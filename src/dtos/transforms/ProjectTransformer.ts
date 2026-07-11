@@ -31,6 +31,7 @@ import { MaterialTransformer } from './MaterialTransformer';
 import { InspectionTransformer } from './InspectionTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
 import { InspectionStatus } from '@/domain/entities/Inspection';
+import type { ReferentialType } from '@/config/referentials';
 
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
@@ -189,6 +190,7 @@ export class ProjectTransformer {
       insuranceRequired: row.insurance_required as boolean | undefined,
       launchDate: row.launch_date ? new Date(row.launch_date as string) : undefined,
       projectReference: (row.project_reference as string) || undefined,
+      referentialCode: (row.referential_code as ReferentialType) || undefined,
       allowsInitialPayment: row.allows_initial_payment as boolean | undefined,
     });
   }
@@ -242,6 +244,8 @@ export class ProjectTransformer {
       procurement_lead_time: project.procurementLeadTime,
       project_order: project.projectOrder,
       project_reference_number: project.projectReferenceNumber,
+      project_reference: project.projectReference,
+      referential_code: project.referentialCode,
       project_responsable_id: project.projectManagerId,
       reception_status: project.receptionStatus,
       requires_consultant_validation: project.requiresConsultantValidation,
@@ -322,7 +326,9 @@ export class ProjectTransformer {
       currentPhase: project.currentPhase || undefined,
       currentStage: project.currentStage as ConstructionStage | undefined,
       methodology: project.methodology as "waterfall" | "agile" | "hybrid" | undefined,
-      projectReference: project.projectReferenceNumber,
+      projectReference: project.projectReference,
+      projectReferenceNumber: project.projectReferenceNumber,
+      referentialCode: project.referentialCode,
       selectionMode: project.selectionMode || undefined,
       financingSource: project.financingSource || undefined,
       marketType: project.marketType || undefined,
@@ -382,6 +388,8 @@ export class ProjectTransformer {
       procurementLeadTime: project.procurementLeadTime,
       projectOrder: project.projectOrder,
       projectReferenceNumber: project.projectReferenceNumber,
+      projectReference: project.projectReference,
+      referentialCode: project.referentialCode,
       projectResponsableId: project.projectManagerId,
       receptionStatus: project.receptionStatus,
       requiresConsultantValidation: project.requiresConsultantValidation,
@@ -477,6 +485,8 @@ export class ProjectTransformer {
       procurementLeadTime: dto.procurementLeadTime,
       projectOrder: dto.projectOrder,
       projectReferenceNumber: dto.projectReferenceNumber || dto.projectReference,
+      projectReference: dto.projectReference,
+      referentialCode: dto.referentialCode,
       projectResponsableId: dto.projectResponsableId,
       receptionStatus: dto.receptionStatus,
       requiresConsultantValidation: dto.requiresConsultantValidation,
@@ -541,6 +551,8 @@ export class ProjectTransformer {
       procurementLeadTime: dto.procurementLeadTime,
       projectOrder: dto.projectOrder,
       projectReferenceNumber: dto.projectReferenceNumber || dto.projectReference,
+      projectReference: dto.projectReference,
+      referentialCode: dto.referentialCode,
       projectResponsableId: dto.projectResponsableId,
       receptionStatus: dto.receptionStatus,
       requiresConsultantValidation: dto.requiresConsultantValidation,
@@ -737,6 +749,8 @@ export class ProjectTransformer {
     if (dto.terrainType !== undefined) entityData.terrainType = dto.terrainType;
     if (dto.environmentalConstraints !== undefined) entityData.environmentalConstraints = dto.environmentalConstraints;
     if (dto.projectReferenceNumber !== undefined) entityData.projectReferenceNumber = dto.projectReferenceNumber;
+    if (dto.projectReference !== undefined) entityData.projectReference = dto.projectReference;
+    if (dto.referentialCode !== undefined) entityData.referentialCode = dto.referentialCode;
     if (dto.projectOrder !== undefined) entityData.projectOrder = dto.projectOrder;
     if (dto.clientId !== undefined) entityData.clientId = dto.clientId;
     if (dto.projectResponsableId !== undefined) entityData.projectResponsable = dto.projectResponsableId;
@@ -790,6 +804,9 @@ export class ProjectTransformer {
     if (dto.marketType !== undefined) updates.marketType = dto.marketType;
     if (dto.selectionMode !== undefined) updates.selectionMode = dto.selectionMode;
     if (dto.projectReference !== undefined) updates.projectReferenceNumber = dto.projectReference;
+    if (dto.projectReferenceNumber !== undefined) updates.projectReferenceNumber = dto.projectReferenceNumber;
+    if (dto.projectReference !== undefined) updates.projectReference = dto.projectReference;
+    if (dto.referentialCode !== undefined) updates.referentialCode = dto.referentialCode;
     if (dto.currentPhase !== undefined) updates.currentPhase = dto.currentPhase;
     if (dto.currentStage !== undefined) updates.currentStage = dto.currentStage;
     if (dto.allowsInitialPayment !== undefined) updates.allowsInitialPayment = dto.allowsInitialPayment;

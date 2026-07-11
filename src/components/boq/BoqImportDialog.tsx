@@ -7,7 +7,7 @@
  *  - Default WBS (Phase › Jalon › Tâche) applied to every imported line.
  *  - Column mapping wizard, dropzone, live preview.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle } from 'lucide-react';
@@ -23,6 +23,8 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { getReferentialOptions, type ReferentialType } from '@/config/referentials';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 interface Props {
   source: BoqSource;
@@ -31,6 +33,8 @@ interface Props {
   /** Optional project referential (SOMELEC / PNDS / SDAU / MR_PUBLIC …) used to
    *  auto-classify each line into Phase → Étape[Jalon] → Tâche. */
   defaultReferentialCode?: ReferentialType;
+  /** Project owning the BOQ. Defaults to contextId for project-level sources. */
+  projectId?: string;
   trigger: React.ReactNode;
   title?: string;
   onImported?: (count: number) => void;
@@ -58,10 +62,11 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   return issues;
 }
 
-export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, trigger, title, onImported }: Props) {
+export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
+  const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
@@ -78,6 +83,44 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
 
+  useEffect(() => {
+    if (defaultReferentialCode) setReferentialCode(defaultReferentialCode);
+  }, [defaultReferentialCode]);
+
+  useEffect(() => {
+    if (!open || !resolvedProjectId || defaultReferentialCode) return;
+    let cancelled = false;
+    const loadProjectReferential = async () => {
+      try {
+        const service = new ProjectService(RepositoryFactory.getProjectRepository());
+        const project = await service.getProjectById(resolvedProjectId);
+        if (!cancelled && project?.referentialCode) setReferentialCode(project.referentialCode);
+      } catch {
+        // Keep import usable even if project metadata cannot be loaded.
+      }
+    };
+    loadProjectReferential();
+    return () => { cancelled = true; };
+  }, [defaultReferentialCode, open, resolvedProjectId]);
+
+  const persistReferential = async (next?: ReferentialType) => {
+    setReferentialCode(next);
+    setWbs({ phaseId: phaseId ?? null, milestoneId: null, taskId: null });
+    if (!resolvedProjectId) return;
+    try {
+      const service = new ProjectService(RepositoryFactory.getProjectRepository());
+      await service.updateProject(resolvedProjectId, { id: resolvedProjectId, referentialCode: next });
+      window.dispatchEvent(new CustomEvent('project-referential-changed', { detail: { projectId: resolvedProjectId, referentialCode: next } }));
+      window.dispatchEvent(new CustomEvent('boq-kpi-refresh', { detail: { projectId: resolvedProjectId, source, contextId } }));
+    } catch (e) {
+      toast({
+        title: 'Référentiel non persisté',
+        description: e instanceof Error ? e.message : String(e),
+        variant: 'destructive',
+      });
+    }
+  };
+
   const onSubmit = async () => {
     if (issues.length > 0) {
       toast({
@@ -88,9 +131,8 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       return;
     }
     try {
-      // Push WBS-enriched dtos back to hook state before commit
       setDtos(wbsEnrichedDtos);
-      const r = await commit();
+      const r = await commit(wbsEnrichedDtos);
       toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s).` });
       // Broadcast so KPI panels (Métrés / DQE) auto-refresh across the app
       window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
@@ -119,7 +161,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
               <Label className="text-sm font-medium">Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)</Label>
               <Select
                 value={referentialCode ?? '__none__'}
-                onValueChange={(v) => setReferentialCode(v === '__none__' ? undefined : (v as ReferentialType))}
+                onValueChange={(v) => persistReferential(v === '__none__' ? undefined : (v as ReferentialType))}
                 disabled={isBusy}
               >
                 <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
@@ -134,7 +176,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
-              <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} />
+              <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} referentialCode={referentialCode} />
             </section>
 
 

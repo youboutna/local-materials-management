@@ -169,36 +169,7 @@ export class ProjectService {
    */
   async update(id: string, request: UpdateProjectDTO): Promise<ProjectDTO | null> {
     try {
-      const projectData: Record<string, unknown> = {};
-      
-      // Basic fields with proper type handling
-      if (request.title !== undefined && request.title !== null) (projectData as any).title = String(request.title);
-      if (request.description !== undefined && request.description !== null) (projectData as any).description = String(request.description);
-      if (request.location !== undefined && request.location !== null) (projectData as any).location = String(request.location);
-      if (request.status !== undefined && request.status !== null) (projectData as any).status = request.status as ProjectStatus;
-      if (request.progress !== undefined && request.progress !== null) (projectData as any).progress = Number(request.progress);
-      if (request.budget !== undefined && request.budget !== null) (projectData as any).budget = Number(request.budget);
-      if (request.startDate !== undefined && request.startDate !== null) (projectData as any).startDate = new Date(String(request.startDate));
-      if (request.endDate !== undefined && request.endDate !== null) (projectData as any).endDate = new Date(String(request.endDate));
-      if (request.teamSize !== undefined && request.teamSize !== null) (projectData as any).teamSize = Number(request.teamSize);
-      
-      // Handle coordinates (create new ProjectCoordinates object for the entity)
-      if (request.coordinates !== undefined && request.coordinates !== null) {
-        if (typeof request.coordinates === 'object' && request.coordinates.latitude && request.coordinates.longitude) {
-          // Coordinates will be handled during Project update through repository
-          // projectData.coordinates = new ProjectCoordinates(
-          //   Number(request.coordinates.latitude),
-          //   Number(request.coordinates.longitude)
-          // );
-        }
-      } else if (request.latitude !== undefined && request.longitude !== undefined) {
-        // Handle individual latitude/longitude fields
-        // Coordinates will be handled during Project update through repository
-        // projectData.coordinates = new ProjectCoordinates(
-        //   Number(request.latitude),
-        //   Number(request.longitude)
-        // );
-      }
+      const projectData = ProjectTransformer.fromUpdateDTOToEntity(request);
 
       const project = await this.projectRepository.update(id, projectData);
       return ProjectTransformer.toDTO(project);

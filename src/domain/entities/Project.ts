@@ -17,6 +17,7 @@ import { Milestone } from './Milestone';
 import { Tender } from './Tender';
 import { Risk } from './Risk';
 import { GeographicUnit } from '@/utils/mauritania';
+import type { ReferentialType } from '@/config/referentials';
 
 // Interface for project resources
 export interface ProjectResource {
@@ -202,6 +203,7 @@ export class Project {
   private _supplierPaymentRequests?: { id: string; date: Date }[];
   private _taskAssignments?: { id: string; taskId: string }[];
   private _projectResources?: { id: string; resourceId: string }[];
+  private _referentialCode?: ReferentialType;
 
   // Missing fields for getters
   private _currentStage?: string;
@@ -355,6 +357,7 @@ export class Project {
   get employees(): Employee[] | undefined { return this._employees; }
   get currentStage(): string | undefined { return this._currentStage; }
   get projectReference(): string | undefined { return this._projectReference; }
+  get referentialCode(): ReferentialType | undefined { return this._referentialCode; }
 
   // Additional properties for UI DTO compatibility
   get address(): string | undefined { return this._location; } // Alias for location
@@ -480,6 +483,7 @@ export class Project {
     insuranceRequired?: boolean;
     launchDate?: Date;
     projectReference?: string;
+    referentialCode?: ReferentialType;
     allowsInitialPayment?: boolean;
   }): Project {
     const project = new Project(
@@ -565,6 +569,7 @@ export class Project {
     if (data.insuranceRequired !== undefined) project._insuranceRequired = data.insuranceRequired;
     if (data.launchDate !== undefined) project._launchDate = data.launchDate;
     if (data.projectReference !== undefined) project._projectReference = data.projectReference;
+    if (data.referentialCode !== undefined) project._referentialCode = data.referentialCode;
     if (data.allowsInitialPayment !== undefined) project._allowsInitialPayment = data.allowsInitialPayment;
 
     return project;
@@ -613,6 +618,7 @@ export class Project {
       currentPhase: this.currentPhase,
       currentStage: this.currentStage,
       projectReference: this.projectReference,
+      referentialCode: this.referentialCode,
       currency: this.currency,
       areaSqm: this.areaSqm,
       requiresConsultantValidation: this.requiresConsultantValidation,

@@ -16,13 +16,15 @@ import {
   BoqBudgetDashboard,
   useBoqDocument,
 } from '@/components/boq';
+import type { ReferentialType } from '@/config/referentials';
 
 
 interface Props {
   projectId: string;
+  referentialCode?: ReferentialType;
 }
 
-const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
+const ProjectDqeTab: React.FC<Props> = ({ projectId, referentialCode }) => {
   const dqe = useBoqDocument({ source: 'dqe', contextId: projectId, projectId });
   const takeoff = useBoqDocument({
     source: 'quantity_takeoff',
@@ -41,6 +43,8 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId }) => {
           <BoqImportDialog
             source="dqe"
             contextId={projectId}
+            projectId={projectId}
+            defaultReferentialCode={referentialCode}
             title="Importer un DQE"
             trigger={
               <button className="inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 hover:bg-accent">

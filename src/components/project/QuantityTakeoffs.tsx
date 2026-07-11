@@ -19,6 +19,8 @@ interface QuantityTakeoff {
   width?: number;
   height?: number;
   quantity: number;
+  unit_price?: number;
+  total_value?: number;
   note?: string;
   material: {
     id: string;
@@ -40,8 +42,8 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const fetchQuantityTakeoffs = async () => {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
+      const { btpClient } = await import('@/integrations/supabase/schema-clients');
+      const { data, error } = await btpClient
         .from('quantity_takeoffs')
         .select(`
           id,
@@ -51,6 +53,8 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           width,
           height,
           quantity,
+          unit_price,
+          total_value,
           note,
           material:materials(
             id,
@@ -75,6 +79,8 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           width: item.width || undefined,
           height: item.height || undefined,
           quantity: item.quantity || 0,
+          unit_price: item.unit_price || undefined,
+          total_value: item.total_value || undefined,
           note: item.note || undefined,
           material: {
             id: mat?.id || '',
@@ -101,8 +107,8 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
   // Fetch project materials and automatically generate takeoffs
   const fetchProjectMaterials = async () => {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data: projectMaterials, error } = await supabase
+      const { btpClient } = await import('@/integrations/supabase/schema-clients');
+      const { data: projectMaterials, error } = await btpClient
         .from('project_materials')
         .select(`
           quantity,
@@ -136,7 +142,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
         });
 
         // Check if auto-takeoffs already exist to avoid duplicates
-        const { data: existingTakeoffs } = await supabase
+        const { data: existingTakeoffs } = await btpClient
           .from('quantity_takeoffs')
           .select('material_id')
           .eq('project_id', projectId);
@@ -145,7 +151,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
         const newTakeoffs = autoTakeoffs.filter(t => !existingMaterialIds.includes(t.material_id));
 
         if (newTakeoffs.length > 0) {
-          const { error: insertError } = await supabase
+          const { error: insertError } = await btpClient
             .from('quantity_takeoffs')
             .insert(newTakeoffs);
 
@@ -171,13 +177,19 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
     // Auto-refresh KPIs when a BOQ / DQE import completes for this project
     const onImported = (e: Event) => {
-      const detail = (e as CustomEvent<{ contextId?: string }>).detail;
-      if (!detail?.contextId || detail.contextId === projectId) {
+      const detail = (e as CustomEvent<{ contextId?: string; projectId?: string }>).detail;
+      if (!detail?.contextId || detail.contextId === projectId || detail.projectId === projectId) {
         fetchQuantityTakeoffs();
       }
     };
     window.addEventListener('boq-imported', onImported as EventListener);
-    return () => window.removeEventListener('boq-imported', onImported as EventListener);
+    window.addEventListener('boq-kpi-refresh', onImported as EventListener);
+    window.addEventListener('project-referential-changed', onImported as EventListener);
+    return () => {
+      window.removeEventListener('boq-imported', onImported as EventListener);
+      window.removeEventListener('boq-kpi-refresh', onImported as EventListener);
+      window.removeEventListener('project-referential-changed', onImported as EventListener);
+    };
   }, [projectId]);
 
   const handleTakeoffAdded = () => {
@@ -191,7 +203,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const calculateTotalValue = () => {
     return takeoffs.reduce((total, takeoff) => {
-      return total + (takeoff.quantity * (takeoff.material.price_per_unit || 0));
+      return total + (takeoff.total_value ?? (takeoff.quantity * (takeoff.unit_price ?? takeoff.material.price_per_unit ?? 0)));
     }, 0);
   };
 
