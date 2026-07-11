@@ -2,7 +2,7 @@
  * useBoqImport — parse a file → mapping → BoqLineDTO[] → bulk persist.
  * Pure orchestration hook (no supabase.from() calls in components).
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 import type { ParseResult } from '@/application/services/boq/parsers/IDocumentParser';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
