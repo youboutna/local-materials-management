@@ -4,7 +4,6 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { supabase as publicSupabase } from '@/integrations/supabase/client';
 import { 
   TenderSharingSecretDTO, 
   CreateSharingSecretDTO, 
