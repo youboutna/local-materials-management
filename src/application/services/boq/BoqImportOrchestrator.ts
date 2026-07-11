@@ -88,8 +88,8 @@ export class BoqImportOrchestrator {
       // Explicit phase from source column, else fallback to ctx.phaseId, else infer
       // via the project referential (SOMELEC / PNDS / …) or static WBS keywords.
       const explicitPhase = mapping.phaseId ? String(get(mapping.phaseId) ?? '').trim() : '';
-      const resolved = explicitPhase
-        ? { resourceType: undefined as BoqResourceType | undefined }
+      const resolved: import('./BoqCategoryResolver').ResolvedCategory = explicitPhase
+        ? {}
         : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
       const phaseId = ctx.phaseId ?? explicitPhase ?? resolved.phaseId ?? null;
 
