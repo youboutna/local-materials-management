@@ -20,7 +20,7 @@ import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { getReferentialOptions, type ReferentialType } from '@/config/referentials';
+import { getReferentialOptions, getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ProjectService } from '@/application/services/ProjectService';
@@ -83,6 +83,25 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
 
+  const updateLine = (index: number, patch: Partial<BoqLineDTO>) => {
+    setDtos((prev) => {
+      const next = [...prev];
+      const current = next[index];
+      if (!current) return prev;
+      const merged: BoqLineDTO = { ...current, ...patch };
+      // Auto-recompute totalHt when qty or PU changes.
+      if (patch.quantity !== undefined || patch.unitPrice !== undefined) {
+        merged.totalHt = (merged.quantity ?? 0) * (merged.unitPrice ?? 0);
+      }
+      next[index] = merged;
+      return next;
+    });
+  };
+
+  const removeLine = (index: number) => {
+    setDtos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     if (defaultReferentialCode) setReferentialCode(defaultReferentialCode);
   }, [defaultReferentialCode]);
@@ -102,6 +121,16 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     loadProjectReferential();
     return () => { cancelled = true; };
   }, [defaultReferentialCode, open, resolvedProjectId]);
+
+  // Pre-select first WBS phase of the referential so lines carry sensible defaults.
+  useEffect(() => {
+    if (!referentialCode || wbs.phaseId) return;
+    const phases = getPhasesForReferential(referentialCode);
+    if (phases.length > 0) {
+      setWbs({ phaseId: phases[0].code, milestoneId: null, taskId: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referentialCode]);
 
   const persistReferential = async (next?: ReferentialType) => {
     setReferentialCode(next);
