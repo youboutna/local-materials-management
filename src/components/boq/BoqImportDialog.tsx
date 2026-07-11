@@ -84,6 +84,8 @@ export function BoqImportDialog({ source, contextId, phaseId, trigger, title, on
       setDtos(wbsEnrichedDtos);
       const r = await commit();
       toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s).` });
+      // Broadcast so KPI panels (Métrés / DQE) auto-refresh across the app
+      window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
       onImported?.(r.length);
       setOpen(false);
     } catch (e) {
