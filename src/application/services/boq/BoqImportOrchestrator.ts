@@ -9,7 +9,8 @@ import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
+import type { ReferentialType } from '@/config/referentials';
 
 export interface ImportMapping {
   designation?: string;
