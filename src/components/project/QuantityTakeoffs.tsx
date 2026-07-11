@@ -168,6 +168,16 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
       await fetchQuantityTakeoffs();
     };
     loadData();
+
+    // Auto-refresh KPIs when a BOQ / DQE import completes for this project
+    const onImported = (e: Event) => {
+      const detail = (e as CustomEvent<{ contextId?: string }>).detail;
+      if (!detail?.contextId || detail.contextId === projectId) {
+        fetchQuantityTakeoffs();
+      }
+    };
+    window.addEventListener('boq-imported', onImported as EventListener);
+    return () => window.removeEventListener('boq-imported', onImported as EventListener);
   }, [projectId]);
 
   const handleTakeoffAdded = () => {
