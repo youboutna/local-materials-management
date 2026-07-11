@@ -18,6 +18,9 @@ import { toast } from "@/hooks/use-toast";
 import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
+import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
+import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
+import type { BoqResourceType } from "@/domain/boq/BoqLine";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
