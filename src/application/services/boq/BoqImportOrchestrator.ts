@@ -82,7 +82,6 @@ export class BoqImportOrchestrator {
       const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
 
       // Compute quantity from L×l×h when the sheet omits a Quantity column.
-      const { BoqCalculatorService } = await import('./BoqCalculatorService');
       const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length, width, height });
       if (!designation && !quantity) continue;
 
