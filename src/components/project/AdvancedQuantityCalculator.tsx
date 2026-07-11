@@ -292,7 +292,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+  const [resourceType, setResourceType] = useState<BoqResourceType>("material");
+  const [unitPriceOverride, setUnitPriceOverride] = useState<string>("");
   const [savingAll, setSavingAll] = useState(false);
+  const [sendingBoq, setSendingBoq] = useState(false);
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
 
