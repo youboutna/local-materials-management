@@ -7,6 +7,7 @@ import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
+import { BoqCalculatorService } from './BoqCalculatorService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 
