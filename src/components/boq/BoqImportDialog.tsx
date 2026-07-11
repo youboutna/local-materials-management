@@ -227,8 +227,15 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
             )}
 
             <div>
-              <h4 className="text-sm font-medium mb-2">Aperçu ({wbsEnrichedDtos.length} lignes)</h4>
-              <BoqLineTable lines={wbsEnrichedDtos} emptyLabel="Aucune ligne détectée avec le mapping courant." />
+              <h4 className="text-sm font-medium mb-2">Aperçu ({wbsEnrichedDtos.length} lignes) — éditable</h4>
+              <BoqLineTable
+                lines={wbsEnrichedDtos}
+                emptyLabel="Aucune ligne détectée avec le mapping courant."
+                editable
+                referentialCode={referentialCode}
+                onChange={updateLine}
+                onRemove={removeLine}
+              />
             </div>
           </>
         )}
