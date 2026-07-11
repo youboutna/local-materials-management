@@ -3,8 +3,11 @@ import * as  tesseract from "tesseract.js";
 import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
 
-// PDF.js worker config
-pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
+// PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 import {
   CalculationOptions, Opening, CalculationResult,
