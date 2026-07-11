@@ -442,7 +442,6 @@ export interface ProjectDTO extends BaseEntityDTO {
   
   // Project references and details
   projectReferenceNumber?: string;
-  referentialCode?: ReferentialType;
   projectOrder?: string;
   projectResponsableId?: string;
   forme?: string;
@@ -782,7 +781,6 @@ export interface CreateProjectDTO {
 
   // References and details
   projectReferenceNumber?: string;
-  referentialCode?: ReferentialType;
   projectOrder?: string;
   projectResponsableId?: string;
   forme?: string;
