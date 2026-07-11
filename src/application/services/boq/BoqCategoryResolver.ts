@@ -28,7 +28,7 @@ const TASK_KEYWORDS: Array<{ rx: RegExp; phaseId: string; milestoneId: string; t
   { rx: /poteau|raidisseur/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poteaux' },
   { rx: /poutre|linteau|chainage\s*haut/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poutres' },
   { rx: /dalle|plancher|paillasse/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'dalles' },
-  { rx: /ma[cç]onnerie|mur|cloison\s*brique|agglo/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'murs-porteurs' },
+  { rx: /ma[cç]onnerie|mur|cloison\s*brique|agglo(m[eé]r[eé]s?)?\s*(creux|pleins?)?|parpaing|brique/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'murs-porteurs' },
   // Hors d'eau
   { rx: /charpente/i, phaseId: 'gros-oeuvre', milestoneId: 'hors-eau', taskId: 'charpente' },
   { rx: /couverture|toiture|tuile/i, phaseId: 'gros-oeuvre', milestoneId: 'hors-eau', taskId: 'couverture' },
