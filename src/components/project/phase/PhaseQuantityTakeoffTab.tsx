@@ -50,7 +50,7 @@ const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
                 </Button>
               }
             />
-            <DQEImportDialog projectId={projectId} phaseId={phaseId} />
+            
           </div>
         </CardHeader>
         <CardContent>
