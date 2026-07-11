@@ -20,11 +20,17 @@ import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { getReferentialOptions, type ReferentialType } from '@/config/referentials';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   source: BoqSource;
   contextId: string;
   phaseId?: string;
+  /** Optional project referential (SOMELEC / PNDS / SDAU / MR_PUBLIC …) used to
+   *  auto-classify each line into Phase → Étape[Jalon] → Tâche. */
+  defaultReferentialCode?: ReferentialType;
   trigger: React.ReactNode;
   title?: string;
   onImported?: (count: number) => void;
