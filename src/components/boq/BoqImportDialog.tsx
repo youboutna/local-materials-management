@@ -58,11 +58,13 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   return issues;
 }
 
-export function BoqImportDialog({ source, contextId, phaseId, trigger, title, onImported }: Props) {
+export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, trigger, title, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
+  const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
+  const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
-    useBoqImport({ source, contextId, phaseId });
+    useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
   const wbsEnrichedDtos = useMemo<BoqLineDTO[]>(() => {
