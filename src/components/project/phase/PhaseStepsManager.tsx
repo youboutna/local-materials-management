@@ -653,11 +653,19 @@ const StepCard: React.FC<{
                   Ressources de l'étape
                 </p>
                 <div className="flex items-center gap-2">
-                  <DQEImportDialog
-                    projectId={projectId}
-                    phaseId={phaseId}
-                    stepId={step.id}
-                  />
+                  {projectId && (
+                    <BoqImportDialog
+                      source="quantity_takeoff"
+                      contextId={projectId}
+                      phaseId={phaseId}
+                      title="Importer BOQ vers cette étape"
+                      trigger={
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-2" /> Import BOQ
+                        </Button>
+                      }
+                    />
+                  )}
                   <PhaseStepResourceDialog
                     projectId={projectId}
                     phaseId={phaseId}
