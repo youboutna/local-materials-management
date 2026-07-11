@@ -115,10 +115,28 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         {parseResult && (
           <>
+            <section className="space-y-2">
+              <Label className="text-sm font-medium">Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)</Label>
+              <Select
+                value={referentialCode ?? '__none__'}
+                onValueChange={(v) => setReferentialCode(v === '__none__' ? undefined : (v as ReferentialType))}
+                disabled={isBusy}
+              >
+                <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Aucun (heuristiques FR par défaut)</SelectItem>
+                  {refOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </section>
+
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
               <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} />
             </section>
+
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
 
