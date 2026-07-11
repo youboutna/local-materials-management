@@ -19,8 +19,13 @@ const FIELDS: { key: keyof ImportMapping; label: string }[] = [
   { key: 'designation', label: 'Désignation' },
   { key: 'unit', label: 'Unité' },
   { key: 'quantity', label: 'Quantité' },
-  { key: 'unitPrice', label: 'Prix unitaire' },
+  { key: 'unitPrice', label: 'Prix unitaire (PU)' },
+  { key: 'length', label: 'Longueur' },
+  { key: 'width', label: 'Largeur' },
+  { key: 'height', label: 'Hauteur / épaisseur' },
+  { key: 'material', label: 'Matériau' },
   { key: 'elementType', label: 'Type / ouvrage' },
+  { key: 'category', label: 'Catégorie / poste' },
   { key: 'phaseId', label: 'Phase / lot' },
 ];
 
