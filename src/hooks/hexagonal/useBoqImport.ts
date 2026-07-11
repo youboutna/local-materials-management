@@ -8,8 +8,9 @@ import type { ParseResult } from '@/application/services/boq/parsers/IDocumentPa
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import type { ReferentialType } from '@/config/referentials';
 
-export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string }) {
+export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
   const [dtos, setDtos] = useState<BoqLineDTO[]>([]);
