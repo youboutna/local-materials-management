@@ -59,7 +59,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/dtos/types/phase-dto";
 import { StepItem } from '@/dtos/types/unified-workflow';
-import DQEImportDialog from "./DQEImportDialog";
+import { BoqImportDialog } from "@/components/boq/BoqImportDialog";
+import { Upload } from "lucide-react";
 import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 
 interface PhaseStepsManagerProps {
@@ -652,11 +653,19 @@ const StepCard: React.FC<{
                   Ressources de l'étape
                 </p>
                 <div className="flex items-center gap-2">
-                  <DQEImportDialog
-                    projectId={projectId}
-                    phaseId={phaseId}
-                    stepId={step.id}
-                  />
+                  {projectId && (
+                    <BoqImportDialog
+                      source="quantity_takeoff"
+                      contextId={projectId}
+                      phaseId={phaseId}
+                      title="Importer BOQ vers cette étape"
+                      trigger={
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-2" /> Import BOQ
+                        </Button>
+                      }
+                    />
+                  )}
                   <PhaseStepResourceDialog
                     projectId={projectId}
                     phaseId={phaseId}
