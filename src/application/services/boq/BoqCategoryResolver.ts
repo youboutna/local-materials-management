@@ -17,11 +17,13 @@ export interface ResolvedCategory {
 
 /** Keyword → WBS task mapping (FR construction vocabulary). */
 const TASK_KEYWORDS: Array<{ rx: RegExp; phaseId: string; milestoneId: string; taskId: string }> = [
+  // Installation / Préparation
+  { rx: /installation\s*de\s*chantier|repli|amen[eé]e|d[eé]broussaillage|implantation|piquetage/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
   // Fondations
-  { rx: /fouille|terrassement|d[eé]blai/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
-  { rx: /b[eé]ton\s*(de\s*)?propret[eé]/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'beton-proprete' },
-  { rx: /semelle/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'semelles' },
-  { rx: /longrine|chainage\s*bas/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'longrines' },
+  { rx: /fouille|terrassement|d[eé]blai|remblai|h[eé]risson|forme\s*en\s*[eé]?paisseur|film\s*polyane/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
+  { rx: /b[eé]ton\s*(de\s*)?propret[eé]|gros\s*b[eé]ton/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'beton-proprete' },
+  { rx: /semelle|radier/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'semelles' },
+  { rx: /longrine|chainage\s*bas|amorce\s*de\s*poteau/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'longrines' },
   // Élévation
   { rx: /poteau|raidisseur/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poteaux' },
   { rx: /poutre|linteau|chainage\s*haut/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poutres' },
