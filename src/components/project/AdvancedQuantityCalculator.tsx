@@ -359,6 +359,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     }
   };
 
+  const buildBoqDto = (calc: CalculationResult): BoqLineDTO => {
+    const { qty, unit } = extractQuantity(calc);
+    const puNum = parseFloat(unitPriceOverride);
+    const unitPrice = Number.isFinite(puNum) && puNum > 0 ? puNum : null;
+    const material = materials.find((m: any) => m.id === selectedMaterialId);
+    const designation = calc.originalLabel
+      || getElementLabel(calc.elementType || 'basic_calculator')
+      || material?.name
+      || 'Ligne calculée';
+    return {
+      source: 'quantity_takeoff',
+      contextId: projectId ?? '',
+      designation,
+      elementType: calc.elementType ?? null,
+      unit,
+      length: calc.dimensions?.length ?? null,
+      width: calc.dimensions?.width ?? null,
+      height: calc.dimensions?.height ?? null,
+      quantity: qty,
+      unitPrice,
+      totalHt: unitPrice != null ? qty * unitPrice : null,
+      materialId: selectedMaterialId || null,
+      phaseId: phaseId ?? null,
+      resourceType,
+      note: JSON.stringify({ source: 'AdvancedQuantityCalculator', results: calc.results }),
+    };
+  };
+
+  const handleSendToBoq = async () => {
+    if (!projectId) {
+      toast({ title: "Contexte projet manquant", description: "Ouvrez le calculateur depuis un projet.", variant: "destructive" });
+      return;
+    }
+    if (calculations.length === 0) return;
+    setSendingBoq(true);
+    try {
+      const lines = calculations.map(buildBoqDto);
+      await boqRepository.bulkCreate(lines);
+      window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source: 'quantity_takeoff', projectId, count: lines.length } }));
+      toast({ title: "Envoyé vers le BOQ", description: `${lines.length} ligne(s) ajoutée(s) aux Métrés du projet.` });
+      onPersisted?.();
+    } catch (e: any) {
+      toast({ title: "Erreur BOQ", description: e?.message ?? "Échec de l'envoi", variant: "destructive" });
+    } finally {
+      setSendingBoq(false);
+    }
+  };
+
+
 
 
 
