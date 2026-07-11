@@ -603,10 +603,163 @@ export function calculateVolume(length: number, width: number, height: number) {
   return length * width * height;
 }
 
-// Export missing functions for compatibility
-export function calculateAdvancedQuantities(...args: any[]): any {
-  console.warn('calculateAdvancedQuantities not implemented yet');
-  return { results: {} };
+/**
+ * Central dispatcher — routes to the correct calculator based on elementType.
+ * Falls back to a basic volume/area/length calculation when no dedicated
+ * calculator exists so the Calculator UI always returns useful numbers.
+ */
+export function calculateAdvancedQuantities(params: CalculationParams): CalculationResult {
+  const { elementType, length = 0, width = 0, height = 0, count = 0, quantity = 1, options } = params;
+  const dosage = options?.dosage ?? DEFAULT_CONCRETE_DOSAGE;
+  const thickness = options?.thickness ?? STANDARD_PLASTER_THICKNESS;
+
+  try {
+    switch (elementType) {
+      case 'concrete_slab':
+        return calculateConcreteSlab(length, width, height, options);
+      case 'masonry_wall':
+        return calculateMasonryWall(length, height, options) as CalculationResult;
+      case 'hollow_block_wall': {
+        const { surface, blocks } = calculateHollowBlockWall(length, height);
+        return {
+          elementType, dimensions: { length, height },
+          results: {
+            'Surface (m²)': roundToDecimal(surface, 2),
+            'Nombre de blocs': Math.ceil(blocks),
+          },
+        };
+      }
+      case 'concrete_column':
+      case 'concrete_beam': {
+        const section = width * height;
+        const { volume, cement } = elementType === 'concrete_column'
+          ? calculateConcreteColumn(length, section, dosage)
+          : calculateConcreteBeam(length, section, dosage);
+        return {
+          elementType, dimensions: { length, width, height },
+          results: {
+            'Volume béton (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(cement, 2),
+            'Sacs ciment (50kg)': Math.ceil(cement / CEMENT_BAG_WEIGHT),
+          },
+        };
+      }
+      case 'concrete_footing':
+      case 'concrete_filling':
+      case 'lean_concrete': {
+        const { volume, cement } = calculateConcreteFooting(length, width, height, dosage);
+        return {
+          elementType, dimensions: { length, width, height },
+          results: {
+            'Volume béton (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(cement, 2),
+            'Sacs ciment (50kg)': Math.ceil(cement / CEMENT_BAG_WEIGHT),
+          },
+        };
+      }
+      case 'plaster': {
+        const { surface, volume, cement } = calculateCementForPlaster(length, height, thickness);
+        return {
+          elementType, dimensions: { length, height },
+          results: {
+            'Surface (m²)': roundToDecimal(surface, 2),
+            'Volume enduit (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(cement, 2),
+          },
+        };
+      }
+      case 'brick_joints': {
+        const surface = length * height;
+        const { volume, cement } = calculateCementForBrickJoints(surface);
+        return {
+          elementType, dimensions: { length, height },
+          results: {
+            'Surface (m²)': roundToDecimal(surface, 2),
+            'Volume mortier (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(cement, 2),
+          },
+        };
+      }
+      case 'paving':
+      case 'rebar_slab': {
+        const surface = length * width;
+        if (elementType === 'rebar_slab') {
+          const { weight } = calculateRebarForSlab(surface);
+          return {
+            elementType, dimensions: { length, width },
+            results: {
+              'Surface (m²)': roundToDecimal(surface, 2),
+              'Poids acier (kg)': roundToDecimal(weight, 2),
+            },
+          };
+        }
+        return {
+          elementType, dimensions: { length, width },
+          results: { 'Surface (m²)': roundToDecimal(surface, 2) },
+        };
+      }
+      case 'concrete_mix': {
+        const volume = length * width * height || quantity;
+        const { cement, gravel, sand } = calculateConcreteMix(volume);
+        return {
+          elementType, dimensions: { volume },
+          results: {
+            'Volume béton (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(cement, 2),
+            'Gravier (kg)': roundToDecimal(gravel, 2),
+            'Sable (kg)': roundToDecimal(sand, 2),
+          },
+        };
+      }
+      case 'vegetal_soil_stripping':
+      case 'mass_excavation': {
+        const area = length * width;
+        const volume = area * height;
+        return {
+          elementType, dimensions: { length, width, height },
+          results: {
+            'Surface (m²)': roundToDecimal(area, 2),
+            'Volume terre (m³)': roundToDecimal(volume, 3),
+          },
+        };
+      }
+      case 'trench_excavation': {
+        const volume = length * width * height;
+        return {
+          elementType, dimensions: { length, width, height },
+          results: {
+            'Longueur (m)': roundToDecimal(length, 2),
+            'Volume fouille (m³)': roundToDecimal(volume, 3),
+          },
+        };
+      }
+      case 'basic_calculator':
+      default: {
+        const w = width || 1;
+        const h = height || 1;
+        const volume = length * w * h;
+        const area = length * w;
+        return {
+          elementType: elementType || 'basic_calculator',
+          dimensions: { length, width, height, count, volume, area },
+          results: {
+            'Longueur (m)': roundToDecimal(length, 2),
+            ...(width ? { 'Surface (m²)': roundToDecimal(area, 2) } : {}),
+            ...(width && height ? { 'Volume (m³)': roundToDecimal(volume, 3) } : {}),
+            ...(count ? { 'Nombre': count } : {}),
+            'Quantité': quantity,
+          },
+        };
+      }
+    }
+  } catch (err) {
+    console.error('calculateAdvancedQuantities error:', err);
+    return {
+      elementType: elementType || 'basic_calculator',
+      dimensions: { length, width, height },
+      results: { 'Erreur': err instanceof Error ? err.message : 'Erreur de calcul' },
+    };
+  }
 }
 
 export async function parsePdf(file: File | string): Promise<any> {
