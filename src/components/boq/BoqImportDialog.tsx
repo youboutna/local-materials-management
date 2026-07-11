@@ -20,11 +20,17 @@ import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { getReferentialOptions, type ReferentialType } from '@/config/referentials';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   source: BoqSource;
   contextId: string;
   phaseId?: string;
+  /** Optional project referential (SOMELEC / PNDS / SDAU / MR_PUBLIC …) used to
+   *  auto-classify each line into Phase → Étape[Jalon] → Tâche. */
+  defaultReferentialCode?: ReferentialType;
   trigger: React.ReactNode;
   title?: string;
   onImported?: (count: number) => void;
@@ -52,11 +58,13 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   return issues;
 }
 
-export function BoqImportDialog({ source, contextId, phaseId, trigger, title, onImported }: Props) {
+export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, trigger, title, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
+  const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
+  const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
-    useBoqImport({ source, contextId, phaseId });
+    useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
   const wbsEnrichedDtos = useMemo<BoqLineDTO[]>(() => {
@@ -107,10 +115,28 @@ export function BoqImportDialog({ source, contextId, phaseId, trigger, title, on
 
         {parseResult && (
           <>
+            <section className="space-y-2">
+              <Label className="text-sm font-medium">Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)</Label>
+              <Select
+                value={referentialCode ?? '__none__'}
+                onValueChange={(v) => setReferentialCode(v === '__none__' ? undefined : (v as ReferentialType))}
+                disabled={isBusy}
+              >
+                <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Aucun (heuristiques FR par défaut)</SelectItem>
+                  {refOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </section>
+
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
               <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} />
             </section>
+
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
 

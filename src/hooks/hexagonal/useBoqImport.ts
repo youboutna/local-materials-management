@@ -2,14 +2,15 @@
  * useBoqImport — parse a file → mapping → BoqLineDTO[] → bulk persist.
  * Pure orchestration hook (no supabase.from() calls in components).
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 import type { ParseResult } from '@/application/services/boq/parsers/IDocumentParser';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import type { ReferentialType } from '@/config/referentials';
 
-export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string }) {
+export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
   const [dtos, setDtos] = useState<BoqLineDTO[]>([]);
@@ -46,6 +47,12 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
       throw new Error(msg);
     } finally { setBusy(false); }
   }, [dtos]);
+
+  // Re-classify existing rows when the project referential changes.
+  useEffect(() => {
+    if (parseResult) setDtos(BoqImportOrchestrator.toDtos(parseResult.rows, mapping, ctx));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctx.referentialCode]);
 
   return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos };
 }
