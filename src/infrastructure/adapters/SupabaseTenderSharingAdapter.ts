@@ -46,7 +46,7 @@ const mapDbRowToAccessLogDTO = (row: any): AccessLogDTO => ({
 export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
   async generateSecretCode(): Promise<string> {
     try {
-      const { data, error } = await publicSupabase.rpc('generate_tender_secret_code' as any);
+      const { data, error } = await supabase.rpc('generate_tender_secret_code' as any);
       if (error) throw new Error('Failed to generate secret code');
       return data;
     } catch (error) {
