@@ -1244,7 +1244,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
-          <Tabs defaultValue="gantt" className="space-y-4">
+          <ProjectBudgetTracking projectId={projectId!} />
+          <Tabs defaultValue="gantt" className="space-y-4 mt-4">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
               <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
               <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
