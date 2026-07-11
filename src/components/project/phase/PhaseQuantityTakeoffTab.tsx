@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calculator, Upload } from 'lucide-react';
 import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
-import DQEImportDialog from './DQEImportDialog';
+
 import { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 
 interface PhaseQuantityTakeoffTabProps {
