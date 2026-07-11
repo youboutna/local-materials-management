@@ -1,9 +1,12 @@
 /**
  * BoqImportOrchestrator — picks the right parser and applies fuzzy column mapping.
+ * P0/P1: extended fuzzy detection (length/width/height/material/category) +
+ * keyword-based WBS/DQE resolution when no explicit phase column is present.
  */
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
+import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 
@@ -14,15 +17,25 @@ export interface ImportMapping {
   unitPrice?: string;
   elementType?: string;
   phaseId?: string;
+  length?: string;
+  width?: string;
+  height?: string;
+  material?: string;
+  category?: string;
 }
 
 const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
-  designation: [/design/i, /libell/i, /descrip/i, /designation/i],
-  unit: [/^unit/i, /unit[eé]/i, /^u\.?$/i],
-  quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i],
-  unitPrice: [/prix\s*unit/i, /^pu$/i, /unit\s*price/i, /prix\s*u/i],
-  elementType: [/type/i, /element/i, /ouvrage/i],
-  phaseId: [/phase/i, /lot/i],
+  designation: [/design/i, /libell/i, /descrip/i, /d[eé]signation/i, /article/i, /prestation/i],
+  unit: [/^unit/i, /unit[eé]/i, /^u\.?$/i, /^um$/i],
+  quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i, /nombre/i],
+  unitPrice: [/prix\s*unit/i, /^pu$/i, /unit\s*price/i, /prix\s*u/i, /p\.?u\.?/i],
+  elementType: [/type/i, /^element$/i, /ouvrage/i, /nature/i],
+  phaseId: [/phase/i, /^lot$/i, /chapitre/i],
+  length: [/longueur/i, /^long\.?$/i, /^l\.?$/i, /length/i],
+  width: [/largeur/i, /^larg\.?$/i, /^la\.?$/i, /width/i],
+  height: [/hauteur|[eé]paisseur/i, /^haut\.?$/i, /^h\.?$/i, /height/i],
+  material: [/mat[eé]riau/i, /material/i, /composant/i],
+  category: [/cat[eé]gorie/i, /category/i, /poste/i, /rubrique/i],
 };
 
 export class BoqImportOrchestrator {
@@ -54,12 +67,26 @@ export class BoqImportOrchestrator {
     const out: BoqLineDTO[] = [];
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
-      const qty = Number(get(mapping.quantity) ?? 0);
-      const pu = mapping.unitPrice ? Number(get(mapping.unitPrice) ?? 0) : null;
+      const num = (v: unknown): number | null => {
+        if (v == null || v === '') return null;
+        const n = Number(String(v).replace(/\s+/g, '').replace(',', '.'));
+        return Number.isFinite(n) ? n : null;
+      };
+      const qty = num(get(mapping.quantity)) ?? 0;
+      const pu = num(get(mapping.unitPrice));
       const designation = String(get(mapping.designation) ?? '').trim();
       if (!designation && !qty) continue;
       const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
-      const phaseId = ctx.phaseId ?? (mapping.phaseId ? String(get(mapping.phaseId) ?? '') : undefined);
+      const length = num(get(mapping.length));
+      const width = num(get(mapping.width));
+      const height = num(get(mapping.height));
+
+      // Explicit phase from source column, else fallback to ctx.phaseId,
+      // else infer from designation keywords.
+      const explicitPhase = mapping.phaseId ? String(get(mapping.phaseId) ?? '').trim() : '';
+      const resolved = explicitPhase ? {} : BoqCategoryResolver.resolve(designation);
+      const phaseId = ctx.phaseId ?? explicitPhase ?? resolved.phaseId ?? null;
+
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
@@ -67,9 +94,14 @@ export class BoqImportOrchestrator {
         elementType: mapping.elementType ? String(get(mapping.elementType) ?? '') : null,
         unit,
         quantity: Number.isFinite(qty) ? qty : 0,
-        unitPrice: pu != null && Number.isFinite(pu) ? pu : null,
-        totalHt: pu != null && Number.isFinite(pu) ? qty * pu : null,
+        length,
+        width,
+        height,
+        unitPrice: pu ?? null,
+        totalHt: pu != null ? qty * pu : null,
         phaseId: phaseId || null,
+        milestoneId: resolved.milestoneId ?? null,
+        taskId: resolved.taskId ?? null,
         resourceType: 'material',
       };
       out.push(dto);
