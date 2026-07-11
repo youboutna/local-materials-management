@@ -1,6 +1,9 @@
 import * as pdfjsLib from "pdfjs-dist";
-// PDF.js worker config
-pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
+// PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 import Papa from "papaparse";
 import type { CalculationResult, InvoiceLine } from "@/utils/types";

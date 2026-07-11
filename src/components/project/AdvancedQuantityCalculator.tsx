@@ -19,8 +19,11 @@ import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 
-// PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
+// PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const DEFAULT_FORM = {
   elementType: "basic_calculator",
