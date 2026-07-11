@@ -91,7 +91,7 @@ export class BoqImportOrchestrator {
       const resolved: import('./BoqCategoryResolver').ResolvedCategory = explicitPhase
         ? {}
         : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
-      const phaseId = ctx.phaseId ?? explicitPhase ?? resolved.phaseId ?? null;
+      const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId) ?? null;
 
       const dto: BoqLineDTO = {
         source: ctx.source,

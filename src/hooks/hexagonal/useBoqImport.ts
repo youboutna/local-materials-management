@@ -35,11 +35,11 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     if (parseResult) setDtos(BoqImportOrchestrator.toDtos(parseResult.rows, next, ctx));
   }, [parseResult, ctx]);
 
-  const commit = useCallback(async () => {
-    if (!dtos.length) return [];
+  const commit = useCallback(async (lines: BoqLineDTO[] = dtos) => {
+    if (!lines.length) return [];
     setBusy(true); setError(null);
     try {
-      const persisted = await boqRepository.bulkCreate(dtos);
+      const persisted = await boqRepository.bulkCreate(lines);
       return persisted;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

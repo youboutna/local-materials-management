@@ -3,6 +3,7 @@
  */
 import { useMemo } from 'react';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
+import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -16,10 +17,24 @@ interface Props {
   value: WbsValue;
   onChange: (next: WbsValue) => void;
   disabled?: boolean;
+  referentialCode?: ReferentialType;
 }
 
-export function WbsSelector({ value, onChange, disabled }: Props) {
-  const phases: WbsPhase[] = WBS_REFERENTIAL;
+const NONE = '__none__';
+
+export function WbsSelector({ value, onChange, disabled, referentialCode }: Props) {
+  const phases: WbsPhase[] = useMemo(() => {
+    if (!referentialCode) return WBS_REFERENTIAL;
+    return getPhasesForReferential(referentialCode).map((phase) => ({
+      id: phase.code,
+      label: phase.label,
+      milestones: phase.steps.map((step) => ({
+        id: step.code,
+        label: step.label,
+        tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
+      })),
+    }));
+  }, [referentialCode]);
   const phase = useMemo(() => phases.find((p) => p.id === value.phaseId) ?? null, [phases, value.phaseId]);
   const milestone = useMemo(() => phase?.milestones.find((m) => m.id === value.milestoneId) ?? null, [phase, value.milestoneId]);
 
@@ -28,12 +43,13 @@ export function WbsSelector({ value, onChange, disabled }: Props) {
       <div>
         <Label>Phase</Label>
         <Select
-          value={value.phaseId ?? ''}
-          onValueChange={(v) => onChange({ phaseId: v || null, milestoneId: null, taskId: null })}
+          value={value.phaseId ?? NONE}
+          onValueChange={(v) => onChange({ phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}
           disabled={disabled}
         >
           <SelectTrigger><SelectValue placeholder="Phase WBS" /></SelectTrigger>
           <SelectContent>
+            <SelectItem value={NONE}>Non assignée</SelectItem>
             {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -41,12 +57,13 @@ export function WbsSelector({ value, onChange, disabled }: Props) {
       <div>
         <Label>Jalon</Label>
         <Select
-          value={value.milestoneId ?? ''}
-          onValueChange={(v) => onChange({ ...value, milestoneId: v || null, taskId: null })}
+          value={value.milestoneId ?? NONE}
+          onValueChange={(v) => onChange({ ...value, milestoneId: v === NONE ? null : v, taskId: null })}
           disabled={disabled || !phase}
         >
           <SelectTrigger><SelectValue placeholder={phase ? 'Jalon' : 'Sélectionner phase'} /></SelectTrigger>
           <SelectContent>
+            <SelectItem value={NONE}>Non assigné</SelectItem>
             {phase?.milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -54,12 +71,13 @@ export function WbsSelector({ value, onChange, disabled }: Props) {
       <div>
         <Label>Tâche</Label>
         <Select
-          value={value.taskId ?? ''}
-          onValueChange={(v) => onChange({ ...value, taskId: v || null })}
+          value={value.taskId ?? NONE}
+          onValueChange={(v) => onChange({ ...value, taskId: v === NONE ? null : v })}
           disabled={disabled || !milestone}
         >
           <SelectTrigger><SelectValue placeholder={milestone ? 'Tâche' : 'Sélectionner jalon'} /></SelectTrigger>
           <SelectContent>
+            <SelectItem value={NONE}>Non assignée</SelectItem>
             {milestone?.tasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>

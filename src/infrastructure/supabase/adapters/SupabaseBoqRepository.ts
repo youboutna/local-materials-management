@@ -6,7 +6,7 @@
  *   - dqe                → public.tender_estimate_items (source='dqe')
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 import { BoqLineMapper, type BoqDbRow } from '@/dtos/boq/BoqLineMapper';

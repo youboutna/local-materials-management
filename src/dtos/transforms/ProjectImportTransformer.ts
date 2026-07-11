@@ -96,7 +96,7 @@ export class ProjectImportTransformer {
       marketType: toStr(pick(raw, 'marketType', 'market_type', 'type_marche')) as ProjectImportRow['marketType'],
       selectionMode: toStr(pick(raw, 'selectionMode', 'selection_mode', 'mode_selection')) as ProjectImportRow['selectionMode'],
       projectType: toStr(pick(raw, 'projectType', 'project_type', 'type_projet')),
-      referentialCode: toStr(pick(raw, 'referentialCode', 'referential', 'referentiel')),
+      referentialCode: toStr(pick(raw, 'referentialCode', 'referential', 'referentiel')) as ProjectImportRow['referentialCode'],
       attributionDate: toStr(pick(raw, 'attributionDate', 'attribution_date')),
       launchDate: toStr(pick(raw, 'launchDate', 'launch_date')),
       completionDate: toStr(pick(raw, 'completionDate', 'completion_date')),

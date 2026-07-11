@@ -12,6 +12,7 @@ import { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
 
 // Import ProjectResource for resource assignments
 import { ProjectResource } from '@/domain/entities/Project';
+import type { ReferentialType } from '@/config/referentials';
 
 // Project Location Data Interface - Enhanced location handling
 export interface ProjectLocationData {
@@ -384,6 +385,8 @@ export interface ProjectDTO extends BaseEntityDTO {
   priorityLevel?: "faible" | "moyenne" | "elevee" | "tresElevee";
   riskLevel?: "faible" | "moyen" | "eleve" | "critique";
   projectReference?: string;
+  /** Référentiel métier actif pour générer phases, jalons, tâches, WBS et parsing BOQ. */
+  referentialCode?: ReferentialType;
   selectionMode?: string;
   financingSource?: string;
   marketType?: string;
@@ -726,6 +729,7 @@ export interface CreateProjectDTO {
 
   // Additional setup
   projectReference?: string;
+  referentialCode?: ReferentialType;
   methodology?: "waterfall" | "agile" | "hybrid";
   estimatedDurationDays?: number;
 
@@ -832,6 +836,7 @@ export interface CreateProjectRequestDTO {
   environmentalConstraints?: string;
   areaSqm?: number;
   projectReferenceNumber?: string;
+  referentialCode?: ReferentialType;
   projectOrder?: string;
   clientId?: string;
   currentPhase?: string;

@@ -22,6 +22,7 @@ import type {
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
+import type { ReferentialType } from '@/config/referentials';
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status'>> {
   title: string;
@@ -40,7 +41,7 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   /** Zones bénéficiaires (multi-polygones). */
   interventionZones?: InterventionZoneDTO[];
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
-  referentialCode?: string;
+  referentialCode?: ReferentialType;
 }
 
 

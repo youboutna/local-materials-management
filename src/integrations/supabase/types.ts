@@ -5926,6 +5926,7 @@ export type Database = {
       project_phases: {
         Row: {
           actual_cost: number | null
+          actual_duration: number | null
           construction_phase: string | null
           construction_stage: string | null
           created_at: string | null
@@ -5955,6 +5956,7 @@ export type Database = {
         }
         Insert: {
           actual_cost?: number | null
+          actual_duration?: number | null
           construction_phase?: string | null
           construction_stage?: string | null
           created_at?: string | null
@@ -5984,6 +5986,7 @@ export type Database = {
         }
         Update: {
           actual_cost?: number | null
+          actual_duration?: number | null
           construction_phase?: string | null
           construction_stage?: string | null
           created_at?: string | null
@@ -6183,6 +6186,7 @@ export type Database = {
           project_responsable_id: string | null
           project_type: string | null
           reception_status: string | null
+          referential_code: string | null
           requires_consultant_validation: boolean | null
           requires_ministry_approval: boolean | null
           requires_permits: boolean | null
@@ -6257,6 +6261,7 @@ export type Database = {
           project_responsable_id?: string | null
           project_type?: string | null
           reception_status?: string | null
+          referential_code?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
           requires_permits?: boolean | null
@@ -6331,6 +6336,7 @@ export type Database = {
           project_responsable_id?: string | null
           project_type?: string | null
           reception_status?: string | null
+          referential_code?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
           requires_permits?: boolean | null
