@@ -13,6 +13,7 @@ import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
 import { ReportManager } from "@/components/reports/ReportManager";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
+import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import { GanttChart, PERTDiagram, KanbanBoard, CriticalPathView, ProjectTimeline } from "@/components/planning";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
