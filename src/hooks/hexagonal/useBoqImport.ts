@@ -48,5 +48,11 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     } finally { setBusy(false); }
   }, [dtos]);
 
+  // Re-classify existing rows when the project referential changes.
+  useEffect(() => {
+    if (parseResult) setDtos(BoqImportOrchestrator.toDtos(parseResult.rows, mapping, ctx));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctx.referentialCode]);
+
   return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos };
 }
