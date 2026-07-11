@@ -18,6 +18,9 @@ import { toast } from "@/hooks/use-toast";
 import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
+import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
+import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
+import type { BoqResourceType } from "@/domain/boq/BoqLine";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -289,7 +292,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+  const [resourceType, setResourceType] = useState<BoqResourceType>("material");
+  const [unitPriceOverride, setUnitPriceOverride] = useState<string>("");
   const [savingAll, setSavingAll] = useState(false);
+  const [sendingBoq, setSendingBoq] = useState(false);
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
 
@@ -352,6 +358,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       setSavingAll(false);
     }
   };
+
+  const buildBoqDto = (calc: CalculationResult): BoqLineDTO => {
+    const { qty, unit } = extractQuantity(calc);
+    const puNum = parseFloat(unitPriceOverride);
+    const unitPrice = Number.isFinite(puNum) && puNum > 0 ? puNum : null;
+    const material = materials.find((m: any) => m.id === selectedMaterialId);
+    const designation = calc.originalLabel
+      || getElementLabel(calc.elementType || 'basic_calculator')
+      || material?.name
+      || 'Ligne calculée';
+    return {
+      source: 'quantity_takeoff',
+      contextId: projectId ?? '',
+      designation,
+      elementType: calc.elementType ?? null,
+      unit,
+      length: calc.dimensions?.length ?? null,
+      width: calc.dimensions?.width ?? null,
+      height: calc.dimensions?.height ?? null,
+      quantity: qty,
+      unitPrice,
+      totalHt: unitPrice != null ? qty * unitPrice : null,
+      materialId: selectedMaterialId || null,
+      phaseId: phaseId ?? null,
+      resourceType,
+      note: JSON.stringify({ source: 'AdvancedQuantityCalculator', results: calc.results }),
+    };
+  };
+
+  const handleSendToBoq = async () => {
+    if (!projectId) {
+      toast({ title: "Contexte projet manquant", description: "Ouvrez le calculateur depuis un projet.", variant: "destructive" });
+      return;
+    }
+    if (calculations.length === 0) return;
+    setSendingBoq(true);
+    try {
+      const lines = calculations.map(buildBoqDto);
+      await boqRepository.bulkCreate(lines);
+      window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source: 'quantity_takeoff', projectId, count: lines.length } }));
+      toast({ title: "Envoyé vers le BOQ", description: `${lines.length} ligne(s) ajoutée(s) aux Métrés du projet.` });
+      onPersisted?.();
+    } catch (e: any) {
+      toast({ title: "Erreur BOQ", description: e?.message ?? "Échec de l'envoi", variant: "destructive" });
+    } finally {
+      setSendingBoq(false);
+    }
+  };
+
 
 
 
@@ -645,7 +700,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             {projectId && (
               <div className="flex flex-wrap items-end gap-2 border-t pt-3">
                 <div className="flex-1 min-w-[220px]">
-                  <Label className="text-xs">Matériau de référence (requis)</Label>
+                  <Label className="text-xs">Matériau de référence</Label>
                   <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
                     <SelectContent>
@@ -655,12 +710,42 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="min-w-[160px]">
+                  <Label className="text-xs">Type de ressource</Label>
+                  <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="material">Matériau</SelectItem>
+                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
+                      <SelectItem value="equipment">Équipement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="min-w-[120px]">
+                  <Label className="text-xs">PU (optionnel)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={unitPriceOverride}
+                    onChange={(e) => setUnitPriceOverride(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
                 <Button
                   onClick={handleSaveAll}
                   disabled={savingAll || !selectedMaterialId || calculations.length === 0}
+                  variant="secondary"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s) dans le projet`}
+                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s)`}
+                </Button>
+                <Button
+                  onClick={handleSendToBoq}
+                  disabled={sendingBoq || calculations.length === 0}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
                 </Button>
                 {phaseId && <Badge variant="outline" className="ml-2">Phase associée</Badge>}
               </div>
