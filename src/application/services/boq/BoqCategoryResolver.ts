@@ -17,16 +17,18 @@ export interface ResolvedCategory {
 
 /** Keyword → WBS task mapping (FR construction vocabulary). */
 const TASK_KEYWORDS: Array<{ rx: RegExp; phaseId: string; milestoneId: string; taskId: string }> = [
+  // Installation / Préparation
+  { rx: /installation\s*de\s*chantier|repli|amen[eé]e|d[eé]broussaillage|implantation|piquetage/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
   // Fondations
-  { rx: /fouille|terrassement|d[eé]blai/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
-  { rx: /b[eé]ton\s*(de\s*)?propret[eé]/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'beton-proprete' },
-  { rx: /semelle/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'semelles' },
-  { rx: /longrine|chainage\s*bas/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'longrines' },
+  { rx: /fouille|terrassement|d[eé]blai|remblai|h[eé]risson|forme\s*en\s*[eé]?paisseur|film\s*polyane/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'terrassement' },
+  { rx: /b[eé]ton\s*(de\s*)?propret[eé]|gros\s*b[eé]ton/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'beton-proprete' },
+  { rx: /semelle|radier/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'semelles' },
+  { rx: /longrine|chainage\s*bas|amorce\s*de\s*poteau/i, phaseId: 'gros-oeuvre', milestoneId: 'fondations', taskId: 'longrines' },
   // Élévation
   { rx: /poteau|raidisseur/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poteaux' },
   { rx: /poutre|linteau|chainage\s*haut/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'poutres' },
   { rx: /dalle|plancher|paillasse/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'dalles' },
-  { rx: /ma[cç]onnerie|mur|cloison\s*brique|agglo/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'murs-porteurs' },
+  { rx: /ma[cç]onnerie|mur|cloison\s*brique|agglo(m[eé]r[eé]s?)?\s*(creux|pleins?)?|parpaing|brique/i, phaseId: 'gros-oeuvre', milestoneId: 'elevation', taskId: 'murs-porteurs' },
   // Hors d'eau
   { rx: /charpente/i, phaseId: 'gros-oeuvre', milestoneId: 'hors-eau', taskId: 'charpente' },
   { rx: /couverture|toiture|tuile/i, phaseId: 'gros-oeuvre', milestoneId: 'hors-eau', taskId: 'couverture' },
