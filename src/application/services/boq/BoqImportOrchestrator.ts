@@ -64,7 +64,7 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string },
+    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
     for (const row of rows) {
@@ -82,14 +82,15 @@ export class BoqImportOrchestrator {
       const height = num(get(mapping.height));
       const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
 
-      // Compute quantity from L×l×h when the sheet omits a Quantity column.
       const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length, width, height });
       if (!designation && !quantity) continue;
 
-      // Explicit phase from source column, else fallback to ctx.phaseId,
-      // else infer from designation keywords.
+      // Explicit phase from source column, else fallback to ctx.phaseId, else infer
+      // via the project referential (SOMELEC / PNDS / …) or static WBS keywords.
       const explicitPhase = mapping.phaseId ? String(get(mapping.phaseId) ?? '').trim() : '';
-      const resolved = explicitPhase ? {} : BoqCategoryResolver.resolve(designation);
+      const resolved = explicitPhase
+        ? { resourceType: undefined as BoqResourceType | undefined }
+        : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
       const phaseId = ctx.phaseId ?? explicitPhase ?? resolved.phaseId ?? null;
 
       const dto: BoqLineDTO = {
@@ -107,7 +108,7 @@ export class BoqImportOrchestrator {
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
-        resourceType: 'material',
+        resourceType: (resolved.resourceType as BoqResourceType) ?? 'material',
       };
       out.push(dto);
     }
