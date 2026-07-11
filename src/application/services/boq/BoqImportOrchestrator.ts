@@ -72,14 +72,18 @@ export class BoqImportOrchestrator {
         const n = Number(String(v).replace(/\s+/g, '').replace(',', '.'));
         return Number.isFinite(n) ? n : null;
       };
-      const qty = num(get(mapping.quantity)) ?? 0;
+      const rawQty = num(get(mapping.quantity));
       const pu = num(get(mapping.unitPrice));
       const designation = String(get(mapping.designation) ?? '').trim();
-      if (!designation && !qty) continue;
-      const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
       const length = num(get(mapping.length));
       const width = num(get(mapping.width));
       const height = num(get(mapping.height));
+      const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
+
+      // Compute quantity from L×l×h when the sheet omits a Quantity column.
+      const { BoqCalculatorService } = await import('./BoqCalculatorService');
+      const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length, width, height });
+      if (!designation && !quantity) continue;
 
       // Explicit phase from source column, else fallback to ctx.phaseId,
       // else infer from designation keywords.
@@ -93,12 +97,12 @@ export class BoqImportOrchestrator {
         designation: designation || (mapping.elementType ? String(get(mapping.elementType) ?? '') : 'Ligne'),
         elementType: mapping.elementType ? String(get(mapping.elementType) ?? '') : null,
         unit,
-        quantity: Number.isFinite(qty) ? qty : 0,
+        quantity: Number.isFinite(quantity) ? quantity : 0,
         length,
         width,
         height,
         unitPrice: pu ?? null,
-        totalHt: pu != null ? qty * pu : null,
+        totalHt: pu != null ? quantity * pu : null,
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
