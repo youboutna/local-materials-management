@@ -489,20 +489,29 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       toast({ title: "Erreur", description: "Dimensions invalides pour l'ouverture", variant: "destructive" });
       return;
     }
+    // Conversion cm/mm → m via AdvancedMeterEngine.toMeters
+    const factor = openingUnit === 'cm' ? 0.01 : openingUnit === 'mm' ? 0.001 : 1;
+    const length = currentOpening.length * factor;
+    const width = currentOpening.width * factor;
+    const heightRaw = currentOpening.height ?? 0;
+    const height = heightRaw > 0 ? heightRaw * factor : undefined;
     setForm(prev => ({
       ...prev,
       openings: [
         ...prev.openings,
         {
           ...currentOpening,
+          length,
+          width,
           id: crypto.randomUUID(),
-          height: form.elementType === "concrete_slab" ? currentOpening.height || form.height : undefined,
+          height: form.elementType === "concrete_slab" ? (height ?? form.height) : height,
         },
       ],
     }));
     setCurrentOpening({ id: "", label: "", length: 0, width: 0, height: 0 });
     setShowOpeningForm(false);
   };
+
 
   const removeOpening = (id: string) => {
     setForm(prev => ({ ...prev, openings: prev.openings.filter(o => o.id !== id) }));
