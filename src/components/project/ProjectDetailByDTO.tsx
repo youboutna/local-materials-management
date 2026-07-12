@@ -14,6 +14,7 @@ import ActionableProjectMilestones from "@/components/project/monitoring/Actiona
 import { ReportManager } from "@/components/reports/ReportManager";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
+import PlanningVarianceView from "@/components/project/PlanningVarianceView";
 import { GanttChart, PERTDiagram, KanbanBoard, CriticalPathView, ProjectTimeline } from "@/components/planning";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1246,6 +1247,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
         <TabsContent value="planning" className="mt-6">
           <ProjectBudgetTracking projectId={projectId!} />
+          <div className="mt-4">
+            <PlanningVarianceView projectId={projectId!} />
+          </div>
           <Tabs defaultValue="gantt" className="space-y-4 mt-4">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
               <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>

@@ -14,6 +14,7 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save, TrendingUp, DollarSig
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCalculator';
+import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -236,12 +237,21 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="workflow">Workflow</TabsTrigger>
               <TabsTrigger value="calculator">Calculateur</TabsTrigger>
+              <TabsTrigger value="devis">Devis</TabsTrigger>
               <TabsTrigger value="templates">Templates</TabsTrigger>
               <TabsTrigger value="analysis">Analyse</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="devis" className="space-y-4">
+              <TenderEstimatorForm
+                tenderId={tenderId}
+                projectId={projectId}
+                onCommitted={() => queryClient.invalidateQueries({ queryKey: ['enhanced-tender-estimates', tenderId] })}
+              />
+            </TabsContent>
 
             <TabsContent value="workflow" className="space-y-4">
               <Card>
