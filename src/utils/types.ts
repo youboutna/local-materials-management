@@ -307,7 +307,7 @@ export const elementTypes = [
   // Concrete elements
     {
     value: "basic_calculator",
-    label: "calcul basic",
+    label: "Saisie rapide",
     requires: ["length", "width", "height"],
     defaultUnit: "m³"
   },
