@@ -375,8 +375,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
 
   const buildBoqDto = (calc: CalculationResult): BoqLineDTO => {
     const { qty, unit } = extractQuantity(calc);
-    const puNum = parseFloat(unitPriceOverride);
-    const unitPrice = Number.isFinite(puNum) && puNum > 0 ? puNum : null;
+    const rowPu = typeof (calc.results as any)?.PU === 'number' ? (calc.results as any).PU : null;
+    const overridePu = parseFloat(unitPriceOverride);
+    const unitPrice = rowPu ?? (Number.isFinite(overridePu) && overridePu > 0 ? overridePu : null);
     const material = materials.find((m: any) => m.id === selectedMaterialId);
     const designation = calc.originalLabel
       || getElementLabel(calc.elementType || 'basic_calculator')
