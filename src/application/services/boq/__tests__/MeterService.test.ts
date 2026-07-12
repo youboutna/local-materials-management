@@ -17,7 +17,7 @@ describe('MeterService', () => {
 
   it('routes advanced elements through the advanced engine', () => {
     const dto: MeterInputDTO = {
-      source: 'dqe', contextId: 'p1', designation: 'Mur',
+      source: 'dqe', contextId: 'p1', designation: 'Mur', quantity: 0,
       elementType: 'masonry_wall', unit: 'm²', length: 4, height: 2.5, unitPrice: 50,
     };
     const r = MeterService.compute(dto);
