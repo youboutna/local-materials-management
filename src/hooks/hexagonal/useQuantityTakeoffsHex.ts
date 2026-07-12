@@ -41,6 +41,26 @@ export function useQuantityTakeoffsHex(projectId: string) {
     },
   });
 
+  // Update mutation (inline edit quantity / unit_price)
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, quantity, unit_price }: { id: string; quantity?: number; unit_price?: number }) => {
+      await quantityTakeoffService.updateQuantityTakeoff(id, {
+        ...(quantity !== undefined ? { quantity } : {}),
+        ...(unit_price !== undefined ? { unit_price } : {}),
+        // service uses project_id to locate the existing takeoff
+        ...( { project_id: projectId } as unknown as { project_id: string }),
+      } as never);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });
+      toast({ title: 'Métré mis à jour', description: 'La ligne a été enregistrée.' });
+    },
+    onError: (error) => {
+      console.error('Error updating quantity takeoff:', error);
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la ligne.', variant: 'destructive' });
+    },
+  });
+
   // Helper functions using local data (synchronous)
   const getTotalQuantityByUnit = (unit: string): number => {
     if (!quantityTakeoffs) return 0;
