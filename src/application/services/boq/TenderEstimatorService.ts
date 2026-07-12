@@ -10,6 +10,7 @@
  *     unchanged.
  */
 import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
+import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/boq/BoqLine';
@@ -49,7 +50,8 @@ function resolveResourceType(cat: TenderCategory): BoqResourceType {
 
 export class TenderEstimatorService {
   /** Live preview totals — pure, use in components without a network round trip. */
-  static summarize(lines: TenderEstimatorLineInput[]): TenderEstimatorSummary {
+  static summarize(lines: TenderEstimatorLineInput[], fiscalProfileCode?: string): TenderEstimatorSummary {
+    const profile = getFiscalProfile(fiscalProfileCode);
     const byCategory: Record<TenderCategory, BoqLineTotals> = {
       material: { ...EMPTY },
       labour: { ...EMPTY },
@@ -57,7 +59,7 @@ export class TenderEstimatorService {
       overhead: { ...EMPTY },
     };
     for (const l of lines) {
-      const t = BoqCalculatorService.computeTotals(l);
+      const t = BoqCalculatorService.computeTotals(l, profile);
       const bucket = byCategory[l.category] ?? byCategory.material;
       byCategory[l.category] = {
         quantity: bucket.quantity + t.quantity,
@@ -66,19 +68,20 @@ export class TenderEstimatorService {
         totalTtc: bucket.totalTtc + t.totalTtc,
       };
     }
-    const totals = BoqCalculatorService.aggregate(lines);
+    const totals = BoqCalculatorService.aggregate(lines, profile);
     return { totals, byCategory, lineCount: lines.length };
   }
 
   /** Convert estimator lines into the canonical BoqLineDTO shape. */
   static toBoqLines(
     lines: TenderEstimatorLineInput[],
-    ctx: { tenderId: string; projectId?: string; submittedBy?: string | null },
+    ctx: { tenderId: string; projectId?: string; submittedBy?: string | null; fiscalProfileCode?: string },
   ): BoqLineDTO[] {
+    const profile = getFiscalProfile(ctx.fiscalProfileCode);
     return lines
       .filter((l) => (l.designation || '').trim().length > 0)
       .map<BoqLineDTO>((l) => {
-        const t = BoqCalculatorService.computeTotals(l);
+        const t = BoqCalculatorService.computeTotals(l, profile);
         return {
           source: 'tender_estimate',
           contextId: ctx.tenderId,
@@ -89,7 +92,7 @@ export class TenderEstimatorService {
           width: l.width ?? null,
           height: l.height ?? null,
           unitPrice: l.unitPrice ?? null,
-          vatRate: l.vatRate ?? null,
+          vatRate: l.vatRate ?? profile.vatRate,
           totalHt: t.totalHt,
           materialId: l.materialId ?? null,
           phaseId: l.phaseId ?? null,
