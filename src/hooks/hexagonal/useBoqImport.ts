@@ -50,7 +50,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
 
   // Re-classify existing rows when the project referential changes.
   useEffect(() => {
-    if (parseResult) setDtos(BoqImportOrchestrator.toDtos(parseResult.rows, mapping, ctx));
+    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, ctx));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.referentialCode]);
 
