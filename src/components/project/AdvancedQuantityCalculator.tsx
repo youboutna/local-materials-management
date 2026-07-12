@@ -616,6 +616,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     link.click();
     URL.revokeObjectURL(url);
   };
+  const isImported = (calc: CalculationResult) =>
+    Boolean((calc.metadata as any)?.imported) || (calc.elementType === 'basic_calculator' && !calc.dimensions);
+
   const handleEdit = (i: number) => {
     const calc = calculations[i];
     setEditIndex(i);
@@ -625,6 +628,34 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       height: calc.dimensions?.height || 0,
       openings: calc.openings ? [...calc.openings] : [],
     });
+    const r = (calc.results || {}) as Record<string, any>;
+    setEditImported({
+      designation: calc.originalLabel ?? '',
+      unit: (calc.metadata as any)?.unit ?? '',
+      quantity: typeof r['Quantité'] === 'number' ? r['Quantité'] : 0,
+      unitPrice: typeof r['PU'] === 'number' ? r['PU'] : 0,
+    });
+  };
+
+  const handleSaveEditImported = () => {
+    if (editIndex === null) return;
+    const total = (editImported.quantity || 0) * (editImported.unitPrice || 0);
+    setCalculations((prev) =>
+      prev.map((c, i) =>
+        i === editIndex
+          ? {
+              ...c,
+              originalLabel: editImported.designation,
+              metadata: { ...(c.metadata || {}), unit: editImported.unit || (c.metadata as any)?.unit },
+              results: {
+                Quantité: editImported.quantity,
+                ...(editImported.unitPrice ? { PU: editImported.unitPrice, 'Total HT': total } : {}),
+              },
+            }
+          : c,
+      ),
+    );
+    setEditIndex(null);
   };
 
   const handleSaveEdit = () => {
