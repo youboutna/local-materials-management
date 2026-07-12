@@ -22,9 +22,11 @@ export interface Dimensions {
 }
 
 export interface CalculationResult {
- 
+
   originalLabel?: string;
   elementType?: string;
+  elementLabel?: string;
+  timestamp?: string;
   dimensions?: Dimensions;
   openings?: Opening[];
   results?: Record<string, number | string>;
@@ -43,10 +45,18 @@ export interface CalculationResult {
     updated_at?: string;
     tax_rate?: number | null;
     tax_amount?: number | null;
-    // Extended optional fields used by parsers
     isFixedPrice?: boolean;
     section?: string;
     originalUnit?: string;
+    // Champs additionnels utilisés par le calculateur / parseurs BOQ
+    imported?: boolean;
+    source?: string;
+    file?: string;
+    resourceType?: string;
+    recommendation?: boolean;
+    phaseId?: string | null;
+    milestoneId?: string | null;
+    taskId?: string | null;
   };
 }
 export interface MasonryMaterials extends CalculationResult {

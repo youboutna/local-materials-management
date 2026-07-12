@@ -23,6 +23,7 @@ import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
 import type { BoqResourceType } from "@/domain/boq/BoqLine";
 import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
 import { BoqImportOrchestrator } from "@/application/services/boq/BoqImportOrchestrator";
+import { getRecommendationItems } from "@/utils/recommendations";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -316,6 +317,34 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
 
+  // Matériau sélectionné → hydrate PU + unité de référence (avant tout calcul).
+  const selectedMaterial = React.useMemo(
+    () => (materials as any[]).find((m: any) => m?.id === selectedMaterialId),
+    [materials, selectedMaterialId],
+  );
+  const [autoRecs, setAutoRecs] = useState(true);
+
+  // Auto-remplissage du PU par défaut dès qu'un matériau est choisi (sans écraser
+  // une saisie manuelle explicite).
+  const priceAutoFilledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedMaterial) return;
+    const price = Number(
+      (selectedMaterial as any).pricePerUnit ??
+      (selectedMaterial as any).unit_price ??
+      (selectedMaterial as any).unitPrice ??
+      NaN,
+    );
+    if (!Number.isFinite(price) || price <= 0) return;
+    // N'écrase pas une valeur non issue de l'auto-fill précédent.
+    const previousAuto = priceAutoFilledRef.current;
+    if (unitPriceOverride && unitPriceOverride !== previousAuto) return;
+    const nextValue = String(price);
+    setUnitPriceOverride(nextValue);
+    priceAutoFilledRef.current = nextValue;
+  }, [selectedMaterial, unitPriceOverride]);
+
+
 
   // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
@@ -537,7 +566,51 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         },
       };
       const result = calculateAdvancedQuantities(params);
-      setCalculations(prev => [...prev, { ...result, timestamp: new Date().toISOString(), elementLabel: form.elementType }]);
+      const baseCalc: CalculationResult = { ...result, timestamp: new Date().toISOString(), elementLabel: form.elementType };
+
+      // Génère 1 ligne article par recommandation quand un matériau est choisi.
+      // Le PU/unité proviennent du dépôt matériaux (auto-hydraté) et peuvent
+      // être ajustés par ligne dans l'aperçu.
+      const recos = autoRecs ? getRecommendationItems(form.elementType) : [];
+      const parsedOverride = parseFloat(unitPriceOverride);
+      const catalogPu = Number(
+        (selectedMaterial as any)?.pricePerUnit ??
+        (selectedMaterial as any)?.unit_price ??
+        (selectedMaterial as any)?.unitPrice ??
+        NaN,
+      );
+      const recoPu = Number.isFinite(parsedOverride) && parsedOverride > 0
+        ? parsedOverride
+        : (Number.isFinite(catalogPu) && catalogPu > 0 ? catalogPu : undefined);
+      const recoUnit: string = (selectedMaterial as any)?.unit
+        || (typeof (baseCalc.metadata as any)?.unit === 'string' ? (baseCalc.metadata as any).unit : 'unité');
+      const materialName: string | undefined = (selectedMaterial as any)?.name;
+
+      const recoLines: CalculationResult[] = (selectedMaterialId && recos.length > 0)
+        ? recos.map((rec) => ({
+            elementType: form.elementType,
+            originalLabel: `${getElementLabel(form.elementType)} — ${rec.label}${materialName ? ` (${materialName})` : ''}`,
+            results: {
+              Quantité: rec.quantity ?? 1,
+              ...(recoPu != null ? { PU: recoPu, 'Total HT': (rec.quantity ?? 1) * recoPu } : {}),
+            },
+            metadata: {
+              unit: rec.unit ?? recoUnit,
+              recommendation: true,
+              resourceType,
+              phaseId: phaseId ?? null,
+            },
+            timestamp: new Date().toISOString(),
+          } as CalculationResult))
+        : [];
+
+      setCalculations(prev => [...prev, baseCalc, ...recoLines]);
+      if (recoLines.length > 0) {
+        toast({
+          title: 'Calcul + recommandations',
+          description: `1 ligne principale + ${recoLines.length} recommandation(s) ajoutée(s).`,
+        });
+      }
       resetForm();
     } catch (error) {
       toast({ title: "Erreur de calcul", description: error instanceof Error ? error.message : "Erreur inconnue", variant: "destructive" });
@@ -868,6 +941,21 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
               </div>
             </div>
           )}
+
+
+          {/* Option: générer 1 ligne article par recommandation. */}
+          {projectId && selectedMaterialId && getRecommendationItems(form.elementType).length > 0 && (
+            <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={autoRecs}
+                onChange={(e) => setAutoRecs(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Générer une ligne article par recommandation ({getRecommendationItems(form.elementType).length}) en utilisant le PU / unité du matériau
+            </label>
+          )}
+
 
           {/* Actions principales */}
           <div className="mt-4 flex flex-wrap gap-2">
