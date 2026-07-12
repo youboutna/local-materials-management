@@ -1,82 +1,72 @@
 
-# Plan d'exécution — Intégration DQE / Calculateur / Contexte
+# Plan d'exécution — DQE / Tender / Portail Fournisseur (batch parallèle)
 
-Livraison en 4 lots parallélisables. Aucune nouvelle vue : tout se greffe sur `AdvancedQuantityCalculator`, `BoqImportDialog`, `ProjectDqeTab` et l'onglet Planification existant.
+Objectif : consolider les 3 interfaces sur une base unique, corriger d'abord les bugs bloquants visibles sur les captures, puis mutualiser sans créer de nouvel écran.
 
-## Lot A — Moteur unifié & ouvertures (Phase 1 + 3)
+## Batch A — Bugs bloquants (P0, en parallèle)
 
-**Domaine** — enrichir `MeterInputDTO` :
-```ts
-openings?: Array<{ width: number; height: number }>; // en mètres
-deductOpenings?: boolean;                            // défaut selon elementType
-```
+A1. **Portail fournisseur `/supplier-portal?tab=tenders`** (image annotée)
+- Symptôme : code validé, toast "Accès autorisé", mais l'onglet reste sur la carte "Accès Sécurisé".
+- Fix : dans `UnifiedSupplierPortal.tsx`, après validation du code invité, forcer `tab=tenders` et rendre le contenu des onglets (Appels d'Offres / Documents / Télécharger / Paiements / Notifications / Tâches / Inspections / Factures) au lieu de garder `SecretUnlockedView`. Persister le déverrouillage (sessionStorage clé `tenderId+secret`) pour ne pas re-demander à chaque navigation d'onglet.
 
-**Référentiel** — ajouter `deductOpenings` dans `element-types.referential.ts` (mur=true, cloison=true, dalle=false, poutre=false…).
+A2. **Type d'élément "Saisie rapide" bloque l'ajout** (image-71)
+- Symptôme : bouton "Calculer et ajouter" en rouge/désactivé quand `elementType='saisie_rapide'` sans dimensions.
+- Fix : dans `AdvancedQuantityCalculator.tsx`, autoriser le mode "Saisie rapide" sans L×l×h (quantité manuelle uniquement, unité libre) ; adapter la validation `canAdd` et le label du bouton.
 
-**Service** — créer `AdvancedMeterEngine.compute(dto)` (dans `src/application/services/boq/`) qui :
-- convertit unités (déjà via `normalizeUnit`),
-- calcule surface brute L×H,
-- soustrait Σ(ouvertures) si `deductOpenings`,
-- applique formules du référentiel (ferraillage, coffrage, béton) via `formulas.referential.ts`.
+A3. **Import DQE : `Métrés` reste à 0 MRU / 0 lignes** (image-72)
+- Symptôme : import réussi mais KPI DQE/Métrés non rafraîchis.
+- Fix : garantir l'émission `boq-imported` + `boq-kpi-refresh` dans `useBoqImport` après `bulkCreate`, et écoute dans `ProjectDqeTab` + `QuantityTakeoffs`. Vérifier que `source='dqe'` est bien filtré côté `SupabaseBoqRepository.list`.
 
-**UI** — `AdvancedQuantityCalculator` :
-- sous-composant `OpeningsInput` (liste éditable, unités cm/mm/m avec conversion auto),
-- affichage récap : surface brute → ouvertures → surface nette,
-- même moteur consommé par le flux « importer ».
+A4. **Ligne 28/29 "calcul basic" au lieu de "Saisie rapide"** (image-70)
+- Fix : renommer partout le libellé UI dans `AdvancedQuantityCalculator` et le tableau résultats.
 
-## Lot B — Libellés & colonnes (Phase 2)
+A5. **Bouton `project.cancel` non traduit** (image-71) — clé i18n manquante, ajouter la traduction FR/EN.
 
-- `« calcul basic »` → `« Saisie rapide »`
-- `« calcul avancé »` → `« Détail estimatif »`
-- Colonnes tableau résultats : `Ressource | Unité | Qté théorique | Coeff | Qté totale | PU HT | Total HT`
-- Renommer `CALCULS` → `Détail des ressources` dans `AdvancedQuantityCalculator`.
+## Batch B — Mutualisation composants (P1, en parallèle après A)
 
-## Lot C — Pagination réelle (Phase 4)
+B1. `ResourceSelector` unique (matériaux/main-d'œuvre/équipement) — extraire depuis `AdvancedQuantityCalculator` et `TenderEstimatorForm`, réutiliser dans `BoqImportDialog` mapping.
+B2. `ResultTable` unique — fusionner `BoqLineTable` + tableau interne du calculateur (édition inline, pagination, suppression déjà présentes dans `BoqLineTable`).
+B3. `MappingModal` — extraire l'assistant de mapping de `BoqImportDialog` en composant partagé consommé par le portail fournisseur lors de l'import de devis.
+B4. `UnifiedBoqParser` déjà en place → brancher aussi l'import de **factures fournisseur** du portail (`/supplier-portal` onglet Factures) sur ce parser.
 
-Remplacer la navigation ligne-par-ligne « Précédent/Suivant » (qui pilote `currentLineIndex` d'un assistant fictif) par une vraie pagination du tableau :
-- `pageSize` configurable (10 par défaut),
-- boutons ← / → naviguent entre pages,
-- compteur `Page X / N — Ligne A à B sur T`,
-- input « aller à la page ».
+## Batch C — Services métier (P1)
 
-Retirer `currentLineIndex` / auto-fill formulaire depuis import (déjà signalé comme confusant par l'utilisateur).
+C1. `MeterService` = façade orchestrant `BoqCalculatorService` + `AdvancedMeterEngine` (Basic vs Advanced) — supprime les branches dupliquées dans les composants.
+C2. `ResourceService` : centraliser lookup PU/TVA/taxes (aujourd'hui éparpillé dans `MaterialPriceResolver` + hooks). Une seule source pour saisie & import.
+C3. `AlignmentService` : persister l'historique nom extrait → `resource_id` (table `btp.boq_alignment_history`, migration incluse) pour l'auto-mapping cross-import.
+C4. `DevisGenerator` : agrégation par WBS + export PDF/CSV, réutilisé par DQE, Tender et Portail.
 
-## Lot D — Contexte projet/phase/tâche & mapping (Phases 5–7)
+## Batch D — Prix, taxes, contexte (P2)
 
-**Header contextuel** dans `AdvancedQuantityCalculator` et `BoqImportDialog` :
-- Sélecteurs Projet (readonly si `/projects/{uuid}`) / Phase / Tâche, alimentés par `getReferentialOptions(referentialCode)`.
-- Persistance sur `MeterInputDTO.phaseId / taskId / contextId`.
+D1. En saisie : PU **lecture seule** dérivé de `ResourceService` ; dérogation par ligne trace un `override_reason`.
+D2. En import : détection d'écart PU extrait vs BDD > seuil (référentiel `deviation-rules`) → badge + choix conserver/aligner.
+D3. TVA + frais généraux appliqués uniformément (Basic + Advanced) via `BoqCalculatorService.computeTotals`.
+D4. Sélecteur projet/phase/tâche unifié en haut de chaque interface (composant existant `WbsSelector`, à hisser au niveau page).
 
-**Mapping matériaux** :
-- Manuel : sélecteur `MaterialPicker` (existant) — PU/TVA auto-remplis.
-- Import : `MaterialPriceResolver` déjà en place, on ajoute fallback « ressource temporaire » avec badge ⚠ dans le tableau.
-- Filtrage ressources par phase (Gros œuvre → béton/acier ; Second œuvre → cloisons/revêtements) via `resource-phase-affinity.referential.ts` (nouveau, mais fichier de config, pas de vue).
+## Batch E — Planification & écarts (P2)
 
-**Planification** :
-- L'onglet Planification (`PlanningVarianceView` existant) reçoit `phaseId` et `taskId` et regroupe déjà par phase — on ajoute regroupement par tâche + sous-totaux HT/TTC.
+E1. `PlanningVarianceView` déjà en place → alimenter depuis `VarianceService` avec `execution_lines` (flag `is_executed` sur `boq_lines`).
+E2. Export PDF/CSV du devis planifié et du rapport d'écart via `DevisGenerator`.
 
-## Lot E — Tests (Phase 8)
+## Batch F — Tests & garde-fous (P2)
 
-Vitest :
-- `AdvancedMeterEngine.spec.ts` — surface brute/nette, conversions cm/mm/m, deductOpenings on/off.
-- `UnifiedBoqParser.spec.ts` — extraction ouvertures depuis PDF SOMELEC & Excel HADRATECH.
-- `pagination.spec.tsx` — tableau paginé, navigation, compteur.
+- Scan `rg "supabase\.from\("` dans `src/components` et `src/hooks` → doit être vide (règle mémoire).
+- Tests unitaires : `BoqCalculatorService`, `AdvancedMeterEngine`, `AlignmentService`, `VarianceService`.
+- Test e2e minimal des 3 parcours (DQE → Tender → Portail).
 
-## Fichiers touchés (aucun nouveau composant visuel)
+## Ordre d'exécution proposé
 
-- `src/dtos/boq/MeterInputDTO.ts` — champ `openings`, `deductOpenings`.
-- `src/config/referentials/boq/element-types.referential.ts` — flag `deductOpenings`.
-- `src/config/referentials/boq/resource-phase-affinity.referential.ts` — nouveau (config).
-- `src/application/services/boq/AdvancedMeterEngine.ts` — nouveau service (pas d'UI).
-- `src/application/services/boq/parsers/PdfBoqParser.ts` + `SpreadsheetBoqParser.ts` — détection `0.90×2.10` → `openings[]`.
-- `src/application/services/boq/BoqImportOrchestrator.ts` — propage `openings` dans DTO.
-- `src/components/project/AdvancedQuantityCalculator.tsx` — refonte pagination + ouvertures + libellés.
-- `src/components/boq/BoqLineTable.tsx` — colonnes renommées.
-- `src/components/boq/BoqImportDialog.tsx` — header contextuel Phase/Tâche.
-- Tests dans `src/**/__tests__/`.
+1. **Turn 1 (parallèle)** : A1, A2, A3, A4, A5 — bugs bloquants uniquement, changements ciblés.
+2. **Turn 2 (parallèle)** : B1–B4 + C1–C2 (extractions sans changement de comportement).
+3. **Turn 3 (parallèle)** : C3, C4, D1–D4 (migration BDD `boq_alignment_history` + branchement).
+4. **Turn 4 (parallèle)** : E1–E2, F (tests).
 
-## Exécution
+Aucune nouvelle page/onglet créé. Les fichiers touchés sont ceux déjà listés dans la codebase (`UnifiedSupplierPortal.tsx`, `AdvancedQuantityCalculator.tsx`, `BoqImportDialog.tsx`, `useBoqImport.ts`, `BoqLineTable.tsx`, `TenderEstimatorForm.tsx`, `ProjectDqeTab.tsx`, `QuantityTakeoffs.tsx`, référentiels existants, services `application/services/boq/*`).
 
-Lots A, B, C, D en batch parallèle (indépendants sur fichiers distincts). Lot E après. Aucun `supabase.from()` en UI ; tout passe par `boqRepository` et hooks hexagonaux existants.
+## Détails techniques (non-utilisateur)
 
-Confirmez « go » et je lance A/B/C/D en parallèle.
+- **A1** : remplacer l'early-return guest de `UnifiedSupplierPortal` par un `unlocked` state qui rend le layout à onglets standard ; utiliser `useSearchParams` pour synchroniser `tab`.
+- **A3** : vérifier que `SupabaseBoqRepository.list({source:'dqe'})` fait bien `.eq('source','dqe')` (déjà présent) et que `ProjectDqeTab` écoute `window.addEventListener('boq-imported', refetch)`.
+- **C3** : migration `CREATE TABLE btp.boq_alignment_history (id uuid pk, extracted_name text, resource_id uuid, resource_type text, occurrences int, created_by uuid, created_at timestamptz)` + GRANT/RLS standard.
+
+Confirmez pour lancer **Turn 1 (batch A)**.
