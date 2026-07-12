@@ -884,7 +884,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
+            <CardTitle>Détail estimatif ({calculations.length} lignes)</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
@@ -895,15 +895,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
                     <th className="border border-gray- px-1 py-1 uppercase">Dimensions</th>
         
-                    <th className="border border-gray-300 px-2 py-1 uppercase">Calculs</th>
+                    <th className="border border-gray-300 px-2 py-1 uppercase">Détail des ressources</th>
                     <th className="border border-gray-300 px-2 py-1 uppercase">Actions</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {calculations.map((calc, i) => (
+                {calculations.slice(pageStart, pageEnd).map((calc, localIdx) => {
+                  const i = pageStart + localIdx;
+                  return (
                     <tr key={i}>{/* No whitespace here */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {getElementLabel(calc.elementType || 'basic_calculator')
                        }
