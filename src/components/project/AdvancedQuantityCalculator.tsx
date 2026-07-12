@@ -621,7 +621,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           total: d.totalHt ?? 0,
         } as InvoiceLine));
         setInvoiceLines(lines);
-        setCurrentLineIndex(0);
+        setPage(0);
+
         toast({
           title: 'Import réussi',
           description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()})${skipped ? ` — ${skipped} en-tête(s) filtré(s)` : ''}.`,
