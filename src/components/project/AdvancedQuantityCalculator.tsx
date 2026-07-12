@@ -910,7 +910,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                         )}
                       </td>
                  <td className="border border-gray-300 px-2 py-1 text-center">
-                      {editIndex === i ? (
+                      {editIndex === i && isImported(calc) ? (
+                        <div className="space-y-2 text-left">
+                          <div>
+                            <Label className="text-xs">Désignation</Label>
+                            <Input
+                              value={editImported.designation}
+                              onChange={(e) => setEditImported((f) => ({ ...f, designation: e.target.value }))}
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <Label className="text-xs">Unité</Label>
+                              <Input
+                                value={editImported.unit}
+                                onChange={(e) => setEditImported((f) => ({ ...f, unit: e.target.value }))}
+                                placeholder="unité"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Quantité</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editImported.quantity}
+                                onChange={(e) => setEditImported((f) => ({ ...f, quantity: parseFloat(e.target.value) || 0 }))}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">PU</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editImported.unitPrice}
+                                onChange={(e) => setEditImported((f) => ({ ...f, unitPrice: parseFloat(e.target.value) || 0 }))}
+                              />
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Total HT ={' '}
+                            {((editImported.quantity || 0) * (editImported.unitPrice || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="default" onClick={handleSaveEditImported}>Valider</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditIndex(null)}>Annuler</Button>
+                          </div>
+                        </div>
+                      ) : editIndex === i ? (
                         <div className="space-y-2">
                           <Input
                             type="number"
