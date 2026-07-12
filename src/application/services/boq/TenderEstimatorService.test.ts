@@ -23,7 +23,7 @@ describe('TenderEstimatorService', () => {
     expect(dtos).toHaveLength(3);
     expect(dtos[0].source).toBe('tender_estimate');
     expect(dtos[0].contextId).toBe('T1');
-    expect(dtos[1].resourceType).toBe('labour');
+    expect(dtos[1].resourceType).toBe('labor');
     expect(dtos[2].resourceType).toBe('equipment');
     expect(dtos[0].totalHt).toBe(10_000);
   });
