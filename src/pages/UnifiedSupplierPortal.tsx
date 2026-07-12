@@ -47,7 +47,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
-import { useParsedInvoicesHex } from "@/hooks/hexagonal/useInvoicesHex";
+import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
+import { parsePdf } from "@/utils/btpCalculations";
 import {
   Supplier,
   SupplierNotification,
