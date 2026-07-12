@@ -23,6 +23,7 @@ import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
 import type { BoqResourceType } from "@/domain/boq/BoqLine";
 import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
 import { BoqImportOrchestrator } from "@/application/services/boq/BoqImportOrchestrator";
+import { getRecommendationItems } from "@/utils/recommendations";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
