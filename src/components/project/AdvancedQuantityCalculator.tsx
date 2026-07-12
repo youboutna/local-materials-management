@@ -312,6 +312,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
     const r = calc.results || {};
     const num = (k: string) => (typeof r[k] === "number" ? (r[k] as number) : undefined);
+    // Imported rows: prefer explicit "Quantité" + metadata.unit.
+    const importedQty = num("Quantité");
+    const importedUnit = (calc.metadata as any)?.unit as string | undefined;
+    if (importedQty != null && importedUnit) return { qty: importedQty, unit: importedUnit };
     const volume = num("Volume béton (m³)") ?? num("Volume (m³)") ?? num("volume");
     if (volume) return { qty: volume, unit: "m³" };
     const area = num("Surface (m²)") ?? num("Surface nette (m²)") ?? num("area");
@@ -320,7 +324,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     if (length) return { qty: length, unit: "m" };
     const count = num("Nombre") ?? num("count");
     if (count) return { qty: count, unit: "unité" };
-    return { qty: 1, unit: calc.metadata?.unit ?? "unité" };
+    if (importedQty != null) return { qty: importedQty, unit: importedUnit || "unité" };
+    return { qty: 1, unit: importedUnit ?? "unité" };
   };
 
   const persistCalculation = async (calc: CalculationResult) => {
