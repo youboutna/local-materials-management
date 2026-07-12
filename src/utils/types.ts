@@ -308,8 +308,8 @@ export const elementTypes = [
     {
     value: "basic_calculator",
     label: "Saisie rapide",
-    requires: ["length", "width", "height"],
-    defaultUnit: "m³"
+    requires: [],
+    defaultUnit: "unité"
   },
   {
     value: "concrete_slab",

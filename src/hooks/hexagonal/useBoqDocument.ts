@@ -2,6 +2,7 @@
  * useBoqDocument — TanStack v5 hook. Reads BOQ lines by source+context and
  * exposes create/bulkCreate/update/delete mutations.
  */
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
@@ -15,6 +16,18 @@ export function useBoqDocument(filter: BoqLineFilter) {
     queryFn: () => boqRepository.list(filter),
     enabled: Boolean(filter.contextId || filter.projectId || filter.estimateId),
   });
+
+  // Global refresh on import / KPI events (fired by BoqImportDialog / AdvancedQuantityCalculator).
+  useEffect(() => {
+    const handler = () => qc.invalidateQueries({ queryKey: ['boq'] });
+    window.addEventListener('boq-imported', handler);
+    window.addEventListener('boq-kpi-refresh', handler);
+    return () => {
+      window.removeEventListener('boq-imported', handler);
+      window.removeEventListener('boq-kpi-refresh', handler);
+    };
+  }, [qc]);
+
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['boq'] });
 

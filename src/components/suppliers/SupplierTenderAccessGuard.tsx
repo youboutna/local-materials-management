@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,16 +14,51 @@ interface SupplierTenderAccessGuardProps {
   children: React.ReactNode;
 }
 
+const SESSION_KEY = 'supplier-tender-secret';
+
 export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps> = ({
   onAccessGranted,
   children
 }) => {
+  const [searchParams] = useSearchParams();
   const [secretCode, setSecretCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [grantedTenderId, setGrantedTenderId] = useState<string | null>(null);
   const [supplierEmail, setSupplierEmail] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Auto-unlock from URL params (redirect from /supplier-access) or persisted session.
+  useEffect(() => {
+    if (hasAccess) return;
+    const urlTid = searchParams.get('tenderId');
+    const urlSecret = searchParams.get('secret');
+    if (urlTid) {
+      setHasAccess(true);
+      setGrantedTenderId(urlTid);
+      const email = searchParams.get('email') ?? '';
+      setSupplierEmail(email);
+      onAccessGranted(urlTid, email);
+      try {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ tenderId: urlTid, secretCode: urlSecret ?? '', email }));
+      } catch { /* noop */ }
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.tenderId) {
+          setHasAccess(true);
+          setGrantedTenderId(parsed.tenderId);
+          setSupplierEmail(parsed.email ?? '');
+          onAccessGranted(parsed.tenderId, parsed.email ?? '');
+        }
+      }
+    } catch { /* noop */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
 
   const handleValidateCode = async () => {
     if (!secretCode.trim()) {
@@ -74,6 +110,9 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
       });
 
       if (validation.tenderId) {
+        try {
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify({ tenderId: validation.tenderId, secretCode: secretCode.trim(), email }));
+        } catch { /* noop */ }
         onAccessGranted(validation.tenderId, email);
       }
     } catch (error: any) {
