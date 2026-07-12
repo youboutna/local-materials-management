@@ -711,8 +711,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           <div className="mt-4 flex flex-wrap gap-3">
             <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer PDF"}</Button>
-            <input type="file" accept="application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
+            <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+
             <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
             <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
             <Button variant="destructive" onClick={() => setCalculations([])}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
