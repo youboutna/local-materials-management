@@ -735,9 +735,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   useEffect(() => {
     if (invoiceLines.length > 0) {
       fillFormWithLine(0);
-      setCurrentLineIndex(0);
     }
   }, [invoiceLines, fillFormWithLine]);
+
 
   useEffect(() => {
     if (["concrete_slab", "masonry_wall"].includes(form.elementType) && form.openings.length === 0) {
