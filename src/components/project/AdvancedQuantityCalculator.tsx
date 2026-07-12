@@ -530,6 +530,35 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     setCalculations((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /** Mise à jour inline (désignation/quantité/PU/unité) sans passer par le mode édition. */
+  const updateCalcInline = (
+    index: number,
+    patch: { designation?: string; unit?: string; quantity?: number; unitPrice?: number },
+  ) => {
+    setCalculations((prev) =>
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        const r = { ...(c.results || {}) } as Record<string, any>;
+        const qty = patch.quantity ?? (typeof r['Quantité'] === 'number' ? r['Quantité'] : 0);
+        const pu = patch.unitPrice ?? (typeof r['PU'] === 'number' ? r['PU'] : undefined);
+        r['Quantité'] = qty;
+        if (pu != null && pu > 0) {
+          r['PU'] = pu;
+          r['Total HT'] = qty * pu;
+        } else if (patch.unitPrice === 0) {
+          delete r['PU'];
+          delete r['Total HT'];
+        }
+        return {
+          ...c,
+          originalLabel: patch.designation ?? c.originalLabel,
+          metadata: { ...(c.metadata || {}), unit: patch.unit ?? (c.metadata as any)?.unit },
+          results: r,
+        };
+      }),
+    );
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -779,79 +808,71 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="mt-4 flex flex-wrap gap-3">
+          {/* Mapping ressources (déplacé depuis résultats) */}
+          {projectId && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
+              <div>
+                <Label className="text-xs">Matériau de référence</Label>
+                <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
+                  <SelectContent>
+                    {materials.map((m: any) => (
+                      <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Type de ressource (défaut)</Label>
+                <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="material">Matériau</SelectItem>
+                    <SelectItem value="labour">Main-d'œuvre</SelectItem>
+                    <SelectItem value="equipment">Équipement / Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">PU par défaut (optionnel)</Label>
+                <Input type="number" step="0.01" min="0" value={unitPriceOverride}
+                  onChange={(e) => setUnitPriceOverride(e.target.value)} placeholder="0.00" />
+              </div>
+            </div>
+          )}
+
+          {/* Actions principales */}
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
             <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-
             <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
             <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
-            <Button variant="destructive" onClick={() => setCalculations([])}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
-            <Button variant="default" onClick={exportToCSV}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
+            {projectId && calculations.length > 0 && (
+              <>
+                <Button onClick={handleSaveAll} disabled={savingAll || !selectedMaterialId} variant="secondary">
+                  <Save className="w-4 h-4 mr-2" />{savingAll ? "Enregistrement..." : `Enregistrer (${calculations.length})`}
+                </Button>
+                <Button onClick={handleSendToBoq} disabled={sendingBoq}>
+                  <Upload className="w-4 h-4 mr-2" />{sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
+                </Button>
+              </>
+            )}
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={exportToCSV} disabled={calculations.length === 0}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
+              <Button variant="destructive" onClick={() => setCalculations([])} disabled={calculations.length === 0}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
+            </div>
           </div>
+          {phaseId && <div className="mt-2"><Badge variant="outline">Phase associée</Badge></div>}
         </CardContent>
       </Card>
 
       {/* Results Table */}
       {calculations.length > 0 && (
         <Card>
-          <CardHeader className="space-y-3">
+          <CardHeader>
             <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
-            {projectId && (
-              <div className="flex flex-wrap items-end gap-2 border-t pt-3">
-                <div className="flex-1 min-w-[220px]">
-                  <Label className="text-xs">Matériau de référence</Label>
-                  <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
-                    <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
-                    <SelectContent>
-                      {materials.map((m: any) => (
-                        <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-[160px]">
-                  <Label className="text-xs">Type de ressource</Label>
-                  <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="material">Matériau</SelectItem>
-                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-[120px]">
-                  <Label className="text-xs">PU (optionnel)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={unitPriceOverride}
-                    onChange={(e) => setUnitPriceOverride(e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-                <Button
-                  onClick={handleSaveAll}
-                  disabled={savingAll || !selectedMaterialId || calculations.length === 0}
-                  variant="secondary"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s)`}
-                </Button>
-                <Button
-                  onClick={handleSendToBoq}
-                  disabled={sendingBoq || calculations.length === 0}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
-                </Button>
-                {phaseId && <Badge variant="outline" className="ml-2">Phase associée</Badge>}
-              </div>
-            )}
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
@@ -893,27 +914,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                         )}
                       </td>
-                       <td className="px-6 py-4 text-sm text-gray-500">
-                        <div className="space-y-1">
-                          {Object.entries(calc.results || {}).map(([key, value]) => (
-                            <div key={key} className="flex justify-between">
-                              <span className="font-medium">{key}</span>
-                              <span>
-                                {typeof value === 'number' 
-                                  ? value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
-                                  : value}
-                              </span>
+                       <td className="px-3 py-2 text-sm text-gray-600 min-w-[280px]">
+                        {isImported(calc) ? (
+                          <div className="space-y-2">
+                            <Input
+                              className="h-8 text-xs"
+                              value={calc.originalLabel ?? ''}
+                              onChange={(e) => updateCalcInline(i, { designation: e.target.value })}
+                              placeholder="Désignation"
+                            />
+                            <div className="grid grid-cols-3 gap-1">
+                              <div>
+                                <Label className="text-[10px]">Unité</Label>
+                                <Input className="h-8 text-xs"
+                                  value={(calc.metadata as any)?.unit ?? ''}
+                                  onChange={(e) => updateCalcInline(i, { unit: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px]">Qté</Label>
+                                <Input className="h-8 text-xs" type="number" step="0.01" min="0"
+                                  value={(calc.results as any)?.['Quantité'] ?? 0}
+                                  onChange={(e) => updateCalcInline(i, { quantity: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px]">PU</Label>
+                                <Input className="h-8 text-xs" type="number" step="0.01" min="0"
+                                  value={(calc.results as any)?.['PU'] ?? 0}
+                                  onChange={(e) => updateCalcInline(i, { unitPrice: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
                             </div>
-                          ))}
-                          <div>
-                          {calc?.metadata && Object.entries(calc.metadata).map(([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
-                          ))}
-                        </div>
-                        </div>
-                        {getRecommendations(calc.elementType || 'basic_calculator') && (
+                            {(calc.results as any)?.['Total HT'] != null && (
+                              <div className="text-xs text-muted-foreground text-right">
+                                Total HT : {Number((calc.results as any)['Total HT']).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {Object.entries(calc.results || {}).map(([key, value]) => (
+                              <div key={key} className="flex justify-between">
+                                <span className="font-medium">{key}</span>
+                                <span>{typeof value === 'number' ? value.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {getRecommendations(calc.elementType || 'basic_calculator') && !isImported(calc) && (
                           <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
                             <div className="font-medium">Recommandations:</div>
                             {getRecommendations(calc.elementType || 'basic_calculator')}
