@@ -383,6 +383,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       || getElementLabel(calc.elementType || 'basic_calculator')
       || material?.name
       || 'Ligne calculée';
+    const meta = (calc.metadata || {}) as any;
+    const rowResource: BoqResourceType = (meta.resourceType as BoqResourceType) ?? resourceType;
+    const rowPhase = meta.phaseId ?? phaseId ?? null;
     return {
       source: 'quantity_takeoff',
       contextId: projectId ?? '',
@@ -395,9 +398,11 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       quantity: qty,
       unitPrice,
       totalHt: unitPrice != null ? qty * unitPrice : null,
-      materialId: selectedMaterialId || null,
-      phaseId: phaseId ?? null,
-      resourceType,
+      materialId: rowResource === 'material' ? (selectedMaterialId || null) : null,
+      phaseId: rowPhase,
+      milestoneId: meta.milestoneId ?? null,
+      taskId: meta.taskId ?? null,
+      resourceType: rowResource,
       note: JSON.stringify({ source: 'AdvancedQuantityCalculator', results: calc.results }),
     };
   };
@@ -564,7 +569,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             ...(d.unitPrice != null ? { PU: d.unitPrice } : {}),
             ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
           },
-          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true },
+          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true, resourceType: d.resourceType ?? 'material', phaseId: d.phaseId ?? null, milestoneId: d.milestoneId ?? null, taskId: d.taskId ?? null },
           timestamp: new Date().toISOString(),
         } as CalculationResult;
       });
@@ -1107,23 +1112,28 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <div className="flex gap-1 justify-center">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(i)}
-                            aria-label="Éditer"
+                        <div className="flex flex-col gap-1 items-stretch min-w-[180px]">
+                          <Select
+                            value={((calc.metadata as any)?.resourceType as BoqResourceType) ?? 'material'}
+                            onValueChange={(v) => {
+                              setCalculations((prev) => prev.map((c, idx) => idx === i ? { ...c, metadata: { ...(c.metadata || {}), resourceType: v } } : c));
+                            }}
                           >
-                            <span role="img" aria-label="edit">✏️</span>
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => removeCalculation(i)}
-                            aria-label="Supprimer"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="material">Matériau</SelectItem>
+                              <SelectItem value="labour">Main-d'œuvre</SelectItem>
+                              <SelectItem value="equipment">Équipement / Service</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="flex gap-1 justify-center">
+                            <Button size="icon" variant="ghost" onClick={() => handleEdit(i)} aria-label="Éditer">
+                              <span role="img" aria-label="edit">✏️</span>
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => removeCalculation(i)} aria-label="Supprimer">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </td>
