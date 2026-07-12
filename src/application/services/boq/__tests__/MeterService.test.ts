@@ -27,8 +27,8 @@ describe('MeterService', () => {
 
   it('normalize applies engine on batches', () => {
     const dtos: MeterInputDTO[] = [
-      { source: 'dqe', contextId: 'p1', designation: 'x', elementType: 'basic_calculator', unit: 'm', quantity: 5 },
-      { source: 'dqe', contextId: 'p1', designation: 'Mur', elementType: 'masonry_wall', unit: 'm²', length: 3, height: 2 },
+      { source: 'dqe', contextId: 'p1', designation: 'x', quantity: 5, elementType: 'basic_calculator', unit: 'm' },
+      { source: 'dqe', contextId: 'p1', designation: 'Mur', quantity: 0, elementType: 'masonry_wall', unit: 'm²', length: 3, height: 2 },
     ];
     const out = MeterService.normalize(dtos);
     expect(out[0].quantity).toBe(5);
