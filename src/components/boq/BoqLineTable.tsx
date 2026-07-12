@@ -94,10 +94,12 @@ export function BoqLineTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {lines.map((l, i) => {
+          {pageRows.map((l, idx) => {
+            const i = start + idx;
             const lineTotal = l.totalHt ?? l.quantity * (l.unitPrice ?? 0);
             return (
-              <TableRow key={l.id ?? i}>
+              <TableRow key={l.id ?? `row-${i}`}>
+
                 <TableCell className="font-medium">
                   {editable ? (
                     <Input
