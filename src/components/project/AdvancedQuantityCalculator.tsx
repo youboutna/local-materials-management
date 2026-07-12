@@ -272,8 +272,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [currentOpening, setCurrentOpening] = useState<Opening>({ id: "", label: "", length: 0, width: 0, height: 0 });
+  const [openingUnit, setOpeningUnit] = useState<'m' | 'cm' | 'mm'>('m');
   const [showOpeningForm, setShowOpeningForm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -305,8 +305,17 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [unitPriceOverride, setUnitPriceOverride] = useState<string>("");
   const [savingAll, setSavingAll] = useState(false);
   const [sendingBoq, setSendingBoq] = useState(false);
+  // Pagination réelle du tableau de résultats (remplace l'assistant fictif).
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(calculations.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, calculations.length);
+  useEffect(() => { if (page >= totalPages) setPage(Math.max(0, totalPages - 1)); }, [totalPages, page]);
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
+
 
   // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
@@ -480,20 +489,29 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       toast({ title: "Erreur", description: "Dimensions invalides pour l'ouverture", variant: "destructive" });
       return;
     }
+    // Conversion cm/mm → m via AdvancedMeterEngine.toMeters
+    const factor = openingUnit === 'cm' ? 0.01 : openingUnit === 'mm' ? 0.001 : 1;
+    const length = currentOpening.length * factor;
+    const width = currentOpening.width * factor;
+    const heightRaw = currentOpening.height ?? 0;
+    const height = heightRaw > 0 ? heightRaw * factor : undefined;
     setForm(prev => ({
       ...prev,
       openings: [
         ...prev.openings,
         {
           ...currentOpening,
+          length,
+          width,
           id: crypto.randomUUID(),
-          height: form.elementType === "concrete_slab" ? currentOpening.height || form.height : undefined,
+          height: form.elementType === "concrete_slab" ? (height ?? form.height) : height,
         },
       ],
     }));
     setCurrentOpening({ id: "", label: "", length: 0, width: 0, height: 0 });
     setShowOpeningForm(false);
   };
+
 
   const removeOpening = (id: string) => {
     setForm(prev => ({ ...prev, openings: prev.openings.filter(o => o.id !== id) }));
@@ -612,7 +630,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           total: d.totalHt ?? 0,
         } as InvoiceLine));
         setInvoiceLines(lines);
-        setCurrentLineIndex(0);
+        setPage(0);
+
         toast({
           title: 'Import réussi',
           description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()})${skipped ? ` — ${skipped} en-tête(s) filtré(s)` : ''}.`,
@@ -725,9 +744,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   useEffect(() => {
     if (invoiceLines.length > 0) {
       fillFormWithLine(0);
-      setCurrentLineIndex(0);
     }
   }, [invoiceLines, fillFormWithLine]);
+
 
   useEffect(() => {
     if (["concrete_slab", "masonry_wall"].includes(form.elementType) && form.openings.length === 0) {
@@ -795,15 +814,24 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 {!showOpeningForm ? (
                   <Button onClick={() => setShowOpeningForm(true)}>Ajouter ouverture</Button>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 items-end">
+                  <div className="grid grid-cols-4 gap-2 items-end">
                     <Input type="number" step="0.01" min="0" placeholder="L" value={currentOpening.length || ""} onChange={e => setCurrentOpening(o => ({ ...o, length: parseFloat(e.target.value) || 0 }))} />
                     <Input type="number" step="0.01" min="0" placeholder="l" value={currentOpening.width || ""} onChange={e => setCurrentOpening(o => ({ ...o, width: parseFloat(e.target.value) || 0 }))} />
                     {form.elementType === "concrete_slab" && (
                       <Input type="number" step="0.01" min="0" placeholder="h" value={currentOpening.height || ""} onChange={e => setCurrentOpening(o => ({ ...o, height: parseFloat(e.target.value) || 0 }))} />
                     )}
+                    <Select value={openingUnit} onValueChange={(v) => setOpeningUnit(v as 'm' | 'cm' | 'mm')}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="m">m</SelectItem>
+                        <SelectItem value="cm">cm</SelectItem>
+                        <SelectItem value="mm">mm</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button variant="outline" onClick={addOpening}>Ajouter</Button>
                   </div>
                 )}
+
               </div>
             </div>
           )}
@@ -847,8 +875,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
             <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
-            <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
+            <Button variant="outline" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))} title="Page précédente"><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
+            <Button variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} title="Page suivante"><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
+            <span className="text-xs text-muted-foreground self-center px-2">Page {safePage + 1} / {totalPages}{calculations.length ? ` · ${pageStart + 1}–${pageEnd} / ${calculations.length}` : ''}</span>
+
             {projectId && calculations.length > 0 && (
               <>
                 <Button onClick={handleSaveAll} disabled={savingAll || !selectedMaterialId} variant="secondary">
@@ -872,7 +902,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
+            <CardTitle>Détail estimatif ({calculations.length} lignes)</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
@@ -883,15 +913,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
                     <th className="border border-gray- px-1 py-1 uppercase">Dimensions</th>
         
-                    <th className="border border-gray-300 px-2 py-1 uppercase">Calculs</th>
+                    <th className="border border-gray-300 px-2 py-1 uppercase">Détail des ressources</th>
                     <th className="border border-gray-300 px-2 py-1 uppercase">Actions</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {calculations.map((calc, i) => (
+                {calculations.slice(pageStart, pageEnd).map((calc, localIdx) => {
+                  const i = pageStart + localIdx;
+                  return (
                     <tr key={i}>{/* No whitespace here */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {getElementLabel(calc.elementType || 'basic_calculator')
                        }
@@ -1189,11 +1222,24 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     <td className="border border-gray-300 px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
                      
                   </tr>
-                ))}
+                  );
+                })}
+
               </tbody>
             </table>
             </div>
+            {calculations.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+                <span>Lignes {pageStart + 1}–{pageEnd} sur {calculations.length}</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}><SkipBack className="w-3 h-3 mr-1" />Précédent</Button>
+                  <span className="self-center">Page {safePage + 1} / {totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>Suivant<SkipForward className="w-3 h-3 ml-1" /></Button>
+                </div>
+              </div>
+            )}
           </CardContent>
+
         </Card>
       )}
 
