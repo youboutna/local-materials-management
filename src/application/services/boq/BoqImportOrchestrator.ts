@@ -66,10 +66,11 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string },
+    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string; detectedVatRate?: number | null },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
     const fiscal = getFiscalProfile(ctx.fiscalProfileCode);
+    const effectiveVat = ctx.detectedVatRate ?? fiscal.vatRate;
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
       const num = (v: unknown): number | null => {
