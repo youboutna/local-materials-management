@@ -3,7 +3,8 @@
  * Pure orchestration hook (no supabase.from() calls in components).
  */
 import { useCallback, useEffect, useState } from 'react';
-import { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+import { BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+import { unifiedBoqParser, type UnifiedParseResult } from '@/application/services/boq/UnifiedBoqParser';
 import type { ParseResult } from '@/application/services/boq/parsers/IDocumentParser';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
