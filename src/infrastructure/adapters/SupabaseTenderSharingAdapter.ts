@@ -171,7 +171,8 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
       return {
         isValid: true,
-        message: 'Valid secret',
+        message: secret.supplier_email || 'Valid secret',
+        tenderId: secret.tender_id ?? undefined,
         expiresAt: secret.expires_at,
         accessCount: secret.access_count ?? undefined,
         maxAccess: secret.max_access_count ?? undefined
