@@ -546,7 +546,16 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       });
       if (calcs.length > 0) {
         setCalculations((prev) => [...prev, ...calcs]);
-        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}).` });
+        const lines: InvoiceLine[] = dtos.map((d) => ({
+          designation: d.designation ?? '',
+          unit: d.unit || 'unité',
+          quantity: d.quantity ?? 0,
+          unitPrice: d.unitPrice ?? 0,
+          total: d.totalHt ?? 0,
+        } as InvoiceLine));
+        setInvoiceLines(lines);
+        setCurrentLineIndex(0);
+        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}). Utilisez Précédent/Suivant pour éditer.` });
       } else {
         toast({ title: "Aucune ligne détectée", description: "Vérifiez la mise en page du fichier.", variant: 'destructive' });
       }
