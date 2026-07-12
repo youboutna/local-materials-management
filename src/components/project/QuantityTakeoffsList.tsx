@@ -190,13 +190,26 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
               </div>
             </div>
 
-            <div>
-              <h5 className="font-medium">Valeur totale</h5>
-              <p className="text-2xl font-bold text-green-600">
-                {getTotalValue().toLocaleString('fr-FR')} MRU
-              </p>
-            </div>
+            {(() => {
+              const totalHt = getTotalValue();
+              const profile = { vatRate: 0.16, withholdingRate: 0.03 };
+              const tva = totalHt * profile.vatRate;
+              const ttc = totalHt + tva;
+              const ras = totalHt * profile.withholdingRate;
+              return (
+                <div className="md:col-span-2">
+                  <h5 className="font-medium">Valeur totale (fiscalité MR)</h5>
+                  <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                    <div className="flex justify-between"><span>Total HT</span><span className="font-semibold">{totalHt.toLocaleString('fr-FR')} MRU</span></div>
+                    <div className="flex justify-between"><span>TVA 16%</span><span>{tva.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between"><span>RAS BIC 3%</span><span className="text-destructive">-{ras.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between border-t pt-1"><span className="font-medium">Total TTC</span><span className="font-bold text-green-600">{ttc.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
+
 
           <PaginationControls
             currentPage={currentPage}

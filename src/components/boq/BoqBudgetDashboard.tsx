@@ -28,10 +28,12 @@ interface Row {
   milestoneLabel: string;
   plannedHt: number;
   actualHt: number;
+  plannedTtc: number;
+  actualTtc: number;
 }
 
-function bucketize(lines: BoqLineDTO[]): Map<string, number> {
-  const m = new Map<string, number>();
+function bucketize(lines: BoqLineDTO[]): Map<string, { ht: number; ttc: number }> {
+  const m = new Map<string, { ht: number; ttc: number }>();
   for (const l of lines) {
     const key = `${l.phaseId ?? '__'}::${l.milestoneId ?? '__'}`;
     const t = BoqCalculatorService.computeTotals({
@@ -42,8 +44,9 @@ function bucketize(lines: BoqLineDTO[]): Map<string, number> {
       quantity: l.quantity,
       unitPrice: l.unitPrice,
       vatRate: l.vatRate,
-    });
-    m.set(key, (m.get(key) ?? 0) + t.totalHt);
+    }, BoqCalculatorService.defaultProfile());
+    const cur = m.get(key) ?? { ht: 0, ttc: 0 };
+    m.set(key, { ht: cur.ht + t.totalHt, ttc: cur.ttc + t.totalTtc });
   }
   return m;
 }
@@ -64,12 +67,16 @@ export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency 
         phaseId === '__' ? undefined : phaseId,
         milestoneId === '__' ? undefined : milestoneId,
       );
+      const pv = p.get(k) ?? { ht: 0, ttc: 0 };
+      const av = a.get(k) ?? { ht: 0, ttc: 0 };
       out.push({
         key: k,
         phaseLabel: phase?.label ?? 'Non affecté',
         milestoneLabel: milestone?.label ?? '—',
-        plannedHt: p.get(k) ?? 0,
-        actualHt: a.get(k) ?? 0,
+        plannedHt: pv.ht,
+        actualHt: av.ht,
+        plannedTtc: pv.ttc,
+        actualTtc: av.ttc,
       });
     }
     return out.sort((x, y) => x.phaseLabel.localeCompare(y.phaseLabel));
@@ -77,12 +84,14 @@ export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency 
 
   const totalPlanned = rows.reduce((s, r) => s + r.plannedHt, 0);
   const totalActual = rows.reduce((s, r) => s + r.actualHt, 0);
+  const totalPlannedTtc = rows.reduce((s, r) => s + r.plannedTtc, 0);
+  const totalActualTtc = rows.reduce((s, r) => s + r.actualTtc, 0);
   const totalVariance = totalActual - totalPlanned;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Suivi budgétaire par jalon (HT)</CardTitle>
+        <CardTitle className="text-base">Suivi budgétaire par jalon (HT / TTC)</CardTitle>
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
@@ -93,9 +102,11 @@ export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency 
               <TableRow>
                 <TableHead>Phase</TableHead>
                 <TableHead>Jalon</TableHead>
-                <TableHead className="text-right">Prévu</TableHead>
-                <TableHead className="text-right">Réel</TableHead>
-                <TableHead className="text-right">Écart</TableHead>
+                <TableHead className="text-right">Prévu HT</TableHead>
+                <TableHead className="text-right">Réel HT</TableHead>
+                <TableHead className="text-right">Prévu TTC</TableHead>
+                <TableHead className="text-right">Réel TTC</TableHead>
+                <TableHead className="text-right">Écart HT</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,6 +120,8 @@ export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency 
                     <TableCell>{r.milestoneLabel}</TableCell>
                     <TableCell className="text-right">{fmt(r.plannedHt, currency)}</TableCell>
                     <TableCell className="text-right">{fmt(r.actualHt, currency)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmt(r.plannedTtc, currency)}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmt(r.actualTtc, currency)}</TableCell>
                     <TableCell className="text-right">
                       <Badge variant={variant as any}>
                         {variance >= 0 ? '+' : ''}{fmt(variance, currency)}
@@ -122,6 +135,8 @@ export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency 
                 <TableCell colSpan={2}>Total</TableCell>
                 <TableCell className="text-right">{fmt(totalPlanned, currency)}</TableCell>
                 <TableCell className="text-right">{fmt(totalActual, currency)}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{fmt(totalPlannedTtc, currency)}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{fmt(totalActualTtc, currency)}</TableCell>
                 <TableCell className="text-right">
                   <Badge variant={totalVariance > 0 ? 'destructive' : 'default'}>
                     {totalVariance >= 0 ? '+' : ''}{fmt(totalVariance, currency)}
