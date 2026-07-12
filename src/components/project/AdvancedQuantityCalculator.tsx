@@ -938,8 +938,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 <Label className="text-xs">PU par défaut (optionnel)</Label>
                 <Input type="number" step="0.01" min="0" value={unitPriceOverride}
                   onChange={(e) => setUnitPriceOverride(e.target.value)} placeholder="0.00" />
+              </div>
             </div>
           )}
+
 
           {/* Option: générer 1 ligne article par recommandation. */}
           {projectId && selectedMaterialId && getRecommendationItems(form.elementType).length > 0 && (
