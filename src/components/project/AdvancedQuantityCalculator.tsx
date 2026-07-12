@@ -383,6 +383,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       || getElementLabel(calc.elementType || 'basic_calculator')
       || material?.name
       || 'Ligne calculée';
+    const meta = (calc.metadata || {}) as any;
+    const rowResource: BoqResourceType = (meta.resourceType as BoqResourceType) ?? resourceType;
+    const rowPhase = meta.phaseId ?? phaseId ?? null;
     return {
       source: 'quantity_takeoff',
       contextId: projectId ?? '',
@@ -395,9 +398,11 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       quantity: qty,
       unitPrice,
       totalHt: unitPrice != null ? qty * unitPrice : null,
-      materialId: selectedMaterialId || null,
-      phaseId: phaseId ?? null,
-      resourceType,
+      materialId: rowResource === 'material' ? (selectedMaterialId || null) : null,
+      phaseId: rowPhase,
+      milestoneId: meta.milestoneId ?? null,
+      taskId: meta.taskId ?? null,
+      resourceType: rowResource,
       note: JSON.stringify({ source: 'AdvancedQuantityCalculator', results: calc.results }),
     };
   };
