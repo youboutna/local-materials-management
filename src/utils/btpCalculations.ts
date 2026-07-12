@@ -180,104 +180,141 @@ const generateId = (): string => {
   return Math.random().toString(36).substring(2, 9);
 };
 
-// Parse PDF invoice function
+// Parse PDF invoice function — position-aware extraction.
+// Extracts text items with their (x,y) coordinates, clusters them into rows
+// by Y, splits each row into columns by X-gaps, then interprets the rightmost
+// numeric cells as (qty, PU, total). Supports French formats (thousands with
+// spaces, comma decimals) and currency suffixes like "MRU", "EUR", "USD".
 export async function parseInvoiceFromPdf(pdfUrl: string): Promise<InvoiceLine[]> {
   try {
     console.log('Starting PDF invoice parsing...');
-    
-    // Load the PDF document
     const response = await fetch(pdfUrl);
     const arrayBuffer = await response.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    
     console.log(`PDF loaded with ${pdf.numPages} pages`);
-    
-    let fullText = '';
-    
-    // Extract text from all pages
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-      fullText += pageText + '\n';
+
+    const Y_TOL = 3;
+    const X_GAP = 15;
+    type Item = { str: string; x: number; y: number; w: number };
+    const rowsAcc: string[][] = [];
+
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const items: Item[] = (content.items as any[])
+        .filter((i) => i && typeof i.str === 'string' && i.str.trim())
+        .map((i) => ({ str: i.str, x: i.transform[4], y: i.transform[5], w: i.width ?? 0 }));
+      if (!items.length) continue;
+
+      items.sort((a, b) => b.y - a.y);
+      const rows: Item[][] = [];
+      let cur: Item[] = [];
+      let curY: number | null = null;
+      for (const it of items) {
+        if (curY === null || Math.abs(it.y - curY) <= Y_TOL) {
+          cur.push(it); curY = curY ?? it.y;
+        } else { rows.push(cur); cur = [it]; curY = it.y; }
+      }
+      if (cur.length) rows.push(cur);
+
+      for (const row of rows) {
+        row.sort((a, b) => a.x - b.x);
+        const cells: string[] = [];
+        let buf = '';
+        let lastEnd = -Infinity;
+        for (const it of row) {
+          if (it.x - lastEnd > X_GAP && buf) { cells.push(buf.trim()); buf = ''; }
+          buf += (buf ? ' ' : '') + it.str.trim();
+          lastEnd = it.x + it.w;
+        }
+        if (buf.trim()) cells.push(buf.trim());
+        if (cells.length) rowsAcc.push(cells);
+      }
     }
-    
-    console.log('Extracted text from PDF:', fullText.substring(0, 500) + '...');
-    
-    // Parse the extracted text to find invoice lines
-    const invoiceLines = parseInvoiceText(fullText);
-    
+
+    console.log(`Extracted ${rowsAcc.length} raw rows from PDF`);
+    const invoiceLines = parseInvoiceRows(rowsAcc);
     console.log(`Parsed ${invoiceLines.length} invoice lines`);
     return invoiceLines;
-    
   } catch (error) {
     console.error('Error parsing PDF invoice:', error);
     throw new Error('Failed to parse PDF invoice');
   }
 }
 
-// Parse invoice text to extract lines
-function parseInvoiceText(text: string): InvoiceLine[] {
-  const lines: InvoiceLine[] = [];
-  const textLines = text.split('\n');
-  
-  for (let i = 0; i < textLines.length; i++) {
-    const line = textLines[i].trim();
-    
-    // Skip empty lines and headers
-    if (!line || line.length < 10) continue;
-    
-    // Try to parse as invoice line (looking for patterns like: description | quantity | unit | price)
-    const invoiceLine = tryParseInvoiceLine(line, i + 1);
-    if (invoiceLine) {
-      lines.push(invoiceLine);
-    }
+const CURRENCY_RE = /\b(MRU|EUR|USD|XOF|MAD|FCFA|CFA|DH|€|\$)\b/gi;
+const UNIT_HINTS = /^(forfait|ann[eé]e|mois|jour|heure|h|u|unit[eé]|pce|pc|ens|kg|t|tonne|m|ml|m2|m²|m3|m³|l|litre)$/i;
+
+/** Parse a French/EN money token — handles "37 600,00", "1,234.50", "1234", trailing currency. */
+function parseMoney(raw: string): number | null {
+  if (!raw) return null;
+  let s = raw.replace(CURRENCY_RE, '').trim();
+  s = s.replace(/[\u00A0\s]/g, '');
+  if (!s) return null;
+  if (s.includes(',') && s.includes('.')) {
+    s = s.replace(/,/g, '');
+  } else if (s.includes(',')) {
+    s = s.replace(',', '.');
   }
-  
-  return lines;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
 }
 
-// Try to parse a single line as an invoice line
-function tryParseInvoiceLine(text: string, lineNumber: number): InvoiceLine | null {
-  try {
-    // Common patterns for invoice lines
-    const patterns = [
-      // Pattern: "Description Qty Unit Price Total"
-      /^(.+?)\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/,
-      // Pattern: "Description | Qty | Unit | Price"
-      /^(.+?)\s*\|\s*(\d+(?:\.\d+)?)\s*\|\s*(\w+)\s*\|\s*(\d+(?:\.\d+)?)$/,
-      // Pattern: "Description Qty Unit @ Price"
-      /^(.+?)\s+(\d+(?:\.\d+)?)\s+(\w+)\s+@\s*(\d+(?:\.\d+)?)$/,
-    ];
-    
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const [, description, quantity, unit, unitPrice] = match;
-        
-        return createInvoiceLine(
-          description.trim(),
-          parseFloat(quantity),
-          unit.trim(),
-          parseFloat(unitPrice),
-          {
-            lineNumber: lineNumber.toString(),
-            metadata: {
-              parsedAt: new Date().toISOString(),
-              sourceText: text
-            }
-          }
-        );
+/** Interpret rows of cells as invoice lines using right-anchored numeric detection. */
+function parseInvoiceRows(rows: string[][]): InvoiceLine[] {
+  const out: InvoiceLine[] = [];
+  const HEADER_RE = /d[eé]signation|libell[eé]|description|poste|unit[eé]|quantit|qt[eé]|prix|montant|total/i;
+  let lineNo = 0;
+  for (const cells of rows) {
+    if (cells.length < 2) continue;
+    const joined = cells.join(' ');
+    if (cells.filter((c) => HEADER_RE.test(c)).length >= 2) continue;
+    if (/^(sous[-\s]?total|total\s|grand\s*total|tva|net\s*[àa]\s*payer)/i.test(joined)) continue;
+
+    const numeric: { idx: number; val: number }[] = [];
+    for (let i = cells.length - 1; i >= 0 && numeric.length < 4; i--) {
+      const v = parseMoney(cells[i]);
+      if (v !== null && /\d/.test(cells[i])) numeric.push({ idx: i, val: v });
+    }
+    if (numeric.length < 2) continue;
+
+    numeric.reverse();
+    let qty: number, unitPrice: number, total: number | null = null;
+    if (numeric.length >= 3) {
+      qty = numeric[0].val; unitPrice = numeric[1].val; total = numeric[2].val;
+    } else {
+      qty = numeric[0].val; unitPrice = numeric[1].val;
+    }
+    if (total !== null && qty > 0) {
+      const diff = Math.abs(qty * unitPrice - total) / Math.max(total, 1);
+      if (diff > 0.05) {
+        const altPu = total / qty;
+        if (Math.abs(altPu * qty - total) < Math.abs(unitPrice * qty - total)) unitPrice = altPu;
       }
     }
-    
-    return null;
-  } catch (error) {
-    console.warn('Failed to parse line:', text, error);
-    return null;
+    if (!(qty > 0) || !(unitPrice > 0)) continue;
+
+    const firstNumericIdx = numeric[0].idx;
+    const leftCells = cells.slice(0, firstNumericIdx);
+    let unit = 'u';
+    let designationCells = leftCells;
+    if (leftCells.length >= 2 && UNIT_HINTS.test(leftCells[leftCells.length - 1])) {
+      unit = leftCells[leftCells.length - 1];
+      designationCells = leftCells.slice(0, -1);
+    }
+    const designation = designationCells.join(' ').trim();
+    if (!designation || designation.length < 3) continue;
+
+    try {
+      out.push(createInvoiceLine(designation, qty, unit, unitPrice, {
+        lineNumber: String(++lineNo),
+        metadata: { total, sourceCells: cells },
+      }));
+    } catch (e) {
+      console.warn('skip line', designation, e);
+    }
   }
+  return out;
 }
 
 // Helper functions
