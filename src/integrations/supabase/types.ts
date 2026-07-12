@@ -4042,6 +4042,42 @@ export type Database = {
         }
         Relationships: []
       }
+      boq_alignment_history: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          extracted_name: string | null
+          id: string | null
+          normalized_key: string | null
+          occurrences: number | null
+          resource_id: string | null
+          resource_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          extracted_name?: string | null
+          id?: string | null
+          normalized_key?: string | null
+          occurrences?: number | null
+          resource_id?: string | null
+          resource_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          extracted_name?: string | null
+          id?: string | null
+          normalized_key?: string | null
+          occurrences?: number | null
+          resource_id?: string | null
+          resource_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       catch_records: {
         Row: {
           actual_sale_value: number | null
