@@ -38,7 +38,12 @@ export function BoqLineTable({
   referentialCode,
   onChange,
   onRemove,
+  pageSize = 10,
 }: Props) {
+  const [page, setPage] = useState(0);
+  // Reset pagination when the dataset shrinks or is replaced (e.g. new import).
+  useEffect(() => { setPage(0); }, [lines.length]);
+
   const phases: WbsPhase[] = useMemo(() => {
     if (!referentialCode) return WBS_REFERENTIAL;
     return getPhasesForReferential(referentialCode).map((phase) => ({
