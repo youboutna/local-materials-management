@@ -566,7 +566,51 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         },
       };
       const result = calculateAdvancedQuantities(params);
-      setCalculations(prev => [...prev, { ...result, timestamp: new Date().toISOString(), elementLabel: form.elementType }]);
+      const baseCalc: CalculationResult = { ...result, timestamp: new Date().toISOString(), elementLabel: form.elementType };
+
+      // Génère 1 ligne article par recommandation quand un matériau est choisi.
+      // Le PU/unité proviennent du dépôt matériaux (auto-hydraté) et peuvent
+      // être ajustés par ligne dans l'aperçu.
+      const recos = autoRecs ? getRecommendationItems(form.elementType) : [];
+      const parsedOverride = parseFloat(unitPriceOverride);
+      const catalogPu = Number(
+        (selectedMaterial as any)?.pricePerUnit ??
+        (selectedMaterial as any)?.unit_price ??
+        (selectedMaterial as any)?.unitPrice ??
+        NaN,
+      );
+      const recoPu = Number.isFinite(parsedOverride) && parsedOverride > 0
+        ? parsedOverride
+        : (Number.isFinite(catalogPu) && catalogPu > 0 ? catalogPu : undefined);
+      const recoUnit: string = (selectedMaterial as any)?.unit
+        || (typeof (baseCalc.metadata as any)?.unit === 'string' ? (baseCalc.metadata as any).unit : 'unité');
+      const materialName: string | undefined = (selectedMaterial as any)?.name;
+
+      const recoLines: CalculationResult[] = (selectedMaterialId && recos.length > 0)
+        ? recos.map((rec) => ({
+            elementType: form.elementType,
+            originalLabel: `${getElementLabel(form.elementType)} — ${rec.label}${materialName ? ` (${materialName})` : ''}`,
+            results: {
+              Quantité: rec.quantity ?? 1,
+              ...(recoPu != null ? { PU: recoPu, 'Total HT': (rec.quantity ?? 1) * recoPu } : {}),
+            },
+            metadata: {
+              unit: rec.unit ?? recoUnit,
+              recommendation: true,
+              resourceType,
+              phaseId: phaseId ?? null,
+            },
+            timestamp: new Date().toISOString(),
+          } as CalculationResult))
+        : [];
+
+      setCalculations(prev => [...prev, baseCalc, ...recoLines]);
+      if (recoLines.length > 0) {
+        toast({
+          title: 'Calcul + recommandations',
+          description: `1 ligne principale + ${recoLines.length} recommandation(s) ajoutée(s).`,
+        });
+      }
       resetForm();
     } catch (error) {
       toast({ title: "Erreur de calcul", description: error instanceof Error ? error.message : "Erreur inconnue", variant: "destructive" });
