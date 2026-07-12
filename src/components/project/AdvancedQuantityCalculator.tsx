@@ -284,12 +284,19 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     height: 0,
     openings: [] as Opening[],
   });
-  const [editOpening, setEditOpening] = useState<Opening>({ 
-    id: "", 
-    label: "", 
-    length: 0, 
-    width: 0, 
-    height: 0 
+  // Extra edit fields for imported (DQE) rows
+  const [editImported, setEditImported] = useState({
+    designation: "",
+    unit: "",
+    quantity: 0,
+    unitPrice: 0,
+  });
+  const [editOpening, setEditOpening] = useState<Opening>({
+    id: "",
+    label: "",
+    length: 0,
+    width: 0,
+    height: 0,
   });
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
@@ -305,6 +312,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
     const r = calc.results || {};
     const num = (k: string) => (typeof r[k] === "number" ? (r[k] as number) : undefined);
+    // Imported rows: prefer explicit "Quantité" + metadata.unit.
+    const importedQty = num("Quantité");
+    const importedUnit = (calc.metadata as any)?.unit as string | undefined;
+    if (importedQty != null && importedUnit) return { qty: importedQty, unit: importedUnit };
     const volume = num("Volume béton (m³)") ?? num("Volume (m³)") ?? num("volume");
     if (volume) return { qty: volume, unit: "m³" };
     const area = num("Surface (m²)") ?? num("Surface nette (m²)") ?? num("area");
@@ -313,7 +324,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     if (length) return { qty: length, unit: "m" };
     const count = num("Nombre") ?? num("count");
     if (count) return { qty: count, unit: "unité" };
-    return { qty: 1, unit: calc.metadata?.unit ?? "unité" };
+    if (importedQty != null) return { qty: importedQty, unit: importedUnit || "unité" };
+    return { qty: 1, unit: importedUnit ?? "unité" };
   };
 
   const persistCalculation = async (calc: CalculationResult) => {
@@ -363,8 +375,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
 
   const buildBoqDto = (calc: CalculationResult): BoqLineDTO => {
     const { qty, unit } = extractQuantity(calc);
-    const puNum = parseFloat(unitPriceOverride);
-    const unitPrice = Number.isFinite(puNum) && puNum > 0 ? puNum : null;
+    const rowPu = typeof (calc.results as any)?.PU === 'number' ? (calc.results as any).PU : null;
+    const overridePu = parseFloat(unitPriceOverride);
+    const unitPrice = rowPu ?? (Number.isFinite(overridePu) && overridePu > 0 ? overridePu : null);
     const material = materials.find((m: any) => m.id === selectedMaterialId);
     const designation = calc.originalLabel
       || getElementLabel(calc.elementType || 'basic_calculator')
@@ -519,28 +532,39 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     toast({ title: "Import en cours", description: `Analyse via l'importeur unifié (${file.name})...` });
     try {
       const parsed = await unifiedBoqParser.parse(file);
-      const dtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
+      const rawDtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
         source: 'quantity_takeoff',
         contextId: projectId ?? 'calculator',
         phaseId,
       });
+      // Filter obvious section headers / sub-totals: no qty, no PU, and matches LOT/PHASE/CHAPITRE/TOTAL.
+      const HEADER_RX = /^\s*(LOT|PHASE|CHAPITRE|TOTAL|SOUS[\s-]*TOTAL|S\/TOTAL)\b/i;
+      const dtos = rawDtos.filter((d) => {
+        const isHeader = HEADER_RX.test(d.designation || '');
+        const empty = (!d.quantity || d.quantity === 0) && !d.unitPrice;
+        return !(isHeader && empty);
+      });
+      const skipped = rawDtos.length - dtos.length;
       const calcs: CalculationResult[] = dtos.map((d) => {
         const qty = d.quantity ?? 0;
         const unit = d.unit || 'unité';
+        const hasGeom = d.length != null || d.width != null || d.height != null;
         return {
           elementType: mapToElementType(d.designation || '') || 'basic_calculator',
           originalLabel: d.designation ?? '',
-          dimensions: {
-            length: d.length ?? qty,
-            width: d.width ?? undefined,
-            height: d.height ?? undefined,
-          },
+          dimensions: hasGeom
+            ? {
+                length: d.length ?? undefined,
+                width: d.width ?? undefined,
+                height: d.height ?? undefined,
+              }
+            : undefined,
           results: {
-            'Quantité': qty,
-            ...(d.unitPrice != null ? { 'PU': d.unitPrice } : {}),
+            Quantité: qty,
+            ...(d.unitPrice != null ? { PU: d.unitPrice } : {}),
             ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
           },
-          metadata: { unit, source: parsed.format, file: parsed.fileName },
+          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true },
           timestamp: new Date().toISOString(),
         } as CalculationResult;
       });
@@ -555,9 +579,12 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         } as InvoiceLine));
         setInvoiceLines(lines);
         setCurrentLineIndex(0);
-        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}). Utilisez Précédent/Suivant pour éditer.` });
+        toast({
+          title: 'Import réussi',
+          description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()})${skipped ? ` — ${skipped} en-tête(s) filtré(s)` : ''}.`,
+        });
       } else {
-        toast({ title: "Aucune ligne détectée", description: "Vérifiez la mise en page du fichier.", variant: 'destructive' });
+        toast({ title: 'Aucune ligne détectée', description: 'Vérifiez la mise en page du fichier.', variant: 'destructive' });
       }
     } catch (err) {
       const description = err instanceof Error ? err.message : "Impossible d'analyser le fichier";
@@ -595,6 +622,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     link.click();
     URL.revokeObjectURL(url);
   };
+  const isImported = (calc: CalculationResult) =>
+    Boolean((calc.metadata as any)?.imported) || (calc.elementType === 'basic_calculator' && !calc.dimensions);
+
   const handleEdit = (i: number) => {
     const calc = calculations[i];
     setEditIndex(i);
@@ -604,6 +634,34 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       height: calc.dimensions?.height || 0,
       openings: calc.openings ? [...calc.openings] : [],
     });
+    const r = (calc.results || {}) as Record<string, any>;
+    setEditImported({
+      designation: calc.originalLabel ?? '',
+      unit: (calc.metadata as any)?.unit ?? '',
+      quantity: typeof r['Quantité'] === 'number' ? r['Quantité'] : 0,
+      unitPrice: typeof r['PU'] === 'number' ? r['PU'] : 0,
+    });
+  };
+
+  const handleSaveEditImported = () => {
+    if (editIndex === null) return;
+    const total = (editImported.quantity || 0) * (editImported.unitPrice || 0);
+    setCalculations((prev) =>
+      prev.map((c, i) =>
+        i === editIndex
+          ? {
+              ...c,
+              originalLabel: editImported.designation,
+              metadata: { ...(c.metadata || {}), unit: editImported.unit || (c.metadata as any)?.unit },
+              results: {
+                Quantité: editImported.quantity,
+                ...(editImported.unitPrice ? { PU: editImported.unitPrice, 'Total HT': total } : {}),
+              },
+            }
+          : c,
+      ),
+    );
+    setEditIndex(null);
   };
 
   const handleSaveEdit = () => {
@@ -813,12 +871,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
-                        {calc.dimensions?.width != null ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
-                        {calc.dimensions?.height != null ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
+                        {isImported(calc) && !calc.dimensions ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : (
+                          <>
+                            {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
+                            {calc.dimensions?.width != null ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
+                            {calc.dimensions?.height != null ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
+                          </>
+                        )}
                         {calc.openings && calc.openings.length > 0 && (
                           <div className="text-xs text-gray-400 mt-1">
-                            Ouvertures: {calc.openings.map(o => 
+                            Ouvertures: {calc.openings.map(o =>
                               `${o.length.toFixed(2)}×${o.width.toFixed(2)}${o.height ? `×${o.height.toFixed(2)}` : ''}`
                             ).join(', ')}
                           </div>
@@ -852,7 +916,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                         )}
                       </td>
                  <td className="border border-gray-300 px-2 py-1 text-center">
-                      {editIndex === i ? (
+                      {editIndex === i && isImported(calc) ? (
+                        <div className="space-y-2 text-left">
+                          <div>
+                            <Label className="text-xs">Désignation</Label>
+                            <Input
+                              value={editImported.designation}
+                              onChange={(e) => setEditImported((f) => ({ ...f, designation: e.target.value }))}
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <Label className="text-xs">Unité</Label>
+                              <Input
+                                value={editImported.unit}
+                                onChange={(e) => setEditImported((f) => ({ ...f, unit: e.target.value }))}
+                                placeholder="unité"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Quantité</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editImported.quantity}
+                                onChange={(e) => setEditImported((f) => ({ ...f, quantity: parseFloat(e.target.value) || 0 }))}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">PU</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editImported.unitPrice}
+                                onChange={(e) => setEditImported((f) => ({ ...f, unitPrice: parseFloat(e.target.value) || 0 }))}
+                              />
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Total HT ={' '}
+                            {((editImported.quantity || 0) * (editImported.unitPrice || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="default" onClick={handleSaveEditImported}>Valider</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditIndex(null)}>Annuler</Button>
+                          </div>
+                        </div>
+                      ) : editIndex === i ? (
                         <div className="space-y-2">
                           <Input
                             type="number"
