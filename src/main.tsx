@@ -5,6 +5,11 @@ import App from './App.tsx';
 import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DEV_MODE } from './config/constants';
+import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
+import { SupabaseAlignmentRepository } from '@/infrastructure/supabase/adapters/SupabaseAlignmentRepository';
+
+// Wire the persistent alignment repository (falls back silently to in-memory if the API is unreachable).
+try { setAlignmentRepository(new SupabaseAlignmentRepository()); } catch { /* noop */ }
 
 // In development mode, log that authentication is bypassed
 if (DEV_MODE) {
