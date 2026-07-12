@@ -110,6 +110,9 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
       });
 
       if (validation.tenderId) {
+        try {
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify({ tenderId: validation.tenderId, secretCode: secretCode.trim(), email }));
+        } catch { /* noop */ }
         onAccessGranted(validation.tenderId, email);
       }
     } catch (error: any) {
