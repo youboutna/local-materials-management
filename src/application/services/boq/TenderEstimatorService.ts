@@ -42,7 +42,7 @@ export interface TenderEstimatorSummary {
 const EMPTY: BoqLineTotals = { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0 };
 
 function resolveResourceType(cat: TenderCategory): BoqResourceType {
-  if (cat === 'labour') return 'labour';
+  if (cat === 'labour') return 'labor';
   if (cat === 'equipment') return 'equipment';
   return 'material';
 }
