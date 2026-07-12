@@ -212,5 +212,20 @@ export function BoqLineTable({
         </TableBody>
       </Table>
     </div>
+    {usePaging && (
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Lignes {start + 1} à {Math.min(end, lines.length)} sur {lines.length}</span>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}>
+            <ChevronLeft className="h-4 w-4" /> Précédent
+          </Button>
+          <span>Page {safePage + 1} / {totalPages}</span>
+          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>
+            Suivant <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    )}
+    </div>
   );
 }
