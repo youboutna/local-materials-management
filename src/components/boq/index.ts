@@ -19,6 +19,10 @@ export { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorSe
 export { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 export { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 export { MaterialPriceResolver } from '@/application/services/boq/MaterialPriceResolver';
+export { MeterService } from '@/application/services/boq/MeterService';
+export { ResourceService } from '@/application/services/boq/ResourceService';
+export { AlignmentService, getAlignmentService, setAlignmentRepository, InMemoryAlignmentRepository } from '@/application/services/boq/AlignmentService';
+export { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 
 export { tenderToPlanningService, TenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 
@@ -40,6 +44,8 @@ export { BoqLineTable } from '@/components/boq/BoqLineTable';
 export { BoqComparisonTable } from '@/components/boq/BoqComparisonTable';
 export { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 export { BoqBudgetDashboard } from '@/components/boq/BoqBudgetDashboard';
+export { ResourceSelector, type ResourceOption } from '@/components/boq/ResourceSelector';
+export { MappingModal, MAPPING_FIELDS } from '@/components/boq/MappingModal';
 
 
 // Referentials
