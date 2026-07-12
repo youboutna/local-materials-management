@@ -278,15 +278,57 @@ const UnifiedSupplierPortal = () => {
   }
 
   if (!user && guestPayload) {
+    // Guest via secret code — show a real tab shell (Appels d'offres + Documents partagés).
+    const guestTab = searchParams.get("tab") === "documents" ? "documents" : "tenders";
+    const setGuestTab = (v: string) => {
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", v);
+      setSearchParams(next, { replace: true });
+    };
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 py-8">
-        <SecretUnlockedView
-          payload={guestPayload}
-          onReset={() => {
-            try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
-            window.location.href = '/supplier-access';
-          }}
-        />
+        <div className="max-w-6xl mx-auto px-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <h1 className="text-xl font-semibold">Accès sécurisé fournisseur</h1>
+                <p className="text-sm text-muted-foreground">
+                  Consultez l'appel d'offres et les documents partagés.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
+                window.location.href = '/supplier-access';
+              }}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Quitter
+            </Button>
+          </div>
+
+          <Tabs value={guestTab} onValueChange={setGuestTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="tenders">Appel d'offres</TabsTrigger>
+              <TabsTrigger value="documents">Documents partagés</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tenders">
+              <EnhancedSupplierTenderPortal />
+            </TabsContent>
+            <TabsContent value="documents">
+              <SecretUnlockedView
+                payload={guestPayload}
+                onReset={() => {
+                  try { sessionStorage.removeItem('supplier-tender-secret'); } catch { /* noop */ }
+                  window.location.href = '/supplier-access';
+                }}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     );
   }
