@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { getPhase, WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
   lines: BoqLineDTO[];
@@ -21,6 +22,8 @@ interface Props {
   referentialCode?: ReferentialType;
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
+  /** Number of rows per page. Set to 0 to disable pagination. */
+  pageSize?: number;
 }
 
 const fmt = (n: number) =>
@@ -35,7 +38,12 @@ export function BoqLineTable({
   referentialCode,
   onChange,
   onRemove,
+  pageSize = 10,
 }: Props) {
+  const [page, setPage] = useState(0);
+  // Reset pagination when the dataset shrinks or is replaced (e.g. new import).
+  useEffect(() => { setPage(0); }, [lines.length]);
+
   const phases: WbsPhase[] = useMemo(() => {
     if (!referentialCode) return WBS_REFERENTIAL;
     return getPhasesForReferential(referentialCode).map((phase) => ({
@@ -61,8 +69,17 @@ export function BoqLineTable({
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => onChange?.(i, p);
 
+  const usePaging = pageSize > 0 && lines.length > pageSize;
+  const totalPages = usePaging ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
+  const safePage = Math.min(page, totalPages - 1);
+  const start = usePaging ? safePage * pageSize : 0;
+  const end = usePaging ? start + pageSize : lines.length;
+  const pageRows = usePaging ? lines.slice(start, end) : lines;
+
   return (
+    <div className="space-y-2">
     <div className="rounded-md border overflow-x-auto">
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -77,10 +94,12 @@ export function BoqLineTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {lines.map((l, i) => {
+          {pageRows.map((l, idx) => {
+            const i = start + idx;
             const lineTotal = l.totalHt ?? l.quantity * (l.unitPrice ?? 0);
             return (
-              <TableRow key={l.id ?? i}>
+              <TableRow key={l.id ?? `row-${i}`}>
+
                 <TableCell className="font-medium">
                   {editable ? (
                     <Input
@@ -192,6 +211,21 @@ export function BoqLineTable({
           </TableRow>
         </TableBody>
       </Table>
+    </div>
+    {usePaging && (
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Lignes {start + 1} à {Math.min(end, lines.length)} sur {lines.length}</span>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}>
+            <ChevronLeft className="h-4 w-4" /> Précédent
+          </Button>
+          <span>Page {safePage + 1} / {totalPages}</span>
+          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>
+            Suivant <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

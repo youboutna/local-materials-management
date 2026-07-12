@@ -92,13 +92,43 @@ export class PdfBoqParser implements IDocumentParser {
       }
     }
 
+    // DQE header detection: promote the first row that matches ≥2 known BOQ
+    // headers to the column labels so downstream fuzzy mapping (BoqImportOrchestrator)
+    // can auto-map Désignation/Qté/Unité/PU/Montant.
+    const HEADER_HINTS: RegExp[] = [
+      /d[eé]signation|libell[eé]|description|intitul/i,
+      /^unit[eé]?$|^u\.?$|^um$/i,
+      /qu?antit[eé]|^qt[eé]?$|^qty$/i,
+      /prix.*unit|^p\.?\s*u\.?$|^pu$/i,
+      /montant|^total$|prix.*total|^p\.?\s*t\.?$/i,
+      /^n[°o]$|^lot$|chapitre|poste/i,
+    ];
+    const looksHeader = (row: string[]) => row.reduce((n, c) => n + (HEADER_HINTS.some((rx) => rx.test(c)) ? 1 : 0), 0);
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(rowsAcc.length, 15); i++) {
+      if (looksHeader(rowsAcc[i]) >= 2) { headerIdx = i; break; }
+    }
     const maxCols = rowsAcc.reduce((m, r) => Math.max(m, r.length), 0);
-    const columns = Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
-    const parsedRows: ParsedBoqRow[] = rowsAcc.map((cells) => {
-      const raw: Record<string, string | number | null> = {};
-      cells.forEach((c, i) => { raw[columns[i]] = c; });
-      return { raw };
-    });
+    const columns: string[] = headerIdx >= 0
+      ? Array.from({ length: maxCols }, (_, i) => {
+          const label = (rowsAcc[headerIdx][i] ?? '').trim();
+          return label || `col_${i + 1}`;
+        })
+      : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
+
+    const dataRows = headerIdx >= 0 ? rowsAcc.slice(headerIdx + 1) : rowsAcc;
+    const parsedRows: ParsedBoqRow[] = dataRows
+      .filter((cells) => {
+        // drop sub-total rows so aggregates don't pollute the DTO list
+        const first = String(cells[0] ?? '').trim();
+        return !/^(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total)/i.test(first);
+      })
+      .map((cells) => {
+        const raw: Record<string, string | number | null> = {};
+        cells.forEach((c, i) => { raw[columns[i]] = c; });
+        return { raw };
+      });
+    if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
     return { rows: parsedRows, columns, warnings };
   }
 }

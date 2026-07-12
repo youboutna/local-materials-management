@@ -8,6 +8,7 @@ import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import { BoqCalculatorService } from './BoqCalculatorService';
+import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { ReferentialType } from '@/config/referentials';
@@ -80,9 +81,16 @@ export class BoqImportOrchestrator {
       const length = num(get(mapping.length));
       const width = num(get(mapping.width));
       const height = num(get(mapping.height));
-      const unit = String(get(mapping.unit) ?? 'unité').trim() || 'unité';
+      const rawUnit = String(get(mapping.unit) ?? '').trim();
+      const normalized = normalizeUnit(rawUnit);
+      const unit = normalized.unit;
+      // Convert non-metric lengths (ft/in/cm/mm) with the mapping factor.
+      const factor = normalized.factor;
+      const lengthN = length != null ? length * factor : null;
+      const widthN = width != null ? width * factor : null;
+      const heightN = height != null ? height * factor : null;
 
-      const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length, width, height });
+      const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       if (!designation && !quantity) continue;
 
       // Explicit phase from source column, else fallback to ctx.phaseId, else infer
@@ -92,17 +100,21 @@ export class BoqImportOrchestrator {
         ? {}
         : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
       const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId) ?? null;
+      // Normalize element type from designation via the boq referential.
+      const elementCode = mapping.elementType
+        ? String(get(mapping.elementType) ?? '').trim()
+        : detectElementType(designation);
 
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
-        designation: designation || (mapping.elementType ? String(get(mapping.elementType) ?? '') : 'Ligne'),
-        elementType: mapping.elementType ? String(get(mapping.elementType) ?? '') : null,
+        designation: designation || elementCode || 'Ligne',
+        elementType: elementCode || null,
         unit,
         quantity: Number.isFinite(quantity) ? quantity : 0,
-        length,
-        width,
-        height,
+        length: lengthN,
+        width: widthN,
+        height: heightN,
         unitPrice: pu ?? null,
         totalHt: pu != null ? quantity * pu : null,
         phaseId: phaseId || null,
