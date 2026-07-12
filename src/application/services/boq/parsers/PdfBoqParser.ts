@@ -6,7 +6,8 @@
  * Emits a `ParseResult` compatible with `ImportMappingWizard` (columns are
  * `col_1..col_N` derived from detected column bands).
  */
-import type { IDocumentParser, ParseResult, ParsedBoqRow } from './IDocumentParser';
+import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
+import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 
 interface PdfItem { str: string; transform: number[]; width?: number }
 
