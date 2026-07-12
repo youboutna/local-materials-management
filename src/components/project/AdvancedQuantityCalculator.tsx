@@ -1210,7 +1210,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
               </tbody>
             </table>
             </div>
+            {calculations.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+                <span>Lignes {pageStart + 1}–{pageEnd} sur {calculations.length}</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}><SkipBack className="w-3 h-3 mr-1" />Précédent</Button>
+                  <span className="self-center">Page {safePage + 1} / {totalPages}</span>
+                  <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>Suivant<SkipForward className="w-3 h-3 ml-1" /></Button>
+                </div>
+              </div>
+            )}
           </CardContent>
+
         </Card>
       )}
 
