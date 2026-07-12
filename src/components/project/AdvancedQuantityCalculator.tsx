@@ -526,28 +526,39 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     toast({ title: "Import en cours", description: `Analyse via l'importeur unifié (${file.name})...` });
     try {
       const parsed = await unifiedBoqParser.parse(file);
-      const dtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
+      const rawDtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
         source: 'quantity_takeoff',
         contextId: projectId ?? 'calculator',
         phaseId,
       });
+      // Filter obvious section headers / sub-totals: no qty, no PU, and matches LOT/PHASE/CHAPITRE/TOTAL.
+      const HEADER_RX = /^\s*(LOT|PHASE|CHAPITRE|TOTAL|SOUS[\s-]*TOTAL|S\/TOTAL)\b/i;
+      const dtos = rawDtos.filter((d) => {
+        const isHeader = HEADER_RX.test(d.designation || '');
+        const empty = (!d.quantity || d.quantity === 0) && !d.unitPrice;
+        return !(isHeader && empty);
+      });
+      const skipped = rawDtos.length - dtos.length;
       const calcs: CalculationResult[] = dtos.map((d) => {
         const qty = d.quantity ?? 0;
         const unit = d.unit || 'unité';
+        const hasGeom = d.length != null || d.width != null || d.height != null;
         return {
           elementType: mapToElementType(d.designation || '') || 'basic_calculator',
           originalLabel: d.designation ?? '',
-          dimensions: {
-            length: d.length ?? qty,
-            width: d.width ?? undefined,
-            height: d.height ?? undefined,
-          },
+          dimensions: hasGeom
+            ? {
+                length: d.length ?? undefined,
+                width: d.width ?? undefined,
+                height: d.height ?? undefined,
+              }
+            : undefined,
           results: {
-            'Quantité': qty,
-            ...(d.unitPrice != null ? { 'PU': d.unitPrice } : {}),
+            Quantité: qty,
+            ...(d.unitPrice != null ? { PU: d.unitPrice } : {}),
             ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
           },
-          metadata: { unit, source: parsed.format, file: parsed.fileName },
+          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true },
           timestamp: new Date().toISOString(),
         } as CalculationResult;
       });
@@ -562,9 +573,12 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         } as InvoiceLine));
         setInvoiceLines(lines);
         setCurrentLineIndex(0);
-        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}). Utilisez Précédent/Suivant pour éditer.` });
+        toast({
+          title: 'Import réussi',
+          description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()})${skipped ? ` — ${skipped} en-tête(s) filtré(s)` : ''}.`,
+        });
       } else {
-        toast({ title: "Aucune ligne détectée", description: "Vérifiez la mise en page du fichier.", variant: 'destructive' });
+        toast({ title: 'Aucune ligne détectée', description: 'Vérifiez la mise en page du fichier.', variant: 'destructive' });
       }
     } catch (err) {
       const description = err instanceof Error ? err.message : "Impossible d'analyser le fichier";
