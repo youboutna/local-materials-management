@@ -10,7 +10,8 @@
  *   3. Emit columns as the detected header labels; ignore rows above.
  */
 import * as XLSX from 'xlsx';
-import type { IDocumentParser, ParseResult, ParsedBoqRow } from './IDocumentParser';
+import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
+import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 
 const HEADER_HINTS: RegExp[] = [
   /d[eé]signation|libell[eé]|description|intitul/i,
