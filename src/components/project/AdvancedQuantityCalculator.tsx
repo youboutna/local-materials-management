@@ -530,6 +530,35 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     setCalculations((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /** Mise à jour inline (désignation/quantité/PU/unité) sans passer par le mode édition. */
+  const updateCalcInline = (
+    index: number,
+    patch: { designation?: string; unit?: string; quantity?: number; unitPrice?: number },
+  ) => {
+    setCalculations((prev) =>
+      prev.map((c, i) => {
+        if (i !== index) return c;
+        const r = { ...(c.results || {}) } as Record<string, any>;
+        const qty = patch.quantity ?? (typeof r['Quantité'] === 'number' ? r['Quantité'] : 0);
+        const pu = patch.unitPrice ?? (typeof r['PU'] === 'number' ? r['PU'] : undefined);
+        r['Quantité'] = qty;
+        if (pu != null && pu > 0) {
+          r['PU'] = pu;
+          r['Total HT'] = qty * pu;
+        } else if (patch.unitPrice === 0) {
+          delete r['PU'];
+          delete r['Total HT'];
+        }
+        return {
+          ...c,
+          originalLabel: patch.designation ?? c.originalLabel,
+          metadata: { ...(c.metadata || {}), unit: patch.unit ?? (c.metadata as any)?.unit },
+          results: r,
+        };
+      }),
+    );
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
