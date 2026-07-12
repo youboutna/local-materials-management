@@ -47,7 +47,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
-import { useParsedInvoicesHex } from "@/hooks/hexagonal/useInvoicesHex";
+import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
+import { parsePdf } from "@/utils/btpCalculations";
 import {
   Supplier,
   SupplierNotification,
@@ -134,7 +135,57 @@ const UnifiedSupplierPortal = () => {
 
   // Fetch parsed invoices using hexagonal hook
   // This replaces the direct supabase.from("parsed_invoices") call
-  const { invoices: parsedInvoices = [], isLoading: invoicesLoading } = useParsedInvoicesHex(supplierProfile?.id || "");
+  const { invoices: parsedInvoices = [], isLoading: invoicesLoading, refetch: refetchInvoices } = useParsedInvoicesHex(supplierProfile?.id || "");
+  const { createInvoice, isCreating: isParsingInvoice } = useInvoiceMutationsHex();
+  const [invoiceParsing, setInvoiceParsing] = useState(false);
+
+  const handleInvoiceUpload = async (file: File) => {
+    if (!user || !file) return;
+    setInvoiceParsing(true);
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `invoices/${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
+      const up = await storageUpload(file, path);
+      if (!up.success) throw new Error("Upload échoué");
+
+      let extracted: any = null;
+      let parseError: string | null = null;
+      try {
+        extracted = await parsePdf(file);
+      } catch (e) {
+        parseError = e instanceof Error ? e.message : String(e);
+      }
+
+      const total = Array.isArray(extracted)
+        ? extracted.reduce((s: number, l: any) => s + (Number(l.total ?? l.amount ?? 0) || 0), 0)
+        : null;
+
+      await createInvoice({
+        id: crypto.randomUUID(),
+        fileName: safeName,
+        originalFileName: file.name,
+        filePath: up.url,
+        fileSize: file.size,
+        mimeType: file.type || 'application/pdf',
+        supplierId: supplierProfile?.id ?? null,
+        invoiceType: 'supplier_invoice',
+        status: parseError ? 'rejected' : (extracted ? 'validated' : 'pending'),
+        amount: total,
+        currency: 'MRU',
+        extractedData: extracted ? { items: extracted } : null,
+        parsingErrors: parseError ? [parseError] : null,
+        uploadedBy: user.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as any);
+      toast({ title: 'Facture analysée', description: parseError ? `Erreur d'analyse: ${parseError}` : `${Array.isArray(extracted) ? extracted.length : 0} lignes extraites.` });
+      refetchInvoices();
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.message ?? 'Analyse impossible', variant: 'destructive' });
+    } finally {
+      setInvoiceParsing(false);
+    }
+  };
 
   // Fetch inspections with service layer (stakeholder-based)
   const {
@@ -979,11 +1030,32 @@ const UnifiedSupplierPortal = () => {
             {/* Parsed Invoices Tab */}
             <TabsContent value="invoices">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between gap-4">
                   <CardTitle className="flex items-center gap-2">
                     <Receipt className="h-5 w-5" />
                     Factures Analysées
                   </CardTitle>
+                  <div>
+                    <input
+                      id="invoice-file"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleInvoiceUpload(f);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => document.getElementById('invoice-file')?.click()}
+                      disabled={invoiceParsing || isParsingInvoice}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {invoiceParsing ? 'Analyse en cours…' : 'Analyser une facture'}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
