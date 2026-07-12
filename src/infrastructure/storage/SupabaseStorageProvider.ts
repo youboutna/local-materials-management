@@ -36,13 +36,16 @@ export class SupabaseStorageProvider implements IStorageProvider {
       error?: string;
     }> {
     try {
-      const filePath = `${this.bucket}/${path}`;
-      
+      // NB: the bucket is already selected via .from(this.bucket) — do NOT prefix the path
+      // with the bucket name again (it would create a nested "documents/documents/..." key
+      // that collides across uploads and yields "The resource already exists").
+      const filePath = path;
+
       const { data, error } = await supabase.storage
         .from(this.bucket)
         .upload(filePath, file, {
           contentType: options?.contentType || file.type,
-          upsert: options?.upsert || false,
+          upsert: options?.upsert ?? true,
           metadata: options?.metadata
         });
 

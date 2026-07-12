@@ -158,10 +158,10 @@ const UnifiedSupplierPortal = () => {
   const handleFileUpload = async () => {
     if (!uploadFile || !uploadTitle.trim() || !user) return;
 
-    const uploadResult = await storageUpload(
-      uploadFile,
-      `supplier-uploads/${user.id}`
-    );
+    // Build a collision-free storage path: prefix + timestamp + random + original name.
+    const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
+    const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
+    const uploadResult = await storageUpload(uploadFile, uniquePath);
 
     if (!uploadResult.success) {
       return;
