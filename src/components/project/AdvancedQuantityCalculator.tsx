@@ -857,8 +857,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
             <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
-            <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
+            <Button variant="outline" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))} title="Page précédente"><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
+            <Button variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} title="Page suivante"><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
+            <span className="text-xs text-muted-foreground self-center px-2">Page {safePage + 1} / {totalPages}{calculations.length ? ` · ${pageStart + 1}–${pageEnd} / ${calculations.length}` : ''}</span>
+
             {projectId && calculations.length > 0 && (
               <>
                 <Button onClick={handleSaveAll} disabled={savingAll || !selectedMaterialId} variant="secondary">
