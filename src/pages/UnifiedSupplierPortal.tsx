@@ -1030,11 +1030,32 @@ const UnifiedSupplierPortal = () => {
             {/* Parsed Invoices Tab */}
             <TabsContent value="invoices">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between gap-4">
                   <CardTitle className="flex items-center gap-2">
                     <Receipt className="h-5 w-5" />
                     Factures Analysées
                   </CardTitle>
+                  <div>
+                    <input
+                      id="invoice-file"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleInvoiceUpload(f);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => document.getElementById('invoice-file')?.click()}
+                      disabled={invoiceParsing || isParsingInvoice}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {invoiceParsing ? 'Analyse en cours…' : 'Analyser une facture'}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
