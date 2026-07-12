@@ -8,6 +8,7 @@ import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import { BoqCalculatorService } from './BoqCalculatorService';
+import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { ReferentialType } from '@/config/referentials';
