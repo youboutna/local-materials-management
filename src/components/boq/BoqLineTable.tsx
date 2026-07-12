@@ -22,6 +22,8 @@ interface Props {
   referentialCode?: ReferentialType;
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
+  /** Number of rows per page. Set to 0 to disable pagination. */
+  pageSize?: number;
 }
 
 const fmt = (n: number) =>
