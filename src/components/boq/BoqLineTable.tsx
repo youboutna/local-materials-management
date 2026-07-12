@@ -69,8 +69,17 @@ export function BoqLineTable({
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => onChange?.(i, p);
 
+  const usePaging = pageSize > 0 && lines.length > pageSize;
+  const totalPages = usePaging ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
+  const safePage = Math.min(page, totalPages - 1);
+  const start = usePaging ? safePage * pageSize : 0;
+  const end = usePaging ? start + pageSize : lines.length;
+  const pageRows = usePaging ? lines.slice(start, end) : lines;
+
   return (
+    <div className="space-y-2">
     <div className="rounded-md border overflow-x-auto">
+
       <Table>
         <TableHeader>
           <TableRow>
