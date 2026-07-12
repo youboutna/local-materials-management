@@ -74,9 +74,12 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       const line = matrix[i] ?? [];
       // Skip fully empty rows
       if (line.every((v) => v == null || String(v).trim() === '')) continue;
-      // Skip sub-total rows so aggregate lines don't pollute the DTO list
-      const firstText = String(line[0] ?? '').trim();
-      if (/^(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total)/i.test(firstText)) continue;
+      // Skip sub-total / total / section-header rows even when text is in col B/C
+      const joined = line.map((v) => String(v ?? '').trim()).join(' | ').toLowerCase();
+      if (/(^|\|\s*)(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total|total\s+lot|total\s+phase|total\s+g[eé]n[eé]ral)/i.test(joined)) continue;
+      // Skip pure section headers ("LOT 1 - PHASE 2 : ...") that carry no quantity + no price
+      const hasNumeric = line.some((v) => typeof v === 'number' && v !== 0);
+      if (!hasNumeric && /^(lot\s*\d|phase\s*\d|chapitre|section)/i.test(String(line[1] ?? line[0] ?? '').trim())) continue;
 
       const raw: Record<string, string | number | null> = {};
       columns.forEach((col, idx) => {
