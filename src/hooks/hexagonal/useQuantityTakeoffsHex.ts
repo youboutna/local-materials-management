@@ -72,8 +72,8 @@ export function useQuantityTakeoffsHex(projectId: string) {
   const getTotalValue = (): number => {
     if (!quantityTakeoffs) return 0;
     return quantityTakeoffs?.reduce((sum, qt) => {
-      const materialPrice = qt.material?.price_per_unit || 0;
-      return sum + (qt.quantity * materialPrice);
+      const pu = (qt as { unit_price?: number }).unit_price ?? qt.material?.price_per_unit ?? 0;
+      return sum + (qt.quantity * pu);
     }, 0) || 0;
   };
 
