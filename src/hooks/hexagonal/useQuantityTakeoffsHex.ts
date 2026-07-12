@@ -100,6 +100,7 @@ export function useQuantityTakeoffsHex(projectId: string) {
     quantityTakeoffs,
     isLoading,
     deleteMutation,
+    updateMutation,
     getTotalQuantityByUnit,
     getTotalValue,
     getTotalQuantityByUnitFromService,
