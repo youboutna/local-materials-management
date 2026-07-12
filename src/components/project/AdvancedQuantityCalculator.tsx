@@ -564,7 +564,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             ...(d.unitPrice != null ? { PU: d.unitPrice } : {}),
             ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
           },
-          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true },
+          metadata: { unit, source: parsed.format, file: parsed.fileName, imported: true, resourceType: d.resourceType ?? 'material', phaseId: d.phaseId ?? null, milestoneId: d.milestoneId ?? null, taskId: d.taskId ?? null },
           timestamp: new Date().toISOString(),
         } as CalculationResult;
       });
