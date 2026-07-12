@@ -119,7 +119,7 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: pu ?? null,
-        vatRate: fiscal.vatRate,
+        vatRate: effectiveVat,
         totalHt: pu != null ? quantity * pu : null,
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
