@@ -317,6 +317,34 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
 
+  // Matériau sélectionné → hydrate PU + unité de référence (avant tout calcul).
+  const selectedMaterial = React.useMemo(
+    () => (materials as any[]).find((m: any) => m?.id === selectedMaterialId),
+    [materials, selectedMaterialId],
+  );
+  const [autoRecs, setAutoRecs] = useState(true);
+
+  // Auto-remplissage du PU par défaut dès qu'un matériau est choisi (sans écraser
+  // une saisie manuelle explicite).
+  const priceAutoFilledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedMaterial) return;
+    const price = Number(
+      (selectedMaterial as any).pricePerUnit ??
+      (selectedMaterial as any).unit_price ??
+      (selectedMaterial as any).unitPrice ??
+      NaN,
+    );
+    if (!Number.isFinite(price) || price <= 0) return;
+    // N'écrase pas une valeur non issue de l'auto-fill précédent.
+    const previousAuto = priceAutoFilledRef.current;
+    if (unitPriceOverride && unitPriceOverride !== previousAuto) return;
+    const nextValue = String(price);
+    setUnitPriceOverride(nextValue);
+    priceAutoFilledRef.current = nextValue;
+  }, [selectedMaterial, unitPriceOverride]);
+
+
 
   // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
