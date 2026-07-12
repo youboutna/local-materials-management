@@ -842,61 +842,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       {/* Results Table */}
       {calculations.length > 0 && (
         <Card>
-          <CardHeader className="space-y-3">
+          <CardHeader>
             <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
-            {projectId && (
-              <div className="flex flex-wrap items-end gap-2 border-t pt-3">
-                <div className="flex-1 min-w-[220px]">
-                  <Label className="text-xs">Matériau de référence</Label>
-                  <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
-                    <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
-                    <SelectContent>
-                      {materials.map((m: any) => (
-                        <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-[160px]">
-                  <Label className="text-xs">Type de ressource</Label>
-                  <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="material">Matériau</SelectItem>
-                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-[120px]">
-                  <Label className="text-xs">PU (optionnel)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={unitPriceOverride}
-                    onChange={(e) => setUnitPriceOverride(e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-                <Button
-                  onClick={handleSaveAll}
-                  disabled={savingAll || !selectedMaterialId || calculations.length === 0}
-                  variant="secondary"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {savingAll ? "Enregistrement..." : `Enregistrer ${calculations.length} métré(s)`}
-                </Button>
-                <Button
-                  onClick={handleSendToBoq}
-                  disabled={sendingBoq || calculations.length === 0}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
-                </Button>
-                {phaseId && <Badge variant="outline" className="ml-2">Phase associée</Badge>}
-              </div>
-            )}
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
