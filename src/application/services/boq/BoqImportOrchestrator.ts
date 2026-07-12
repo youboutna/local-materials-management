@@ -9,6 +9,7 @@ import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
+import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { ReferentialType } from '@/config/referentials';
@@ -65,9 +66,10 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType },
+    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
+    const fiscal = getFiscalProfile(ctx.fiscalProfileCode);
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
       const num = (v: unknown): number | null => {
@@ -116,6 +118,7 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: pu ?? null,
+        vatRate: fiscal.vatRate,
         totalHt: pu != null ? quantity * pu : null,
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,

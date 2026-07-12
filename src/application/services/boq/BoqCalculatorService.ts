@@ -6,6 +6,7 @@
  */
 
 import { BOQ_UNIT_BY_CODE, BoqUnit, isBoqUnit } from '@/config/referentials/boq/units.referential';
+import { DEFAULT_FISCAL_PROFILE, type BoqFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 
 export interface BoqLineInput {
   unit: BoqUnit | string;
@@ -14,7 +15,7 @@ export interface BoqLineInput {
   height?: number | null;
   quantity?: number | null; // when set explicitly (e.g. count for "unité")
   unitPrice?: number | null;
-  vatRate?: number | null; // 0.20 = 20%
+  vatRate?: number | null; // 0.16 = 16% (fallback to fiscal profile when null)
 }
 
 export interface BoqLineTotals {
@@ -22,6 +23,8 @@ export interface BoqLineTotals {
   totalHt: number;
   totalTva: number;
   totalTtc: number;
+  withholding?: number;   // RAS BIC applied on HT (opt.)
+  netToPay?: number;      // TTC − retenues (opt.)
 }
 
 export class BoqCalculatorService {
@@ -38,50 +41,61 @@ export class BoqCalculatorService {
     return def.compute(input.length ?? 0, input.width ?? undefined, input.height ?? undefined);
   }
 
-  /** Line totals HT / TVA / TTC. */
-  static computeTotals(input: BoqLineInput): BoqLineTotals {
+  /** Line totals HT / TVA / TTC (+ retenues if a fiscal profile is provided). */
+  static computeTotals(input: BoqLineInput, profile?: BoqFiscalProfile): BoqLineTotals {
     const quantity = BoqCalculatorService.computeQuantity(input);
     const unitPrice = input.unitPrice ?? 0;
-    const vatRate = input.vatRate ?? 0;
+    const vatRate = input.vatRate ?? profile?.vatRate ?? 0;
     const totalHt = quantity * unitPrice;
     const totalTva = totalHt * vatRate;
     const totalTtc = totalHt + totalTva;
-    return { quantity, totalHt, totalTva, totalTtc };
+    if (!profile) return { quantity, totalHt, totalTva, totalTtc };
+    const withholding = totalHt * (profile.withholdingRate ?? 0);
+    const netToPay = totalTtc - withholding;
+    return { quantity, totalHt, totalTva, totalTtc, withholding, netToPay };
   }
 
   /** Aggregate totals over a set of lines. */
-  static aggregate(lines: BoqLineInput[]): BoqLineTotals {
+  static aggregate(lines: BoqLineInput[], profile?: BoqFiscalProfile): BoqLineTotals {
     return lines.reduce<BoqLineTotals>(
       (acc, l) => {
-        const t = BoqCalculatorService.computeTotals(l);
+        const t = BoqCalculatorService.computeTotals(l, profile);
         return {
           quantity: acc.quantity + t.quantity,
           totalHt: acc.totalHt + t.totalHt,
           totalTva: acc.totalTva + t.totalTva,
           totalTtc: acc.totalTtc + t.totalTtc,
+          withholding: (acc.withholding ?? 0) + (t.withholding ?? 0),
+          netToPay: (acc.netToPay ?? 0) + (t.netToPay ?? 0),
         };
       },
-      { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0 }
+      { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0, withholding: 0, netToPay: 0 }
     );
   }
 
   /** Group by any WBS key (phaseId / milestoneId / taskId). */
   static aggregateBy<T extends BoqLineInput & { [k: string]: unknown }>(
     lines: T[],
-    key: string
+    key: string,
+    profile?: BoqFiscalProfile,
   ): Record<string, BoqLineTotals> {
     const out: Record<string, BoqLineTotals> = {};
     for (const l of lines) {
       const k = String(l[key] ?? '__unassigned__');
-      const cur = out[k] ?? { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0 };
-      const t = BoqCalculatorService.computeTotals(l);
+      const cur = out[k] ?? { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0, withholding: 0, netToPay: 0 };
+      const t = BoqCalculatorService.computeTotals(l, profile);
       out[k] = {
         quantity: cur.quantity + t.quantity,
         totalHt: cur.totalHt + t.totalHt,
         totalTva: cur.totalTva + t.totalTva,
         totalTtc: cur.totalTtc + t.totalTtc,
+        withholding: (cur.withholding ?? 0) + (t.withholding ?? 0),
+        netToPay: (cur.netToPay ?? 0) + (t.netToPay ?? 0),
       };
     }
     return out;
   }
+
+  /** Convenience: default Mauritania profile. */
+  static defaultProfile(): BoqFiscalProfile { return DEFAULT_FISCAL_PROFILE; }
 }
