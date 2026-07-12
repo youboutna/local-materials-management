@@ -779,18 +779,63 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="mt-4 flex flex-wrap gap-3">
+          {/* Mapping ressources (déplacé depuis résultats) */}
+          {projectId && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
+              <div>
+                <Label className="text-xs">Matériau de référence</Label>
+                <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
+                  <SelectContent>
+                    {materials.map((m: any) => (
+                      <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Type de ressource (défaut)</Label>
+                <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="material">Matériau</SelectItem>
+                    <SelectItem value="labour">Main-d'œuvre</SelectItem>
+                    <SelectItem value="equipment">Équipement / Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">PU par défaut (optionnel)</Label>
+                <Input type="number" step="0.01" min="0" value={unitPriceOverride}
+                  onChange={(e) => setUnitPriceOverride(e.target.value)} placeholder="0.00" />
+              </div>
+            </div>
+          )}
+
+          {/* Actions principales */}
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
             <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
             <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-
             <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
             <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
-            <Button variant="destructive" onClick={() => setCalculations([])}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
-            <Button variant="default" onClick={exportToCSV}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
+            {projectId && calculations.length > 0 && (
+              <>
+                <Button onClick={handleSaveAll} disabled={savingAll || !selectedMaterialId} variant="secondary">
+                  <Save className="w-4 h-4 mr-2" />{savingAll ? "Enregistrement..." : `Enregistrer (${calculations.length})`}
+                </Button>
+                <Button onClick={handleSendToBoq} disabled={sendingBoq}>
+                  <Upload className="w-4 h-4 mr-2" />{sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
+                </Button>
+              </>
+            )}
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={exportToCSV} disabled={calculations.length === 0}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
+              <Button variant="destructive" onClick={() => setCalculations([])} disabled={calculations.length === 0}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
+            </div>
           </div>
+          {phaseId && <div className="mt-2"><Badge variant="outline">Phase associée</Badge></div>}
         </CardContent>
       </Card>
 
