@@ -1,84 +1,82 @@
-## Objectifs
 
-1. **Bug bloquant** : après validation code secret, rediriger vers `/supplier-portal` onglet « Appels d'Offres » au lieu de rendre l'UnlockedView isolé.
-2. **Câblage Plan v3 (BOQ composable)** cohérent sur `/supplier-portal/*`, `/projects/create`, `/projects/{uuid}`, `/projects/{uuid}/edit`, `/materials/create`, `/materials/{uuid}`, `/materials/{uuid}/edit`.
-3. **Clarification métier BOQ vs Métré vs DQE** : le métré seul n'a pas de sens — il est soit un outil d'expression de besoin/planification (côté projet), soit un outil de chiffrage (côté fournisseur). BOQ = brique commune ; DQE = livrable projet spécifique.
-4. **Suppression du legacy** une fois le remplacement validé.
+# Plan d'exécution — Intégration DQE / Calculateur / Contexte
 
-## 1. Fix redirect code secret (bloquant)
+Livraison en 4 lots parallélisables. Aucune nouvelle vue : tout se greffe sur `AdvancedQuantityCalculator`, `BoqImportDialog`, `ProjectDqeTab` et l'onglet Planification existant.
 
-Fichier : `src/components/tenders/SupplierSecureAccessPortal.tsx`
-- Sur `handleValidate` succès → `navigate('/supplier-portal?tab=tenders&tenderId=<id>&secret=<code>')` via `useNavigate()`.
-- Conserver `SecretCodeAccessGate` pour l'écran de saisie ; supprimer l'UnlockedView inline (déplacée dans l'onglet Tenders du portail).
+## Lot A — Moteur unifié & ouvertures (Phase 1 + 3)
 
-Fichier : `src/pages/UnifiedSupplierPortal.tsx`
-- Lire `useSearchParams()` → si `tab` présent, initialiser `activeTab` avec cette valeur (au lieu de `'documents'`).
-- Onglet `tenders` : rendre `<SupplierTenderInbox tenderId={...} secret={...} />` (nouveau composant léger qui reprend le contenu de l'ancien UnlockedView, mais en mode intégré au portail).
-- Si le fournisseur n'est pas encore authentifié : afficher un panneau contextuel « Code validé — connectez-vous pour accéder à l'appel d'offres <ref> » qui pré-remplit l'email si dispo.
-
-## 2. Sémantique BOQ / Métré / DQE
-
-Réalignement (docstrings + UI wording) :
-
-```text
-BoqLine (kernel)  ← brique atomique partagée
-   ├── source = quantity_takeoff → expression de besoin projet (planification)
-   ├── source = tender_estimate  → estimation confidentielle (maître d'ouvrage)
-   ├── source = dqe              → livrable DQE (chiffrage détaillé projet)
-   └── source = supplier_bid     → offre financière fournisseur
+**Domaine** — enrichir `MeterInputDTO` :
+```ts
+openings?: Array<{ width: number; height: number }>; // en mètres
+deductOpenings?: boolean;                            // défaut selon elementType
 ```
 
-- `<QuantityTakeoffs />` sera renommé côté UI en « Expression de besoin (métré prévisionnel) » quand utilisé dans un projet, et « Chiffrage BOQ » quand utilisé côté fournisseur.
-- Le module « Métré » standalone est supprimé du menu principal ; l'accès passe désormais par :
-  - un projet → onglet « Métré / DQE » de la phase (déjà en place via `PhaseQuantityTakeoffTab`) ;
-  - une soumission fournisseur → onglet « Chiffrage » (à câbler).
+**Référentiel** — ajouter `deductOpenings` dans `element-types.referential.ts` (mur=true, cloison=true, dalle=false, poutre=false…).
 
-## 3. Câblage pages ciblées
+**Service** — créer `AdvancedMeterEngine.compute(dto)` (dans `src/application/services/boq/`) qui :
+- convertit unités (déjà via `normalizeUnit`),
+- calcule surface brute L×H,
+- soustrait Σ(ouvertures) si `deductOpenings`,
+- applique formules du référentiel (ferraillage, coffrage, béton) via `formulas.referential.ts`.
 
-### `/supplier-portal`
-- Nouvel onglet `tenders` (déjà présent) reçoit `<SupplierTenderInbox>` qui affiche : liste des tenders accessibles (via code ou compte), et pour chaque tender : `<BoqLineTable source="supplier_bid" contextId={tenderId} />` + `<BoqImportDialog source="supplier_bid" contextId={tenderId} />`.
-- Le tab `upload` reste pour docs annexes.
+**UI** — `AdvancedQuantityCalculator` :
+- sous-composant `OpeningsInput` (liste éditable, unités cm/mm/m avec conversion auto),
+- affichage récap : surface brute → ouvertures → surface nette,
+- même moteur consommé par le flux « importer ».
 
-### `/projects/create` (workflow) et `/projects/{uuid}/edit`
-- Vérifier que l'étape « Phases » monte bien `PhaseQuantityTakeoffTab` (déjà OK).
-- Ajouter dans l'étape « Budget & DQE » un `<BoqLineTable source="dqe" contextId={projectId} />` avec import BOQ pour le DQE global projet (agrégation multi-phases).
+## Lot B — Libellés & colonnes (Phase 2)
 
-### `/projects/{uuid}` (détail)
-- Onglet « DQE / Métré » : totaux (`<PriceSummary lines={...} />`) + `<BoqComparisonTable estimateLines={dqe} bidLines={bids} />` en cas de tender awarded lié.
-- Cohérence design : réutiliser `Card + CardHeader + CardTitle + Badge` comme dans `PhaseQuantityTakeoffTab`.
+- `« calcul basic »` → `« Saisie rapide »`
+- `« calcul avancé »` → `« Détail estimatif »`
+- Colonnes tableau résultats : `Ressource | Unité | Qté théorique | Coeff | Qté totale | PU HT | Total HT`
+- Renommer `CALCULS` → `Détail des ressources` dans `AdvancedQuantityCalculator`.
 
-### `/materials/*`
-- Pages Materials restent des CRUD référentiels — **pas** de BOQ ici. Vérifier uniquement que le sélecteur matériau utilisé dans `<BoqLineTable>` référence bien `materials.id` via un service, pas via `supabase.from()`.
+## Lot C — Pagination réelle (Phase 4)
 
-## 4. Contrôle qualité architecture
+Remplacer la navigation ligne-par-ligne « Précédent/Suivant » (qui pilote `currentLineIndex` d'un assistant fictif) par une vraie pagination du tableau :
+- `pageSize` configurable (10 par défaut),
+- boutons ← / → naviguent entre pages,
+- compteur `Page X / N — Ligne A à B sur T`,
+- input « aller à la page ».
 
-Grep de non-régression :
-- `rg "supabase\\.from" src/components src/pages src/hooks` → 0 hit autorisé hors adapters/hooks hexagonaux existants.
-- `rg "TenderQuantitativeEstimate" src` → doit disparaître (remplacé par `<BoqLineTable source="tender_estimate">`).
-- Vérifier que chaque hook créé (`useBoqDocument`, `useBoqImport`, `useTenderToPlanning`) suit le pattern `{ data, isLoading, action*, isPending, error }` — pas de mutation brute exposée.
+Retirer `currentLineIndex` / auto-fill formulaire depuis import (déjà signalé comme confusant par l'utilisateur).
 
-## 5. Suppression legacy (après validation visuelle)
+## Lot D — Contexte projet/phase/tâche & mapping (Phases 5–7)
 
-À supprimer :
-- `src/components/tenders/TenderQuantitativeEstimate.tsx` (si présent) → remplacé par `BoqLineTable`.
-- Ancien `UnlockedView` inline dans `SupplierSecureAccessPortal.tsx` (déplacé vers portail).
-- Éventuels doublons `QuantityTakeoffs*` non hexagonaux dans `src/components/project/` (à auditer avec `rg`).
+**Header contextuel** dans `AdvancedQuantityCalculator` et `BoqImportDialog` :
+- Sélecteurs Projet (readonly si `/projects/{uuid}`) / Phase / Tâche, alimentés par `getReferentialOptions(referentialCode)`.
+- Persistance sur `MeterInputDTO.phaseId / taskId / contextId`.
 
-Chaque suppression fera l'objet d'un contrôle build + preview avant validation finale.
+**Mapping matériaux** :
+- Manuel : sélecteur `MaterialPicker` (existant) — PU/TVA auto-remplis.
+- Import : `MaterialPriceResolver` déjà en place, on ajoute fallback « ressource temporaire » avec badge ⚠ dans le tableau.
+- Filtrage ressources par phase (Gros œuvre → béton/acier ; Second œuvre → cloisons/revêtements) via `resource-phase-affinity.referential.ts` (nouveau, mais fichier de config, pas de vue).
 
-## Détails techniques (pour référence)
+**Planification** :
+- L'onglet Planification (`PlanningVarianceView` existant) reçoit `phaseId` et `taskId` et regroupe déjà par phase — on ajoute regroupement par tâche + sous-totaux HT/TTC.
 
-- **Route params** : `useSearchParams()` (react-router v6) ; pas de state global pour transporter `secret`/`tenderId`.
-- **Persistance code validé** : `sessionStorage['supplier-tender-secret']` (non `localStorage`) pour ne pas fuiter entre sessions.
-- **Design tokens** : réutiliser `text-primary`, `bg-muted`, `Badge variant="outline"` — pas de couleur hard-codée.
-- **i18n** : nouvelles clés `tenders.supplierPortal.tenderInbox.*` dans le fichier de traduction utilisé par `useLanguage`.
+## Lot E — Tests (Phase 8)
 
-## Ordre d'exécution proposé
+Vitest :
+- `AdvancedMeterEngine.spec.ts` — surface brute/nette, conversions cm/mm/m, deductOpenings on/off.
+- `UnifiedBoqParser.spec.ts` — extraction ouvertures depuis PDF SOMELEC & Excel HADRATECH.
+- `pagination.spec.tsx` — tableau paginé, navigation, compteur.
 
-1. Fix redirect (SupplierSecureAccessPortal + UnifiedSupplierPortal tabs from URL) — livrable immédiat.
-2. `<SupplierTenderInbox>` minimal + câblage tab `tenders`.
-3. Wiring `/projects/{uuid}` onglet DQE.
-4. Audit + suppression legacy.
-5. Renommages wording BOQ/Métré/DQE.
+## Fichiers touchés (aucun nouveau composant visuel)
 
-Confirmes-tu cet ordre, ou préfères-tu que je démarre directement par (1) + (2) et qu'on itère ?
+- `src/dtos/boq/MeterInputDTO.ts` — champ `openings`, `deductOpenings`.
+- `src/config/referentials/boq/element-types.referential.ts` — flag `deductOpenings`.
+- `src/config/referentials/boq/resource-phase-affinity.referential.ts` — nouveau (config).
+- `src/application/services/boq/AdvancedMeterEngine.ts` — nouveau service (pas d'UI).
+- `src/application/services/boq/parsers/PdfBoqParser.ts` + `SpreadsheetBoqParser.ts` — détection `0.90×2.10` → `openings[]`.
+- `src/application/services/boq/BoqImportOrchestrator.ts` — propage `openings` dans DTO.
+- `src/components/project/AdvancedQuantityCalculator.tsx` — refonte pagination + ouvertures + libellés.
+- `src/components/boq/BoqLineTable.tsx` — colonnes renommées.
+- `src/components/boq/BoqImportDialog.tsx` — header contextuel Phase/Tâche.
+- Tests dans `src/**/__tests__/`.
+
+## Exécution
+
+Lots A, B, C, D en batch parallèle (indépendants sur fichiers distincts). Lot E après. Aucun `supabase.from()` en UI ; tout passe par `boqRepository` et hooks hexagonaux existants.
+
+Confirmez « go » et je lance A/B/C/D en parallèle.
