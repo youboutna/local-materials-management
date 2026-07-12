@@ -513,22 +513,49 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
     setIsProcessing(true);
-    toast({ title: "Import en cours", description: "Analyse du fichier PDF..." });
+    toast({ title: "Import en cours", description: `Analyse via l'importeur unifié (${file.name})...` });
     try {
-      const parsedLines = await parsePdf(e.target.files[0]);
-      if (parsedLines.length > 0) {
-       //setInvoiceLines(parsedLines);
-        setCalculations(parsedLines);
-        toast({ title: "Import réussi", description: `${parsedLines.length} lignes importées` });
+      const parsed = await unifiedBoqParser.parse(file);
+      const dtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
+        source: 'quantity_takeoff',
+        contextId: projectId ?? 'calculator',
+        phaseId,
+      });
+      const calcs: CalculationResult[] = dtos.map((d) => {
+        const qty = d.quantity ?? 0;
+        const unit = d.unit || 'unité';
+        return {
+          elementType: mapToElementType(d.designation || '') || 'basic_calculator',
+          originalLabel: d.designation ?? '',
+          dimensions: {
+            length: d.length ?? qty,
+            width: d.width ?? undefined,
+            height: d.height ?? undefined,
+          },
+          results: {
+            'Quantité': qty,
+            ...(d.unitPrice != null ? { 'PU': d.unitPrice } : {}),
+            ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
+          },
+          metadata: { unit, source: parsed.format, file: parsed.fileName },
+          timestamp: new Date().toISOString(),
+        } as CalculationResult;
+      });
+      if (calcs.length > 0) {
+        setCalculations((prev) => [...prev, ...calcs]);
+        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}).` });
+      } else {
+        toast({ title: "Aucune ligne détectée", description: "Vérifiez la mise en page du fichier.", variant: 'destructive' });
       }
     } catch (err) {
-      const description =
-        err instanceof Error ? err.message : "Impossible d'analyser le PDF";
+      const description = err instanceof Error ? err.message : "Impossible d'analyser le fichier";
       toast({ title: "Erreur d'import", description, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
