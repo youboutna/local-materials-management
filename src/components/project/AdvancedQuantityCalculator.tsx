@@ -1112,23 +1112,28 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <div className="flex gap-1 justify-center">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(i)}
-                            aria-label="Éditer"
+                        <div className="flex flex-col gap-1 items-stretch min-w-[180px]">
+                          <Select
+                            value={((calc.metadata as any)?.resourceType as BoqResourceType) ?? 'material'}
+                            onValueChange={(v) => {
+                              setCalculations((prev) => prev.map((c, idx) => idx === i ? { ...c, metadata: { ...(c.metadata || {}), resourceType: v } } : c));
+                            }}
                           >
-                            <span role="img" aria-label="edit">✏️</span>
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => removeCalculation(i)}
-                            aria-label="Supprimer"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="material">Matériau</SelectItem>
+                              <SelectItem value="labour">Main-d'œuvre</SelectItem>
+                              <SelectItem value="equipment">Équipement / Service</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="flex gap-1 justify-center">
+                            <Button size="icon" variant="ghost" onClick={() => handleEdit(i)} aria-label="Éditer">
+                              <span role="img" aria-label="edit">✏️</span>
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => removeCalculation(i)} aria-label="Supprimer">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </td>
