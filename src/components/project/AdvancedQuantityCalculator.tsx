@@ -284,12 +284,19 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     height: 0,
     openings: [] as Opening[],
   });
-  const [editOpening, setEditOpening] = useState<Opening>({ 
-    id: "", 
-    label: "", 
-    length: 0, 
-    width: 0, 
-    height: 0 
+  // Extra edit fields for imported (DQE) rows
+  const [editImported, setEditImported] = useState({
+    designation: "",
+    unit: "",
+    quantity: 0,
+    unitPrice: 0,
+  });
+  const [editOpening, setEditOpening] = useState<Opening>({
+    id: "",
+    label: "",
+    length: 0,
+    width: 0,
+    height: 0,
   });
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
