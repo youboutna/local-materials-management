@@ -814,15 +814,24 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 {!showOpeningForm ? (
                   <Button onClick={() => setShowOpeningForm(true)}>Ajouter ouverture</Button>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 items-end">
+                  <div className="grid grid-cols-4 gap-2 items-end">
                     <Input type="number" step="0.01" min="0" placeholder="L" value={currentOpening.length || ""} onChange={e => setCurrentOpening(o => ({ ...o, length: parseFloat(e.target.value) || 0 }))} />
                     <Input type="number" step="0.01" min="0" placeholder="l" value={currentOpening.width || ""} onChange={e => setCurrentOpening(o => ({ ...o, width: parseFloat(e.target.value) || 0 }))} />
                     {form.elementType === "concrete_slab" && (
                       <Input type="number" step="0.01" min="0" placeholder="h" value={currentOpening.height || ""} onChange={e => setCurrentOpening(o => ({ ...o, height: parseFloat(e.target.value) || 0 }))} />
                     )}
+                    <Select value={openingUnit} onValueChange={(v) => setOpeningUnit(v as 'm' | 'cm' | 'mm')}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="m">m</SelectItem>
+                        <SelectItem value="cm">cm</SelectItem>
+                        <SelectItem value="mm">mm</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button variant="outline" onClick={addOpening}>Ajouter</Button>
                   </div>
                 )}
+
               </div>
             </div>
           )}
