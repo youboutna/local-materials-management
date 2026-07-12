@@ -23,6 +23,7 @@ export interface ToMeterInputsContext {
   contextId: string;
   phaseId?: string;
   referentialCode?: ReferentialType;
+  fiscalProfileCode?: string;
 }
 
 function detectFormat(file: File): MeterInputSourceFormat {
@@ -37,7 +38,6 @@ function detectFormat(file: File): MeterInputSourceFormat {
 export class UnifiedBoqParser {
   private readonly orchestrator = new BoqImportOrchestrator();
 
-  /** Parse a file (PDF/Excel/CSV) into a normalized preview + auto-mapping. */
   async parse(file: File): Promise<UnifiedParseResult> {
     const parsed = await this.orchestrator.parseFile(file);
     return {
@@ -48,13 +48,15 @@ export class UnifiedBoqParser {
     };
   }
 
-  /** Convert a parsed preview into MeterInputDTO[] ready for validation/commit. */
   toMeterInputs(
     parsed: UnifiedParseResult,
     mapping: ImportMapping,
     ctx: ToMeterInputsContext,
   ): MeterInputDTO[] {
-    const dtos = BoqImportOrchestrator.toDtos(parsed.rows, mapping, ctx);
+    const dtos = BoqImportOrchestrator.toDtos(parsed.rows, mapping, {
+      ...ctx,
+      detectedVatRate: parsed.detectedFiscal?.vatRate ?? null,
+    });
     return dtos.map((dto, idx) => ({
       ...dto,
       provenance: {
@@ -65,7 +67,6 @@ export class UnifiedBoqParser {
     }));
   }
 
-  /** Ingest already-computed calculator rows without going through a file. */
   static fromCalculator(
     lines: Omit<MeterInputDTO, 'provenance'>[],
     fileName = 'AdvancedQuantityCalculator',

@@ -66,10 +66,11 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string },
+    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string; detectedVatRate?: number | null },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
     const fiscal = getFiscalProfile(ctx.fiscalProfileCode);
+    const effectiveVat = ctx.detectedVatRate ?? fiscal.vatRate;
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
       const num = (v: unknown): number | null => {
@@ -118,7 +119,7 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: pu ?? null,
-        vatRate: fiscal.vatRate,
+        vatRate: effectiveVat,
         totalHt: pu != null ? quantity * pu : null,
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,

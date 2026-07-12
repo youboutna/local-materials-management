@@ -10,7 +10,8 @@
  *   3. Emit columns as the detected header labels; ignore rows above.
  */
 import * as XLSX from 'xlsx';
-import type { IDocumentParser, ParseResult, ParsedBoqRow } from './IDocumentParser';
+import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
+import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 
 const HEADER_HINTS: RegExp[] = [
   /d[eé]signation|libell[eé]|description|intitul/i,
@@ -70,16 +71,19 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     });
 
     const rows: ParsedBoqRow[] = [];
+    const detectedFiscal: DetectedFiscal = {};
     for (let i = headerIdx + 1; i < matrix.length; i++) {
       const line = matrix[i] ?? [];
-      // Skip fully empty rows
       if (line.every((v) => v == null || String(v).trim() === '')) continue;
-      // Skip sub-total / total / section-header rows even when text is in col B/C
-      const joined = line.map((v) => String(v ?? '').trim()).join(' | ').toLowerCase();
-      if (/(^|\|\s*)(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total|total\s+lot|total\s+phase|total\s+g[eé]n[eé]ral)/i.test(joined)) continue;
-      // Skip pure section headers ("LOT 1 - PHASE 2 : ...") that carry no quantity + no price
+      const label = String(line[0] ?? line[1] ?? '').trim();
+      // Fiscal meta rows: extract rates then drop
+      if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc)/i.test(label)) {
+        extractFiscalFromRow(line, detectedFiscal);
+        continue;
+      }
+      if (isSubtotalRow(label)) continue;
       const hasNumeric = line.some((v) => typeof v === 'number' && v !== 0);
-      if (!hasNumeric && /^(lot\s*\d|phase\s*\d|chapitre|section)/i.test(String(line[1] ?? line[0] ?? '').trim())) continue;
+      if (!hasNumeric && /^(lot\s*\d|phase\s*\d|chapitre|section)/i.test(label)) continue;
 
       const raw: Record<string, string | number | null> = {};
       columns.forEach((col, idx) => {
@@ -89,6 +93,7 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       rows.push({ raw });
     }
 
-    return { rows, columns, warnings };
+    warnings.push(...summarizeFiscal(detectedFiscal));
+    return { rows, columns, warnings, detectedFiscal };
   }
 }

@@ -6,7 +6,8 @@
  * Emits a `ParseResult` compatible with `ImportMappingWizard` (columns are
  * `col_1..col_N` derived from detected column bands).
  */
-import type { IDocumentParser, ParseResult, ParsedBoqRow } from './IDocumentParser';
+import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
+import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 
 interface PdfItem { str: string; transform: number[]; width?: number }
 
@@ -117,19 +118,22 @@ export class PdfBoqParser implements IDocumentParser {
       : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
 
     const dataRows = headerIdx >= 0 ? rowsAcc.slice(headerIdx + 1) : rowsAcc;
-    const parsedRows: ParsedBoqRow[] = dataRows
-      .filter((cells) => {
-        // drop sub-total rows so aggregates don't pollute the DTO list
-        const first = String(cells[0] ?? '').trim();
-        return !/^(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total)/i.test(first);
-      })
-      .map((cells) => {
-        const raw: Record<string, string | number | null> = {};
-        cells.forEach((c, i) => { raw[columns[i]] = c; });
-        return { raw };
-      });
+    const detectedFiscal: DetectedFiscal = {};
+    const parsedRows: ParsedBoqRow[] = [];
+    for (const cells of dataRows) {
+      const label = String(cells[0] ?? '').trim();
+      if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc)/i.test(label)) {
+        extractFiscalFromRow(cells, detectedFiscal);
+        continue;
+      }
+      if (isSubtotalRow(label)) continue;
+      const raw: Record<string, string | number | null> = {};
+      cells.forEach((c, i) => { raw[columns[i]] = c; });
+      parsedRows.push({ raw });
+    }
     if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
-    return { rows: parsedRows, columns, warnings };
+    warnings.push(...summarizeFiscal(detectedFiscal));
+    return { rows: parsedRows, columns, warnings, detectedFiscal };
   }
 }
 
