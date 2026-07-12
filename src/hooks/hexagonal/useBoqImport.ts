@@ -12,7 +12,7 @@ import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRep
 import type { ReferentialType } from '@/config/referentials';
 
 export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
-  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [parseResult, setParseResult] = useState<UnifiedParseResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
   const [dtos, setDtos] = useState<BoqLineDTO[]>([]);
   const [isBusy, setBusy] = useState(false);
@@ -21,11 +21,10 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const parseFile = useCallback(async (file: File) => {
     setBusy(true); setError(null);
     try {
-      const res = await boqImportOrchestrator.parseFile(file);
+      const res = await unifiedBoqParser.parse(file);
       setParseResult(res);
-      const auto = BoqImportOrchestrator.autoMap(res.columns);
-      setMapping(auto);
-      setDtos(BoqImportOrchestrator.toDtos(res.rows, auto, ctx));
+      setMapping(res.autoMapping);
+      setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, ctx));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally { setBusy(false); }
@@ -33,7 +32,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
 
   const applyMapping = useCallback((next: ImportMapping) => {
     setMapping(next);
-    if (parseResult) setDtos(BoqImportOrchestrator.toDtos(parseResult.rows, next, ctx));
+    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, next, ctx));
   }, [parseResult, ctx]);
 
   const commit = useCallback(async (lines: BoqLineDTO[] = dtos) => {
