@@ -272,8 +272,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [currentOpening, setCurrentOpening] = useState<Opening>({ id: "", label: "", length: 0, width: 0, height: 0 });
+  const [openingUnit, setOpeningUnit] = useState<'m' | 'cm' | 'mm'>('m');
   const [showOpeningForm, setShowOpeningForm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -305,8 +305,17 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   const [unitPriceOverride, setUnitPriceOverride] = useState<string>("");
   const [savingAll, setSavingAll] = useState(false);
   const [sendingBoq, setSendingBoq] = useState(false);
+  // Pagination réelle du tableau de résultats (remplace l'assistant fictif).
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(calculations.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageStart = safePage * PAGE_SIZE;
+  const pageEnd = Math.min(pageStart + PAGE_SIZE, calculations.length);
+  useEffect(() => { if (page >= totalPages) setPage(Math.max(0, totalPages - 1)); }, [totalPages, page]);
   const { data: materials = [] } = useMaterialsForTakeoff();
   const createTakeoff = useCreateQuantityTakeoff(projectId ?? "");
+
 
   // Extract primary numeric quantity from results (volume m³ > area m² > length m > count)
   const extractQuantity = (calc: CalculationResult): { qty: number; unit: string } => {
