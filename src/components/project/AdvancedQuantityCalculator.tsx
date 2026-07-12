@@ -938,9 +938,22 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 <Label className="text-xs">PU par défaut (optionnel)</Label>
                 <Input type="number" step="0.01" min="0" value={unitPriceOverride}
                   onChange={(e) => setUnitPriceOverride(e.target.value)} placeholder="0.00" />
-              </div>
             </div>
           )}
+
+          {/* Option: générer 1 ligne article par recommandation. */}
+          {projectId && selectedMaterialId && getRecommendationItems(form.elementType).length > 0 && (
+            <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={autoRecs}
+                onChange={(e) => setAutoRecs(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Générer une ligne article par recommandation ({getRecommendationItems(form.elementType).length}) en utilisant le PU / unité du matériau
+            </label>
+          )}
+
 
           {/* Actions principales */}
           <div className="mt-4 flex flex-wrap gap-2">
