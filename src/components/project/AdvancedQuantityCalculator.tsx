@@ -865,12 +865,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
-                        {calc.dimensions?.width != null ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
-                        {calc.dimensions?.height != null ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
+                        {isImported(calc) && !calc.dimensions ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : (
+                          <>
+                            {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
+                            {calc.dimensions?.width != null ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
+                            {calc.dimensions?.height != null ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
+                          </>
+                        )}
                         {calc.openings && calc.openings.length > 0 && (
                           <div className="text-xs text-gray-400 mt-1">
-                            Ouvertures: {calc.openings.map(o => 
+                            Ouvertures: {calc.openings.map(o =>
                               `${o.length.toFixed(2)}×${o.width.toFixed(2)}${o.height ? `×${o.height.toFixed(2)}` : ''}`
                             ).join(', ')}
                           </div>
