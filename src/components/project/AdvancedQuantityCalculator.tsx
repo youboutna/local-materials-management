@@ -15,12 +15,14 @@ import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack, Save } 
 import * as pdfjsLib from "pdfjs-dist";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
-import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
+import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
 import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
 import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
 import type { BoqResourceType } from "@/domain/boq/BoqLine";
+import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
+import { BoqImportOrchestrator } from "@/application/services/boq/BoqImportOrchestrator";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -511,22 +513,49 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
     setIsProcessing(true);
-    toast({ title: "Import en cours", description: "Analyse du fichier PDF..." });
+    toast({ title: "Import en cours", description: `Analyse via l'importeur unifié (${file.name})...` });
     try {
-      const parsedLines = await parsePdf(e.target.files[0]);
-      if (parsedLines.length > 0) {
-       //setInvoiceLines(parsedLines);
-        setCalculations(parsedLines);
-        toast({ title: "Import réussi", description: `${parsedLines.length} lignes importées` });
+      const parsed = await unifiedBoqParser.parse(file);
+      const dtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
+        source: 'quantity_takeoff',
+        contextId: projectId ?? 'calculator',
+        phaseId,
+      });
+      const calcs: CalculationResult[] = dtos.map((d) => {
+        const qty = d.quantity ?? 0;
+        const unit = d.unit || 'unité';
+        return {
+          elementType: mapToElementType(d.designation || '') || 'basic_calculator',
+          originalLabel: d.designation ?? '',
+          dimensions: {
+            length: d.length ?? qty,
+            width: d.width ?? undefined,
+            height: d.height ?? undefined,
+          },
+          results: {
+            'Quantité': qty,
+            ...(d.unitPrice != null ? { 'PU': d.unitPrice } : {}),
+            ...(d.totalHt != null ? { 'Total HT': d.totalHt } : {}),
+          },
+          metadata: { unit, source: parsed.format, file: parsed.fileName },
+          timestamp: new Date().toISOString(),
+        } as CalculationResult;
+      });
+      if (calcs.length > 0) {
+        setCalculations((prev) => [...prev, ...calcs]);
+        toast({ title: "Import réussi", description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()}).` });
+      } else {
+        toast({ title: "Aucune ligne détectée", description: "Vérifiez la mise en page du fichier.", variant: 'destructive' });
       }
     } catch (err) {
-      const description =
-        err instanceof Error ? err.message : "Impossible d'analyser le PDF";
+      const description = err instanceof Error ? err.message : "Impossible d'analyser le fichier";
       toast({ title: "Erreur d'import", description, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -682,8 +711,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           <div className="mt-4 flex flex-wrap gap-3">
             <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
             <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer PDF"}</Button>
-            <input type="file" accept="application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
+            <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+
             <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
             <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
             <Button variant="destructive" onClick={() => setCalculations([])}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
