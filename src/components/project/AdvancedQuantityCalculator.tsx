@@ -914,27 +914,55 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                         )}
                       </td>
-                       <td className="px-6 py-4 text-sm text-gray-500">
-                        <div className="space-y-1">
-                          {Object.entries(calc.results || {}).map(([key, value]) => (
-                            <div key={key} className="flex justify-between">
-                              <span className="font-medium">{key}</span>
-                              <span>
-                                {typeof value === 'number' 
-                                  ? value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
-                                  : value}
-                              </span>
+                       <td className="px-3 py-2 text-sm text-gray-600 min-w-[280px]">
+                        {isImported(calc) ? (
+                          <div className="space-y-2">
+                            <Input
+                              className="h-8 text-xs"
+                              value={calc.originalLabel ?? ''}
+                              onChange={(e) => updateCalcInline(i, { designation: e.target.value })}
+                              placeholder="Désignation"
+                            />
+                            <div className="grid grid-cols-3 gap-1">
+                              <div>
+                                <Label className="text-[10px]">Unité</Label>
+                                <Input className="h-8 text-xs"
+                                  value={(calc.metadata as any)?.unit ?? ''}
+                                  onChange={(e) => updateCalcInline(i, { unit: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px]">Qté</Label>
+                                <Input className="h-8 text-xs" type="number" step="0.01" min="0"
+                                  value={(calc.results as any)?.['Quantité'] ?? 0}
+                                  onChange={(e) => updateCalcInline(i, { quantity: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px]">PU</Label>
+                                <Input className="h-8 text-xs" type="number" step="0.01" min="0"
+                                  value={(calc.results as any)?.['PU'] ?? 0}
+                                  onChange={(e) => updateCalcInline(i, { unitPrice: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
                             </div>
-                          ))}
-                          <div>
-                          {calc?.metadata && Object.entries(calc.metadata).map(([key, value]) => (
-                            <div key={key}>
-                              <strong>{key}:</strong> {String(value)}
-                            </div>
-                          ))}
-                        </div>
-                        </div>
-                        {getRecommendations(calc.elementType || 'basic_calculator') && (
+                            {(calc.results as any)?.['Total HT'] != null && (
+                              <div className="text-xs text-muted-foreground text-right">
+                                Total HT : {Number((calc.results as any)['Total HT']).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {Object.entries(calc.results || {}).map(([key, value]) => (
+                              <div key={key} className="flex justify-between">
+                                <span className="font-medium">{key}</span>
+                                <span>{typeof value === 'number' ? value.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {getRecommendations(calc.elementType || 'basic_calculator') && !isImported(calc) && (
                           <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
                             <div className="font-medium">Recommandations:</div>
                             {getRecommendations(calc.elementType || 'basic_calculator')}
