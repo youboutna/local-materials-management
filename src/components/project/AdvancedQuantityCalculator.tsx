@@ -1204,7 +1204,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     <td className="border border-gray-300 px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
                      
                   </tr>
-                ))}
+                  );
+                })}
+
               </tbody>
             </table>
             </div>
