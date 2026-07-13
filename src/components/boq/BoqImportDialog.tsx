@@ -224,15 +224,26 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 <Label className="text-sm font-medium">
                   Référentiel projet <span className="text-xs text-muted-foreground">(lecture seule)</span>
                 </Label>
-                <div className="h-9 flex items-center rounded-md border bg-muted/40 px-3 text-sm">
-                  {projectReferentialCode ? (
+                <div className="min-h-9 flex flex-col justify-center rounded-md border bg-muted/40 px-3 py-1.5 text-sm">
+                  {projectWbs.length > 0 ? (
+                    <>
+                      <span className="text-xs font-medium truncate">
+                        {projectName || 'Projet courant'} — {projectWbs.length} phase(s)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground truncate">
+                        {projectWbs.map((p) => p.label).join(' • ')}
+                      </span>
+                    </>
+                  ) : projectReferentialCode ? (
                     <code className="text-xs">{projectReferentialCode}</code>
                   ) : (
                     <span className="text-xs text-muted-foreground">Aucun référentiel défini sur le projet</span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Géré depuis le module projet — non modifiable ici.
+                  {projectWbs.length > 0
+                    ? 'Phases/étapes/tâches chargées depuis le projet courant.'
+                    : 'Géré depuis le module projet — non modifiable ici.'}
                 </p>
               </div>
 
