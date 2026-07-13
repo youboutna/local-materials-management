@@ -273,9 +273,9 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
             </section>
 
 
-            {isAltReferential && projectPhases.length > 0 && (
+            {isAltReferential && (projectWbs.length > 0 || projectPhases.length > 0) && (
               <section className="rounded-md border p-3 space-y-2 bg-muted/30">
-                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → référentiel projet</h4>
+                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → phases du projet</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {altPhases.map((altPh) => (
                     <div key={altPh.code} className="flex items-center gap-2">
@@ -289,7 +289,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                         <SelectTrigger className="w-56 h-8"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">— non mappée —</SelectItem>
-                          {projectPhases.map((p) => (
+                          {(projectWbs.length > 0
+                            ? projectWbs.map((p) => ({ code: p.id, label: p.label }))
+                            : projectPhases.map((p) => ({ code: p.code, label: p.label }))
+                          ).map((p) => (
                             <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
                           ))}
                         </SelectContent>
