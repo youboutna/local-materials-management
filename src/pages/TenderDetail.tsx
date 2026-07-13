@@ -161,7 +161,27 @@ const TenderDetail: React.FC = () => {
           </div>
         )}
 
-        {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement (soumissions) car il nécessite l'estimateId gagnant. */}
+        {tender && (
+          <Card>
+            <CardHeader>
+              <CardTitle>DQE / Chiffrage estimatif</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Import BPU, saisie manuelle, calcul métré, génération devis signé et alignement projet.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <BoqWorkspace
+                source="tender_estimate"
+                contextId={tender.id}
+                projectId={tender.projectId ?? undefined}
+                mode="bid"
+                estimateId={tender.id}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement. */}
         {false && awardOpen && <span />}
       </div>
     </AppLayout>
