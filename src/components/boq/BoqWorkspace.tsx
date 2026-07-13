@@ -119,18 +119,12 @@ export function BoqWorkspace({
   // ---- Récap fiscal ----------------------------------------------------------
   const totals = useMemo(() => BoqCalculatorService.aggregate(doc.lines), [doc.lines]);
 
-  // ---- Devis / Facture -------------------------------------------------------
-  const [openSend, setOpenSend] = useState(false);
-  const [emailTo, setEmailTo] = useState(defaultEmail ?? '');
-  const [sending, setSending] = useState(false);
-
-  const buildCsv = () => {
-    const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
-    return DevisGenerator.toCsv(devis);
-  };
+  // ---- Devis / Facture : PDF + e-signature + email via BoqDevisDialog --------
+  const devisMode: BoqDevisMode = mode === 'invoice' ? 'facture' : mode === 'bid' ? 'devis' : 'dqe';
 
   const downloadCsv = () => {
-    const csv = buildCsv();
+    const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
+    const csv = DevisGenerator.toCsv(devis);
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -141,35 +135,6 @@ export function BoqWorkspace({
     toast({ title: 'Export CSV téléchargé' });
   };
 
-  const sendByEmail = async () => {
-    if (!emailTo.trim()) { toast({ title: 'Email destinataire requis', variant: 'destructive' }); return; }
-    setSending(true);
-    try {
-      const csv = buildCsv();
-      const b64 = typeof window !== 'undefined' ? btoa(unescape(encodeURIComponent(csv))) : '';
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: JSON.stringify({
-          to: emailTo.trim(),
-          subject: `${labels.devis} — ${totals.totalTtc.toLocaleString('fr-FR')} MRU TTC`,
-          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le ${labels.docPrefix} au format CSV.</p>
-                 <p><strong>Total HT :</strong> ${totals.totalHt.toLocaleString('fr-FR')} MRU<br/>
-                 <strong>TVA :</strong> ${totals.totalTva.toLocaleString('fr-FR')} MRU<br/>
-                 <strong>Total TTC :</strong> ${totals.totalTtc.toLocaleString('fr-FR')} MRU</p>`,
-          attachments: [{
-            filename: `${labels.docPrefix}_${contextId.slice(0, 8)}.csv`,
-            content: b64,
-            contentType: 'text/csv',
-            encoding: 'base64',
-          }],
-        }),
-      });
-      if (error) throw error;
-      toast({ title: 'Email envoyé', description: emailTo });
-      setOpenSend(false);
-    } catch (e) {
-      toast({ title: 'Envoi échoué', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    } finally { setSending(false); }
-  };
 
   // ---- Alignement planification (mode bid → project planning) ----------------
   const [aligning, setAligning] = useState(false);
