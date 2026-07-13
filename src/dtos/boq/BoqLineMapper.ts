@@ -70,6 +70,8 @@ export class BoqLineMapper {
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
       submittedBy: row.submitted_by ?? null,
+      sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
+      btpCode: row.btp_code ?? null,
     };
   }
 
