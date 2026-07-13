@@ -10,6 +10,7 @@ import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
 import { useQuery } from '@tanstack/react-query';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { BoqWorkspace } from '@/components/boq';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
