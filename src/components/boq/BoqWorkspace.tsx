@@ -126,18 +126,77 @@ export function BoqWorkspace({
   // ---- Devis / Facture : PDF + e-signature + email via BoqDevisDialog --------
   const devisMode: BoqDevisMode = mode === 'invoice' ? 'facture' : mode === 'bid' ? 'devis' : 'dqe';
 
-  const downloadCsv = () => {
+  const buildCsv = () => {
     const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
-    const csv = DevisGenerator.toCsv(devis);
+    return DevisGenerator.toCsv(devis);
+  };
+  const csvFileName = () => `${labels.docPrefix}_${contextId.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+  const downloadCsv = () => {
+    const csv = buildCsv();
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${labels.docPrefix}_${contextId.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = csvFileName();
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
     toast({ title: 'Export CSV téléchargé' });
   };
+
+  // ---- Envoyer CSV par email (sans PDF, léger) -------------------------------
+  const [csvEmailOpen, setCsvEmailOpen] = useState(false);
+  const [csvEmailTo, setCsvEmailTo] = useState(defaultEmail ?? '');
+  const [csvEmailSubject, setCsvEmailSubject] = useState(`${labels.devis} — ${contextId.slice(0, 8)}`);
+  const [csvSending, setCsvSending] = useState(false);
+  const sendCsvEmail = async () => {
+    if (!csvEmailTo) { toast({ title: 'Email destinataire requis', variant: 'destructive' }); return; }
+    setCsvSending(true);
+    try {
+      const csv = buildCsv();
+      const b64 = btoa(unescape(encodeURIComponent(`\uFEFF${csv}`)));
+      const { error } = await supabase.functions.invoke('send-email-notification', {
+        body: JSON.stringify({
+          to: csvEmailTo,
+          subject: csvEmailSubject,
+          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le fichier CSV <strong>${csvEmailSubject}</strong> (${doc.lines.length} lignes).</p><p>Total HT : ${totals.totalHt.toLocaleString('fr-FR')} MRU — TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU</p>`,
+          attachments: [{ filename: csvFileName(), content: b64, contentType: 'text/csv', encoding: 'base64' }],
+        }),
+      });
+      if (error) throw error;
+      toast({ title: 'CSV envoyé', description: csvEmailTo });
+      setCsvEmailOpen(false);
+    } catch (e) {
+      toast({ title: 'Envoi CSV échoué', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+    } finally { setCsvSending(false); }
+  };
+
+  // ---- Diffusion contextuelle (offre technique/commerciale, EB, BC, décompte)
+  type DiffusePreset = { key: string; label: string; title: string; notes: string; email?: string };
+  const diffusePresets: DiffusePreset[] = useMemo(() => {
+    const shortId = contextId.slice(0, 8);
+    if (mode === 'bid') {
+      return [
+        { key: 'offre-tech', label: 'Joindre à l\'offre technique', title: `Offre technique — ${shortId}`, notes: 'Pièce jointe au dossier d\'offre technique (chiffrage détaillé HT/TVA/TTC).' },
+        { key: 'offre-com',  label: 'Joindre à l\'offre commerciale', title: `Offre commerciale — ${shortId}`, notes: 'Pièce jointe à l\'offre commerciale : prix unitaires, quantités, totaux TTC.' },
+      ];
+    }
+    if (mode === 'planning') {
+      return [
+        { key: 'eb',  label: 'Expression de besoin (co-équipier)', title: `Expression de besoin — ${shortId}`, notes: 'Merci de valider les quantités et matériaux listés avant lancement des achats.' },
+        { key: 'bc',  label: 'Bon de commande fournisseur',         title: `Bon de commande — ${shortId}`, notes: 'Bon de commande pour décompte projet. Merci de confirmer disponibilité, délais et prix.' },
+        { key: 'dec', label: 'Décompte projet (interne)',            title: `Décompte projet — ${shortId}`, notes: 'Décompte des quantités et coûts par phase pour suivi budgétaire.' },
+      ];
+    }
+    return [
+      { key: 'dec-fact', label: 'Décompte facture (validation)', title: `Décompte facture — ${shortId}`, notes: 'Analyse détaillée de la facture pour validation comptable et rapprochement projet.' },
+    ];
+  }, [mode, contextId]);
+
+  const [diffuseOpen, setDiffuseOpen] = useState(false);
+  const [diffusePreset, setDiffusePreset] = useState<DiffusePreset | null>(null);
+  const openDiffuse = (p: DiffusePreset) => { setDiffusePreset(p); setDiffuseOpen(true); };
+
 
 
   // ---- Alignement planification (mode bid → project planning) ----------------
