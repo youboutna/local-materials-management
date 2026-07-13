@@ -20,6 +20,8 @@ interface Props {
   emptyLabel?: string;
   editable?: boolean;
   referentialCode?: ReferentialType;
+  /** Override dynamique (phases réelles du projet). Prioritaire sur referentialCode. */
+  phases?: WbsPhase[];
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
   /** Number of rows per page. Set to 0 to disable pagination. */
@@ -36,6 +38,7 @@ export function BoqLineTable({
   emptyLabel = 'Aucune ligne',
   editable = false,
   referentialCode,
+  phases: phasesOverride,
   onChange,
   onRemove,
   pageSize = 10,
@@ -45,6 +48,7 @@ export function BoqLineTable({
   useEffect(() => { setPage(0); }, [lines.length]);
 
   const phases: WbsPhase[] = useMemo(() => {
+    if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
     if (!referentialCode) return WBS_REFERENTIAL;
     return getPhasesForReferential(referentialCode).map((phase) => ({
       id: phase.code,
@@ -55,7 +59,7 @@ export function BoqLineTable({
         tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
       })),
     }));
-  }, [referentialCode]);
+  }, [phasesOverride, referentialCode]);
 
   if (!lines.length) {
     return <div className="text-sm text-muted-foreground p-4 border rounded-md">{emptyLabel}</div>;
