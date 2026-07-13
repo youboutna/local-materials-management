@@ -36,6 +36,8 @@ export interface BoqDbRow {
   bid_ref?: string | null;
   submitted_by?: string | null;
   source?: string | null;
+  source_type?: string | null;
+  btp_code?: string | null;
 }
 
 export class BoqLineMapper {
