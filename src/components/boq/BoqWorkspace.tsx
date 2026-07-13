@@ -268,37 +268,84 @@ export function BoqWorkspace({
             <DialogTrigger asChild>
               <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie manuelle</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-xl">
-              <DialogHeader><DialogTitle>Ajouter une ligne</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <Label>Désignation</Label>
-                  <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Unité</Label>
-                  <Input value={form.unit ?? ''} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Type</Label>
-                  <Select value={form.resourceType ?? 'material'} onValueChange={(v) => setForm({ ...form, resourceType: v as BoqResourceType })}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Ajouter une ligne</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-6 gap-3">
+                <div className="col-span-3">
+                  <Label>Catégorie</Label>
+                  <Select value={category} onValueChange={(v) => setCategory(v as ManualCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="material">Matériau</SelectItem>
-                      <SelectItem value="labor">Main-d'œuvre</SelectItem>
+                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
                       <SelectItem value="equipment">Équipement</SelectItem>
+                      <SelectItem value="overhead">Frais généraux</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="col-span-3">
+                  <Label>Profil fiscal</Label>
+                  <Select value={fiscalCode} onValueChange={setFiscalCode}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
+                        <SelectItem key={p.code} value={p.code}>
+                          {p.label} (TVA {(p.vatRate * 100).toFixed(0)}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {category === 'material' && materials.length > 0 && (
+                  <div className="col-span-6">
+                    <Label>Article du dépôt (optionnel)</Label>
+                    <Select value={materialId || '__none__'} onValueChange={(v) => (v === '__none__' ? setMaterialId('') : onPickMaterial(v))}>
+                      <SelectTrigger><SelectValue placeholder="Sélectionner un article — auto-remplit désignation, unité, PU" /></SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        <SelectItem value="__none__">— Saisie libre —</SelectItem>
+                        {materials.slice(0, 200).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}{m.unit ? ` · ${m.unit}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="col-span-6">
+                  <Label>Désignation</Label>
+                  <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Unité</Label>
+                  <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
                   <Label>Quantité</Label>
                   <Input type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
                 </div>
-                <div>
+                <div className="col-span-2">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
                 </div>
               </div>
+
+              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-4 gap-2">
+                <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
+                <div>TVA : <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
+                <div>RAS : <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
+                <div>TTC : <span className="font-bold text-primary">{manualPreview.ttc.toLocaleString('fr-FR')}</span></div>
+              </div>
+
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setOpenManual(false)}>Annuler</Button>
                 <Button onClick={handleCreate} disabled={doc.isPending}>
