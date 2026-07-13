@@ -302,7 +302,13 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
-              <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} referentialCode={referentialCode} />
+              <WbsSelector
+                value={wbs}
+                onChange={setWbs}
+                disabled={isBusy}
+                referentialCode={referentialCode}
+                phases={projectWbs.length > 0 && !isAltReferential ? projectWbs : undefined}
+              />
             </section>
 
 
