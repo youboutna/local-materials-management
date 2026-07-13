@@ -92,6 +92,8 @@ export class BoqLineMapper {
       resource_type: dto.resourceType ?? 'material',
       note: dto.note ?? null,
       source: dto.source,
+      source_type: dto.sourceType ?? null,
+      btp_code: dto.btpCode ?? null,
     };
     if (dto.source === 'quantity_takeoff') {
       return {
