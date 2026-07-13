@@ -65,21 +65,37 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
+  const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
+  const [phaseMapping, setPhaseMapping] = useState<Record<string, string>>({});
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
+  const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
+  const altPhases = useMemo(
+    () => (isAltReferential && referentialCode ? getPhasesForReferential(referentialCode) : []),
+    [isAltReferential, referentialCode]
+  );
+  const projectPhases = useMemo(
+    () => (projectReferentialCode ? getPhasesForReferential(projectReferentialCode) : []),
+    [projectReferentialCode]
+  );
+
   const wbsEnrichedDtos = useMemo<BoqLineDTO[]>(() => {
-    return dtos.map((l) => ({
-      ...l,
-      phaseId: l.phaseId ?? wbs.phaseId ?? undefined,
-      milestoneId: l.milestoneId ?? wbs.milestoneId ?? undefined,
-      taskId: l.taskId ?? wbs.taskId ?? undefined,
-    }));
-  }, [dtos, wbs]);
+    return dtos.map((l) => {
+      const rawPhaseId = l.phaseId ?? wbs.phaseId ?? undefined;
+      const mapped = isAltReferential && rawPhaseId ? phaseMapping[rawPhaseId] : undefined;
+      return {
+        ...l,
+        phaseId: mapped ?? rawPhaseId,
+        milestoneId: mapped ? undefined : (l.milestoneId ?? wbs.milestoneId ?? undefined),
+        taskId: mapped ? undefined : (l.taskId ?? wbs.taskId ?? undefined),
+      };
+    });
+  }, [dtos, wbs, isAltReferential, phaseMapping]);
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
 
@@ -89,7 +105,6 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       const current = next[index];
       if (!current) return prev;
       const merged: BoqLineDTO = { ...current, ...patch };
-      // Auto-recompute totalHt when qty or PU changes.
       if (patch.quantity !== undefined || patch.unitPrice !== undefined) {
         merged.totalHt = (merged.quantity ?? 0) * (merged.unitPrice ?? 0);
       }
@@ -103,7 +118,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   };
 
   useEffect(() => {
-    if (defaultReferentialCode) setReferentialCode(defaultReferentialCode);
+    if (defaultReferentialCode) {
+      setProjectReferentialCode(defaultReferentialCode);
+      setReferentialCode(defaultReferentialCode);
+    }
   }, [defaultReferentialCode]);
 
   useEffect(() => {
@@ -113,7 +131,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       try {
         const service = new ProjectService(RepositoryFactory.getProjectRepository());
         const project = await service.getProjectById(resolvedProjectId);
-        if (!cancelled && project?.referentialCode) setReferentialCode(project.referentialCode);
+        if (!cancelled && project?.referentialCode) {
+          setProjectReferentialCode(project.referentialCode);
+          setReferentialCode(project.referentialCode);
+        }
       } catch {
         // Keep import usable even if project metadata cannot be loaded.
       }
@@ -122,7 +143,6 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     return () => { cancelled = true; };
   }, [defaultReferentialCode, open, resolvedProjectId]);
 
-  // Pre-select first WBS phase of the referential so lines carry sensible defaults.
   useEffect(() => {
     if (!referentialCode || wbs.phaseId) return;
     const phases = getPhasesForReferential(referentialCode);
@@ -132,22 +152,13 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [referentialCode]);
 
-  const persistReferential = async (next?: ReferentialType) => {
+  // Selecting a referential in the dialog NEVER persists to the project — the
+  // project referential is managed by the project workflow module. When the
+  // user picks an alternate one, a mapping panel appears instead.
+  const handleReferentialChange = (next?: ReferentialType) => {
     setReferentialCode(next);
     setWbs({ phaseId: phaseId ?? null, milestoneId: null, taskId: null });
-    if (!resolvedProjectId) return;
-    try {
-      const service = new ProjectService(RepositoryFactory.getProjectRepository());
-      await service.updateProject(resolvedProjectId, { id: resolvedProjectId, referentialCode: next });
-      window.dispatchEvent(new CustomEvent('project-referential-changed', { detail: { projectId: resolvedProjectId, referentialCode: next } }));
-      window.dispatchEvent(new CustomEvent('boq-kpi-refresh', { detail: { projectId: resolvedProjectId, source, contextId } }));
-    } catch (e) {
-      toast({
-        title: 'Référentiel non persisté',
-        description: e instanceof Error ? e.message : String(e),
-        variant: 'destructive',
-      });
-    }
+    setPhaseMapping({});
   };
 
   const onSubmit = async () => {
@@ -159,11 +170,18 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       });
       return;
     }
+    if (isAltReferential && altPhases.some((p) => !phaseMapping[p.code])) {
+      toast({
+        title: 'Mapping incomplet',
+        description: 'Associez chaque phase du référentiel choisi à une phase du projet.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       setDtos(wbsEnrichedDtos);
       const r = await commit(wbsEnrichedDtos);
       toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s).` });
-      // Broadcast so KPI panels (Métrés / DQE) auto-refresh across the app
       window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
       onImported?.(r.length);
       setOpen(false);
@@ -175,6 +193,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       });
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
