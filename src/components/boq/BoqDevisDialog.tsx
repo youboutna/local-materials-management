@@ -234,7 +234,7 @@ export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEm
               ].map(([k, l]) => (
                 <div key={k} className="flex items-center justify-between">
                   <Label className="text-sm">{l}</Label>
-                  <Switch checked={(config as Record<string, unknown>)[k] as boolean} onCheckedChange={(v) => setConfig(p => ({ ...p, [k]: v }))} />
+                  <Switch checked={(config as unknown as Record<string, unknown>)[k] as boolean} onCheckedChange={(v) => setConfig(p => ({ ...p, [k]: v }))} />
                 </div>
               ))}
             </div>
