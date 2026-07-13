@@ -25,6 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { ProjectService } from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
+import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 
 interface Props {
   source: BoqSource;
