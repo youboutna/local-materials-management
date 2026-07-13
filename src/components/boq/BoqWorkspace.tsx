@@ -36,9 +36,16 @@ import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorSe
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 import { supabase } from '@/integrations/supabase/client';
+import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
+import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ReferentialType } from '@/config/referentials';
+
+type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
+const catToResource = (c: ManualCategory): BoqResourceType =>
+  c === 'labour' ? 'labor' : c === 'equipment' ? 'equipment' : 'material';
+const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff', 'ens', 'lot'];
 
 
 export type BoqWorkspaceMode = 'planning' | 'bid' | 'invoice';
