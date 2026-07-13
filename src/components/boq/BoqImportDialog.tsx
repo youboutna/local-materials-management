@@ -25,6 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { ProjectService } from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
+import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 
 interface Props {
   source: BoqSource;
@@ -68,6 +70,8 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [phaseMapping, setPhaseMapping] = useState<Record<string, string>>({});
+  const [projectWbs, setProjectWbs] = useState<WbsPhase[]>([]);
+  const [projectName, setProjectName] = useState<string>('');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
@@ -125,21 +129,31 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   }, [defaultReferentialCode]);
 
   useEffect(() => {
-    if (!open || !resolvedProjectId || defaultReferentialCode) return;
+    if (!open || !resolvedProjectId) return;
     let cancelled = false;
-    const loadProjectReferential = async () => {
+    const loadProjectContext = async () => {
       try {
-        const service = new ProjectService(RepositoryFactory.getProjectRepository());
-        const project = await service.getProjectById(resolvedProjectId);
-        if (!cancelled && project?.referentialCode) {
-          setProjectReferentialCode(project.referentialCode);
-          setReferentialCode(project.referentialCode);
+        // 1) Charge les phases/étapes/tâches réelles du projet (source de vérité)
+        const wbs = await loadProjectWbs(resolvedProjectId);
+        if (!cancelled) setProjectWbs(wbs);
+
+        // 2) Charge le référentiel projet (métadonnée) si pas déjà fourni
+        if (!defaultReferentialCode) {
+          const service = new ProjectService(RepositoryFactory.getProjectRepository());
+          const project = await service.getProjectById(resolvedProjectId);
+          if (!cancelled) {
+            if (project?.referentialCode) {
+              setProjectReferentialCode(project.referentialCode);
+              setReferentialCode(project.referentialCode);
+            }
+            setProjectName(project?.title ?? '');
+          }
         }
       } catch {
         // Keep import usable even if project metadata cannot be loaded.
       }
     };
-    loadProjectReferential();
+    loadProjectContext();
     return () => { cancelled = true; };
   }, [defaultReferentialCode, open, resolvedProjectId]);
 
@@ -210,15 +224,26 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 <Label className="text-sm font-medium">
                   Référentiel projet <span className="text-xs text-muted-foreground">(lecture seule)</span>
                 </Label>
-                <div className="h-9 flex items-center rounded-md border bg-muted/40 px-3 text-sm">
-                  {projectReferentialCode ? (
+                <div className="min-h-9 flex flex-col justify-center rounded-md border bg-muted/40 px-3 py-1.5 text-sm">
+                  {projectWbs.length > 0 ? (
+                    <>
+                      <span className="text-xs font-medium truncate">
+                        {projectName || 'Projet courant'} — {projectWbs.length} phase(s)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground truncate">
+                        {projectWbs.map((p) => p.label).join(' • ')}
+                      </span>
+                    </>
+                  ) : projectReferentialCode ? (
                     <code className="text-xs">{projectReferentialCode}</code>
                   ) : (
                     <span className="text-xs text-muted-foreground">Aucun référentiel défini sur le projet</span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Géré depuis le module projet — non modifiable ici.
+                  {projectWbs.length > 0
+                    ? 'Phases/étapes/tâches chargées depuis le projet courant.'
+                    : 'Géré depuis le module projet — non modifiable ici.'}
                 </p>
               </div>
 
@@ -248,9 +273,9 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
             </section>
 
 
-            {isAltReferential && projectPhases.length > 0 && (
+            {isAltReferential && (projectWbs.length > 0 || projectPhases.length > 0) && (
               <section className="rounded-md border p-3 space-y-2 bg-muted/30">
-                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → référentiel projet</h4>
+                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → phases du projet</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {altPhases.map((altPh) => (
                     <div key={altPh.code} className="flex items-center gap-2">
@@ -264,7 +289,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                         <SelectTrigger className="w-56 h-8"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">— non mappée —</SelectItem>
-                          {projectPhases.map((p) => (
+                          {(projectWbs.length > 0
+                            ? projectWbs.map((p) => ({ code: p.id, label: p.label }))
+                            : projectPhases.map((p) => ({ code: p.code, label: p.label }))
+                          ).map((p) => (
                             <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
                           ))}
                         </SelectContent>
@@ -277,7 +305,13 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
-              <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} referentialCode={referentialCode} />
+              <WbsSelector
+                value={wbs}
+                onChange={setWbs}
+                disabled={isBusy}
+                referentialCode={referentialCode}
+                phases={projectWbs.length > 0 && !isAltReferential ? projectWbs : undefined}
+              />
             </section>
 
 

@@ -18,12 +18,15 @@ interface Props {
   onChange: (next: WbsValue) => void;
   disabled?: boolean;
   referentialCode?: ReferentialType;
+  /** Override dynamique (ex. phases réelles du projet). Prioritaire sur referentialCode. */
+  phases?: WbsPhase[];
 }
 
 const NONE = '__none__';
 
-export function WbsSelector({ value, onChange, disabled, referentialCode }: Props) {
+export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride }: Props) {
   const phases: WbsPhase[] = useMemo(() => {
+    if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
     if (!referentialCode) return WBS_REFERENTIAL;
     return getPhasesForReferential(referentialCode).map((phase) => ({
       id: phase.code,
@@ -34,7 +37,7 @@ export function WbsSelector({ value, onChange, disabled, referentialCode }: Prop
         tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
       })),
     }));
-  }, [referentialCode]);
+  }, [phasesOverride, referentialCode]);
   const phase = useMemo(() => phases.find((p) => p.id === value.phaseId) ?? null, [phases, value.phaseId]);
   const milestone = useMemo(() => phase?.milestones.find((m) => m.id === value.milestoneId) ?? null, [phase, value.milestoneId]);
 
