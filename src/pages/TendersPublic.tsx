@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Package, HelpCircle } from 'lucide-react';
 import { PublicTendersList } from '@/components/supplier/PublicTendersList';
 import { SupplierBidWizard, type BidWizardStepCode } from '@/components/supplier/SupplierBidWizard';
-import EnhancedTenderEstimator from '@/components/tenders/EnhancedTenderEstimator';
+import { BoqWorkspace } from '@/components/boq';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
