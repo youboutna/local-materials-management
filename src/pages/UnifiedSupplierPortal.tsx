@@ -148,17 +148,29 @@ const UnifiedSupplierPortal = () => {
       const up = await storageUpload(file, path);
       if (!up.success) throw new Error("Upload échoué");
 
-      let extracted: any = null;
+      // Utilise le parseur DQE unifié (PDF/Excel/CSV) — mêmes règles que l'import DQE
+      // avec détection TVA/taxes et alignement colonnes → BoqLineDTO.
+      const { unifiedBoqParser } = await import('@/application/services/boq/UnifiedBoqParser');
+      const { BoqImportOrchestrator } = await import('@/application/services/boq/BoqImportOrchestrator');
+
+      let parsed: Awaited<ReturnType<typeof unifiedBoqParser.parse>> | null = null;
+      let dtos: ReturnType<typeof BoqImportOrchestrator.toDtos> = [];
       let parseError: string | null = null;
       try {
-        extracted = await parsePdf(file);
+        parsed = await unifiedBoqParser.parse(file);
+        dtos = BoqImportOrchestrator.toDtos(parsed.rows, parsed.autoMapping, {
+          source: 'supplier_bid',
+          contextId: supplierProfile?.id ?? user.id,
+          detectedVatRate: parsed.detectedFiscal?.vatRate ?? null,
+        });
       } catch (e) {
         parseError = e instanceof Error ? e.message : String(e);
       }
 
-      const total = Array.isArray(extracted)
-        ? extracted.reduce((s: number, l: any) => s + (Number(l.total ?? l.amount ?? 0) || 0), 0)
-        : null;
+      const totalHt = dtos.reduce((s, d) => s + (Number(d.totalHt ?? (d.quantity * (d.unitPrice ?? 0))) || 0), 0);
+      const vatRate = parsed?.detectedFiscal?.vatRate ?? 0;
+      const totalTtc = parsed?.detectedFiscal?.totalTtc ?? (totalHt * (1 + vatRate));
+      const amount = totalTtc > 0 ? totalTtc : (totalHt > 0 ? totalHt : null);
 
       await createInvoice({
         id: crypto.randomUUID(),
@@ -169,16 +181,27 @@ const UnifiedSupplierPortal = () => {
         mimeType: file.type || 'application/pdf',
         supplierId: supplierProfile?.id ?? null,
         invoiceType: 'supplier_invoice',
-        status: parseError ? 'rejected' : (extracted ? 'validated' : 'pending'),
-        amount: total,
+        status: parseError ? 'rejected' : (dtos.length ? 'validated' : 'pending'),
+        amount,
         currency: 'MRU',
-        extractedData: extracted ? { items: extracted } : null,
+        extractedData: parsed ? {
+          items: dtos,
+          columns: parsed.columns,
+          detectedFiscal: parsed.detectedFiscal,
+          warnings: parsed.warnings,
+          totals: { ht: totalHt, tva: totalHt * vatRate, ttc: totalTtc, vatRate },
+        } : null,
         parsingErrors: parseError ? [parseError] : null,
         uploadedBy: user.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as any);
-      toast({ title: 'Facture analysée', description: parseError ? `Erreur d'analyse: ${parseError}` : `${Array.isArray(extracted) ? extracted.length : 0} lignes extraites.` });
+      toast({
+        title: 'Facture analysée',
+        description: parseError
+          ? `Erreur d'analyse: ${parseError}`
+          : `${dtos.length} lignes extraites — Total HT ${totalHt.toLocaleString('fr-FR')} MRU${vatRate ? ` · TVA ${(vatRate * 100).toFixed(0)}%` : ''}`,
+      });
       refetchInvoices();
     } catch (e: any) {
       toast({ title: 'Erreur', description: e?.message ?? 'Analyse impossible', variant: 'destructive' });
