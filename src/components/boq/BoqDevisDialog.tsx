@@ -34,6 +34,17 @@ interface Props {
   defaultTitle?: string;
   defaultEmail?: string;
   triggerLabel?: string;
+  /** notes/HTML additionnel pré-rempli (ex. « Expression de besoin ») */
+  defaultNotes?: string;
+  /** joindre le CSV brut au mail en plus du PDF */
+  attachCsv?: boolean;
+  /** contenu CSV à joindre (ignoré si attachCsv=false) */
+  csvContent?: string;
+  /** contrôle externe de l'ouverture (préset diffusion) */
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+  /** masque le bouton déclencheur si contrôle externe */
+  hideTrigger?: boolean;
 }
 
 function lineToItem(l: BoqLineDTO): EstimateItem {
@@ -49,9 +60,15 @@ function lineToItem(l: BoqLineDTO): EstimateItem {
   };
 }
 
-export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEmail, triggerLabel }: Props) {
+export function BoqDevisDialog({
+  lines, mode, contextId, defaultTitle, defaultEmail, triggerLabel,
+  defaultNotes, attachCsv, csvContent,
+  open: openProp, onOpenChange, hideTrigger,
+}: Props) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (v: boolean) => { onOpenChange ? onOpenChange(v) : setOpenInternal(v); };
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
@@ -74,11 +91,21 @@ export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEm
 3. Prix fermes hors révision exceptionnelle
 4. Conformité aux normes en vigueur`,
     recipientEmail: defaultEmail ?? '',
-    notes: '',
+    notes: defaultNotes ?? '',
     signatoryName: '',
     signatoryTitle: '',
     validityPeriod: 30,
   });
+
+  // Synchronise le titre/email/notes quand les presets changent (mode diffusion)
+  React.useEffect(() => {
+    setConfig(p => ({
+      ...p,
+      title: defaultTitle ?? p.title,
+      recipientEmail: defaultEmail ?? p.recipientEmail,
+      notes: defaultNotes ?? p.notes,
+    }));
+  }, [defaultTitle, defaultEmail, defaultNotes]);
 
   // ---- Signature drawing ---
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -179,12 +206,15 @@ export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEm
                  TVA : ${totals.totalTva.toLocaleString('fr-FR')} MRU<br/>
                  <strong>Total TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU</strong></p>
                  ${config.includeSignature && signature ? `<p>Signé par : ${config.signatoryName ?? ''} ${config.signatoryTitle ? `(${config.signatoryTitle})` : ''}</p><img src="${signature}" style="max-height:80px" />` : ''}`,
-          attachments: [{
-            filename: fileName,
-            content: b64,
-            contentType: 'application/pdf',
-            encoding: 'base64',
-          }],
+          attachments: [
+            { filename: fileName, content: b64, contentType: 'application/pdf', encoding: 'base64' },
+            ...(attachCsv && csvContent ? [{
+              filename: fileName.replace(/\.pdf$/, '.csv'),
+              content: btoa(unescape(encodeURIComponent(`\uFEFF${csvContent}`))),
+              contentType: 'text/csv',
+              encoding: 'base64',
+            }] : []),
+          ],
         }),
       });
       if (error) throw error;
@@ -197,11 +227,13 @@ export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEm
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" disabled={!lines.length}>
-          <FileDown className="h-4 w-4 mr-1" />{triggerLabel ?? `Générer ${label}`}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline" disabled={!lines.length}>
+            <FileDown className="h-4 w-4 mr-1" />{triggerLabel ?? `Générer ${label}`}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><FileDown className="h-5 w-5" />Générer {label} PDF</DialogTitle>
