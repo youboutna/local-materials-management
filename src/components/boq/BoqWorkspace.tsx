@@ -17,12 +17,15 @@
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState } from 'react';
-import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
@@ -32,6 +35,7 @@ import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
+import { supabase } from '@/integrations/supabase/client';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ReferentialType } from '@/config/referentials';
