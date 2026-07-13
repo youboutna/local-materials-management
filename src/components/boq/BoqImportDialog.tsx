@@ -206,10 +206,19 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
         {parseResult && (
           <>
             <section className="space-y-2">
-              <Label className="text-sm font-medium">Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-medium">
+                  Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)
+                </Label>
+                {projectReferentialCode && (
+                  <span className="text-xs text-muted-foreground">
+                    Projet : <code>{projectReferentialCode}</code>
+                  </span>
+                )}
+              </div>
               <Select
                 value={referentialCode ?? '__none__'}
-                onValueChange={(v) => persistReferential(v === '__none__' ? undefined : (v as ReferentialType))}
+                onValueChange={(v) => handleReferentialChange(v === '__none__' ? undefined : (v as ReferentialType))}
                 disabled={isBusy}
               >
                 <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
@@ -220,12 +229,45 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                   ))}
                 </SelectContent>
               </Select>
+              {isAltReferential && (
+                <p className="text-xs text-muted-foreground">
+                  Référentiel différent de celui du projet — le mapping ci-dessous convertit les phases vers le référentiel projet avant import.
+                </p>
+              )}
             </section>
+
+            {isAltReferential && projectPhases.length > 0 && (
+              <section className="rounded-md border p-3 space-y-2 bg-muted/30">
+                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → référentiel projet</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {altPhases.map((altPh) => (
+                    <div key={altPh.code} className="flex items-center gap-2">
+                      <span className="text-xs flex-1 truncate" title={altPh.label}>{altPh.label}</span>
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <Select
+                        value={phaseMapping[altPh.code] ?? '__none__'}
+                        onValueChange={(v) => setPhaseMapping((m) => ({ ...m, [altPh.code]: v === '__none__' ? '' : v }))}
+                        disabled={isBusy}
+                      >
+                        <SelectTrigger className="w-56 h-8"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">— non mappée —</SelectItem>
+                          {projectPhases.map((p) => (
+                            <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
               <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} referentialCode={referentialCode} />
             </section>
+
 
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
