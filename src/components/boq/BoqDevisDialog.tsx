@@ -227,11 +227,13 @@ export function BoqDevisDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" disabled={!lines.length}>
-          <FileDown className="h-4 w-4 mr-1" />{triggerLabel ?? `Générer ${label}`}
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline" disabled={!lines.length}>
+            <FileDown className="h-4 w-4 mr-1" />{triggerLabel ?? `Générer ${label}`}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><FileDown className="h-5 w-5" />Générer {label} PDF</DialogTitle>
