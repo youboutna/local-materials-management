@@ -79,18 +79,48 @@ export function BoqWorkspace({
   const { toast } = useToast();
   const labels = LABELS[mode];
 
-  // ---- Saisie manuelle inline ------------------------------------------------
+  // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
+  const { materials } = useMaterialsHex();
+  const [fiscalCode, setFiscalCode] = useState<string>('MR_STANDARD');
+  const [category, setCategory] = useState<ManualCategory>('material');
+  const [materialId, setMaterialId] = useState<string>('');
   const [form, setForm] = useState<Partial<BoqLineDTO>>({
-    designation: '', unit: 'u', quantity: 1, unitPrice: 0, resourceType: 'material',
+    designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
-  const resetForm = () => setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0, resourceType: 'material' });
+  const resetForm = () => {
+    setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
+    setMaterialId(''); setCategory('material');
+  };
+
+  const onPickMaterial = (id: string) => {
+    setMaterialId(id);
+    const m = materials.find((x) => x.id === id);
+    if (m) {
+      setForm((f) => ({
+        ...f,
+        designation: m.name,
+        unit: m.unit || f.unit || 'u',
+        unitPrice: m.pricePerUnit ?? f.unitPrice ?? 0,
+      }));
+    }
+  };
+
+  const manualPreview = useMemo(() => {
+    const q = Number(form.quantity) || 0;
+    const pu = Number(form.unitPrice) || 0;
+    const ht = q * pu;
+    const profile = getFiscalProfile(fiscalCode);
+    const tva = ht * profile.vatRate;
+    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate };
+  }, [form.quantity, form.unitPrice, fiscalCode]);
 
   const handleCreate = async () => {
     if (!form.designation?.trim()) {
       toast({ title: 'Désignation requise', variant: 'destructive' });
       return;
     }
+    const profile = getFiscalProfile(fiscalCode);
     try {
       await doc.createLine({
         source, contextId,
@@ -98,9 +128,11 @@ export function BoqWorkspace({
         unit: form.unit || 'u',
         quantity: Number(form.quantity) || 0,
         unitPrice: Number(form.unitPrice) || 0,
-        resourceType: (form.resourceType as BoqResourceType) ?? 'material',
+        resourceType: catToResource(category),
+        materialId: materialId || null,
         phaseId: form.phaseId ?? null,
-        vatRate: 0.16,
+        vatRate: profile.vatRate,
+        note: category === 'overhead' ? 'Frais généraux' : null,
         sourceType: 'rapide',
       });
       toast({ title: 'Ligne ajoutée' });
