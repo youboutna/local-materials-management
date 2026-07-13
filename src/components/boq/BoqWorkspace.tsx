@@ -220,36 +220,19 @@ export function BoqWorkspace({
             onImported={() => doc.refetch()}
           />
 
-          <Button size="sm" variant="outline" onClick={downloadCsv} disabled={!doc.lines.length}>
-            <Download className="h-4 w-4 mr-1" />{labels.devis}
+          <Button size="sm" variant="ghost" onClick={downloadCsv} disabled={!doc.lines.length} title="Export CSV brut">
+            <Download className="h-4 w-4 mr-1" />CSV
           </Button>
 
-          <Dialog open={openSend} onOpenChange={setOpenSend}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={!doc.lines.length}>
-                <Mail className="h-4 w-4 mr-1" />Envoyer par email
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Envoyer {labels.docPrefix} par email</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Destinataire</Label>
-                  <Input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="client@example.com" />
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Le CSV signé sera joint automatiquement. Total TTC :{' '}
-                  <strong>{totals.totalTtc.toLocaleString('fr-FR')} MRU</strong>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpenSend(false)}>Annuler</Button>
-                <Button onClick={sendByEmail} disabled={sending}>
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Envoyer
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <BoqDevisDialog
+            lines={doc.lines}
+            mode={devisMode}
+            contextId={contextId}
+            defaultTitle={`${labels.devis} — ${contextId.slice(0, 8)}`}
+            defaultEmail={defaultEmail}
+            triggerLabel={labels.devis}
+          />
+
 
           {mode === 'bid' && projectId && estimateId && (
             <Button size="sm" onClick={handleAlignPlanning} disabled={aligning}>
