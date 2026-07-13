@@ -29,6 +29,8 @@ const FIELDS: { key: keyof ImportMapping; label: string }[] = [
   { key: 'phaseId', label: 'Phase / lot' },
 ];
 
+const NONE = '__none__';
+
 export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
   const preview = useMemo(() => parseResult.rows.slice(0, 10), [parseResult]);
   return (
@@ -38,11 +40,12 @@ export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
           <div key={f.key}>
             <Label>{f.label}</Label>
             <Select
-              value={mapping[f.key] ?? ''}
-              onValueChange={(v) => onChange({ ...mapping, [f.key]: v || undefined })}
+              value={mapping[f.key] ?? NONE}
+              onValueChange={(v) => onChange({ ...mapping, [f.key]: v === NONE ? undefined : v })}
             >
               <SelectTrigger><SelectValue placeholder="— colonne source —" /></SelectTrigger>
               <SelectContent>
+                <SelectItem value={NONE}>— non mappé —</SelectItem>
                 {parseResult.columns.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
