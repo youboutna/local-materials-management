@@ -295,7 +295,15 @@ export function BoqWorkspace({
       </div>
 
       {/* Récap fiscal */}
-      <PriceSummary totals={totals} />
+      <div className="rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><div className="text-muted-foreground">Total HT</div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground">TVA</div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
+        {'totalRas' in totals && (totals as { totalRas?: number }).totalRas ? (
+          <div><div className="text-muted-foreground">RAS</div><div className="font-medium">{(totals as { totalRas: number }).totalRas.toLocaleString('fr-FR')} MRU</div></div>
+        ) : <div />}
+        <div><div className="text-muted-foreground">Total TTC</div><div className="font-semibold">{totals.totalTtc.toLocaleString('fr-FR')} MRU</div></div>
+      </div>
+
 
       {/* Tableau éditable */}
       {doc.isLoading ? (
