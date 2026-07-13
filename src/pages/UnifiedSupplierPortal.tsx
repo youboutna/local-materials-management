@@ -552,8 +552,9 @@ const UnifiedSupplierPortal = () => {
 
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full grid-cols-8 overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-9 overflow-x-auto">
               <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
+              <TabsTrigger value="devis">Devis</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Télécharger</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
