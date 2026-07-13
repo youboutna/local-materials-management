@@ -158,13 +158,21 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   }, [defaultReferentialCode, open, resolvedProjectId]);
 
   useEffect(() => {
-    if (!referentialCode || wbs.phaseId) return;
+    if (wbs.phaseId && projectWbs.some((p) => p.id === wbs.phaseId)) return;
+    if (projectWbs.length > 0) {
+      setWbs({ phaseId: projectWbs[0].id, milestoneId: null, taskId: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectWbs]);
+
+  useEffect(() => {
+    if (projectWbs.length > 0 || !referentialCode || wbs.phaseId) return;
     const phases = getPhasesForReferential(referentialCode);
     if (phases.length > 0) {
       setWbs({ phaseId: phases[0].code, milestoneId: null, taskId: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [referentialCode]);
+  }, [referentialCode, projectWbs.length]);
 
   // Selecting a referential in the dialog NEVER persists to the project — the
   // project referential is managed by the project workflow module. When the
@@ -309,8 +317,8 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 value={wbs}
                 onChange={setWbs}
                 disabled={isBusy}
-                referentialCode={referentialCode}
-                phases={projectWbs.length > 0 && !isAltReferential ? projectWbs : undefined}
+                referentialCode={projectWbs.length > 0 ? undefined : referentialCode}
+                phases={projectWbs.length > 0 ? projectWbs : undefined}
               />
             </section>
 
@@ -339,8 +347,8 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 lines={wbsEnrichedDtos}
                 emptyLabel="Aucune ligne détectée avec le mapping courant."
                 editable
-                referentialCode={referentialCode}
-                phases={projectWbs.length > 0 && !isAltReferential ? projectWbs : undefined}
+                referentialCode={projectWbs.length > 0 ? undefined : referentialCode}
+                phases={projectWbs.length > 0 ? projectWbs : undefined}
                 onChange={updateLine}
                 onRemove={removeLine}
               />
