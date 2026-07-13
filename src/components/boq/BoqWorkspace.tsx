@@ -17,7 +17,7 @@
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState } from 'react';
-import { FileSpreadsheet, Plus, Download, Mail, ArrowRightCircle, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,15 +26,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
+import { BoqDevisDialog, type BoqDevisMode } from './BoqDevisDialog';
 
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
-import { supabase } from '@/integrations/supabase/client';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ReferentialType } from '@/config/referentials';
+
 
 export type BoqWorkspaceMode = 'planning' | 'bid' | 'invoice';
 
@@ -118,18 +119,12 @@ export function BoqWorkspace({
   // ---- Récap fiscal ----------------------------------------------------------
   const totals = useMemo(() => BoqCalculatorService.aggregate(doc.lines), [doc.lines]);
 
-  // ---- Devis / Facture -------------------------------------------------------
-  const [openSend, setOpenSend] = useState(false);
-  const [emailTo, setEmailTo] = useState(defaultEmail ?? '');
-  const [sending, setSending] = useState(false);
-
-  const buildCsv = () => {
-    const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
-    return DevisGenerator.toCsv(devis);
-  };
+  // ---- Devis / Facture : PDF + e-signature + email via BoqDevisDialog --------
+  const devisMode: BoqDevisMode = mode === 'invoice' ? 'facture' : mode === 'bid' ? 'devis' : 'dqe';
 
   const downloadCsv = () => {
-    const csv = buildCsv();
+    const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
+    const csv = DevisGenerator.toCsv(devis);
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -140,35 +135,6 @@ export function BoqWorkspace({
     toast({ title: 'Export CSV téléchargé' });
   };
 
-  const sendByEmail = async () => {
-    if (!emailTo.trim()) { toast({ title: 'Email destinataire requis', variant: 'destructive' }); return; }
-    setSending(true);
-    try {
-      const csv = buildCsv();
-      const b64 = typeof window !== 'undefined' ? btoa(unescape(encodeURIComponent(csv))) : '';
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: JSON.stringify({
-          to: emailTo.trim(),
-          subject: `${labels.devis} — ${totals.totalTtc.toLocaleString('fr-FR')} MRU TTC`,
-          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le ${labels.docPrefix} au format CSV.</p>
-                 <p><strong>Total HT :</strong> ${totals.totalHt.toLocaleString('fr-FR')} MRU<br/>
-                 <strong>TVA :</strong> ${totals.totalTva.toLocaleString('fr-FR')} MRU<br/>
-                 <strong>Total TTC :</strong> ${totals.totalTtc.toLocaleString('fr-FR')} MRU</p>`,
-          attachments: [{
-            filename: `${labels.docPrefix}_${contextId.slice(0, 8)}.csv`,
-            content: b64,
-            contentType: 'text/csv',
-            encoding: 'base64',
-          }],
-        }),
-      });
-      if (error) throw error;
-      toast({ title: 'Email envoyé', description: emailTo });
-      setOpenSend(false);
-    } catch (e) {
-      toast({ title: 'Envoi échoué', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    } finally { setSending(false); }
-  };
 
   // ---- Alignement planification (mode bid → project planning) ----------------
   const [aligning, setAligning] = useState(false);
@@ -254,36 +220,19 @@ export function BoqWorkspace({
             onImported={() => doc.refetch()}
           />
 
-          <Button size="sm" variant="outline" onClick={downloadCsv} disabled={!doc.lines.length}>
-            <Download className="h-4 w-4 mr-1" />{labels.devis}
+          <Button size="sm" variant="ghost" onClick={downloadCsv} disabled={!doc.lines.length} title="Export CSV brut">
+            <Download className="h-4 w-4 mr-1" />CSV
           </Button>
 
-          <Dialog open={openSend} onOpenChange={setOpenSend}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={!doc.lines.length}>
-                <Mail className="h-4 w-4 mr-1" />Envoyer par email
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Envoyer {labels.docPrefix} par email</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Destinataire</Label>
-                  <Input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="client@example.com" />
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Le CSV signé sera joint automatiquement. Total TTC :{' '}
-                  <strong>{totals.totalTtc.toLocaleString('fr-FR')} MRU</strong>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpenSend(false)}>Annuler</Button>
-                <Button onClick={sendByEmail} disabled={sending}>
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Envoyer
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <BoqDevisDialog
+            lines={doc.lines}
+            mode={devisMode}
+            contextId={contextId}
+            defaultTitle={`${labels.devis} — ${contextId.slice(0, 8)}`}
+            defaultEmail={defaultEmail}
+            triggerLabel={labels.devis}
+          />
+
 
           {mode === 'bid' && projectId && estimateId && (
             <Button size="sm" onClick={handleAlignPlanning} disabled={aligning}>
