@@ -116,7 +116,12 @@ function BidStepContent({ step, tenderId }: { step: BidWizardStepCode; tenderId:
           Importez votre BPU Excel, PDF ou saisissez manuellement les prix. Les totaux se calculent en temps réel.
         </p>
         <div className="rounded border bg-card">
-          <EnhancedTenderEstimator tenderId={tenderId} />
+          <BoqWorkspace
+            source="tender_estimate"
+            contextId={tenderId}
+            mode="bid"
+            emptyLabel="Aucune ligne de chiffrage. Importez votre BPU ou saisissez manuellement."
+          />
         </div>
       </div>
     );
