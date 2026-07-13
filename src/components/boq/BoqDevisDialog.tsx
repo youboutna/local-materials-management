@@ -34,6 +34,17 @@ interface Props {
   defaultTitle?: string;
   defaultEmail?: string;
   triggerLabel?: string;
+  /** notes/HTML additionnel pré-rempli (ex. « Expression de besoin ») */
+  defaultNotes?: string;
+  /** joindre le CSV brut au mail en plus du PDF */
+  attachCsv?: boolean;
+  /** contenu CSV à joindre (ignoré si attachCsv=false) */
+  csvContent?: string;
+  /** contrôle externe de l'ouverture (préset diffusion) */
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+  /** masque le bouton déclencheur si contrôle externe */
+  hideTrigger?: boolean;
 }
 
 function lineToItem(l: BoqLineDTO): EstimateItem {
