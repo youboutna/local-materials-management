@@ -56,9 +56,26 @@ export class BoqImportOrchestrator {
 
   static autoMap(columns: string[]): ImportMapping {
     const map: ImportMapping = {};
-    for (const [field, patterns] of Object.entries(FUZZY) as [keyof ImportMapping, RegExp[]][]) {
-      const match = columns.find((c) => patterns.some((rx) => rx.test(String(c))));
+    const used = new Set<string>();
+    const order: (keyof ImportMapping)[] = [
+      'designation',
+      'unit',
+      'quantity',
+      'unitPrice',
+      'length',
+      'width',
+      'height',
+      'material',
+      'elementType',
+      'category',
+      'phaseId',
+    ];
+
+    for (const field of order) {
+      const patterns = FUZZY[field];
+      const match = columns.find((c) => !used.has(c) && patterns.some((rx) => rx.test(String(c))));
       if (match) map[field] = match;
+      if (match) used.add(match);
     }
     return map;
   }
