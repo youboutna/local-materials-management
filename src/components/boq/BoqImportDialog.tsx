@@ -205,36 +205,48 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         {parseResult && (
           <>
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
                 <Label className="text-sm font-medium">
-                  Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)
+                  Référentiel projet <span className="text-xs text-muted-foreground">(lecture seule)</span>
                 </Label>
-                {projectReferentialCode && (
-                  <span className="text-xs text-muted-foreground">
-                    Projet : <code>{projectReferentialCode}</code>
-                  </span>
-                )}
-              </div>
-              <Select
-                value={referentialCode ?? '__none__'}
-                onValueChange={(v) => handleReferentialChange(v === '__none__' ? undefined : (v as ReferentialType))}
-                disabled={isBusy}
-              >
-                <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Aucun (heuristiques FR par défaut)</SelectItem>
-                  {refOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {isAltReferential && (
-                <p className="text-xs text-muted-foreground">
-                  Référentiel différent de celui du projet — le mapping ci-dessous convertit les phases vers le référentiel projet avant import.
+                <div className="h-9 flex items-center rounded-md border bg-muted/40 px-3 text-sm">
+                  {projectReferentialCode ? (
+                    <code className="text-xs">{projectReferentialCode}</code>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Aucun référentiel défini sur le projet</span>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Géré depuis le module projet — non modifiable ici.
                 </p>
-              )}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">
+                  Référentiel de mapping <span className="text-xs text-muted-foreground">(optionnel)</span>
+                </Label>
+                <Select
+                  value={referentialCode ?? '__none__'}
+                  onValueChange={(v) => handleReferentialChange(v === '__none__' ? undefined : (v as ReferentialType))}
+                  disabled={isBusy}
+                >
+                  <SelectTrigger><SelectValue placeholder="Utiliser le référentiel projet" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Aucun (heuristiques FR par défaut)</SelectItem>
+                    {refOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  {isAltReferential
+                    ? 'Un mapping vers les phases du projet est requis avant import.'
+                    : 'Choisir un référentiel différent pour aider à classer un devis externe.'}
+                </p>
+              </div>
             </section>
+
 
             {isAltReferential && projectPhases.length > 0 && (
               <section className="rounded-md border p-3 space-y-2 bg-muted/30">
