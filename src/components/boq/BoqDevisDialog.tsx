@@ -60,9 +60,15 @@ function lineToItem(l: BoqLineDTO): EstimateItem {
   };
 }
 
-export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEmail, triggerLabel }: Props) {
+export function BoqDevisDialog({
+  lines, mode, contextId, defaultTitle, defaultEmail, triggerLabel,
+  defaultNotes, attachCsv, csvContent,
+  open: openProp, onOpenChange, hideTrigger,
+}: Props) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (v: boolean) => { onOpenChange ? onOpenChange(v) : setOpenInternal(v); };
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
@@ -85,11 +91,21 @@ export function BoqDevisDialog({ lines, mode, contextId, defaultTitle, defaultEm
 3. Prix fermes hors révision exceptionnelle
 4. Conformité aux normes en vigueur`,
     recipientEmail: defaultEmail ?? '',
-    notes: '',
+    notes: defaultNotes ?? '',
     signatoryName: '',
     signatoryTitle: '',
     validityPeriod: 30,
   });
+
+  // Synchronise le titre/email/notes quand les presets changent (mode diffusion)
+  React.useEffect(() => {
+    setConfig(p => ({
+      ...p,
+      title: defaultTitle ?? p.title,
+      recipientEmail: defaultEmail ?? p.recipientEmail,
+      notes: defaultNotes ?? p.notes,
+    }));
+  }, [defaultTitle, defaultEmail, defaultNotes]);
 
   // ---- Signature drawing ---
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
