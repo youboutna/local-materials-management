@@ -65,21 +65,37 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
+  const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
+  const [phaseMapping, setPhaseMapping] = useState<Record<string, string>>({});
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
+  const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
+  const altPhases = useMemo(
+    () => (isAltReferential && referentialCode ? getPhasesForReferential(referentialCode) : []),
+    [isAltReferential, referentialCode]
+  );
+  const projectPhases = useMemo(
+    () => (projectReferentialCode ? getPhasesForReferential(projectReferentialCode) : []),
+    [projectReferentialCode]
+  );
+
   const wbsEnrichedDtos = useMemo<BoqLineDTO[]>(() => {
-    return dtos.map((l) => ({
-      ...l,
-      phaseId: l.phaseId ?? wbs.phaseId ?? undefined,
-      milestoneId: l.milestoneId ?? wbs.milestoneId ?? undefined,
-      taskId: l.taskId ?? wbs.taskId ?? undefined,
-    }));
-  }, [dtos, wbs]);
+    return dtos.map((l) => {
+      const rawPhaseId = l.phaseId ?? wbs.phaseId ?? undefined;
+      const mapped = isAltReferential && rawPhaseId ? phaseMapping[rawPhaseId] : undefined;
+      return {
+        ...l,
+        phaseId: mapped ?? rawPhaseId,
+        milestoneId: mapped ? undefined : (l.milestoneId ?? wbs.milestoneId ?? undefined),
+        taskId: mapped ? undefined : (l.taskId ?? wbs.taskId ?? undefined),
+      };
+    });
+  }, [dtos, wbs, isAltReferential, phaseMapping]);
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
 
@@ -89,7 +105,6 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       const current = next[index];
       if (!current) return prev;
       const merged: BoqLineDTO = { ...current, ...patch };
-      // Auto-recompute totalHt when qty or PU changes.
       if (patch.quantity !== undefined || patch.unitPrice !== undefined) {
         merged.totalHt = (merged.quantity ?? 0) * (merged.unitPrice ?? 0);
       }
@@ -103,7 +118,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   };
 
   useEffect(() => {
-    if (defaultReferentialCode) setReferentialCode(defaultReferentialCode);
+    if (defaultReferentialCode) {
+      setProjectReferentialCode(defaultReferentialCode);
+      setReferentialCode(defaultReferentialCode);
+    }
   }, [defaultReferentialCode]);
 
   useEffect(() => {
@@ -113,7 +131,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       try {
         const service = new ProjectService(RepositoryFactory.getProjectRepository());
         const project = await service.getProjectById(resolvedProjectId);
-        if (!cancelled && project?.referentialCode) setReferentialCode(project.referentialCode);
+        if (!cancelled && project?.referentialCode) {
+          setProjectReferentialCode(project.referentialCode);
+          setReferentialCode(project.referentialCode);
+        }
       } catch {
         // Keep import usable even if project metadata cannot be loaded.
       }
@@ -122,7 +143,6 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     return () => { cancelled = true; };
   }, [defaultReferentialCode, open, resolvedProjectId]);
 
-  // Pre-select first WBS phase of the referential so lines carry sensible defaults.
   useEffect(() => {
     if (!referentialCode || wbs.phaseId) return;
     const phases = getPhasesForReferential(referentialCode);
@@ -132,22 +152,13 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [referentialCode]);
 
-  const persistReferential = async (next?: ReferentialType) => {
+  // Selecting a referential in the dialog NEVER persists to the project — the
+  // project referential is managed by the project workflow module. When the
+  // user picks an alternate one, a mapping panel appears instead.
+  const handleReferentialChange = (next?: ReferentialType) => {
     setReferentialCode(next);
     setWbs({ phaseId: phaseId ?? null, milestoneId: null, taskId: null });
-    if (!resolvedProjectId) return;
-    try {
-      const service = new ProjectService(RepositoryFactory.getProjectRepository());
-      await service.updateProject(resolvedProjectId, { id: resolvedProjectId, referentialCode: next });
-      window.dispatchEvent(new CustomEvent('project-referential-changed', { detail: { projectId: resolvedProjectId, referentialCode: next } }));
-      window.dispatchEvent(new CustomEvent('boq-kpi-refresh', { detail: { projectId: resolvedProjectId, source, contextId } }));
-    } catch (e) {
-      toast({
-        title: 'Référentiel non persisté',
-        description: e instanceof Error ? e.message : String(e),
-        variant: 'destructive',
-      });
-    }
+    setPhaseMapping({});
   };
 
   const onSubmit = async () => {
@@ -159,11 +170,18 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       });
       return;
     }
+    if (isAltReferential && altPhases.some((p) => !phaseMapping[p.code])) {
+      toast({
+        title: 'Mapping incomplet',
+        description: 'Associez chaque phase du référentiel choisi à une phase du projet.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       setDtos(wbsEnrichedDtos);
       const r = await commit(wbsEnrichedDtos);
       toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s).` });
-      // Broadcast so KPI panels (Métrés / DQE) auto-refresh across the app
       window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
       onImported?.(r.length);
       setOpen(false);
@@ -176,6 +194,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     }
   };
 
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -187,10 +206,19 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
         {parseResult && (
           <>
             <section className="space-y-2">
-              <Label className="text-sm font-medium">Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-medium">
+                  Référentiel projet (auto-classification Phase → Étape[Jalon] → Tâche)
+                </Label>
+                {projectReferentialCode && (
+                  <span className="text-xs text-muted-foreground">
+                    Projet : <code>{projectReferentialCode}</code>
+                  </span>
+                )}
+              </div>
               <Select
                 value={referentialCode ?? '__none__'}
-                onValueChange={(v) => persistReferential(v === '__none__' ? undefined : (v as ReferentialType))}
+                onValueChange={(v) => handleReferentialChange(v === '__none__' ? undefined : (v as ReferentialType))}
                 disabled={isBusy}
               >
                 <SelectTrigger><SelectValue placeholder="Aucun (heuristiques FR par défaut)" /></SelectTrigger>
@@ -201,12 +229,45 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                   ))}
                 </SelectContent>
               </Select>
+              {isAltReferential && (
+                <p className="text-xs text-muted-foreground">
+                  Référentiel différent de celui du projet — le mapping ci-dessous convertit les phases vers le référentiel projet avant import.
+                </p>
+              )}
             </section>
+
+            {isAltReferential && projectPhases.length > 0 && (
+              <section className="rounded-md border p-3 space-y-2 bg-muted/30">
+                <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → référentiel projet</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {altPhases.map((altPh) => (
+                    <div key={altPh.code} className="flex items-center gap-2">
+                      <span className="text-xs flex-1 truncate" title={altPh.label}>{altPh.label}</span>
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <Select
+                        value={phaseMapping[altPh.code] ?? '__none__'}
+                        onValueChange={(v) => setPhaseMapping((m) => ({ ...m, [altPh.code]: v === '__none__' ? '' : v }))}
+                        disabled={isBusy}
+                      >
+                        <SelectTrigger className="w-56 h-8"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">— non mappée —</SelectItem>
+                          {projectPhases.map((p) => (
+                            <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section>
               <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
               <WbsSelector value={wbs} onChange={setWbs} disabled={isBusy} referentialCode={referentialCode} />
             </section>
+
 
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
