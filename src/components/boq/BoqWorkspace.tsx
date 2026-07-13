@@ -283,9 +283,21 @@ export function BoqWorkspace({
             onImported={() => doc.refetch()}
           />
 
-          <Button size="sm" variant="ghost" onClick={downloadCsv} disabled={!doc.lines.length} title="Export CSV brut">
-            <Download className="h-4 w-4 mr-1" />CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="ghost" disabled={!doc.lines.length} title="Export CSV et envoi par email">
+                <Download className="h-4 w-4 mr-1" />CSV
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={downloadCsv}>
+                <Download className="h-4 w-4 mr-2" />Télécharger CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCsvEmailOpen(true)}>
+                <Mail className="h-4 w-4 mr-2" />Envoyer CSV par email
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <BoqDevisDialog
             lines={doc.lines}
@@ -296,6 +308,40 @@ export function BoqWorkspace({
             triggerLabel={labels.devis}
           />
 
+          {/* Diffusion contextuelle : PDF signé + CSV joint */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={!doc.lines.length}>
+                <Send className="h-4 w-4 mr-1" />Diffuser
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Joindre PDF signé + CSV à…</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {diffusePresets.map((p) => (
+                <DropdownMenuItem key={p.key} onClick={() => openDiffuse(p)}>
+                  <Send className="h-4 w-4 mr-2" />{p.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Dialog contrôlé pour la diffusion contextuelle (PDF + CSV joints) */}
+          {diffusePreset && (
+            <BoqDevisDialog
+              lines={doc.lines}
+              mode={devisMode}
+              contextId={contextId}
+              defaultTitle={diffusePreset.title}
+              defaultEmail={diffusePreset.email ?? defaultEmail}
+              defaultNotes={diffusePreset.notes}
+              attachCsv
+              csvContent={buildCsv()}
+              hideTrigger
+              open={diffuseOpen}
+              onOpenChange={setDiffuseOpen}
+            />
+          )}
 
           {mode === 'bid' && projectId && estimateId && (
             <Button size="sm" onClick={handleAlignPlanning} disabled={aligning}>
@@ -305,6 +351,29 @@ export function BoqWorkspace({
           )}
         </div>
       </div>
+
+      {/* Dialog Envoyer CSV par email */}
+      <Dialog open={csvEmailOpen} onOpenChange={setCsvEmailOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Envoyer le CSV par email</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Destinataire</Label>
+              <Input type="email" value={csvEmailTo} onChange={(e) => setCsvEmailTo(e.target.value)} placeholder="destinataire@example.com" />
+            </div>
+            <div>
+              <Label>Objet</Label>
+              <Input value={csvEmailSubject} onChange={(e) => setCsvEmailSubject(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCsvEmailOpen(false)}>Annuler</Button>
+            <Button onClick={sendCsvEmail} disabled={csvSending}>
+              {csvSending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}Envoyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Récap fiscal */}
       <div className="rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-2 md:grid-cols-4 gap-3">
