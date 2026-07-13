@@ -340,6 +340,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 emptyLabel="Aucune ligne détectée avec le mapping courant."
                 editable
                 referentialCode={referentialCode}
+                phases={projectWbs.length > 0 && !isAltReferential ? projectWbs : undefined}
                 onChange={updateLine}
                 onRemove={removeLine}
               />
