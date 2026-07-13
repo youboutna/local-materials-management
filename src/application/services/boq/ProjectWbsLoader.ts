@@ -10,15 +10,33 @@ import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 
 interface RawStep {
   id?: string;
+  code?: string;
   name?: string;
+  label?: string;
+  title?: string;
   order_index?: number;
+  order?: number;
   tasks?: RawTask[];
 }
 interface RawTask {
   id?: string;
+  code?: string;
   name?: string;
+  label?: string;
+  title?: string;
   order_index?: number;
+  order?: number;
 }
+
+const pickLabel = (...values: unknown[]) => {
+  const match = values.find((v) => typeof v === 'string' && v.trim().length > 0);
+  return typeof match === 'string' ? match.trim() : undefined;
+};
+
+const pickOrder = (value: { order_index?: number; order?: number }, fallback: number) => {
+  const n = value.order_index ?? value.order;
+  return Number.isFinite(n) ? Number(n) : fallback;
+};
 
 export async function loadProjectWbs(projectId: string): Promise<WbsPhase[]> {
   if (!projectId) return [];
@@ -33,13 +51,13 @@ export async function loadProjectWbs(projectId: string): Promise<WbsPhase[]> {
 
   return data.map((row) => {
     const raw = (row.custom_phase_data ?? {}) as { steps?: RawStep[] };
-    const steps = Array.isArray(raw.steps) ? raw.steps : [];
+    const steps = Array.isArray(raw.steps) ? [...raw.steps].sort((a, b) => pickOrder(a, 0) - pickOrder(b, 0)) : [];
     const milestones = steps.map((s, i) => ({
-      id: s.id ?? `step-${i}`,
-      label: s.name ?? `Étape ${i + 1}`,
-      tasks: (Array.isArray(s.tasks) ? s.tasks : []).map((t, j) => ({
-        id: t.id ?? `task-${i}-${j}`,
-        label: t.name ?? `Tâche ${j + 1}`,
+      id: s.id ?? s.code ?? `step-${i}`,
+      label: pickLabel(s.name, s.label, s.title) ?? `Étape ${i + 1}`,
+      tasks: (Array.isArray(s.tasks) ? [...s.tasks].sort((a, b) => pickOrder(a, 0) - pickOrder(b, 0)) : []).map((t, j) => ({
+        id: t.id ?? t.code ?? `task-${i}-${j}`,
+        label: pickLabel(t.name, t.label, t.title) ?? `Tâche ${j + 1}`,
       })),
     }));
     return {
