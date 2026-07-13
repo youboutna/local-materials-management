@@ -206,12 +206,15 @@ export function BoqDevisDialog({
                  TVA : ${totals.totalTva.toLocaleString('fr-FR')} MRU<br/>
                  <strong>Total TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU</strong></p>
                  ${config.includeSignature && signature ? `<p>Signé par : ${config.signatoryName ?? ''} ${config.signatoryTitle ? `(${config.signatoryTitle})` : ''}</p><img src="${signature}" style="max-height:80px" />` : ''}`,
-          attachments: [{
-            filename: fileName,
-            content: b64,
-            contentType: 'application/pdf',
-            encoding: 'base64',
-          }],
+          attachments: [
+            { filename: fileName, content: b64, contentType: 'application/pdf', encoding: 'base64' },
+            ...(attachCsv && csvContent ? [{
+              filename: fileName.replace(/\.pdf$/, '.csv'),
+              content: btoa(unescape(encodeURIComponent(`\uFEFF${csvContent}`))),
+              contentType: 'text/csv',
+              encoding: 'base64',
+            }] : []),
+          ],
         }),
       });
       if (error) throw error;
