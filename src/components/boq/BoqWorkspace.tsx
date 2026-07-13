@@ -26,7 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
-import { PriceSummary } from './PriceSummary';
+
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
