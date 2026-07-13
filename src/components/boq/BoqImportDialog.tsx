@@ -146,7 +146,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
               setProjectReferentialCode(project.referentialCode);
               setReferentialCode(project.referentialCode);
             }
-            setProjectName(project?.name ?? project?.projectName ?? '');
+            setProjectName(project?.title ?? '');
           }
         }
       } catch {
