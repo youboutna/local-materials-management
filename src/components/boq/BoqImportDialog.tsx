@@ -129,21 +129,31 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   }, [defaultReferentialCode]);
 
   useEffect(() => {
-    if (!open || !resolvedProjectId || defaultReferentialCode) return;
+    if (!open || !resolvedProjectId) return;
     let cancelled = false;
-    const loadProjectReferential = async () => {
+    const loadProjectContext = async () => {
       try {
-        const service = new ProjectService(RepositoryFactory.getProjectRepository());
-        const project = await service.getProjectById(resolvedProjectId);
-        if (!cancelled && project?.referentialCode) {
-          setProjectReferentialCode(project.referentialCode);
-          setReferentialCode(project.referentialCode);
+        // 1) Charge les phases/étapes/tâches réelles du projet (source de vérité)
+        const wbs = await loadProjectWbs(resolvedProjectId);
+        if (!cancelled) setProjectWbs(wbs);
+
+        // 2) Charge le référentiel projet (métadonnée) si pas déjà fourni
+        if (!defaultReferentialCode) {
+          const service = new ProjectService(RepositoryFactory.getProjectRepository());
+          const project = await service.getProjectById(resolvedProjectId);
+          if (!cancelled) {
+            if (project?.referentialCode) {
+              setProjectReferentialCode(project.referentialCode);
+              setReferentialCode(project.referentialCode);
+            }
+            setProjectName(project?.name ?? project?.projectName ?? '');
+          }
         }
       } catch {
         // Keep import usable even if project metadata cannot be loaded.
       }
     };
-    loadProjectReferential();
+    loadProjectContext();
     return () => { cancelled = true; };
   }, [defaultReferentialCode, open, resolvedProjectId]);
 
