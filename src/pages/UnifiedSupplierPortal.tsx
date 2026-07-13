@@ -59,6 +59,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { UnlockedView as SecretUnlockedView } from "@/components/tenders/SupplierSecureAccessPortal";
+import { BoqWorkspace } from "@/components/boq";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
 import {
@@ -551,8 +552,9 @@ const UnifiedSupplierPortal = () => {
 
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full grid-cols-8 overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-9 overflow-x-auto">
               <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
+              <TabsTrigger value="devis">Devis</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Télécharger</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
@@ -715,6 +717,34 @@ const UnifiedSupplierPortal = () => {
             {/* Tender Submissions Tab - New */}
             <TabsContent value="tenders">
               <EnhancedSupplierTenderPortal />
+            </TabsContent>
+
+            {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
+            <TabsContent value="devis">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Devis / Chiffrage
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Saisie manuelle, import BPU (PDF/Excel/CSV), calcul métré, récap fiscal HT/TVA/TTC,
+                    génération PDF signé et envoi par email.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {supplierProfile?.id ? (
+                    <BoqWorkspace
+                      source="supplier_bid"
+                      contextId={supplierProfile.id}
+                      mode="bid"
+                      defaultEmail={supplierProfile.email ?? undefined}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Profil fournisseur requis.</p>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Upload Tab */}

@@ -10,6 +10,7 @@ import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
 import { useQuery } from '@tanstack/react-query';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { BoqWorkspace } from '@/components/boq';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
@@ -160,7 +161,27 @@ const TenderDetail: React.FC = () => {
           </div>
         )}
 
-        {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement (soumissions) car il nécessite l'estimateId gagnant. */}
+        {tender && (
+          <Card>
+            <CardHeader>
+              <CardTitle>DQE / Chiffrage estimatif</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Import BPU, saisie manuelle, calcul métré, génération devis signé et alignement projet.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <BoqWorkspace
+                source="tender_estimate"
+                contextId={tender.id}
+                projectId={tender.projectId ?? undefined}
+                mode="bid"
+                estimateId={tender.id}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AwardedTenderPreviewDialog est déclenché depuis TenderManagement. */}
         {false && awardOpen && <span />}
       </div>
     </AppLayout>
