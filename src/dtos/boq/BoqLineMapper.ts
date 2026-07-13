@@ -36,6 +36,8 @@ export interface BoqDbRow {
   bid_ref?: string | null;
   submitted_by?: string | null;
   source?: string | null;
+  source_type?: string | null;
+  btp_code?: string | null;
 }
 
 export class BoqLineMapper {
@@ -68,6 +70,8 @@ export class BoqLineMapper {
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
       submittedBy: row.submitted_by ?? null,
+      sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
+      btpCode: row.btp_code ?? null,
     };
   }
 
@@ -88,6 +92,8 @@ export class BoqLineMapper {
       resource_type: dto.resourceType ?? 'material',
       note: dto.note ?? null,
       source: dto.source,
+      source_type: dto.sourceType ?? null,
+      btp_code: dto.btpCode ?? null,
     };
     if (dto.source === 'quantity_takeoff') {
       return {

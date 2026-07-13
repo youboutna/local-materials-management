@@ -44,6 +44,7 @@ export { BoqLineTable } from '@/components/boq/BoqLineTable';
 export { BoqComparisonTable } from '@/components/boq/BoqComparisonTable';
 export { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 export { BoqBudgetDashboard } from '@/components/boq/BoqBudgetDashboard';
+export { BoqWorkspace, type BoqWorkspaceMode } from '@/components/boq/BoqWorkspace';
 export { ResourceSelector, type ResourceOption } from '@/components/boq/ResourceSelector';
 export { MappingModal, MAPPING_FIELDS } from '@/components/boq/MappingModal';
 

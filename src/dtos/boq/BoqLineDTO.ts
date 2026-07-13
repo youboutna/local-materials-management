@@ -3,6 +3,8 @@
  */
 import type { BoqResourceType, BoqSource } from '@/domain/boq/BoqLine';
 
+export type BoqSourceType = 'rapide' | 'avance' | 'import' | 'invoice';
+
 export interface BoqLineDTO {
   id?: string;
   source: BoqSource;
@@ -25,6 +27,10 @@ export interface BoqLineDTO {
   note?: string | null;
   bidRef?: string | null;
   submittedBy?: string | null;
+  /** Origine de la ligne : saisie rapide, calcul avancé, import parseur, ou facture fournisseur. */
+  sourceType?: BoqSourceType;
+  /** Code métier BTP réutilisable (nomenclature BTP standardisée). */
+  btpCode?: string | null;
 }
 
 export interface BoqLineFilter {

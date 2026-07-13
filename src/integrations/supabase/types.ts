@@ -3068,6 +3068,7 @@ export type Database = {
       tender_estimate_items: {
         Row: {
           bid_ref: string | null
+          btp_code: string | null
           category: string | null
           created_at: string
           description: string | null
@@ -3084,6 +3085,7 @@ export type Database = {
           resource_kind: string | null
           resource_type: string | null
           source: string | null
+          source_type: string | null
           specifications: string | null
           submitted_by: string | null
           supplier_contract_ref: string | null
@@ -3096,6 +3098,7 @@ export type Database = {
         }
         Insert: {
           bid_ref?: string | null
+          btp_code?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -3112,6 +3115,7 @@ export type Database = {
           resource_kind?: string | null
           resource_type?: string | null
           source?: string | null
+          source_type?: string | null
           specifications?: string | null
           submitted_by?: string | null
           supplier_contract_ref?: string | null
@@ -3124,6 +3128,7 @@ export type Database = {
         }
         Update: {
           bid_ref?: string | null
+          btp_code?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -3140,6 +3145,7 @@ export type Database = {
           resource_kind?: string | null
           resource_type?: string | null
           source?: string | null
+          source_type?: string | null
           specifications?: string | null
           submitted_by?: string | null
           supplier_contract_ref?: string | null
