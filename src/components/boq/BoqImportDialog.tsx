@@ -70,6 +70,8 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [phaseMapping, setPhaseMapping] = useState<Record<string, string>>({});
+  const [projectWbs, setProjectWbs] = useState<WbsPhase[]>([]);
+  const [projectName, setProjectName] = useState<string>('');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
