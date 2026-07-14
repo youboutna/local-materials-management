@@ -16,7 +16,7 @@ export interface BoqDbRow {
   material_id?: string | null;
   item_code?: string | null;
   description?: string | null;
-  element_type?: string | null;
+  // element_type column doesn't exist — elementType is persisted via item_type
   unit?: string | null;
   length?: number | null;
   width?: number | null;
@@ -52,8 +52,8 @@ export class BoqLineMapper {
       id: row.id,
       source,
       contextId,
-      designation: row.description ?? row.element_type ?? row.item_code ?? '',
-      elementType: row.element_type ?? row.item_type ?? null,
+      designation: row.description ?? row.item_type ?? row.item_code ?? '',
+      elementType: row.item_type ?? null,
       unit: row.unit ?? 'unité',
       length: row.length ?? null,
       width: row.width ?? null,
@@ -78,7 +78,7 @@ export class BoqLineMapper {
   static toDb(dto: BoqLineDTO): BoqDbRow {
     const base: BoqDbRow = {
       material_id: dto.materialId ?? null,
-      element_type: dto.elementType ?? null,
+      item_type: dto.elementType ?? null,
       unit: dto.unit,
       length: dto.length ?? null,
       width: dto.width ?? null,
