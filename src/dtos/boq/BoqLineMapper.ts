@@ -17,7 +17,6 @@ export interface BoqDbRow {
   item_code?: string | null;
   description?: string | null;
   element_type?: string | null;
-  item_type?: string | null;
   unit?: string | null;
   length?: number | null;
   width?: number | null;
