@@ -369,7 +369,42 @@ export function BoqWorkspace({
                   <Label>Désignation</Label>
                   <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
                 </div>
-                <div className="col-span-2">
+
+                {/* Classification WBS projet (Phase → Jalon → Tâche) — dynamique */}
+                <div className="col-span-6">
+                  <Label className="text-xs text-muted-foreground">
+                    Classification WBS {projectPhases.length > 0 ? '(phases du projet)' : '(référentiel)'}
+                  </Label>
+                  <WbsSelector
+                    value={wbs}
+                    onChange={setWbs}
+                    phases={projectPhases.length > 0 ? projectPhases : undefined}
+                    referentialCode={referentialCode}
+                  />
+                </div>
+
+                {/* Type d'élément — pilote le moteur de métré dynamique (inline, pas de modal) */}
+                {!isLabourTime && (
+                  <div className="col-span-3">
+                    <Label>Type d'ouvrage (métré)</Label>
+                    <Select value={elementType} onValueChange={(v) => setElementType(v as ElementTypeCode)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="generic">— Saisie directe —</SelectItem>
+                        {ELEMENT_TYPES.map((e) => (
+                          <SelectItem key={e.code} value={e.code}>{e.label} ({e.defaultUnit})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {isLabourTime && (
+                  <div className="col-span-3 text-xs text-muted-foreground self-end pb-2">
+                    Main-d'œuvre au temps → quantité saisie directement (pas de métré volumique).
+                  </div>
+                )}
+
+                <div className="col-span-1">
                   <Label>Unité</Label>
                   <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -379,16 +414,48 @@ export function BoqWorkspace({
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <Label>Quantité</Label>
-                  <Input type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+                  <Label>{useAdvanced ? 'Quantité (calculée)' : 'Quantité'}</Label>
+                  <Input
+                    type="number"
+                    value={useAdvanced ? computedQuantity.toFixed(2) : (form.quantity ?? 0)}
+                    onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+                    readOnly={useAdvanced}
+                    className={useAdvanced ? 'bg-muted' : ''}
+                  />
                 </div>
+
+                {/* Dimensions L/W/H — visibles selon le référentiel element-types */}
+                {useAdvanced && elDef && (
+                  <>
+                    {elDef.dimensions.length && (
+                      <div className="col-span-2">
+                        <Label>Longueur (m)</Label>
+                        <Input type="number" value={form.length ?? ''} onChange={(e) => setForm({ ...form, length: Number(e.target.value) })} />
+                      </div>
+                    )}
+                    {elDef.dimensions.width && (
+                      <div className="col-span-2">
+                        <Label>Largeur (m)</Label>
+                        <Input type="number" value={form.width ?? ''} onChange={(e) => setForm({ ...form, width: Number(e.target.value) })} />
+                      </div>
+                    )}
+                    {elDef.dimensions.height && (
+                      <div className="col-span-2">
+                        <Label>Hauteur (m)</Label>
+                        <Input type="number" value={form.height ?? ''} onChange={(e) => setForm({ ...form, height: Number(e.target.value) })} />
+                      </div>
+                    )}
+                  </>
+                )}
+
                 <div className="col-span-2">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-4 gap-2">
+              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
+                <div>Qté : <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
                 <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
                 <div>TVA : <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
                 <div>RAS : <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
