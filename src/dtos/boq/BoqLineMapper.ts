@@ -52,8 +52,8 @@ export class BoqLineMapper {
       id: row.id,
       source,
       contextId,
-      designation: row.description ?? row.element_type ?? row.item_code ?? '',
-      elementType: row.element_type ?? row.item_type ?? null,
+      designation: row.description ?? row.item_type ?? row.item_code ?? '',
+      elementType: row.item_type ?? null,
       unit: row.unit ?? 'unité',
       length: row.length ?? null,
       width: row.width ?? null,
@@ -78,7 +78,6 @@ export class BoqLineMapper {
   static toDb(dto: BoqLineDTO): BoqDbRow {
     const base: BoqDbRow = {
       material_id: dto.materialId ?? null,
-      element_type: dto.elementType ?? null,
       unit: dto.unit,
       length: dto.length ?? null,
       width: dto.width ?? null,
@@ -98,13 +97,16 @@ export class BoqLineMapper {
     if (dto.source === 'quantity_takeoff') {
       return {
         ...base,
+        element_type: dto.elementType ?? null,
         project_id: dto.contextId,
         total_value: dto.totalHt ?? null,
       };
     }
+    // tender_estimate | supplier_bid | dqe use item_type instead of element_type
     // tender_estimate | supplier_bid | dqe
     return {
       ...base,
+      item_type: dto.elementType ?? null,
       estimate_id: dto.contextId,
       description: dto.designation,
       item_code: dto.elementType ?? dto.designation.slice(0, 32),
