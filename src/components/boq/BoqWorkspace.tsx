@@ -168,15 +168,21 @@ export function BoqWorkspace({
       await doc.createLine({
         source, contextId,
         designation: form.designation!,
+        elementType: useAdvanced ? elementType : null,
         unit: form.unit || 'u',
-        quantity: Number(form.quantity) || 0,
+        length: useAdvanced ? (form.length ?? null) : null,
+        width: useAdvanced ? (form.width ?? null) : null,
+        height: useAdvanced ? (form.height ?? null) : null,
+        quantity: computedQuantity,
         unitPrice: Number(form.unitPrice) || 0,
         resourceType: catToResource(category),
         materialId: materialId || null,
-        phaseId: form.phaseId ?? null,
+        phaseId: wbs.phaseId ?? null,
+        milestoneId: wbs.milestoneId ?? null,
+        taskId: wbs.taskId ?? null,
         vatRate: profile.vatRate,
         note: category === 'overhead' ? 'Frais généraux' : null,
-        sourceType: 'rapide',
+        sourceType: useAdvanced ? 'avance' : 'rapide',
       });
       toast({ title: 'Ligne ajoutée' });
       resetForm();
