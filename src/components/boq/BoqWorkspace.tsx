@@ -16,7 +16,7 @@
  * N'accède jamais à supabase.from() directement. Toute écriture passe par
  * useBoqDocument (hexagonal).
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,14 +30,19 @@ import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqDevisDialog, type BoqDevisMode } from './BoqDevisDialog';
+import { WbsSelector, type WbsValue } from './WbsSelector';
 
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
+import { MeterService } from '@/application/services/boq/MeterService';
+import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 import { supabase } from '@/integrations/supabase/client';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ReferentialType } from '@/config/referentials';
@@ -46,6 +51,7 @@ type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
   c === 'labour' ? 'labor' : c === 'equipment' ? 'equipment' : 'material';
 const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff', 'ens', 'lot'];
+const LABOUR_TIME_UNITS = new Set(['h', 'j', 'hj', 'homme/jour']);
 
 
 export type BoqWorkspaceMode = 'planning' | 'bid' | 'invoice';
@@ -85,12 +91,28 @@ export function BoqWorkspace({
   const [fiscalCode, setFiscalCode] = useState<string>('MR_STANDARD');
   const [category, setCategory] = useState<ManualCategory>('material');
   const [materialId, setMaterialId] = useState<string>('');
-  const [form, setForm] = useState<Partial<BoqLineDTO>>({
+  const [elementType, setElementType] = useState<ElementTypeCode>('generic');
+  const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
+  const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
+  const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
+
+  // Load real project WBS (phases → milestones → tasks) — dynamic, per project
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!projectId) { setProjectPhases([]); return; }
+      const phases = await loadProjectWbs(projectId);
+      if (!cancelled) setProjectPhases(phases);
+    })();
+    return () => { cancelled = true; };
+  }, [projectId]);
+
   const resetForm = () => {
     setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
-    setMaterialId(''); setCategory('material');
+    setMaterialId(''); setCategory('material'); setElementType('generic');
+    setWbs({ phaseId: null, milestoneId: null, taskId: null });
   };
 
   const onPickMaterial = (id: string) => {
@@ -106,14 +128,35 @@ export function BoqWorkspace({
     }
   };
 
+  // RH rule: main-d'œuvre + unité temps (h/j) → arithmétique simple, PAS de métré volumique
+  const isLabourTime = category === 'labour' && LABOUR_TIME_UNITS.has(String(form.unit ?? '').toLowerCase());
+  const elDef = getElementType(elementType);
+  const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
+
+  // Dynamic quantity — recomputed from L/W/H + element type (or user-entered on generic/RH)
+  const computedQuantity = useMemo(() => {
+    if (!useAdvanced) return Number(form.quantity) || 0;
+    const r = MeterService.compute({
+      source, contextId,
+      designation: form.designation ?? '',
+      elementType,
+      unit: form.unit || 'u',
+      length: form.length ?? null,
+      width: form.width ?? null,
+      height: form.height ?? null,
+      quantity: 0,
+      unitPrice: form.unitPrice ?? 0,
+    });
+    return r.quantity;
+  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId]);
+
   const manualPreview = useMemo(() => {
-    const q = Number(form.quantity) || 0;
     const pu = Number(form.unitPrice) || 0;
-    const ht = q * pu;
+    const ht = computedQuantity * pu;
     const profile = getFiscalProfile(fiscalCode);
     const tva = ht * profile.vatRate;
-    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate };
-  }, [form.quantity, form.unitPrice, fiscalCode]);
+    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
+  }, [computedQuantity, form.unitPrice, fiscalCode]);
 
   const handleCreate = async () => {
     if (!form.designation?.trim()) {
@@ -125,15 +168,21 @@ export function BoqWorkspace({
       await doc.createLine({
         source, contextId,
         designation: form.designation!,
+        elementType: useAdvanced ? elementType : null,
         unit: form.unit || 'u',
-        quantity: Number(form.quantity) || 0,
+        length: useAdvanced ? (form.length ?? null) : null,
+        width: useAdvanced ? (form.width ?? null) : null,
+        height: useAdvanced ? (form.height ?? null) : null,
+        quantity: computedQuantity,
         unitPrice: Number(form.unitPrice) || 0,
         resourceType: catToResource(category),
         materialId: materialId || null,
-        phaseId: form.phaseId ?? null,
+        phaseId: wbs.phaseId ?? null,
+        milestoneId: wbs.milestoneId ?? null,
+        taskId: wbs.taskId ?? null,
         vatRate: profile.vatRate,
         note: category === 'overhead' ? 'Frais généraux' : null,
-        sourceType: 'rapide',
+        sourceType: useAdvanced ? 'avance' : 'rapide',
       });
       toast({ title: 'Ligne ajoutée' });
       resetForm();
@@ -320,7 +369,42 @@ export function BoqWorkspace({
                   <Label>Désignation</Label>
                   <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
                 </div>
-                <div className="col-span-2">
+
+                {/* Classification WBS projet (Phase → Jalon → Tâche) — dynamique */}
+                <div className="col-span-6">
+                  <Label className="text-xs text-muted-foreground">
+                    Classification WBS {projectPhases.length > 0 ? '(phases du projet)' : '(référentiel)'}
+                  </Label>
+                  <WbsSelector
+                    value={wbs}
+                    onChange={setWbs}
+                    phases={projectPhases.length > 0 ? projectPhases : undefined}
+                    referentialCode={referentialCode}
+                  />
+                </div>
+
+                {/* Type d'élément — pilote le moteur de métré dynamique (inline, pas de modal) */}
+                {!isLabourTime && (
+                  <div className="col-span-3">
+                    <Label>Type d'ouvrage (métré)</Label>
+                    <Select value={elementType} onValueChange={(v) => setElementType(v as ElementTypeCode)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="generic">— Saisie directe —</SelectItem>
+                        {ELEMENT_TYPES.map((e) => (
+                          <SelectItem key={e.code} value={e.code}>{e.label} ({e.defaultUnit})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {isLabourTime && (
+                  <div className="col-span-3 text-xs text-muted-foreground self-end pb-2">
+                    Main-d'œuvre au temps → quantité saisie directement (pas de métré volumique).
+                  </div>
+                )}
+
+                <div className="col-span-1">
                   <Label>Unité</Label>
                   <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -330,16 +414,48 @@ export function BoqWorkspace({
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <Label>Quantité</Label>
-                  <Input type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+                  <Label>{useAdvanced ? 'Quantité (calculée)' : 'Quantité'}</Label>
+                  <Input
+                    type="number"
+                    value={useAdvanced ? computedQuantity.toFixed(2) : (form.quantity ?? 0)}
+                    onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+                    readOnly={useAdvanced}
+                    className={useAdvanced ? 'bg-muted' : ''}
+                  />
                 </div>
+
+                {/* Dimensions L/W/H — visibles selon le référentiel element-types */}
+                {useAdvanced && elDef && (
+                  <>
+                    {elDef.dimensions.length && (
+                      <div className="col-span-2">
+                        <Label>Longueur (m)</Label>
+                        <Input type="number" value={form.length ?? ''} onChange={(e) => setForm({ ...form, length: Number(e.target.value) })} />
+                      </div>
+                    )}
+                    {elDef.dimensions.width && (
+                      <div className="col-span-2">
+                        <Label>Largeur (m)</Label>
+                        <Input type="number" value={form.width ?? ''} onChange={(e) => setForm({ ...form, width: Number(e.target.value) })} />
+                      </div>
+                    )}
+                    {elDef.dimensions.height && (
+                      <div className="col-span-2">
+                        <Label>Hauteur (m)</Label>
+                        <Input type="number" value={form.height ?? ''} onChange={(e) => setForm({ ...form, height: Number(e.target.value) })} />
+                      </div>
+                    )}
+                  </>
+                )}
+
                 <div className="col-span-2">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-4 gap-2">
+              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
+                <div>Qté : <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
                 <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
                 <div>TVA : <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
                 <div>RAS : <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
