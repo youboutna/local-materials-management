@@ -16,7 +16,7 @@
  * N'accède jamais à supabase.from() directement. Toute écriture passe par
  * useBoqDocument (hexagonal).
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,14 +30,19 @@ import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqDevisDialog, type BoqDevisMode } from './BoqDevisDialog';
+import { WbsSelector, type WbsValue } from './WbsSelector';
 
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
+import { MeterService } from '@/application/services/boq/MeterService';
+import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
 import { supabase } from '@/integrations/supabase/client';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ReferentialType } from '@/config/referentials';
@@ -46,6 +51,7 @@ type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
   c === 'labour' ? 'labor' : c === 'equipment' ? 'equipment' : 'material';
 const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff', 'ens', 'lot'];
+const LABOUR_TIME_UNITS = new Set(['h', 'j', 'hj', 'homme/jour']);
 
 
 export type BoqWorkspaceMode = 'planning' | 'bid' | 'invoice';
