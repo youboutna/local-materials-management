@@ -144,7 +144,7 @@ export function BoqWorkspace({
       length: form.length ?? null,
       width: form.width ?? null,
       height: form.height ?? null,
-      quantity: null,
+      quantity: 0,
       unitPrice: form.unitPrice ?? 0,
     });
     return r.quantity;
