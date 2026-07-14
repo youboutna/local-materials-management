@@ -91,12 +91,28 @@ export function BoqWorkspace({
   const [fiscalCode, setFiscalCode] = useState<string>('MR_STANDARD');
   const [category, setCategory] = useState<ManualCategory>('material');
   const [materialId, setMaterialId] = useState<string>('');
-  const [form, setForm] = useState<Partial<BoqLineDTO>>({
+  const [elementType, setElementType] = useState<ElementTypeCode>('generic');
+  const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
+  const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
+  const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
+
+  // Load real project WBS (phases → milestones → tasks) — dynamic, per project
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!projectId) { setProjectPhases([]); return; }
+      const phases = await loadProjectWbs(projectId);
+      if (!cancelled) setProjectPhases(phases);
+    })();
+    return () => { cancelled = true; };
+  }, [projectId]);
+
   const resetForm = () => {
     setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
-    setMaterialId(''); setCategory('material');
+    setMaterialId(''); setCategory('material'); setElementType('generic');
+    setWbs({ phaseId: null, milestoneId: null, taskId: null });
   };
 
   const onPickMaterial = (id: string) => {
@@ -112,14 +128,35 @@ export function BoqWorkspace({
     }
   };
 
+  // RH rule: main-d'œuvre + unité temps (h/j) → arithmétique simple, PAS de métré volumique
+  const isLabourTime = category === 'labour' && LABOUR_TIME_UNITS.has(String(form.unit ?? '').toLowerCase());
+  const elDef = getElementType(elementType);
+  const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
+
+  // Dynamic quantity — recomputed from L/W/H + element type (or user-entered on generic/RH)
+  const computedQuantity = useMemo(() => {
+    if (!useAdvanced) return Number(form.quantity) || 0;
+    const r = MeterService.compute({
+      source, contextId,
+      designation: form.designation ?? '',
+      elementType,
+      unit: form.unit || 'u',
+      length: form.length ?? null,
+      width: form.width ?? null,
+      height: form.height ?? null,
+      quantity: null,
+      unitPrice: form.unitPrice ?? 0,
+    });
+    return r.quantity;
+  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId]);
+
   const manualPreview = useMemo(() => {
-    const q = Number(form.quantity) || 0;
     const pu = Number(form.unitPrice) || 0;
-    const ht = q * pu;
+    const ht = computedQuantity * pu;
     const profile = getFiscalProfile(fiscalCode);
     const tva = ht * profile.vatRate;
-    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate };
-  }, [form.quantity, form.unitPrice, fiscalCode]);
+    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
+  }, [computedQuantity, form.unitPrice, fiscalCode]);
 
   const handleCreate = async () => {
     if (!form.designation?.trim()) {
