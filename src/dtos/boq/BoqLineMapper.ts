@@ -16,7 +16,8 @@ export interface BoqDbRow {
   material_id?: string | null;
   item_code?: string | null;
   description?: string | null;
-  // element_type column doesn't exist — elementType is persisted via item_type
+  element_type?: string | null;
+  item_type?: string | null;
   unit?: string | null;
   length?: number | null;
   width?: number | null;
