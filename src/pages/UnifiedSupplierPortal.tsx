@@ -60,6 +60,7 @@ import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentReques
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { UnlockedView as SecretUnlockedView } from "@/components/tenders/SupplierSecureAccessPortal";
 import { BoqWorkspace } from "@/components/boq";
+import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
 import {
@@ -721,31 +722,18 @@ const UnifiedSupplierPortal = () => {
 
             {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
             <TabsContent value="devis">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Devis / Chiffrage
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Saisie manuelle, import BPU (PDF/Excel/CSV), calcul métré, récap fiscal HT/TVA/TTC,
-                    génération PDF signé et envoi par email.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {supplierProfile?.id ? (
-                    <BoqWorkspace
-                      source="supplier_bid"
-                      contextId={supplierProfile.id}
-                      mode="bid"
-                      defaultEmail={supplierProfile.email ?? undefined}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Profil fournisseur requis.</p>
-                  )}
-                </CardContent>
-              </Card>
+              {supplierProfile?.id ? (
+                <DqeWorkspace
+                  routeContext="supplier-bid"
+                  senderId={supplierProfile.id}
+                  submissionId={supplierProfile.id}
+                  recipientEmail={supplierProfile.email ?? undefined}
+                />
+              ) : (
+                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
+              )}
             </TabsContent>
+
 
             {/* Upload Tab */}
             <TabsContent value="upload">
@@ -1082,139 +1070,18 @@ const UnifiedSupplierPortal = () => {
 
             {/* Parsed Invoices Tab */}
             <TabsContent value="invoices">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between gap-4">
-                  <CardTitle className="flex items-center gap-2">
-                    <Receipt className="h-5 w-5" />
-                    Factures Analysées
-                  </CardTitle>
-                  <div>
-                    <input
-                      id="invoice-file"
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleInvoiceUpload(f);
-                        e.target.value = '';
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => document.getElementById('invoice-file')?.click()}
-                      disabled={invoiceParsing || isParsingInvoice}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {invoiceParsing ? 'Analyse en cours…' : 'Analyser une facture'}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {parsedInvoices.length > 0 ? (
-                      parsedInvoices.map((invoice) => (
-                        <div
-                          key={invoice.id}
-                          className="p-4 rounded-lg border bg-card"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h3 className="font-medium">
-                                Facture #{invoice.invoice_number || "N/A"}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                Fichier: {invoice.file_name}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Montant total:{" "}
-                                {invoice.total_amount?.toLocaleString()} MRU
-                              </p>
-                              {invoice.tax_amount && (
-                                <p className="text-sm text-muted-foreground">
-                                  TVA: {invoice.tax_amount.toLocaleString()} MRU
-                                </p>
-                              )}
-                              <p className="text-xs text-muted-foreground">
-                                {invoice.invoice_date
-                                  ? new Date(
-                                      invoice.invoice_date
-                                    ).toLocaleDateString("fr-FR")
-                                  : "Date inconnue"}
-                              </p>
-                            </div>
-                            <Badge
-                              variant={
-                                invoice.parsing_status === "completed"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className={
-                                invoice.parsing_status === "completed"
-                                  ? "bg-green-100 text-green-800"
-                                  : invoice.parsing_status === "failed"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-orange-100 text-orange-800"
-                              }
-                            >
-                              {invoice.parsing_status}
-                            </Badge>
-                          </div>
-
-                          {invoice.items && (
-                            <div className="mt-3">
-                              <h4 className="font-medium mb-2">Articles:</h4>
-                              <div className="space-y-1">
-                                {Array.isArray(invoice.items) &&
-                                  invoice.items.map(
-                                    (item: any, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="text-sm bg-muted p-2 rounded"
-                                      >
-                                        <span className="font-medium">
-                                          {item.description || item.name}
-                                        </span>
-                                        {item.quantity && (
-                                          <span> - Qté: {item.quantity}</span>
-                                        )}
-                                        {item.unit_price && (
-                                          <span>
-                                            {" "}
-                                            - Prix: {item.unit_price} MRU
-                                          </span>
-                                        )}
-                                        {item.total && (
-                                          <span>
-                                            {" "}
-                                            - Total: {item.total} MRU
-                                          </span>
-                                        )}
-                                      </div>
-                                    )
-                                  )}
-                              </div>
-                            </div>
-                          )}
-
-                          {invoice.parsing_errors && (
-                            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
-                              <p className="text-sm text-red-600">
-                                Erreur d'analyse: {invoice.parsing_errors}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">
-                        Aucune facture analysée
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              {supplierProfile?.id ? (
+                <DqeWorkspace
+                  routeContext="supplier-invoice"
+                  senderId={supplierProfile.id}
+                  submissionId={supplierProfile.id}
+                  recipientEmail={supplierProfile.email ?? undefined}
+                />
+              ) : (
+                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
+              )}
             </TabsContent>
+
           </Tabs>
         </div>
       </main>
