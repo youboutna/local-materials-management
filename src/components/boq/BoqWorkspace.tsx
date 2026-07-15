@@ -382,10 +382,33 @@ export function BoqWorkspace({
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground">
-          {doc.lines.length} ligne(s)
+        <div className="text-sm text-muted-foreground flex items-center gap-3">
+          <span>{doc.lines.length} ligne(s) enregistrée(s)</span>
+          {drafts.length > 0 && (
+            <span className="text-amber-600 font-medium">
+              + {drafts.length} brouillon(s) non enregistré(s)
+            </span>
+          )}
+          {/* WBS par défaut (contexte de saisie) — appliqué automatiquement aux nouvelles lignes */}
+          <div className="ml-2 hidden md:flex items-center gap-2">
+            <span className="text-xs">WBS par défaut :</span>
+            <div className="min-w-[420px]">
+              <WbsSelector
+                value={wbsDefault}
+                onChange={setWbsDefault}
+                phases={projectPhases.length > 0 ? projectPhases : undefined}
+                referentialCode={referentialCode}
+              />
+            </div>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {drafts.length > 0 && (
+            <Button size="sm" variant="secondary" onClick={() => flushDrafts(false)} disabled={flushing}>
+              {flushing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+              Enregistrer ({drafts.length})
+            </Button>
+          )}
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie manuelle</Button>
