@@ -1,224 +1,75 @@
+# Plan v3.2 — Correctifs BOQ (post-audit v3.1)
 
-# Plan v3.1 — Unification `boq_lines` + Redesign DQE & Portail Fournisseur (portée réduite)
+Objectif : combler les écarts constatés entre le plan v3.1 et l'implémentation réelle. Exécution en 4 lots parallèles en background, sans reprise de main entre les lots.
 
-**Changement clé depuis v3** : côté portail fournisseur, seuls les onglets **Devis** et **Factures** sont refondus autour du `DqeWorkspace`. Les autres onglets (Appels d'Offres, Documents, Télécharger, Paiements, Notifications, Tâches, Inspections) restent inchangés — juste la double barre d'onglets est supprimée.
+## État des lieux (audit rapide)
 
----
+| Point v3.1 | Statut réel | Écart |
+|---|---|---|
+| Migration `btp.boq_lines` + vues compat | Fait (B1) | Repository cible encore les tables historiques |
+| `BoqContextService` / `DocumentService` / `BoqWorkflowService` | Fichiers présents | `DocumentService.generate` produit un CSV, pas un PDF ; pas d'entête/pied ; agrège uniquement les lignes passées |
+| `DqeWorkspace` unifié | Monté sur projet + portail | Carte legacy « Métrés / Métrés ajouter / Liste des Métrés » toujours affichée sous le workspace ⇒ doublon |
+| Onglets Devis / Factures fournisseur | Refactor OK | Flux « Créer un devis depuis un AO » non câblé ; « Joindre à la soumission » absent ; onglet Facture n'impose pas l'association projet/AO |
+| Actions PDF / Email / Signer / Diffuser | Boutons visibles | Email OK (edge function), PDF = CSV, Signer = no-op, Diffuser non branché côté projet |
+| Statut `draft` sur lignes | Absent | Chaque ligne créée est immédiatement persistée sans état brouillon explicite ⇒ pas de "finaliser DQE" |
+| Shadow-writes `quantity_takeoffs` | Toujours en place dans `BoqWorkspace` / `BoqImportDialog` | À retirer une fois `boq_lines` en lecture |
 
-## Partie A — Redesign UX
+## Lot 1 — Workflow brouillon + suppression carte Métrés legacy
 
-### A.1 Projet `/projects/:id` — onglet DQE
+- `src/components/project/ProjectDqeTab.tsx` (et tout écran affichant `Métrés` / `Métrés ajouter` / `Liste des Métrés` sous `DqeWorkspace`) : supprimer la section legacy. Le takeoff dimensionnel reste accessible depuis l'import (`AdvancedQuantityCalculator`) déjà intégré dans `BoqWorkspace`.
+- `BoqLineDTO` : ajouter `status?: BoqStatus` (défaut `draft`).
+- `SupabaseBoqRepository.create` / `bulkCreate` : persister `status='draft'` par défaut, colonne déjà présente sur `btp.boq_lines`; pour tables legacy, mapper vers `status` existant ou champ metadata.
+- `BoqWorkflowService` : exposer `finalize(lines) → submitted` (bulk transition).
+- `BoqActionsBar` : ajouter action `finalize` (bouton « Finaliser le DQE ») visible quand ≥1 ligne `draft`. Après finalize, déclencher automatiquement `generate` (Lot 2).
+- KPI header : afficher badge « N brouillon(s) » quand présent.
 
-Aujourd'hui : 3 cartes empilées (DQE global · Métrés · Liste des Métrés) → dispersion.
+## Lot 2 — PDF complet + actions contextuelles
 
-Cible : **un seul `DqeWorkspace`** avec sous-onglets internes.
+- Créer `src/application/services/boq/BoqPdfRenderer.ts` (pure TS + `jspdf` + `jspdf-autotable` déjà installés) :
+  - Entête : titre contexte (`ctx.title`), n° document, date, émetteur/destinataire, projet/AO référencés.
+  - Corps : tableau lignes (Désignation, WBS Phase/Jalon/Tâche, Type, Qté, Unité, PU, TVA, Total HT).
+  - Totaux : HT / TVA / RAS / TTC via `BoqCalculatorService.aggregate`.
+  - Pied : mentions légales, pagination, signature (si `signed`).
+- `DocumentService.generate(ctx)` : signature revue — charge **toutes** les lignes du contexte via `boqRepository.list({ source, contextId, projectId })` (plus de dépendance sur la sélection UI), renvoie `{ blob: Blob(pdf), filename: '<prefix>-<ctx>-<date>.pdf' }`.
+- `DocumentService.email` : joindre le PDF (base64) au payload edge `send-email-notification`. Corriger le sujet/HTML par contexte (Devis vs Facture vs DQE).
+- `DocumentService.sign` : écrire `signature_hash` + `signed_at` + `signed_by` dans les métadonnées du document (table `btp.boq_documents` si présente, sinon `boq_lines.metadata`) et mettre à jour statut via `BoqWorkflowService`.
+- `BoqActionsBar` : appels alignés sur la nouvelle signature (`generate(ctx)` sans passer `lines` manuellement) ; masquage par `BoqContextService.can(ctx, action)` déjà en place.
 
-```text
-┌ En-tête + KPIs (Total HT · TVA · TTC · Écart budget) ─────────┐
-├ Barre d'actions unique ───────────────────────────────────────┤
-│  [+ Saisie] [Importer] [CSV] [Exporter PDF] [Signer]          │
-│  [Envoyer email] [Télécharger] [Diffuser]                     │
-├ Sous-onglets ─────────────────────────────────────────────────┤
-│  Lignes │ Métrés dimensionnels │ Comparaison besoin↔DQE │      │
-│         │ (L·l·h·ouvertures)   │ Suivi budget                  │
-├ BoqLineTable unifié (WBS · fiscal · pagination) ──────────────┤
-└───────────────────────────────────────────────────────────────┘
-```
+## Lot 3 — Flux Devis-depuis-AO & Facture→projet obligatoire
 
-Les 3 cartes actuelles fusionnent. Les compteurs 0/0/0.00 disparaissent quand vides ; sinon ils sont dans le header KPI.
+- Portail fournisseur `UnifiedSupplierPortal.tsx` :
+  - Onglet « Appels d'Offres » : bouton « Créer un devis » sur chaque AO ⇒ `setActiveTab('devis')` + `setActiveTenderId(tender.id)` + `setSubmissionId(submission?.id)`.
+  - Onglet « Devis » : monte `<DqeWorkspace routeContext="supplier-bid" tenderId submissionId senderId />` avec les IDs mémorisés ; sinon état vide « sélectionnez un AO ».
+  - Action `attachToSubmission` : après `generate` + `sign`, upload du PDF dans bucket `tender-submissions` et insertion dans `tender_submission_documents` (table existante) avec `submission_id`, `document_type='quote'`.
+- Onglet « Factures » : imposer sélection Projet **ou** AO avant validation (état bloquant dans `BoqWorkspace`) ; à la soumission, écriture `boq_lines.line_type='invoice'` + `project_id`/`tender_id` renseigné ⇒ alimente automatiquement `BoqBudgetDashboard` (déjà branché sur `boq` query key).
+- Supprimer la seconde barre d'onglets redondante dans `UnifiedSupplierPortal.tsx` (image-109) — ne garder que la barre principale (Appels / Devis / Documents / Télécharger / Paiements / Notifications / Tâches / Inspections / Factures).
 
-### A.2 Tender entité `/tenders/:id`
+## Lot 4 — Nettoyage shadow-writes & bascule lecture `boq_lines`
 
-Même `DqeWorkspace` en `context='tender'`. Sous-onglets : `Estimation · Offres reçues · Comparaison`. Boutons : `Publier`, `Exporter PDF`, `Signer`, `Envoyer aux fournisseurs`.
+- `SupabaseBoqRepository` : basculer les 4 sources sur `btp.boq_lines` en lecture (via colonne `line_type`) ; conserver les tables legacy en écriture jusqu'à validation prod (feature flag `BOQ_UNIFIED_READ=true`).
+- Retirer les shadow-writes vers `quantity_takeoffs` dans `BoqWorkspace.flushDrafts` et `BoqImportDialog` : les takeoffs dimensionnels sont désormais représentés comme `boq_lines.line_type='quantity_takeoff'`.
+- Vérifier vues `v_boq_quantity_takeoffs` / `v_boq_estimates` / `v_boq_invoices` : query sanity (compte lignes avant/après).
 
-### A.3 Portail fournisseur `/supplier-portal` — **portée précisée**
+## Exécution
 
-Aujourd'hui (image-108) : **double barre d'onglets** (`Appels d'Offres / Devis / Documents / Télécharger / Paiements / Notifications / Tâches / Inspections / Factures` **puis** `Parcourir / Documents Partagés / Soumissionner / Devis`) → confusion.
+Batch parallèle background — les 4 lots sont indépendants (fichiers disjoints sauf `BoqActionsBar` qui reçoit Lot 1 + Lot 2 mais sur props différents). Pas de reprise de main intermédiaire. Livrables :
+1. Diff complet des fichiers touchés.
+2. Typecheck vert (`tsgo`).
+3. Checklist ci-dessous cochée dans le commit final.
 
-Cible :
-- **Une seule barre d'onglets** top-niveau (suppression du sous-niveau `Parcourir / Documents Partagés / Soumissionner / Devis`).
-- Onglets **inchangés** dans leur logique : `Appels d'Offres`, `Documents`, `Télécharger`, `Paiements`, `Notifications`, `Tâches`, `Inspections`. On garde leur contenu tel quel — on retire uniquement la barre secondaire redondante.
-- Onglets **refondus** avec `DqeWorkspace` : **`Devis`** et **`Factures`**.
+## Checklist de validation
 
-**Onglet Devis (fournisseur)** :
-```text
-1. Fournisseur ouvre "Appels d'Offres" → parcourt les AO ouverts → sélectionne un AO.
-2. Il clique "Créer un devis pour cet AO" → l'onglet Devis s'ouvre avec :
-     • DqeWorkspace context='supplier_bid'
-     • tenderId préparé, submissionId lié (ou création à la volée)
-     • BoqLineTable + KPI HT/TVA/TTC
-     • BoqActionsBar : [Enregistrer] [Générer PDF devis] [Signer]
-                       [Télécharger] [Joindre à ma soumission]
-3. "Joindre à ma soumission" ⇒ le PDF signé rejoint tender_submission_documents.
-```
+- [ ] Carte « Métrés / Métrés ajouter / Liste des Métrés » retirée sous `DqeWorkspace`.
+- [ ] Ajout de plusieurs lignes en `draft` sans persistance de statut final ; bouton « Finaliser » visible.
+- [ ] `Finaliser` → transition `draft→submitted` + génération PDF automatique.
+- [ ] PDF : entête, lignes complètes (toutes, pas la sélection), totaux HT/TVA/TTC, pied paginé.
+- [ ] Email : PDF joint, sujet contextuel.
+- [ ] Signer : statut `signed` + hash + horodatage.
+- [ ] Portail : bouton « Créer un devis » depuis AO ouvre l'onglet Devis pré-rempli.
+- [ ] « Joindre à ma soumission » insère le PDF dans `tender_submission_documents`.
+- [ ] Facture bloque la validation sans projet/AO ; suivi budget alimenté.
+- [ ] Double barre d'onglets fournisseur supprimée.
+- [ ] Shadow-writes `quantity_takeoffs` retirés.
+- [ ] Typecheck OK.
 
-**Onglet Factures (fournisseur)** :
-```text
-1. Fournisseur importe une facture (parseur unifié) OU saisie manuelle.
-2. Association obligatoire : projet ET/OU appel d'offre + soumission.
-3. DqeWorkspace context='invoice' :
-     • BoqLineTable (lignes de facture + fiscal)
-     • BoqActionsBar : [Générer PDF facture] [Signer] [Envoyer email]
-                       [Télécharger] [Soumettre pour paiement]
-4. Facture rattachée alimente le suivi budget côté projet (comparaison
-   ligne à ligne avec le DQE / expression de besoin).
-```
-
-Les autres onglets restent tels quels dans cette itération.
-
-### A.4 Composants partagés
-
-- `DqeWorkspace` (englobe `BoqWorkspace` + sous-onglets + KPI header + `BoqActionsBar`).
-- `BoqActionsBar` (visibilité selon `context` + `status` + rôle).
-- `BoqKpiHeader`.
-- `SupplierPortalTabs` refondu : une seule barre, `Devis` et `Factures` montent `DqeWorkspace`, les autres onglets gardent leur composant actuel.
-
----
-
-## Partie B — Actions document (PDF / Signer / Email / Télécharger)
-
-Nouveau `DocumentService` unique :
-
-```text
-generatePdf(ctx)      → Blob + storageUrl (bucket `documents`)
-signDocument(docId)   → e-signature existante + attache la signature
-emailDocument(docId,  → edge functions existantes (`send-tender-report`,
-  recipients)             `send-supplier-notification`)
-downloadDocument(id)  → signed URL, force download côté UI
-```
-
-| Contexte              | PDF généré                | Destinataires email par défaut |
-| --------------------- | ------------------------- | ------------------------------ |
-| Projet DQE            | Expression de besoin      | Direction / bailleurs          |
-| Tender entité         | Dossier consultation      | Fournisseurs invités           |
-| Portail — Devis       | Devis fournisseur         | Entité (attaché à soumission)  |
-| Portail — Factures    | Facture / situation       | Entité (attaché au projet/AO)  |
-
-`document_id` stocké sur `boq_lines.document_id` → 1 PDF ↔ N lignes.
-
----
-
-## Partie C — Data model unique `btp.boq_lines`
-
-Discriminant `line_type` : `quantity_takeoff | estimate | supplier_bid | invoice | progress_invoice`.
-
-Colonnes : dimensions (L·l·h), quantité, PU, TVA, RAS, fees, discount, `sender_id`, `recipient_id`, `document_id`, `status`, `metadata` JSONB. `total_ht/tva/ras/ttc` en colonnes générées.
-
-Migration : reprise des données existantes de `btp.quantity_takeoffs`, `public.tender_estimate_items`, `btp.parsed_invoices`, `btp.progress_invoices`. Anciennes tables remplacées par des **vues** filtrées sur `line_type` pour compat lecture.
-
-GRANT authenticated + service_role, RLS entité (`has_project_access`) et RLS prestataire (`sender_id = auth.uid()`).
-
----
-
-## Partie D — Services
-
-- `BoqService` : CRUD unique sur `boq_lines`.
-- `BoqWorkflowService` : `generate / submit / validate / reject / invoice / pay` — transitions `status`, appelle `DocumentService`.
-- `BoqContextService` : route + rôle → `{ lineType, projectId, tenderId, submissionId, senderId, allowedActions }`.
-- `DocumentService` : PDF + signature + email + download.
-- Suppression des shadow-writes.
-
----
-
-## Partie E — Routage contextuel
-
-| Route                          | Rôle       | lineType défaut    | Actions visibles                                        |
-| ------------------------------ | ---------- | ------------------ | ------------------------------------------------------- |
-| `/projects/:id` (DQE)          | staff      | `quantity_takeoff` | Saisie · Import · PDF · Email · Diffuser                |
-| `/tenders/:id`                 | staff      | `estimate`         | Publier · PDF · Signer · Email fournisseurs             |
-| `/supplier-portal` **Devis**   | prestataire| `supplier_bid`     | Saisie · Import · PDF · Signer · Joindre à la soumission|
-| `/supplier-portal` **Factures**| prestataire| `invoice`          | Import facture · PDF · Signer · Envoyer à l'entité      |
-
-Boutons non autorisés **masqués** (pas juste désactivés) selon `allowedActions`.
-
----
-
-## Partie F — Correctifs bugs intégrés
-
-- `null value in column "material_id"` : disparaît (colonne inexistante dans `boq_lines`, `resource_id` nullable).
-- Portail : suppression de la barre d'onglets doublon.
-- UUID `"temp-project"` : `DqeWorkspace` refuse `bulkCreate` sans UUID valide → brouillon (`project_id NULL`, `status='draft'`).
-- Cartes « Métrés 0/0/0.00 » : disparaissent (fusionnées dans le KPI header).
-- Erreur `The resource already exists` sur upload : `upsert:true` déjà en place, on ajoute génération de nom unique côté `DocumentService` pour éviter d'écraser un doc signé antérieur.
-
----
-
-## Ordre d'exécution (parallélisable)
-
-1. **B1 (bloquant)** : migration DB `boq_lines` + vues de compat + data migration.
-2. **B2 (parallèle après B1)** :
-   - 2a Domain/DTO/Mapper + `SupabaseBoqRepository` unique.
-   - 2b `BoqService` · `BoqWorkflowService` · `BoqContextService` · `DocumentService`.
-   - 2c `BoqActionsBar`, `BoqKpiHeader`.
-3. **B3 (parallèle après B2)** :
-   - 3a `DqeWorkspace` (projet + tender).
-   - 3b `UnifiedSupplierPortal` : suppression barre doublon + refonte **Devis** et **Factures** uniquement.
-4. **B4** : nettoyage shadow-writes, vues de compat, tests.
-
----
-
-## Livrables
-
-- [ ] Migration SQL `boq_lines` + data + vues compat.
-- [ ] `BoqService` / `BoqWorkflowService` / `BoqContextService` / `DocumentService`.
-- [ ] `DqeWorkspace` (remplace 3 cartes projet + workspace tender).
-- [ ] `BoqActionsBar` (PDF · Signer · Email · Télécharger · Diffuser).
-- [ ] `SupplierPortalTabs` : barre unique, `Devis`/`Factures` = `DqeWorkspace`, autres onglets inchangés.
-- [ ] Flux « Créer un devis depuis un AO » (bouton dans Appels d'Offres → route interne vers onglet Devis).
-- [ ] Flux « Joindre à ma soumission » (attache PDF signé à `tender_submission_documents`).
-- [ ] Flux « Facture → projet/AO » (association obligatoire + alimentation suivi budget).
-- [ ] Nettoyage shadow-writes, deprecation `IQuantityTakeoffRepository` / `ITenderEstimateRepository`.
-- [ ] Doc `docs/BOQ_ARCHITECTURE.md` (schéma + flux + routage).
-
----
-
-## Détails techniques
-
-**Schéma clé** :
-```sql
-CREATE TABLE btp.boq_lines (
-  id uuid PK default gen_random_uuid(),
-  project_id uuid, tender_id uuid, submission_id uuid, estimate_id uuid,
-  phase_id uuid, milestone_id uuid, task_id uuid,
-  resource_id uuid, resource_kind text,
-  line_type text NOT NULL,          -- discriminant
-  source_type text,                 -- rapide|avance|import|invoice
-  designation text NOT NULL,
-  element_type text, btp_code text,
-  unit text, length numeric, width numeric, height numeric,
-  quantity numeric NOT NULL default 0,
-  unit_price_ht numeric,
-  total_ht numeric GENERATED ALWAYS AS (quantity * coalesce(unit_price_ht,0)) STORED,
-  vat_rate numeric, ras_rate numeric,
-  total_tva numeric GENERATED ..., total_ras numeric GENERATED ..., total_ttc numeric GENERATED ...,
-  fees numeric default 0, discount numeric default 0,
-  sender_id uuid, recipient_id uuid, document_id uuid,
-  status text NOT NULL default 'draft',
-  metadata jsonb default '{}',
-  import_source text, note text,
-  created_at timestamptz default now(), updated_at timestamptz default now()
-);
-CREATE INDEX ... (project_id, line_type), (tender_id, line_type), (submission_id), (status), (sender_id);
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.boq_lines TO authenticated;
-GRANT ALL ON btp.boq_lines TO service_role;
-ALTER TABLE btp.boq_lines ENABLE ROW LEVEL SECURITY;
--- policies: has_project_access(project_id) OR sender_id = auth.uid()
-```
-
-**`BoqActionsBar` API** :
-```tsx
-<BoqActionsBar
-  ctx={ctx}                    // BoqContext (route + role)
-  selection={selectedLineIds}
-  onGeneratePdf={...} onSign={...} onEmail={...}
-  onDownload={...} onDistribute={...}
-  onAttachToSubmission={...}   // visible uniquement en context=supplier_bid
-  onSubmitInvoice={...}        // visible uniquement en context=invoice
-/>
-```
-
-Boutons masqués via `ctx.allowedActions` — cohérent avec les policies RLS.
-
----
-
-**Hors périmètre** : refonte visuelle finale (couleurs, typo) · refonte des autres onglets fournisseur · suppression physique des anciennes tables (migration séparée post-observation).
+Confirmez « GO v3.2 » pour lancement en batch parallèle background.
