@@ -60,6 +60,7 @@ import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentReques
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { UnlockedView as SecretUnlockedView } from "@/components/tenders/SupplierSecureAccessPortal";
 import { BoqWorkspace } from "@/components/boq";
+import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
 import {
