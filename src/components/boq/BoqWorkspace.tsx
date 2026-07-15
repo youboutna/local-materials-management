@@ -38,6 +38,7 @@ import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
