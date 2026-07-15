@@ -958,7 +958,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           referentialService.getReferentialOptions(),
         ]);
 
-        const previewPhases = Array.isArray(preview) ? preview : (preview?.phases ?? []);
+        const previewPhases: any[] = Array.isArray(preview) ? (preview as any[]) : ((preview as any)?.phases ?? []);
         const summary = {
           totalPhases: previewPhases.length,
           estimatedDuration: previewPhases.reduce((sum: number, phase: any) => sum + (phase.estimatedDuration || phase.duration || 0), 0),
