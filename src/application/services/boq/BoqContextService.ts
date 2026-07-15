@@ -15,7 +15,8 @@ export type BoqAction =
   | 'distribute'
   | 'attachToSubmission'
   | 'submitInvoice'
-  | 'publish';
+  | 'publish'
+  | 'transfer';
 
 export type BoqRouteContext =
   | 'project-dqe'
@@ -45,10 +46,10 @@ interface ResolveInput {
 }
 
 const MATRIX: Record<BoqRouteContext, { source: BoqSource; actions: BoqAction[]; title: string; docPrefix: string }> = {
-  'project-dqe':      { source: 'dqe',              actions: ['create', 'import', 'generatePdf', 'email', 'download', 'distribute'], title: 'DQE global',           docPrefix: 'dqe' },
-  'tender-estimate':  { source: 'tender_estimate',  actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'publish'],                 title: 'Estimation appel d’offres', docPrefix: 'estimation' },
-  'supplier-bid':     { source: 'supplier_bid',     actions: ['create', 'import', 'generatePdf', 'sign', 'download', 'attachToSubmission'],               title: 'Devis fournisseur',   docPrefix: 'devis' },
-  'supplier-invoice': { source: 'invoice',          actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'submitInvoice'],           title: 'Facture fournisseur', docPrefix: 'facture' },
+  'project-dqe':      { source: 'dqe',              actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'distribute', 'transfer'], title: 'Expression de besoin (DQE)', docPrefix: 'dqe' },
+  'tender-estimate':  { source: 'tender_estimate',  actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'publish', 'transfer'],    title: 'DQE Appel d’offres',          docPrefix: 'estimation' },
+  'supplier-bid':     { source: 'supplier_bid',     actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'attachToSubmission', 'transfer'], title: 'Devis fournisseur',   docPrefix: 'devis' },
+  'supplier-invoice': { source: 'invoice',          actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'submitInvoice'],           title: 'Décompte / Facture',   docPrefix: 'facture' },
 };
 
 export const BoqContextService = {
