@@ -721,6 +721,7 @@ export function BoqWorkspace({
           emptyLabel={emptyLabel ?? labels.empty}
           editable
           referentialCode={referentialCode}
+          phases={projectPhases.length > 0 ? projectPhases : undefined}
           onChange={handlePatch}
           onRemove={handleRemove}
         />
