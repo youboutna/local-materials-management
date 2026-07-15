@@ -19,6 +19,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail, FileCheck2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -404,52 +405,79 @@ export function BoqWorkspace({
     } finally { setAligning(false); }
   };
 
+  // ---- Ajout inline d'une ligne vide (édition dans le tableau) ---------------
+  const addEmptyRow = () => {
+    const profile = getFiscalProfile(fiscalCode);
+    setPendingLines((prev) => [...prev, {
+      source, contextId,
+      designation: '',
+      unit: 'u',
+      length: null, width: null, height: null,
+      quantity: 0,
+      unitPrice: 0,
+      totalHt: 0,
+      vatRate: profile.vatRate,
+      resourceType: 'material',
+      phaseId: wbsDefault.phaseId ?? null,
+      milestoneId: wbsDefault.milestoneId ?? null,
+      taskId: wbsDefault.taskId ?? null,
+      sourceType: 'rapide',
+      status: 'draft',
+    }]);
+  };
+
   // ---- Render ---------------------------------------------------------------
+  const docRef = contextId.slice(0, 8).toUpperCase();
+  const docStatus = pendingLines.length > 0 || draftLineIds.length > 0 ? 'Brouillon' : (doc.lines.length > 0 ? 'Enregistré' : 'Vide');
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground flex items-center gap-3">
-          <span>{doc.lines.length} ligne(s) enregistrée(s)</span>
-          {pendingLines.length > 0 && (
-            <span className="text-blue-600 font-medium">
-              + {pendingLines.length} en attente
-            </span>
-          )}
-          {draftLineIds.length > 0 && (
-            <span className="text-amber-600 font-medium">
-              {draftLineIds.length} brouillon(s) DB
-            </span>
-          )}
-          {/* WBS par défaut (contexte de saisie) — appliqué automatiquement aux nouvelles lignes */}
-          <div className="ml-2 hidden md:flex items-center gap-2">
-            <span className="text-xs">WBS par défaut :</span>
-            <div className="min-w-[420px]">
-              <WbsSelector
-                value={wbsDefault}
-                onChange={setWbsDefault}
-                phases={projectPhases.length > 0 ? projectPhases : undefined}
-                referentialCode={referentialCode}
-              />
+      {/* Entête document (bloc conteneur) */}
+      <div className="rounded-md border bg-card p-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">{labels.docPrefix}</div>
+            <div className="text-lg font-semibold">Réf. {docRef}</div>
+          </div>
+          <Badge variant={docStatus === 'Brouillon' ? 'secondary' : docStatus === 'Vide' ? 'outline' : 'default'}>{docStatus}</Badge>
+          <div className="hidden md:flex items-center gap-2 ml-3">
+            <span className="text-xs text-muted-foreground">WBS par défaut :</span>
+            <div className="min-w-[380px]">
+              <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={referentialCode} />
             </div>
+          </div>
+          <div className="hidden lg:flex items-center gap-2 ml-2">
+            <span className="text-xs text-muted-foreground">Profil fiscal :</span>
+            <Select value={fiscalCode} onValueChange={setFiscalCode}>
+              <SelectTrigger className="h-8 w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
+                  <SelectItem key={p.code} value={p.code}>{p.label} (TVA {(p.vatRate * 100).toFixed(0)}%)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(pendingLines.length > 0 || draftLineIds.length > 0) && (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => finalizeDraftLines(false)}
-              disabled={finalizing || doc.isPending}
-            >
+            <Button size="sm" variant="default" onClick={() => finalizeDraftLines(false)} disabled={finalizing || doc.isPending}>
               {finalizing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-1" />}
-              Enregistrer le DQE ({pendingLines.length + draftLineIds.length})
+              Enregistrer le {labels.docPrefix.toUpperCase()} ({pendingLines.length + draftLineIds.length})
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={addEmptyRow}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie manuelle</Button>
+              <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie assistée (métré)</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
