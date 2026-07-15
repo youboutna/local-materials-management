@@ -63,6 +63,8 @@ interface Props {
   importLabel?: string;
   /** conservé pour compatibilité des contextes qui fournissent un destinataire */
   defaultEmail?: string;
+  /** Identifiant du document conteneur — plusieurs documents par contexte. */
+  documentId?: string;
 }
 
 const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefix: string }> = {
