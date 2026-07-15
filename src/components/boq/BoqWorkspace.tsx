@@ -411,9 +411,14 @@ export function BoqWorkspace({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm text-muted-foreground flex items-center gap-3">
           <span>{doc.lines.length} ligne(s) enregistrée(s)</span>
+          {pendingLines.length > 0 && (
+            <span className="text-blue-600 font-medium">
+              + {pendingLines.length} en attente
+            </span>
+          )}
           {draftLineIds.length > 0 && (
             <span className="text-amber-600 font-medium">
-              {draftLineIds.length} brouillon(s)
+              {draftLineIds.length} brouillon(s) DB
             </span>
           )}
           {/* WBS par défaut (contexte de saisie) — appliqué automatiquement aux nouvelles lignes */}
@@ -430,12 +435,18 @@ export function BoqWorkspace({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {draftLineIds.length > 0 && (
-            <Button size="sm" variant="secondary" onClick={() => finalizeDraftLines(false)} disabled={finalizing || doc.isPending}>
+          {(pendingLines.length > 0 || draftLineIds.length > 0) && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => finalizeDraftLines(false)}
+              disabled={finalizing || doc.isPending}
+            >
               {finalizing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-1" />}
-              Finaliser ({draftLineIds.length})
+              Enregistrer le DQE ({pendingLines.length + draftLineIds.length})
             </Button>
           )}
+
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie manuelle</Button>
