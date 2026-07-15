@@ -123,30 +123,31 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
+  const L = DOC_LABELS[ctx.routeContext];
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
         {can('generatePdf') && (
-          <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null} title={L.pdf}>
             {iconOf('pdf') ?? <FileDown className="h-4 w-4 mr-2" />}
             Générer PDF
           </Button>
         )}
         {can('sign') && (
-          <Button size="sm" variant={signedInfo ? 'default' : 'outline'} onClick={() => setSignOpen(true)} disabled={disabled || busy !== null}>
+          <Button size="sm" variant={signedInfo ? 'default' : 'outline'} onClick={() => setSignOpen(true)} disabled={disabled || busy !== null} title={L.sign}>
             {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
             {signedInfo ? 'Signé ✓' : 'Signer'}
           </Button>
         )}
         {can('email') && (
-          <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null} title={L.email}>
             {iconOf('email') ?? <Mail className="h-4 w-4 mr-2" />}
-            Envoyer email
+            Envoyer
           </Button>
         )}
         {can('download') && (
-          <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null} title={L.download}>
             {iconOf('download') ?? <Download className="h-4 w-4 mr-2" />}
             Télécharger
           </Button>
