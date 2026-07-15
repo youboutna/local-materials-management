@@ -205,6 +205,8 @@ export function BoqWorkspace({
       quantity: computedQuantity,
       unitPrice: effectivePu,
       totalHt: computedQuantity * effectivePu,
+      rasRate: profile.withholdingRate,
+      fees: 0,
       resourceType: catToResource(category),
       materialId: materialId || null,
       phaseId: effectiveWbs.phaseId,
@@ -329,6 +331,8 @@ export function BoqWorkspace({
       unitPrice: 0,
       totalHt: 0,
       vatRate: profile.vatRate,
+      rasRate: profile.withholdingRate,
+      fees: 0,
       resourceType: 'material',
       phaseId: wbsDefault.phaseId ?? null,
       milestoneId: wbsDefault.milestoneId ?? null,
@@ -343,6 +347,15 @@ export function BoqWorkspace({
   const pendingCount = pendingLines.length + draftLineIds.length;
   const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
   const isDocumentEmpty = displayedLines.length === 0;
+  const handleParsedImport = (lines: BoqLineDTO[]) => {
+    setPendingLines((prev) => [...prev, ...lines.map((line) => ({
+      ...line,
+      source,
+      contextId,
+      id: undefined,
+      status: 'submitted' as const,
+    }))]);
+  };
   return (
     <div className="space-y-4">
       <section className="space-y-0">
@@ -575,7 +588,8 @@ export function BoqWorkspace({
                 <FileSpreadsheet className="h-4 w-4 mr-1" />{importLabel ?? labels.import}
               </Button>
             }
-            onImported={() => doc.refetch()}
+            commitOnSubmit={false}
+            onParsed={handleParsedImport}
           />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -596,10 +610,10 @@ export function BoqWorkspace({
       <div className="grid grid-cols-2 gap-3 border-b bg-muted/20 p-4 text-sm md:grid-cols-4">
         <div><div className="text-muted-foreground">Total HT</div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
         <div><div className="text-muted-foreground">TVA</div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
-        {'totalRas' in totals && (totals as { totalRas?: number }).totalRas ? (
-          <div><div className="text-muted-foreground">RAS</div><div className="font-medium">{(totals as { totalRas: number }).totalRas.toLocaleString('fr-FR')} MRU</div></div>
+        {(totals.withholding ?? 0) > 0 ? (
+          <div><div className="text-muted-foreground">RAS</div><div className="font-medium">{(totals.withholding ?? 0).toLocaleString('fr-FR')} MRU</div></div>
         ) : <div />}
-        <div><div className="text-muted-foreground">Total TTC</div><div className="font-semibold">{totals.totalTtc.toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground">Net à payer</div><div className="font-semibold">{(totals.netToPay ?? totals.totalTtc).toLocaleString('fr-FR')} MRU</div></div>
       </div>
 
       <div className="p-4">

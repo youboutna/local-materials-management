@@ -51,7 +51,7 @@ export class BoqCalculatorService {
     const totalHt = quantity * unitPrice + (input.fees ?? 0);
     const totalTva = totalHt * vatRate;
     const withholding = totalHt * (input.rasRate ?? profile?.withholdingRate ?? 0);
-    const totalTtc = totalHt + totalTva - withholding;
+    const totalTtc = totalHt + totalTva;
     if (!profile && input.rasRate == null) return { quantity, totalHt, totalTva, totalTtc };
     const netToPay = totalTtc - withholding;
     return { quantity, totalHt, totalTva, totalTtc, withholding, netToPay };
