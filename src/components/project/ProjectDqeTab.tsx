@@ -9,13 +9,15 @@ import type { ReferentialType } from '@/config/referentials';
 
 interface Props {
   projectId: string;
+  projectName?: string;
   referentialCode?: ReferentialType;
 }
 
-const ProjectDqeTab: React.FC<Props> = ({ projectId, referentialCode }) => (
+const ProjectDqeTab: React.FC<Props> = ({ projectId, projectName, referentialCode }) => (
   <DqeWorkspace
     routeContext="project-dqe"
     projectId={projectId}
+    projectName={projectName}
     referentialCode={referentialCode}
     showComparison
   />
