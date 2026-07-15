@@ -89,14 +89,23 @@ export function BoqWorkspace({
   const [openManual, setOpenManual] = useState(false);
   const { materials } = useMaterialsHex();
   const [fiscalCode, setFiscalCode] = useState<string>('MR_STANDARD');
+  const [overheadPct, setOverheadPct] = useState<number>(0);
   const [category, setCategory] = useState<ManualCategory>('material');
   const [materialId, setMaterialId] = useState<string>('');
+  const [depotId, setDepotId] = useState<string>('');
   const [elementType, setElementType] = useState<ElementTypeCode>('generic');
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
+  const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
   const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
+
+  // Buffer local : les lignes saisies "Ajouter" ne partent PAS en base (évite RLS).
+  // Elles sont fusionnées à l'affichage/totaux/génération. Persistance déclenchée
+  // uniquement par "Enregistrer" ou automatiquement avant "Diffuser/Générer".
+  const [drafts, setDrafts] = useState<BoqLineDTO[]>([]);
+  const [flushing, setFlushing] = useState(false);
 
   // Load real project WBS (phases → milestones → tasks) — dynamic, per project
   useEffect(() => {
@@ -109,10 +118,30 @@ export function BoqWorkspace({
     return () => { cancelled = true; };
   }, [projectId]);
 
+  // Groupe les articles par dépôt (utilise material.warehouse / depot / location si dispo)
+  const depots = useMemo(() => {
+    const map = new Map<string, { id: string; label: string }>();
+    for (const m of materials) {
+      const mm = m as unknown as { warehouseId?: string; warehouseName?: string; depot?: string; location?: string };
+      const id = mm.warehouseId || mm.depot || mm.location || 'default';
+      const label = mm.warehouseName || mm.depot || mm.location || 'Dépôt principal';
+      if (!map.has(id)) map.set(id, { id, label });
+    }
+    return Array.from(map.values());
+  }, [materials]);
+  const filteredMaterials = useMemo(() => {
+    if (!depotId) return materials;
+    return materials.filter((m) => {
+      const mm = m as unknown as { warehouseId?: string; depot?: string; location?: string };
+      return (mm.warehouseId || mm.depot || mm.location || 'default') === depotId;
+    });
+  }, [materials, depotId]);
+
   const resetForm = () => {
     setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
     setMaterialId(''); setCategory('material'); setElementType('generic');
-    setWbs({ phaseId: null, milestoneId: null, taskId: null });
+    // Réapplique le WBS par défaut (fallback contexte de saisie)
+    setWbs({ ...wbsDefault });
   };
 
   const onPickMaterial = (id: string) => {
@@ -152,44 +181,78 @@ export function BoqWorkspace({
 
   const manualPreview = useMemo(() => {
     const pu = Number(form.unitPrice) || 0;
-    const ht = computedQuantity * pu;
+    const htBase = computedQuantity * pu;
+    const ht = htBase * (1 + (Number(overheadPct) || 0) / 100);
     const profile = getFiscalProfile(fiscalCode);
     const tva = ht * profile.vatRate;
     return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
-  }, [computedQuantity, form.unitPrice, fiscalCode]);
+  }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct]);
 
-  const handleCreate = async () => {
+  // "Ajouter" → buffer local uniquement (ne touche PAS la base — évite l'erreur RLS)
+  const handleCreate = () => {
     if (!form.designation?.trim()) {
       toast({ title: 'Désignation requise', variant: 'destructive' });
       return;
     }
     const profile = getFiscalProfile(fiscalCode);
+    const overheadNote = (Number(overheadPct) || 0) > 0 ? `Frais généraux ${overheadPct}%` : null;
+    const effectivePu = (Number(form.unitPrice) || 0) * (1 + (Number(overheadPct) || 0) / 100);
+    // Fallback WBS par défaut si l'utilisateur n'a pas défini de phase pour cette ligne
+    const effectiveWbs: WbsValue = {
+      phaseId: wbs.phaseId ?? wbsDefault.phaseId ?? null,
+      milestoneId: wbs.milestoneId ?? wbsDefault.milestoneId ?? null,
+      taskId: wbs.taskId ?? wbsDefault.taskId ?? null,
+    };
+    const draft: BoqLineDTO = {
+      id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      source, contextId,
+      designation: form.designation!,
+      elementType: useAdvanced ? elementType : null,
+      unit: form.unit || 'u',
+      length: useAdvanced ? (form.length ?? null) : null,
+      width: useAdvanced ? (form.width ?? null) : null,
+      height: useAdvanced ? (form.height ?? null) : null,
+      quantity: computedQuantity,
+      unitPrice: effectivePu,
+      totalHt: computedQuantity * effectivePu,
+      resourceType: catToResource(category),
+      materialId: materialId || null,
+      phaseId: effectiveWbs.phaseId,
+      milestoneId: effectiveWbs.milestoneId,
+      taskId: effectiveWbs.taskId,
+      vatRate: profile.vatRate,
+      note: [category === 'overhead' ? 'Frais généraux' : null, overheadNote].filter(Boolean).join(' • ') || null,
+      sourceType: useAdvanced ? 'avance' : 'rapide',
+    };
+    setDrafts((prev) => [...prev, draft]);
+    toast({ title: 'Ligne ajoutée au brouillon', description: 'Cliquez « Enregistrer » pour persister.' });
+    resetForm();
+    setOpenManual(false);
+  };
+
+  // Flush drafts → base (appelé explicitement par l'utilisateur ou avant diffusion)
+  const flushDrafts = async (silent = false): Promise<boolean> => {
+    if (drafts.length === 0) return true;
+    setFlushing(true);
+    let ok = true;
     try {
-      await doc.createLine({
-        source, contextId,
-        designation: form.designation!,
-        elementType: useAdvanced ? elementType : null,
-        unit: form.unit || 'u',
-        length: useAdvanced ? (form.length ?? null) : null,
-        width: useAdvanced ? (form.width ?? null) : null,
-        height: useAdvanced ? (form.height ?? null) : null,
-        quantity: computedQuantity,
-        unitPrice: Number(form.unitPrice) || 0,
-        resourceType: catToResource(category),
-        materialId: materialId || null,
-        phaseId: wbs.phaseId ?? null,
-        milestoneId: wbs.milestoneId ?? null,
-        taskId: wbs.taskId ?? null,
-        vatRate: profile.vatRate,
-        note: category === 'overhead' ? 'Frais généraux' : null,
-        sourceType: useAdvanced ? 'avance' : 'rapide',
-      });
-      toast({ title: 'Ligne ajoutée' });
-      resetForm();
-      setOpenManual(false);
+      for (const d of drafts) {
+        // strip local id — laisse la DB générer
+        const { id: _localId, ...payload } = d;
+        void _localId;
+        await doc.createLine(payload);
+      }
+      setDrafts([]);
+      if (!silent) toast({ title: `${drafts.length} ligne(s) enregistrée(s)` });
     } catch (e) {
-      toast({ title: 'Échec ajout', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    }
+      ok = false;
+      toast({
+        title: 'Persistance partielle',
+        description: String(e instanceof Error ? e.message : e),
+        variant: 'destructive',
+      });
+    } finally { setFlushing(false); }
+    return ok;
   };
 
   // ---- Édition inline --------------------------------------------------------
