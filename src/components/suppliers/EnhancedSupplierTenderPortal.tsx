@@ -477,17 +477,29 @@ const EnhancedSupplierTenderPortal = () => {
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <Badge variant="default">{t('supplier_tender.title')}</Badge>
-                        <Button 
-                          onClick={() => {
-                            setSelectedTender(tender);
-                            setActiveTab('submit');
-                          }}
-                          size="sm"
-                        >
-                          {t('supplier_tender.actions.submit')}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('boq-create-quote', { detail: { tenderId: tender.id } }));
+                            }}
+                          >
+                            <Calculator className="h-3.5 w-3.5 mr-1" />
+                            Créer un devis
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedTender(tender);
+                              setActiveTab('submit');
+                            }}
+                            size="sm"
+                          >
+                            {t('supplier_tender.actions.submit')}
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="text-xs text-muted-foreground space-y-1">
