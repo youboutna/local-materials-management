@@ -16,6 +16,8 @@ export interface BoqLineInput {
   quantity?: number | null; // when set explicitly (e.g. count for "unité")
   unitPrice?: number | null;
   vatRate?: number | null; // 0.16 = 16% (fallback to fiscal profile when null)
+  rasRate?: number | null;
+  fees?: number | null;
 }
 
 export interface BoqLineTotals {
@@ -46,11 +48,11 @@ export class BoqCalculatorService {
     const quantity = BoqCalculatorService.computeQuantity(input);
     const unitPrice = input.unitPrice ?? 0;
     const vatRate = input.vatRate ?? profile?.vatRate ?? 0;
-    const totalHt = quantity * unitPrice;
+    const totalHt = quantity * unitPrice + (input.fees ?? 0);
     const totalTva = totalHt * vatRate;
-    const totalTtc = totalHt + totalTva;
-    if (!profile) return { quantity, totalHt, totalTva, totalTtc };
-    const withholding = totalHt * (profile.withholdingRate ?? 0);
+    const withholding = totalHt * (input.rasRate ?? profile?.withholdingRate ?? 0);
+    const totalTtc = totalHt + totalTva - withholding;
+    if (!profile && input.rasRate == null) return { quantity, totalHt, totalTva, totalTtc };
     const netToPay = totalTtc - withholding;
     return { quantity, totalHt, totalTva, totalTtc, withholding, netToPay };
   }

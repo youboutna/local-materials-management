@@ -33,6 +33,8 @@ export interface BoqDbRow {
   total_value?: number | null;
   total_ht?: number | null;
   vat_rate?: number | null;
+  ras_rate?: number | null;
+  fees?: number | null;
   phase_id?: string | null;
   milestone_id?: string | null;
   task_id?: string | null;
@@ -81,6 +83,8 @@ export class BoqLineMapper {
       quantity,
       unitPrice,
       vatRate: row.vat_rate ?? 0,
+      rasRate: row.ras_rate ?? 0,
+      fees: row.fees ?? 0,
       totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
       materialId: row.resource_id ?? row.material_id ?? null,
       phaseId: row.phase_id ?? null,
@@ -114,6 +118,8 @@ export class BoqLineMapper {
       quantity: dto.quantity,
       unit_price_ht: dto.unitPrice ?? null,
       vat_rate: dto.vatRate ?? 0,
+      ras_rate: dto.rasRate ?? 0,
+      fees: dto.fees ?? 0,
       phase_id: dto.phaseId ?? null,
       milestone_id: dto.milestoneId ?? null,
       task_id: dto.taskId ?? null,
