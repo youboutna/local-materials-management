@@ -949,42 +949,29 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
       try {
 
-        const [preview, options, phases] = await Promise.all([
-
+        // Phase 4 : NE PAS appeler createConstructionPhasesFromReferential ici —
+        // c'est une méthode PERSISTANTE qui insère en base. L'appel avec 'temp-project'
+        // provoquait "Failed to create phase" (project_id invalide / violation FK/RLS).
+        // L'aperçu se déduit uniquement du référentiel, sans écrire en base.
+        const [preview, options] = await Promise.all([
           referentialService.getPhasesForReferential(selectedReferential),
-
           referentialService.getReferentialOptions(),
-
-          phaseService.createConstructionPhasesFromReferential('temp-project', selectedReferential)
-
         ]);
 
-        // Create summary from phases
-
+        const previewPhases: any[] = Array.isArray(preview) ? (preview as any[]) : ((preview as any)?.phases ?? []);
         const summary = {
-
-          totalPhases: phases.length,
-
-          estimatedDuration: phases.reduce((sum, phase) => sum + (phase.estimatedDuration || 0), 0),
-
-          totalCost: phases.reduce((sum, phase) => sum + (phase.estimatedCost || 0), 0),
-
-          phases: phases.map(p => ({
-
-            name: p.phaseName,
-
-            duration: p.estimatedDuration,
-
-            cost: p.estimatedCost
-
-          }))
-
+          totalPhases: previewPhases.length,
+          estimatedDuration: previewPhases.reduce((sum: number, phase: any) => sum + (phase.estimatedDuration || phase.duration || 0), 0),
+          totalCost: previewPhases.reduce((sum: number, phase: any) => sum + (phase.estimatedCost || phase.cost || 0), 0),
+          phases: previewPhases.map((p: any) => ({
+            name: p.phaseName || p.name,
+            duration: p.estimatedDuration || p.duration,
+            cost: p.estimatedCost || p.cost,
+          })),
         };
 
         setGenerationPreview(preview);
-
         setReferentialOptions(options);
-
         setGenerationSummary(summary);
 
       } catch (error) {

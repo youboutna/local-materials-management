@@ -58,8 +58,14 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId, referentialCode }) => {
                 + récap fiscal HT/TVA/TTC + génération PDF signé + export CSV + envoi email
                 + diffusion contextuelle (expression de besoin, bon de commande, décompte).
               */}
+              {/*
+                Phase 2.3 / 3.3 : contexte "planification" projet → persistance dans
+                quantity_takeoffs (planned_lines), pas tender_estimate_items.
+                Évite l'erreur RLS "new row violates RLS for tender_estimate_items"
+                car cette table exige un estimate_id lié à un tender_estimates du user.
+              */}
               <BoqWorkspace
-                source="dqe"
+                source="quantity_takeoff"
                 contextId={projectId}
                 projectId={projectId}
                 mode="planning"
