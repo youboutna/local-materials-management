@@ -68,8 +68,10 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
   const mode = MODE_BY_ROUTE[props.routeContext];
 
+  // Actions rattachées au document courant — toujours visibles, réactives à l'état
+  // (désactivées tant que le document ne contient pas de ligne persistée).
   const actionableLines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
-  const hasDocument = actionableLines.length > 0;
+  const noActionableLines = actionableLines.length === 0;
 
   return (
     <div className="space-y-4">
@@ -79,18 +81,16 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             <FileSpreadsheet className="h-5 w-5" />
             {ctx.title}
           </CardTitle>
-          {hasDocument && (
-            <BoqActionsBar
-              ctx={ctx}
-              lines={actionableLines}
-              recipientEmail={props.recipientEmail}
-              disabled={doc.isLoading}
-              onAttachToSubmission={props.onAttachToSubmission}
-              onSubmitInvoice={props.onSubmitInvoice}
-              onDistribute={props.onDistribute}
-              onPublish={props.onPublish}
-            />
-          )}
+          <BoqActionsBar
+            ctx={ctx}
+            lines={actionableLines}
+            recipientEmail={props.recipientEmail}
+            disabled={doc.isLoading || noActionableLines}
+            onAttachToSubmission={props.onAttachToSubmission}
+            onSubmitInvoice={props.onSubmitInvoice}
+            onDistribute={props.onDistribute}
+            onPublish={props.onPublish}
+          />
         </CardHeader>
         <CardContent className="p-0">
           <BoqWorkspace

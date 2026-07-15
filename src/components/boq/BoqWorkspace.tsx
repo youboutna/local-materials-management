@@ -35,6 +35,7 @@ import { tenderToPlanningService } from '@/application/services/tender/TenderToP
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import { getReferentialOptions } from '@/config/referentials';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -77,6 +78,11 @@ export function BoqWorkspace({
   const doc = useBoqDocument({ source, contextId, projectId });
   const { toast } = useToast();
   const labels = LABELS[mode];
+  // Référentiel actif — défaut = référentiel du projet courant (prop),
+  // modifiable pour enrichir le mapping (phases/étapes/tâches alternatives).
+  const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(referentialCode);
+  useEffect(() => { setActiveReferential(referentialCode); }, [referentialCode]);
+  const referentialOptions = useMemo(() => getReferentialOptions('fr'), []);
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
@@ -359,7 +365,7 @@ export function BoqWorkspace({
   return (
     <div className="space-y-4">
       <section className="space-y-0">
-        <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1.2fr)_minmax(220px,0.8fr)_auto] lg:items-end">
+        <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(200px,0.7fr)_minmax(180px,0.8fr)_minmax(300px,1.1fr)_minmax(200px,0.8fr)_auto] lg:items-end">
           <div className="space-y-2">
             <div className="text-xs font-medium uppercase text-muted-foreground">Document</div>
             <div className="flex flex-wrap items-center gap-2">
@@ -368,8 +374,23 @@ export function BoqWorkspace({
             </div>
           </div>
           <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Référentiel</Label>
+            <Select
+              value={activeReferential ?? '__project__'}
+              onValueChange={(v) => setActiveReferential(v === '__project__' ? referentialCode : (v as ReferentialType))}
+            >
+              <SelectTrigger className="h-10"><SelectValue placeholder="Référentiel du projet" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__project__">Référentiel du projet{referentialCode ? ` (${referentialCode})` : ''}</SelectItem>
+                {referentialOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Classification par défaut</Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={referentialCode} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Profil fiscal</Label>
