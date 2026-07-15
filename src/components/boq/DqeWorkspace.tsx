@@ -23,6 +23,7 @@ import type { ReferentialType } from '@/config/referentials';
 interface Props {
   routeContext: BoqRouteContext;
   projectId?: string;
+  projectName?: string;
   tenderId?: string;
   submissionId?: string;
   senderId?: string;
@@ -97,6 +98,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             source={workspaceSource}
             contextId={ctx.contextId}
             projectId={props.projectId}
+            projectName={props.projectName}
             mode={mode}
             referentialCode={props.referentialCode}
             defaultEmail={props.recipientEmail}

@@ -36,6 +36,15 @@ const TRANSFER_LABEL: Record<BoqContext['routeContext'], string> = {
   'supplier-invoice': 'Soumettre pour paiement',
 };
 
+// Labels contextualisés par type de document — évite les ambiguïtés métier
+// (ex. ne pas afficher "Générer PDF DQE" quand on est sur une facture).
+const DOC_LABELS: Record<BoqContext['routeContext'], { pdf: string; email: string; download: string; sign: string }> = {
+  'project-dqe':      { pdf: "Générer PDF de l'expression de besoin", email: "Envoyer l'expression de besoin", download: "Télécharger l'expression",   sign: "Signer l'expression"   },
+  'tender-estimate':  { pdf: 'Générer PDF du DQE AO',                 email: 'Envoyer le DQE',                 download: 'Télécharger le DQE',          sign: 'Signer le DQE'          },
+  'supplier-bid':     { pdf: 'Générer PDF du devis',                  email: 'Envoyer le devis',               download: 'Télécharger le devis',        sign: 'Signer le devis'        },
+  'supplier-invoice': { pdf: 'Générer PDF de la facture',             email: 'Envoyer la facture',             download: 'Télécharger la facture',      sign: 'Signer la facture'      },
+};
+
 export const BoqActionsBar: React.FC<Props> = ({
   ctx, lines, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
@@ -114,30 +123,31 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
+  const L = DOC_LABELS[ctx.routeContext];
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
         {can('generatePdf') && (
-          <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null} title={L.pdf}>
             {iconOf('pdf') ?? <FileDown className="h-4 w-4 mr-2" />}
             Générer PDF
           </Button>
         )}
         {can('sign') && (
-          <Button size="sm" variant={signedInfo ? 'default' : 'outline'} onClick={() => setSignOpen(true)} disabled={disabled || busy !== null}>
+          <Button size="sm" variant={signedInfo ? 'default' : 'outline'} onClick={() => setSignOpen(true)} disabled={disabled || busy !== null} title={L.sign}>
             {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
             {signedInfo ? 'Signé ✓' : 'Signer'}
           </Button>
         )}
         {can('email') && (
-          <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null} title={L.email}>
             {iconOf('email') ?? <Mail className="h-4 w-4 mr-2" />}
-            Envoyer email
+            Envoyer
           </Button>
         )}
         {can('download') && (
-          <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null}>
+          <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null} title={L.download}>
             {iconOf('download') ?? <Download className="h-4 w-4 mr-2" />}
             Télécharger
           </Button>

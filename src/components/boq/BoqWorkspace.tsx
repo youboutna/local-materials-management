@@ -54,6 +54,7 @@ interface Props {
   source: BoqSource;
   contextId: string;
   projectId?: string;
+  projectName?: string;
   mode: BoqWorkspaceMode;
   referentialCode?: ReferentialType;
   /** cible d'alignement planification (mode bid uniquement) */
@@ -71,7 +72,7 @@ const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefi
 };
 
 export function BoqWorkspace({
-  source, contextId, projectId, mode,
+  source, contextId, projectId, projectName, mode,
   referentialCode, estimateId,
   emptyLabel, importLabel,
 }: Props) {
@@ -379,14 +380,22 @@ export function BoqWorkspace({
               value={activeReferential ?? '__project__'}
               onValueChange={(v) => setActiveReferential(v === '__project__' ? referentialCode : (v as ReferentialType))}
             >
-              <SelectTrigger className="h-10"><SelectValue placeholder="Référentiel du projet" /></SelectTrigger>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder={projectName ? `Réf. projet — ${projectName}` : 'Référentiel du projet'} />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__project__">Référentiel du projet{referentialCode ? ` (${referentialCode})` : ''}</SelectItem>
+                <SelectItem value="__project__">
+                  {projectName ? `Réf. projet — ${projectName}` : 'Référentiel du projet'}
+                  {referentialCode ? ` (${referentialCode})` : ''}
+                </SelectItem>
                 {referentialOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  <SelectItem key={opt.value} value={opt.value}>Enrichir : {opt.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir le mapping Phase / Jalon / Tâche.
+            </p>
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Classification par défaut</Label>
@@ -496,7 +505,7 @@ export function BoqWorkspace({
                     value={wbs}
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
-                    referentialCode={referentialCode}
+                    referentialCode={activeReferential}
                   />
                 </div>
 
@@ -602,7 +611,7 @@ export function BoqWorkspace({
             source={source}
             contextId={contextId}
             projectId={projectId}
-            defaultReferentialCode={referentialCode}
+            defaultReferentialCode={activeReferential}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline">
@@ -645,7 +654,7 @@ export function BoqWorkspace({
           lines={displayedLines}
           emptyLabel={emptyLabel ?? labels.empty}
           editable
-          referentialCode={referentialCode}
+          referentialCode={activeReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
           onChange={handlePatch}
           onRemove={handleRemove}
