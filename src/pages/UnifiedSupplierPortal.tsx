@@ -96,6 +96,10 @@ const UnifiedSupplierPortal = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "documents";
   const [activeTab, setActiveTab] = useState(initialTab);
+  // v3.2 : tender sélectionné pour créer un devis depuis l'onglet Appels d'Offres.
+  const [selectedBidTenderId, setSelectedBidTenderId] = useState<string | null>(
+    searchParams.get("tenderId"),
+  );
 
   // Keep tab state in sync with URL (e.g. redirect from /supplier-access after code secret validation).
   useEffect(() => {
@@ -103,6 +107,24 @@ const UnifiedSupplierPortal = () => {
     if (urlTab && urlTab !== activeTab) setActiveTab(urlTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Event bridge : EnhancedSupplierTenderPortal fires `boq-create-quote` with tenderId
+  // ⇒ on bascule vers l'onglet Devis avec le contexte pré-rempli.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ tenderId?: string }>).detail;
+      if (detail?.tenderId) {
+        setSelectedBidTenderId(detail.tenderId);
+        setActiveTab("devis");
+        const next = new URLSearchParams(searchParams);
+        next.set("tab", "devis");
+        next.set("tenderId", detail.tenderId);
+        setSearchParams(next, { replace: true });
+      }
+    };
+    window.addEventListener("boq-create-quote", handler);
+    return () => window.removeEventListener("boq-create-quote", handler);
+  }, [searchParams, setSearchParams]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
