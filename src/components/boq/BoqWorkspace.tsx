@@ -54,6 +54,7 @@ interface Props {
   source: BoqSource;
   contextId: string;
   projectId?: string;
+  projectName?: string;
   mode: BoqWorkspaceMode;
   referentialCode?: ReferentialType;
   /** cible d'alignement planification (mode bid uniquement) */
