@@ -42,35 +42,35 @@ export const BoqActionsBar: React.FC<Props> = ({
     try { await fn(); } finally { setBusy(null); }
   };
 
+  const baseDocCtx = {
+    docPrefix: ctx.docPrefix,
+    title: ctx.title,
+    source: ctx.source,
+    contextId: ctx.contextId,
+    projectId: ctx.projectId,
+    tenderId: ctx.tenderId,
+    submissionId: ctx.submissionId,
+  };
+
   const handleGenerate = () => withGuard('pdf', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, {
-      docPrefix: ctx.docPrefix,
-      title: ctx.title,
-      projectId: ctx.projectId,
-      tenderId: ctx.tenderId,
-      submissionId: ctx.submissionId,
-    });
+    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
     DocumentService.download(blob, filename);
-    toast({ title: 'Document généré', description: filename });
+    toast({ title: 'PDF généré', description: filename });
   });
 
   const handleEmail = () => withGuard('email', async () => {
-    const res = await DocumentService.email(lines, {
-      docPrefix: ctx.docPrefix,
-      title: ctx.title,
-      recipientEmail,
-    });
+    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail });
     if (res.ok) toast({ title: 'Email envoyé' });
     else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
   });
 
   const handleSign = () => withGuard('sign', async () => {
-    const res = await DocumentService.sign(lines, { docPrefix: ctx.docPrefix, title: ctx.title });
+    const res = await DocumentService.sign(lines, baseDocCtx);
     toast({ title: res.ok ? 'Signé' : 'Signature échouée', description: res.message, variant: res.ok ? 'default' : 'destructive' });
   });
 
   const handleDownload = () => withGuard('download', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, { docPrefix: ctx.docPrefix, title: ctx.title });
+    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
     DocumentService.download(blob, filename);
   });
 
