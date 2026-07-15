@@ -334,6 +334,7 @@ export function BoqWorkspace({
     const profile = getFiscalProfile(fiscalCode);
     setPendingLines((prev) => [...prev, {
       source, contextId,
+      documentId: documentId ?? null,
       designation: '',
       unit: 'u',
       length: null, width: null, height: null,
@@ -353,7 +354,7 @@ export function BoqWorkspace({
   };
 
   // ---- Render ---------------------------------------------------------------
-  const docRef = contextId.slice(0, 8).toUpperCase();
+  const docRef = (documentId ?? contextId).slice(0, 8).toUpperCase();
   const pendingCount = pendingLines.length + draftLineIds.length;
   const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
   const isDocumentEmpty = displayedLines.length === 0;
@@ -362,6 +363,7 @@ export function BoqWorkspace({
       ...line,
       source,
       contextId,
+      documentId: documentId ?? null,
       id: undefined,
       status: 'submitted' as const,
     }))]);
