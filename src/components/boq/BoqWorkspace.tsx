@@ -205,6 +205,7 @@ export function BoqWorkspace({
     };
     const draft: BoqLineDTO = {
       source, contextId,
+      documentId: documentId ?? null,
       designation: form.designation!,
       elementType: useAdvanced ? elementType : null,
       unit: form.unit || 'u',
