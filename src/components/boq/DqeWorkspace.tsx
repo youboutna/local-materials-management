@@ -92,7 +92,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             />
           )}
         </CardHeader>
-        <CardContent className="p-4">
+        <CardContent className="p-0">
           <BoqWorkspace
             source={workspaceSource}
             contextId={ctx.contextId}

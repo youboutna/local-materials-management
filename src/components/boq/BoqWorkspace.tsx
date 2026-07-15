@@ -345,7 +345,7 @@ export function BoqWorkspace({
   const isDocumentEmpty = displayedLines.length === 0;
   return (
     <div className="space-y-4">
-      <section className="rounded-md border bg-card">
+      <section className="space-y-0">
         <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1.2fr)_minmax(220px,0.8fr)_auto] lg:items-end">
           <div className="space-y-2">
             <div className="text-xs font-medium uppercase text-muted-foreground">Document</div>
