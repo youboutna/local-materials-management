@@ -98,6 +98,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             source={workspaceSource}
             contextId={ctx.contextId}
             projectId={props.projectId}
+            projectName={props.projectName}
             mode={mode}
             referentialCode={props.referentialCode}
             defaultEmail={props.recipientEmail}
