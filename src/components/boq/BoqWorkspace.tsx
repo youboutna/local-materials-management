@@ -213,7 +213,7 @@ export function BoqWorkspace({
       vatRate: profile.vatRate,
       note: [category === 'overhead' ? 'Frais généraux' : null, overheadNote].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
-      status: 'draft',
+      status: 'submitted',
     };
     setPendingLines((prev) => [...prev, draft]);
     resetForm();
@@ -334,7 +334,7 @@ export function BoqWorkspace({
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
       sourceType: 'rapide',
-      status: 'draft',
+      status: 'submitted',
     }]);
   };
 
