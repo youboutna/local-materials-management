@@ -59,7 +59,7 @@ export interface BoqDocumentSummary {
   documentId: string;
   reference: string;
   title: string;
-  status: 'draft' | 'submitted' | 'signed' | 'sent' | 'mixed';
+  status: BoqStatus | 'mixed';
   totalHt: number;
   lineCount: number;
   createdAt: string;
