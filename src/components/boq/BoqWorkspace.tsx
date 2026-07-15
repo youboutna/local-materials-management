@@ -558,9 +558,19 @@ export function BoqWorkspace({
                   </>
                 )}
 
-                <div className="col-span-2">
+                <div className="col-span-1">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Frais généraux (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={overheadPct}
+                    onChange={(e) => setOverheadPct(Number(e.target.value) || 0)}
+                  />
                 </div>
               </div>
 
