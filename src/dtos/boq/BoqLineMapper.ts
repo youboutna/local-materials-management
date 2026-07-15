@@ -100,6 +100,9 @@ export class BoqLineMapper {
       sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
       btpCode: row.btp_code ?? null,
       status: row.status ?? 'draft',
+      documentId: row.document_id ?? null,
+      title: (row.metadata as { title?: string } | null)?.title ?? null,
+      createdAt: row.created_at ?? null,
     };
   }
 
