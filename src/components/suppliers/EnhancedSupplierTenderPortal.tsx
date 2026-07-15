@@ -751,24 +751,7 @@ const EnhancedSupplierTenderPortal = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="estimate" className="space-y-6">
-          {selectedTender ? (
-            <SupplierBidBoq tenderId={selectedTender.id} />
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Calculator className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
-                <p className="text-muted-foreground mb-4">
-                  Choisissez un appel d'offres pour créer votre devis quantitatif estimatif.
-                </p>
-                <Button onClick={() => setActiveTab('browse')}>
-                  Parcourir les appels d'offres
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {/* Estimate tab retiré : le devis se crée depuis l'onglet "Devis" du portail (BoqWorkspace unifié). */}
       </Tabs>
     </div>
     </SupplierTenderAccessGuard>
