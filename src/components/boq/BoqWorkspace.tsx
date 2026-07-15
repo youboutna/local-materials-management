@@ -607,7 +607,7 @@ export function BoqWorkspace({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="ghost" disabled={!doc.lines.length} title="Export CSV et envoi par email">
+              <Button size="sm" variant="ghost" disabled={!displayedLines.length} title="Export CSV et envoi par email">
                 <Download className="h-4 w-4 mr-1" />CSV
               </Button>
             </DropdownMenuTrigger>
@@ -622,7 +622,7 @@ export function BoqWorkspace({
           </DropdownMenu>
 
           <BoqDevisDialog
-            lines={doc.lines}
+            lines={displayedLines}
             mode={devisMode}
             contextId={contextId}
             defaultTitle={`${labels.devis} — ${contextId.slice(0, 8)}`}
@@ -633,7 +633,7 @@ export function BoqWorkspace({
           {/* Diffusion contextuelle : PDF signé + CSV joint */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={!doc.lines.length}>
+              <Button size="sm" variant="outline" disabled={!displayedLines.length}>
                 <Send className="h-4 w-4 mr-1" />Diffuser
               </Button>
             </DropdownMenuTrigger>
@@ -651,7 +651,7 @@ export function BoqWorkspace({
           {/* Dialog contrôlé pour la diffusion contextuelle (PDF + CSV joints) */}
           {diffusePreset && (
             <BoqDevisDialog
-              lines={doc.lines}
+              lines={displayedLines}
               mode={devisMode}
               contextId={contextId}
               defaultTitle={diffusePreset.title}
@@ -713,7 +713,7 @@ export function BoqWorkspace({
         <div className="text-sm text-muted-foreground">Chargement…</div>
       ) : (
         <BoqLineTable
-          lines={doc.lines}
+          lines={displayedLines}
           emptyLabel={emptyLabel ?? labels.empty}
           editable
           referentialCode={referentialCode}
