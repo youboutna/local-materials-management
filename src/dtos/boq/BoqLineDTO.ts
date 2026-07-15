@@ -35,6 +35,12 @@ export interface BoqLineDTO {
   btpCode?: string | null;
   /** Workflow unique v3.2 : brouillon DB puis finalisation métier. */
   status?: BoqStatus;
+  /** Identifiant du document conteneur (regroupe N lignes en un DQE/Devis/Facture). */
+  documentId?: string | null;
+  /** Titre libre du document (stocké dans metadata.title). */
+  title?: string | null;
+  /** Horodatage création (lecture seule). */
+  createdAt?: string | null;
 }
 
 export interface BoqLineFilter {
@@ -45,4 +51,16 @@ export interface BoqLineFilter {
   estimateId?: string;
   phaseId?: string;
   resourceType?: BoqResourceType;
+  documentId?: string;
+}
+
+/** Résumé d'un document (agrégat de lignes partageant le même document_id). */
+export interface BoqDocumentSummary {
+  documentId: string;
+  reference: string;
+  title: string;
+  status: 'draft' | 'submitted' | 'signed' | 'sent' | 'mixed';
+  totalHt: number;
+  lineCount: number;
+  createdAt: string;
 }
