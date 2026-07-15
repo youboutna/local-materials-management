@@ -134,6 +134,8 @@ export class BoqLineMapper {
       btp_code: dto.btpCode ?? null,
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
+      document_id: dto.documentId ?? null,
+      metadata: dto.title ? { title: dto.title } : undefined,
     };
   }
 
