@@ -722,31 +722,18 @@ const UnifiedSupplierPortal = () => {
 
             {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
             <TabsContent value="devis">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Devis / Chiffrage
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Saisie manuelle, import BPU (PDF/Excel/CSV), calcul métré, récap fiscal HT/TVA/TTC,
-                    génération PDF signé et envoi par email.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {supplierProfile?.id ? (
-                    <BoqWorkspace
-                      source="supplier_bid"
-                      contextId={supplierProfile.id}
-                      mode="bid"
-                      defaultEmail={supplierProfile.email ?? undefined}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Profil fournisseur requis.</p>
-                  )}
-                </CardContent>
-              </Card>
+              {supplierProfile?.id ? (
+                <DqeWorkspace
+                  routeContext="supplier-bid"
+                  senderId={supplierProfile.id}
+                  submissionId={supplierProfile.id}
+                  recipientEmail={supplierProfile.email ?? undefined}
+                />
+              ) : (
+                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
+              )}
             </TabsContent>
+
 
             {/* Upload Tab */}
             <TabsContent value="upload">
