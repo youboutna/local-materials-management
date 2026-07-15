@@ -35,6 +35,7 @@ import { tenderToPlanningService } from '@/application/services/tender/TenderToP
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import { getReferentialOptions } from '@/config/referentials';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
