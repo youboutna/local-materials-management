@@ -12,6 +12,8 @@ import type { BoqSource } from '@/domain/boq/BoqLine';
 export interface BoqDbRow {
   id?: string;
   project_id?: string | null;
+  tender_id?: string | null;
+  submission_id?: string | null;
   estimate_id?: string | null;
   material_id?: string | null;
   resource_id?: string | null;
@@ -84,7 +86,7 @@ export class BoqLineMapper {
       phaseId: row.phase_id ?? null,
       milestoneId: row.milestone_id ?? null,
       taskId: row.task_id ?? null,
-      resourceType: (row.resource_kind ?? row.resource_type as BoqLineDTO['resourceType']) ?? 'material',
+      resourceType: ((row.resource_kind ?? row.resource_type) as BoqLineDTO['resourceType']) ?? 'material',
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
       submittedBy: row.sender_id ?? row.submitted_by ?? null,

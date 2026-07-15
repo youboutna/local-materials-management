@@ -17,7 +17,7 @@
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState, useEffect } from 'react';
-import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail } from 'lucide-react';
+import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail, FileCheck2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,11 +102,7 @@ export function BoqWorkspace({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
 
-  // Buffer local : les lignes saisies "Ajouter" ne partent PAS en base (évite RLS).
-  // Elles sont fusionnées à l'affichage/totaux/génération. Persistance déclenchée
-  // uniquement par "Enregistrer" ou automatiquement avant "Diffuser/Générer".
-  const [drafts, setDrafts] = useState<BoqLineDTO[]>([]);
-  const [flushing, setFlushing] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
 
   // Load real project WBS (phases → milestones → tasks) — dynamic, per project
   useEffect(() => {
@@ -189,8 +185,8 @@ export function BoqWorkspace({
     return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
   }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct]);
 
-  // "Ajouter" → buffer local uniquement (ne touche PAS la base — évite l'erreur RLS)
-  const handleCreate = () => {
+  // "Ajouter" → persiste immédiatement une ligne DB au statut draft dans btp.boq_lines.
+  const handleCreate = async () => {
     if (!form.designation?.trim()) {
       toast({ title: 'Désignation requise', variant: 'destructive' });
       return;
@@ -205,7 +201,6 @@ export function BoqWorkspace({
       taskId: wbs.taskId ?? wbsDefault.taskId ?? null,
     };
     const draft: BoqLineDTO = {
-      id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       source, contextId,
       designation: form.designation!,
       elementType: useAdvanced ? elementType : null,
@@ -224,49 +219,46 @@ export function BoqWorkspace({
       vatRate: profile.vatRate,
       note: [category === 'overhead' ? 'Frais généraux' : null, overheadNote].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
+      status: 'draft',
     };
-    setDrafts((prev) => [...prev, draft]);
-    toast({ title: 'Ligne ajoutée au brouillon', description: 'Cliquez « Enregistrer » pour persister.' });
-    resetForm();
-    setOpenManual(false);
+    try {
+      await doc.createLine(draft);
+      toast({ title: 'Ligne ajoutée', description: 'Statut brouillon enregistré.' });
+      resetForm();
+      setOpenManual(false);
+    } catch (e) {
+      toast({ title: 'Échec ajout ligne', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+    }
   };
 
-  // Flush drafts → base (appelé explicitement par l'utilisateur ou avant diffusion)
-  // v3.2 : plus de shadow-write vers `quantity_takeoffs` — les métrés dimensionnels
-  // sont conservés directement dans la ligne BOQ (elementType + L/W/H).
-  const flushDrafts = async (silent = false): Promise<boolean> => {
-    if (drafts.length === 0) return true;
-    setFlushing(true);
+  const draftLineIds = useMemo(
+    () => doc.lines.filter((l) => l.status === 'draft' && l.id).map((l) => l.id!),
+    [doc.lines]
+  );
+
+  const finalizeDraftLines = async (silent = false): Promise<boolean> => {
+    if (draftLineIds.length === 0) return true;
+    setFinalizing(true);
     let ok = true;
     try {
-      for (const d of drafts) {
-        const { id: _localId, ...payload } = d;
-        void _localId;
-        await doc.createLine(payload);
-      }
-      setDrafts([]);
-      if (!silent) toast({ title: `${drafts.length} ligne(s) enregistrée(s)` });
+      await doc.updateStatus(draftLineIds, 'submitted', source);
+      if (!silent) toast({ title: `${draftLineIds.length} ligne(s) finalisée(s)` });
     } catch (e) {
       ok = false;
       toast({
-        title: 'Persistance partielle',
+        title: 'Finalisation échouée',
         description: String(e instanceof Error ? e.message : e),
         variant: 'destructive',
       });
-    } finally { setFlushing(false); }
+    } finally { setFinalizing(false); }
     return ok;
   };
 
   // ---- Édition inline --------------------------------------------------------
-  const displayedLines = useMemo(() => [...doc.lines, ...drafts], [doc.lines, drafts]);
+  const displayedLines = doc.lines;
   const handlePatch = async (index: number, patch: Partial<BoqLineDTO>) => {
     const line = displayedLines[index];
     if (!line?.id) return;
-    // Ligne brouillon locale : patch en mémoire, pas d'appel réseau
-    if (String(line.id).startsWith('draft-')) {
-      setDrafts((prev) => prev.map((d) => (d.id === line.id ? { ...d, ...patch } : d)));
-      return;
-    }
     try { await doc.updateLine(line.id, patch); } catch (e) {
       toast({ title: 'Échec mise à jour', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     }
@@ -274,10 +266,6 @@ export function BoqWorkspace({
   const handleRemove = async (index: number) => {
     const line = displayedLines[index];
     if (!line?.id) return;
-    if (String(line.id).startsWith('draft-')) {
-      setDrafts((prev) => prev.filter((d) => d.id !== line.id));
-      return;
-    }
     try { await doc.deleteLine(line.id, source); } catch (e) {
       toast({ title: 'Échec suppression', variant: 'destructive' });
     }
@@ -359,8 +347,7 @@ export function BoqWorkspace({
   const [diffuseOpen, setDiffuseOpen] = useState(false);
   const [diffusePreset, setDiffusePreset] = useState<DiffusePreset | null>(null);
   const openDiffuse = async (p: DiffusePreset) => {
-    // Persistance déclenchée par la diffusion (jamais par "Ajouter") : flush avant émission.
-    if (drafts.length > 0) await flushDrafts(true);
+    if (draftLineIds.length > 0) await finalizeDraftLines(true);
     setDiffusePreset(p); setDiffuseOpen(true);
   };
 
@@ -390,9 +377,9 @@ export function BoqWorkspace({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm text-muted-foreground flex items-center gap-3">
           <span>{doc.lines.length} ligne(s) enregistrée(s)</span>
-          {drafts.length > 0 && (
+          {draftLineIds.length > 0 && (
             <span className="text-amber-600 font-medium">
-              + {drafts.length} brouillon(s) non enregistré(s)
+              {draftLineIds.length} brouillon(s)
             </span>
           )}
           {/* WBS par défaut (contexte de saisie) — appliqué automatiquement aux nouvelles lignes */}
@@ -409,10 +396,10 @@ export function BoqWorkspace({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {drafts.length > 0 && (
-            <Button size="sm" variant="secondary" onClick={() => flushDrafts(false)} disabled={flushing}>
-              {flushing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
-              Enregistrer ({drafts.length})
+          {draftLineIds.length > 0 && (
+            <Button size="sm" variant="secondary" onClick={() => finalizeDraftLines(false)} disabled={finalizing || doc.isPending}>
+              {finalizing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-1" />}
+              Finaliser ({draftLineIds.length})
             </Button>
           )}
           <Dialog open={openManual} onOpenChange={setOpenManual}>

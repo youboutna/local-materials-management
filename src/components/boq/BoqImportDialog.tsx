@@ -97,6 +97,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
         phaseId: mapped ?? rawPhaseId,
         milestoneId: mapped ? undefined : (l.milestoneId ?? wbs.milestoneId ?? undefined),
         taskId: mapped ? undefined : (l.taskId ?? wbs.taskId ?? undefined),
+        status: 'draft',
       };
     });
   }, [dtos, wbs, isAltReferential, phaseMapping]);
@@ -203,34 +204,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     try {
       setDtos(wbsEnrichedDtos);
       const r = await commit(wbsEnrichedDtos);
-      // Shadow write : lignes matériau avec elementType + dimensions → alimente
-      // btp.quantity_takeoffs pour le dimensionnement BTP (indépendant du contexte).
-      if (resolvedProjectId && source !== 'quantity_takeoff') {
-        const { boqRepository } = await import('@/infrastructure/supabase/adapters/SupabaseBoqRepository');
-        let shadowed = 0;
-        for (const line of wbsEnrichedDtos) {
-          if (!line.materialId) continue;
-          if (!line.elementType || line.elementType === 'generic') continue;
-          const hasDim = (line.length ?? 0) > 0 || (line.width ?? 0) > 0 || (line.height ?? 0) > 0;
-          if (!hasDim) continue;
-          try {
-            await boqRepository.create({
-              ...line,
-              id: undefined,
-              source: 'quantity_takeoff',
-              contextId: resolvedProjectId,
-              sourceType: 'avance',
-            });
-            shadowed += 1;
-          } catch (err) {
-            console.warn('[BoqImportDialog] shadow QT skipped:', err instanceof Error ? err.message : err);
-          }
-        }
-        if (shadowed > 0) {
-          window.dispatchEvent(new CustomEvent('boq-kpi-refresh'));
-        }
-      }
-      toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s).` });
+      toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s) en brouillon.` });
       window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
       onImported?.(r.length);
       setOpen(false);
