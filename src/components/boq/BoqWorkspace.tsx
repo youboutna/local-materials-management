@@ -72,7 +72,7 @@ const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefi
 };
 
 export function BoqWorkspace({
-  source, contextId, projectId, mode,
+  source, contextId, projectId, projectName, mode,
   referentialCode, estimateId,
   emptyLabel, importLabel,
 }: Props) {
