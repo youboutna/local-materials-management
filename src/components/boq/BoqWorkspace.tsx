@@ -185,8 +185,11 @@ export function BoqWorkspace({
     return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
   }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct]);
 
-  // "Ajouter" → persiste immédiatement une ligne DB au statut draft dans btp.boq_lines.
-  const handleCreate = async () => {
+  // ---- Tampon local (batch) : « Ajouter » n'écrit PAS en DB.
+  //      La persistance atomique se fait via « Enregistrer le DQE » (bulkCreate).
+  const [pendingLines, setPendingLines] = useState<BoqLineDTO[]>([]);
+
+  const handleCreate = () => {
     if (!form.designation?.trim()) {
       toast({ title: 'Désignation requise', variant: 'destructive' });
       return;
@@ -194,7 +197,6 @@ export function BoqWorkspace({
     const profile = getFiscalProfile(fiscalCode);
     const overheadNote = (Number(overheadPct) || 0) > 0 ? `Frais généraux ${overheadPct}%` : null;
     const effectivePu = (Number(form.unitPrice) || 0) * (1 + (Number(overheadPct) || 0) / 100);
-    // Fallback WBS par défaut si l'utilisateur n'a pas défini de phase pour cette ligne
     const effectiveWbs: WbsValue = {
       phaseId: wbs.phaseId ?? wbsDefault.phaseId ?? null,
       milestoneId: wbs.milestoneId ?? wbsDefault.milestoneId ?? null,
@@ -221,14 +223,28 @@ export function BoqWorkspace({
       sourceType: useAdvanced ? 'avance' : 'rapide',
       status: 'draft',
     };
+    setPendingLines((prev) => [...prev, draft]);
+    resetForm();
+    setOpenManual(false);
+    toast({ title: 'Ligne ajoutée au brouillon', description: 'Cliquez « Enregistrer le DQE » pour persister.' });
+  };
+
+  const persistPending = async (silent = false): Promise<boolean> => {
+    if (pendingLines.length === 0) return true;
+    setFinalizing(true);
     try {
-      await doc.createLine(draft);
-      toast({ title: 'Ligne ajoutée', description: 'Statut brouillon enregistré.' });
-      resetForm();
-      setOpenManual(false);
+      await doc.bulkCreate(pendingLines);
+      if (!silent) toast({ title: `${pendingLines.length} ligne(s) enregistrée(s)` });
+      setPendingLines([]);
+      return true;
     } catch (e) {
-      toast({ title: 'Échec ajout ligne', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    }
+      toast({
+        title: 'Enregistrement échoué',
+        description: String(e instanceof Error ? e.message : e),
+        variant: 'destructive',
+      });
+      return false;
+    } finally { setFinalizing(false); }
   };
 
   const draftLineIds = useMemo(
@@ -237,34 +253,52 @@ export function BoqWorkspace({
   );
 
   const finalizeDraftLines = async (silent = false): Promise<boolean> => {
-    if (draftLineIds.length === 0) return true;
-    setFinalizing(true);
-    let ok = true;
+    // 1) persiste d'abord le tampon local
+    const persisted = await persistPending(true);
+    if (!persisted) return false;
+    // 2) puis passe tous les brouillons DB en submitted
+    if (draftLineIds.length === 0) {
+      if (!silent) toast({ title: 'DQE enregistré' });
+      return true;
+    }
     try {
       await doc.updateStatus(draftLineIds, 'submitted', source);
       if (!silent) toast({ title: `${draftLineIds.length} ligne(s) finalisée(s)` });
+      return true;
     } catch (e) {
-      ok = false;
       toast({
         title: 'Finalisation échouée',
         description: String(e instanceof Error ? e.message : e),
         variant: 'destructive',
       });
-    } finally { setFinalizing(false); }
-    return ok;
+      return false;
+    }
   };
 
-  // ---- Édition inline --------------------------------------------------------
-  const displayedLines = doc.lines;
+  // ---- Édition inline (persistée) + tampon (local) ---------------------------
+  const displayedLines = useMemo<BoqLineDTO[]>(
+    () => [...doc.lines, ...pendingLines],
+    [doc.lines, pendingLines],
+  );
+  const persistedCount = doc.lines.length;
+
   const handlePatch = async (index: number, patch: Partial<BoqLineDTO>) => {
-    const line = displayedLines[index];
+    if (index >= persistedCount) {
+      setPendingLines((prev) => prev.map((l, i) => (i === index - persistedCount ? { ...l, ...patch } : l)));
+      return;
+    }
+    const line = doc.lines[index];
     if (!line?.id) return;
     try { await doc.updateLine(line.id, patch); } catch (e) {
       toast({ title: 'Échec mise à jour', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     }
   };
   const handleRemove = async (index: number) => {
-    const line = displayedLines[index];
+    if (index >= persistedCount) {
+      setPendingLines((prev) => prev.filter((_, i) => i !== index - persistedCount));
+      return;
+    }
+    const line = doc.lines[index];
     if (!line?.id) return;
     try { await doc.deleteLine(line.id, source); } catch (e) {
       toast({ title: 'Échec suppression', variant: 'destructive' });
