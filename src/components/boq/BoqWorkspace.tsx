@@ -9,15 +9,13 @@
  *   • Import multi-format PDF/Excel/CSV via BoqImportDialog (parseur unifié)
  *   • Édition / suppression inline via BoqLineTable (updateLine / deleteLine)
  *   • Récap fiscal HT / TVA / RAS / TTC via BoqCalculatorService
- *   • Génération devis/facture CSV via DevisGenerator + téléchargement
- *   • Envoi par email via edge function send-email-notification
  *   • Alignement planification via TenderToPlanningService (mode planning/bid)
  *
  * N'accède jamais à supabase.from() directement. Toute écriture passe par
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState, useEffect } from 'react';
-import { FileSpreadsheet, Plus, ArrowRightCircle, Loader2, Mail, FileCheck2, Calculator, Trash2 } from 'lucide-react';
+import { FileSpreadsheet, Plus, ArrowRightCircle, Loader2, FileCheck2, Calculator, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -61,20 +59,20 @@ interface Props {
   estimateId?: string;
   emptyLabel?: string;
   importLabel?: string;
-  /** email destinataire par défaut pour "envoyer devis" */
+  /** conservé pour compatibilité des contextes qui fournissent un destinataire */
   defaultEmail?: string;
 }
 
-const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; devis: string; docPrefix: string }> = {
-  planning: { import: 'Importer un DQE',      empty: 'Document vide — ajoutez une ligne, importez un DQE ou utilisez le métré.',    devis: 'Exporter DQE',    docPrefix: 'dqe' },
-  bid:      { import: 'Importer un chiffrage', empty: 'Document vide — ajoutez ou importez les lignes du devis.',                   devis: 'Générer devis',   docPrefix: 'devis' },
-  invoice:  { import: 'Analyser une facture',  empty: 'Document vide — importez la facture ou saisissez ses lignes contrôlées.',    devis: 'Générer facture', docPrefix: 'facture' },
+const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefix: string }> = {
+  planning: { import: 'Importer un DQE',      empty: 'Document vide — ajoutez une ligne, importez un DQE ou utilisez le métré.',    docPrefix: 'dqe' },
+  bid:      { import: 'Importer un chiffrage', empty: 'Document vide — ajoutez ou importez les lignes du devis.',                   docPrefix: 'devis' },
+  invoice:  { import: 'Analyser une facture',  empty: 'Document vide — importez la facture ou saisissez ses lignes contrôlées.',    docPrefix: 'facture' },
 };
 
 export function BoqWorkspace({
   source, contextId, projectId, mode,
   referentialCode, estimateId,
-  emptyLabel, importLabel, defaultEmail,
+  emptyLabel, importLabel,
 }: Props) {
   const doc = useBoqDocument({ source, contextId, projectId });
   const { toast } = useToast();
