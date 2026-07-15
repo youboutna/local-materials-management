@@ -356,7 +356,11 @@ export function BoqWorkspace({
 
   const [diffuseOpen, setDiffuseOpen] = useState(false);
   const [diffusePreset, setDiffusePreset] = useState<DiffusePreset | null>(null);
-  const openDiffuse = (p: DiffusePreset) => { setDiffusePreset(p); setDiffuseOpen(true); };
+  const openDiffuse = async (p: DiffusePreset) => {
+    // Persistance déclenchée par la diffusion (jamais par "Ajouter") : flush avant émission.
+    if (drafts.length > 0) await flushDrafts(true);
+    setDiffusePreset(p); setDiffuseOpen(true);
+  };
 
 
 
