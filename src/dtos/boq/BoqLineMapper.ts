@@ -1,6 +1,6 @@
 /**
  * BoqLineMapper — snake_case ↔ camelCase, single source of truth
- * for all BOQ persistence tables (quantity_takeoffs, tender_estimate_items).
+ * for the unified BOQ persistence table (btp.boq_lines).
  * Also supports `reproject()` used when converting a tender estimate into
  * a planned project's quantity takeoffs.
  */
@@ -14,8 +14,11 @@ export interface BoqDbRow {
   project_id?: string | null;
   estimate_id?: string | null;
   material_id?: string | null;
+  resource_id?: string | null;
+  resource_kind?: string | null;
   item_code?: string | null;
   description?: string | null;
+  designation?: string | null;
   element_type?: string | null;
   unit?: string | null;
   length?: number | null;
@@ -23,8 +26,10 @@ export interface BoqDbRow {
   height?: number | null;
   quantity?: number | null;
   unit_price?: number | null;
+  unit_price_ht?: number | null;
   total_price?: number | null;
   total_value?: number | null;
+  total_ht?: number | null;
   vat_rate?: number | null;
   phase_id?: string | null;
   milestone_id?: string | null;
@@ -35,25 +40,38 @@ export interface BoqDbRow {
   item_type?: string | null;
   bid_ref?: string | null;
   submitted_by?: string | null;
+  sender_id?: string | null;
   source?: string | null;
   source_type?: string | null;
   btp_code?: string | null;
+  line_type?: string | null;
+  status?: BoqLineDTO['status'] | null;
 }
+
+export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> = {
+  quantity_takeoff: 'quantity_takeoff',
+  tender_estimate: 'estimate',
+  supplier_bid: 'supplier_bid',
+  invoice: 'invoice',
+  dqe: 'estimate',
+};
 
 export class BoqLineMapper {
   static fromDb(row: BoqDbRow, source: BoqSource): BoqLineDTO {
     const contextId =
-      source === 'quantity_takeoff'
-        ? String(row.project_id ?? '')
-        : String(row.estimate_id ?? '');
-    const unitPrice = row.unit_price ?? null;
+      source === 'quantity_takeoff' || source === 'dqe'
+        ? String(row.project_id ?? row.estimate_id ?? '')
+        : source === 'tender_estimate'
+          ? String(row.tender_id ?? row.estimate_id ?? '')
+          : String(row.submission_id ?? row.estimate_id ?? row.sender_id ?? '');
+    const unitPrice = row.unit_price_ht ?? row.unit_price ?? null;
     const quantity = Number(row.quantity ?? 0);
     return {
       id: row.id,
       source,
       contextId,
-      designation: row.description ?? row.item_type ?? row.item_code ?? '',
-      elementType: row.item_type ?? null,
+      designation: row.designation ?? row.description ?? row.item_type ?? row.item_code ?? '',
+      elementType: row.element_type ?? row.item_type ?? null,
       unit: row.unit ?? 'unité',
       length: row.length ?? null,
       width: row.width ?? null,
@@ -61,58 +79,47 @@ export class BoqLineMapper {
       quantity,
       unitPrice,
       vatRate: row.vat_rate ?? 0,
-      totalHt: row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
-      materialId: row.material_id ?? null,
+      totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
+      materialId: row.resource_id ?? row.material_id ?? null,
       phaseId: row.phase_id ?? null,
       milestoneId: row.milestone_id ?? null,
       taskId: row.task_id ?? null,
-      resourceType: (row.resource_type as BoqLineDTO['resourceType']) ?? 'material',
+      resourceType: (row.resource_kind ?? row.resource_type as BoqLineDTO['resourceType']) ?? 'material',
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
-      submittedBy: row.submitted_by ?? null,
+      submittedBy: row.sender_id ?? row.submitted_by ?? null,
       sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
       btpCode: row.btp_code ?? null,
+      status: row.status ?? 'draft',
     };
   }
 
   static toDb(dto: BoqLineDTO): BoqDbRow {
-    const base: BoqDbRow = {
-      material_id: dto.materialId ?? null,
+    return {
+      project_id: dto.source === 'quantity_takeoff' || dto.source === 'dqe' ? dto.contextId : null,
+      tender_id: dto.source === 'tender_estimate' ? dto.contextId : null,
+      submission_id: dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
+      estimate_id: dto.source === 'tender_estimate' || dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
+      line_type: BOQ_LINE_TYPE_BY_SOURCE[dto.source],
+      designation: dto.designation,
+      element_type: dto.elementType ?? null,
+      resource_id: dto.materialId ?? null,
+      resource_kind: dto.resourceType ?? 'material',
       unit: dto.unit,
       length: dto.length ?? null,
       width: dto.width ?? null,
       height: dto.height ?? null,
       quantity: dto.quantity,
-      unit_price: dto.unitPrice ?? null,
+      unit_price_ht: dto.unitPrice ?? null,
       vat_rate: dto.vatRate ?? 0,
       phase_id: dto.phaseId ?? null,
       milestone_id: dto.milestoneId ?? null,
       task_id: dto.taskId ?? null,
-      resource_type: dto.resourceType ?? 'material',
       note: dto.note ?? null,
-      source: dto.source,
-      source_type: dto.sourceType ?? null,
+      source_type: dto.source === 'dqe' ? 'dqe' : dto.sourceType ?? null,
       btp_code: dto.btpCode ?? null,
-    };
-    if (dto.source === 'quantity_takeoff') {
-      return {
-        ...base,
-        element_type: dto.elementType ?? null,
-        project_id: dto.contextId,
-        total_value: dto.totalHt ?? null,
-      };
-    }
-    // tender_estimate | supplier_bid | dqe use item_type instead of element_type
-    // tender_estimate | supplier_bid | dqe
-    return {
-      ...base,
-      item_type: dto.elementType ?? null,
-      estimate_id: dto.contextId,
-      description: dto.designation,
-      item_code: dto.elementType ?? dto.designation.slice(0, 32),
-      total_price: dto.totalHt ?? null,
-      bid_ref: dto.bidRef ?? null,
-      submitted_by: dto.submittedBy ?? null,
+      sender_id: dto.submittedBy ?? null,
+      status: dto.status ?? 'draft',
     };
   }
 

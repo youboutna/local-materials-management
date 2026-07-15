@@ -1,7 +1,7 @@
 /**
  * BoqLineDTO — camelCase DTO shared by services and UI.
  */
-import type { BoqResourceType, BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqResourceType, BoqSource, BoqStatus } from '@/domain/boq/BoqLine';
 
 export type BoqSourceType = 'rapide' | 'avance' | 'import' | 'invoice';
 
@@ -31,6 +31,8 @@ export interface BoqLineDTO {
   sourceType?: BoqSourceType;
   /** Code métier BTP réutilisable (nomenclature BTP standardisée). */
   btpCode?: string | null;
+  /** Workflow unique v3.2 : brouillon DB puis finalisation métier. */
+  status?: BoqStatus;
 }
 
 export interface BoqLineFilter {
