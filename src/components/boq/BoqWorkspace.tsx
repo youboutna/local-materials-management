@@ -445,20 +445,34 @@ export function BoqWorkspace({
                 </div>
 
                 {category === 'material' && materials.length > 0 && (
-                  <div className="col-span-6">
-                    <Label>Article du dépôt (optionnel)</Label>
-                    <Select value={materialId || '__none__'} onValueChange={(v) => (v === '__none__' ? setMaterialId('') : onPickMaterial(v))}>
-                      <SelectTrigger><SelectValue placeholder="Sélectionner un article — auto-remplit désignation, unité, PU" /></SelectTrigger>
-                      <SelectContent className="max-h-64">
-                        <SelectItem value="__none__">— Saisie libre —</SelectItem>
-                        {materials.slice(0, 200).map((m) => (
-                          <SelectItem key={m.id} value={m.id}>
-                            {m.name}{m.unit ? ` · ${m.unit}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <>
+                    {depots.length > 1 && (
+                      <div className="col-span-3">
+                        <Label>Dépôt</Label>
+                        <Select value={depotId || '__all__'} onValueChange={(v) => { setDepotId(v === '__all__' ? '' : v); setMaterialId(''); }}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            <SelectItem value="__all__">— Tous les dépôts —</SelectItem>
+                            {depots.map((d) => <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className={depots.length > 1 ? 'col-span-3' : 'col-span-6'}>
+                      <Label>Article {depotId ? '(dépôt filtré)' : '(du dépôt, optionnel)'}</Label>
+                      <Select value={materialId || '__none__'} onValueChange={(v) => (v === '__none__' ? setMaterialId('') : onPickMaterial(v))}>
+                        <SelectTrigger><SelectValue placeholder="Sélectionner un article — auto-remplit désignation, unité, PU" /></SelectTrigger>
+                        <SelectContent className="max-h-64">
+                          <SelectItem value="__none__">— Saisie libre —</SelectItem>
+                          {filteredMaterials.slice(0, 200).map((m) => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.name}{m.unit ? ` · ${m.unit}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
                 )}
 
                 <div className="col-span-6">
