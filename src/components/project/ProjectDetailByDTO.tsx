@@ -2128,15 +2128,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           })()}
         </TabsContent>
 
-        {/* DQE / Métré — module de quantification (simple + avancé) */}
-        <TabsContent value="dqe" className="mt-6">
-          <QuantityTakeoffs projectId={projectId!} />
-        </TabsContent>
-
-        {/* Rapports — génère un rapport complet incluant le métré planifié */}
+        {/* Rapports — génère un rapport complet (métré désormais intégré au DQE global) */}
         <TabsContent value="rapports" className="mt-6 space-y-6">
           <CompactProjectReportGenerator project={projectDetail as any} />
-          <QuantityTakeoffs projectId={projectId!} />
         </TabsContent>
 
       </Tabs>
