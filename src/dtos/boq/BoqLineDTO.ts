@@ -18,6 +18,8 @@ export interface BoqLineDTO {
   quantity: number;
   unitPrice?: number | null;
   vatRate?: number | null;
+  rasRate?: number | null;
+  fees?: number | null;
   totalHt?: number | null;
   materialId?: string | null;
   phaseId?: string | null;

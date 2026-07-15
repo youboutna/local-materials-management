@@ -40,6 +40,8 @@ interface Props {
   trigger: React.ReactNode;
   title?: string;
   onImported?: (count: number) => void;
+  onParsed?: (lines: BoqLineDTO[]) => void;
+  commitOnSubmit?: boolean;
 }
 
 interface RowIssue { index: number; designation: string; message: string }
@@ -64,7 +66,7 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   return issues;
 }
 
-export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported }: Props) {
+export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true }: Props) {
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
@@ -202,11 +204,18 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       return;
     }
     try {
-      setDtos(wbsEnrichedDtos);
-      const r = await commit(wbsEnrichedDtos);
-      toast({ title: 'Import terminé', description: `${r.length} ligne(s) créée(s) en brouillon.` });
-      window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
-      onImported?.(r.length);
+      const lines = wbsEnrichedDtos.map((line) => ({ ...line }));
+      setDtos(lines);
+      if (commitOnSubmit) {
+        const r = await commit(lines);
+        toast({ title: 'Import terminé', description: `${r.length} ligne(s) importée(s).` });
+        window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
+        onImported?.(r.length);
+      } else {
+        onParsed?.(lines);
+        toast({ title: 'Lignes ajoutées au document', description: `${lines.length} ligne(s) à contrôler puis enregistrer.` });
+        onImported?.(lines.length);
+      }
       setOpen(false);
     } catch (e) {
       toast({
