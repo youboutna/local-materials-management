@@ -10,8 +10,8 @@ import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRep
 import type { BoqLineDTO, BoqLineFilter, BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
 import type { BoqStatus } from '@/domain/boq/BoqLine';
 
-const STATUS_PRIORITY: Record<BoqStatus, number> = {
-  draft: 1, submitted: 2, signed: 3, sent: 4,
+const STATUS_PRIORITY: Partial<Record<BoqStatus, number>> = {
+  draft: 1, submitted: 2, validated: 3, invoiced: 4, paid: 5,
 };
 
 function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
