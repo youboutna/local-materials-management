@@ -76,9 +76,9 @@ const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefi
 export function BoqWorkspace({
   source, contextId, projectId, projectName, mode,
   referentialCode, estimateId,
-  emptyLabel, importLabel,
+  emptyLabel, importLabel, documentId,
 }: Props) {
-  const doc = useBoqDocument({ source, contextId, projectId });
+  const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
   // Référentiel actif — défaut = référentiel du projet courant (prop),
