@@ -94,8 +94,9 @@ export const BoqPdfRenderer = {
     doc.text(`Total HT :   ${fmt(totals.totalHt)} ${currency}`, rightX, ty, { align: 'right' }); ty += 14;
     doc.setFont('helvetica', 'normal');
     doc.text(`TVA :        ${fmt(totals.totalTva)} ${currency}`, rightX, ty, { align: 'right' }); ty += 14;
-    if (totals.totalRas > 0) {
-      doc.text(`RAS :        ${fmt(totals.totalRas)} ${currency}`, rightX, ty, { align: 'right' }); ty += 14;
+    const ras = totals.withholding ?? 0;
+    if (ras > 0) {
+      doc.text(`RAS :        ${fmt(ras)} ${currency}`, rightX, ty, { align: 'right' }); ty += 14;
     }
     doc.setFont('helvetica', 'bold');
     doc.text(`Total TTC :  ${fmt(totals.totalTtc)} ${currency}`, rightX, ty, { align: 'right' });
