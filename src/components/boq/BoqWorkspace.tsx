@@ -4,8 +4,8 @@
  *  - Portail fournisseur / Devis  (source='tender_estimate',           mode='bid')
  *  - Portail fournisseur / Factures (source='supplier_bid',            mode='invoice')
  *
- * Fournit dans un seul bloc, sans ouvrir de nouvelle page/onglet :
- *   • Saisie manuelle inline (formulaire compact + createLine)
+ * Fournit un document métier unique, sans ouvrir de nouvelle page/onglet :
+ *   • Saisie manuelle inline dans la grille (batch local)
  *   • Import multi-format PDF/Excel/CSV via BoqImportDialog (parseur unifié)
  *   • Édition / suppression inline via BoqLineTable (updateLine / deleteLine)
  *   • Récap fiscal HT / TVA / RAS / TTC via BoqCalculatorService
@@ -17,30 +17,23 @@
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState, useEffect } from 'react';
-import { FileSpreadsheet, Plus, Download, ArrowRightCircle, Loader2, Send, Mail, FileCheck2 } from 'lucide-react';
+import { FileSpreadsheet, Plus, ArrowRightCircle, Loader2, Mail, FileCheck2, Calculator, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { BoqLineTable } from './BoqLineTable';
 import { BoqImportDialog } from './BoqImportDialog';
-import { BoqDevisDialog, type BoqDevisMode } from './BoqDevisDialog';
 import { WbsSelector, type WbsValue } from './WbsSelector';
 
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
-import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
-
-import { supabase } from '@/integrations/supabase/client';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
@@ -73,9 +66,9 @@ interface Props {
 }
 
 const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; devis: string; docPrefix: string }> = {
-  planning: { import: 'Importer un DQE',      empty: 'Aucune ligne DQE. Importez, saisissez ou calculez.',    devis: 'Exporter DQE',    docPrefix: 'dqe' },
-  bid:      { import: 'Importer un chiffrage', empty: 'Aucune ligne de devis. Importez ou saisissez.',         devis: 'Générer devis',   docPrefix: 'devis' },
-  invoice:  { import: 'Analyser une facture',  empty: 'Aucune facture analysée. Importez un PDF/Excel/CSV.',    devis: 'Générer facture', docPrefix: 'facture' },
+  planning: { import: 'Importer un DQE',      empty: 'Document vide — ajoutez une ligne, importez un DQE ou utilisez le métré.',    devis: 'Exporter DQE',    docPrefix: 'dqe' },
+  bid:      { import: 'Importer un chiffrage', empty: 'Document vide — ajoutez ou importez les lignes du devis.',                   devis: 'Générer devis',   docPrefix: 'devis' },
+  invoice:  { import: 'Analyser une facture',  empty: 'Document vide — importez la facture ou saisissez ses lignes contrôlées.',    devis: 'Générer facture', docPrefix: 'facture' },
 };
 
 export function BoqWorkspace({
@@ -259,7 +252,7 @@ export function BoqWorkspace({
     if (!persisted) return false;
     // 2) puis passe tous les brouillons DB en submitted
     if (draftLineIds.length === 0) {
-      if (!silent) toast({ title: 'DQE enregistré' });
+    if (!silent) toast({ title: `${labels.docPrefix.toUpperCase()} enregistré` });
       return true;
     }
     try {
@@ -309,85 +302,6 @@ export function BoqWorkspace({
   // ---- Récap fiscal (inclut brouillons) --------------------------------------
   const totals = useMemo(() => BoqCalculatorService.aggregate(displayedLines), [displayedLines]);
 
-  // ---- Devis / Facture : PDF + e-signature + email via BoqDevisDialog --------
-  const devisMode: BoqDevisMode = mode === 'invoice' ? 'facture' : mode === 'bid' ? 'devis' : 'dqe';
-
-  const buildCsv = () => {
-    const devis = DevisGenerator.aggregate(displayedLines, 'phaseId');
-    return DevisGenerator.toCsv(devis);
-  };
-  const csvFileName = () => `${labels.docPrefix}_${contextId.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.csv`;
-
-  const downloadCsv = () => {
-    const csv = buildCsv();
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = csvFileName();
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Export CSV téléchargé' });
-  };
-
-  // ---- Envoyer CSV par email (sans PDF, léger) -------------------------------
-  const [csvEmailOpen, setCsvEmailOpen] = useState(false);
-  const [csvEmailTo, setCsvEmailTo] = useState(defaultEmail ?? '');
-  const [csvEmailSubject, setCsvEmailSubject] = useState(`${labels.devis} — ${contextId.slice(0, 8)}`);
-  const [csvSending, setCsvSending] = useState(false);
-  const sendCsvEmail = async () => {
-    if (!csvEmailTo) { toast({ title: 'Email destinataire requis', variant: 'destructive' }); return; }
-    setCsvSending(true);
-    try {
-      const csv = buildCsv();
-      const b64 = btoa(unescape(encodeURIComponent(`\uFEFF${csv}`)));
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: JSON.stringify({
-          to: csvEmailTo,
-          subject: csvEmailSubject,
-          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le fichier CSV <strong>${csvEmailSubject}</strong> (${doc.lines.length} lignes).</p><p>Total HT : ${totals.totalHt.toLocaleString('fr-FR')} MRU — TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU</p>`,
-          attachments: [{ filename: csvFileName(), content: b64, contentType: 'text/csv', encoding: 'base64' }],
-        }),
-      });
-      if (error) throw error;
-      toast({ title: 'CSV envoyé', description: csvEmailTo });
-      setCsvEmailOpen(false);
-    } catch (e) {
-      toast({ title: 'Envoi CSV échoué', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    } finally { setCsvSending(false); }
-  };
-
-  // ---- Diffusion contextuelle (offre technique/commerciale, EB, BC, décompte)
-  type DiffusePreset = { key: string; label: string; title: string; notes: string; email?: string };
-  const diffusePresets: DiffusePreset[] = useMemo(() => {
-    const shortId = contextId.slice(0, 8);
-    if (mode === 'bid') {
-      return [
-        { key: 'offre-tech', label: 'Joindre à l\'offre technique', title: `Offre technique — ${shortId}`, notes: 'Pièce jointe au dossier d\'offre technique (chiffrage détaillé HT/TVA/TTC).' },
-        { key: 'offre-com',  label: 'Joindre à l\'offre commerciale', title: `Offre commerciale — ${shortId}`, notes: 'Pièce jointe à l\'offre commerciale : prix unitaires, quantités, totaux TTC.' },
-      ];
-    }
-    if (mode === 'planning') {
-      return [
-        { key: 'eb',  label: 'Expression de besoin (co-équipier)', title: `Expression de besoin — ${shortId}`, notes: 'Merci de valider les quantités et matériaux listés avant lancement des achats.' },
-        { key: 'bc',  label: 'Bon de commande fournisseur',         title: `Bon de commande — ${shortId}`, notes: 'Bon de commande pour décompte projet. Merci de confirmer disponibilité, délais et prix.' },
-        { key: 'dec', label: 'Décompte projet (interne)',            title: `Décompte projet — ${shortId}`, notes: 'Décompte des quantités et coûts par phase pour suivi budgétaire.' },
-      ];
-    }
-    return [
-      { key: 'dec-fact', label: 'Décompte facture (validation)', title: `Décompte facture — ${shortId}`, notes: 'Analyse détaillée de la facture pour validation comptable et rapprochement projet.' },
-    ];
-  }, [mode, contextId]);
-
-  const [diffuseOpen, setDiffuseOpen] = useState(false);
-  const [diffusePreset, setDiffusePreset] = useState<DiffusePreset | null>(null);
-  const openDiffuse = async (p: DiffusePreset) => {
-    if (draftLineIds.length > 0) await finalizeDraftLines(true);
-    setDiffusePreset(p); setDiffuseOpen(true);
-  };
-
-
-
   // ---- Alignement planification (mode bid → project planning) ----------------
   const [aligning, setAligning] = useState(false);
   const handleAlignPlanning = async () => {
@@ -428,27 +342,28 @@ export function BoqWorkspace({
 
   // ---- Render ---------------------------------------------------------------
   const docRef = contextId.slice(0, 8).toUpperCase();
-  const docStatus = pendingLines.length > 0 || draftLineIds.length > 0 ? 'Brouillon' : (doc.lines.length > 0 ? 'Enregistré' : 'Vide');
+  const pendingCount = pendingLines.length + draftLineIds.length;
+  const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
+  const isDocumentEmpty = displayedLines.length === 0;
   return (
     <div className="space-y-4">
-      {/* Entête document (bloc conteneur) */}
-      <div className="rounded-md border bg-card p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{labels.docPrefix}</div>
-            <div className="text-lg font-semibold">Réf. {docRef}</div>
-          </div>
-          <Badge variant={docStatus === 'Brouillon' ? 'secondary' : docStatus === 'Vide' ? 'outline' : 'default'}>{docStatus}</Badge>
-          <div className="hidden md:flex items-center gap-2 ml-3">
-            <span className="text-xs text-muted-foreground">WBS par défaut :</span>
-            <div className="min-w-[380px]">
-              <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={referentialCode} />
+      <section className="rounded-md border bg-card">
+        <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1.2fr)_minmax(220px,0.8fr)_auto] lg:items-end">
+          <div className="space-y-2">
+            <div className="text-xs font-medium uppercase text-muted-foreground">Document</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
+              <Badge variant={pendingCount > 0 ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
             </div>
           </div>
-          <div className="hidden lg:flex items-center gap-2 ml-2">
-            <span className="text-xs text-muted-foreground">Profil fiscal :</span>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Classification par défaut</Label>
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={referentialCode} />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Profil fiscal</Label>
             <Select value={fiscalCode} onValueChange={setFiscalCode}>
-              <SelectTrigger className="h-8 w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
                   <SelectItem key={p.code} value={p.code}>{p.label} (TVA {(p.vatRate * 100).toFixed(0)}%)</SelectItem>
@@ -456,32 +371,26 @@ export function BoqWorkspace({
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {(pendingLines.length > 0 || draftLineIds.length > 0) && (
-            <Button size="sm" variant="default" onClick={() => finalizeDraftLines(false)} disabled={finalizing || doc.isPending}>
-              {finalizing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-1" />}
-              Enregistrer le {labels.docPrefix.toUpperCase()} ({pendingLines.length + draftLineIds.length})
+          <div className="flex lg:justify-end">
+            <Button onClick={() => finalizeDraftLines(false)} disabled={pendingCount === 0 || finalizing || doc.isPending}>
+              {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
+              Enregistrer le {labels.docPrefix.toUpperCase()}{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </Button>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={addEmptyRow}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={addEmptyRow}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
 
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie assistée (métré)</Button>
+              <Button size="sm" variant="outline"><Calculator className="h-4 w-4 mr-1" />Calcul métré</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Ajouter une ligne</DialogTitle>
+                <DialogTitle>Calcul métré — ajouter au document</DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
@@ -670,67 +579,13 @@ export function BoqWorkspace({
             }
             onImported={() => doc.refetch()}
           />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="ghost" disabled={!displayedLines.length} title="Export CSV et envoi par email">
-                <Download className="h-4 w-4 mr-1" />CSV
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {isDocumentEmpty ? null : (
+              <Button size="sm" variant="ghost" onClick={() => setPendingLines([])} disabled={pendingLines.length === 0}>
+                <Trash2 className="h-4 w-4 mr-1" />Vider brouillon
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={downloadCsv}>
-                <Download className="h-4 w-4 mr-2" />Télécharger CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCsvEmailOpen(true)}>
-                <Mail className="h-4 w-4 mr-2" />Envoyer CSV par email
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <BoqDevisDialog
-            lines={displayedLines}
-            mode={devisMode}
-            contextId={contextId}
-            defaultTitle={`${labels.devis} — ${contextId.slice(0, 8)}`}
-            defaultEmail={defaultEmail}
-            triggerLabel={labels.devis}
-          />
-
-          {/* Diffusion contextuelle : PDF signé + CSV joint */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={!displayedLines.length}>
-                <Send className="h-4 w-4 mr-1" />Diffuser
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>Joindre PDF signé + CSV à…</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {diffusePresets.map((p) => (
-                <DropdownMenuItem key={p.key} onClick={() => openDiffuse(p)}>
-                  <Send className="h-4 w-4 mr-2" />{p.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Dialog contrôlé pour la diffusion contextuelle (PDF + CSV joints) */}
-          {diffusePreset && (
-            <BoqDevisDialog
-              lines={displayedLines}
-              mode={devisMode}
-              contextId={contextId}
-              defaultTitle={diffusePreset.title}
-              defaultEmail={diffusePreset.email ?? defaultEmail}
-              defaultNotes={diffusePreset.notes}
-              attachCsv
-              csvContent={buildCsv()}
-              hideTrigger
-              open={diffuseOpen}
-              onOpenChange={setDiffuseOpen}
-            />
-          )}
-
+            )}
           {mode === 'bid' && projectId && estimateId && (
             <Button size="sm" onClick={handleAlignPlanning} disabled={aligning}>
               {aligning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ArrowRightCircle className="h-4 w-4 mr-1" />}
@@ -740,31 +595,7 @@ export function BoqWorkspace({
         </div>
       </div>
 
-      {/* Dialog Envoyer CSV par email */}
-      <Dialog open={csvEmailOpen} onOpenChange={setCsvEmailOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Envoyer le CSV par email</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Destinataire</Label>
-              <Input type="email" value={csvEmailTo} onChange={(e) => setCsvEmailTo(e.target.value)} placeholder="destinataire@example.com" />
-            </div>
-            <div>
-              <Label>Objet</Label>
-              <Input value={csvEmailSubject} onChange={(e) => setCsvEmailSubject(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setCsvEmailOpen(false)}>Annuler</Button>
-            <Button onClick={sendCsvEmail} disabled={csvSending}>
-              {csvSending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}Envoyer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Récap fiscal */}
-      <div className="rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 border-b bg-muted/20 p-4 text-sm md:grid-cols-4">
         <div><div className="text-muted-foreground">Total HT</div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
         <div><div className="text-muted-foreground">TVA</div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
         {'totalRas' in totals && (totals as { totalRas?: number }).totalRas ? (
@@ -773,8 +604,7 @@ export function BoqWorkspace({
         <div><div className="text-muted-foreground">Total TTC</div><div className="font-semibold">{totals.totalTtc.toLocaleString('fr-FR')} MRU</div></div>
       </div>
 
-
-      {/* Tableau éditable */}
+      <div className="p-4">
       {doc.isLoading ? (
         <div className="text-sm text-muted-foreground">Chargement…</div>
       ) : (
@@ -788,6 +618,8 @@ export function BoqWorkspace({
           onRemove={handleRemove}
         />
       )}
+      </div>
+      </section>
     </div>
   );
 }

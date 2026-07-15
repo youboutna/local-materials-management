@@ -14,6 +14,7 @@ interface Props {
   ctx: BoqContext;
   lines: BoqLineDTO[];
   recipientEmail?: string;
+  disabled?: boolean;
   onAttachToSubmission?: () => void;
   onSubmitInvoice?: () => void;
   onDistribute?: () => void;
@@ -24,6 +25,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   ctx,
   lines,
   recipientEmail,
+  disabled = false,
   onAttachToSubmission,
   onSubmitInvoice,
   onDistribute,
@@ -79,49 +81,49 @@ export const BoqActionsBar: React.FC<Props> = ({
   return (
     <div className="flex flex-wrap gap-2">
       {can('generatePdf') && (
-        <Button size="sm" variant="outline" onClick={handleGenerate} disabled={busy !== null}>
+        <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null}>
           {iconOf('pdf') ?? <FileDown className="h-4 w-4 mr-2" />}
           Générer PDF
         </Button>
       )}
       {can('sign') && (
-        <Button size="sm" variant="outline" onClick={handleSign} disabled={busy !== null}>
+        <Button size="sm" variant="outline" onClick={handleSign} disabled={disabled || busy !== null}>
           {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
           Signer
         </Button>
       )}
       {can('email') && (
-        <Button size="sm" variant="outline" onClick={handleEmail} disabled={busy !== null}>
+        <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null}>
           {iconOf('email') ?? <Mail className="h-4 w-4 mr-2" />}
           Envoyer email
         </Button>
       )}
       {can('download') && (
-        <Button size="sm" variant="outline" onClick={handleDownload} disabled={busy !== null}>
+        <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null}>
           {iconOf('download') ?? <Download className="h-4 w-4 mr-2" />}
           Télécharger
         </Button>
       )}
       {can('distribute') && onDistribute && (
-        <Button size="sm" variant="outline" onClick={onDistribute}>
+        <Button size="sm" variant="outline" onClick={onDistribute} disabled={disabled || busy !== null}>
           <Send className="h-4 w-4 mr-2" />
           Diffuser
         </Button>
       )}
       {can('attachToSubmission') && onAttachToSubmission && (
-        <Button size="sm" onClick={onAttachToSubmission}>
+        <Button size="sm" onClick={onAttachToSubmission} disabled={disabled || busy !== null}>
           <Paperclip className="h-4 w-4 mr-2" />
           Joindre à ma soumission
         </Button>
       )}
       {can('submitInvoice') && onSubmitInvoice && (
-        <Button size="sm" onClick={onSubmitInvoice}>
+        <Button size="sm" onClick={onSubmitInvoice} disabled={disabled || busy !== null}>
           <FileCheck2 className="h-4 w-4 mr-2" />
           Soumettre pour paiement
         </Button>
       )}
       {can('publish') && onPublish && (
-        <Button size="sm" onClick={onPublish}>
+        <Button size="sm" onClick={onPublish} disabled={disabled || busy !== null}>
           <Send className="h-4 w-4 mr-2" />
           Publier
         </Button>

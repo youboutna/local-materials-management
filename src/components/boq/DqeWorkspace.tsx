@@ -1,10 +1,10 @@
 /**
  * DqeWorkspace — coquille mutualisée pour DQE projet / estimation tender /
  * devis fournisseur / facture fournisseur. Compose :
- *   • BoqKpiHeader (Total HT · TVA · TTC · nb lignes)
- *   • BoqActionsBar (PDF · Signer · Email · Télécharger · Diffuser · …)
- *   • BoqWorkspace existant (saisie + import + fiscal + WBS)
- *   • Sous-onglets optionnels (Lignes / Comparaison / Suivi budget)
+ *   • Un seul conteneur document (pas une liste d'enregistrements)
+ *   • BoqActionsBar conditionnée par l'état réel du document
+ *   • BoqWorkspace (saisie/import/fiscal/WBS/grille) dans le même bloc
+ *   • Analyses optionnelles sous le document, sans casser l'UX de saisie
  *
  * Aucune requête directe supabase. Toutes les lectures passent par useBoqDocument.
  */
@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-react';
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
-import { BoqKpiHeader } from './BoqKpiHeader';
 import { BoqActionsBar } from './BoqActionsBar';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
@@ -69,44 +68,50 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
   const mode = MODE_BY_ROUTE[props.routeContext];
 
+  const actionableLines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
+  const hasDocument = actionableLines.length > 0;
+
   return (
     <div className="space-y-4">
-      <BoqKpiHeader lines={doc.lines ?? []} />
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
             {ctx.title}
           </CardTitle>
-          <BoqActionsBar
-            ctx={ctx}
-            lines={doc.lines ?? []}
-            recipientEmail={props.recipientEmail}
-            onAttachToSubmission={props.onAttachToSubmission}
-            onSubmitInvoice={props.onSubmitInvoice}
-            onDistribute={props.onDistribute}
-            onPublish={props.onPublish}
-          />
+          {hasDocument && (
+            <BoqActionsBar
+              ctx={ctx}
+              lines={actionableLines}
+              recipientEmail={props.recipientEmail}
+              disabled={doc.isLoading}
+              onAttachToSubmission={props.onAttachToSubmission}
+              onSubmitInvoice={props.onSubmitInvoice}
+              onDistribute={props.onDistribute}
+              onPublish={props.onPublish}
+            />
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
+          <BoqWorkspace
+            source={workspaceSource}
+            contextId={ctx.contextId}
+            projectId={props.projectId}
+            mode={mode}
+            referentialCode={props.referentialCode}
+            defaultEmail={props.recipientEmail}
+          />
+        </CardContent>
+      </Card>
+
           {props.showComparison ? (
-            <Tabs defaultValue="lines" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="lines"><FileSpreadsheet className="h-4 w-4 mr-1" /> Lignes</TabsTrigger>
+        <Card>
+          <CardContent className="p-4">
+            <Tabs defaultValue="compare" className="space-y-4">
+              <TabsList className="w-full justify-start">
                 <TabsTrigger value="compare"><GitCompare className="h-4 w-4 mr-1" /> Comparaison besoin ↔ DQE</TabsTrigger>
                 <TabsTrigger value="budget"><LayoutDashboard className="h-4 w-4 mr-1" /> Suivi budget</TabsTrigger>
               </TabsList>
-              <TabsContent value="lines">
-                <BoqWorkspace
-                  source={workspaceSource}
-                  contextId={ctx.contextId}
-                  projectId={props.projectId}
-                  mode={mode}
-                  referentialCode={props.referentialCode}
-                  defaultEmail={props.recipientEmail}
-                />
-              </TabsContent>
               <TabsContent value="compare">
                 {doc.isLoading || dqeCompare.isLoading ? (
                   <div className="text-sm text-muted-foreground">Chargement…</div>
@@ -126,18 +131,9 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
                 )}
               </TabsContent>
             </Tabs>
-          ) : (
-            <BoqWorkspace
-              source={workspaceSource}
-              contextId={ctx.contextId}
-              projectId={props.projectId}
-              mode={mode}
-              referentialCode={props.referentialCode}
-              defaultEmail={props.recipientEmail}
-            />
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 };
