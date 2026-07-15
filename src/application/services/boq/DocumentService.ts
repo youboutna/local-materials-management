@@ -19,7 +19,8 @@ export interface DocumentContext {
 export const DocumentService = {
   /** Génère un CSV (proxy PDF pour l'instant — DevisGenerator existant). */
   async generate(lines: BoqLineDTO[], ctx: DocumentContext): Promise<{ blob: Blob; filename: string }> {
-    const csv = DevisGenerator.toCsv(lines);
+    const doc = DevisGenerator.aggregate(lines);
+    const csv = DevisGenerator.toCsv(doc);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const stamp = new Date().toISOString().slice(0, 10);
     const filename = `${ctx.docPrefix}-${stamp}.csv`;
