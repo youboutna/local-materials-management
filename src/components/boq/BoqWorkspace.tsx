@@ -477,7 +477,7 @@ export function BoqWorkspace({
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie manuelle</Button>
+              <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Saisie assistée (métré)</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
