@@ -38,6 +38,7 @@ import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
@@ -230,6 +231,33 @@ export function BoqWorkspace({
     setOpenManual(false);
   };
 
+  /**
+   * Shadow write dans `btp.quantity_takeoffs` pour toute ligne matériau
+   * comportant un `elementType` (≠ generic) et au moins une dimension.
+   * Vise à alimenter le dimensionnement BTP indépendamment du contexte
+   * (planning DQE, chiffrage AO, facture) — cf. règle métier "métré BTP pur".
+   */
+  const shadowQuantityTakeoff = async (d: BoqLineDTO) => {
+    if (!projectId) return;
+    if (d.source === 'quantity_takeoff') return;
+    if (!d.materialId) return;
+    if (!d.elementType || d.elementType === 'generic') return;
+    const hasDim = (d.length ?? 0) > 0 || (d.width ?? 0) > 0 || (d.height ?? 0) > 0;
+    if (!hasDim) return;
+    try {
+      await boqRepository.create({
+        ...d,
+        id: undefined,
+        source: 'quantity_takeoff',
+        contextId: projectId,
+        sourceType: 'avance',
+      });
+    } catch (e) {
+      // non bloquant : la ligne principale reste persistée
+      console.warn('[BoqWorkspace] shadow quantity_takeoff skipped:', e instanceof Error ? e.message : e);
+    }
+  };
+
   // Flush drafts → base (appelé explicitement par l'utilisateur ou avant diffusion)
   const flushDrafts = async (silent = false): Promise<boolean> => {
     if (drafts.length === 0) return true;
@@ -241,6 +269,7 @@ export function BoqWorkspace({
         const { id: _localId, ...payload } = d;
         void _localId;
         await doc.createLine(payload);
+        await shadowQuantityTakeoff(payload as BoqLineDTO);
       }
       setDrafts([]);
       if (!silent) toast({ title: `${drafts.length} ligne(s) enregistrée(s)` });
@@ -721,6 +750,7 @@ export function BoqWorkspace({
           emptyLabel={emptyLabel ?? labels.empty}
           editable
           referentialCode={referentialCode}
+          phases={projectPhases.length > 0 ? projectPhases : undefined}
           onChange={handlePatch}
           onRemove={handleRemove}
         />
