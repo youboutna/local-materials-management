@@ -50,6 +50,9 @@ export interface BoqDbRow {
   btp_code?: string | null;
   line_type?: string | null;
   status?: BoqLineDTO['status'] | null;
+  document_id?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string | null;
 }
 
 export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> = {
