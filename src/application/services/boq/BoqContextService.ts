@@ -48,7 +48,7 @@ const MATRIX: Record<BoqRouteContext, { source: BoqSource; actions: BoqAction[];
   'project-dqe':      { source: 'dqe',              actions: ['create', 'import', 'generatePdf', 'email', 'download', 'distribute'], title: 'DQE global',           docPrefix: 'dqe' },
   'tender-estimate':  { source: 'tender_estimate',  actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'publish'],                 title: 'Estimation appel d’offres', docPrefix: 'estimation' },
   'supplier-bid':     { source: 'supplier_bid',     actions: ['create', 'import', 'generatePdf', 'sign', 'download', 'attachToSubmission'],               title: 'Devis fournisseur',   docPrefix: 'devis' },
-  'supplier-invoice': { source: 'supplier_bid',     actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'submitInvoice'],           title: 'Facture fournisseur', docPrefix: 'facture' },
+  'supplier-invoice': { source: 'invoice',          actions: ['create', 'import', 'generatePdf', 'sign', 'email', 'download', 'submitInvoice'],           title: 'Facture fournisseur', docPrefix: 'facture' },
 };
 
 export const BoqContextService = {
