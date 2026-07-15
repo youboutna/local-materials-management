@@ -256,20 +256,33 @@ export function BoqWorkspace({
   };
 
   // ---- Édition inline --------------------------------------------------------
+  const displayedLines = useMemo(() => [...doc.lines, ...drafts], [doc.lines, drafts]);
   const handlePatch = async (index: number, patch: Partial<BoqLineDTO>) => {
-    const line = doc.lines[index];
+    const line = displayedLines[index];
     if (!line?.id) return;
+    // Ligne brouillon locale : patch en mémoire, pas d'appel réseau
+    if (String(line.id).startsWith('draft-')) {
+      setDrafts((prev) => prev.map((d) => (d.id === line.id ? { ...d, ...patch } : d)));
+      return;
+    }
     try { await doc.updateLine(line.id, patch); } catch (e) {
       toast({ title: 'Échec mise à jour', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     }
   };
   const handleRemove = async (index: number) => {
-    const line = doc.lines[index];
+    const line = displayedLines[index];
     if (!line?.id) return;
+    if (String(line.id).startsWith('draft-')) {
+      setDrafts((prev) => prev.filter((d) => d.id !== line.id));
+      return;
+    }
     try { await doc.deleteLine(line.id, source); } catch (e) {
       toast({ title: 'Échec suppression', variant: 'destructive' });
     }
   };
+
+  // ---- Récap fiscal (inclut brouillons) --------------------------------------
+  const totals = useMemo(() => BoqCalculatorService.aggregate(displayedLines), [displayedLines]);
 
   // ---- Récap fiscal ----------------------------------------------------------
   const totals = useMemo(() => BoqCalculatorService.aggregate(doc.lines), [doc.lines]);
