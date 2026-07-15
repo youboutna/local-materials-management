@@ -505,7 +505,7 @@ export function BoqWorkspace({
                     value={wbs}
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
-                    referentialCode={referentialCode}
+                    referentialCode={activeReferential}
                   />
                 </div>
 
