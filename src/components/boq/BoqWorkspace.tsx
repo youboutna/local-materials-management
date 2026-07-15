@@ -284,14 +284,11 @@ export function BoqWorkspace({
   // ---- Récap fiscal (inclut brouillons) --------------------------------------
   const totals = useMemo(() => BoqCalculatorService.aggregate(displayedLines), [displayedLines]);
 
-  // ---- Récap fiscal ----------------------------------------------------------
-  const totals = useMemo(() => BoqCalculatorService.aggregate(doc.lines), [doc.lines]);
-
   // ---- Devis / Facture : PDF + e-signature + email via BoqDevisDialog --------
   const devisMode: BoqDevisMode = mode === 'invoice' ? 'facture' : mode === 'bid' ? 'devis' : 'dqe';
 
   const buildCsv = () => {
-    const devis = DevisGenerator.aggregate(doc.lines, 'phaseId');
+    const devis = DevisGenerator.aggregate(displayedLines, 'phaseId');
     return DevisGenerator.toCsv(devis);
   };
   const csvFileName = () => `${labels.docPrefix}_${contextId.slice(0, 8)}_${new Date().toISOString().slice(0, 10)}.csv`;
