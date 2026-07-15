@@ -23,6 +23,7 @@ import type { ReferentialType } from '@/config/referentials';
 interface Props {
   routeContext: BoqRouteContext;
   projectId?: string;
+  projectName?: string;
   tenderId?: string;
   submissionId?: string;
   senderId?: string;
