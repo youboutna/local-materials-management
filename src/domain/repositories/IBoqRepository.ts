@@ -9,5 +9,6 @@ export interface IBoqRepository {
   bulkCreate(dtos: BoqLineDTO[]): Promise<BoqLineDTO[]>;
   create(dto: BoqLineDTO): Promise<BoqLineDTO>;
   update(id: string, dto: Partial<BoqLineDTO>): Promise<BoqLineDTO>;
+  updateStatus(ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']): Promise<void>;
   delete(id: string, source: BoqLineDTO['source']): Promise<void>;
 }

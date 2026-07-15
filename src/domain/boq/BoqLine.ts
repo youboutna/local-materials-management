@@ -10,7 +10,10 @@ export type BoqSource =
   | 'quantity_takeoff'
   | 'tender_estimate'
   | 'supplier_bid'
+  | 'invoice'
   | 'dqe';
+
+export type BoqStatus = 'draft' | 'submitted' | 'validated' | 'rejected' | 'invoiced' | 'paid' | 'archived';
 
 export type BoqResourceType = 'material' | 'labor' | 'equipment';
 
@@ -35,6 +38,7 @@ export interface BoqLineProps {
   note?: string | null;
   bidRef?: string | null;
   submittedBy?: string | null;
+  status?: BoqStatus;
 }
 
 export class BoqLine {
@@ -68,6 +72,7 @@ export class BoqLine {
   get note() { return this.props.note ?? null; }
   get bidRef() { return this.props.bidRef ?? null; }
   get submittedBy() { return this.props.submittedBy ?? null; }
+  get status(): BoqStatus { return this.props.status ?? 'draft'; }
 
   toJSON(): BoqLineProps { return { ...this.props }; }
 }

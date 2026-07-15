@@ -43,6 +43,9 @@ export function useBoqDocument(filter: BoqLineFilter) {
   const deleteMut = useMutation({
     mutationFn: (p: { id: string; source: BoqLineDTO['source'] }) => boqRepository.delete(p.id, p.source),
   });
+  const updateStatusMut = useMutation({
+    mutationFn: (p: { ids: string[]; status: NonNullable<BoqLineDTO['status']>; source: BoqLineDTO['source'] }) => boqRepository.updateStatus(p.ids, p.status, p.source),
+  });
 
   return {
     lines: query.data ?? [],
@@ -53,7 +56,8 @@ export function useBoqDocument(filter: BoqLineFilter) {
     createLine: async (dto: BoqLineDTO) => { const r = await createMut.mutateAsync(dto); invalidate(); return r; },
     bulkCreate: async (dtos: BoqLineDTO[]) => { const r = await bulkCreateMut.mutateAsync(dtos); invalidate(); return r; },
     updateLine: async (id: string, dto: Partial<BoqLineDTO>) => { const r = await updateMut.mutateAsync({ id, dto }); invalidate(); return r; },
+    updateStatus: async (ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']) => { await updateStatusMut.mutateAsync({ ids, status, source }); invalidate(); },
     deleteLine: async (id: string, source: BoqLineDTO['source']) => { await deleteMut.mutateAsync({ id, source }); invalidate(); },
-    isPending: createMut.isPending || bulkCreateMut.isPending || updateMut.isPending || deleteMut.isPending,
+    isPending: createMut.isPending || bulkCreateMut.isPending || updateMut.isPending || deleteMut.isPending || updateStatusMut.isPending,
   };
 }

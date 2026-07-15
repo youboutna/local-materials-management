@@ -53,9 +53,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     senderId: props.senderId,
   });
 
-  // Pour le contexte projet-DQE, on charge quantity_takeoff (expression de besoin)
-  // — c'est ce que BoqWorkspace persiste en mode planning, cohérent avec le KPI.
-  const workspaceSource = props.routeContext === 'project-dqe' ? 'quantity_takeoff' : ctx.source;
+  const workspaceSource = ctx.source;
   const doc = useBoqDocument({
     source: workspaceSource,
     contextId: ctx.contextId,
