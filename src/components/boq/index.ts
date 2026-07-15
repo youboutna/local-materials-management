@@ -45,6 +45,12 @@ export { BoqComparisonTable } from '@/components/boq/BoqComparisonTable';
 export { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 export { BoqBudgetDashboard } from '@/components/boq/BoqBudgetDashboard';
 export { BoqWorkspace, type BoqWorkspaceMode } from '@/components/boq/BoqWorkspace';
+export { DqeWorkspace } from '@/components/boq/DqeWorkspace';
+export { BoqKpiHeader } from '@/components/boq/BoqKpiHeader';
+export { BoqActionsBar } from '@/components/boq/BoqActionsBar';
+export { BoqContextService, type BoqContext, type BoqRouteContext, type BoqAction } from '@/application/services/boq/BoqContextService';
+export { DocumentService } from '@/application/services/boq/DocumentService';
+export { BoqWorkflowService, type BoqStatus, type BoqTransitionAction } from '@/application/services/boq/BoqWorkflowService';
 export { ResourceSelector, type ResourceOption } from '@/components/boq/ResourceSelector';
 export { MappingModal, MAPPING_FIELDS } from '@/components/boq/MappingModal';
 
