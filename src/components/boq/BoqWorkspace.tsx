@@ -611,7 +611,7 @@ export function BoqWorkspace({
             source={source}
             contextId={contextId}
             projectId={projectId}
-            defaultReferentialCode={referentialCode}
+            defaultReferentialCode={activeReferential}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline">
