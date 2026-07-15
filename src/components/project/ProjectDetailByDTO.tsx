@@ -1239,7 +1239,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
         <TabsContent value="dqe" className="mt-6">
-          <ProjectDqeTab projectId={projectId!} referentialCode={project?.referentialCode} />
+          <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
         </TabsContent>
 
 
