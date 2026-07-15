@@ -78,6 +78,11 @@ export function BoqWorkspace({
   const doc = useBoqDocument({ source, contextId, projectId });
   const { toast } = useToast();
   const labels = LABELS[mode];
+  // Référentiel actif — défaut = référentiel du projet courant (prop),
+  // modifiable pour enrichir le mapping (phases/étapes/tâches alternatives).
+  const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(referentialCode);
+  useEffect(() => { setActiveReferential(referentialCode); }, [referentialCode]);
+  const referentialOptions = useMemo(() => getReferentialOptions('fr'), []);
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
