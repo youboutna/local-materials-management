@@ -450,11 +450,10 @@ const EnhancedSupplierTenderPortal = () => {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="browse">{t('supplier_tender.tabs.browse')}</TabsTrigger>
           <TabsTrigger value="documents">{t('supplier_tender.tabs.documents')}</TabsTrigger>
           <TabsTrigger value="submit">{t('supplier_tender.tabs.submit')}</TabsTrigger>
-          <TabsTrigger value="estimate">{t('supplier_tender.tabs.estimate')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
@@ -478,17 +477,29 @@ const EnhancedSupplierTenderPortal = () => {
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <Badge variant="default">{t('supplier_tender.title')}</Badge>
-                        <Button 
-                          onClick={() => {
-                            setSelectedTender(tender);
-                            setActiveTab('submit');
-                          }}
-                          size="sm"
-                        >
-                          {t('supplier_tender.actions.submit')}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('boq-create-quote', { detail: { tenderId: tender.id } }));
+                            }}
+                          >
+                            <Calculator className="h-3.5 w-3.5 mr-1" />
+                            Créer un devis
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedTender(tender);
+                              setActiveTab('submit');
+                            }}
+                            size="sm"
+                          >
+                            {t('supplier_tender.actions.submit')}
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="text-xs text-muted-foreground space-y-1">
@@ -752,24 +763,7 @@ const EnhancedSupplierTenderPortal = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="estimate" className="space-y-6">
-          {selectedTender ? (
-            <SupplierBidBoq tenderId={selectedTender.id} />
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Calculator className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
-                <p className="text-muted-foreground mb-4">
-                  Choisissez un appel d'offres pour créer votre devis quantitatif estimatif.
-                </p>
-                <Button onClick={() => setActiveTab('browse')}>
-                  Parcourir les appels d'offres
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {/* Estimate tab retiré : le devis se crée depuis l'onglet "Devis" du portail (BoqWorkspace unifié). */}
       </Tabs>
     </div>
     </SupplierTenderAccessGuard>
