@@ -14,6 +14,7 @@ interface Props {
 export const BoqKpiHeader: React.FC<Props> = ({ lines, currency = 'MRU' }) => {
   const totals = useMemo(() => {
     const inputs = lines.map((l) => ({
+      unit: l.unit ?? 'u',
       quantity: l.quantity ?? 0,
       unitPrice: l.unitPrice ?? 0,
       vatRate: l.vatRate ?? 0,
