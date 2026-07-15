@@ -96,6 +96,10 @@ const UnifiedSupplierPortal = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "documents";
   const [activeTab, setActiveTab] = useState(initialTab);
+  // v3.2 : tender sélectionné pour créer un devis depuis l'onglet Appels d'Offres.
+  const [selectedBidTenderId, setSelectedBidTenderId] = useState<string | null>(
+    searchParams.get("tenderId"),
+  );
 
   // Keep tab state in sync with URL (e.g. redirect from /supplier-access after code secret validation).
   useEffect(() => {
@@ -103,6 +107,24 @@ const UnifiedSupplierPortal = () => {
     if (urlTab && urlTab !== activeTab) setActiveTab(urlTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Event bridge : EnhancedSupplierTenderPortal fires `boq-create-quote` with tenderId
+  // ⇒ on bascule vers l'onglet Devis avec le contexte pré-rempli.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ tenderId?: string }>).detail;
+      if (detail?.tenderId) {
+        setSelectedBidTenderId(detail.tenderId);
+        setActiveTab("devis");
+        const next = new URLSearchParams(searchParams);
+        next.set("tab", "devis");
+        next.set("tenderId", detail.tenderId);
+        setSearchParams(next, { replace: true });
+      }
+    };
+    window.addEventListener("boq-create-quote", handler);
+    return () => window.removeEventListener("boq-create-quote", handler);
+  }, [searchParams, setSearchParams]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -723,12 +745,17 @@ const UnifiedSupplierPortal = () => {
             {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
             <TabsContent value="devis">
               {supplierProfile?.id ? (
-                <DqeWorkspace
-                  routeContext="supplier-bid"
-                  senderId={supplierProfile.id}
-                  submissionId={supplierProfile.id}
-                  recipientEmail={supplierProfile.email ?? undefined}
-                />
+                selectedBidTenderId ? (
+                  <DqeWorkspace
+                    routeContext="supplier-bid"
+                    tenderId={selectedBidTenderId}
+                    senderId={supplierProfile.id}
+                    submissionId={supplierProfile.id}
+                    recipientEmail={supplierProfile.email ?? undefined}
+                  />
+                ) : (
+                  <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Sélectionnez un appel d'offres dans l'onglet « Appels d'Offres » puis cliquez « Créer un devis » pour démarrer le chiffrage.</p></CardContent></Card>
+                )
               ) : (
                 <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
               )}

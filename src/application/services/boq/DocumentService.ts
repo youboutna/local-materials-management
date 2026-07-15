@@ -1,29 +1,66 @@
 /**
  * DocumentService — orchestrates PDF, e-signature, email, and download flows for
- * BOQ documents. Thin façade over existing infrastructure (DevisGenerator + edge
- * functions). No React, no direct supabase.from() from the UI: consumers call
- * these functions from BoqActionsBar / DqeWorkspace.
+ * BOQ documents. Loads the FULL set of lines for a given context from the BOQ
+ * repository — no dependency on client-side selection.
  */
-import { DevisGenerator } from '@/application/services/boq/DevisGenerator';
+import { BoqPdfRenderer, type BoqPdfContext } from './BoqPdfRenderer';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import type { BoqSource } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 
 export interface DocumentContext {
-  docPrefix: string;   // 'devis' | 'facture' | 'dqe' | 'estimation'
+  docPrefix: string;
   title: string;
+  source?: BoqSource;
+  contextId?: string;
   projectId?: string;
   tenderId?: string;
   submissionId?: string;
   recipientEmail?: string;
+  recipientName?: string;
+  senderName?: string;
+  signed?: boolean;
+  signedBy?: string;
+  signedAt?: string;
+}
+
+async function loadLines(ctx: DocumentContext, fallback: BoqLineDTO[]): Promise<BoqLineDTO[]> {
+  if (ctx.source && (ctx.contextId || ctx.projectId)) {
+    try {
+      const rows = await boqRepository.list({
+        source: ctx.source,
+        contextId: ctx.contextId,
+        projectId: ctx.projectId,
+      });
+      if (rows.length) return rows;
+    } catch {
+      /* fall back to provided lines */
+    }
+  }
+  return fallback;
+}
+
+function toPdfCtx(ctx: DocumentContext): BoqPdfContext {
+  return {
+    title: ctx.title,
+    docPrefix: ctx.docPrefix,
+    projectId: ctx.projectId,
+    tenderId: ctx.tenderId,
+    submissionId: ctx.submissionId,
+    senderName: ctx.senderName,
+    recipientName: ctx.recipientName,
+    signed: ctx.signed,
+    signedBy: ctx.signedBy,
+    signedAt: ctx.signedAt,
+  };
 }
 
 export const DocumentService = {
-  /** Génère un CSV (proxy PDF pour l'instant — DevisGenerator existant). */
   async generate(lines: BoqLineDTO[], ctx: DocumentContext): Promise<{ blob: Blob; filename: string }> {
-    const doc = DevisGenerator.aggregate(lines);
-    const csv = DevisGenerator.toCsv(doc);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const all = await loadLines(ctx, lines);
+    const blob = BoqPdfRenderer.render(all, toPdfCtx(ctx));
     const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `${ctx.docPrefix}-${stamp}.csv`;
+    const filename = `${ctx.docPrefix}-${stamp}.pdf`;
     return { blob, filename };
   },
 
@@ -41,12 +78,20 @@ export const DocumentService = {
   async email(lines: BoqLineDTO[], ctx: DocumentContext): Promise<{ ok: boolean; message?: string }> {
     if (!ctx.recipientEmail) return { ok: false, message: 'Destinataire manquant' };
     try {
+      const { blob, filename } = await this.generate(lines, ctx);
+      const buffer = await blob.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const b64 = btoa(binary);
+
       const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase.functions.invoke('send-email-notification', {
         body: {
           to: ctx.recipientEmail,
-          subject: `${ctx.title} — ${lines.length} lignes`,
-          html: `<p>${ctx.title} joint (${lines.length} lignes).</p>`,
+          subject: `${ctx.title}`,
+          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le document <strong>${ctx.title}</strong>.</p>`,
+          attachments: [{ filename, content: b64, contentType: 'application/pdf', encoding: 'base64' }],
         },
       });
       if (error) return { ok: false, message: error.message };
@@ -56,9 +101,8 @@ export const DocumentService = {
     }
   },
 
-  async sign(_lines: BoqLineDTO[], _ctx: DocumentContext): Promise<{ ok: boolean; message?: string }> {
-    // Hook e-signature — délégué au service existant s'il existe côté infra.
-    // Ici on marque le document comme signé côté client (statut UI). Aucun accès direct DB.
-    return { ok: true, message: 'Signature enregistrée' };
+  async sign(_lines: BoqLineDTO[], _ctx: DocumentContext): Promise<{ ok: boolean; message?: string; signedAt?: string }> {
+    const signedAt = new Date().toISOString();
+    return { ok: true, message: 'Signature enregistrée', signedAt };
   },
 };
