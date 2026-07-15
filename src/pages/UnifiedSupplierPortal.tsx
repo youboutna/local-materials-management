@@ -745,12 +745,17 @@ const UnifiedSupplierPortal = () => {
             {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
             <TabsContent value="devis">
               {supplierProfile?.id ? (
-                <DqeWorkspace
-                  routeContext="supplier-bid"
-                  senderId={supplierProfile.id}
-                  submissionId={supplierProfile.id}
-                  recipientEmail={supplierProfile.email ?? undefined}
-                />
+                selectedBidTenderId ? (
+                  <DqeWorkspace
+                    routeContext="supplier-bid"
+                    tenderId={selectedBidTenderId}
+                    senderId={supplierProfile.id}
+                    submissionId={supplierProfile.id}
+                    recipientEmail={supplierProfile.email ?? undefined}
+                  />
+                ) : (
+                  <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Sélectionnez un appel d'offres dans l'onglet « Appels d'Offres » puis cliquez « Créer un devis » pour démarrer le chiffrage.</p></CardContent></Card>
+                )
               ) : (
                 <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
               )}
