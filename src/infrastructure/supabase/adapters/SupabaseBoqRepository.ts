@@ -15,6 +15,7 @@ export class SupabaseBoqRepository implements IBoqRepository {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = (supabase as any).from(TABLE).select('*').eq('line_type', BOQ_LINE_TYPE_BY_SOURCE[filter.source]);
     if (filter.source === 'dqe') q = q.eq('source_type', 'dqe');
+    if (filter.documentId) q = q.eq('document_id', filter.documentId);
     if (filter.source === 'quantity_takeoff' && (filter.projectId || filter.contextId)) q = q.eq('project_id', filter.projectId ?? filter.contextId);
     else if (filter.source === 'dqe' && (filter.projectId || filter.contextId)) q = q.eq('project_id', filter.projectId ?? filter.contextId);
     else if (filter.source === 'tender_estimate' && (filter.tenderId || filter.contextId)) q = q.eq('tender_id', filter.tenderId ?? filter.contextId);

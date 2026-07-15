@@ -1,19 +1,23 @@
 /**
- * DqeWorkspace — coquille mutualisée pour DQE projet / estimation tender /
- * devis fournisseur / facture fournisseur. Compose :
- *   • Un seul conteneur document (pas une liste d'enregistrements)
- *   • BoqActionsBar conditionnée par l'état réel du document
- *   • BoqWorkspace (saisie/import/fiscal/WBS/grille) dans le même bloc
- *   • Analyses optionnelles sous le document, sans casser l'UX de saisie
+ * DqeWorkspace — coquille mutualisée Liste ↔ Détail pour les 4 contextes :
+ *   • project-dqe       (Expression de besoin / DQE projet)
+ *   • tender-estimate   (DQE Appel d'offres)
+ *   • supplier-bid      (Devis fournisseur)
+ *   • supplier-invoice  (Décompte / Facture)
  *
- * Aucune requête directe supabase. Toutes les lectures passent par useBoqDocument.
+ * Vue Liste : agrégation des lignes par `document_id` (BoqDocumentList).
+ * Vue Détail : BoqWorkspace + BoqActionsBar pour un document précis.
+ *
+ * Aucune requête directe Supabase — tout passe par les hooks hexagonaux.
  */
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-react';
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
 import { BoqActionsBar } from './BoqActionsBar';
+import { BoqDocumentList } from './BoqDocumentList';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
@@ -29,7 +33,6 @@ interface Props {
   senderId?: string;
   referentialCode?: ReferentialType;
   recipientEmail?: string;
-  /** Active la comparaison Expression de besoin ↔ DQE et le suivi budget (projet seulement). */
   showComparison?: boolean;
   onAttachToSubmission?: () => void;
   onSubmitInvoice?: () => void;
@@ -45,32 +48,53 @@ const MODE_BY_ROUTE: Record<BoqRouteContext, BoqWorkspaceMode> = {
 };
 
 export const DqeWorkspace: React.FC<Props> = (props) => {
-  const ctx = BoqContextService.resolve({
+  const ctx = useMemo(() => BoqContextService.resolve({
     routeContext: props.routeContext,
     projectId: props.projectId,
     tenderId: props.tenderId,
     submissionId: props.submissionId,
     senderId: props.senderId,
-  });
+  }), [props.routeContext, props.projectId, props.tenderId, props.submissionId, props.senderId]);
 
-  const workspaceSource = ctx.source;
+  const mode = MODE_BY_ROUTE[props.routeContext];
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+
+  // Détail : lignes du document courant (pour la BoqActionsBar).
   const doc = useBoqDocument({
-    source: workspaceSource,
+    source: ctx.source,
     contextId: ctx.contextId,
     projectId: props.projectId,
+    documentId: selectedDocumentId ?? undefined,
   });
 
-  // Comparaison optionnelle (projet uniquement) : DQE canonique vs expression de besoin.
+  // Comparaison optionnelle (projet uniquement).
   const dqeCompare = useBoqDocument({
     source: 'dqe',
     contextId: props.projectId ?? ctx.contextId,
     projectId: props.projectId,
+    documentId: selectedDocumentId ?? undefined,
   });
 
-  const mode = MODE_BY_ROUTE[props.routeContext];
+  // ------------------------------------------------------------- Vue Liste
+  if (!selectedDocumentId) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="p-4">
+          <BoqDocumentList
+            source={ctx.source}
+            contextId={ctx.contextId}
+            projectId={props.projectId}
+            title={ctx.title}
+            docPrefix={ctx.docPrefix}
+            onOpen={(id) => setSelectedDocumentId(id)}
+            onCreate={(id) => setSelectedDocumentId(id)}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Actions rattachées au document courant — toujours visibles, réactives à l'état
-  // (désactivées tant que le document ne contient pas de ligne persistée).
+  // ------------------------------------------------------------ Vue Détail
   const actionableLines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
   const noActionableLines = actionableLines.length === 0;
 
@@ -78,10 +102,15 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     <div className="space-y-4">
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5" />
-            {ctx.title}
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDocumentId(null)}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Retour à la liste
+            </Button>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5" />
+              {ctx.title}
+            </CardTitle>
+          </div>
           <BoqActionsBar
             ctx={ctx}
             lines={actionableLines}
@@ -95,18 +124,19 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
         </CardHeader>
         <CardContent className="p-0">
           <BoqWorkspace
-            source={workspaceSource}
+            source={ctx.source}
             contextId={ctx.contextId}
             projectId={props.projectId}
             projectName={props.projectName}
             mode={mode}
             referentialCode={props.referentialCode}
             defaultEmail={props.recipientEmail}
+            documentId={selectedDocumentId}
           />
         </CardContent>
       </Card>
 
-          {props.showComparison ? (
+      {props.showComparison ? (
         <Card>
           <CardContent className="p-4">
             <Tabs defaultValue="compare" className="space-y-4">

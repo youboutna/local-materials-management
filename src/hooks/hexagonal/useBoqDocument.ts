@@ -9,7 +9,7 @@ import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 
 export function useBoqDocument(filter: BoqLineFilter) {
   const qc = useQueryClient();
-  const key = ['boq', filter.source, filter.contextId ?? filter.projectId ?? filter.estimateId, filter.phaseId ?? '', filter.resourceType ?? ''];
+  const key = ['boq', filter.source, filter.contextId ?? filter.projectId ?? filter.estimateId, filter.phaseId ?? '', filter.resourceType ?? '', filter.documentId ?? ''];
 
   const query = useQuery({
     queryKey: key,

@@ -50,6 +50,9 @@ export interface BoqDbRow {
   btp_code?: string | null;
   line_type?: string | null;
   status?: BoqLineDTO['status'] | null;
+  document_id?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string | null;
 }
 
 export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> = {
@@ -97,6 +100,9 @@ export class BoqLineMapper {
       sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
       btpCode: row.btp_code ?? null,
       status: row.status ?? 'draft',
+      documentId: row.document_id ?? null,
+      title: (row.metadata as { title?: string } | null)?.title ?? null,
+      createdAt: row.created_at ?? null,
     };
   }
 
@@ -128,6 +134,8 @@ export class BoqLineMapper {
       btp_code: dto.btpCode ?? null,
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
+      document_id: dto.documentId ?? null,
+      metadata: dto.title ? { title: dto.title } : undefined,
     };
   }
 

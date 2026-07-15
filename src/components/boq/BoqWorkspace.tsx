@@ -63,6 +63,8 @@ interface Props {
   importLabel?: string;
   /** conservé pour compatibilité des contextes qui fournissent un destinataire */
   defaultEmail?: string;
+  /** Identifiant du document conteneur — plusieurs documents par contexte. */
+  documentId?: string;
 }
 
 const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefix: string }> = {
@@ -74,9 +76,9 @@ const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefi
 export function BoqWorkspace({
   source, contextId, projectId, projectName, mode,
   referentialCode, estimateId,
-  emptyLabel, importLabel,
+  emptyLabel, importLabel, documentId,
 }: Props) {
-  const doc = useBoqDocument({ source, contextId, projectId });
+  const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
   // Référentiel actif — défaut = référentiel du projet courant (prop),
@@ -203,6 +205,7 @@ export function BoqWorkspace({
     };
     const draft: BoqLineDTO = {
       source, contextId,
+      documentId: documentId ?? null,
       designation: form.designation!,
       elementType: useAdvanced ? elementType : null,
       unit: form.unit || 'u',
@@ -331,6 +334,7 @@ export function BoqWorkspace({
     const profile = getFiscalProfile(fiscalCode);
     setPendingLines((prev) => [...prev, {
       source, contextId,
+      documentId: documentId ?? null,
       designation: '',
       unit: 'u',
       length: null, width: null, height: null,
@@ -350,7 +354,7 @@ export function BoqWorkspace({
   };
 
   // ---- Render ---------------------------------------------------------------
-  const docRef = contextId.slice(0, 8).toUpperCase();
+  const docRef = (documentId ?? contextId).slice(0, 8).toUpperCase();
   const pendingCount = pendingLines.length + draftLineIds.length;
   const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
   const isDocumentEmpty = displayedLines.length === 0;
@@ -359,6 +363,7 @@ export function BoqWorkspace({
       ...line,
       source,
       contextId,
+      documentId: documentId ?? null,
       id: undefined,
       status: 'submitted' as const,
     }))]);
