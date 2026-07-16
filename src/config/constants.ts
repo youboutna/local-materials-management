@@ -111,8 +111,9 @@ export const getActiveDevRole = (): DevRoleOptions => {
 export const setActiveDevRole = (role: string): void => {
   if (typeof window !== "undefined") {
     localStorage.setItem("dev_role", role);
-    // Update the DEV_USER with the new role
-    DEV_USER.user_metadata.role = role;
+    // DEV_USER is a Proxy that resolves the profile from localStorage on read,
+    // so no direct mutation is needed here.
+    window.dispatchEvent(new CustomEvent("dev-role-changed", { detail: role }));
   }
 };
 
