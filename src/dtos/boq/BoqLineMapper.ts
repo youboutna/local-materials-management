@@ -135,7 +135,7 @@ export class BoqLineMapper {
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
       document_id: dto.documentId ?? null,
-      metadata: dto.title ? { title: dto.title } : undefined,
+      metadata: dto.title ? { title: dto.title } : {},
     };
   }
 
