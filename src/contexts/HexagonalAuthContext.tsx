@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { DEV_MODE } from '@/config/constants';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { UnifiedAuthService, UnifiedAuthUser, UnifiedAuthSession, OAuthLoginData } from '@/application/services/UnifiedAuthService';
@@ -197,6 +198,10 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
 
   // Set up auth state listener for real-time updates
   useEffect(() => {
+    if (DEV_MODE) {
+      console.log('🛠️ DEV_MODE=true — skipping Supabase auth listener, using DEV_USER session.');
+      return;
+    }
     console.log('🔧 Setting up hexagonal auth state listener...');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

@@ -9,6 +9,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { AuthProvider } from '@/config/app';
 import { supabase } from '@/integrations/supabase/client';
+import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 import { OAuthProviderService, OAuthProvider } from './OAuthProviderService';
 import { 
   IAuthRepository, 
@@ -56,9 +57,40 @@ export class UnifiedAuthService {
   }
 
   /**
+   * DEV MODE bypass — synthesize a UnifiedAuthUser/Session from DEV_USER,
+   * without any Supabase round-trip. Applied to getCurrentSession and login.
+   */
+  private buildDevSession(): { user: UnifiedAuthUser; session: UnifiedAuthSession } {
+    const role = getActiveDevRole().role;
+    const nowIso = new Date().toISOString();
+    const unifiedUser: UnifiedAuthUser = {
+      id: DEV_USER.id,
+      email: DEV_USER.email,
+      fullName: DEV_USER.user_metadata.full_name,
+      phone: DEV_USER.user_metadata.phone,
+      nationalId: DEV_USER.user_metadata.national_id,
+      role,
+      authProvider: 'dev',
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    const unifiedSession: UnifiedAuthSession = {
+      accessToken: 'dev-mode-token',
+      refreshToken: 'dev-mode-refresh',
+      expiresAt: new Date(Date.now() + 24 * 3600_000).toISOString(),
+      user: unifiedUser,
+      provider: 'supabase',
+    };
+    return { user: unifiedUser, session: unifiedSession };
+  }
+
+  /**
    * Get current session with provider info
    */
   async getCurrentSession(): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
+    if (DEV_MODE) {
+      return this.buildDevSession();
+    }
     try {
       const result = await this.authRepository.getCurrentSession();
       
@@ -108,6 +140,9 @@ export class UnifiedAuthService {
    * Standard email/password login
    */
   async login(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
+    if (DEV_MODE) {
+      return this.buildDevSession();
+    }
     try {
       const normalized: LoginCredentials = {
         ...credentials,
