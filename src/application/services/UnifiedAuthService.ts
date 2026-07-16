@@ -140,6 +140,9 @@ export class UnifiedAuthService {
    * Standard email/password login
    */
   async login(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
+    if (DEV_MODE) {
+      return this.buildDevSession();
+    }
     try {
       const normalized: LoginCredentials = {
         ...credentials,
