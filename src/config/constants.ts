@@ -23,7 +23,8 @@ export interface DevUserProfile {
 export const DEV_USERS: Record<string, DevUserProfile> = {
   admin: {
     id: "00000000-0000-0000-0000-000000000001",
-    email: "admin@example.com",
+    email: "admin@hadratech.com",
+    password: "DEV-ADMIN-001",
     user_metadata: {
       full_name: "Admin Dev",
       role: "admin",
@@ -33,7 +34,7 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
   },
   manager: {
     id: "00000000-0000-0000-0000-000000000002",
-    email: "manager@example.com",
+    email: "manager@hadratech.com",
     user_metadata: {
       full_name: "Manager Dev",
       role: "manager",
@@ -43,7 +44,7 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
   },
   director: {
     id: "00000000-0000-0000-0000-000000000003",
-    email: "director@example.com",
+    email: "director@hadratech.com",
     user_metadata: {
       full_name: "Director Dev",
       role: "director",
