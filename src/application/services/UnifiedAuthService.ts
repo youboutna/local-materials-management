@@ -9,6 +9,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { AuthProvider } from '@/config/app';
 import { supabase } from '@/integrations/supabase/client';
+import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 import { OAuthProviderService, OAuthProvider } from './OAuthProviderService';
 import { 
   IAuthRepository, 
