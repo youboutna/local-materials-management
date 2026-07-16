@@ -35,6 +35,7 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
   manager: {
     id: "00000000-0000-0000-0000-000000000002",
     email: "manager@hadratech.com",
+    password: "DEV-MANAGER-001",
     user_metadata: {
       full_name: "Manager Dev",
       role: "manager",
@@ -45,6 +46,7 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
   director: {
     id: "00000000-0000-0000-0000-000000000003",
     email: "director@hadratech.com",
+    password: "DEV-DIRECTOR-001",
     user_metadata: {
       full_name: "Director Dev",
       role: "director",
