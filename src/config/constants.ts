@@ -9,16 +9,58 @@ export const DEV_MODE = true;
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
 // Mock user configuration for development mode
-export const DEV_USER = {
-  id: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_ID) || "00000000-0000-0000-0000-000000000001",
-  email: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_EMAIL) || "dev@example.com",
+export interface DevUserProfile {
+  id: string;
+  email: string;
   user_metadata: {
-    full_name: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_NAME) || "Développeur Test",
-    role: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_ROLE) || "admin",
-    phone: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_PHONE) || "123456789",
-    national_id: (isBrowser && (window as any).__APP_CONFIG__?.DEV_USER_NATIONAL_ID) || "DEV12345",
+    full_name: string;
+    role: string;
+    phone: string;
+    national_id: string;
+  };
+}
+
+export const DEV_USERS: Record<string, DevUserProfile> = {
+  admin: {
+    id: "00000000-0000-0000-0000-000000000001",
+    email: "admin@example.com",
+    user_metadata: {
+      full_name: "Admin Dev",
+      role: "admin",
+      phone: "100000001",
+      national_id: "DEV-ADMIN-001",
+    },
+  },
+  manager: {
+    id: "00000000-0000-0000-0000-000000000002",
+    email: "manager@example.com",
+    user_metadata: {
+      full_name: "Manager Dev",
+      role: "manager",
+      phone: "100000002",
+      national_id: "DEV-MANAGER-002",
+    },
+  },
+  director: {
+    id: "00000000-0000-0000-0000-000000000003",
+    email: "director@example.com",
+    user_metadata: {
+      full_name: "Director Dev",
+      role: "director",
+      phone: "100000003",
+      national_id: "DEV-DIRECTOR-003",
+    },
   },
 };
+
+/** Active DEV_USER — derived from the active dev role (localStorage: dev_role). */
+export const DEV_USER: DevUserProfile = new Proxy({} as DevUserProfile, {
+  get(_t, prop: keyof DevUserProfile) {
+    const roleKey = (isBrowser && localStorage.getItem("dev_role")) || "admin";
+    const profile = DEV_USERS[roleKey] ?? DEV_USERS.admin;
+    return profile[prop];
+  },
+});
 
 // Development mode role configuration
 export interface DevRoleOptions {
