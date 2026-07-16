@@ -1,10 +1,12 @@
 // Configuration flags - can be controlled by environment variables
 // Check if we're in a browser environment
-const isBrowser = typeof window !== 'undefined';
-const isDevelopment = isBrowser ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') : false;
+const isBrowser = typeof window !== "undefined";
+const isDevelopment = isBrowser
+  ? window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  : false;
 
-export const DEV_MODE =  false;
-export const CLIENT_ETRML = isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === 'true' || false;
+export const DEV_MODE = true;
+export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
 // Mock user configuration for development mode
 export const DEV_USER = {
