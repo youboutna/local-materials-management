@@ -123,6 +123,18 @@ const Auth = () => {
 
   const loading = loginMutation.isPending || registerMutation.isPending;
 
+  const handleDevLogin = async (roleKey: keyof typeof DEV_USERS) => {
+    const profile = DEV_USERS[roleKey];
+    if (!profile) return;
+    setActiveDevRole(profile.user_metadata.role);
+    setEmail(profile.email);
+    setPassword(profile.password || '');
+    toast.success(`DEV login → ${profile.user_metadata.full_name} (${profile.user_metadata.role})`);
+    await loginMutation.mutateAsync({ email: profile.email, password: profile.password || 'dev' });
+  };
+
+
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
       <main className="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
