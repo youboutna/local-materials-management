@@ -239,8 +239,36 @@ const Auth = () => {
                       Mot de passe oublié ?
                     </Button>
                   </div>
+
+                  {DEV_MODE && (
+                    <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                      <div className="flex items-center gap-2 mb-2 text-amber-900 text-sm font-medium">
+                        <ShieldCheck className="h-4 w-4" />
+                        DEV_MODE — Connexion locale (aucun appel réseau)
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(Object.keys(DEV_USERS) as Array<keyof typeof DEV_USERS>).map((k) => (
+                          <Button
+                            key={k}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                            onClick={() => handleDevLogin(k)}
+                            className="capitalize"
+                          >
+                            {DEV_USERS[k].user_metadata.role}
+                          </Button>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-amber-800 mt-2">
+                        Utilisateurs DEV : {Object.values(DEV_USERS).map((u) => u.email).join(' · ')}
+                      </p>
+                    </div>
+                  )}
                 </form>
               </TabsContent>
+
 
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
