@@ -2,18 +2,59 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ReactNode } from 'react';
 import { AuthContext, AuthContextType } from './auth-context';
+import { DEV_MODE, DEV_USERS, DEV_USER, getActiveDevRole, setActiveDevRole } from '@/config/constants';
+
+// Build a Supabase-shaped session from an active DEV_USER profile, without any network call.
+function buildDevAuthState(): { user: User; session: Session } {
+  const role = getActiveDevRole().role;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const devUser = {
+    id: DEV_USER.id,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: DEV_USER.email,
+    phone: DEV_USER.user_metadata.phone,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    app_metadata: { provider: 'dev', role },
+    user_metadata: { ...DEV_USER.user_metadata, role },
+  } as unknown as User;
+  const devSession = {
+    access_token: 'dev-mode-token',
+    refresh_token: 'dev-mode-refresh',
+    token_type: 'bearer',
+    expires_in: 24 * 3600,
+    expires_at: nowSec + 24 * 3600,
+    user: devUser,
+  } as unknown as Session;
+  return { user: devUser, session: devSession };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => (DEV_MODE ? buildDevAuthState().user : null));
+  const [session, setSession] = useState<Session | null>(() => (DEV_MODE ? buildDevAuthState().session : null));
+  const [loading, setLoading] = useState(!DEV_MODE);
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  const rehydrateDev = useCallback(() => {
+    const { user: u, session: s } = buildDevAuthState();
+    setUser(u);
+    setSession(s);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
+    if (DEV_MODE) {
+      console.log('🛠️ DEV_MODE=true — AuthContext bypass: using DEV_USER', DEV_USER.email);
+      rehydrateDev();
+      const handler = () => rehydrateDev();
+      window.addEventListener('dev-role-changed', handler);
+      return () => window.removeEventListener('dev-role-changed', handler);
+    }
     console.log('🔧 Setting up auth state listener...');
 
     // Set up auth state listener FIRST
@@ -42,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, []);
+  }, [rehydrateDev]);
 
   const signIn = async (email: string, password: string) => {
     try {

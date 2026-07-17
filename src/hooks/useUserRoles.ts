@@ -11,6 +11,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
+import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 
 export interface UserRole {
   id: string;
@@ -50,9 +51,13 @@ export const useUserRoles = (userId?: string) => {
   const { userService } = getServices();
 
   const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
-    queryKey: ['userRoles', userId],
+    queryKey: ['userRoles', userId, DEV_MODE ? getActiveDevRole().role : null],
     queryFn: async () => {
       if (!userId) return [];
+      if (DEV_MODE) {
+        const role = getActiveDevRole().role;
+        return [{ id: `${userId}-${role}`, roleName: role, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }] as UserRole[];
+      }
       
       try {
         const user = await userService.getUserById(userId);
@@ -100,6 +105,15 @@ export const useCurrentUserRoles = () => {
 
   const loadCurrentUser = useCallback(async () => {
     if (!user?.id) return;
+    if (DEV_MODE) {
+      setCurrentUser({
+        id: user.id,
+        roleName: getActiveDevRole().role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      return;
+    }
     const userData = await userService.getUserById(user.id);
     setCurrentUser(userData ? {
       roleName: String(userData.role || ''),
@@ -116,8 +130,14 @@ export const useCurrentUserRoles = () => {
   }, [isAuthenticated, user, loadCurrentUser]);
 
   const { data: userRoles, isLoading, error } = useQuery({
-    queryKey: ['currentUserRoles', currentUser?.id, user?.role],
+    queryKey: ['currentUserRoles', currentUser?.id, user?.role, DEV_MODE ? getActiveDevRole().role : null],
     queryFn: async () => {
+      // DEV_MODE: no network — resolve roles from local DEV_USER profile.
+      if (DEV_MODE) {
+        const devRole = getActiveDevRole().role;
+        return Array.from(new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean)));
+      }
+
       const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
 
       const userId = currentUser?.id || user?.id;
@@ -145,10 +165,13 @@ export const useCurrentUserRoles = () => {
       }
     },
     enabled: !!currentUser?.id || !!user?.id || !!isAuthenticated,
-    retry: 2,
+    retry: DEV_MODE ? 0 : 2,
     retryDelay: 500,
     staleTime: 5 * 60 * 1000,
-    placeholderData: () => (user?.role ? [String(user.role).toLowerCase()] : [])
+    placeholderData: () => {
+      if (DEV_MODE) return [getActiveDevRole().role];
+      return user?.role ? [String(user.role).toLowerCase()] : [];
+    }
   });
 
   const hasRole = (roleName: string) => {

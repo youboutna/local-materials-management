@@ -18,12 +18,14 @@ import {
   Lock,
   UserPlus,
   KeyRound,
+  ShieldCheck,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PasswordResetForm from "@/components/auth/PasswordResetForm";
 import OAuthLogin from "@/components/auth/OAuthLogin";
 import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
+import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -120,6 +122,18 @@ const Auth = () => {
   };
 
   const loading = loginMutation.isPending || registerMutation.isPending;
+
+  const handleDevLogin = async (roleKey: keyof typeof DEV_USERS) => {
+    const profile = DEV_USERS[roleKey];
+    if (!profile) return;
+    setActiveDevRole(profile.user_metadata.role);
+    setEmail(profile.email);
+    setPassword(profile.password || '');
+    toast.success(`DEV login → ${profile.user_metadata.full_name} (${profile.user_metadata.role})`);
+    await loginMutation.mutateAsync({ email: profile.email, password: profile.password || 'dev' });
+  };
+
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
@@ -225,8 +239,36 @@ const Auth = () => {
                       Mot de passe oublié ?
                     </Button>
                   </div>
+
+                  {DEV_MODE && (
+                    <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                      <div className="flex items-center gap-2 mb-2 text-amber-900 text-sm font-medium">
+                        <ShieldCheck className="h-4 w-4" />
+                        DEV_MODE — Connexion locale (aucun appel réseau)
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(Object.keys(DEV_USERS) as Array<keyof typeof DEV_USERS>).map((k) => (
+                          <Button
+                            key={k}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                            onClick={() => handleDevLogin(k)}
+                            className="capitalize"
+                          >
+                            {DEV_USERS[k].user_metadata.role}
+                          </Button>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-amber-800 mt-2">
+                        Utilisateurs DEV : {Object.values(DEV_USERS).map((u) => u.email).join(' · ')}
+                      </p>
+                    </div>
+                  )}
                 </form>
               </TabsContent>
+
 
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
