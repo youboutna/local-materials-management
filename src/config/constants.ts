@@ -12,6 +12,7 @@ export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT
 export interface DevUserProfile {
   id: string;
   email: string;
+  password?: string;
   user_metadata: {
     full_name: string;
     role: string;
