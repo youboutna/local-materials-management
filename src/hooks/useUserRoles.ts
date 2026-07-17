@@ -51,9 +51,13 @@ export const useUserRoles = (userId?: string) => {
   const { userService } = getServices();
 
   const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
-    queryKey: ['userRoles', userId],
+    queryKey: ['userRoles', userId, DEV_MODE ? getActiveDevRole().role : null],
     queryFn: async () => {
       if (!userId) return [];
+      if (DEV_MODE) {
+        const role = getActiveDevRole().role;
+        return [{ id: `${userId}-${role}`, roleName: role, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }] as UserRole[];
+      }
       
       try {
         const user = await userService.getUserById(userId);
