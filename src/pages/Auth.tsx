@@ -18,12 +18,14 @@ import {
   Lock,
   UserPlus,
   KeyRound,
+  ShieldCheck,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PasswordResetForm from "@/components/auth/PasswordResetForm";
 import OAuthLogin from "@/components/auth/OAuthLogin";
 import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
+import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
