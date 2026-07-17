@@ -101,6 +101,15 @@ export const useCurrentUserRoles = () => {
 
   const loadCurrentUser = useCallback(async () => {
     if (!user?.id) return;
+    if (DEV_MODE) {
+      setCurrentUser({
+        id: user.id,
+        roleName: getActiveDevRole().role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      return;
+    }
     const userData = await userService.getUserById(user.id);
     setCurrentUser(userData ? {
       roleName: String(userData.role || ''),
