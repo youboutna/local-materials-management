@@ -11,6 +11,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
+import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 
 export interface UserRole {
   id: string;
