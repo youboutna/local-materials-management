@@ -228,7 +228,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('🚪 Signing out...');
-      
+
+      if (DEV_MODE && devAdapter) {
+        await devAdapter.signOut();
+        setUser(null);
+        setSession(null);
+        toast({ title: t('common.success'), description: 'Vous avez été déconnecté avec succès.' });
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       
       if (error) {
