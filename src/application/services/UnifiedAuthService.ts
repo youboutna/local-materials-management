@@ -85,11 +85,41 @@ export class UnifiedAuthService {
   }
 
   /**
+   * Map a snake_case adapter session to a camelCase UnifiedAuthSession.
+   * Used for the DEV path where no Supabase profile lookup is available.
+   */
+  private toUnifiedSessionFromAdapter(
+    session: AuthSession
+  ): { user: UnifiedAuthUser; session: UnifiedAuthSession } {
+    const unifiedUser: UnifiedAuthUser = {
+      id: session.user.id,
+      email: session.user.email,
+      fullName: session.user.full_name,
+      phone: session.user.phone,
+      nationalId: session.user.national_id,
+      role: session.user.role,
+      authProvider: 'dev',
+      createdAt: session.user.created_at || new Date().toISOString(),
+      updatedAt: session.user.updated_at,
+    };
+    const unifiedSession: UnifiedAuthSession = {
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expiresAt: session.expires_at,
+      user: unifiedUser,
+      provider: 'supabase',
+    };
+    return { user: unifiedUser, session: unifiedSession };
+  }
+
+  /**
    * Get current session with provider info
    */
   async getCurrentSession(): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
     if (DEV_MODE) {
-      return this.buildDevSession();
+      const result = await this.authRepository.getCurrentSession();
+      if (!result.session) return { user: null, session: null };
+      return this.toUnifiedSessionFromAdapter(result.session);
     }
     try {
       const result = await this.authRepository.getCurrentSession();
@@ -141,7 +171,19 @@ export class UnifiedAuthService {
    */
   async login(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
     if (DEV_MODE) {
-      return this.buildDevSession();
+      const normalized: LoginCredentials = {
+        ...credentials,
+        email: String(credentials.email || '').trim(),
+      };
+      const result = await this.authRepository.signIn(normalized);
+      if (result.error || !result.session) {
+        throw new AppError(
+          ErrorCode.UNAUTHORIZED,
+          AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS,
+          result.error ?? undefined
+        );
+      }
+      return this.toUnifiedSessionFromAdapter(result.session);
     }
     try {
       const normalized: LoginCredentials = {

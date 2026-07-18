@@ -4,54 +4,72 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { useEffect, useState, useCallback } from 'react';
 import { ReactNode } from 'react';
-import { AuthContext, AuthContextType } from './auth-context';
-import { DEV_MODE, DEV_USERS, DEV_USER, getActiveDevRole, setActiveDevRole } from '@/config/constants';
+import { AuthContext } from './auth-context';
+import { DEV_MODE } from '@/config/constants';
+import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+import type { AuthSession as DomainAuthSession } from '@/domain/repositories/IAuthRepository';
 
-// Build a Supabase-shaped session from an active DEV_USER profile, without any network call.
-function buildDevAuthState(): { user: User; session: Session } {
-  const role = getActiveDevRole().role;
-  const nowSec = Math.floor(Date.now() / 1000);
-  const devUser = {
-    id: DEV_USER.id,
+// Lazy singleton — only used in DEV_MODE. Reads/writes localStorage 'dev_session'.
+const devAdapter = DEV_MODE ? new LocalAuthAdapter() : null;
+
+// Map a snake_case AuthSession from the adapter to a Supabase-shaped User/Session
+// so downstream code that expects @supabase/supabase-js types keeps working.
+function toSupabaseShape(dom: DomainAuthSession): { user: User; session: Session } {
+  const roleValue = dom.user.role || 'user';
+  const supaUser = {
+    id: dom.user.id,
     aud: 'authenticated',
     role: 'authenticated',
-    email: DEV_USER.email,
-    phone: DEV_USER.user_metadata.phone,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    app_metadata: { provider: 'dev', role },
-    user_metadata: { ...DEV_USER.user_metadata, role },
+    email: dom.user.email,
+    phone: dom.user.phone,
+    created_at: dom.user.created_at ?? new Date().toISOString(),
+    updated_at: dom.user.updated_at ?? new Date().toISOString(),
+    app_metadata: { provider: 'dev', role: roleValue },
+    user_metadata: {
+      full_name: dom.user.full_name,
+      role: roleValue,
+      phone: dom.user.phone,
+      national_id: dom.user.national_id,
+    },
   } as unknown as User;
-  const devSession = {
-    access_token: 'dev-mode-token',
-    refresh_token: 'dev-mode-refresh',
+  const expiresAtSec = Math.floor(new Date(dom.expires_at).getTime() / 1000);
+  const supaSession = {
+    access_token: dom.access_token,
+    refresh_token: dom.refresh_token,
     token_type: 'bearer',
-    expires_in: 24 * 3600,
-    expires_at: nowSec + 24 * 3600,
-    user: devUser,
+    expires_in: Math.max(0, expiresAtSec - Math.floor(Date.now() / 1000)),
+    expires_at: expiresAtSec,
+    user: supaUser,
   } as unknown as Session;
-  return { user: devUser, session: devSession };
+  return { user: supaUser, session: supaSession };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => (DEV_MODE ? buildDevAuthState().user : null));
-  const [session, setSession] = useState<Session | null>(() => (DEV_MODE ? buildDevAuthState().session : null));
-  const [loading, setLoading] = useState(!DEV_MODE);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const rehydrateDev = useCallback(() => {
-    const { user: u, session: s } = buildDevAuthState();
-    setUser(u);
-    setSession(s);
+  const restoreDevSession = useCallback(async () => {
+    if (!devAdapter) return;
+    const { session: domSession } = await devAdapter.getCurrentSession();
+    if (!domSession) {
+      setUser(null);
+      setSession(null);
+    } else {
+      const { user: u, session: s } = toSupabaseShape(domSession);
+      setUser(u);
+      setSession(s);
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     if (DEV_MODE) {
-      console.log('🛠️ DEV_MODE=true — AuthContext bypass: using DEV_USER', DEV_USER.email);
-      rehydrateDev();
-      const handler = () => rehydrateDev();
+      console.log('🛠️ DEV_MODE=true — AuthContext uses LocalAuthAdapter (DEV_USERS)');
+      void restoreDevSession();
+      const handler = () => void restoreDevSession();
       window.addEventListener('dev-role-changed', handler);
       return () => window.removeEventListener('dev-role-changed', handler);
     }
@@ -83,16 +101,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, [rehydrateDev]);
+  }, [restoreDevSession]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+
+      // DEV_MODE: validate credentials locally against DEV_USERS.
+      if (DEV_MODE && devAdapter) {
+        const { session: domSession, error } = await devAdapter.signIn({
+          email: email.trim(),
+          password,
+        });
+        if (error || !domSession) {
+          toast({
+            title: t('common.error'),
+            description: 'Email ou mot de passe incorrect. Vérifiez vos identifiants.',
+            variant: 'destructive',
+          });
+          throw error ?? new Error('Invalid login credentials');
+        }
+        const { user: u, session: s } = toSupabaseShape(domSession);
+        setUser(u);
+        setSession(s);
+        toast({ title: t('common.success'), description: 'Bienvenue sur la plateforme.' });
+        return;
+      }
+
       console.log('🔐 Attempting to sign in with:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email: email.trim(), 
-        password 
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
       });
       
       if (error) {
@@ -125,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
 
   const signUp = async (email: string, password: string, fullName: string, phone: string, nationalId: string) => {
     try {
@@ -187,7 +228,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('🚪 Signing out...');
-      
+
+      if (DEV_MODE && devAdapter) {
+        await devAdapter.signOut();
+        setUser(null);
+        setSession(null);
+        toast({ title: t('common.success'), description: 'Vous avez été déconnecté avec succès.' });
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -359,7 +408,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithPhone,
     verifyPhoneOTP,
     signInWithNationalId,
-    isDevelopmentMode: false
+    isDevelopmentMode: DEV_MODE
   };
 
   return (

@@ -236,19 +236,29 @@ export class AuthManager {
    * Create adapter based on provider configuration
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
+    // DEV_MODE short-circuit: local adapter for every provider so credential
+    // checks happen against DEV_USERS without touching the network.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { DEV_MODE } = require('@/config/constants');
+    if (DEV_MODE) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { LocalAuthAdapter } = require('@/infrastructure/local/LocalAuthAdapter');
+      return new LocalAuthAdapter();
+    }
+
     switch (config.provider) {
       case 'supabase':
         return new SupabaseAuthAdapter();
-      
+
       case 'keycloak':
         return new KeycloakAuthAdapter(config);
-      
+
       case 'auth0':
         return new Auth0Adapter(config);
-      
+
       case 'custom':
         return new DatabaseAuthAdapter(config);
-      
+
       default:
         return new SupabaseAuthAdapter();
     }
