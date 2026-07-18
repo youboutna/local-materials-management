@@ -408,7 +408,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithPhone,
     verifyPhoneOTP,
     signInWithNationalId,
-    isDevelopmentMode: false
+    isDevelopmentMode: DEV_MODE
   };
 
   return (
