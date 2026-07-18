@@ -532,7 +532,7 @@ export class RepositoryFactory {
         repositoryRegistry.authRepository = new SupabaseAuthAdapter();
       }
     }
-    return repositoryRegistry.authRepository;
+    return repositoryRegistry.authRepository!;
   }
 
   /**
