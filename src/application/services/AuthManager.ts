@@ -4,13 +4,17 @@
  * Following hexagonal architecture principles
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { AuthSession as BaseAuthSession } from '@/domain/repositories/IAuthRepository';
-import { getAppConfig, AuthProvider } from '@/config/app';
-import { AuthUserStatus } from '@/domain/entities/AuthUser';
+import { AppError, ErrorCode } from "@/utils/errorHandling";
+import { AuthSession as BaseAuthSession } from "@/domain/repositories/IAuthRepository";
+import { getAppConfig, AuthProvider } from "@/config/app";
+import { AuthUserStatus } from "@/domain/entities/AuthUser";
 
 // Import existing DTOs from entities instead of defining locally
-import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from '@/dtos/entities/AuthDTO';
+import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from "@/dtos/entities/AuthDTO";
+
+// ✅ IMPORT des modules locaux (correction)
+import { DEV_MODE } from "@/config/constants";
+import { LocalAuthAdapter } from "@/infrastructure/local/LocalAuthAdapter";
 
 // Use existing DTOs for AuthManager internal operations
 export type AuthCredentials = LoginData;
@@ -40,7 +44,7 @@ type SignInCredentials = LoginCredentials;
 type SignUpData = RegisterData;
 
 // Internal session type for AuthManager - extends existing AuthSession
-type AuthManagerSession = Omit<AuthSession, 'user'> & {
+type AuthManagerSession = Omit<AuthSession, "user"> & {
   expiresAt: number;
 };
 
@@ -228,37 +232,29 @@ export class AuthManager {
       url: appConfig.auth.url,
       clientId: appConfig.auth.clientId,
       realm: appConfig.auth.realm,
-      redirectUri: appConfig.auth.redirectUri
+      redirectUri: appConfig.auth.redirectUri,
     };
   }
 
   /**
    * Create adapter based on provider configuration
+   * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // DEV_MODE short-circuit: local adapter for every provider so credential
-    // checks happen against DEV_USERS without touching the network.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { DEV_MODE } = require('@/config/constants');
+    // DEV_MODE short-circuit: local adapter for every provider
     if (DEV_MODE) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { LocalAuthAdapter } = require('@/infrastructure/local/LocalAuthAdapter');
       return new LocalAuthAdapter();
     }
 
     switch (config.provider) {
-      case 'supabase':
+      case "supabase":
         return new SupabaseAuthAdapter();
-
-      case 'keycloak':
+      case "keycloak":
         return new KeycloakAuthAdapter(config);
-
-      case 'auth0':
+      case "auth0":
         return new Auth0Adapter(config);
-
-      case 'custom':
+      case "custom":
         return new DatabaseAuthAdapter(config);
-
       default:
         return new SupabaseAuthAdapter();
     }
@@ -269,7 +265,7 @@ export class AuthManager {
    */
   getAdapter(): IAuthRepository {
     if (!this.currentAdapter) {
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'No auth adapter available');
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "No auth adapter available");
     }
     return this.currentAdapter;
   }
@@ -296,8 +292,8 @@ export class AuthManager {
 
       console.log(`Switched to ${newConfig.provider} auth provider`);
     } catch (error) {
-      console.error('Failed to switch provider:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to switch authentication provider');
+      console.error("Failed to switch provider:", error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to switch authentication provider");
     }
   }
 
@@ -309,7 +305,7 @@ export class AuthManager {
       // Simple connection test - try to get current session
       await adapter.getCurrentSession();
     } catch (error) {
-      throw new AppError(ErrorCode.CONNECTION_ERROR, 'Cannot connect to authentication provider');
+      throw new AppError(ErrorCode.CONNECTION_ERROR, "Cannot connect to authentication provider");
     }
   }
 
@@ -330,7 +326,9 @@ export class AuthManager {
   /**
    * Sign in with credentials
    */
-  async signInWithCredentials(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+  async signInWithCredentials(
+    credentials: LoginCredentials,
+  ): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
     return this.getAdapter().signIn(credentials);
   }
 
@@ -367,10 +365,10 @@ export class AuthManager {
    */
   getSupportedProviders(): Array<{ value: AuthProvider; label: string; description: string }> {
     return [
-      { value: 'supabase', label: 'Supabase Auth', description: 'Managed authentication with social providers' },
-      { value: 'keycloak', label: 'Keycloak', description: 'Enterprise SSO and identity management' },
-      { value: 'auth0', label: 'Auth0', description: 'Universal authentication & authorization platform' },
-      { value: 'custom', label: 'Custom', description: 'Custom authentication implementation' }
+      { value: "supabase", label: "Supabase Auth", description: "Managed authentication with social providers" },
+      { value: "keycloak", label: "Keycloak", description: "Enterprise SSO and identity management" },
+      { value: "auth0", label: "Auth0", description: "Universal authentication & authorization platform" },
+      { value: "custom", label: "Custom", description: "Custom authentication implementation" },
     ];
   }
 
@@ -379,13 +377,13 @@ export class AuthManager {
    */
   isProviderAvailable(provider: AuthProvider): boolean {
     switch (provider) {
-      case 'supabase':
+      case "supabase":
         return true; // Always available
-      case 'keycloak':
+      case "keycloak":
         return true; // Available (mock implementation)
-      case 'auth0':
+      case "auth0":
         return true; // Available (mock implementation)
-      case 'custom':
+      case "custom":
         return true; // Available (mock implementation)
       default:
         return false;
@@ -398,26 +396,23 @@ export class AuthManager {
   async signIn(credentials: SignInCredentials, provider?: AuthProvider): Promise<AuthManagerSession | null> {
     const result = await this.getAdapter().signIn({
       email: credentials.email,
-      password: credentials.password
+      password: credentials.password,
     });
     return result.session;
   }
 
-  async authenticate(
-    provider: AuthProvider,
-    credentials: AuthCredentials
-  ): Promise<AuthResult> {
+  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
     try {
       const result = await this.getAdapter().authenticate(provider, credentials);
       return {
         success: true,
         user: result.user,
-        token: result.token
+        token: result.token,
       };
     } catch (error) {
       return {
         success: false,
-        error: this.handleAuthError(error)
+        error: this.handleAuthError(error),
       };
     }
   }
@@ -425,13 +420,13 @@ export class AuthManager {
   private handleAuthError(error: unknown): AuthErrorDTO {
     if (error instanceof Error) {
       return {
-        code: 'server_error',
-        message: error.message
+        code: "server_error",
+        message: error.message,
       };
     }
     return {
-      code: 'server_error',
-      message: 'Unknown authentication error'
+      code: "server_error",
+      message: "Unknown authentication error",
     };
   }
 
