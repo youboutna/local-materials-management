@@ -5,7 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useEffect, useState, useCallback } from 'react';
 import { ReactNode } from 'react';
 import { AuthContext } from './auth-context';
-import { DEV_MODE, DEV_USERS } from '@/config/constants';
+import { DEV_MODE } from '@/config/constants';
 import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
 import type { AuthSession as DomainAuthSession } from '@/domain/repositories/IAuthRepository';
 
