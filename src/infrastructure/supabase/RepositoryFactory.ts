@@ -59,6 +59,9 @@ import type { IProjectStrategyLinkRepository } from '@/domain/repositories/IProj
 import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
+import { DEV_MODE } from '@/config/constants';
+import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+
 
 import {
   SupabaseProjectAdapter,
@@ -519,14 +522,7 @@ export class RepositoryFactory {
    */
   static getAuthRepository(): IAuthRepository {
     if (!repositoryRegistry.authRepository) {
-      // DEV_MODE: swap Supabase for a purely local adapter validating
-      // credentials against DEV_USERS. No network calls, no data leak.
-      // Lazy require to avoid pulling DEV code into prod bundles when tree-shaken.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { DEV_MODE } = require('@/config/constants');
       if (DEV_MODE) {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { LocalAuthAdapter } = require('@/infrastructure/local/LocalAuthAdapter');
         repositoryRegistry.authRepository = new LocalAuthAdapter();
       } else {
         repositoryRegistry.authRepository = new SupabaseAuthAdapter();
@@ -534,6 +530,7 @@ export class RepositoryFactory {
     }
     return repositoryRegistry.authRepository!;
   }
+
 
   /**
    * Get Storage Repository instance
