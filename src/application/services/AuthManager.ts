@@ -241,10 +241,26 @@ export class AuthManager {
    * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // DEV_MODE short-circuit: local adapter for every provider
+    // DEV_MODE short-circuit: wrap LocalAuthAdapter to match AuthManager's local IAuthRepository shape
     if (DEV_MODE) {
-      return new LocalAuthAdapter();
+      const local = new LocalAuthAdapter();
+      const wrapper: IAuthRepository = {
+        authenticate: async (_provider, credentials) => {
+          const { session, error } = await local.signIn({ email: credentials.email, password: credentials.password });
+          if (error || !session) return { success: false, error: { code: 'AUTH_FAILED', message: error?.message ?? 'Invalid credentials' } };
+          return { success: true, user: session.user as unknown as AuthUser, token: session.access_token };
+        },
+        getCurrentSession: () => local.getCurrentSession() as any,
+        getCurrentUser: () => local.getCurrentUser() as any,
+        signIn: (c) => local.signIn(c) as any,
+        signUp: (d) => local.signUp(d) as any,
+        signOut: () => local.signOut(),
+        resetPassword: (e) => local.resetPassword(e),
+        updatePassword: (p) => local.updatePassword(p),
+      };
+      return wrapper;
     }
+
 
     switch (config.provider) {
       case "supabase":
