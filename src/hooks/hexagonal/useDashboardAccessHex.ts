@@ -5,7 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/use-auth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
+import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
 
 export interface DashboardAccess {
   hasAccess: boolean;
