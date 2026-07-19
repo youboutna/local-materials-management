@@ -3,7 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
-import { DEV_MODE, DEV_USER, DEV_CONFIG } from '@/config/constants';
+import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
 
 interface Profile {
   id: string;
@@ -41,19 +41,22 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     setError(null);
 
-    // In development mode, use DEV_USER profile
-    if (DEV_MODE) {
+    // DEV_MODE profile hydration: only when a real DEV session exists (user
+    // signed in via LocalAuthAdapter). We build the profile from the session's
+    // user metadata — never from DEV_USER directly — so signed-out state stays
+    // truly signed-out.
+    if (DEV_MODE && user?.id) {
       if (DEV_CONFIG.mockApiDelay > 0) {
         await new Promise(resolve => setTimeout(resolve, DEV_CONFIG.mockApiDelay));
       }
-      
+
       const devProfile: Profile = {
-        id: DEV_USER.id,
-        full_name: DEV_USER.user_metadata?.full_name || 'Développeur Test',
-        phone: DEV_USER.user_metadata?.phone || '',
-        national_id: DEV_USER.user_metadata?.national_id || '',
-        role: DEV_USER.user_metadata?.role || 'admin',
-        avatar_url: (DEV_USER.user_metadata as any)?.avatar_url || null,
+        id: user.id,
+        full_name: user.user_metadata?.full_name || 'Utilisateur DEV',
+        phone: user.user_metadata?.phone || '',
+        national_id: user.user_metadata?.national_id || '',
+        role: user.user_metadata?.role || 'user',
+        avatar_url: user.user_metadata?.avatar_url || null,
       };
 
       setProfile(devProfile);
