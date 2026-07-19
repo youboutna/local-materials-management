@@ -12,9 +12,9 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
 continue, while paying attention to UI and DB needs. we are in migration focus first to UI
 ```
 
-### lire docs/ARCHITECTURE_REFERENTIELS.md
+### lire ref : docs/ARCHITECTURE_REFERENTIELS.md
 
-### lire docs/CONTEXT.md et continue lignes suivantes
+### lire ref docs/CONTEXT.md et continue lignes suivantes
 
 ## Bonnes Pratiques d'Architecture Hexagonale##
 
