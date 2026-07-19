@@ -57,13 +57,13 @@ export const useDashboardAccessHex = (userId: string | undefined) => {
 
 export const useCheckAuthHex = () => {
   const { user, loading } = useAuth();
-  
-  // In development mode, return DEV_USER if no real user
-  const effectiveUser = DEV_MODE && !user ? DEV_USER : user;
-  
+
+  // DEV_MODE no longer auto-injects DEV_USER. The user must sign in via the
+  // Auth page — LocalAuthAdapter validates credentials against DEV_USERS and
+  // populates the AuthContext session on success.
   return {
-    data: { user: effectiveUser },
-    isLoading: DEV_MODE ? false : loading, // No loading in dev mode
+    data: { user },
+    isLoading: loading,
     error: null,
     refetch: () => Promise.resolve()
   };
