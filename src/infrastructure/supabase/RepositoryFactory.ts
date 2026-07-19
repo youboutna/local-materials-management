@@ -59,6 +59,9 @@ import type { IProjectStrategyLinkRepository } from '@/domain/repositories/IProj
 import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
+import { DEV_MODE } from '@/config/constants';
+import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+
 
 import {
   SupabaseProjectAdapter,
