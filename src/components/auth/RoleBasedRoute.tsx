@@ -34,10 +34,9 @@ const RoleBasedRoute = ({
     }
   }, [loading, rolesLoading]);
 
-  // In dev mode, allow access to all pages if DEV_MODE is true
-  if (DEV_MODE) {
-    return <>{children}</>;
-  }
+  // NOTE: DEV_MODE no longer bypasses authentication. Users must sign in with
+  // credentials matching DEV_USERS (see src/config/constants.ts). Role checks
+  // below still apply, powered by the dev role of the authenticated profile.
 
   // Show loader only before first resolution; avoid blocking on later refetches
   if (!initializedRef.current && (loading || rolesLoading)) {
