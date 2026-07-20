@@ -59,8 +59,7 @@ import type { IProjectStrategyLinkRepository } from '@/domain/repositories/IProj
 import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { DEV_MODE } from '@/config/constants';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+import { AuthAdapterFactory } from '@/infrastructure/auth/AuthAdapterFactory';
 
 
 import {
@@ -522,11 +521,7 @@ export class RepositoryFactory {
    */
   static getAuthRepository(): IAuthRepository {
     if (!repositoryRegistry.authRepository) {
-      if (DEV_MODE) {
-        repositoryRegistry.authRepository = new LocalAuthAdapter();
-      } else {
-        repositoryRegistry.authRepository = new SupabaseAuthAdapter();
-      }
+      repositoryRegistry.authRepository = AuthAdapterFactory.create();
     }
     return repositoryRegistry.authRepository!;
   }
