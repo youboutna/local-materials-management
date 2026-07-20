@@ -1,9 +1,9 @@
 /**
-file : src/infrastructure/supabase/RepositoryFactory.ts
+ * file : src/infrastructure/supabase/RepositoryFactory.ts
  * Repository Factory - Hexagonal Architecture
  * Centralized factory for creating repository implementations
  * Provides dependency injection and adapter instantiation
- * 
+ *
  * Features:
  * - Singleton pattern for performance
  * - Lazy loading for memory efficiency
