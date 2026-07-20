@@ -2,7 +2,6 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { DEV_MODE } from '@/config/constants';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,10 +12,8 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) =
   const { isAuthenticated, user, loading } = useKeycloakAuth();
   const location = useLocation();
 
-  // In dev mode, we'll always render the children to bypass authentication checks
-  if (DEV_MODE) {
-    return <>{children}</>;
-  }
+  // DEV_MODE no longer bypasses authentication. Users must sign in via /auth
+  // with credentials matching DEV_USERS (see src/config/constants.ts).
 
   if (loading) {
     // Display a loading spinner while checking authentication
