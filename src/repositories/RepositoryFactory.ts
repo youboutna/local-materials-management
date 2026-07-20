@@ -1,10 +1,12 @@
 /**
+ 
+ file : src/repositories/RepositoryFactory.ts
  * Repository Factory - Wrapper Centralisé
  * Wrapper qui délègue au nouveau RepositoryFactory hexagonal
  * Maintient la compatibilité avec les imports existants
  */
 
-import { RepositoryFactory as InfraRepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory as InfraRepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 // Wrapper principal qui délègue au nouveau RepositoryFactory
 export const RepositoryFactory = {
@@ -40,7 +42,7 @@ export const RepositoryFactory = {
   getInspectionPermissionRepository: InfraRepositoryFactory.getInspectionPermissionRepository,
   getTenderDocumentRepository: InfraRepositoryFactory.getTenderDocumentRepository,
   getMilestoneRepository: InfraRepositoryFactory.getMilestoneRepository,
-  
+
   // Délégation au vrai adapter Supabase (l'ancienne implémentation mock
   // ne persistait rien — cause directe du bug "Failed to save tender").
   getTenderEstimateRepository: InfraRepositoryFactory.getTenderEstimateRepository,
@@ -57,17 +59,17 @@ export const RepositoryFactory = {
     }),
     checkDatabaseHealth: async (metrics: any) => metrics.queryTime < 1000 && metrics.slowQueries === 0,
     getDatabaseHealthStatus: async (metrics: any) => {
-      if (metrics.queryTime > 2000 || metrics.slowQueries > 5) return 'critical';
-      if (metrics.queryTime > 1000 || metrics.connections > 80) return 'warning';
-      return 'healthy';
+      if (metrics.queryTime > 2000 || metrics.slowQueries > 5) return "critical";
+      if (metrics.queryTime > 1000 || metrics.connections > 80) return "warning";
+      return "healthy";
     },
     getHistoricalMetrics: async () => [],
     storeMetrics: async () => {},
   }),
-  
+
   // Contact Message Repository
   getContactMessageRepository: InfraRepositoryFactory.getContactMessageRepository,
-  
+
   // Location Repository
   getLocationRepository: InfraRepositoryFactory.getLocationRepository,
 };
@@ -95,7 +97,7 @@ export const getProjectFormRepository = InfraRepositoryFactory.getProjectFormRep
 export const getUserRepository = InfraRepositoryFactory.getUserRepository;
 
 // Types exportés pour compatibilité
-export type DataSourceType = 'supabase' | 'java_api' | 'prisma' |'localStorage'| 'postgis';
+export type DataSourceType = "supabase" | "java_api" | "prisma" | "localStorage" | "postgis";
 
 // Fonctions utilitaires exportées pour compatibilité
 export function setDataSource(source: DataSourceType): void {
@@ -108,7 +110,7 @@ export function getDataSource(): DataSourceType {
   if (InfraRepositoryFactory.getDataSource) {
     return InfraRepositoryFactory.getDataSource();
   }
-  return 'localStorage';
+  return "localStorage";
 }
 
 // Export par défaut pour compatibilité
