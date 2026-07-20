@@ -1,12 +1,13 @@
 /**
- * OAuth Provider Service
- * Implements business logic for OAuth provider management  
+ * file : src/application/service/OAuthProviderService.ts
+ *OAuth Provider Service
+ * Implements business logic for OAuth provider management
  * Following hexagonal architecture principles from PROMPTS.md
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
+import { AppError, ErrorCode } from "@/utils/errorHandling";
+import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface OAuthProvider {
   id: string;
@@ -33,7 +34,6 @@ export interface OAuthProviderCreateData {
 }
 
 export class OAuthProviderService {
-  
   /**
    * Transform database row to DTO
    */
@@ -47,13 +47,13 @@ export class OAuthProviderService {
       userInfoUrl: data.user_info_url || undefined,
       scopes: data.scopes || undefined,
       enabled: Boolean(data.enabled),
-      configuration: this.parseConfiguration(data.configuration)
+      configuration: this.parseConfiguration(data.configuration),
     };
   }
 
   private parseConfiguration(config: Json): Record<string, any> | undefined {
     if (!config || config === null) return undefined;
-    if (typeof config === 'object' && !Array.isArray(config)) {
+    if (typeof config === "object" && !Array.isArray(config)) {
       return config as Record<string, any>;
     }
     return undefined;
@@ -64,20 +64,17 @@ export class OAuthProviderService {
    */
   async getOAuthProviders(): Promise<OAuthProvider[]> {
     try {
-      const { data, error } = await supabase
-        .from('oauth_providers')
-        .select('*')
-        .order('provider_name');
+      const { data, error } = await supabase.from("oauth_providers").select("*").order("provider_name");
 
       if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth providers', error);
+        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch OAuth providers", error);
       }
 
       return (data || []).map(this.transformProvider);
     } catch (error) {
-      console.error('OAuthProviderService.getOAuthProviders failed:', error);
+      console.error("OAuthProviderService.getOAuthProviders failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch OAuth providers', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth providers", error);
     }
   }
 
@@ -87,23 +84,23 @@ export class OAuthProviderService {
   async getOAuthProviderByName(providerName: string): Promise<OAuthProvider | null> {
     try {
       const { data, error } = await supabase
-        .from('oauth_providers')
-        .select('*')
-        .eq('provider_name', providerName)
+        .from("oauth_providers")
+        .select("*")
+        .eq("provider_name", providerName)
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           return null; // No provider found
         }
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth provider', error);
+        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch OAuth provider", error);
       }
 
       return this.transformProvider(data);
     } catch (error) {
-      console.error('OAuthProviderService.getOAuthProviderByName failed:', error);
+      console.error("OAuthProviderService.getOAuthProviderByName failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch OAuth provider', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth provider", error);
     }
   }
 
@@ -113,20 +110,20 @@ export class OAuthProviderService {
   async getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
     try {
       const { data, error } = await supabase
-        .from('oauth_providers')
-        .select('*')
-        .eq('enabled', true)
-        .order('provider_name');
+        .from("oauth_providers")
+        .select("*")
+        .eq("enabled", true)
+        .order("provider_name");
 
       if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch enabled OAuth providers', error);
+        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch enabled OAuth providers", error);
       }
 
       return (data || []).map(this.transformProvider);
     } catch (error) {
-      console.error('OAuthProviderService.getEnabledOAuthProviders failed:', error);
+      console.error("OAuthProviderService.getEnabledOAuthProviders failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch enabled OAuth providers', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch enabled OAuth providers", error);
     }
   }
 
@@ -136,31 +133,34 @@ export class OAuthProviderService {
   async upsertOAuthProvider(data: OAuthProviderCreateData): Promise<OAuthProvider> {
     try {
       const { data: provider, error } = await supabase
-        .from('oauth_providers')
-        .upsert({
-          provider_name: data.providerName,
-          client_id: data.clientId,
-          auth_url: data.authUrl,
-          token_url: data.tokenUrl,
-          user_info_url: data.userInfoUrl,
-          scopes: data.scopes,
-          enabled: data.enabled ?? false,
-          configuration: data.configuration
-        }, {
-          onConflict: 'provider_name'
-        })
+        .from("oauth_providers")
+        .upsert(
+          {
+            provider_name: data.providerName,
+            client_id: data.clientId,
+            auth_url: data.authUrl,
+            token_url: data.tokenUrl,
+            user_info_url: data.userInfoUrl,
+            scopes: data.scopes,
+            enabled: data.enabled ?? false,
+            configuration: data.configuration,
+          },
+          {
+            onConflict: "provider_name",
+          },
+        )
         .select()
         .single();
 
       if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to create/update OAuth provider', error);
+        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to create/update OAuth provider", error);
       }
 
       return this.transformProvider(provider);
     } catch (error) {
-      console.error('OAuthProviderService.upsertOAuthProvider failed:', error);
+      console.error("OAuthProviderService.upsertOAuthProvider failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create/update OAuth provider', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to create/update OAuth provider", error);
     }
   }
 
@@ -169,18 +169,15 @@ export class OAuthProviderService {
    */
   async toggleOAuthProvider(providerName: string, enabled: boolean): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('oauth_providers')
-        .update({ enabled })
-        .eq('provider_name', providerName);
+      const { error } = await supabase.from("oauth_providers").update({ enabled }).eq("provider_name", providerName);
 
       if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to toggle OAuth provider', error);
+        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to toggle OAuth provider", error);
       }
     } catch (error) {
-      console.error('OAuthProviderService.toggleOAuthProvider failed:', error);
+      console.error("OAuthProviderService.toggleOAuthProvider failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to toggle OAuth provider', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to toggle OAuth provider", error);
     }
   }
 
@@ -189,15 +186,15 @@ export class OAuthProviderService {
    */
   generateOAuthUrl(provider: OAuthProvider, redirectUri: string, state?: string): string {
     if (!provider.authUrl || !provider.clientId) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, 'OAuth provider not properly configured');
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider not properly configured");
     }
 
     const params = new URLSearchParams({
       client_id: provider.clientId,
       redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: provider.scopes?.join(' ') || 'openid email profile',
-      ...(state && { state })
+      response_type: "code",
+      scope: provider.scopes?.join(" ") || "openid email profile",
+      ...(state && { state }),
     });
 
     return `${provider.authUrl}?${params.toString()}`;
@@ -207,31 +204,31 @@ export class OAuthProviderService {
    * Exchange OAuth code for tokens
    */
   async exchangeOAuthCode(
-    provider: OAuthProvider, 
-    code: string, 
-    redirectUri: string
+    provider: OAuthProvider,
+    code: string,
+    redirectUri: string,
   ): Promise<{ accessToken: string; refreshToken?: string; expiresIn?: number }> {
     try {
       if (!provider.tokenUrl || !provider.clientId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'OAuth provider not properly configured');
+        throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider not properly configured");
       }
 
       const response = await fetch(provider.tokenUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
         },
         body: new URLSearchParams({
           client_id: provider.clientId,
           code,
           redirect_uri: redirectUri,
-          grant_type: 'authorization_code'
-        })
+          grant_type: "authorization_code",
+        }),
       });
 
       if (!response.ok) {
-        throw new AppError(ErrorCode.NETWORK_ERROR, 'Failed to exchange OAuth code');
+        throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to exchange OAuth code");
       }
 
       const tokens = await response.json();
@@ -239,12 +236,12 @@ export class OAuthProviderService {
       return {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
-        expiresIn: tokens.expires_in
+        expiresIn: tokens.expires_in,
       };
     } catch (error) {
-      console.error('OAuthProviderService.exchangeOAuthCode failed:', error);
+      console.error("OAuthProviderService.exchangeOAuthCode failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to exchange OAuth code', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to exchange OAuth code", error);
     }
   }
 
@@ -254,25 +251,25 @@ export class OAuthProviderService {
   async getOAuthUserInfo(provider: OAuthProvider, accessToken: string): Promise<any> {
     try {
       if (!provider.userInfoUrl) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'OAuth provider user info URL not configured');
+        throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider user info URL not configured");
       }
 
       const response = await fetch(provider.userInfoUrl, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json'
-        }
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new AppError(ErrorCode.NETWORK_ERROR, 'Failed to fetch OAuth user info');
+        throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to fetch OAuth user info");
       }
 
       return await response.json();
     } catch (error) {
-      console.error('OAuthProviderService.getOAuthUserInfo failed:', error);
+      console.error("OAuthProviderService.getOAuthUserInfo failed:", error);
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch OAuth user info', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth user info", error);
     }
   }
 }
