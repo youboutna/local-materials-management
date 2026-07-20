@@ -118,6 +118,7 @@ export class LocalAuthAdapter implements IAuthRepository {
     setActiveDevRole(match.profile.user_metadata.role);
 
     const persisted: PersistedDevSession = {
+      v: SESSION_VERSION,
       userId: match.profile.id,
       roleKey: match.key,
       access_token: `dev-token-${match.profile.id}-${Date.now()}`,
