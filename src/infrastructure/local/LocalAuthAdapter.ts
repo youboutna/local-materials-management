@@ -24,8 +24,10 @@ import {
 } from '@/config/constants';
 
 const SESSION_KEY = 'dev_session';
+const SESSION_VERSION = 2; // bump to invalidate any pre-existing auto-injected sessions
 
 interface PersistedDevSession {
+  v?: number;
   userId: string;
   roleKey: string;
   access_token: string;
@@ -59,7 +61,13 @@ function readPersistedSession(): PersistedDevSession | null {
   try {
     const raw = window.localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as PersistedDevSession;
+    const parsed = JSON.parse(raw) as PersistedDevSession;
+    // Invalidate any legacy/auto-injected sessions without a version marker.
+    if (parsed?.v !== SESSION_VERSION) {
+      window.localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
