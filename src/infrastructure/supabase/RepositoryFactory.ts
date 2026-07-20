@@ -1,4 +1,5 @@
 /**
+file : src/infrastructure/supabase/RepositoryFactory.ts
  * Repository Factory - Hexagonal Architecture
  * Centralized factory for creating repository implementations
  * Provides dependency injection and adapter instantiation
@@ -11,8 +12,8 @@
  */
 
 import {
-  IProjectRepository, 
-  IPhaseRepository, 
+  IProjectRepository,
+  IPhaseRepository,
   IHierarchyRepository,
   IInspectionRepository,
   IPaymentRepository,
@@ -54,13 +55,12 @@ import {
   IProjectStakeholderRepository,
   IMissionExpenseRepository,
   IContactMessageRepository,
-} from '@/domain/repositories';
-import type { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
-import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
+} from "@/domain/repositories";
+import type { IProjectStrategyLinkRepository } from "@/domain/repositories/IProjectStrategyLinkRepository";
+import type { IProjectBudgetLinkRepository } from "@/domain/repositories/IProjectBudgetLinkRepository";
 
-import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { AuthAdapterFactory } from '@/infrastructure/auth/AuthAdapterFactory';
-
+import { ILocationRepository } from "@/domain/repositories/LocationRepository";
+import { AuthAdapterFactory } from "@/infrastructure/auth/AuthAdapterFactory";
 
 import {
   SupabaseProjectAdapter,
@@ -93,8 +93,8 @@ import {
   SupabaseParsedInvoiceAdapter,
   SupabaseInspectionPermissionAdapter,
   SupabaseContactMessageAdapter,
-} from './adapters';
-import { SupabaseMissionExpenseAdapter } from './adapters/SupabaseMissionExpenseAdapter';
+} from "./adapters";
+import { SupabaseMissionExpenseAdapter } from "./adapters/SupabaseMissionExpenseAdapter";
 import {
   SupabaseTenderDocumentAdapter,
   TenderEstimateAdapter,
@@ -104,17 +104,17 @@ import {
   SupabaseProjectStakeholderAdapter,
   SupabaseComplianceAdapter,
   SupabaseMonitoringAdapter,
-  SupabaseStakeholderAdapter
-} from './adapters';
-import { SupabaseTenderSharingAdapter } from '../adapters/SupabaseTenderSharingAdapter';
-import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
-import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
-import { SupabaseWorkspaceAdapter } from './adapters/SupabaseWorkspaceAdapter';
-import { SupabaseAlertAdapter } from './adapters/SupabaseAlertAdapter';
+  SupabaseStakeholderAdapter,
+} from "./adapters";
+import { SupabaseTenderSharingAdapter } from "../adapters/SupabaseTenderSharingAdapter";
+import { IMonitoringRepository } from "@/domain/repositories/IMonitoringRepository";
+import { IStakeholderRepository } from "@/domain/repositories/IStakeholderRepository";
+import { SupabaseWorkspaceAdapter } from "./adapters/SupabaseWorkspaceAdapter";
+import { SupabaseAlertAdapter } from "./adapters/SupabaseAlertAdapter";
 
-import { LocationRepository } from './adapters/LocationRepository';
-import { SupabaseProjectStrategyLinkAdapter } from './adapters/SupabaseProjectStrategyLinkAdapter';
-import { SupabaseProjectBudgetLinkAdapter } from './adapters/SupabaseProjectBudgetLinkAdapter';
+import { LocationRepository } from "./adapters/LocationRepository";
+import { SupabaseProjectStrategyLinkAdapter } from "./adapters/SupabaseProjectStrategyLinkAdapter";
+import { SupabaseProjectBudgetLinkAdapter } from "./adapters/SupabaseProjectBudgetLinkAdapter";
 
 /**
  * Repository Registry - Enhanced Singleton Management
@@ -178,17 +178,17 @@ const repositoryRegistry: RepositoryRegistry = {};
 /**
  * Current data source for repositories
  */
-let currentDataSource: 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis' = 'supabase';
+let currentDataSource: "supabase" | "java_api" | "prisma" | "localStorage" | "postgis" = "supabase";
 
 /**
  * Repository Factory - Enhanced Hexagonal Architecture
- * 
+ *
  * Provides:
  * - Lazy loading of repositories
  * - Type-safe instantiation
  * - Memory optimization
  * - Centralized dependency injection
- * 
+ *
  * Usage:
  * ```typescript
  * const projectRepo = RepositoryFactory.getProjectRepository();
@@ -200,7 +200,7 @@ export class RepositoryFactory {
    * Reset all repositories (useful for testing)
    */
   static reset(): void {
-    Object.keys(repositoryRegistry).forEach(key => {
+    Object.keys(repositoryRegistry).forEach((key) => {
       delete repositoryRegistry[key as keyof RepositoryRegistry];
     });
   }
@@ -526,7 +526,6 @@ export class RepositoryFactory {
     return repositoryRegistry.authRepository!;
   }
 
-
   /**
    * Get Storage Repository instance
    * Lazy loaded for memory efficiency
@@ -642,7 +641,7 @@ export class RepositoryFactory {
    * Set data source for repositories
    * This allows switching between different backend implementations
    */
-  static setDataSource(source: 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis'): void {
+  static setDataSource(source: "supabase" | "java_api" | "prisma" | "localStorage" | "postgis"): void {
     currentDataSource = source;
     // Reset all repositories to force re-instantiation with new data source
     repositoryRegistry.reportDataTransformerRepository = undefined;
@@ -669,7 +668,7 @@ export class RepositoryFactory {
   /**
    * Get the current data source
    */
-  static getDataSource(): 'supabase' | 'java_api' | 'prisma' | 'localStorage' | 'postgis' {
+  static getDataSource(): "supabase" | "java_api" | "prisma" | "localStorage" | "postgis" {
     return currentDataSource;
   }
 
@@ -694,7 +693,6 @@ export class RepositoryFactory {
     }
     return repositoryRegistry.workspaceRepository!;
   }
-
 
   /**
    * Get Location Repository instance
