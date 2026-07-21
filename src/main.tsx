@@ -7,6 +7,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { DEV_MODE } from './config/constants';
 import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
 import { SupabaseAlignmentRepository } from '@/infrastructure/supabase/adapters/SupabaseAlignmentRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+// Validate VITE_* provider env vars at startup and warm the unified factory.
+try { RepositoryFactory.init(); } catch (e) { console.warn('[RepositoryFactory.init]', e); }
 
 // Wire the persistent alignment repository (falls back silently to in-memory if the API is unreachable).
 try { setAlignmentRepository(new SupabaseAlignmentRepository()); } catch { /* noop */ }
