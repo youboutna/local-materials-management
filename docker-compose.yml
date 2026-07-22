@@ -1,19 +1,28 @@
+# Full self-hosted stack for local development and on-prem deployments.
+# Provides Postgres, Keycloak, PostgREST, MinIO (and optional backend).
+# For the lightweight PostgREST + GoTrue + MinIO variant, see
+# docker-compose.selfhosted.yml.
+#
+# Frontend env selection (see docs/SELF_HOSTING.md):
+#   VITE_AUTH_PROVIDER=keycloak
+#   VITE_DATA_PROVIDER=postgrest
+#   VITE_STORAGE_PROVIDER=minio
 
 version: '3.8'
 
 services:
   postgres:
-    image: postgres:13
+    image: postgres:15
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak_pass
+      POSTGRES_DB: etrml
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_MULTIPLE_DATABASES: keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - keycloak_network
-    ports:
-      - "5432:5432"
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    networks: [app_network]
+    ports: ["5432:5432"]
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -21,20 +30,59 @@ services:
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak_pass
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin123
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-    networks:
-      - keycloak_network
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    ports: ["8081:8080"]
+    depends_on: [postgres]
+    networks: [app_network]
+
+  postgrest:
+    image: postgrest/postgrest:v12.0.2
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/etrml
+      PGRST_DB_SCHEMAS: public,btp
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-please-change-me-32-chars-minimum}
+    ports: ["3001:3000"]
+    depends_on: [postgres]
+    networks: [app_network]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - minio_data:/data
+    networks: [app_network]
+
+  # Optional: custom backend (Node.js + Prisma). Comment out if unused.
+  backend:
+    profiles: ["backend"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/etrml
+      JWT_SECRET: ${JWT_SECRET:-please-change-me-32-chars-minimum}
+      NODE_ENV: development
+    ports: ["4000:4000"]
+    depends_on: [postgres]
+    networks: [app_network]
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
 volumes:
   postgres_data:
+  minio_data:
 
 networks:
-  keycloak_network:
+  app_network:
     driver: bridge
