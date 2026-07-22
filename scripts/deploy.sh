@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Mauritanian Materials Management System - Deployment Script
+# HadraTech-GPI — deployment helper.
+# Provider selection is read from .env (canonical vars documented in
+# docs/SELF_HOSTING.md):
+#   VITE_AUTH_PROVIDER    supabase | gotrue | keycloak | local
+#   VITE_DATA_PROVIDER    supabase | postgrest | local
+#   VITE_STORAGE_PROVIDER supabase | s3 | minio | local
+#
 # Usage: ./scripts/deploy.sh [--with-docker] [--supabase-local]
 
 set -e
+
 
 # Colors for output
 RED='\033[0;31m'
