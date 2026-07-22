@@ -3,10 +3,17 @@
  * Supports multiple deployment scenarios and infrastructure providers
  */
 
+// Canonical provider taxonomy — kept in sync with src/config/app-validate.ts
+// and src/infrastructure/RepositoryFactory.ts (single source of truth for
+// which adapters actually exist). Legacy aliases (`auth0`, `custom`, `mysql`,
+// `azure`, `gcs`, `ftp`) are retained only to satisfy existing consumers
+// (ProviderSettings UI, StorageFactory) — they map to no real adapter and
+// will be rejected by validateProviders() at startup.
 export type Environment = 'development' | 'production' | 'staging';
-export type AuthProvider = 'supabase' | 'keycloak' | 'auth0' | 'custom';
-export type DatabaseProvider = 'supabase' | 'postgresql' | 'mysql';
-export type StorageProvider = 'supabase' | 'minio' | 's3' | 'azure' | 'gcs' | 'ftp' | 'local';
+export type AuthProvider = 'supabase' | 'gotrue' | 'keycloak' | 'local' | 'auth0' | 'custom';
+export type DatabaseProvider = 'supabase' | 'postgrest' | 'local' | 'postgresql' | 'mysql';
+export type StorageProvider = 'supabase' | 's3' | 'minio' | 'local' | 'azure' | 'gcs' | 'ftp';
+
 
 export interface AppConfig {
   environment: Environment;
