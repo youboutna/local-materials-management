@@ -1,11 +1,11 @@
-# Stack complète avec Keycloak pour SSO Entreprise
-# Utilisée avec VITE_AUTH_PROVIDER=keycloak, VITE_DATA_PROVIDER=postgrest
-# Déployer : docker compose up -d
-# 
+# Stack open-source légère — totalement indépendante de Supabase
+# PostgREST + GoTrue + MinIO + PostgreSQL
+# Utilisée avec VITE_AUTH_PROVIDER=gotrue, VITE_DATA_PROVIDER=postgrest
+# Déployer : docker compose -f docker-compose.postgrest.yml up -d
+#
 # Variables utilisées :
 #   POSTGRES_PASSWORD, POSTGRES_DB, PGRST_DB_SCHEMAS, PGRST_DB_EXTRA_SEARCH_PATH
-#   JWT_SECRET, API_EXTERNAL_URL
-#   KEYCLOAK_ADMIN, KEYCLOAK_ADMIN_PASSWORD, KEYCLOAK_HOSTNAME
+#   JWT_SECRET, API_EXTERNAL_URL, SITE_URL, MAILER_AUTOCONFIRM
 #   MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
 
 version: "3.9"
@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-app}
-      # Ces variables sont utilisées par PostgREST et le Studio
+      PGDATA: /var/lib/postgresql/data/pgdata
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,btp}
       PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
     volumes:
@@ -36,7 +36,6 @@ services:
     restart: unless-stopped
     environment:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-app}
-      # Schémas exposés par l'API PostgREST
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,btp}
       PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
       PGRST_DB_ANON_ROLE: web_anon
@@ -49,29 +48,24 @@ services:
     ports:
       - "3001:3000"
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.7
+  gotrue:
+    image: supabase/gotrue:v2.158.1
     restart: unless-stopped
-    command: ["start-dev", "--import-realm"]
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-app}
-      KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
-      KC_HTTP_PORT: 8080
-      KC_HTTP_ENABLED: "true"
-      KC_HTTP_RELATIVE_PATH: /auth
-    volumes:
-      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-app}?search_path=auth
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:5173}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-please-change-me-32-chars-minimum}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-true}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:9999}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
-      - "8443:8443"
+      - "9999:9999"
 
   minio:
     image: minio/minio:latest

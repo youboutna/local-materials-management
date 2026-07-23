@@ -49,9 +49,13 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'development',
     auth: {
       provider: import.meta.env.VITE_AUTH_PROVIDER as AuthProvider || 'supabase',
-      url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
-      clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'etr-ml-frontend',
-      realm: import.meta.env.VITE_KEYCLOAK_REALM || 'etr-ml',
+      url:
+        import.meta.env.VITE_GOTRUE_URL ||
+        import.meta.env.VITE_KEYCLOAK_URL ||
+        import.meta.env.VITE_SUPABASE_URL ||
+        'http://localhost:8080',
+      clientId: import.meta.env.VITE_AUTH_CLIENT_ID || import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'etr-ml-frontend',
+      realm: import.meta.env.VITE_AUTH_REALM || import.meta.env.VITE_KEYCLOAK_REALM || 'etr-ml',
       redirectUri: import.meta.env.VITE_AUTH_REDIRECT_URI || window.location.origin
     },
     api: {
@@ -59,12 +63,18 @@ const configs: Record<Environment, AppConfig> = {
       timeout: 30000
     },
     database: {
-      provider: import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'supabase',
-      url: import.meta.env.VITE_SUPABASE_URL || 'https://huttgbybeuzeikaqfvam.supabase.co'
+      provider: import.meta.env.VITE_DATA_PROVIDER as DatabaseProvider || import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'supabase',
+      url:
+        import.meta.env.VITE_POSTGREST_URL ||
+        import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_DATABASE_URL ||
+        'https://huttgbybeuzeikaqfvam.supabase.co'
     },
     storage: {
       provider: import.meta.env.VITE_STORAGE_PROVIDER as StorageProvider || 'supabase',
-      endpoint: import.meta.env.VITE_STORAGE_ENDPOINT,
+      endpoint:
+        import.meta.env.VITE_STORAGE_ENDPOINT ||
+        import.meta.env.VITE_SUPABASE_URL,
       bucket: import.meta.env.VITE_STORAGE_BUCKET || 'documents'
     }
   },
@@ -72,21 +82,29 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'staging',
     auth: {
       provider: import.meta.env.VITE_AUTH_PROVIDER as AuthProvider || 'keycloak',
-      url: import.meta.env.VITE_KEYCLOAK_URL,
-      clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
-      realm: import.meta.env.VITE_KEYCLOAK_REALM
+      url:
+        import.meta.env.VITE_GOTRUE_URL ||
+        import.meta.env.VITE_KEYCLOAK_URL ||
+        import.meta.env.VITE_SUPABASE_URL,
+      clientId: import.meta.env.VITE_AUTH_CLIENT_ID || import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+      realm: import.meta.env.VITE_AUTH_REALM || import.meta.env.VITE_KEYCLOAK_REALM
     },
     api: {
       baseUrl: import.meta.env.VITE_API_URL || '/api',
       timeout: 30000
     },
     database: {
-      provider: import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'postgresql',
-      url: import.meta.env.VITE_DATABASE_URL
+      provider: import.meta.env.VITE_DATA_PROVIDER as DatabaseProvider || import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'postgresql',
+      url:
+        import.meta.env.VITE_POSTGREST_URL ||
+        import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_DATABASE_URL
     },
     storage: {
       provider: import.meta.env.VITE_STORAGE_PROVIDER as StorageProvider || 'minio',
-      endpoint: import.meta.env.VITE_STORAGE_ENDPOINT,
+      endpoint:
+        import.meta.env.VITE_STORAGE_ENDPOINT ||
+        import.meta.env.VITE_SUPABASE_URL,
       bucket: import.meta.env.VITE_STORAGE_BUCKET || 'documents'
     }
   },
@@ -94,21 +112,29 @@ const configs: Record<Environment, AppConfig> = {
     environment: 'production',
     auth: {
       provider: import.meta.env.VITE_AUTH_PROVIDER as AuthProvider || 'keycloak',
-      url: import.meta.env.VITE_KEYCLOAK_URL,
-      clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
-      realm: import.meta.env.VITE_KEYCLOAK_REALM
+      url:
+        import.meta.env.VITE_GOTRUE_URL ||
+        import.meta.env.VITE_KEYCLOAK_URL ||
+        import.meta.env.VITE_SUPABASE_URL,
+      clientId: import.meta.env.VITE_AUTH_CLIENT_ID || import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+      realm: import.meta.env.VITE_AUTH_REALM || import.meta.env.VITE_KEYCLOAK_REALM
     },
     api: {
       baseUrl: import.meta.env.VITE_API_URL || '/api',
       timeout: 30000
     },
     database: {
-      provider: import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'postgresql',
-      url: import.meta.env.VITE_DATABASE_URL
+      provider: import.meta.env.VITE_DATA_PROVIDER as DatabaseProvider || import.meta.env.VITE_DB_PROVIDER as DatabaseProvider || 'postgresql',
+      url:
+        import.meta.env.VITE_POSTGREST_URL ||
+        import.meta.env.VITE_SUPABASE_URL ||
+        import.meta.env.VITE_DATABASE_URL
     },
     storage: {
       provider: import.meta.env.VITE_STORAGE_PROVIDER as StorageProvider || 'minio',
-      endpoint: import.meta.env.VITE_STORAGE_ENDPOINT,
+      endpoint:
+        import.meta.env.VITE_STORAGE_ENDPOINT ||
+        import.meta.env.VITE_SUPABASE_URL,
       bucket: import.meta.env.VITE_STORAGE_BUCKET || 'documents'
     }
   }

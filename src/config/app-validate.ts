@@ -1,7 +1,7 @@
 /**
  * Provider validation at startup.
  * Ensures VITE_AUTH_PROVIDER / VITE_DATA_PROVIDER / VITE_STORAGE_PROVIDER
- * are among the supported values.
+ * are among the supported values and compatible with the chosen deployment.
  */
 
 const AUTH = ['supabase', 'gotrue', 'keycloak', 'local'] as const;
@@ -11,6 +11,14 @@ const STORAGE = ['supabase', 's3', 'minio', 'local'] as const;
 export type AuthProviderKind = (typeof AUTH)[number];
 export type DataProviderKind = (typeof DATA)[number];
 export type StorageProviderKind = (typeof STORAGE)[number];
+
+const env = (key: string): string => (import.meta as any)?.env?.[key] ?? '';
+
+function requireEnv(key: string, condition: boolean, errors: string[]) {
+  if (condition && !env(key)) {
+    errors.push(`${key} is required for the chosen provider combination`);
+  }
+}
 
 export function validateProviders(cfg: {
   auth: string;
@@ -24,6 +32,29 @@ export function validateProviders(cfg: {
     errors.push(`VITE_DATA_PROVIDER="${cfg.data}" invalide (attendu: ${DATA.join(', ')})`);
   if (!STORAGE.includes(cfg.storage as StorageProviderKind))
     errors.push(`VITE_STORAGE_PROVIDER="${cfg.storage}" invalide (attendu: ${STORAGE.join(', ')})`);
+
+  const validCombos = new Set([
+    'supabase-supabase',
+    'gotrue-supabase',
+    'gotrue-postgrest',
+    'keycloak-postgrest',
+    'local-local',
+  ]);
+
+  if (errors.length === 0 && !validCombos.has(`${cfg.auth}-${cfg.data}`)) {
+    errors.push(`Invalid auth/data combination: auth=${cfg.auth} is not compatible with data=${cfg.data}`);
+  }
+
+  requireEnv('VITE_SUPABASE_URL', cfg.auth === 'supabase' || cfg.data === 'supabase' || cfg.storage === 'supabase', errors);
+  requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY', cfg.auth === 'supabase' || cfg.data === 'supabase' || cfg.storage === 'supabase', errors);
+  requireEnv('VITE_GOTRUE_URL', cfg.auth === 'gotrue', errors);
+  requireEnv('VITE_KEYCLOAK_URL', cfg.auth === 'keycloak', errors);
+  requireEnv('VITE_KEYCLOAK_REALM', cfg.auth === 'keycloak', errors);
+  requireEnv('VITE_KEYCLOAK_CLIENT_ID', cfg.auth === 'keycloak', errors);
+  requireEnv('VITE_POSTGREST_URL', cfg.data === 'postgrest', errors);
+  requireEnv('VITE_STORAGE_ENDPOINT', cfg.storage === 's3' || cfg.storage === 'minio', errors);
+  requireEnv('VITE_STORAGE_BUCKET', cfg.storage === 's3' || cfg.storage === 'minio', errors);
+
   if (errors.length) {
     console.error('[ProviderValidation]', errors.join('\n'));
   } else {

@@ -1,5 +1,15 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AlertsProcessorSettings from "@/components/admin/AlertsProcessorSettings";
+import DatabaseSettings from "@/components/admin/DatabaseSettings";
+import DeploymentSettings from "@/components/admin/DeploymentSettings";
+import EscalationThresholdsSettings from "@/components/admin/EscalationThresholdsSettings";
+import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
+import KeycloakSettings from "@/components/admin/KeycloakSettings";
+import ProviderSettings from "@/components/admin/ProviderSettings";
+import StorageSettings from "@/components/admin/StorageSettings";
+import { AppLayout } from "@/components/layout";
+import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,40 +17,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Database,
-  Key,
-  Shield,
-  Cog,
-  Folder,
-  Cloud,
-  Settings2,
-  AlertTriangle,
-  Mail,
-} from "lucide-react";
-import DatabaseSettings from "@/components/admin/DatabaseSettings";
-import KeycloakSettings from "@/components/admin/KeycloakSettings";
-import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
-import StorageSettings from "@/components/admin/StorageSettings";
-import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/use-auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DEV_ROLES,
   getActiveDevRole,
   setActiveDevRole,
 } from "@/config/constants";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ProviderSettings from "@/components/admin/ProviderSettings";
-import DeploymentSettings from "@/components/admin/DeploymentSettings";
-import EscalationThresholdsSettings from "@/components/admin/EscalationThresholdsSettings";
-import AlertsProcessorSettings from "@/components/admin/AlertsProcessorSettings";
-import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
-import { AppLayout } from "@/components/layout";
+import { useAuth } from '@/contexts/use-auth';
+import { useToast } from "@/hooks/use-toast";
+import { useAppConfig } from '@/hooks/useAppConfig';
+import {
+  AlertTriangle,
+  Cloud,
+  Cog,
+  Database,
+  Folder,
+  Key,
+  Mail,
+  Settings2,
+  Shield,
+} from "lucide-react";
+import { useState } from "react";
 
 const Settings = () => {
   const { t } = useLanguage();
   const { isDevelopmentMode } = useAuth();
+  const { config, isValid } = useAppConfig();
   const [activeTab, setActiveTab] = useState("database");
   const [activeDevRole, setDevRole] = useState(getActiveDevRole());
   const { toast } = useToast();
@@ -61,6 +64,38 @@ const Settings = () => {
   return (
     <AppLayout pageTitle={t("settings.title")}>
       <div className="max-w-6xl mx-auto">
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Configuration providers</CardTitle>
+                <CardDescription>
+                  Statut des providers actuels et compatibilité de la configuration.
+                </CardDescription>
+              </div>
+              <Badge variant={isValid ? 'default' : 'destructive'}>
+                {isValid ? 'Configuration valide' : 'Configuration invalide'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm font-semibold">Auth Provider</p>
+                <p className="text-sm text-muted-foreground">{config.auth.provider}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Data Provider</p>
+                <p className="text-sm text-muted-foreground">{config.database.provider}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Storage Provider</p>
+                <p className="text-sm text-muted-foreground">{config.storage.provider}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {isDevelopmentMode && (
             <Card className="mb-8 border-amber-300 bg-amber-50">
               <CardHeader>

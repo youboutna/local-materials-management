@@ -11,20 +11,20 @@
  * it exposes the primitives (auth, storage, postgrest client) that the app can
  * switch centrally, and legacy per-entity factories delegate to it.
  */
-import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
-import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
-import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
+import { validateProviders } from '@/config/app-validate';
 import { DEV_MODE } from '@/config/constants';
-import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
+import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
+import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
 import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
 import { LocalNotificationAdapter } from '@/infrastructure/adapters/local/LocalNotificationAdapter';
 import { LocalStorageAdapter } from '@/infrastructure/adapters/local/LocalStorageAdapter';
 import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
-import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
 import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
-import { validateProviders } from '@/config/app-validate';
+import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
 
 export type AuthProviderKind = 'supabase' | 'gotrue' | 'keycloak' | 'local';
 export type DataProviderKind = 'supabase' | 'postgrest' | 'local';
@@ -57,11 +57,14 @@ export class RepositoryFactory {
   private static postgrest?: PostgrestClient;
 
   static init() {
-    validateProviders({
+    const errors = validateProviders({
       auth: resolveAuth(),
       data: resolveData(),
       storage: resolveStorage(),
     });
+    if (errors.length) {
+      throw new Error(errors.join(' / '));
+    }
   }
 
   static getAuthKind(): AuthProviderKind {
@@ -82,7 +85,7 @@ export class RepositoryFactory {
         break;
       case 'gotrue':
         this.auth = new GoTrueAuthAdapter(
-          env('VITE_GOTRUE_URL', env('VITE_SUPABASE_URL', '') + '/auth/v1')!,
+          env('VITE_GOTRUE_URL', '')!,
           env('VITE_SUPABASE_PUBLISHABLE_KEY')
         );
         break;
@@ -136,7 +139,7 @@ export class RepositoryFactory {
   static getPostgrestClient(): PostgrestClient {
     if (this.postgrest) return this.postgrest;
     this.postgrest = new PostgrestClient({
-      baseUrl: env('VITE_POSTGREST_URL', env('VITE_SUPABASE_URL', '') + '/rest/v1')!,
+      baseUrl: env('VITE_POSTGREST_URL', '')!,
       apiKey: env('VITE_SUPABASE_PUBLISHABLE_KEY'),
       defaultSchema: env('VITE_BTP_SCHEMA', 'public'),
       getToken: () => {
