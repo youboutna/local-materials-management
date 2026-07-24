@@ -1,13 +1,11 @@
 /**
- * LocalAuthAdapter — DEV-only IAuthRepository implementation.
+ * LocalAuthAdapter — DEV / Mode B IAuthRepository implementation.
  *
- * Validates credentials against DEV_USERS defined in src/config/constants.ts
- * and persists a fake session in localStorage (key: dev_session). No network calls.
- *
- * Architecture: this adapter lives on the infrastructure side of the hexagon,
- * exactly like SupabaseAuthAdapter. It exposes snake_case AuthUser/AuthSession
- * shapes; the Service (UnifiedAuthService) is responsible for converting to
- * the camelCase UnifiedAuthUser DTO consumed by the UI.
+ * Validates credentials against DEV_USERS (defaults + localStorage overrides)
+ * and mints an HS256 JWT signed with VITE_JWT_SECRET so a self-hosted
+ * PostgREST/GoTrue backend accepts the token for RLS in "Mode B" (local
+ * auth + self-hosted data). Falls back to an opaque dev token if the secret
+ * is missing (fully offline mode).
  */
 
 import {
@@ -18,13 +16,13 @@ import {
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
 import {
-  DEV_USERS,
+  getDevUsersSnapshot,
   DevUserProfile,
   setActiveDevRole,
 } from '@/config/constants';
 
 const SESSION_KEY = 'dev_session';
-const SESSION_VERSION = 2; // bump to invalidate any pre-existing auto-injected sessions
+const SESSION_VERSION = 3;
 
 interface PersistedDevSession {
   v?: number;
@@ -50,7 +48,8 @@ function profileToAuthUser(profile: DevUserProfile): AuthUser {
 
 function findProfileByEmail(email: string): { key: string; profile: DevUserProfile } | null {
   const target = email.trim().toLowerCase();
-  for (const [key, profile] of Object.entries(DEV_USERS)) {
+  const users = getDevUsersSnapshot();
+  for (const [key, profile] of Object.entries(users)) {
     if (profile.email.toLowerCase() === target) return { key, profile };
   }
   return null;
@@ -62,7 +61,6 @@ function readPersistedSession(): PersistedDevSession | null {
     const raw = window.localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedDevSession;
-    // Invalidate any legacy/auto-injected sessions without a version marker.
     if (parsed?.v !== SESSION_VERSION) {
       window.localStorage.removeItem(SESSION_KEY);
       return null;
@@ -83,11 +81,70 @@ function clearPersistedSession(): void {
   window.localStorage.removeItem(SESSION_KEY);
 }
 
-function buildSession(profile: DevUserProfile, persisted?: PersistedDevSession): AuthSession {
+// ---------- HS256 JWT signing (browser, WebCrypto) ----------
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function base64UrlEncodeString(s: string): string {
+  return base64UrlEncode(new TextEncoder().encode(s));
+}
+
+async function signHs256(payload: Record<string, unknown>, secret: string): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encoded = `${base64UrlEncodeString(JSON.stringify(header))}.${base64UrlEncodeString(JSON.stringify(payload))}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(encoded));
+  return `${encoded}.${base64UrlEncode(new Uint8Array(sig))}`;
+}
+
+async function mintAccessToken(profile: DevUserProfile, ttlSeconds: number): Promise<string> {
+  const secret = (import.meta as any)?.env?.VITE_JWT_SECRET as string | undefined;
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    aud: 'authenticated',
+    role: 'authenticated',
+    sub: profile.id,
+    email: profile.email,
+    app_metadata: { provider: 'local', roles: [profile.user_metadata.role] },
+    user_metadata: {
+      ...profile.user_metadata,
+      permissions: profile.permissions ?? [],
+      teams: profile.teams ?? [],
+    },
+    iat: now,
+    exp: now + ttlSeconds,
+  };
+  if (!secret) {
+    // Offline mode: opaque token, RLS backends will reject it (expected).
+    return `dev-token-${profile.id}-${now}`;
+  }
+  try {
+    return await signHs256(payload, secret);
+  } catch (err) {
+    console.warn('[LocalAuthAdapter] HS256 sign failed, using opaque token', err);
+    return `dev-token-${profile.id}-${now}`;
+  }
+}
+
+async function buildSession(
+  profile: DevUserProfile,
+  persisted?: PersistedDevSession,
+): Promise<AuthSession> {
+  const ttl = Number((import.meta as any)?.env?.VITE_JWT_EXPIRY ?? 3600);
   const expiresAt =
-    persisted?.expires_at ?? new Date(Date.now() + 24 * 3600_000).toISOString();
+    persisted?.expires_at ?? new Date(Date.now() + ttl * 1000).toISOString();
+  const accessToken = persisted?.access_token ?? (await mintAccessToken(profile, ttl));
   return {
-    access_token: persisted?.access_token ?? `dev-token-${profile.id}`,
+    access_token: accessToken,
     refresh_token: persisted?.refresh_token ?? `dev-refresh-${profile.id}`,
     expires_at: expiresAt,
     user: profileToAuthUser(profile),
@@ -99,12 +156,13 @@ export class LocalAuthAdapter implements IAuthRepository {
     const persisted = readPersistedSession();
     if (!persisted) return { session: null, error: null };
 
-    const profile = Object.values(DEV_USERS).find((p) => p.id === persisted.userId);
+    const users = getDevUsersSnapshot();
+    const profile = Object.values(users).find((p) => p.id === persisted.userId);
     if (!profile) {
       clearPersistedSession();
       return { session: null, error: null };
     }
-    return { session: buildSession(profile, persisted), error: null };
+    return { session: await buildSession(profile, persisted), error: null };
   }
 
   async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
@@ -113,21 +171,21 @@ export class LocalAuthAdapter implements IAuthRepository {
       return { session: null, error: new Error('Invalid login credentials') };
     }
 
-    // Align the active dev role with the account that just signed in — keeps the
-    // DEV_USER Proxy and any UI role selector consistent with the session.
     setActiveDevRole(match.profile.user_metadata.role);
 
+    const ttl = Number((import.meta as any)?.env?.VITE_JWT_EXPIRY ?? 3600);
+    const accessToken = await mintAccessToken(match.profile, ttl);
     const persisted: PersistedDevSession = {
       v: SESSION_VERSION,
       userId: match.profile.id,
       roleKey: match.key,
-      access_token: `dev-token-${match.profile.id}-${Date.now()}`,
+      access_token: accessToken,
       refresh_token: `dev-refresh-${match.profile.id}`,
-      expires_at: new Date(Date.now() + 24 * 3600_000).toISOString(),
+      expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
     };
     writePersistedSession(persisted);
 
-    return { session: buildSession(match.profile, persisted), error: null };
+    return { session: await buildSession(match.profile, persisted), error: null };
   }
 
   async signUp(_data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
