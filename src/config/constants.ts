@@ -5,7 +5,11 @@ const isDevelopment = isBrowser
   ? window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
   : false;
 
-export const DEV_MODE = false;
+export const DEV_MODE =
+  (isBrowser && (window as any).__APP_CONFIG__?.DEV_MODE === "true") ||
+  (typeof import.meta !== "undefined" &&
+    (import.meta as any)?.env?.VITE_DEV_MODE === "true") ||
+  false;
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
 // Mock user configuration for development mode
@@ -19,9 +23,15 @@ export interface DevUserProfile {
     phone: string;
     national_id: string;
   };
+  /** Fine-grained permissions (Mode B / audit UI). */
+  permissions?: string[];
+  /** Team memberships. */
+  teams?: string[];
+  /** User preferences (language, theme, defaults). */
+  preferences?: Record<string, unknown>;
 }
 
-export const DEV_USERS: Record<string, DevUserProfile> = {
+const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
   admin: {
     id: "00000000-0000-0000-0000-000000000001",
     email: "admin@hadratech.com",
@@ -32,6 +42,9 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
       phone: "100000001",
       national_id: "DEV-ADMIN-001",
     },
+    permissions: ["*"],
+    teams: ["core"],
+    preferences: { language: "fr", theme: "light" },
   },
   manager: {
     id: "00000000-0000-0000-0000-000000000002",
@@ -43,6 +56,15 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
       phone: "100000002",
       national_id: "DEV-MANAGER-002",
     },
+    permissions: [
+      "projects:read",
+      "projects:create",
+      "projects:update",
+      "tenders:read",
+      "tenders:manage",
+    ],
+    teams: ["projects"],
+    preferences: { language: "fr", theme: "light" },
   },
   director: {
     id: "00000000-0000-0000-0000-000000000003",
@@ -54,14 +76,69 @@ export const DEV_USERS: Record<string, DevUserProfile> = {
       phone: "100000003",
       national_id: "DEV-DIRECTOR-003",
     },
+    permissions: [
+      "projects:read",
+      "projects:approve",
+      "payments:approve",
+      "users:read",
+    ],
+    teams: ["direction"],
+    preferences: { language: "fr", theme: "light" },
   },
 };
+
+const LOCAL_USERS_STORAGE_KEY = "dev_users_overrides";
+
+function loadPersistedUsers(): Record<string, DevUserProfile> {
+  if (!isBrowser) return {};
+  try {
+    const raw = window.localStorage.getItem(LOCAL_USERS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, DevUserProfile>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function persistDevUsers(users: Record<string, DevUserProfile>): void {
+  if (!isBrowser) return;
+  window.localStorage.setItem(LOCAL_USERS_STORAGE_KEY, JSON.stringify(users));
+  window.dispatchEvent(new CustomEvent("dev-users-changed"));
+}
+
+/** Live DEV_USERS registry: defaults merged with localStorage overrides. */
+export const DEV_USERS: Record<string, DevUserProfile> = new Proxy(
+  {} as Record<string, DevUserProfile>,
+  {
+    get(_t, prop: string) {
+      const merged = { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
+      return merged[prop];
+    },
+    ownKeys() {
+      return Object.keys({ ...DEFAULT_DEV_USERS, ...loadPersistedUsers() });
+    },
+    getOwnPropertyDescriptor() {
+      return { enumerable: true, configurable: true };
+    },
+    has(_t, prop: string) {
+      return prop in { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
+    },
+  },
+);
+
+export function getDevUsersSnapshot(): Record<string, DevUserProfile> {
+  return { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
+}
+
+export function getDefaultDevUsers(): Record<string, DevUserProfile> {
+  return { ...DEFAULT_DEV_USERS };
+}
 
 /** Active DEV_USER — derived from the active dev role (localStorage: dev_role). */
 export const DEV_USER: DevUserProfile = new Proxy({} as DevUserProfile, {
   get(_t, prop: keyof DevUserProfile) {
     const roleKey = (isBrowser && localStorage.getItem("dev_role")) || "admin";
-    const profile = DEV_USERS[roleKey] ?? DEV_USERS.admin;
+    const users = getDevUsersSnapshot();
+    const profile = users[roleKey] ?? users.admin ?? DEFAULT_DEV_USERS.admin;
     return profile[prop];
   },
 });
