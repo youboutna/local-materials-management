@@ -4,13 +4,18 @@ interface ImportMetaEnv {
   readonly VITE_DEV_MODE: string;
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_PUBLISHABLE_KEY: string;
+  readonly VITE_SUPABASE_ANON_KEY?: string;
   readonly VITE_SUPABASE_PROJECT_ID: string;
-  /**
-   * Nom du schéma Postgres utilisé pour les données métier BTP.
-   * Par défaut `public`. Mettre `btp` si le schéma est exposé côté
-   * Supabase Dashboard (Settings > API > Exposed schemas).
-   */
+  /** Schéma Postgres BTP (par défaut `btp`). */
   readonly VITE_BTP_SCHEMA?: string;
+  readonly VITE_PGRST_SCHEMAS?: string;
+  readonly VITE_PGRST_EXTRA_SEARCH_PATH?: string;
+  /** Secret HS256 partagé avec GoTrue/PostgREST pour le Mode B (local auth + self-hosted data). */
+  readonly VITE_JWT_SECRET?: string;
+  readonly VITE_JWT_EXPIRY?: string;
+  readonly VITE_AUTH_PROVIDER?: string;
+  readonly VITE_DATA_PROVIDER?: string;
+  readonly VITE_STORAGE_PROVIDER?: string;
 }
 
 interface ImportMeta {
