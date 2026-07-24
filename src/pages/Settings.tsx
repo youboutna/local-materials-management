@@ -4,6 +4,7 @@ import DeploymentSettings from "@/components/admin/DeploymentSettings";
 import EscalationThresholdsSettings from "@/components/admin/EscalationThresholdsSettings";
 import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
 import KeycloakSettings from "@/components/admin/KeycloakSettings";
+import LocalUserManagementPanel from "@/components/admin/LocalUserManagementPanel";
 import ProviderSettings from "@/components/admin/ProviderSettings";
 import StorageSettings from "@/components/admin/StorageSettings";
 import { AppLayout } from "@/components/layout";
@@ -37,6 +38,7 @@ import {
   Mail,
   Settings2,
   Shield,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -142,7 +144,7 @@ const Settings = () => {
           )}
 
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-9 mb-8">
+            <TabsList className="grid grid-cols-10 mb-8">
               <TabsTrigger value="providers" className="flex items-center">
                 <Cloud className="mr-2 h-4 w-4" /> Providers
               </TabsTrigger>
@@ -174,6 +176,9 @@ const Settings = () => {
               </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center">
                 <Mail className="mr-2 h-4 w-4" /> Emails
+              </TabsTrigger>
+              <TabsTrigger value="local-users" className="flex items-center">
+                <Users className="mr-2 h-4 w-4" /> Utilisateurs locaux
               </TabsTrigger>
             </TabsList>
 
@@ -211,6 +216,10 @@ const Settings = () => {
 
             <TabsContent value="notifications">
               <AdminEmailsSettings />
+            </TabsContent>
+
+            <TabsContent value="local-users">
+              <LocalUserManagementPanel />
             </TabsContent>
         </Tabs>
       </div>

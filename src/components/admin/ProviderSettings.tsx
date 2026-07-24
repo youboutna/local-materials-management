@@ -27,23 +27,31 @@ const ProviderSettings = () => {
   const scenarioPresets = [
     {
       id: 'supabase-cloud',
-      label: 'Supabase Cloud',
+      label: 'Mode A · Supabase Cloud',
       auth: 'supabase',
       data: 'supabase',
       storage: 'supabase',
-      description: 'Managed Supabase SaaS',
+      description: 'Managed Supabase SaaS (full)',
     },
     {
       id: 'supabase-self-hosted',
-      label: 'Supabase Self-Hosted',
+      label: 'Mode A · Self-Hosted (SDK)',
       auth: 'supabase',
       data: 'supabase',
       storage: 'supabase',
-      description: 'Self-hosted Supabase stack',
+      description: 'Stack Supabase self-hostée (Kong + GoTrue + PostgREST)',
+    },
+    {
+      id: 'local-selfhosted-data',
+      label: 'Mode B · Local Users + Self-Hosted Data',
+      auth: 'local',
+      data: 'supabase',
+      storage: 'supabase',
+      description: 'DEV_USERS locaux + JWT HS256 accepté par la RLS self-hostée',
     },
     {
       id: 'postgrest-oss',
-      label: 'OSS Légère',
+      label: 'OSS Légère (GoTrue + PostgREST)',
       auth: 'gotrue',
       data: 'postgrest',
       storage: 's3',
@@ -51,7 +59,7 @@ const ProviderSettings = () => {
     },
     {
       id: 'sso-enterprise',
-      label: 'SSO Entreprise',
+      label: 'SSO Entreprise (Keycloak)',
       auth: 'keycloak',
       data: 'postgrest',
       storage: 's3',
@@ -59,11 +67,11 @@ const ProviderSettings = () => {
     },
     {
       id: 'local-dev',
-      label: 'Local Dev',
+      label: 'Mode C · Local Dev (offline)',
       auth: 'local',
       data: 'local',
       storage: 'local',
-      description: 'Offline developer mode',
+      description: 'Tout local, aucun réseau',
     },
   ];
 
