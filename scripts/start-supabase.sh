@@ -434,3 +434,36 @@ echo "   - Docker: /docker-entrypoint-initdb.d/migrations/hadratech/"
 echo ""
 echo -e "${GREEN}${BOLD}🎯 HadraTech-GPI Supabase self-hosted is ready!${NC}"
 echo ""
+# =============================================================================
+# SECTION 9 : SYNCHRONISATION DES CLÉS AVEC LE .ENV RACINE
+# =============================================================================
+echo ""
+echo -e "${YELLOW}${BOLD}[9/8] Synchronisation des clés avec .env racine...${NC}"
+ROOT_ENV="$PROJECT_ROOT/.env"
+if [ -f "$ROOT_ENV" ] && [ -f "$ENV_FILE" ]; then
+  ANON_KEY=$(grep -E '^ANON_KEY=' "$ENV_FILE" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d ' ')
+  JWT_SECRET=$(grep -E '^JWT_SECRET=' "$ENV_FILE" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d ' ')
+  if [ -n "$ANON_KEY" ]; then
+    if grep -qE '^VITE_SUPABASE_ANON_KEY=' "$ROOT_ENV"; then
+      sed -i.bak "s|^VITE_SUPABASE_ANON_KEY=.*$|VITE_SUPABASE_ANON_KEY=\"${ANON_KEY}\"|" "$ROOT_ENV"
+    else
+      echo "VITE_SUPABASE_ANON_KEY=\"${ANON_KEY}\"" >> "$ROOT_ENV"
+    fi
+    if grep -qE '^VITE_SUPABASE_PUBLISHABLE_KEY=' "$ROOT_ENV"; then
+      sed -i.bak "s|^VITE_SUPABASE_PUBLISHABLE_KEY=.*$|VITE_SUPABASE_PUBLISHABLE_KEY=\"${ANON_KEY}\"|" "$ROOT_ENV"
+    fi
+  fi
+  if [ -n "$JWT_SECRET" ]; then
+    if grep -qE '^VITE_JWT_SECRET=' "$ROOT_ENV"; then
+      sed -i.bak "s|^VITE_JWT_SECRET=.*$|VITE_JWT_SECRET=\"${JWT_SECRET}\"|" "$ROOT_ENV"
+    else
+      echo "VITE_JWT_SECRET=\"${JWT_SECRET}\"" >> "$ROOT_ENV"
+    fi
+  fi
+  # Force self-hosted URL
+  if grep -qE '^VITE_SUPABASE_URL=' "$ROOT_ENV"; then
+    sed -i.bak "s|^VITE_SUPABASE_URL=.*$|VITE_SUPABASE_URL=\"http://localhost:8000\"|" "$ROOT_ENV"
+  fi
+  rm -f "$ROOT_ENV.bak"
+  echo -e "${GREEN}✅ .env racine synchronisé (ANON_KEY, JWT_SECRET, SUPABASE_URL)${NC}"
+fi

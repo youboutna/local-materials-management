@@ -33,12 +33,17 @@ export function validateProviders(cfg: {
   if (!STORAGE.includes(cfg.storage as StorageProviderKind))
     errors.push(`VITE_STORAGE_PROVIDER="${cfg.storage}" invalide (attendu: ${STORAGE.join(', ')})`);
 
+  // Matrice de compatibilité auth × data.
+  // Mode B (local auth + supabase data) est valide : LocalAuthAdapter signe des
+  // JWT HS256 avec VITE_JWT_SECRET (partagé avec GoTrue) que la RLS accepte.
   const validCombos = new Set([
     'supabase-supabase',
     'gotrue-supabase',
     'gotrue-postgrest',
     'keycloak-postgrest',
-    'local-local',
+    'local-supabase',   // Mode B
+    'local-postgrest',  // variante self-hosted légère
+    'local-local',      // Mode C offline
   ]);
 
   if (errors.length === 0 && !validCombos.has(`${cfg.auth}-${cfg.data}`)) {
@@ -54,6 +59,11 @@ export function validateProviders(cfg: {
   requireEnv('VITE_POSTGREST_URL', cfg.data === 'postgrest', errors);
   requireEnv('VITE_STORAGE_ENDPOINT', cfg.storage === 's3' || cfg.storage === 'minio', errors);
   requireEnv('VITE_STORAGE_BUCKET', cfg.storage === 's3' || cfg.storage === 'minio', errors);
+
+  // Mode B / self-hosted: LocalAuthAdapter must sign JWTs the backend can verify.
+  if (cfg.auth === 'local' && (cfg.data === 'supabase' || cfg.data === 'postgrest')) {
+    requireEnv('VITE_JWT_SECRET', true, errors);
+  }
 
   if (errors.length) {
     console.error('[ProviderValidation]', errors.join('\n'));
