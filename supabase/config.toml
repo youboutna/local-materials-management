@@ -1,6 +1,6 @@
 
 # This is the Supabase project configuration file
-project_id = "huttgbybeuzeikaqfvam"
+project_id = "env(VITE_SUPABASE_PROJECT_ID)"
 
 # CORS settings to allow requests from all origins in development
 [api]
