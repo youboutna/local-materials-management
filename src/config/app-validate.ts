@@ -40,10 +40,11 @@ export function validateProviders(cfg: {
     'supabase-supabase',
     'gotrue-supabase',
     'gotrue-postgrest',
+    'keycloak-supabase',
     'keycloak-postgrest',
     'local-supabase',   // Mode B
     'local-postgrest',  // variante self-hosted légère
-    'local-local',      // Mode C offline
+    'local-local',      // Mode local-bypass offline
   ]);
 
   if (errors.length === 0 && !validCombos.has(`${cfg.auth}-${cfg.data}`)) {
