@@ -4,6 +4,9 @@
  * are among the supported values and compatible with the chosen deployment.
  */
 
+import { getAppConfig } from './app';
+
+
 const AUTH = ['supabase', 'gotrue', 'keycloak', 'local'] as const;
 const DATA = ['supabase', 'postgrest', 'local'] as const;
 const STORAGE = ['supabase', 's3', 'minio', 'local'] as const;
@@ -40,10 +43,11 @@ export function validateProviders(cfg: {
     'supabase-supabase',
     'gotrue-supabase',
     'gotrue-postgrest',
+    'keycloak-supabase',
     'keycloak-postgrest',
     'local-supabase',   // Mode B
     'local-postgrest',  // variante self-hosted légère
-    'local-local',      // Mode C offline
+    'local-local',      // Mode local-bypass offline
   ]);
 
   if (errors.length === 0 && !validCombos.has(`${cfg.auth}-${cfg.data}`)) {
@@ -74,3 +78,44 @@ export function validateProviders(cfg: {
   }
   return errors;
 }
+
+/**
+ * Startup validation for the full AppConfig, called from main.tsx.
+ * Enforces required variables per mode and warns on insecure defaults.
+ */
+export function validateAppConfig(): string[] {
+  const config = getAppConfig();
+  const errors: string[] = [];
+
+
+
+  if (config.mode === 'production') {
+    if (!config.auth.url) errors.push('VITE_SUPABASE_URL is required in production');
+    if (!config.auth.anonKey) errors.push('VITE_SUPABASE_ANON_KEY is required in production');
+    if (!config.auth.projectId) errors.push('VITE_SUPABASE_PROJECT_ID is required in production');
+  }
+
+  if (config.mode === 'development') {
+    if (!config.auth.anonKey || config.auth.anonKey === 'dev-anon-key') {
+      console.warn('[AppConfig] Using default ANON_KEY for development. Generate one with scripts/generate-keys.sh');
+    }
+  }
+
+  errors.push(
+    ...validateProviders({
+      auth: config.auth.provider,
+      data: config.database.provider,
+      storage: config.storage.provider,
+    })
+  );
+
+  if (errors.length) {
+    console.error('[AppConfig]', errors.join('\n'));
+  } else {
+    console.info(
+      `[AppConfig] mode=${config.mode} auth=${config.auth.provider} data=${config.database.provider} storage=${config.storage.provider}`
+    );
+  }
+  return errors;
+}
+
