@@ -8,8 +8,10 @@ import { DEV_MODE } from './config/constants';
 import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
 import { SupabaseAlignmentRepository } from '@/infrastructure/supabase/adapters/SupabaseAlignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { validateAppConfig } from '@/config/app-validate';
 
 // Validate VITE_* provider env vars at startup and warm the unified factory.
+try { validateAppConfig(); } catch (e) { console.warn('[validateAppConfig]', e); }
 try { RepositoryFactory.init(); } catch (e) { console.warn('[RepositoryFactory.init]', e); }
 
 // Wire the persistent alignment repository (falls back silently to in-memory if the API is unreachable).
