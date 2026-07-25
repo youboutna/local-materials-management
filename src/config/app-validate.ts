@@ -75,3 +75,45 @@ export function validateProviders(cfg: {
   }
   return errors;
 }
+
+/**
+ * Startup validation for the full AppConfig, called from main.tsx.
+ * Enforces required variables per mode and warns on insecure defaults.
+ */
+export function validateAppConfig(): string[] {
+  // Local import to avoid a cycle at module load.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getAppConfig } = require('./app') as typeof import('./app');
+  const config = getAppConfig();
+  const errors: string[] = [];
+
+  if (config.mode === 'production') {
+    if (!config.auth.url) errors.push('VITE_SUPABASE_URL is required in production');
+    if (!config.auth.anonKey) errors.push('VITE_SUPABASE_ANON_KEY is required in production');
+    if (!config.auth.projectId) errors.push('VITE_SUPABASE_PROJECT_ID is required in production');
+  }
+
+  if (config.mode === 'development') {
+    if (!config.auth.anonKey || config.auth.anonKey === 'dev-anon-key') {
+      console.warn('[AppConfig] Using default ANON_KEY for development. Generate one with scripts/generate-keys.sh');
+    }
+  }
+
+  errors.push(
+    ...validateProviders({
+      auth: config.auth.provider,
+      data: config.database.provider,
+      storage: config.storage.provider,
+    })
+  );
+
+  if (errors.length) {
+    console.error('[AppConfig]', errors.join('\n'));
+  } else {
+    console.info(
+      `[AppConfig] mode=${config.mode} auth=${config.auth.provider} data=${config.database.provider} storage=${config.storage.provider}`
+    );
+  }
+  return errors;
+}
+
