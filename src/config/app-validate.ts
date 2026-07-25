@@ -84,11 +84,10 @@ export function validateProviders(cfg: {
  * Enforces required variables per mode and warns on insecure defaults.
  */
 export function validateAppConfig(): string[] {
-  // Local import to avoid a cycle at module load.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getAppConfig } = require('./app') as typeof import('./app');
   const config = getAppConfig();
   const errors: string[] = [];
+
+
 
   if (config.mode === 'production') {
     if (!config.auth.url) errors.push('VITE_SUPABASE_URL is required in production');
