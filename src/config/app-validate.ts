@@ -4,6 +4,9 @@
  * are among the supported values and compatible with the chosen deployment.
  */
 
+import { getAppConfig } from './app';
+
+
 const AUTH = ['supabase', 'gotrue', 'keycloak', 'local'] as const;
 const DATA = ['supabase', 'postgrest', 'local'] as const;
 const STORAGE = ['supabase', 's3', 'minio', 'local'] as const;
