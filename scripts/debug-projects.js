@@ -1,38 +1,39 @@
 // Script de diagnostic pour vérifier les données de projets
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Configuration Supabase
-const SUPABASE_URL = 'https://huttgbybeuzeikaqfvam.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1dHRnYnliZXV6ZWlrYXFmdmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNjM3MzgsImV4cCI6MjA1ODgzOTczOH0.1VbV47UuczSyKrA_Rzxw2lywA25392bjNe6snuHVF0k';
+const SUPABASE_URL = "https://ttrfbzonzcyimfmezuqv.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1dHRnYnliZXV6ZWlrYXFmdmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNjM3MzgsImV4cCI6MjA1ODgzOTczOH0.1VbV47UuczSyKrA_Rzxw2lywA25392bjNe6snuHVF0k";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function debugProjects() {
-  console.log('=== DIAGNOSTIC DES PROJETS ===\n');
+  console.log("=== DIAGNOSTIC DES PROJETS ===\n");
 
   try {
     // 1. Vérifier tous les projets
     const { data: projects, error: projectsError } = await supabase
-      .from('projects')
-      .select('id, title, location, status, progress, budget');
+      .from("projects")
+      .select("id, title, location, status, progress, budget");
 
     if (projectsError) {
-      console.error('Erreur lors de la récupération des projets:', projectsError);
+      console.error("Erreur lors de la récupération des projets:", projectsError);
       return;
     }
 
     console.log(`Nombre total de projets: ${projects?.length || 0}\n`);
 
     if (!projects || projects.length === 0) {
-      console.log('Aucun projet trouvé dans la base de données.');
+      console.log("Aucun projet trouvé dans la base de données.");
       return;
     }
 
     // 2. Distribution par localisation
-    console.log('=== DISTRIBUTION PAR LOCALISATION ===');
+    console.log("=== DISTRIBUTION PAR LOCALISATION ===");
     const locationCounts = {};
-    projects.forEach(project => {
-      const location = project.location || 'Non spécifié';
+    projects.forEach((project) => {
+      const location = project.location || "Non spécifié";
       locationCounts[location] = (locationCounts[location] || 0) + 1;
     });
 
@@ -43,10 +44,10 @@ async function debugProjects() {
       });
 
     // 3. Distribution par statut
-    console.log('\n=== DISTRIBUTION PAR STATUT ===');
+    console.log("\n=== DISTRIBUTION PAR STATUT ===");
     const statusCounts = {};
-    projects.forEach(project => {
-      const status = project.status || 'Non spécifié';
+    projects.forEach((project) => {
+      const status = project.status || "Non spécifié";
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
 
@@ -57,13 +58,11 @@ async function debugProjects() {
       });
 
     // 4. Vérifier les projets avec Mauritanie
-    console.log('\n=== PROJETS MAURITANIE ===');
-    const mauritanieProjects = projects.filter(p => 
-      p.location && p.location.toLowerCase().includes('mauritanie')
-    );
-    
+    console.log("\n=== PROJETS MAURITANIE ===");
+    const mauritanieProjects = projects.filter((p) => p.location && p.location.toLowerCase().includes("mauritanie"));
+
     if (mauritanieProjects.length > 0) {
-      mauritanieProjects.forEach(p => {
+      mauritanieProjects.forEach((p) => {
         console.log(`  - ${p.title} (location: ${p.location})`);
       });
     } else {
@@ -71,10 +70,10 @@ async function debugProjects() {
     }
 
     // 5. Projets avec localisations similaires
-    console.log('\n=== ANALYSE DES LOCALISATIONS SIMILAIRES ===');
+    console.log("\n=== ANALYSE DES LOCALISATIONS SIMILAIRES ===");
     const normalizedLocations = {};
-    projects.forEach(project => {
-      const normalized = (project.location || '').toLowerCase().trim();
+    projects.forEach((project) => {
+      const normalized = (project.location || "").toLowerCase().trim();
       if (!normalizedLocations[normalized]) {
         normalizedLocations[normalized] = [];
       }
@@ -85,13 +84,12 @@ async function debugProjects() {
       .filter(([loc, projects]) => projects.length > 1)
       .forEach(([location, projectList]) => {
         console.log(`  "${location}": ${projectList.length} projets`);
-        projectList.forEach(title => console.log(`    - ${title}`));
+        projectList.forEach((title) => console.log(`    - ${title}`));
       });
 
-    console.log('\n=== FIN DU DIAGNOSTIC ===');
-
+    console.log("\n=== FIN DU DIAGNOSTIC ===");
   } catch (error) {
-    console.error('Erreur inattendue:', error);
+    console.error("Erreur inattendue:", error);
   }
 }
 
