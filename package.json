@@ -8,8 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "create-user": "ts-node scripts/create-user.ts",
+    "create-user:admin": "ts-node scripts/create-user.ts --admin"
   },
+
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -103,7 +106,7 @@
     "jsdom": "^29.1.1",
     "lovable-tagger": "^1.1.8",
     "postcss": "^8.4.47",
-    "supabase": "^2.22.12",
+    "supabase": "^2.109.1",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",

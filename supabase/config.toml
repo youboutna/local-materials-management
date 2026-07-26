@@ -1,39 +1,48 @@
+# =============================================================================
+# Supabase Project Configuration – HadraTech-GPI
+# =============================================================================
+# Version compatible avec la CLI Supabase v2
+# =============================================================================
 
-# This is the Supabase project configuration file
-project_id = "env(VITE_SUPABASE_PROJECT_ID)"
+# ---- Projet ----
+project_id = "ttrfbzonzcyimfmezuqv"
 
-# CORS settings to allow requests from all origins in development
+# ---- API ----
 [api]
 port = 54321
-schemas = ["public", "storage", "graphql_public", "btp"]
-extra_search_path = ["public", "extensions"]
+schemas = ["public", "btp", "auth", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions", "btp"]
 max_rows = 1000
 
-[api.cors]
-enabled = true
-allowed_origins = ["*"]
-allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-allowed_headers = ["Authorization", "Content-Type"]
-exposed_headers = ["Content-Range", "X-Total-Count"]
-
-# Update environment to use correct Lovable project domain with Google OAuth support
+# ---- Auth ----
 [auth]
 enable_signup = true
-site_url = "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com"
+site_url = "http://localhost:5173"
 additional_redirect_urls = [
-  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth/callback", 
-  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth",
-  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/"
+  "http://localhost:5173/auth/callback",
+  "http://localhost:5173/auth",
+  "http://localhost:5173/",
+  "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback",
+  "https://*.lovableproject.com/auth/callback",
+  "https://*.lovableproject.com/auth",
+  "https://*.lovableproject.com/"
 ]
 
-# Google OAuth configuration
+# ---- Google OAuth ----
 [auth.external.google]
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-redirect_uri = "https://huttgbybeuzeikaqfvam.supabase.co/auth/v1/callback"
+redirect_uri = "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback"
 
-# Function configurations for better performance
+# ---- GitHub OAuth (optionnel) ----
+# [auth.external.github]
+# enabled = false
+# client_id = "env(GITHUB_CLIENT_ID)"
+# secret = "env(GITHUB_CLIENT_SECRET)"
+# redirect_uri = "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback"
+
+# ---- Edge Functions ----
 [functions.send-email-notification]
 verify_jwt = false
 
@@ -48,3 +57,11 @@ verify_jwt = false
 
 [functions.send-tender-submission-notification]
 verify_jwt = false
+
+# ---- Database Migrations ----
+[db]
+# Le format des migrations est imposé par la CLI:
+# <timestamp>_<name>.sql
+# Exemple: 20250726000000_init.sql
+# Ne pas utiliser de tirets (-) après le timestamp
+# Utiliser des tirets bas (_)
