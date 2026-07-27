@@ -1,60 +1,57 @@
-/**
- * LocalOAuthProviderAdapter
- * Simulates OAuth flows for Google/GitHub/Microsoft in DEV_MODE.
- * Uses DEV_USERS as the authoritative identity source — no network calls.
- */
-import { DEV_USERS } from '@/config/constants';
+// src/infrastructure/adapters/local/LocalOAuthProviderAdapter.ts
 
-export type OAuthProviderId = 'google' | 'github' | 'microsoft';
-
-export interface IOAuthProviderRepository {
-  signInWithProvider(
-    provider: OAuthProviderId
-  ): Promise<{ url?: string; user?: any; error: Error | null }>;
-  linkProvider(provider: OAuthProviderId, userId: string): Promise<{ error: Error | null }>;
-  unlinkProvider(provider: OAuthProviderId, userId: string): Promise<{ error: Error | null }>;
-  listLinkedProviders(userId: string): Promise<{ providers: OAuthProviderId[]; error: Error | null }>;
-}
-
-const LINKS_KEY = 'dev_oauth_links';
-
-function loadLinks(): Record<string, OAuthProviderId[]> {
-  try {
-    return JSON.parse(localStorage.getItem(LINKS_KEY) ?? '{}');
-  } catch {
-    return {};
-  }
-}
-function saveLinks(v: Record<string, OAuthProviderId[]>) {
-  try {
-    localStorage.setItem(LINKS_KEY, JSON.stringify(v));
-  } catch {}
-}
+import {
+  IOAuthProviderRepository,
+  OAuthProvider,
+  OAuthProviderCreateData
+} from "@/domain/repositories/IOAuthProviderRepository";
 
 export class LocalOAuthProviderAdapter implements IOAuthProviderRepository {
-  async signInWithProvider(provider: OAuthProviderId) {
-    // Return the first DEV user as if OAuth had succeeded.
-    const first = Object.values(DEV_USERS ?? {})[0];
-    if (!first) return { error: new Error('No DEV_USERS available') };
-    console.info(`[LocalOAuthProviderAdapter] simulated ${provider} sign-in`, first);
-    return { user: first, error: null };
+  private providers: OAuthProvider[] = [
+    { id: '1', providerName: 'Google', enabled: true },
+    { id: '2', providerName: 'GitHub', enabled: true },
+    { id: '3', providerName: 'Microsoft', enabled: true },
+  ];
+
+  async findAll(): Promise<OAuthProvider[]> {
+    return this.providers;
   }
 
-  async linkProvider(provider: OAuthProviderId, userId: string) {
-    const links = loadLinks();
-    links[userId] = Array.from(new Set([...(links[userId] ?? []), provider]));
-    saveLinks(links);
-    return { error: null };
+  async findByName(name: string): Promise<OAuthProvider | null> {
+    return this.providers.find(p => p.providerName === name) || null;
   }
 
-  async unlinkProvider(provider: OAuthProviderId, userId: string) {
-    const links = loadLinks();
-    links[userId] = (links[userId] ?? []).filter((p) => p !== provider);
-    saveLinks(links);
-    return { error: null };
+  async findEnabled(): Promise<OAuthProvider[]> {
+    return this.providers.filter(p => p.enabled);
   }
 
-  async listLinkedProviders(userId: string) {
-    return { providers: loadLinks()[userId] ?? [], error: null };
+  async upsert(data: OAuthProviderCreateData): Promise<OAuthProvider> {
+    const existing = this.providers.find(p => p.providerName === data.providerName);
+    if (existing) {
+      Object.assign(existing, data);
+      return existing;
+    }
+    const newProvider: OAuthProvider = {
+      id: String(Date.now()),
+      providerName: data.providerName,
+      clientId: data.clientId,
+      authUrl: data.authUrl,
+      tokenUrl: data.tokenUrl,
+      userInfoUrl: data.userInfoUrl,
+      scopes: data.scopes,
+      enabled: data.enabled ?? false,
+      configuration: data.configuration,
+    };
+    this.providers.push(newProvider);
+    return newProvider;
+  }
+
+  async toggleEnabled(name: string, enabled: boolean): Promise<void> {
+    const provider = this.providers.find(p => p.providerName === name);
+    if (provider) provider.enabled = enabled;
+  }
+
+  async delete(name: string): Promise<void> {
+    this.providers = this.providers.filter(p => p.providerName !== name);
   }
 }

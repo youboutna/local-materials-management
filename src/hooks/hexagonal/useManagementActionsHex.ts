@@ -1,14 +1,12 @@
 // Hook hexagonal pour les actions de gestion
 // Uses EnhancedActionService for event-driven action management
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { EnhancedActionService } from '@/application/services/enhancedActionService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { TaskService } from '@/application/services/TaskService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { EnhancedActionService } from '@/application/services/enhancedActionService';
-import { CreateEnhancedActionRequestDTO, EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
+import { EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface ActionItem {
   id: string;

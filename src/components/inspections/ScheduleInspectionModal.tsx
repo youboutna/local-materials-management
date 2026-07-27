@@ -3,34 +3,32 @@
  * Utilisable depuis PhaseDetailsPage et ProjectDetailByDTO
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Calendar, Clock, User, FileText, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { 
-  InspectionPermissionService
+import {
+    InspectionPermissionService
 } from '@/application/services/InspectionPermissionService';
 import {
-  PermissionContextDTO,
-  AssignableInspectorDTO,
-  PermissionResultDTO
-} from '@/dtos/entities/InspectionPermissionDTO';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { 
-  InspectionSchedulingService,
-  InspectionScheduleData,
-  INSPECTION_TYPES 
+    INSPECTION_TYPES,
+    InspectionScheduleData,
+    InspectionSchedulingService
 } from '@/application/services/InspectionSchedulingService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    PermissionContextDTO
+} from '@/dtos/entities/InspectionPermissionDTO';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Bell, Calendar, CheckCircle2, FileText, User } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // Local type for inspection type selection
 type InspectionTypeId = 'technical' | 'safety' | 'quality';

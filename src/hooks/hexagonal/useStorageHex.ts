@@ -3,10 +3,9 @@
  * Provides file upload functionality through StorageService
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { StorageService } from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UploadResult {
   name: string;

@@ -4,15 +4,14 @@
  * Integrates with CheckpointVerificationEngine and AutomaticDecompteCalculator
  */
 
-import { useCallback, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
 import { PaymentService } from '@/application/services/PaymentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { toast } from '@/hooks/use-toast';
 import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';
 import type { CreatePaymentDTO } from '@/dtos/entities/PaymentDTO';
-import type { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
 
 interface UseCheckpointVerificationOptions {
   projectId: string;

@@ -4,20 +4,20 @@
  * Following hexagonal architecture principles
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  INotificationRepository, 
-  NotificationData, 
-  EmailData, 
-  SMSData, 
-  CallData 
+import {
+    CallData,
+    EmailData,
+    INotificationRepository,
+    NotificationData,
+    SMSData
 } from '@/domain/repositories/INotificationRepository';
-import { 
-  NotificationDTO, 
-  CreateNotificationRequestDTO, 
-  UpdateNotificationRequestDTO 
+import {
+    CreateNotificationRequestDTO,
+    NotificationDTO,
+    UpdateNotificationRequestDTO
 } from '@/dtos/entities/NotificationDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class NotificationService {
   private notificationRepository: INotificationRepository;
@@ -465,13 +465,13 @@ export class NotificationService {
 
   // Static methods for backward compatibility
   static async createNotification(data: CreateNotificationRequestDTO): Promise<NotificationDTO> {
-    const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+    const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
     const service = new NotificationService(RepositoryFactory.getNotificationRepository());
     return await service.createNotification(data);
   }
 
   static async notifyUser(userId: string, title: string, message: string): Promise<void> {
-    const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+    const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
     const service = new NotificationService(RepositoryFactory.getNotificationRepository());
     await service.notifyUser(userId, title, message);
   }

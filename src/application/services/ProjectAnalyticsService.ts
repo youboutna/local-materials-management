@@ -3,19 +3,14 @@
  * Business logic for project analytics and metrics
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { IProjectRepository, IInspectionRepository, IMilestoneRepository } from '@/domain/repositories';
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { 
-  ProjectAnalyticsDTO,
-  ProjectMetricsDTO,
-  ProjectRiskDTO,
-  CreateProjectRiskRequestDTO,
-  UpdateProjectRiskRequestDTO
+import { IInspectionRepository, IMilestoneRepository, IProjectRepository } from '@/domain/repositories';
+import {
+    ProjectAnalyticsDTO,
+    ProjectMetricsDTO
 } from '@/dtos/entities/ProjectAnalyticsDTO';
-import { Inspection, InspectionStatus } from '@/domain';
+import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Local compliance DTO to avoid circular import
 export interface ProjectComplianceDTO {

@@ -3,9 +3,9 @@
  * Business logic for inspection scheduling operations
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface InspectionScheduleData {
   inspectionId: string;

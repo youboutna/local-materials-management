@@ -3,13 +3,11 @@
  * Business logic for supplier payment reporting and analytics with proper error handling
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { format, startOfMonth, endOfMonth, subMonths, differenceInDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { differenceInDays } from 'date-fns';
 
 // Local DTOs for payment reporting
 export interface PaymentRequestReportDTO {

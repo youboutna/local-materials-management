@@ -1,26 +1,23 @@
-import React, { useState, useRef } from 'react';
+import { NotificationService } from '@/application/services/NotificationService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { FileDown, Mail, PenTool, Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
+import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { EstimateData, EstimateItem, ExportConfig } from '@/dtos/transforms/shared';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CheckCircle, FileDown, Loader2, Mail, Upload } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
-import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
-import { TenderDTO } from '@/dtos/entities/TenderDTO';
-import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
 
 // Mapping functions for type compatibility
 const mapTenderEstimateToEstimateData = (tenderEstimate: TenderEstimateDTO): EstimateData => {

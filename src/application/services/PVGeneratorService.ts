@@ -3,20 +3,20 @@
  * Service for generating inspection PV (Procès-Verbaux)
  */
 
-import jsPDF from 'jspdf';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import {
-  GeneratedPV,
-  PVType,
-  ConformityStatus,
+    ConformityStatus,
+    GeneratedPV,
+    PVType,
 } from '@/dtos/types/inspection-execution';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import jsPDF from 'jspdf';
 
 // Service DTOs for data exchange
 export interface InspectionWithProjectDTO {

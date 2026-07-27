@@ -3,11 +3,11 @@
  * Business logic for inspection reporting and analytics
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { InspectionDTO, InspectionDocumentEntity } from '@/dtos/entities/InspectionDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

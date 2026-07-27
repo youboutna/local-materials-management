@@ -3,16 +3,16 @@
  * Comprehensive validation for all project aspects including risks, compliance, and reception
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Enhanced validation interfaces
 export interface EnhancedValidationResult {

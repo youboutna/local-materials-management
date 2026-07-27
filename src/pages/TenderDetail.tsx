@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { AppLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink, Calendar, DollarSign, FileSignature, Users, FileText, KeyRound } from 'lucide-react';
-import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
-import { useQuery } from '@tanstack/react-query';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { BoqWorkspace } from '@/components/boq';
+import { AppLayout } from '@/components/layout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Calendar, DollarSign, ExternalLink, FileSignature, FileText, KeyRound, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>

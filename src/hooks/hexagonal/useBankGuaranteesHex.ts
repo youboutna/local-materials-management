@@ -3,9 +3,9 @@
  * Uses RepositoryFactory instead of direct Supabase calls
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
+import { BankGuaranteeStatus, BankGuaranteeType } from '@/dtos/entities/BankGuaranteeDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface BankGuaranteeFormData {
   projectId: string;

@@ -1,4 +1,5 @@
-export { LocalNotificationAdapter } from './LocalNotificationAdapter';
-export { LocalOAuthProviderAdapter } from './LocalOAuthProviderAdapter';
-export type { IOAuthProviderRepository, OAuthProviderId } from './LocalOAuthProviderAdapter';
-export { LocalStorageAdapter } from './LocalStorageAdapter';
+// src/infrastructure/adapters/local/index.ts
+
+export * from './LocalNotificationAdapter';
+export * from './LocalOAuthProviderAdapter';
+export * from './LocalStorageAdapter';

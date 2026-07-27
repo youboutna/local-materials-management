@@ -1,17 +1,16 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Calendar, User, CheckCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { DocumentService } from '@/application/services/DocumentService';
 import { TenderService } from '@/application/services/TenderService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { TenderDTO } from '@/dtos/entities/TenderDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Calendar, CheckCircle, FileText } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface Document {
   id: string;

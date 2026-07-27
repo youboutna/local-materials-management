@@ -4,15 +4,14 @@
  * Gère la mise à jour en cascade du projet, phases, jalons et la mainlevée des garanties
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { BankGuaranteeService } from './BankGuaranteeService';
 
 export interface InspectionApprovalContext {

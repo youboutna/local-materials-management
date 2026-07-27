@@ -2,25 +2,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
-  AlertTriangle,
-  Building,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  CircleDashed,
-  Clock,
-  FileCheck,
-  Layers,
-  MapPin,
-  Save,
-  Target,
-  Users,
+    AlertTriangle,
+    Building,
+    CheckCircle,
+    ChevronLeft,
+    ChevronRight,
+    CircleDashed,
+    Clock,
+    FileCheck,
+    Layers,
+    MapPin,
+    Save,
+    Target,
+    Users,
 } from "lucide-react";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 // (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
 
 // Import step components
@@ -29,44 +29,26 @@ import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import QuantityTakeoffs from "./QuantityTakeoffs";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
-import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
 import RiskAnalysisStep from "./steps/RiskAnalysisStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 // Import unified workflow hook
 import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProjectWorkflow";
 
 // Import ProjectWorkflowService and RepositoryFactory
-import { ProjectWorkflowService } from "@/application/services/ProjectWorkflowService";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 
 // Import workflow DTOs
-import { ProjectWorkflowData, StepRelatedDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
-import { PhaseWorkflowDTO } from "@/dtos/workflows/PhaseWorkflowDTO";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
-import { ProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { ComplianceItemDTO } from '@/dtos/entities/ComplianceDTO';
-import { MaterialDTO, MaterialCategory, MaterialStatus, MaterialUnit } from "@/dtos/entities/MaterialDTO";
-import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
-import { PhaseDTO, PhaseType, PhaseStatus, PhasePriority } from "@/dtos/entities/PhaseDTO";
-import { LocationDTO } from "@/dtos/shared";
-import { generatePhaseTypeFromReferentialPhase, generateDynamicPhaseType } from '@/utils/phaseTypeGenerator';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import ProjectInfoStep from "./steps/ProjectInfoStep";
 import StrategicLinkageStep from "./steps/StrategicLinkageStep";
 
 // Référentiel central des étapes (PROMPTS.md Rule #3 + ARCHITECTURE_REFERENTIELS)
 import {
-  PROJECT_WORKFLOW_STEPS,
-  type WorkflowStepIcon,
+    PROJECT_WORKFLOW_STEPS,
+    type WorkflowStepIcon,
 } from "@/config/referentials/projects/project-workflow-steps.referential";
 
 const STEP_ICON_MAP: Record<WorkflowStepIcon, React.ComponentType<{ className?: string }>> = {

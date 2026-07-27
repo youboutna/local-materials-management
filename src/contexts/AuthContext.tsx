@@ -1,19 +1,20 @@
+/**
+ * src/contexts/AuthContext.tsx
+ */
+import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { AuthSession as DomainAuthSession } from '@/domain/repositories/IAuthRepository';
 import { useToast } from '@/hooks/use-toast';
+import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
-import { useEffect, useState, useCallback } from 'react';
-import { ReactNode } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { AuthContext } from './auth-context';
-import { DEV_MODE } from '@/config/constants';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
-import type { AuthSession as DomainAuthSession } from '@/domain/repositories/IAuthRepository';
 
 // Lazy singleton — only used in DEV_MODE. Reads/writes localStorage 'dev_session'.
 const devAdapter = DEV_MODE ? new LocalAuthAdapter() : null;
 
 // Map a snake_case AuthSession from the adapter to a Supabase-shaped User/Session
-// so downstream code that expects @supabase/supabase-js types keeps working.
 function toSupabaseShape(dom: DomainAuthSession): { user: User; session: Session } {
   const roleValue = dom.user.role || 'user';
   const supaUser = {
@@ -51,21 +52,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  // ✅ Vérifier que supabase est configuré
+  const isSupabaseConfigured = useCallback(() => {
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    if (!url || !anonKey) {
+      console.warn('⚠️ Supabase credentials not configured. Using DEV_MODE mock.');
+      return false;
+    }
+    return true;
+  }, []);
+
   const restoreDevSession = useCallback(async () => {
     if (!devAdapter) return;
-    const { session: domSession } = await devAdapter.getCurrentSession();
-    if (!domSession) {
-      setUser(null);
-      setSession(null);
-    } else {
-      const { user: u, session: s } = toSupabaseShape(domSession);
-      setUser(u);
-      setSession(s);
+    try {
+      const { session: domSession } = await devAdapter.getCurrentSession();
+      if (!domSession) {
+        setUser(null);
+        setSession(null);
+      } else {
+        const { user: u, session: s } = toSupabaseShape(domSession);
+        setUser(u);
+        setSession(s);
+      }
+    } catch (error) {
+      console.error('Error restoring dev session:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
+    // ✅ Si DEV_MODE, utiliser l'adaptateur local
     if (DEV_MODE) {
       console.log('🛠️ DEV_MODE=true — AuthContext uses LocalAuthAdapter (DEV_USERS)');
       void restoreDevSession();
@@ -73,6 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.addEventListener('dev-role-changed', handler);
       return () => window.removeEventListener('dev-role-changed', handler);
     }
+
+    // ✅ Vérifier que Supabase est configuré
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured. Falling back to local auth.');
+      void restoreDevSession();
+      return;
+    }
+
     console.log('🔧 Setting up auth state listener...');
 
     // Set up auth state listener FIRST
@@ -89,6 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('❌ Error getting session:', error);
+        // ✅ En cas d'erreur, fallback sur le mode local
+        if (DEV_MODE) {
+          void restoreDevSession();
+        }
       } else {
         console.log('✅ Initial session:', session?.user?.email || 'no session');
       }
@@ -101,13 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, [restoreDevSession]);
+  }, [restoreDevSession, isSupabaseConfigured]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
 
-      // DEV_MODE: validate credentials locally against DEV_USERS.
+      // ✅ DEV_MODE: validate credentials locally against DEV_USERS
       if (DEV_MODE && devAdapter) {
         const { session: domSession, error } = await devAdapter.signIn({
           email: email.trim(),
@@ -126,6 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(s);
         toast({ title: t('common.success'), description: 'Bienvenue sur la plateforme.' });
         return;
+      }
+
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Please check your environment variables.');
       }
 
       console.log('🔐 Attempting to sign in with:', email);
@@ -166,11 +202,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   const signUp = async (email: string, password: string, fullName: string, phone: string, nationalId: string) => {
     try {
       setLoading(true);
       console.log('📝 Attempting to sign up with:', email);
+      
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Please check your environment variables.');
+      }
       
       const { data, error } = await supabase.auth.signUp({ 
         email: email.trim(), 
@@ -267,6 +307,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       console.log('🔍 Attempting Google sign in...');
       
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured. Please check your environment variables.');
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -295,6 +340,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('📱 Attempting phone sign in...');
+      
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        return { success: false, error: 'Supabase not configured.' };
+      }
       
       const { data, error } = await supabase.auth.signInWithOtp({
         phone,
@@ -329,6 +379,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       console.log('🔢 Verifying phone OTP...');
       
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured.');
+      }
+      
       const { error } = await supabase.auth.verifyOtp({
         phone,
         token,
@@ -361,6 +416,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('🆔 Attempting national ID sign in...');
+      
+      // ✅ Vérifier que supabase est configuré
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase not configured.');
+      }
       
       // Query profiles table to find email associated with national ID
       const { data: profile, error: profileError } = await supabase
@@ -408,7 +468,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithPhone,
     verifyPhoneOTP,
     signInWithNationalId,
-    isDevelopmentMode: DEV_MODE
+    isDevelopmentMode: DEV_MODE,
+    isSupabaseConfigured: isSupabaseConfigured(),
   };
 
   return (

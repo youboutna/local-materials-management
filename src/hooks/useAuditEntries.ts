@@ -4,9 +4,9 @@
  * Legacy interface maintained for backward compatibility
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface AuditEntry {
   id: string;

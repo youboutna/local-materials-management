@@ -6,12 +6,12 @@
  * Uses IAlertRepository for data access (not INotificationRepository)
  */
 
+import { AlertStatistics, CreateProjectAlertRequestDto, IAlertRepository, ProjectAlertDTO, UpdateProjectAlertRequestDto } from '@/domain/repositories/IAlertRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IAlertRepository, ProjectAlertDTO, CreateProjectAlertRequestDto, UpdateProjectAlertRequestDto, AlertStatistics } from '@/domain/repositories/IAlertRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 // Re-export DTOs for consumers
-export type { ProjectAlertDTO, CreateProjectAlertRequestDto, UpdateProjectAlertRequestDto, AlertStatistics };
+export type { AlertStatistics, CreateProjectAlertRequestDto, ProjectAlertDTO, UpdateProjectAlertRequestDto };
 
 // Validation utility
 const AlertValidation = {

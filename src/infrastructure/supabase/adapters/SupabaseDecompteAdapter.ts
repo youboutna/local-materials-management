@@ -6,20 +6,16 @@
  * Architecture : Service de compute/util utilisant plusieurs repositories
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IDecompteRepository, ProjectFinancials, PhaseFinancials, VerifiedMilestone, DecompteCalculationContext } from '@/domain/repositories/IDecompteRepository';
-import {
-  AutomaticDecompteDTO,
-  DecompteLineDTO,
-  DecompteStatus,
-  PaymentType,
-  DEFAULT_MAURITANIA_RULES,
-  MauritaniaBusinessRulesDTO,
-} from '@/dtos/types/checkpoint-dto';
+import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import {
+    AutomaticDecompteDTO,
+    DecompteLineDTO,
+    DEFAULT_MAURITANIA_RULES
+} from '@/dtos/types/checkpoint-dto';
 
 // Import des repositories existants (via RepositoryFactory)
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export class SupabaseDecompteAdapter implements IDecompteRepository {
   constructor() {}

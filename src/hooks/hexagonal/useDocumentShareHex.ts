@@ -3,10 +3,9 @@
  * Uses DocumentService instead of direct Supabase access
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface SharedDocument {
   id: string;

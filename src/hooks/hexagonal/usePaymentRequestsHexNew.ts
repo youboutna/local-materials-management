@@ -3,11 +3,11 @@
  * Uses PaymentRequestService instead of direct Supabase calls
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { CreatePaymentRequestDTO, UpdatePaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function usePaymentRequests() {
   const queryClient = useQueryClient();

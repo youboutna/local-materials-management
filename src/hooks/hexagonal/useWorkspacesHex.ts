@@ -2,9 +2,9 @@
  * Workspaces Hook - Hexagonal Architecture
  */
 
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface UseWorkspacesHexResult {
   workspaces: Array<{

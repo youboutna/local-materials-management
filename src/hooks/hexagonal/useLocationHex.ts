@@ -4,33 +4,28 @@
  * UI Component → Hook → Service → Domain ← Infrastructure
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 
 // Import DTOs following Rule #4
 import { LocationDTO } from '@/dtos/shared';
-import { GeographicUnit, Region, City, MAURITANIA_CITIES } from '@/utils/mauritania';
-import { 
-  searchRegions, 
-  searchCities, 
-  getCitiesByWilaya, 
-  getWilayaByCode,
-  getCityByCode,
-  isValidRegionCode,
-  isValidCityCode,
-  isValidCityRegion,
-  isLocationInRegion,
-  findRegionByLocation
+import { MAURITANIA_CITIES } from '@/utils/mauritania';
+import {
+    findRegionByLocation,
+    getCityByCode,
+    getWilayaByCode,
+    isValidCityCode,
+    isValidRegionCode,
+    searchCities
 } from '@/utils/mauritaniaUtils';
 
 // Import services (application layer)
-import { LocationService } from '@/application/services/LocationService';
-import { GeocodingService } from '@/application/services/GeocodingService';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
+import { LocationService } from '@/application/services/LocationService';
 
 // Import repository factory for dependency injection
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Interface for geocoding search results
 interface GeocodingSearchResult {

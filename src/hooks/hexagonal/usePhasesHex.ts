@@ -3,10 +3,10 @@
  * Encapsulates phase operations using hexagonal architecture
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Phase, PhaseStep, PhaseStatus } from '@/domain/entities';
+import { Phase, PhaseStatus } from '@/domain/entities';
 import { PhaseMetrics } from '@/domain/repositories';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface CreatePhaseData {
   phase_name: string;

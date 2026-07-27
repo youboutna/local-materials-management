@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Search, Calendar } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
+import { Calendar, FileText, Search } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface Document {
   id: string;

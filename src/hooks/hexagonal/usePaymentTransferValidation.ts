@@ -4,9 +4,8 @@
  * Follows Rule #5: UI Layer Separation
  */
 
-import { useState, useCallback } from 'react';
 import { PaymentValidationService } from '@/application/services/PaymentValidationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { useCallback, useState } from 'react';
 
 export interface PaymentTransferValidationResult {
   allowedAmount: number;

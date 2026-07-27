@@ -4,15 +4,14 @@
  * Tests the complete integration of enhanced risk, compliance, and validation management
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { ComplianceService } from '@/application/services/ComplianceService';
 import { EnhancedValidationService } from '@/application/services/EnhancedValidationService';
 import { ReceptionService } from '@/application/services/ReceptionService';
 import { RiskService } from '@/application/services/RiskService';
-import { ComplianceService } from '@/application/services/ComplianceService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { ReceptionDTO, ReceptionType, ReceptionStatus } from '@/dtos/entities/ReceptionDTO';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { ReceptionStatus, ReceptionType } from '@/dtos/entities/ReceptionDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 describe('Enhanced Validation Integration', () => {
   let validationService: EnhancedValidationService;

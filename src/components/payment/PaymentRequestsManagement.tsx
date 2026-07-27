@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
-import { SupplierService } from '@/application/services/SupplierService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { useAuth } from '@/contexts/use-auth';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { NotificationService } from '@/application/services/NotificationService';
+import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { SupplierService } from '@/application/services/SupplierService';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { useAuth } from '@/contexts/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { AlertCircle, CheckCircle, Eye, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { PaymentRequestDetailsDialog } from './PaymentRequestDetailsDialog';
 
 interface PaymentRequest {

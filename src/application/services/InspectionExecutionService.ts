@@ -3,28 +3,27 @@
  * Service for managing inspection execution workflow
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { InspectionStatus as DomainInspectionStatus, Inspection } from '@/domain/entities/Inspection';
 import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-import { 
-  InspectionOperationResultDTO,
-  AddMeasurementRequestDTO,
-  AddParticipantRequestDTO,
-  CompleteInspectionRequestDTO,
-  AddDocumentRequestDto,
-  CHECKLIST_TEMPLATES,
-  StartInspectionRequestDto,
-  AddObservationRequestDto,
-  UpdateChecklistItemRequestDto,
-  InspectionParticipant,
-  InspectionDocumentEntity,
-  ChecklistItem,
-  ConformityStatus
+import {
+    AddDocumentRequestDto,
+    AddMeasurementRequestDTO,
+    AddObservationRequestDto,
+    AddParticipantRequestDTO,
+    CHECKLIST_TEMPLATES,
+    ChecklistItem,
+    CompleteInspectionRequestDTO,
+    ConformityStatus,
+    InspectionDocumentEntity,
+    InspectionOperationResultDTO,
+    InspectionParticipant,
+    StartInspectionRequestDto,
+    UpdateChecklistItemRequestDto
 } from '@/dtos/entities/InspectionDTO';
-import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 function isValidInspectionStatusTransition(current: string, next: string): boolean {
   const validTransitions: Record<string, string[]> = {

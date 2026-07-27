@@ -6,17 +6,14 @@
  * Architecture: UI → Service → Repository (interface) → Adapter
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { MilestoneDTO, MilestoneSummaryDTO, MilestoneType, MilestonePriority, MilestoneStatus } from '@/dtos/entities/MilestoneDTO';
-import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dto';
-import { Milestone } from '@/domain/entities/Milestone';
+import { MilestoneDTO, MilestonePriority, MilestoneStatus, MilestoneSummaryDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Type definitions for better type safety
 interface ProjectData {

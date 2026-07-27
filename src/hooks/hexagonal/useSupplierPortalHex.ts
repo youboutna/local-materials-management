@@ -1,12 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
-import { TenderService } from '@/application/services/TenderService';
-import { TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
-import { UserService } from '@/application/services/UserService';
 import { AuthService } from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { TenderService } from '@/application/services/TenderService';
+import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
+import { UserService } from '@/application/services/UserService';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface PublicTender { id: string; title: string; description?: string; deadline_date?: string; status?: string; }
 

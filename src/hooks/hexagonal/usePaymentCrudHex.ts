@@ -2,11 +2,11 @@
  * Hexagonal hooks for Payment CRUD operations
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentService } from '@/application/services/PaymentService';
 import { StorageService } from '@/application/services/StorageService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { CreatePaymentDTO, PaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 // Re-export types for components
 export type Payment = PaymentDTO;

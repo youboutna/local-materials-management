@@ -1,10 +1,10 @@
 // hooks/hexagonal/usePhaseMaterialsHex.ts - Hexagonal hook for phase materials management
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from '@/application/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface MaterialDetails {
   id: string;

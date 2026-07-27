@@ -3,16 +3,13 @@
  * Implements business logic for real-time subscription operations
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { 
-  IRealtimeRepository, 
-  RealtimeSubscription, 
-  RealtimePayload 
+import {
+    RealtimePayload,
+    RealtimeSubscription
 } from '@/domain/repositories/IRealtimeRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // For now, using any repository as placeholder since realtime repository doesn't exist
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 
 // Placeholder interface for realtime repository methods
 interface IRealtimeRepositoryPlaceholder {

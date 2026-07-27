@@ -1,26 +1,26 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 // Import all project-related services
-import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
-import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { ProjectManagerService } from '@/application/services/ProjectManagerService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 
 // Import DTOs
-import { 
-  ProjectDTO, 
-  CreateProjectDTO, 
-  UpdateProjectDTO, 
-  ProjectStatus,
-  PROJECT_STATUS_LABELS,
-  PROJECT_STATUS_TRANSITIONS,
-  PROJECT_STATUS_CATEGORIES
-} from '@/dtos/entities/ProjectDTO';
-import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import {
+    CreateProjectDTO,
+    PROJECT_STATUS_CATEGORIES,
+    PROJECT_STATUS_LABELS,
+    PROJECT_STATUS_TRANSITIONS,
+    ProjectDTO,
+    ProjectStatus,
+    UpdateProjectDTO
+} from '@/dtos/entities/ProjectDTO';
 import { StakeholderDTO } from '@/dtos/entities/StakeholderDTO';
 
 // Comprehensive project management interfaces

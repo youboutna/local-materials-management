@@ -3,11 +3,11 @@
  * Uses DocumentService + StorageService instead of direct Supabase access
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { StorageService } from '@/application/services/StorageService';
 import { AuthService } from '@/application/services/AuthService';
 import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { StorageService } from '@/application/services/StorageService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface BusinessDocumentFormData {
   title: string;

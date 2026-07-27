@@ -3,11 +3,11 @@
  * Encapsulates inspection workflow use cases and state management
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
-import type { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
+import type { InspectionStatus } from '@/domain/entities/Inspection';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useMemo, useState } from 'react';
 
 export interface InspectionRequestInput {
   projectId: string;

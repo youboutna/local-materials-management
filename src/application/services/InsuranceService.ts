@@ -3,12 +3,12 @@
  * Business logic for insurance certificate management
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { NotificationService } from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { InsuranceCertificateDTO, InsuranceType, InsuranceStatus, CreateInsuranceCertificateDTO, UpdateInsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceAlertDTO, CreateInsuranceRequestDTO } from '@/dtos/entities/InsuranceDTO';
+import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
+import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Status and type constants for validation
 const INSURANCE_STATUSES = ['active', 'expired', 'expiring_soon', 'missing', 'pending'] as const;

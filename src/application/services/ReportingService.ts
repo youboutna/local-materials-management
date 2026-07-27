@@ -3,29 +3,26 @@
  * Business logic for comprehensive reporting operations
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import { DeviationEngine, DeviationResult } from '@/application/services/DeviationEngine';
+import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
-  ProjectReportDTO,
-  EnhancedPhaseDTO,
-  ConstructionMilestoneDTO,
-  ProjectAnalyticsDTO,
-  FinancialMetricsDTO,
-  RiskAssessmentDTO,
-  ReportData,
-  CostCalculation
-} from '@/dtos/entities/ReportDTO';
-import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
-import {
-  ReportProfile,
-  ReportSectionKey,
-  getReportProfile,
-  defaultSectionsFor,
+    ReportProfile,
+    ReportSectionKey,
+    defaultSectionsFor,
+    getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
+import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import {
+    CostCalculation,
+    FinancialMetricsDTO,
+    ProjectAnalyticsDTO,
+    ProjectReportDTO,
+    ReportData,
+    RiskAssessmentDTO
+} from '@/dtos/entities/ReportDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Service DTOs for data exchange
 export interface GenerateCompleteProjectReportRequestDto {

@@ -2,14 +2,14 @@
  * Hexagonal hooks for contact_messages (messagerie réception)
  * UI -> ContactMessageService -> SupabaseContactMessageAdapter
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
 import { ContactMessageService } from '@/application/services/ContactMessageService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import type {
-  ContactMessageFilters,
-  CreateContactMessageData,
+    ContactMessageFilters,
+    CreateContactMessageData,
 } from '@/domain/repositories/IContactMessageRepository';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const getService = () =>
   new ContactMessageService(RepositoryFactory.getContactMessageRepository());

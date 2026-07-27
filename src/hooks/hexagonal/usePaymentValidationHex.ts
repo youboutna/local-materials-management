@@ -2,10 +2,10 @@
  * Hexagonal Hook: usePaymentValidationHex
  * Provides payment validation and blocking operations via services
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PaymentValidationService } from '@/application/services/PaymentValidationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface PaymentStats {
   blockedPayments: number;

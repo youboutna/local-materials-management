@@ -3,27 +3,25 @@
  * Business logic for milestone management operations
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  MilestoneDTO, 
-  MilestoneStatus, 
-  MilestoneType, 
-  MilestonePriority,
-  MilestoneProgressDTO,
-  CriticalPathDTO,
-  MilestoneSummaryDTO,
-  MilestoneFormDTO,
-  MilestoneTemplateDTO
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
+import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import {
+    CriticalPathDTO,
+    MilestoneDTO,
+    MilestoneFormDTO,
+    MilestonePriority,
+    MilestoneProgressDTO,
+    MilestoneSummaryDTO,
+    MilestoneTemplateDTO,
+    MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
-import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
-import { addDays, differenceInDays, format, parseISO } from 'date-fns';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { differenceInDays } from 'date-fns';
 
 export interface Milestone {
   id: string;

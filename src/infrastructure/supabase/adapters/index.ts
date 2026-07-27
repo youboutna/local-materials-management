@@ -4,55 +4,62 @@
  */
 
 // Core adapters
-export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
-export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
-export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
-export { SupabaseInspectionAdapter } from './SupabaseInspectionAdapter';
-export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
-export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
-export { SupabaseEmployeeAdapter } from './SupabaseEmployeeAdapter';
-export { SupabaseRiskAdapter } from './SupabaseRiskAdapter';
-export { SupabaseTenderAdapter } from './SupabaseTenderAdapter';
-export { SupabaseSupplierAdapter } from './SupabaseSupplierAdapter';
 export { SupabaseDocumentAdapter } from './SupabaseDocumentAdapter';
-export { SupabaseQuantityTakeoffAdapter } from './SupabaseQuantityTakeoffAdapter';
+export { SupabaseEmployeeAdapter } from './SupabaseEmployeeAdapter';
+export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
+export { SupabaseInspectionAdapter } from './SupabaseInspectionAdapter';
 export { SupabaseInspectionExecutionAdapter } from './SupabaseInspectionExecutionAdapter';
 export { SupabaseInspectionPaymentValidationAdapter } from './SupabaseInspectionPaymentValidationAdapter';
 export { SupabaseLoadDataAdapter } from './SupabaseLoadDataAdapter';
-export { SupabaseReportingAdapter } from './SupabaseReportingAdapter';
-export { SupabaseReportDataTransformerAdapter } from './SupabaseReportDataTransformerAdapter';
+export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
+export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
+export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
+export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 export { SupabaseProjectFormAdapter } from './SupabaseProjectFormAdapter';
-export { SupabaseHierarchyAdapter } from './SupabaseHierarchyAdapter';
+export { SupabaseQuantityTakeoffAdapter } from './SupabaseQuantityTakeoffAdapter';
+export { SupabaseReportDataTransformerAdapter } from './SupabaseReportDataTransformerAdapter';
+export { SupabaseReportingAdapter } from './SupabaseReportingAdapter';
+export { SupabaseRiskAdapter } from './SupabaseRiskAdapter';
+export { SupabaseSupplierAdapter } from './SupabaseSupplierAdapter';
+export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
+export { SupabaseTenderAdapter } from './SupabaseTenderAdapter';
 
 // New adapters for hexagonal architecture
-export { SupabaseUserAdapter } from './SupabaseUserAdapter';
-export { SupabaseAuthAdapter } from './SupabaseAuthAdapter';
-export { SupabaseStorageAdapter } from './SupabaseStorageAdapter';
-export { TenderEstimateAdapter } from './TenderEstimateAdapter';
 export { PaymentBlockingAdapter } from './PaymentBlockingAdapter';
-export { TaskAssignmentAdapter } from './TaskAssignmentAdapter';
-export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
-export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';
+export { SupabaseAuthAdapter } from './SupabaseAuthAdapter';
 export { SupabaseComplianceAdapter } from './SupabaseComplianceAdapter';
+export { SupabaseInsuranceAdapter } from './SupabaseInsuranceAdapter';
 export { SupabaseMonitoringAdapter } from './SupabaseMonitoringAdapter';
+export { SupabaseNotificationAdapter } from './SupabaseNotificationAdapter';
+export { SupabaseStorageAdapter } from './SupabaseStorageAdapter';
+export { SupabaseUserAdapter } from './SupabaseUserAdapter';
+export { TaskAssignmentAdapter } from './TaskAssignmentAdapter';
+export { TenderEstimateAdapter } from './TenderEstimateAdapter';
 
 // Additional adapters
-export { PVGeneratorAdapter } from './PVGeneratorAdapter';
 export { BankGuaranteeAdapter } from './BankGuaranteeAdapter';
 export { InspectionSchedulingAdapter } from './InspectionSchedulingAdapter';
-export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';
-export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
-export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
+export { PVGeneratorAdapter } from './PVGeneratorAdapter';
 export { SupabaseAlertRepository } from './SupabaseAlertRepository';
+export { SupabaseContactMessageAdapter } from './SupabaseContactMessageAdapter';
+export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
 export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
+export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
+export { SupabaseParsedInvoiceAdapter } from './SupabaseParsedInvoiceAdapter';
 export { SupabaseProjectStakeholderAdapter } from './SupabaseProjectStakeholderAdapter';
 export { SupabaseStakeholderAdapter } from './SupabaseStakeholderAdapter';
 export { SupabaseSupplierPaymentAdapter } from './SupabaseSupplierPaymentAdapter';
-export { SupabaseContactMessageAdapter } from './SupabaseContactMessageAdapter';
-export { SupabaseMonitoringAlertAdapter } from './SupabaseMonitoringAlertAdapter';
+export { SupabaseTenderDocumentAdapter } from './SupabaseTenderDocumentAdapter';
 
 // Strategic linkage adapters
-export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLinkAdapter';
 export { SupabaseProjectBudgetLinkAdapter } from './SupabaseProjectBudgetLinkAdapter';
+export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLinkAdapter';
+
+// Missing adapters
+export { LocationRepository } from './LocationRepository';
+export { SupabaseAlertAdapter } from './SupabaseAlertAdapter';
+export { SupabaseMissionExpenseAdapter } from './SupabaseMissionExpenseAdapter';
+export { SupabaseTenderSharingAdapter } from './SupabaseTenderSharingAdapter';
+export { SupabaseWorkspaceAdapter } from './SupabaseWorkspaceAdapter';
 
 // Auth adapters (multi-provider support)

@@ -1,18 +1,18 @@
 /**
  * Hexagonal hook for supplier dashboard data
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@/application/services/AuthService';
-import { SupplierPortalService } from '@/application/services/SupplierPortalService';
-import { NotificationService } from '@/application/services/NotificationService';
 import { DocumentService } from '@/application/services/DocumentService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { useEffect, useState } from 'react';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { SupplierPortalService } from '@/application/services/SupplierPortalService';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
-import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 export interface SupplierDashboardData {
   supplier: SupplierDTO | null;

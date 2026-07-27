@@ -4,13 +4,12 @@
  * Following hexagonal architecture principles
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/application/services/PhaseService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { PhaseData, PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { ConstructionPhase } from '@/domain/entities/Phase';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useEffect, useMemo, useState } from 'react';
 
 /**
  * Hook for construction phase management

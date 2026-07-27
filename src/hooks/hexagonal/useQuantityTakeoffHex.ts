@@ -3,10 +3,10 @@
  * Uses QuantityTakeoffService/adapter instead of direct Supabase access
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 import { MaterialService } from '@/application/services/MaterialService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { QuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Hook: Fetch materials for quantity takeoff
 export function useMaterialsForTakeoff() {

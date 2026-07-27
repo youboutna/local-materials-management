@@ -10,43 +10,39 @@
  * 4. Après progression ≥100%: Mainlevée garanties & assurances
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { getMilestoneService } from '@/application/services/MilestoneService';
+import { InspectionFormWithContext } from '@/components/project/inspection';
+import { MilestoneActionContext } from '@/components/project/milestones/MilestoneCheckpointActions';
+import { PaymentFormWithContext } from '@/components/project/payment';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Target,
-  Layers,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  ClipboardCheck,
-  DollarSign,
-  ChevronRight,
-  ChevronDown,
-  Play,
-  FileCheck,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
-  FileText,
-  Eye,
-  Plus
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MILESTONE_TYPES } from '@/dtos/entities/MilestoneDTO';
-import { MilestoneActionContext } from '@/components/project/milestones/MilestoneCheckpointActions';
+import { MILESTONE_TYPES, MilestoneSummaryDTO } from '@/dtos/entities/MilestoneDTO';
 import { toast } from '@/hooks/use-toast';
-import { InspectionFormWithContext } from '@/components/project/inspection';
-import { PaymentFormWithContext } from '@/components/project/payment';
-import { InspectionApprovalSyncService } from '@/application/services/InspectionApprovalSyncService';
+import { cn } from '@/lib/utils';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+    AlertTriangle,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    ClipboardCheck,
+    Clock,
+    DollarSign,
+    FileCheck,
+    FileText,
+    Layers,
+    Play,
+    Plus,
+    ShieldCheck,
+    Target,
+    Zap
+} from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 // Workflow stage types
 type WorkflowStage = 'scheduled' | 'in_progress' | 'documents_pending' | 'validation_pending' | 'approved' | 'rejected' | 'payment_available';
@@ -120,7 +116,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     queryKey: ['phase-inspections-workflow', phaseId],
     queryFn: async () => {
       const { InspectionService } = await import('@/application/services/InspectionService');
-      const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+      const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
       const service = new InspectionService(RepositoryFactory.getInspectionRepository());
       return await service.getInspectionsByPhase(phaseId);
     },

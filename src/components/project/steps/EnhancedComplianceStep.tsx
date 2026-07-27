@@ -1,32 +1,24 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileCheck, Shield, AlertCircle, CheckCircle, Upload, Calendar, Users, Building, FileText, Plus, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-import { Button } from '../../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { Badge } from '../../ui/badge';
-import { Progress } from '../../ui/progress';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
-import { Textarea } from '../../ui/textarea';
+import { Building, Calendar, FileCheck, FileText, Plus, Shield, Upload, Users } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../../hooks/use-toast';
+import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Progress } from '../../ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 // Import DTOs and services for hexagonal architecture
-import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
-import { ComplianceItemDTO, ComplianceDocumentDTO, ComplianceNoteDTO, ComplianceAuditEntryDTO, ComplianceType, ComplianceStatus, CompliancePriority, ComplianceLevel, ComplianceRiskLevel } from "@/dtos/entities/ComplianceDTO";
-import { ComplianceDataDTO } from "@/dtos/workflows/ProjectWorkflowDTOs";
-import { ComplianceService } from "@/application/services/ComplianceService";
 import { BankGuaranteeService } from "@/application/services/BankGuaranteeService";
-import { InsuranceService } from "@/application/services/InsuranceService";
+import { ComplianceService } from "@/application/services/ComplianceService";
 import { DocumentService } from "@/application/services/DocumentService";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { InsuranceService } from "@/application/services/InsuranceService";
 import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";
-import { InsuranceCertificateDTO } from "@/dtos/entities/InsuranceDTO";
+import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { DocumentDTO } from "@/dtos/entities/DocumentDTO";
-import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
-import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
+import { InsuranceCertificateDTO } from "@/dtos/entities/InsuranceDTO";
+import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 
 interface EnhancedComplianceStepProps {
   workflowData: ProjectWorkflowData | null;

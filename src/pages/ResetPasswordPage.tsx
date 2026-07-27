@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { AuthService } from '@/application/services/AuthService';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Lock } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
-import { AuthService } from '@/application/services/AuthService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();

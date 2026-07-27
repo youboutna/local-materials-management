@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { NotificationService } from '@/application/services/NotificationService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Download, Mail, Loader2, PenTool, CheckCircle, BarChart3 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { TenderDTO } from '@/dtos/entities/TenderDTO';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TenderReportingService, TenderReportData } from '@/application/services/TenderReportingService';
-import { ReportFormatting } from '@/utils/reportFormatting';
+import { Download, FileText, Loader2, Mail, PenTool } from 'lucide-react';
+import React, { useState } from 'react';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
-import { TenderDTO } from '@/dtos/entities/TenderDTO';
 
 interface TenderReportGeneratorProps {
   tender: TenderDTO;

@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
 import { StorageService } from '@/application/services/StorageService';
-import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface InspectionData {
   id: string;

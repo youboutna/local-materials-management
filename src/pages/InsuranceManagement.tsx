@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { actionLabels } from '@/application/services/ProjectManagerService';
 import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceManager';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
-import { actionLabels } from '@/application/services/ProjectManagerService';
+import { useEffect, useMemo, useState } from 'react';
 
-import type { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AlertTriangle } from 'lucide-react';
 
 // Content component that uses ProjectManager
 const InsuranceContent = () => {

@@ -2,11 +2,11 @@
  * Hexagonal hooks for Phase Payments management
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface PhasePaymentFormData {
   amount: string;

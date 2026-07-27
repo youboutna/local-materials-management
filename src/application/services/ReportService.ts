@@ -3,9 +3,9 @@
  * Comprehensive data-centric reporting service following hexagonal principles
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Use local DTOs to avoid re-export alias conflicts from reportDTOs
 export interface ReportServiceProjectReportDTO {

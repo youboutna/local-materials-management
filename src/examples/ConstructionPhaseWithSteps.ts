@@ -4,7 +4,7 @@
  */
 
 import { PhaseService } from '@/application/services/PhaseService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export class ConstructionPhaseWithStepsExample {
   private phaseService: PhaseService;

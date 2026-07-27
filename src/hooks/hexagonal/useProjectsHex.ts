@@ -4,10 +4,10 @@
  * Following hexagonal architecture principles
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectService } from '@/application/services/ProjectService';
 import type { CreateProjectDTO, ProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Types pour les hooks

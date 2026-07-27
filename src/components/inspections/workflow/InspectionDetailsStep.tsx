@@ -2,23 +2,19 @@
  * InspectionDetailsStep - Étape de configuration des détails de l'inspection
  */
 
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { InspectionPermissionService } from '@/application/services/InspectionPermissionService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Clock, User, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { InspectionPermissionService } from '@/application/services/InspectionPermissionService';
-import {
-  PermissionContextDTO,
-  AssignableInspectorDTO
-} from '@/dtos/entities/InspectionPermissionDTO';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { Textarea } from '@/components/ui/textarea';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface InspectionDetailsStepProps {
   projectId: string;

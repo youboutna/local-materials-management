@@ -57,8 +57,8 @@ export * from './InsuranceDTO';
 
 export * from './InvoiceDTO';
 
-export * from './UserDTO';
 export * from './HierarchyDTO';
+export * from './UserDTO';
 
 export * from './HierarchyMappingDTO';
 
@@ -99,5 +99,6 @@ export * from './NotificationTypeDTO';
 
 // Unified workflow
 export * from './UnifiedWorkflowDTO';
-
+// src/dtos/entities/index.ts
+export * from './OAuthProviderDTO';
 

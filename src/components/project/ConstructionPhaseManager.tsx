@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -24,45 +24,26 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { 
+import {
+    AlertCircle,
+    Building,
+    Calendar,
+    ClipboardCheck,
 
-  Plus, 
-
-  Edit, 
-
-  Trash2, 
-
-  Calendar, 
-
-  DollarSign, 
-
-  Users, 
-
-  MapPin, 
-
-  Package, 
-
-  Building,
-
-  Settings,
-
-  Eye,
-
-  AlertCircle,
-
-  Flag,
-
-  Zap,
-
-  ClipboardCheck,
-
-  Clock
-
+    Clock,
+    DollarSign,
+    Edit,
+    Eye,
+    Flag,
+    Package,
+    Plus,
+    Trash2,
+    Users,
+    Zap
 } from 'lucide-react';
 
 import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
 
-import { GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 
 // Types for procurement phases from referential
 type ProcurementPhase = string;
@@ -82,11 +63,11 @@ import { PhaseService } from '@/application/services/PhaseService';
 
 import { MilestoneService } from '@/application/services/MilestoneService';
 
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 import { referentialService } from '@/application/services/ReferentialService';
-import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // PhaseService instance for dynamic data
 const phaseService = new PhaseService();
@@ -2485,5 +2466,5 @@ const ProcurementPhaseCreator: React.FC<{
 
 export default ConstructionPhaseManager;
 
-export type { PhaseData, CustomPhase };
+export type { CustomPhase, PhaseData };
 

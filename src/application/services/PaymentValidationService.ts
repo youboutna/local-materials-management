@@ -4,11 +4,11 @@
  * Following hexagonal architecture principles
  */
 
-import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
-import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
+import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface PaymentStats {

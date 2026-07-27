@@ -4,13 +4,12 @@
  * Simplified version aligned with existing DTOs and services
  */
 
-import { ProjectService } from './ProjectService';
-import { PhaseService } from './PhaseService';
-import { MaterialService } from './MaterialService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { EmployeeService } from './EmployeeService';
+import { MaterialService } from './MaterialService';
+import { PhaseService } from './PhaseService';
+import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 // Local type definitions
 export interface DataValidationIssueDTO {

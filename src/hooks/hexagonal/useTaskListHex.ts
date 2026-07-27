@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TaskService, TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from '@/application/services/TaskService';
 import { AuthService } from '@/application/services/AuthService';
+import { CreateTaskDTO, TaskPriority, TaskService, TaskStatus, UpdateTaskDTO } from '@/application/services/TaskService';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface TaskAssignment {
   id: string;

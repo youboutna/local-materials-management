@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import {
-  Layers,
-  ChevronRight,
-  ChevronDown,
-  FileText,
-  Users,
-  Calendar,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Package,
-  Shield
+    AlertCircle,
+    Calendar,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    FileText,
+    Layers,
+    Package,
+    Shield,
+    Users
 } from 'lucide-react';
-import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
+import React, { useState } from 'react';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Progress } from '../ui/progress';
 
 // Local type for phase hierarchy view data (snake_case from DB query)
 interface PhaseStepTask {
@@ -37,8 +36,6 @@ interface PhaseStepTask {
   task_description?: string;
   assigned_to?: string[];
 }
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
 
 interface PhaseStepTaskManagerProps {
   projectId: string;

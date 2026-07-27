@@ -1,16 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Calculator, Plus, Trash2, Save, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
 import { calculateQuantity } from '@/dtos/entities/QuantityTakeoffDTO';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { Calculator, FileText, Plus, Save, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 // Local Material interface for UI usage
 interface LocalMaterial {

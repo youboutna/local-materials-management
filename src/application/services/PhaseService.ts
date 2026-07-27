@@ -4,20 +4,18 @@
  * Following hexagonal architecture principles
  */
 
-import { Phase, PhaseStatus as DomainPhaseStatus, ConstructionPhase, ConstructionStage } from '@/domain/entities/Phase';
-import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { ReferentialService } from './ReferentialService';
-import { 
-  ReferentialPhase, 
-  ReferentialStep, 
-  ReferentialTask, 
-  MultiLanguageLabel,
-  ReferentialType 
+import {
+    ReferentialStep,
+    ReferentialTask,
+    ReferentialType
 } from '@/config/referentials';
+import { ConstructionPhase, ConstructionStage, Phase } from '@/domain/entities/Phase';
+import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { ReferentialService } from './ReferentialService';
 
 /**
  * Phase Service

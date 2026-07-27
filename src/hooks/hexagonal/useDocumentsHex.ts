@@ -3,11 +3,11 @@
  * Real data from DocumentService via RepositoryFactory
  */
 
+import { DocumentService } from '@/application/services/DocumentService';
+import { CreateDocumentDTO, DocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { DocumentService } from '@/application/services/DocumentService';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 type DocumentRow = DocumentDTO;
 

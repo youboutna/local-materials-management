@@ -1,142 +1,250 @@
 /**
+ * src/infrastructure/supabase/adapters/SupabaseStorageAdapter.ts
  * Supabase Storage Adapter
- * Implements IStorageRepository for Supabase storage
+ * Implements IStorageProvider for Supabase storage
  * Following hexagonal architecture principles
  */
 
+import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  IStorageRepository, 
-  StorageFile, 
-  UploadResult 
-} from '@/domain/repositories/IStorageRepository';
 
-export class SupabaseStorageAdapter implements IStorageRepository {
+export class SupabaseStorageAdapter implements IStorageProvider {
+  private defaultBucket: string = 'documents';
+
   /**
    * Upload file to storage
    */
-  async uploadFile(bucket: string, path: string, file: File): Promise<{ result: UploadResult | null; error: Error | null }> {
+  async uploadFile(
+    file: File,
+    path: string,
+    options?: {
+      contentType?: string;
+      metadata?: Record<string, string>;
+      upsert?: boolean;
+    }
+  ): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+  }> {
     try {
+      const bucket = options?.metadata?.bucket || this.defaultBucket;
+      
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(path, file);
-
-      if (error) {
-        return { result: null, error };
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path);
-
-      const result: UploadResult = {
-        path: data.path,
-        publicUrl,
-        size: file.size,
-        content_type: file.type
-      };
-
-      return { result, error: null };
-    } catch (error) {
-      return { result: null, error: error as Error };
-    }
-  }
-
-  /**
-   * Get public URL for file
-   */
-  getPublicUrl(bucket: string, path: string): string {
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    
-    return publicUrl;
-  }
-
-  /**
-   * Delete file from storage
-   */
-  async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    try {
-      const { error } = await supabase.storage
-        .from(bucket)
-        .remove([path]);
-
-      return { error };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  }
-
-  /**
-   * List files in bucket with optional prefix
-   */
-  async listFiles(bucket: string, prefix?: string): Promise<{ files: StorageFile[]; error: Error | null }> {
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .list(prefix);
-
-      if (error) {
-        return { files: [], error };
-      }
-
-      const files: StorageFile[] = data.map(file => ({
-        id: file.id,
-        name: file.name,
-        path: `${prefix || ''}${file.name}`,
-        bucket,
-        size: file.metadata?.size || 0,
-        content_type: file.metadata?.mimetype,
-        created_at: file.created_at,
-        updated_at: file.updated_at
-      }));
-
-      return { files, error: null };
-    } catch (error) {
-      return { files: [], error: error as Error };
-    }
-  }
-
-  /**
-   * Download file
-   */
-  async downloadFile(bucket: string, path: string): Promise<{ data: Blob | null; error: Error | null }> {
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .download(path);
-
-      if (error) {
-        return { data: null, error };
-      }
-
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error: error as Error };
-    }
-  }
-
-  /**
-   * Check if file exists
-   */
-  async fileExists(bucket: string, path: string): Promise<{ exists: boolean; error: Error | null }> {
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .list(path.split('/').slice(0, -1).join('/'), {
-          search: path.split('/').pop() || ''
+        .upload(path, file, {
+          cacheControl: '3600',
+          contentType: options?.contentType || file.type,
+          upsert: options?.upsert || false,
         });
 
       if (error) {
-        return { exists: false, error };
+        return { success: false, error: error.message };
       }
 
-      const exists = data.some(file => file.name === path.split('/').pop());
-      return { exists, error: null };
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(path);
+
+      return {
+        success: true,
+        url: publicUrlData.publicUrl,
+      };
     } catch (error) {
-      return { exists: false, error: error as Error };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Upload failed',
+      };
+    }
+  }
+
+  /**
+   * Download a file from storage
+   */
+  async downloadFile(path: string): Promise<{
+    success: boolean;
+    data?: Blob;
+    error?: string;
+  }> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(this.defaultBucket)
+        .download(path);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data: data || undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Download failed',
+      };
+    }
+  }
+
+  /**
+   * Delete a file from storage
+   */
+  async deleteFile(path: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const { error } = await supabase.storage
+        .from(this.defaultBucket)
+        .remove([path]);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Delete failed',
+      };
+    }
+  }
+
+  /**
+   * Get public URL for a file
+   */
+  async getPublicUrl(path: string): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+  }> {
+    try {
+      const { data } = supabase.storage
+        .from(this.defaultBucket)
+        .getPublicUrl(path);
+
+      return { success: true, url: data.publicUrl };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get public URL',
+      };
+    }
+  }
+
+  /**
+   * List files in storage
+   */
+  async listFiles(prefix?: string): Promise<{
+    success: boolean;
+    files?: Array<{
+      name: string;
+      size: number;
+      created_at: string;
+      updated_at: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(this.defaultBucket)
+        .list(prefix);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const files = data.map((file) => ({
+        name: file.name,
+        size: file.metadata?.size || 0,
+        created_at: file.created_at || new Date().toISOString(),
+        updated_at: file.updated_at || new Date().toISOString(),
+      }));
+
+      return { success: true, files };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to list files',
+      };
+    }
+  }
+
+  /**
+   * Check if a file exists
+   */
+  async fileExists(path: string): Promise<boolean> {
+    try {
+      const pathParts = path.split('/');
+      const fileName = pathParts.pop() || '';
+      const prefix = pathParts.join('/');
+
+      const { data, error } = await supabase.storage
+        .from(this.defaultBucket)
+        .list(prefix, {
+          search: fileName,
+        });
+
+      if (error) {
+        return false;
+      }
+
+      return data.some((file) => file.name === fileName);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Set default bucket
+   */
+  setDefaultBucket(bucket: string): void {
+    this.defaultBucket = bucket;
+  }
+
+  /**
+   * Upload with custom bucket (convenience method)
+   */
+  async uploadToBucket(
+    bucket: string,
+    file: File,
+    path: string,
+    options?: {
+      contentType?: string;
+      metadata?: Record<string, string>;
+      upsert?: boolean;
+    }
+  ): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+  }> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, {
+          cacheControl: '3600',
+          contentType: options?.contentType || file.type,
+          upsert: options?.upsert || false,
+        });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(path);
+
+      return {
+        success: true,
+        url: publicUrlData.publicUrl,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Upload failed',
+      };
     }
   }
 }

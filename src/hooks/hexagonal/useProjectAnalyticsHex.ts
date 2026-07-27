@@ -2,10 +2,10 @@
  * Hexagonal Hook for Project Analytics
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface ProjectAnalyticsError extends Error {
   code?: string;

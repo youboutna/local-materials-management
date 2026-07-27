@@ -3,14 +3,14 @@
  * Implements IInspectionSchedulingRepository using Supabase
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { 
-  IInspectionSchedulingRepository, 
-  InspectionScheduleData, 
-  InspectionType, 
-  AssignableInspector 
+import {
+    AssignableInspector,
+    IInspectionSchedulingRepository,
+    InspectionScheduleData,
+    InspectionType
 } from '@/domain/repositories/IInspectionSchedulingRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class InspectionSchedulingAdapter implements IInspectionSchedulingRepository {
   

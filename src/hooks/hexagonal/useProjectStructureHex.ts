@@ -3,8 +3,8 @@
  * Uses RepositoryFactory instead of direct Supabase access
  */
 
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface Step {
   id: string;

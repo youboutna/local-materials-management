@@ -4,10 +4,10 @@
  * Aligned with hexagonal architecture
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Inspection } from '@/domain/entities/Inspection';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain/entities/Inspection';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { NotificationService } from './NotificationService';
 
 export type InspectionStatus = 'scheduled' | 'in_progress' | 'completed' | 'approved' | 'rejected' | 'pending' | 'requested' | 'requires_changes' | 'cancelled';

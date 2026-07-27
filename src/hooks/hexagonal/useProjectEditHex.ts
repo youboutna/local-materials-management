@@ -2,21 +2,21 @@
  * useProjectEditHex - Hook Hexagonal pour l'Édition de Projets
  */
 
+import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from '@/hooks/use-toast';
 
 // Import DTOs
-import { ProjectDTO, UpdateProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
-import { ProjectWorkflowData, SaveResult, ValidationResult } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { UpdateProjectDTO } from "@/dtos/entities/ProjectDTO";
+import { SaveResult, ValidationResult } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 // Import services
-import { ProjectService } from "@/application/services/ProjectService";
 import { PhaseService } from "@/application/services/PhaseService";
+import { ProjectService } from "@/application/services/ProjectService";
 import { ProjectStakeholderService } from "@/application/services/ProjectStakeholderService";
 import { ReferentialService } from "@/application/services/ReferentialService";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 
 // Import transformer for UI conversions
 import { ProjectWorkflowTransforms } from "@/dtos/transforms/ProjectWorkflowTransforms";

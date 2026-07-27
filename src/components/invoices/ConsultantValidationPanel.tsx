@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { AuthService } from '@/application/services/AuthService';
+import { NotificationService } from '@/application/services/NotificationService';
+import { StorageService } from '@/application/services/StorageService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { AuthService } from '@/application/services/AuthService';
-import { StorageService } from '@/application/services/StorageService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Upload } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface ProgressInvoice {
   id: string;

@@ -2,9 +2,8 @@
  * Hexagonal hooks for Kanban Board management
  */
 
-import { useState, useEffect } from 'react';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useEffect, useState } from 'react';
 
 export interface KanbanTask {
   id: string;

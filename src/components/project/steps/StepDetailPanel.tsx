@@ -3,33 +3,33 @@
  * Architecture hexagonale: utilise les use cases pour les opérations
  */
 
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  ClipboardCheck, 
-  DollarSign, 
-  FileText, 
-  Target, 
-  Calendar,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  CalendarPlus,
-  X,
-  Eye,
-  ListChecks,
-  ChevronRight
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    AlertTriangle,
+    Calendar,
+    CalendarPlus,
+    CheckCircle,
+    ChevronRight,
+    ClipboardCheck,
+    Clock,
+    DollarSign,
+    Eye,
+    FileText,
+    ListChecks,
+    Target,
+    X
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from '@/application/services/InspectionService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Components
 import EnhancedScheduleInspectionModal from '@/components/inspections/EnhancedScheduleInspectionModal';

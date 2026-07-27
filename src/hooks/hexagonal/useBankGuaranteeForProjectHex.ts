@@ -2,9 +2,8 @@
  * Hexagonal Hook: useBankGuaranteesMonitorHex
  * Uses BankGuaranteeService instead of direct Supabase access
  */
-import { useQuery } from '@tanstack/react-query';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface BankGuaranteeData {
   projectId: string;

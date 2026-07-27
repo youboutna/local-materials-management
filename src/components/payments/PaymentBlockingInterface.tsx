@@ -1,32 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { 
-  PaymentBlockingService, 
-  PaymentBlockDTO, 
-  PaymentControlActionDTO, 
-  CreatePaymentBlockRequestDto, 
-  ResolvePaymentBlockRequestDto, 
-  GetPaymentBlockStatsRequestDto, 
-  PaymentEligibilityValidationDto 
+import { DocumentService } from '@/application/services/DocumentService';
+import { InsuranceService } from '@/application/services/InsuranceService';
+import {
+    PaymentBlockingService,
+    PaymentEligibilityValidationDto
 } from '@/application/services/PaymentBlockingService';
 import { PaymentService } from '@/application/services/PaymentService';
-import { InsuranceService } from '@/application/services/InsuranceService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertTriangle, Ban, CheckCircle, Clock, DollarSign, Shield } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 interface PaymentBlockHistoryItem {
   id: string;

@@ -3,9 +3,9 @@
  * Uses DocumentService instead of direct Supabase access
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface PhaseDocument {
   id: string;

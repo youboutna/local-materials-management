@@ -2,14 +2,13 @@
  * Hook hexagonal pour les appels d'offres
  * Encapsule les use cases de l'architecture hexagonale
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { Tender } from '@/domain/entities/Tender';
 import { TenderSubmission } from '@/domain/entities/TenderSubmission';
-import { TenderSubmissionDocument } from '@/domain/entities/TenderSubmissionDocument';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface UseTenderHexResult {
   tenders: Tender[];

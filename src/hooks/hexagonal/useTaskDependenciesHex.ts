@@ -4,8 +4,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { TaskService } from '@/application/services/TaskService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface TaskDependency {
   id: string;

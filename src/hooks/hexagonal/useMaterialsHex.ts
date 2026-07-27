@@ -3,16 +3,16 @@
  * Rule #1: Form → DTO → Service → Domain → Adapter → DB
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialUIDTO } from '@/dtos/transforms';
-import { MaterialCategory, MaterialFormDataDTO, MaterialDTO, MaterialUnit, UpdateMaterialDTO, CreateMaterialDTO, MaterialStatus } from '@/dtos/entities';
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
+import { MaterialService } from "@/application/services/MaterialService";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { CreateMaterialDTO, MaterialCategory, MaterialDTO, MaterialFormDataDTO, MaterialStatus, MaterialUnit, UpdateMaterialDTO } from '@/dtos/entities';
+import { CreateMaterialRequestDto, MaterialUIDTO, UpdateMaterialRequestDto } from '@/dtos/transforms';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 // Types for advanced UI features
 interface WorkspaceData {
@@ -608,4 +608,5 @@ export function useMaterialHex(id: string) {
 }
 
 // Re-export types
-export type { MaterialDTO, CreateMaterialRequestDto, UpdateMaterialRequestDto, MaterialFormDataDTO as MaterialFormData };
+export type { CreateMaterialRequestDto, MaterialDTO, MaterialFormDataDTO as MaterialFormData, UpdateMaterialRequestDto };
+

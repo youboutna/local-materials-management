@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
 import { InspectionService } from '@/application/services/InspectionService';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionStatus } from '@/domain/entities/Inspection';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useInspectionPaymentValidationHex(inspectionId: string) {
   const queryClient = useQueryClient();

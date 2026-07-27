@@ -4,15 +4,15 @@
  * Service → Repository → Domain ← Infrastructure
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  WorkspaceDTO,
-  CreateWorkspaceRequestDTO,
-  UpdateWorkspaceRequestDTO
+import { OperationalStatus } from '@/domain/entities/Workspace';
+import {
+    CreateWorkspaceRequestDTO,
+    UpdateWorkspaceRequestDTO,
+    WorkspaceDTO
 } from '@/dtos/entities/WorkspaceDTO';
 import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
-import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class WorkspaceService {
   private workspaceRepository: any;

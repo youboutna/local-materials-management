@@ -3,37 +3,23 @@
  * Pont intelligent entre l'UI et le service hexagonal
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { ProjectWorkflowService, type ProjectCreationWorkflowData, type WorkflowResult } from '@/application/services/ProjectWorkflowService';
+import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { ReferentialService } from '@/application/services/ReferentialService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 // Import workflow DTOs
-import { 
-  ProjectWorkflowData,
-  StepRelatedDataDTO,
-  WorkflowMetadataDTO,
-  ValidationResult,
-  SaveResult,
-  SaveContextDTO,
-  WorkflowStep,
-  WorkflowTransition,
-  WorkflowState,
-  ProjectCreationWorkflowDTO,
-  ProjectValidationDTO,
-  StepProgressDTO
+import {
+    ProjectWorkflowData,
+    SaveResult
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs
-import { ProjectDTO, CreateProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
-import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { CreateProjectDTO, ProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { RiskDTO } from '@/dtos/entities/RiskDTO';
 
 // Types d'erreur locaux pour éviter les dépendances
 export enum ErrorCode {

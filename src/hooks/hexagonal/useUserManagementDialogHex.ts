@@ -2,10 +2,10 @@
  * Hexagonal hook for User Management Dialog
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface CreateUserData {
   email: string;

@@ -2,13 +2,13 @@
  * Payment Control Hook - Hexagonal Architecture
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  PaymentControlDashboardDTO, 
-  PaymentBlockingInterfaceDTO 
-} from '@/dtos/entities/MonitoringDTOs';
 import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import {
+    PaymentBlockingInterfaceDTO,
+    PaymentControlDashboardDTO
+} from '@/dtos/entities/MonitoringDTOs';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UsePaymentControlHexResult {
   dashboard: PaymentControlDashboardDTO | null;

@@ -8,26 +8,25 @@
  * - Inspections obligatoires à chaque étape clé
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  IProjectRepository,
-  IPaymentRepository,
-  IPhaseRepository,
-  IMilestoneRepository,
-  IInspectionRepository
+import {
+    IMilestoneRepository,
+    IPaymentRepository,
+    IPhaseRepository,
+    IProjectRepository
 } from '@/domain/repositories';
-import { 
-  AutomaticDecompteDTO,
-  DecompteLineDTO,
-  PaymentType,
-  DEFAULT_MAURITANIA_RULES,
-  MauritaniaBusinessRulesDTO,
-  PhaseFinancials,
-  VerifiedMilestone,
-  ProjectFinancials
+import {
+    AutomaticDecompteDTO,
+    DecompteLineDTO,
+    DEFAULT_MAURITANIA_RULES,
+    MauritaniaBusinessRulesDTO,
+    PaymentType,
+    PhaseFinancials,
+    ProjectFinancials,
+    VerifiedMilestone
 } from '@/dtos/entities/DecompteDTO';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Service DTOs for data exchange
 export interface CalculateProjectDecompteRequestDto {

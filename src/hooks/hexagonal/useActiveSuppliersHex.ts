@@ -2,9 +2,9 @@
  * Hexagonal hook for fetching active suppliers (for task assignment)
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { SupplierService } from '@/application/services/SupplierService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface ActiveSupplier {
   id: string;

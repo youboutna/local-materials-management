@@ -3,11 +3,11 @@
  * Business logic for supplier notifications with proper error handling
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
-import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface SupplierNotificationData {
   type: 'password_reset' | 'task_assignment' | 'payment_request' | 'inspection_required';

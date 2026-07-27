@@ -6,15 +6,15 @@
  * TODO: Replace direct Supabase calls with RepositoryFactory pattern
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { NotificationService } from '@/application/services/NotificationService';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { 
-  DatabaseMetricsDTO,
-  PerformanceMetricsDTO, 
-  PerformanceAlertDTO,
-  PerformanceSummaryDTO
+import {
+    DatabaseMetricsDTO,
+    PerformanceAlertDTO,
+    PerformanceMetricsDTO,
+    PerformanceSummaryDTO
 } from '@/dtos/entities/PerformanceMetricsDTO';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Event-driven interfaces for performance monitoring
 export interface EventPerformanceMetrics {
@@ -85,7 +85,7 @@ export class PerformanceMonitoringService {
       const startTime = Date.now();
 
       // Use RepositoryFactory pattern (no direct Supabase)
-      const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+      const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
       const projectRepo = RepositoryFactory.getProjectRepository();
       const inspectionRepo = RepositoryFactory.getInspectionRepository();
       const paymentRepo = RepositoryFactory.getPaymentRepository();

@@ -3,20 +3,17 @@
  * Business logic for managing project stakeholders and team delegation
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  ProjectStakeholderDTO,
-  CreateProjectStakeholderDTO,
-  UpdateProjectStakeholderDTO,
-  StakeholderDelegationDTO,
-  ExternalStakeholderDTO,
-  StakeholderInputDTO,
-  CreateStakeholderInputDTO,
-  StakeholderFormDataDTO
+import {
+    CreateProjectStakeholderDTO,
+    CreateStakeholderInputDTO,
+    ProjectStakeholderDTO,
+    StakeholderInputDTO,
+    UpdateProjectStakeholderDTO
 } from '@/dtos/entities/ProjectStakeholderDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class ProjectStakeholderService {
   constructor(

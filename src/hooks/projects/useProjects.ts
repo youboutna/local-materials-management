@@ -4,13 +4,13 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { ProjectService } from "@/application/services/ProjectService";
-import { ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 // Types compatibles avec le service
 interface ProjectAnalytics {

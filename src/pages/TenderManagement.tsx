@@ -1,40 +1,39 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  FileText,
-  Users,
-  Upload,
-  Settings,
-  KeyRound,
-  Bell,
-  Gavel,
-  Inbox,
-  Layers,
-} from "lucide-react";
+import { TenderSubmissionService } from "@/application/services/TenderSubmissionService";
+import { AppLayout } from "@/components/layout";
+import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
+import { EvaluationPanelTabs } from "@/components/tenders/EvaluationPanelTabs";
+import { SecureSharingDialog } from "@/components/tenders/SecureSharingDialog";
+import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
 import TenderCrud from "@/components/tenders/TenderCrud";
 import TenderDocumentsPanel from "@/components/tenders/TenderDocumentsPanel";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
 import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
-import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
-import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
-import { SecureSharingDialog } from "@/components/tenders/SecureSharingDialog";
-import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
-import { EvaluationPanelTabs } from "@/components/tenders/EvaluationPanelTabs";
-import { TenderWorkflowPanel } from "@/components/tenders/TenderWorkflowPanel";
 import { TenderSecretsPanel } from "@/components/tenders/TenderSecretsPanel";
-import { useQuery } from "@tanstack/react-query";
-import { TenderSubmissionService } from "@/application/services/TenderSubmissionService";
-import { AppLayout } from "@/components/layout";
-import { useTenders } from "@/hooks/hexagonal";
-import { useTenderLots } from "@/hooks/hexagonal/useTenderLotsHex";
-import { useTenderLotDocuments } from "@/hooks/hexagonal/useTenderLotDocumentsHex";
+import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
+import { TenderWorkflowPanel } from "@/components/tenders/TenderWorkflowPanel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TenderStatusCode } from "@/config/referentials/tender/tender-workflow.referential";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { useTenders } from "@/hooks/hexagonal";
+import { useTenderLotDocuments } from "@/hooks/hexagonal/useTenderLotDocumentsHex";
+import { useTenderLots } from "@/hooks/hexagonal/useTenderLotsHex";
 import { useToast } from "@/hooks/use-toast";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useQuery } from "@tanstack/react-query";
+import {
+  FileText,
+  Gavel,
+  Inbox,
+  KeyRound,
+  Layers,
+  Settings,
+  Upload,
+  Users
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 interface Tender {
   id: string;

@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { StorageService } from '@/application/services/StorageService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { FileText, Upload, Send, Plus, Search } from 'lucide-react';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
-import { useDocumentsHex, type DocumentFilters } from '@/hooks/hexagonal/useDocumentsHex';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/hexagonal/useAuthSimple';
+import { useDocumentsHex } from '@/hooks/hexagonal/useDocumentsHex';
+import { useToast } from '@/hooks/use-toast';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FileText, Search, Send, Upload } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface Document {
   id: string;

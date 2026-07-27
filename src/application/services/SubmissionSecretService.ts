@@ -3,20 +3,20 @@
  * Business logic for managing submission secret codes
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ISubmissionSecretRepository } from '@/domain/repositories/ISubmissionSecretRepository';
 import {
-  SubmissionSecretDTO,
-  GenerateSubmissionSecretRequestDTO,
-  ValidateSubmissionSecretRequestDTO,
-  GetSubmissionSecretsRequestDTO,
-  DeactivateSecretRequestDTO,
-  DeleteSubmissionSecretRequestDTO,
-  RegenerateSecretRequestDTO,
-  SecretValidationResultDTO
+    DeactivateSecretRequestDTO,
+    DeleteSubmissionSecretRequestDTO,
+    GenerateSubmissionSecretRequestDTO,
+    GetSubmissionSecretsRequestDTO,
+    RegenerateSecretRequestDTO,
+    SecretValidationResultDTO,
+    SubmissionSecretDTO,
+    ValidateSubmissionSecretRequestDTO
 } from '@/dtos/entities/SubmissionSecretDTO';
 import { SubmissionSecretTransformer } from '@/dtos/transforms/SubmissionSecretTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class SubmissionSecretService {
   constructor(

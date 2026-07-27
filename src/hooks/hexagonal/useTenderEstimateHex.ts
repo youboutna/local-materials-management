@@ -2,12 +2,12 @@
  * Hexagonal hooks for Tender Quantitative Estimate
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { MaterialService } from '@/application/services/MaterialService';
+import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
-import { EstimateItem, EstimateData } from '@/dtos/transforms/shared';
+import { EstimateItem } from '@/dtos/transforms/shared';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Hooks
 export function useTenderEstimatesHex(tenderId: string) {
@@ -68,7 +68,7 @@ export function useParsedInvoicesHex(tenderId: string) {
     queryKey: ['parsed-invoices', tenderId],
     queryFn: async () => {
       const { InvoiceService } = await import('@/application/services/InvoiceService');
-      const { RepositoryFactory } = await import('@/infrastructure/supabase/RepositoryFactory');
+      const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
       
       const invoiceRepository = RepositoryFactory.getParsedInvoiceRepository();
       const invoiceService = new InvoiceService(invoiceRepository);

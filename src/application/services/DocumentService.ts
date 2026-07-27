@@ -4,11 +4,10 @@
  */
 
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { Document, DocumentStatus as DomainDocumentStatus } from '@/domain/entities/Document';
+import { CreateDocumentDTO, DocumentDTO, DocumentStatus, DocumentType, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO, DocumentStatus, DocumentType, DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 function isDocumentType(type: string): type is DocumentType {
   return Object.values(DocumentType).includes(type as DocumentType);

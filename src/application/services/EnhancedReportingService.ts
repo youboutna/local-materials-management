@@ -1,19 +1,18 @@
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { supabase as publicClient } from '@/integrations/supabase/client';
-import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import {
-  ProjectReportDTO,
-  EnhancedPhaseDTO,
-  ConstructionMilestoneDTO,
-  ProjectAnalyticsDTO,
-  FinancialMetricsDTO,
-  RiskAssessmentDTO,
-  ReportData,
-  CostCalculation
+    ConstructionMilestoneDTO,
+    CostCalculation,
+    EnhancedPhaseDTO,
+    FinancialMetricsDTO,
+    ProjectAnalyticsDTO,
+    ProjectReportDTO,
+    ReportData,
+    RiskAssessmentDTO
 } from '@/dtos/types/reportTypes';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { ReportCalculations } from '@/utils/reportCalculations';
 
 export class EnhancedReportingService {
   private reportingRepository = RepositoryFactory.getReportingRepository();

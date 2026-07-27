@@ -2,9 +2,9 @@
  * Hexagonal Hook: usePaymentStatsHex
  * Uses services instead of direct Supabase access
  */
-import { useQuery } from '@tanstack/react-query';
 import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface PaymentStats {
   blockedPayments: number;

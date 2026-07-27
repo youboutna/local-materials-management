@@ -3,9 +3,9 @@
  * Uses MilestoneService with domain entities
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MilestoneService } from '@/application/services/MilestoneService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 interface MilestoneProgress {
   percentage: number;

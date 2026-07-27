@@ -2,11 +2,11 @@
  * Hexagonal hook for project hierarchy operations
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { HierarchyNode, CreateHierarchyNodeDTO, UpdateHierarchyNodeDTO, HierarchyStatisticsDTO } from '@/dtos/entities/HierarchyDTO';
 import { HierarchyService } from '@/application/services/HierarchyService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateHierarchyNodeDTO, HierarchyNode, HierarchyStatisticsDTO, UpdateHierarchyNodeDTO } from '@/dtos/entities/HierarchyDTO';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UseProjectHierarchyResult {
   hierarchy: HierarchyNode[];

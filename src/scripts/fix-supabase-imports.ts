@@ -53,7 +53,7 @@ function fixFile(filePath: string): FileFix {
   if (fixedContent.includes("import { supabase }")) {
     fixedContent = fixedContent.replace(
       /import { supabase } from ['"]@\/integrations\/supabase\/client['"];?/,
-      "import { RepositoryFactory } from '@/repositories/RepositoryFactory';"
+      "import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';"
     );
     changes.push('Replaced supabase import with RepositoryFactory');
   }

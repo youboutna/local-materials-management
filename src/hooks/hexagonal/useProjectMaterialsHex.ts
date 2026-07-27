@@ -3,11 +3,11 @@
  * Utilise MaterialService au lieu des appels Supabase directs
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/hooks/use-toast";
 import { MaterialService } from "@/application/services/MaterialService";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
+import { toast } from "@/hooks/use-toast";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ProjectMaterial {
   id?: string;

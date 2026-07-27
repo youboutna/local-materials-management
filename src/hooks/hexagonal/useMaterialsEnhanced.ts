@@ -4,12 +4,12 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
+import { MaterialService } from "@/application/services/MaterialService";
+import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { CreateMaterialRequestDto, MaterialTransformer, UpdateMaterialRequestDto } from '@/dtos/transforms';
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
-import { MaterialService } from "@/application/services/MaterialService";
-import { MaterialTransformer, CreateMaterialRequestDto, UpdateMaterialRequestDto } from '@/dtos/transforms';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 // Enhanced types for UI components
 export interface UseMaterialsEnhancedResult {

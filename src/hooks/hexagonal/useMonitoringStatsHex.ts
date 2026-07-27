@@ -1,8 +1,8 @@
 // Hook hexagonal pour les statistiques de monitoring
 // Uses RepositoryFactory instead of direct Supabase calls
 
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface MonitoringStats {
   guarantees: { count: number; status: string };

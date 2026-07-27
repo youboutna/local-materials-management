@@ -10,12 +10,11 @@
  *  - Pas de Supabase direct dans le hook : passe par NotificationService.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
-import { CreateNotificationRequestDTO, UpdateNotificationRequestDTO } from '@/dtos/entities/NotificationDTO';
 import { useAuth } from '@/contexts/use-auth';
+import { CreateNotificationRequestDTO, NotificationDTO, UpdateNotificationRequestDTO } from '@/dtos/entities/NotificationDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // =================== INTERFACES ===================
 

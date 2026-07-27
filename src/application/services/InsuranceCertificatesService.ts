@@ -4,17 +4,13 @@
  * Uses centralized DTOs and transformers to avoid circular dependencies
  */
 
-import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
-import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
-import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
-import { 
-  InsuranceCertificateDTO, 
-  InsuranceCertificateFormData,
-  InsuranceCertificateCreateData,
-  InsuranceCertificateUpdateData 
+import {
+    InsuranceCertificateDTO,
+    InsuranceCertificateFormData,
+    InsuranceCertificateUpdateData
 } from '@/dtos/entities/InsuranceCertificateDTO';
+import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export class InsuranceCertificatesService {
   constructor(

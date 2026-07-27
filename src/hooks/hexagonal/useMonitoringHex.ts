@@ -3,12 +3,11 @@
  * Bank Guarantees, Payment Blocks, Insurance, Notifications
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
-import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
 import { InsuranceService } from '@/application/services/InsuranceService';
-import { NotificationService } from '@/application/services/NotificationService';
+import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 // Types for monitoring entities
 export interface BankGuarantee {

@@ -1,85 +1,74 @@
 
+import { MilestoneService } from '@/application/services/MilestoneService';
+import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
+import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
+import { CriticalPathView, GanttChart, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
 import FinancialOverview from "@/components/project/FinaancialOverview";
-import PhaseList from "@/components/project/PhaseList";
 import { InspectionsList } from "@/components/project/InspectionsList";
+import { UnifiedMilestoneManager } from "@/components/project/milestones";
+import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
+import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
+import { PaymentDialog } from "@/components/project/PaymentDialog";
+import PhaseList from "@/components/project/PhaseList";
+import PlanningVarianceView from "@/components/project/PlanningVarianceView";
+import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
+import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
-import { UnifiedMilestoneManager } from "@/components/project/milestones";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
-import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
 import { ReportManager } from "@/components/reports/ReportManager";
-import ProjectDqeTab from "@/components/project/ProjectDqeTab";
-import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
-import PlanningVarianceView from "@/components/project/PlanningVarianceView";
-import { GanttChart, PERTDiagram, KanbanBoard, CriticalPathView, ProjectTimeline } from "@/components/planning";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DialogContent as DialogContentUI, DialogDescription, DialogHeader, DialogHeader as DialogHeaderUI, DialogTitle, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReferentialType } from "@/config/referentials";
+import { getProjectTabs } from "@/config/referentials/projects/project-views.referential";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "@/hooks/use-toast";
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { MilestoneService } from '@/application/services/MilestoneService';
-import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
-import { useProjectCompliance } from '@/hooks/hexagonal';
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
+import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
+import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import { toast } from "@/hooks/use-toast";
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle,
-  ArrowLeft,
-  BarChart3,
-  Calendar,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  FileDown,
-  FileText,
-  MapPin,
-  Package,
-  Shield,
-  Target,
-  TrendingUp,
-  Users,
+    AlertTriangle,
+    BarChart3,
+    Calendar,
+    CheckCircle,
+    Clock,
+    DollarSign,
+    FileDown,
+    FileText,
+    Package,
+    Shield,
+    Target,
+    TrendingUp
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ElectricSpinner } from "../loading-page";
 import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
-import { ReferentialType } from "@/config/referentials";
-import { getProjectTabs } from "@/config/referentials/projects/project-views.referential";
-import { referentialService } from '@/application/services/ReferentialService';
-import {
-  Dialog as DialogUI,
-  DialogContent as DialogContentUI,
-  DialogHeader as DialogHeaderUI,
-  DialogTitle as DialogTitleUI,
-} from "@/components/ui/dialog";
-import ConstructionPhaseManager from "./ConstructionPhaseManager";
-import QuantityTakeoffs from "./QuantityTakeoffs";
-import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { Label } from "../ui/label";
-import { ProjectHeader, ProjectHierarchyView, ProjectMatrixView } from "./hierarchy";
 import {
-  Select,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "../ui/select";
-import { useProjectPhasesHex } from "@/hooks/hexagonal";
-import MonitoringEvaluationPanel from "@/components/project/monitoring/MonitoringEvaluationPanel";
-import { PaymentDialog } from "@/components/project/PaymentDialog";
+import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import { ProjectHeader } from "./hierarchy";
+import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;

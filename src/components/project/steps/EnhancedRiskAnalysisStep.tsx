@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, Trash2, TrendingUp, TrendingDown, Shield, Calculator } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Button } from '../../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Plus, Shield, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useToast } from '../../../hooks/use-toast';
 import { Badge } from '../../ui/badge';
-import { Progress } from '../../ui/progress';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
+import { Progress } from '../../ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Textarea } from '../../ui/textarea';
-import { useToast } from '../../../hooks/use-toast';
 
 // Import DTOs and services for hexagonal architecture
+import { RiskService } from "@/application/services/RiskService";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { RiskService } from "@/application/services/RiskService";
-import { RepositoryFactory } from "@/infrastructure/supabase/RepositoryFactory";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };

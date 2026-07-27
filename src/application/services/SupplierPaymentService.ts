@@ -3,10 +3,10 @@
  * Handles supplier payment requests and validations
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { SupplierPaymentRequestDTO } from '@/dtos/entities/SupplierPaymentDTO';
 import { ISupplierPaymentRepository } from '@/domain/repositories/ISupplierPaymentRepository';
+import { SupplierPaymentRequestDTO } from '@/dtos/entities/SupplierPaymentDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Service DTOs for data exchange
 export interface GetPendingPaymentRequestByInspectionIdRequestDto {

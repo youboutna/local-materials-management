@@ -3,22 +3,22 @@
  * Implements business logic for employee management
  */
 
-import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { Employee } from '@/domain/entities/Employee';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  EmployeeDTO,
-  SearchEmployeesOptions,
-  SearchEmployeesResult,
-  CreateEmployeeDTO,
-  UpdateEmployeeDTO,
-  EmployeeDepartment,
-  EmployeeRole,
-  EmployeeType,
-  EmployeeStatus
+import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import {
+    CreateEmployeeDTO,
+    EmployeeDepartment,
+    EmployeeDTO,
+    EmployeeRole,
+    EmployeeStatus,
+    EmployeeType,
+    SearchEmployeesOptions,
+    SearchEmployeesResult,
+    UpdateEmployeeDTO
 } from '@/dtos/entities/EmployeeDTO';
 import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class EmployeeService {
   constructor(private employeeRepository: IEmployeeRepository = RepositoryFactory.getEmployeeRepository()) {}

@@ -9,17 +9,17 @@
  *
  * Aucun `supabase.from(...)` ici, aucun import legacy.
  */
-import { useQuery } from '@tanstack/react-query';
-import { ProjectService } from '@/application/services/ProjectService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { PaymentService } from '@/application/services/PaymentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectService } from '@/application/services/ProjectService';
 import type {
-  ProjectWithPaymentsDTO,
-  InspectionSummaryDTO,
-  PaymentSummaryDTO,
-  InspectionStatus,
+    InspectionStatus,
+    InspectionSummaryDTO,
+    PaymentSummaryDTO,
+    ProjectWithPaymentsDTO,
 } from '@/dtos/entities/ProjectWithPaymentsDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 function inspectorName(insp: any): string | null {
   if (!insp) return null;

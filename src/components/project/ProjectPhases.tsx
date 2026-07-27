@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PhaseService } from '@/application/services/PhaseService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/use-auth';
-import { DEV_MODE } from '@/config/constants';
-import { PhaseService } from '@/application/services/PhaseService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import ConstructionPhaseManager, { PhaseData } from './ConstructionPhaseManager';
 
 interface ProjectPhasesProps {

@@ -1,13 +1,13 @@
 // Inspection Service - Hexagonal Architecture
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
-import { AppError, ErrorLogger, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  InspectionDocumentEntity,
-  InspectionExecutionDataDTO,
-  InspectionPaymentValidationDTO
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import {
+    InspectionDocumentEntity,
+    InspectionExecutionDataDTO,
+    InspectionPaymentValidationDTO
 } from '@/dtos/entities/InspectionDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 export class InspectionService {
   private repository: IInspectionRepository;

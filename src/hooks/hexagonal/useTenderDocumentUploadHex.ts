@@ -2,11 +2,11 @@
  * Hexagonal hooks for Tender Document Upload
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { StorageService, UploadFileRequestDto } from '@/application/services/StorageService';
 import { DocumentService } from '@/application/services/DocumentService';
+import { StorageService } from '@/application/services/StorageService';
 import { TenderService } from '@/application/services/TenderService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export type TenderCategory = string;
 export type TenderSubcategory = string;

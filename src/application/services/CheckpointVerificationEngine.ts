@@ -7,20 +7,17 @@
  * Architecture: UI → Service → Engine → Repository → Database
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionStatus } from '@/domain/entities/Inspection';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { CheckpointDTO } from '@/dtos/entities/CheckpointDTO';
-import { CheckpointVerificationResultDTO } from '@/dtos/entities/CheckpointVerificationResultDTO';
-import { CheckpointVerificationResult, VerifyCheckpointRequestDto, VerifyCheckpointResponseDto, VerifyInspectionsRequestDto, VerifyDocumentsRequestDto, VerifyApprovalsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
-import { VerificationItemDTO } from '@/dtos/entities/VerificationItemDTO';
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { DEFAULT_MAURITANIA_RULES } from '@/dtos/entities/VerificationItemDTO';
+import { CheckpointVerificationResult, VerifyApprovalsRequestDto, VerifyCheckpointRequestDto, VerifyDocumentsRequestDto, VerifyInspectionsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
+import { DEFAULT_MAURITANIA_RULES, VerificationItemDTO } from '@/dtos/entities/VerificationItemDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Import types from DTOs to avoid mismatch
 import { CheckpointCategory, VerificationStatus } from '@/dtos/entities/VerificationItemDTO';

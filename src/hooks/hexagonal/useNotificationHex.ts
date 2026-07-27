@@ -3,15 +3,15 @@
  * Architecture hexagonale avec service centralisé
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  NotificationDTO, 
-  CreateNotificationRequestDTO, 
-  UpdateNotificationRequestDTO 
+import {
+    CreateNotificationRequestDTO,
+    NotificationDTO,
+    UpdateNotificationRequestDTO
 } from '@/dtos/entities/NotificationDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Types pour le hook
 export interface NotificationHookReturn {

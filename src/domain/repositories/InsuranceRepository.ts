@@ -4,10 +4,9 @@
  * Uses adapters for data access
  */
 
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceCertificateDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export interface IInsuranceRepository {
   getActiveCertificates(): Promise<InsuranceCertificateEntity[]>;

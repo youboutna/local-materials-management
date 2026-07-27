@@ -2,12 +2,12 @@
  * Tasks Hook - Enhanced with Task Service Integration
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
-import { TaskService, TaskDTO, TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from '@/application/services/TaskService';
-import { useNavigate } from 'react-router-dom';
+import { TaskPriority, TaskService, TaskStatus, UpdateTaskDTO } from '@/application/services/TaskService';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 interface Task {
   id: string;

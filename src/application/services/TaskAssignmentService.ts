@@ -3,30 +3,29 @@
  * Business logic for managing task assignments
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { TaskAssignment as WorkspaceTaskAssignment } from '@/domain/entities/Workspace';
+import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 import {
-  TaskAssignmentDTO,
-  TaskAssignmentFiltersDTO,
-  CreateTaskAssignmentWithAssignerRequestDTO,
-  GetTaskAssignmentByIdRequestDTO,
-  UpdateTaskAssignmentWithIdRequestDTO,
-  DeleteTaskAssignmentRequestDTO,
-  GetTaskAssignmentsWithFiltersRequestDTO,
-  GetTaskAssignmentsByProjectRequestDTO,
-  GetTaskAssignmentsAssignedToRequestDTO,
-  GetTaskAssignmentsAssignedByRequestDTO,
-  GetTaskAssignmentsDueSoonRequestDTO,
-  SearchTaskAssignmentsRequestDTO,
-  GetTaskAssignmentsByStatusRequestDTO,
-  GetTaskAssignmentsByPriorityRequestDTO,
-  GetTaskAssignmentsByAssigneeTypeRequestDTO,
-  TaskAssignmentStatsDTO,
-  TaskAssignmentValidationResultDTO
+    CreateTaskAssignmentWithAssignerRequestDTO,
+    DeleteTaskAssignmentRequestDTO,
+    GetTaskAssignmentByIdRequestDTO,
+    GetTaskAssignmentsAssignedByRequestDTO,
+    GetTaskAssignmentsAssignedToRequestDTO,
+    GetTaskAssignmentsByAssigneeTypeRequestDTO,
+    GetTaskAssignmentsByPriorityRequestDTO,
+    GetTaskAssignmentsByProjectRequestDTO,
+    GetTaskAssignmentsByStatusRequestDTO,
+    GetTaskAssignmentsDueSoonRequestDTO,
+    GetTaskAssignmentsWithFiltersRequestDTO,
+    SearchTaskAssignmentsRequestDTO,
+    TaskAssignmentDTO,
+    TaskAssignmentStatsDTO,
+    TaskAssignmentValidationResultDTO,
+    UpdateTaskAssignmentWithIdRequestDTO
 } from '@/dtos/entities/TaskAssignmentDTO';
 
 export class TaskAssignmentService {

@@ -1,36 +1,34 @@
-import React, { useState, useRef, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { 
-  Upload, 
-  FileSpreadsheet, 
-  FileText, 
-  CheckCircle, 
-  AlertTriangle,
-  X,
-  Download,
-  Map,
-  Calendar
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { CreateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import {
+    AlertTriangle,
+    Calendar,
+    CheckCircle,
+    FileSpreadsheet,
+    FileText,
+    Map,
+    Upload,
+    X
+} from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 
 // Local type for import form data (subset of CreateProjectDTO)
 interface ProjectFormDTO extends Partial<CreateProjectDTO> {
   coordinates?: { latitude: number; longitude: number };
 }
-import { useLanguage } from '@/contexts/LanguageContext';
-import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
-import * as XLSX from 'xlsx';
 
 type ImportMode = 'create' | 'update' | 'patch';
 

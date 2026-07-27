@@ -3,9 +3,9 @@
  * Business logic for supplier portal operations
  */
 
-import { ISupplierRepository } from '@/domain/repositories';
 import { Supplier } from '@/domain/entities/Supplier';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ISupplierRepository } from '@/domain/repositories';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export class SupplierPortalService {
   constructor(

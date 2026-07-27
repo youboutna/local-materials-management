@@ -2,8 +2,8 @@
  * Hexagonal Hook for Phase Milestones
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface Milestone {
   id: string;

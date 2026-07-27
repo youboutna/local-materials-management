@@ -3,9 +3,9 @@
  * Centralizes supplier submission operations
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface Submission {
   id: string;

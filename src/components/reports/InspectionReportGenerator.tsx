@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { InspectionMetrics, InspectionReportData, InspectionReportingService } from '@/application/services/InspectionReportingService';
+import { NotificationService } from '@/application/services/NotificationService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Download, Mail, Loader2, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { ReportFormatting } from '@/utils/reportFormatting';
 import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/application/services/InspectionReportingService';
-import { ReportFormatting } from '@/utils/reportFormatting';
+import { CheckCircle, Download, Loader2, Mail } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;

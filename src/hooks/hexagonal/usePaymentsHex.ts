@@ -3,18 +3,17 @@
  * Uses PaymentRequestService following hexagonal architecture
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { PaymentRequestService } from "@/application/services/PaymentRequestService";
-import { 
-  PaymentDTO, 
-  CreatePaymentDTO, 
-  UpdatePaymentDTO,
-  PaymentRequestDTO,
-} from '@/dtos/entities/PaymentDTO';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+    CreatePaymentDTO,
+    PaymentRequestDTO,
+    UpdatePaymentDTO
+} from '@/dtos/entities/PaymentDTO';
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 // Enhanced types for UI components
 interface PaymentRiskAssessment {

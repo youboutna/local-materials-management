@@ -4,16 +4,11 @@
  * Supporte les employés internes et les organisations externes (fournisseurs, sous-traitants, etc.)
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
 import { StakeholderService } from '@/application/services/StakeholderService';
-import { StakeholderListResult } from '@/dtos/entities/StakeholderDTO';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  CreateStakeholderRequestDTO, 
-  UpdateStakeholderRequestDTO, 
-  StakeholderResponseDTO
-} from '@/dtos/entities/StakeholderDTO';
+import { CreateStakeholderRequestDTO, StakeholderListResult, StakeholderResponseDTO, UpdateStakeholderRequestDTO } from '@/dtos/entities/StakeholderDTO';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useStakeholdersHex(projectId?: string) {
   const queryClient = useQueryClient();

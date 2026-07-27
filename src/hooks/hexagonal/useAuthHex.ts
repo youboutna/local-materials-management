@@ -4,17 +4,16 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
 import { AuthService } from "@/application/services/AuthService";
-import { AuthDomainTransformer } from "@/dtos/transforms";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { LoginData, RegisterData, UserDTO } from "@/dtos/entities";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 // Re-export types for convenience
 export type { LoginData, RegisterData, UserDTO };
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 // Enhanced types for UI components
 export interface UseAuthHexResult {

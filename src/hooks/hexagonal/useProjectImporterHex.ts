@@ -3,8 +3,8 @@
  * Uses ProjectRepository instead of direct Supabase access
  */
 
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 
 export interface ProjectImportData {
   project_order: number;

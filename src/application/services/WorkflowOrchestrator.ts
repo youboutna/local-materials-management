@@ -4,16 +4,28 @@
  * Jalon vérifié → Progression → Décompte → Paiement → Budget
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
+import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { AutomaticDecompteCalculator } from './AutomaticDecompteCalculator';
+import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
 // Use AutomaticDecompteDTO from WorkflowDTO to avoid legacy imports
+import { PaymentService } from '@/application/services/PaymentService';
+import { Milestone } from '@/domain/entities/Milestone';
+import type { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
 import type { AutomaticDecompteDTO } from '@/dtos/entities/WorkflowDTO';
+import {
+    OnProgressUpdatedRequestDTO,
+    OnProgressUpdatedResponseDTO,
+    TriggerPaymentRequestDTO,
+    TriggerPaymentResponseDTO,
+    WorkflowStatusDTO
+} from '@/dtos/entities/WorkflowDTO';
+import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 
 // Define CheckpointDTO locally to avoid legacy imports
 export interface CheckpointDTO {
@@ -27,24 +39,6 @@ export interface CheckpointDTO {
   documents?: string[];
   projectId: string;
 }
-import type { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
-import { WorkflowTransformer } from '@/dtos/transforms/WorkflowTransformer';
-import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';
-import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
-import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
-import { Milestone } from '@/domain/entities/Milestone';
-import { Phase } from '@/domain/entities/Phase';
-import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
-import { PaymentService } from '@/application/services/PaymentService';
-import {
-  OnProgressUpdatedRequestDTO,
-  OnProgressUpdatedResponseDTO,
-  TriggerPaymentRequestDTO,
-  TriggerPaymentResponseDTO,
-  CheckMilestoneThresholdsRequestDTO,
-  CheckMilestoneThresholdsResponseDTO,
-  WorkflowStatusDTO
-} from '@/dtos/entities/WorkflowDTO';
 
 // Domain entities following Rule #4 - Pure business objects
 interface WorkflowState {

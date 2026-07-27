@@ -3,11 +3,11 @@
  * Follows hexagonal architecture: UI → Hook → Service → Repository
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ParsedInvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO, InvoiceStatisticsDTO } from '@/dtos/entities/InvoiceDTO';
 import { InvoiceService } from '@/application/services/InvoiceService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { CreateInvoiceDTO, InvoiceStatisticsDTO, ParsedInvoiceDTO, UpdateInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UseInvoicesResult {
   invoices: ParsedInvoiceDTO[];

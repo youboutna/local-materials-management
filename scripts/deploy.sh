@@ -3,6 +3,7 @@
 # deploy.sh – Déploiement des migrations Supabase
 # =============================================================================
 # Utilise npx supabase si la CLI globale n'est pas installée
+# PROJECT_ID lu depuis .env ou .env.production
 # =============================================================================
 
 set -e
@@ -23,6 +24,7 @@ MIGRATION_NAME=""
 PROJECT_ID=""
 ANON_KEY=""
 ENV_FILE="$PROJECT_ROOT/.env"
+ENV_PROD_FILE="$PROJECT_ROOT/.env.production"
 
 # ---- Fonctions ----
 check_cli() {
@@ -43,11 +45,19 @@ supabase_cmd() {
 
 read_env() {
     local var_name="$1"
-    if [ -f "$ENV_FILE" ]; then
-        grep -E "^${var_name}=" "$ENV_FILE" | cut -d'=' -f2- | tr -d '"' | tr -d "'" | head -n1
-    else
-        echo ""
+    local value=""
+    
+    # D'abord lire depuis .env.production
+    if [ -f "$ENV_PROD_FILE" ]; then
+        value=$(grep -E "^${var_name}=" "$ENV_PROD_FILE" | cut -d'=' -f2- | tr -d '"' | tr -d "'" | head -n1)
     fi
+    
+    # Si pas trouvé, lire depuis .env
+    if [ -z "$value" ] && [ -f "$ENV_FILE" ]; then
+        value=$(grep -E "^${var_name}=" "$ENV_FILE" | cut -d'=' -f2- | tr -d '"' | tr -d "'" | head -n1)
+    fi
+    
+    echo "$value"
 }
 
 # ---- Parsing des options ----
@@ -111,6 +121,11 @@ fi
 echo -e "${YELLOW}📋 Configuration:${NC}"
 echo "   Target: $TARGET"
 echo "   Action: $ACTION"
+if [ -n "$PROJECT_ID" ]; then
+    echo "   Project: $PROJECT_ID"
+else
+    echo "   Project: (non défini)"
+fi
 echo ""
 
 # ---- Initialiser le projet si nécessaire ----
@@ -164,13 +179,17 @@ case "$ACTION" in
             supabase_cmd db push
         else
             echo "   Target: production (cloud)"
+            
+            # Vérifier PROJECT_ID
             if [ -z "$PROJECT_ID" ]; then
-                echo -e "${RED}❌ PROJECT_ID required for production. Use --project-id or set VITE_SUPABASE_PROJECT_ID in .env${NC}"
+                echo -e "${RED}❌ PROJECT_ID required for production.${NC}"
+                echo "   Set VITE_SUPABASE_PROJECT_ID in .env or .env.production"
+                echo "   Or use: --project-id <id>"
                 exit 1
             fi
+            
             if [ -z "$ANON_KEY" ]; then
-                echo -e "${RED}❌ ANON_KEY required for production. Use --anon-key or set VITE_SUPABASE_ANON_KEY in .env${NC}"
-                exit 1
+                echo -e "${YELLOW}⚠️  ANON_KEY non trouvé. Tentative de connexion sans...${NC}"
             fi
 
             # Lier au projet distant
@@ -202,7 +221,8 @@ case "$ACTION" in
         else
             echo "   Target: production"
             if [ -z "$PROJECT_ID" ]; then
-                echo -e "${RED}❌ PROJECT_ID required for production. Use --project-id or set VITE_SUPABASE_PROJECT_ID in .env${NC}"
+                echo -e "${RED}❌ PROJECT_ID required for production.${NC}"
+                echo "   Set VITE_SUPABASE_PROJECT_ID in .env or .env.production"
                 exit 1
             fi
             supabase_cmd login 2>/dev/null || true

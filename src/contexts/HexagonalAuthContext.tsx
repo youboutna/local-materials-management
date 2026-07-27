@@ -5,18 +5,18 @@
  * Following PROMPTS.md: UI Component → Transformer → DTO → Service → Domain ← Adapter → DB
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { DEV_MODE } from '@/config/constants';
-import { AUTH_ERROR_MESSAGES } from '@/config/auth';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { UnifiedAuthService, UnifiedAuthUser, UnifiedAuthSession, OAuthLoginData } from '@/application/services/UnifiedAuthService';
-import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
+import { OAuthLoginData, UnifiedAuthService, UnifiedAuthSession, UnifiedAuthUser } from '@/application/services/UnifiedAuthService';
 import { AuthProvider } from '@/config/app';
+import { AUTH_ERROR_MESSAGES } from '@/config/auth';
+import { DEV_MODE } from '@/config/constants';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, ReactNode, useCallback, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export interface HexagonalAuthContextType {
   // Core auth state

@@ -1,24 +1,23 @@
 
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Download, 
-  FileSpreadsheet, 
-  FileText,
-  CheckCircle,
-  AlertTriangle,
-  Search
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import {
+    AlertTriangle,
+    CheckCircle,
+    Download,
+    FileSpreadsheet,
+    FileText,
+    Search
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 const ProjectExporter = () => {

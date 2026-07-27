@@ -3,17 +3,14 @@
  * Following Rule #1: Arrow Flow - UI → Service → Domain ← Adapter → DB
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ComplianceService } from '@/application/services/ComplianceService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  ComplianceItemDTO, 
-  ComplianceDocumentDTO, 
-  ComplianceNoteDTO, 
-  ComplianceAuditEntryDTO,
-  CreateComplianceRequestDTO as CreateComplianceItemDTO,
-  UpdateComplianceRequestDTO as UpdateComplianceItemDTO 
+import {
+    ComplianceItemDTO,
+    CreateComplianceRequestDTO as CreateComplianceItemDTO,
+    UpdateComplianceRequestDTO as UpdateComplianceItemDTO
 } from '@/dtos/entities/ComplianceDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface ComplianceAlert {
   type: string;

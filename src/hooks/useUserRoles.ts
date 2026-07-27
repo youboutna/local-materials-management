@@ -4,14 +4,14 @@
  * Legacy interface maintained for backward compatibility
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
-import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
+import { DEV_MODE, getActiveDevRole } from '@/config/constants';
+import { toast } from '@/hooks/use-toast';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface UserRole {
   id: string;

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { EscalationRoles, HierarchyMember, EscalationLevel } from '@/domain/entities/Hierarchy';
+import { EscalationLevel, EscalationRoles, HierarchyMember } from '@/domain/entities/Hierarchy';
 import { HierarchyNode } from '@/dtos/entities/HierarchyDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useEffect, useState } from 'react';
 
 interface EscalationTarget {
   employee_id: string;

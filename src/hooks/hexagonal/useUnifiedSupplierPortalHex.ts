@@ -2,17 +2,16 @@
  * Hexagonal hook for unified supplier portal
  * Simplified to avoid service method mismatches
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { SupplierService } from '@/application/services/SupplierService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { StorageService } from '@/application/services/StorageService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { AuthService } from '@/application/services/AuthService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { SupplierService } from '@/application/services/SupplierService';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 export interface Supplier {
   id: string;

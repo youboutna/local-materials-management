@@ -3,9 +3,9 @@
  * Following hexagonal architecture: Hook → Service → Adapter
  */
 
+import type { BudgetAnalytics, EVMCalculations } from '@/dtos/entities/CalculationsDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import type { EVMCalculations, BudgetAnalytics } from '@/dtos/entities/CalculationsDTO';
 
 export interface CriticalAlert {
   id: string;

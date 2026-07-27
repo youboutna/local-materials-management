@@ -2,11 +2,11 @@
  * Hexagonal Hook: useAssigneeDetailsHex
  * Fetches assignee details (employees, suppliers, profiles) via services
  */
-import { useQuery } from '@tanstack/react-query';
 import { EmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { UserService } from '@/application/services/UserService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface AssigneeDetails {
   type: 'employee' | 'supplier' | 'user' | '';

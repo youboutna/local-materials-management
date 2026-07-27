@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { InspectionService } from '@/application/services/InspectionService';
-import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { Inspection } from '@/domain/entities/Inspection';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useEffect, useState } from 'react';
 
 /**
  * Custom hook for managing supplier inspections

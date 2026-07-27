@@ -2,8 +2,8 @@
  * Hook pour synchroniser automatiquement la progression d'un projet
  * avec la base de données lorsque des modifications sont effectuées
  */
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback } from 'react';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { toast } from 'sonner';
 
 export const useProjectProgressSync = (projectId?: string) => {

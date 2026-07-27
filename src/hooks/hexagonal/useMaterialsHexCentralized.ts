@@ -3,11 +3,11 @@
  * Uses MaterialService with domain entities
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { MaterialService } from '@/application/services/MaterialService';
-import { toast } from 'sonner';
 import { CreateMaterialDTO, UpdateMaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export function useMaterials() {
   const queryClient = useQueryClient();

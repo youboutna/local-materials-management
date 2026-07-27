@@ -3,16 +3,15 @@
  * Business logic for bank guarantee management
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { 
-  BankGuaranteeDTO,
-  BankGuaranteeActionDTO,
-  BankGuaranteeStatsDTO,
-  CreateBankGuaranteeDTO,
-  GetBankGuaranteesOptionsDTO
+import {
+    BankGuaranteeDTO,
+    BankGuaranteeStatsDTO,
+    CreateBankGuaranteeDTO,
+    GetBankGuaranteesOptionsDTO
 } from '@/dtos/entities/BankGuaranteeDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 /**
  * Bank Guarantee Service - Hexagonal Architecture

@@ -1,189 +1,144 @@
-/**
- * file : src/application/service/OAuthProviderService.ts
- *OAuth Provider Service
- * Implements business logic for OAuth provider management
- * Following hexagonal architecture principles from PROMPTS.md
- */
+// src/application/services/OAuthProviderService.ts
 
+import {
+  IOAuthProviderRepository,
+  OAuthProvider,
+  OAuthProviderCreateData,
+  OAuthProviderUpdateData
+} from "@/domain/repositories/IOAuthProviderRepository";
+import {
+  OAuthProviderDTO,
+  OAuthProviderListResponse,
+  OAuthProviderResponse
+} from "@/dtos/entities/OAuthProviderDTO";
+import { OAuthProviderTransformer } from "@/dtos/transforms/OAuthProviderTransformer";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { AppError, ErrorCode } from "@/utils/errorHandling";
-import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-
-export interface OAuthProvider {
-  id: string;
-  providerName: string;
-  clientId?: string;
-  authUrl?: string;
-  tokenUrl?: string;
-  userInfoUrl?: string;
-  scopes?: string[];
-  enabled: boolean;
-  configuration?: Record<string, any>;
-}
-
-export interface OAuthProviderCreateData {
-  providerName: string;
-  clientId?: string;
-  clientSecret?: string;
-  authUrl?: string;
-  tokenUrl?: string;
-  userInfoUrl?: string;
-  scopes?: string[];
-  enabled?: boolean;
-  configuration?: Record<string, any>;
-}
 
 export class OAuthProviderService {
-  /**
-   * Transform database row to DTO
-   */
-  private transformProvider(data: any): OAuthProvider {
+  private repository: IOAuthProviderRepository;
+
+  constructor(repository?: IOAuthProviderRepository) {
+    this.repository = repository || RepositoryFactory.getOAuthProviderRepository();
+  }
+
+  // ========== LECTURE ==========
+
+  async getOAuthProviders(): Promise<OAuthProvider[]> {
+    return this.repository.findAll();
+  }
+
+  async getOAuthProvidersDTO(): Promise<OAuthProviderDTO[]> {
+    const entities = await this.repository.findAll();
+    return OAuthProviderTransformer.manyToDTO(entities);
+  }
+
+  async getOAuthProviderByName(providerName: string): Promise<OAuthProvider | null> {
+    return this.repository.findByName(providerName);
+  }
+
+  async getOAuthProviderDTOByName(providerName: string): Promise<OAuthProviderDTO | null> {
+    const entity = await this.repository.findByName(providerName);
+    return entity ? OAuthProviderTransformer.toDTO(entity) : null;
+  }
+
+  async getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
+    return this.repository.findEnabled();
+  }
+
+  async getEnabledOAuthProvidersDTO(): Promise<OAuthProviderDTO[]> {
+    const entities = await this.repository.findEnabled();
+    return OAuthProviderTransformer.manyToDTO(entities);
+  }
+
+  async getEnabledOAuthProvidersResponse(): Promise<OAuthProviderResponse[]> {
+    const entities = await this.repository.findEnabled();
+    return OAuthProviderTransformer.manyToResponse(entities);
+  }
+
+  async getOAuthProviderList(): Promise<OAuthProviderListResponse> {
+    const entities = await this.repository.findAll();
+    const enabled = entities.filter(p => p.enabled);
+    
     return {
-      id: data.id,
-      providerName: data.provider_name,
-      clientId: data.client_id || undefined,
-      authUrl: data.auth_url || undefined,
-      tokenUrl: data.token_url || undefined,
-      userInfoUrl: data.user_info_url || undefined,
-      scopes: data.scopes || undefined,
-      enabled: Boolean(data.enabled),
-      configuration: this.parseConfiguration(data.configuration),
+      providers: OAuthProviderTransformer.manyToDTO(entities),
+      total: entities.length,
+      enabledCount: enabled.length,
     };
   }
 
-  private parseConfiguration(config: Json): Record<string, any> | undefined {
-    if (!config || config === null) return undefined;
-    if (typeof config === "object" && !Array.isArray(config)) {
-      return config as Record<string, any>;
+  // ========== ÉCRITURE ==========
+
+  async createOAuthProvider(data: OAuthProviderCreateData): Promise<OAuthProvider> {
+    this.validateProviderData(data);
+    
+    const existing = await this.repository.findByName(data.providerName);
+    if (existing) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Provider "${data.providerName}" already exists`);
     }
-    return undefined;
+    
+    return this.repository.upsert(data);
   }
 
-  /**
-   * Get all OAuth providers
-   */
-  async getOAuthProviders(): Promise<OAuthProvider[]> {
-    try {
-      const { data, error } = await supabase.from("oauth_providers").select("*").order("provider_name");
-
-      if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch OAuth providers", error);
-      }
-
-      return (data || []).map(this.transformProvider);
-    } catch (error) {
-      console.error("OAuthProviderService.getOAuthProviders failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth providers", error);
-    }
+  async createOAuthProviderDTO(data: OAuthProviderCreateData): Promise<OAuthProviderDTO> {
+    const entity = await this.createOAuthProvider(data);
+    return OAuthProviderTransformer.toDTO(entity);
   }
 
-  /**
-   * Get OAuth provider by name
-   */
-  async getOAuthProviderByName(providerName: string): Promise<OAuthProvider | null> {
-    try {
-      const { data, error } = await supabase
-        .from("oauth_providers")
-        .select("*")
-        .eq("provider_name", providerName)
-        .single();
-
-      if (error) {
-        if (error.code === "PGRST116") {
-          return null; // No provider found
-        }
-        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch OAuth provider", error);
-      }
-
-      return this.transformProvider(data);
-    } catch (error) {
-      console.error("OAuthProviderService.getOAuthProviderByName failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth provider", error);
+  async updateOAuthProvider(providerName: string, data: OAuthProviderUpdateData): Promise<OAuthProvider> {
+    const existing = await this.repository.findByName(providerName);
+    if (!existing) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Provider "${providerName}" not found`);
     }
+    
+    const merged: OAuthProviderCreateData = {
+      providerName: data.providerName || existing.providerName,
+      clientId: data.clientId ?? existing.clientId,
+      clientSecret: data.clientSecret,
+      authUrl: data.authUrl ?? existing.authUrl,
+      tokenUrl: data.tokenUrl ?? existing.tokenUrl,
+      userInfoUrl: data.userInfoUrl ?? existing.userInfoUrl,
+      scopes: data.scopes ?? existing.scopes,
+      enabled: data.enabled ?? existing.enabled,
+      configuration: data.configuration ?? existing.configuration,
+    };
+    
+    return this.repository.upsert(merged);
   }
 
-  /**
-   * Get enabled OAuth providers
-   */
-  async getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
-    try {
-      const { data, error } = await supabase
-        .from("oauth_providers")
-        .select("*")
-        .eq("enabled", true)
-        .order("provider_name");
-
-      if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to fetch enabled OAuth providers", error);
-      }
-
-      return (data || []).map(this.transformProvider);
-    } catch (error) {
-      console.error("OAuthProviderService.getEnabledOAuthProviders failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch enabled OAuth providers", error);
-    }
+  async updateOAuthProviderDTO(providerName: string, data: OAuthProviderUpdateData): Promise<OAuthProviderDTO> {
+    const entity = await this.updateOAuthProvider(providerName, data);
+    return OAuthProviderTransformer.toDTO(entity);
   }
 
-  /**
-   * Create or update OAuth provider
-   */
   async upsertOAuthProvider(data: OAuthProviderCreateData): Promise<OAuthProvider> {
-    try {
-      const { data: provider, error } = await supabase
-        .from("oauth_providers")
-        .upsert(
-          {
-            provider_name: data.providerName,
-            client_id: data.clientId,
-            auth_url: data.authUrl,
-            token_url: data.tokenUrl,
-            user_info_url: data.userInfoUrl,
-            scopes: data.scopes,
-            enabled: data.enabled ?? false,
-            configuration: data.configuration,
-          },
-          {
-            onConflict: "provider_name",
-          },
-        )
-        .select()
-        .single();
-
-      if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to create/update OAuth provider", error);
-      }
-
-      return this.transformProvider(provider);
-    } catch (error) {
-      console.error("OAuthProviderService.upsertOAuthProvider failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to create/update OAuth provider", error);
-    }
+    this.validateProviderData(data);
+    return this.repository.upsert(data);
   }
 
-  /**
-   * Toggle OAuth provider status
-   */
+  async upsertOAuthProviderDTO(data: OAuthProviderCreateData): Promise<OAuthProviderDTO> {
+    const entity = await this.upsertOAuthProvider(data);
+    return OAuthProviderTransformer.toDTO(entity);
+  }
+
   async toggleOAuthProvider(providerName: string, enabled: boolean): Promise<void> {
-    try {
-      const { error } = await supabase.from("oauth_providers").update({ enabled }).eq("provider_name", providerName);
-
-      if (error) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, "Failed to toggle OAuth provider", error);
-      }
-    } catch (error) {
-      console.error("OAuthProviderService.toggleOAuthProvider failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to toggle OAuth provider", error);
+    const existing = await this.repository.findByName(providerName);
+    if (!existing) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Provider "${providerName}" not found`);
     }
+    await this.repository.toggleEnabled(providerName, enabled);
   }
 
-  /**
-   * Generate OAuth authorization URL
-   */
+  async deleteOAuthProvider(providerName: string): Promise<void> {
+    const existing = await this.repository.findByName(providerName);
+    if (!existing) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Provider "${providerName}" not found`);
+    }
+    await this.repository.delete(providerName);
+  }
+
+  // ========== OAUTH ==========
+
   generateOAuthUrl(provider: OAuthProvider, redirectUri: string, state?: string): string {
     if (!provider.authUrl || !provider.clientId) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider not properly configured");
@@ -200,76 +155,102 @@ export class OAuthProviderService {
     return `${provider.authUrl}?${params.toString()}`;
   }
 
-  /**
-   * Exchange OAuth code for tokens
-   */
   async exchangeOAuthCode(
     provider: OAuthProvider,
     code: string,
     redirectUri: string,
   ): Promise<{ accessToken: string; refreshToken?: string; expiresIn?: number }> {
-    try {
-      if (!provider.tokenUrl || !provider.clientId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider not properly configured");
-      }
+    if (!provider.tokenUrl || !provider.clientId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider not properly configured");
+    }
 
-      const response = await fetch(provider.tokenUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Accept: "application/json",
-        },
-        body: new URLSearchParams({
-          client_id: provider.clientId,
-          code,
-          redirect_uri: redirectUri,
-          grant_type: "authorization_code",
-        }),
-      });
+    const response = await fetch(provider.tokenUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({
+        client_id: provider.clientId,
+        code,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
 
-      if (!response.ok) {
-        throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to exchange OAuth code");
-      }
+    if (!response.ok) {
+      throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to exchange OAuth code");
+    }
 
-      const tokens = await response.json();
+    return await response.json();
+  }
 
-      return {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiresIn: tokens.expires_in,
-      };
-    } catch (error) {
-      console.error("OAuthProviderService.exchangeOAuthCode failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to exchange OAuth code", error);
+  async getOAuthUserInfo(provider: OAuthProvider, accessToken: string): Promise<any> {
+    if (!provider.userInfoUrl) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider user info URL not configured");
+    }
+
+    const response = await fetch(provider.userInfoUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to fetch OAuth user info");
+    }
+
+    return response.json();
+  }
+
+  // ========== PRIVÉES ==========
+
+  private validateProviderData(data: OAuthProviderCreateData): void {
+    if (!data.providerName || data.providerName.trim() === '') {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Provider name is required");
+    }
+    
+    if (data.authUrl && !this.isValidUrl(data.authUrl)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid auth URL format");
+    }
+    
+    if (data.tokenUrl && !this.isValidUrl(data.tokenUrl)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid token URL format");
+    }
+    
+    if (data.userInfoUrl && !this.isValidUrl(data.userInfoUrl)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Invalid user info URL format");
     }
   }
 
-  /**
-   * Get user info from OAuth provider
-   */
-  async getOAuthUserInfo(provider: OAuthProvider, accessToken: string): Promise<any> {
+  private isValidUrl(url: string): boolean {
     try {
-      if (!provider.userInfoUrl) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, "OAuth provider user info URL not configured");
-      }
-
-      const response = await fetch(provider.userInfoUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new AppError(ErrorCode.NETWORK_ERROR, "Failed to fetch OAuth user info");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("OAuthProviderService.getOAuthUserInfo failed:", error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, "Failed to fetch OAuth user info", error);
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
+  }
+
+  getDefaultProviders(): OAuthProviderCreateData[] {
+    return [
+      { providerName: 'google', authUrl: 'https://accounts.google.com/o/oauth2/v2/auth', tokenUrl: 'https://oauth2.googleapis.com/token', userInfoUrl: 'https://www.googleapis.com/oauth2/v1/userinfo', scopes: ['openid', 'email', 'profile'], enabled: true },
+      { providerName: 'github', authUrl: 'https://github.com/login/oauth/authorize', tokenUrl: 'https://github.com/login/oauth/access_token', userInfoUrl: 'https://api.github.com/user', scopes: ['read:user', 'user:email'], enabled: true },
+      { providerName: 'microsoft', authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize', tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token', userInfoUrl: 'https://graph.microsoft.com/v1.0/me', scopes: ['openid', 'email', 'profile', 'User.Read'], enabled: true },
+    ];
+  }
+
+  async initializeDefaultProviders(): Promise<OAuthProvider[]> {
+    const results: OAuthProvider[] = [];
+    for (const provider of this.getDefaultProviders()) {
+      const existing = await this.repository.findByName(provider.providerName);
+      if (!existing) {
+        results.push(await this.repository.upsert(provider));
+      } else {
+        results.push(existing);
+      }
+    }
+    return results;
   }
 }

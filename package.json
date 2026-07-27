@@ -10,7 +10,16 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "create-user": "ts-node scripts/create-user.ts",
-    "create-user:admin": "ts-node scripts/create-user.ts --admin"
+    "create-user:admin": "ts-node scripts/create-user.ts --admin",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:cloud": "./scripts/deploy.sh cloud",
+    "deploy:local": "./scripts/deploy.sh local",
+    "verify": "./scripts/verify-deployment.sh",
+    "fix-migrations": "./scripts/fix-migrations.sh",
+    "clean-migrations": "./scripts/clean-migrations.sh",
+    "supabase:link": "npx supabase link --project-ref $VITE_SUPABASE_PROJECT_ID",
+    "supabase:push": "npx supabase db push",
+    "supabase:types": "npx supabase gen types typescript --linked > src/integrations/supabase/types.gen.ts"
   },
 
   "dependencies": {

@@ -6,15 +6,15 @@
  *   UI Component → Transformer → DTO (camelCase) → Service → Adapter → DB
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { InspectionService } from '@/application/services/InspectionService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import type {
-  CreateInspectionDTO,
-  UpdateProjectStatusDTO,
+    CreateInspectionDTO,
+    UpdateProjectStatusDTO,
 } from '@/dtos/entities/ProjectWithPaymentsDTO';
 import { ProjectWithPaymentsTransformer } from '@/dtos/transforms/ProjectWithPaymentsTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export type { CreateInspectionDTO, UpdateProjectStatusDTO };
 

@@ -3,9 +3,9 @@
  * Centralizes CRUD operations for suppliers via SupplierService
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SupplierService } from '@/application/services/SupplierService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface SupplierFormData {
   name: string;

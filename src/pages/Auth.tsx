@@ -1,31 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthService } from '@/application/services/AuthService';
+import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
+import OAuthLogin from "@/components/auth/OAuthLogin";
+import PasswordResetForm from "@/components/auth/PasswordResetForm";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from '@/hooks/hexagonal';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { AuthService } from '@/application/services/AuthService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import {
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Lock,
-  UserPlus,
-  KeyRound,
-  ShieldCheck,
-} from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import PasswordResetForm from "@/components/auth/PasswordResetForm";
-import OAuthLogin from "@/components/auth/OAuthLogin";
-import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
 import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
+import { useAuth } from '@/hooks/hexagonal';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation } from '@tanstack/react-query';
+import {
+    Eye,
+    EyeOff,
+    KeyRound,
+    Lock,
+    Mail,
+    ShieldCheck,
+    User,
+    UserPlus,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from 'sonner';
 
 const Auth = () => {
   const [email, setEmail] = useState("");

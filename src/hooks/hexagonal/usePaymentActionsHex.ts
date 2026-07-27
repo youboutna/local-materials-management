@@ -3,11 +3,11 @@
  * Replaces direct supabase calls in PaymentControlActions.tsx
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation } from '@tanstack/react-query';
 
 export interface PaymentActionRequest {
   projectId: string;

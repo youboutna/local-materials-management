@@ -1,9 +1,9 @@
-import { SubmissionSecretService } from './SubmissionSecretService';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { sendTenderSubmissionNotification } from '@/application/services/TenderSubmissionNotificationService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { SubmissionSecretService } from './SubmissionSecretService';
 
 export interface CreateTenderSubmissionDTO {
   tender_id: string;

@@ -3,12 +3,11 @@
  * Uses services instead of direct supabase calls
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { AuthService } from '@/application/services/AuthService';
 import { InspectionService } from '@/application/services/InspectionService';
-import { StorageService } from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface MonitoringInspection {
   id: string;

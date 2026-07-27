@@ -4,14 +4,13 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { InspectionService } from "@/application/services/InspectionService";
-import { CreateInspectionRequestDto, UpdateInspectionRequestDto } from "@/dtos/transforms";
-import type { Inspection } from '@/domain/entities/Inspection';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CreateInspectionRequestDto, UpdateInspectionRequestDto } from "@/dtos/transforms";
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 // Types compatibles avec le service
 type ServiceCreateInspectionDTO = Omit<CreateInspectionRequestDto, 'status'> & { status?: unknown };

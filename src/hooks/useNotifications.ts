@@ -1,9 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/use-auth';
-import { toast } from '@/hooks/use-toast';
 import { NotificationService } from '@/application/services/NotificationService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { useAuth } from '@/contexts/use-auth';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
   id: string;

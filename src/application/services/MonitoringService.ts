@@ -3,9 +3,9 @@
  * Business logic for comprehensive project monitoring with proper error handling
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Local types for monitoring (avoiding legacy imports)
 interface MonitoringAlert {

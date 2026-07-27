@@ -1,30 +1,29 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { NotificationService } from '@/application/services/NotificationService';
-import { ProjectService } from '@/application/services/ProjectService';
 import { InspectionService } from '@/application/services/InspectionService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  FileText, 
-  Calendar,
-  TrendingUp,
-  DollarSign,
-  ArrowLeft,
-  Users
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    AlertTriangle,
+    ArrowLeft,
+    Calendar,
+    CheckCircle,
+    DollarSign,
+    FileText,
+    TrendingUp,
+    Users,
+    XCircle
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 // Local interface for stakeholder
 interface Stakeholder {

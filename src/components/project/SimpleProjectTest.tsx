@@ -1,9 +1,8 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 
 const SimpleProjectTest = () => {
   const { projectId } = useParams<{ projectId: string }>();

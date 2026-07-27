@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { BankGuaranteeService } from '../BankGuaranteeService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { AppError } from '@/utils/errorHandling';
 import type { CreateBankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError } from '@/utils/errorHandling';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { BankGuaranteeService } from '../BankGuaranteeService';
 
 describe('BankGuaranteeService', () => {
   let service: BankGuaranteeService;

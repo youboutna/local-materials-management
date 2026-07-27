@@ -1,10 +1,10 @@
 // Hook hexagonal pour les résumés de monitoring de phase
 // Uses services instead of direct Supabase access
 
-import { useQuery } from '@tanstack/react-query';
 import { InspectionService } from '@/application/services/InspectionService';
 import { PaymentService } from '@/application/services/PaymentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 export interface TasksSummary {
   total: number;

@@ -4,9 +4,9 @@
  * Simplified version aligned with existing services
  */
 
-import { ProjectService } from './ProjectService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { PhaseService } from './PhaseService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectService } from './ProjectService';
 
 export interface IntegrationTestResult {
   testName: string;

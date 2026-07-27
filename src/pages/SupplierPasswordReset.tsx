@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';

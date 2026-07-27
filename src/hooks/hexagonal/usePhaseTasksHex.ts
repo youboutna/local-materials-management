@@ -1,17 +1,17 @@
 // hooks/hexagonal/usePhaseTasksHex.ts - Hexagonal hook for phase tasks management
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { useAuthUserHex } from './useAuthUserHex';
-import { 
-  TaskService, 
-  TaskDTO as ServiceTaskDTO, 
-  CreateTaskDTO as ServiceCreateTaskDTO, 
-  UpdateTaskDTO as ServiceUpdateTaskDTO,
-  TaskStatus as ServiceTaskStatus,
-  TaskPriority as ServiceTaskPriority
+import {
+    CreateTaskDTO as ServiceCreateTaskDTO,
+    TaskDTO as ServiceTaskDTO,
+    TaskPriority as ServiceTaskPriority,
+    TaskStatus as ServiceTaskStatus,
+    UpdateTaskDTO as ServiceUpdateTaskDTO,
+    TaskService
 } from '@/application/services/TaskService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuthUserHex } from './useAuthUserHex';
 
 export interface PhaseTask {
   id: string;

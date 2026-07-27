@@ -2,11 +2,11 @@
  * Hexagonal hook for user management
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
 import { AuthService } from '@/application/services/AuthService';
 import { UserService } from '@/application/services/UserService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface CreateUserData {
   email: string;

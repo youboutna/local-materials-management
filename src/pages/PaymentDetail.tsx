@@ -1,14 +1,14 @@
-import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { AppLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { PaymentService } from '@/application/services/PaymentService';
-import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+import { AppLayout } from '@/components/layout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
+import React from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 const PaymentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

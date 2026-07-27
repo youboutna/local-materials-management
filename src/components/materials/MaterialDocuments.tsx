@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DocumentService } from '@/application/services/DocumentService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Upload, Download, Trash2, Plus, Calendar, User, Tag } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { DocumentService } from '@/application/services/DocumentService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { CreateDocumentDTO, DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { Calendar, Download, FileText, Plus, Tag, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface MaterialDocumentMetadata {
   materialId: string;

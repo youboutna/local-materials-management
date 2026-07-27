@@ -5,16 +5,16 @@
  * Following Rule #5: UI Layer Separation with Business Logic in Hooks
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import { useLocationAutoFill, AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
-import { useLocationHex } from './useLocationHex';
 import { LocationService } from '@/application/services/LocationService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 import { LocationDTO } from '@/dtos/shared';
+import { AutoFillLocationData, useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError } from '@/utils/errors';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useLocationHex } from './useLocationHex';
 
 export interface ProjectLocationHexResult {
   // Location data and state

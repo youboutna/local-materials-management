@@ -4,18 +4,14 @@
  * Follows hexagonal architecture principles
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { InspectorService } from '@/application/services/InspectorServiceSimple';
-import { TenderService } from '@/application/services/TenderService';
-import { SupplierService } from '@/application/services/SupplierService';
-import { UserService } from '@/application/services/UserService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { MaterialService } from '@/application/services/MaterialService';
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
-import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
-import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { InspectorService } from '@/application/services/InspectorServiceSimple';
+import { MaterialService } from '@/application/services/MaterialService';
+import { SupplierService } from '@/application/services/SupplierService';
+import { TenderService } from '@/application/services/TenderService';
+import { UserService } from '@/application/services/UserService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useQuery } from '@tanstack/react-query';
 
 // Configuration commune pour éviter les appels en continu
 const COMMON_QUERY_OPTIONS = {

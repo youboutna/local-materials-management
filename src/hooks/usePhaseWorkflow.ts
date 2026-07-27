@@ -3,17 +3,15 @@
  * Centralise la logique métier: Étapes → Inspections → Validation → Paiement
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { useMemo, useCallback } from 'react';
-import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
-import { StepItem } from '@/dtos/types/unified-workflow';
 import { InspectionService } from '@/application/services/InspectionService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { PhaseService } from '@/application/services/PhaseService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { CreateInspectionDTO, InspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { StepItem } from '@/dtos/types/unified-workflow';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 
 export type WorkflowStage = 
   | 'not_started' 

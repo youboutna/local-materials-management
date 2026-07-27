@@ -1,4 +1,4 @@
-/**
+/**src/config/app-validate.ts
  * Provider validation at startup.
  * Ensures VITE_AUTH_PROVIDER / VITE_DATA_PROVIDER / VITE_STORAGE_PROVIDER
  * are among the supported values and compatible with the chosen deployment.

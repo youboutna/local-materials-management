@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectDTO, ProjectFormDTO, ProjectData, CreateProjectRequestDTO } from '@/dtos/entities/ProjectDTO';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { ProjectDTO, ProjectFormDTO } from '@/dtos/entities/ProjectDTO';
+import { toast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useEffect, useState } from 'react';
 
 type ConstructionPhase = 'preparation' | 'foundation' | 'structure' | 'finishing' | 'completed';
 

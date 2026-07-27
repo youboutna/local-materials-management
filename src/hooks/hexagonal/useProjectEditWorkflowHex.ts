@@ -3,26 +3,23 @@
  * Pont intelligent entre l'UI et le service hexagonal d'édition
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { useState, useCallback, useMemo } from 'react';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 
 // Import workflow DTOs
-import { 
-  ProjectWorkflowData,
-  ValidationResult,
-  SaveResult,
-  WorkflowState,
-  StepProgressDTO
+import {
+    ProjectWorkflowData,
+    SaveResult
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs
-import { ProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { ProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { ProjectWorkflowService, type WorkflowResult } from '@/application/services/ProjectWorkflowService';
+import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 
 // Types d'erreur locaux
 export enum ErrorCode {

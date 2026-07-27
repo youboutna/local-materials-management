@@ -7,26 +7,26 @@
  *  - Default WBS (Phase › Jalon › Tâche) applied to every imported line.
  *  - Column mapping wizard, dropzone, live preview.
  */
-import { useEffect, useMemo, useState } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Loader2, AlertTriangle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { ImportDropzone } from './ImportDropzone';
-import { ImportMappingWizard } from './ImportMappingWizard';
-import { BoqLineTable } from './BoqLineTable';
-import { WbsSelector, type WbsValue } from './WbsSelector';
-import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
+import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
+import { ProjectService } from '@/application/services/ProjectService';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getPhasesForReferential, getReferentialOptions, type ReferentialType } from '@/config/referentials';
+import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource } from '@/domain/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { getReferentialOptions, getPhasesForReferential, type ReferentialType } from '@/config/referentials';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { ProjectService } from '@/application/services/ProjectService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
-import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
+import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
+import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BoqLineTable } from './BoqLineTable';
+import { ImportDropzone } from './ImportDropzone';
+import { ImportMappingWizard } from './ImportMappingWizard';
+import { WbsSelector, type WbsValue } from './WbsSelector';
 
 interface Props {
   source: BoqSource;

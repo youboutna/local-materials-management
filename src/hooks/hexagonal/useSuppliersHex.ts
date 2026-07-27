@@ -2,10 +2,10 @@
  * Hexagonal Hook for Suppliers Management
  */
 
+import { SupplierService } from "@/application/services/SupplierService";
+import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RepositoryFactory } from "@/repositories/RepositoryFactory";
-import { SupplierService } from "@/application/services/SupplierService";
 
 // Types pour les hooks
 export interface UseSuppliersHexResult {

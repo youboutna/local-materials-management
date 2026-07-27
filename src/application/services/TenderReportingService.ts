@@ -3,13 +3,13 @@
  * Business logic for tender reporting and analytics with proper error handling
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
-import { TenderDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDTO';
 import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { TenderDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDTO';
 import { TenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
-import { format, differenceInDays } from 'date-fns';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { differenceInDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export interface TenderReportData {

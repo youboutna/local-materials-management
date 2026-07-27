@@ -4,22 +4,21 @@
  * Clean separation between domain logic and infrastructure
  */
 
-import { ProjectService } from './ProjectService';
-import { EmployeeService } from './EmployeeService';
-import { MaterialService } from './MaterialService';
-import { DocumentService } from './DocumentService';
-import { PaymentRequestService } from './PaymentRequestService';
-import { InspectionService } from './InspectionService';
-import { SupplierService } from './SupplierService';
 import { InspectionStatus } from '@/domain/entities/Inspection';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
-import { buildLocationDistribution } from '@/utils/projectLocationBuckets';
 import {
-  MonitoringConfiguration,
-  MonitoringMetrics,
-  Alert,
-  DashboardStats
+    Alert,
+    DashboardStats,
+    MonitoringConfiguration,
+    MonitoringMetrics
 } from '@/dtos/entities/DashboardDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { DocumentService } from './DocumentService';
+import { EmployeeService } from './EmployeeService';
+import { InspectionService } from './InspectionService';
+import { MaterialService } from './MaterialService';
+import { PaymentRequestService } from './PaymentRequestService';
+import { ProjectService } from './ProjectService';
+import { SupplierService } from './SupplierService';
 
 /**
  * Custom error class for dashboard operations

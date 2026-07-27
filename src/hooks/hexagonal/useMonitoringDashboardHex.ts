@@ -8,16 +8,16 @@
  * - Exposes clean interface to UI components
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  MonitoringDashboardDTO, 
-  MonitoringWidgetDTO, 
-  MonitoringFiltersDTO,
-  ComprehensiveMonitoringDTO
-} from '@/dtos/entities/MonitoringDTOs';
 import { MonitoringDashboardService } from '@/application/services/MonitoringDashboardServiceWorking';
-import { PerformanceMonitoringService, PerformanceMonitoringRecord, EventPerformanceMetrics } from '@/application/services/PerformanceMonitoringService';
-import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
+import { EventPerformanceMetrics, PerformanceMonitoringRecord, PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+import {
+    ComprehensiveMonitoringDTO,
+    MonitoringDashboardDTO,
+    MonitoringFiltersDTO,
+    MonitoringWidgetDTO
+} from '@/dtos/entities/MonitoringDTOs';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // =================== INTERFACES ===================
 
