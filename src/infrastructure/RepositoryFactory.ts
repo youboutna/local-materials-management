@@ -289,9 +289,15 @@ export class RepositoryFactory {
     return registry.storage;
   }
 
-  static getStorageRepository(): IStorageProvider {
-    return this.getStorageProvider();
+  static getStorageRepository(): IStorageRepository {
+    if (!registry.storageRepository) {
+      registry.storageRepository = new StorageProviderToRepositoryAdapter(
+        this.getStorageProvider()
+      );
+    }
+    return registry.storageRepository;
   }
+
 
   // ---------- NOTIFICATIONS ----------
   static getNotificationRepository(): INotificationRepository {
