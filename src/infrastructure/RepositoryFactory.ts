@@ -105,6 +105,8 @@ import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
 // ================================================================
 
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
+import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
+import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
 import { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
@@ -178,6 +180,7 @@ function resolveStorage(): StorageProviderKind {
 interface RepositoryRegistry {
   auth?: IAuthRepository;
   storage?: IStorageProvider;
+  storageRepository?: IStorageRepository;
   notifications?: INotificationRepository;
   oauthProvider?: IOAuthProviderRepository;
   project?: IProjectRepository;
@@ -289,9 +292,15 @@ export class RepositoryFactory {
     return registry.storage;
   }
 
-  static getStorageRepository(): IStorageProvider {
-    return this.getStorageProvider();
+  static getStorageRepository(): IStorageRepository {
+    if (!registry.storageRepository) {
+      registry.storageRepository = new StorageProviderToRepositoryAdapter(
+        this.getStorageProvider()
+      );
+    }
+    return registry.storageRepository;
   }
+
 
   // ---------- NOTIFICATIONS ----------
   static getNotificationRepository(): INotificationRepository {

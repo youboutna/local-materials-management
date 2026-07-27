@@ -60,7 +60,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
 
     const { data: provider, error } = await supabase
       .from('oauth_providers')
-      .upsert(dbData, { onConflict: 'provider_name' })
+      .upsert(dbData as never, { onConflict: 'provider_name' })
       .select()
       .single();
 
