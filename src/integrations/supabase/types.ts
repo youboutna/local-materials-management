@@ -1129,51 +1129,51 @@ export type Database = {
         }
         Relationships: []
       }
-      oauth_providers: {
-        Row: {
-          auth_url: string | null
-          client_id: string | null
-          client_secret: string | null
-          configuration: Json | null
-          created_at: string | null
-          enabled: boolean | null
-          id: string
-          provider_name: string
-          scopes: string[] | null
-          token_url: string | null
-          updated_at: string | null
-          user_info_url: string | null
-        }
-        Insert: {
-          auth_url?: string | null
-          client_id?: string | null
-          client_secret?: string | null
-          configuration?: Json | null
-          created_at?: string | null
-          enabled?: boolean | null
-          id?: string
-          provider_name: string
-          scopes?: string[] | null
-          token_url?: string | null
-          updated_at?: string | null
-          user_info_url?: string | null
-        }
-        Update: {
-          auth_url?: string | null
-          client_id?: string | null
-          client_secret?: string | null
-          configuration?: Json | null
-          created_at?: string | null
-          enabled?: boolean | null
-          id?: string
-          provider_name?: string
-          scopes?: string[] | null
-          token_url?: string | null
-          updated_at?: string | null
-          user_info_url?: string | null
-        }
-        Relationships: []
-      }
+   oauth_providers: {
+      Row: {
+        auth_url: string | null;
+        client_id: string | null;
+        client_secret: string | null;
+        configuration: Json | null;
+        created_at: string | null;
+        enabled: boolean | null;
+        id: string;
+        provider_name: string;
+        scopes: string[] | null;
+        token_url: string | null;
+        updated_at: string | null;
+        user_info_url: string | null;
+      };
+      Insert: {
+        auth_url?: string | null;
+        client_id?: string | null;
+        client_secret?: string | null;
+        configuration?: Json | null;
+        created_at?: string | null;
+        enabled?: boolean | null;
+        id?: string;
+        provider_name: string;
+        scopes?: string[] | null;
+        token_url?: string | null;
+        updated_at?: string | null;
+        user_info_url?: string | null;
+      };
+      Update: {
+        auth_url?: string | null;
+        client_id?: string | null;
+        client_secret?: string | null;
+        configuration?: Json | null;
+        created_at?: string | null;
+        enabled?: boolean | null;
+        id?: string;
+        provider_name?: string;
+        scopes?: string[] | null;
+        token_url?: string | null;
+        updated_at?: string | null;
+        user_info_url?: string | null;
+      };
+      Relationships: [];
+    };
       payment_blocks: {
         Row: {
           amount: number

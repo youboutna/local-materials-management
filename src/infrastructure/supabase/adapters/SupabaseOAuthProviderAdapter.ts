@@ -1,7 +1,7 @@
 /**
  * src/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter.ts
  * Supabase OAuth Provider Adapter
- * Implements IOAuthProviderRepository for Supabase
+ * Implements IOAuthProviderRepository pour la table public.oauth_providers
  */
 
 import {
@@ -21,6 +21,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .order('provider_name');
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.findAll error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth providers', error);
     }
 
@@ -35,6 +36,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .maybeSingle();
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.findByName error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth provider', error);
     }
 
@@ -49,6 +51,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .order('provider_name');
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.findEnabled error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch enabled OAuth providers', error);
     }
 
@@ -60,11 +63,12 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
 
     const { data: provider, error } = await supabase
       .from('oauth_providers')
-      .upsert(dbData as never, { onConflict: 'provider_name' })
+      .upsert(dbData, { onConflict: 'provider_name' })
       .select()
       .single();
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.upsert error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to upsert OAuth provider', error);
     }
 
@@ -78,6 +82,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .eq('provider_name', name);
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.toggleEnabled error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to toggle OAuth provider', error);
     }
   }
@@ -89,6 +94,7 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .eq('provider_name', name);
 
     if (error) {
+      console.error('❌ SupabaseOAuthProviderAdapter.delete error:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete OAuth provider', error);
     }
   }

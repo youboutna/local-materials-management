@@ -364,7 +364,7 @@ CREATE TABLE materials (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE btp.materials ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS select_materials_by_role ON materials;
 CREATE POLICY select_materials_by_role ON materials
   FOR SELECT TO public

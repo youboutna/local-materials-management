@@ -3,8 +3,11 @@
 # fix-migrations.sh – Corrige les noms des fichiers de migration
 # =============================================================================
 # La CLI Supabase attend le format: <timestamp>_<name>.sql
-# Règle: Tous les '-' sont remplacés par '_' après le timestamp
-# Sauvegarde dans scripts/.backup/ (pas de fichiers .bak dans migrations/)
+# Règle: 
+#   - Vérifie si '_' existe déjà après le timestamp
+#   - Remplace les '-' par '_' si nécessaire
+#   - Supprime les doubles underscores '__'
+# Sauvegarde dans scripts/.backup/
 # =============================================================================
 
 set -e
@@ -22,7 +25,10 @@ BACKUP_DIR="$SCRIPT_DIR/.backup"
 
 echo -e "${GREEN}${BOLD}🔧 Correction des noms de migrations${NC}"
 echo -e "${YELLOW}📋 Format attendu: <timestamp>_<name>.sql${NC}"
-echo -e "${YELLOW}📋 Règle: Tous les '-' → '_'${NC}"
+echo -e "${YELLOW}📋 Règles:${NC}"
+echo "   - Vérifier si '_' existe après le timestamp"
+echo "   - Remplacer les '-' par '_'"
+echo "   - Supprimer les doubles underscores '__'"
 echo ""
 
 if [ ! -d "$MIGRATION_DIR" ]; then
@@ -32,8 +38,8 @@ fi
 
 cd "$MIGRATION_DIR"
 
-# ⬇️⬇️⬇️ SUPPRIMER LES FICHIERS .bak AVANT DE COMMENCER ⬇️⬇️⬇️
-echo -e "${YELLOW}🧹 Suppression des fichiers .bak existants...${NC}"
+# Nettoyer les fichiers .bak
+echo -e "${YELLOW}🧹 Nettoyage des fichiers .bak...${NC}"
 rm -f *.bak 2>/dev/null || true
 echo -e "${GREEN}✅ Fichiers .bak supprimés${NC}"
 echo ""
@@ -51,13 +57,16 @@ echo ""
 MODIFIED=0
 
 for file in *.sql; do
-    # Vérifier si le nom est déjà au bon format (timestamp_name.sql sans '-')
+    ORIGINAL="$file"
+    NEW="$file"
+    
+    # 1. Vérifier si le nom est déjà au bon format (timestamp_name.sql)
     if [[ "$file" =~ ^[0-9]{14}_[a-zA-Z0-9_]+\.sql$ ]]; then
         echo -e "${GREEN}✅ $file (déjà correct)${NC}"
         continue
     fi
 
-    # Extraire le timestamp (premiers 14 caractères)
+    # 2. Extraire le timestamp (premiers 14 caractères)
     timestamp=$(echo "$file" | cut -c1-14)
     
     # Vérifier que le timestamp est numérique
@@ -66,24 +75,50 @@ for file in *.sql; do
         continue
     fi
 
-    # Extraire le nom et remplacer TOUS les '-' par '_'
-    name_part=$(echo "$file" | sed 's/^[0-9]\{14\}-*//' | sed 's/\.sql$//')
+    # 3. Extraire la partie après le timestamp
+    # Supprimer le timestamp et le séparateur
+    name_part=$(echo "$file" | sed 's/^[0-9]\{14\}//' | sed 's/\.sql$//')
+    
+    # 4. Supprimer le premier caractère si c'est '-' ou '_'
+    name_part=$(echo "$name_part" | sed 's/^[-_]//')
+    
+    # 5. ⬇️⬇️⬇️ VÉRIFICATION SI '_' EXISTE DÉJÀ ⬇️⬇️⬇️
+    # Si le nom contient déjà '_' (pas de '-' à remplacer), on garde le nom
+    if [[ "$name_part" =~ ^[a-zA-Z0-9_]+$ ]] && [[ ! "$name_part" =~ - ]]; then
+        # Le nom est déjà valide (que des '_' et des caractères alphanumériques)
+        new_name="${timestamp}_${name_part}.sql"
+        if [ "$file" != "$new_name" ]; then
+            echo -e "${YELLOW}   Renommer: $file → $new_name${NC}"
+            mkdir -p "$BACKUP_DIR"
+            cp "$file" "$BACKUP_DIR/$file"
+            mv "$file" "$new_name"
+            MODIFIED=$((MODIFIED + 1))
+        fi
+        continue
+    fi
+    
+    # 6. Remplacer les '-' par '_' dans le nom
     name_part=$(echo "$name_part" | tr '-' '_')
     
+    # 7. Supprimer les doubles underscores
+    name_part=$(echo "$name_part" | sed 's/__/_/g')
+    
+    # 8. Si le nom est vide, utiliser "migration"
     if [ -z "$name_part" ]; then
-        name_part="$timestamp"
+        name_part="migration"
     fi
 
+    # 9. Construire le nouveau nom
     new_name="${timestamp}_${name_part}.sql"
     
-    # Si le nouveau nom existe déjà, ajouter un suffixe
+    # 10. Si le nouveau nom existe déjà, ajouter un suffixe
     if [ -f "$new_name" ] && [ "$file" != "$new_name" ]; then
         suffix="_$(date +%s)"
         new_name="${timestamp}_${name_part}${suffix}.sql"
     fi
 
+    # 11. Renommer si différent
     if [ "$file" != "$new_name" ]; then
-        # Sauvegarder dans scripts/.backup/ (pas dans supabase/migrations/)
         mkdir -p "$BACKUP_DIR"
         cp "$file" "$BACKUP_DIR/$file"
         echo -e "${YELLOW}   Renommer: $file → $new_name${NC}"

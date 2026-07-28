@@ -9,7 +9,7 @@ DROP POLICY IF EXISTS "Admins can manage all roles" ON public.user_roles;
 -- Create a security definer function to check if current user is admin
 CREATE OR REPLACE FUNCTION btp.is_current_user_admin()
 RETURNS BOOLEAN
-LANGUAGE SQL
+LANGUAGE SQL   
 SECURITY DEFINER
 STABLE
 AS $$
