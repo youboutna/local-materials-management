@@ -1,6 +1,6 @@
 -- Update tender document category enum to match the reorganized structure
-ALTER TYPE tender_document_category RENAME TO tender_document_category_old;
-
+/*ALTER TYPE IF EXISTS tender_document_category RENAME TO tender_document_category_old;
+*/
 CREATE TYPE tender_document_category AS ENUM (
   'administrative',
   'technical', 
@@ -8,8 +8,8 @@ CREATE TYPE tender_document_category AS ENUM (
 );
 
 -- Update tender document subcategory enum to include all new subcategories
-ALTER TYPE tender_document_subcategory RENAME TO tender_document_subcategory_old;
-
+/*ALTER TYPE IF EXISTS tender_document_subcategory RENAME TO tender_document_subcategory_old;
+*/
 CREATE TYPE tender_document_subcategory AS ENUM (
   -- Administrative subcategories
   'lettre_soumission',
@@ -84,10 +84,11 @@ CREATE TYPE tender_document_subcategory AS ENUM (
 );
 
 -- Update the tender_documents table to use new enum types
-ALTER TABLE tender_documents 
+/**ALTER TABLE btp.tender_documents 
   ALTER COLUMN category TYPE tender_document_category USING category::text::tender_document_category,
   ALTER COLUMN subcategory TYPE tender_document_subcategory USING subcategory::text::tender_document_subcategory;
 
 -- Clean up old enum types
 DROP TYPE IF EXISTS tender_document_category_old;
 DROP TYPE IF EXISTS tender_document_subcategory_old;
+*/

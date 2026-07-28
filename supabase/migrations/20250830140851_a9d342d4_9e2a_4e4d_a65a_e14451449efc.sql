@@ -12,6 +12,9 @@ CREATE INDEX IF NOT EXISTS idx_materials_category ON btp.materials(category);
 CREATE INDEX IF NOT EXISTS idx_materials_supplier ON btp.materials(supplier_id);
 CREATE INDEX IF NOT EXISTS idx_materials_code ON btp.materials(material_code);
 CREATE INDEX IF NOT EXISTS idx_materials_status ON btp.materials(material_status);
+-- fix create catergory
+ALTER TABLE btp.suppliers ADD COLUMN IF NOT EXISTS category VARCHAR(255);
+ALTER TABLE btp.suppliers ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_suppliers_category ON btp.suppliers(category);
 CREATE INDEX IF NOT EXISTS idx_suppliers_active ON btp.suppliers(is_active);

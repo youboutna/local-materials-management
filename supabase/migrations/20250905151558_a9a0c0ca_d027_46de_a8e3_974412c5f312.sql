@@ -1,6 +1,4 @@
--- Add check_schedule_last_run column to projects table
-ALTER TABLE btp.projects 
-ADD COLUMN check_schedule_last_run JSONB DEFAULT '{}'::jsonb;
+
 
 -- Drop and recreate project_resources with simplified structure
 DROP TABLE IF EXISTS btp.project_resources CASCADE;
@@ -21,7 +19,7 @@ CREATE TABLE btp.project_resources (
 );
 
 -- Create project_alerts table
-CREATE TABLE btp.project_alerts (
+CREATE TABLE IF NOT EXISTS btp.project_alerts (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   project_id UUID NOT NULL REFERENCES btp.projects(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
@@ -44,12 +42,12 @@ CREATE TABLE btp.project_alerts (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_project_resources_project_id ON btp.project_resources(project_id);
-CREATE INDEX idx_project_resources_type ON btp.project_resources(type);
-CREATE INDEX idx_project_alerts_project_id ON btp.project_alerts(project_id);
-CREATE INDEX idx_project_alerts_severity ON btp.project_alerts(severity);
-CREATE INDEX idx_project_alerts_acknowledged ON btp.project_alerts(acknowledged);
-CREATE INDEX idx_project_alerts_resolved ON btp.project_alerts(resolved);
+CREATE INDEX IF NOT EXISTS idx_project_resources_project_id ON btp.project_resources(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_resources_type ON btp.project_resources(type);
+CREATE INDEX IF NOT EXISTS idx_project_alerts_project_id ON btp.project_alerts(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_alerts_severity ON btp.project_alerts(severity);
+CREATE INDEX IF NOT EXISTS idx_project_alerts_acknowledged ON btp.project_alerts(acknowledged);
+CREATE INDEX IF NOT EXISTS idx_project_alerts_resolved ON btp.project_alerts(resolved);
 
 -- Enable Row Level Security
 ALTER TABLE btp.project_resources ENABLE ROW LEVEL SECURITY;
@@ -202,12 +200,12 @@ USING (
 );
 
 -- Create triggers for automatic timestamp updates
-CREATE TRIGGER update_project_resources_updated_at
+CREATE OR REPLACE TRIGGER update_project_resources_updated_at
 BEFORE UPDATE ON btp.project_resources
 FOR EACH ROW
 EXECUTE FUNCTION btp.update_updated_at_column();
 
-CREATE TRIGGER update_project_alerts_updated_at
+CREATE OR REPLACE TRIGGER update_project_alerts_updated_at
 BEFORE UPDATE ON btp.project_alerts
 FOR EACH ROW
 EXECUTE FUNCTION btp.update_updated_at_column();
