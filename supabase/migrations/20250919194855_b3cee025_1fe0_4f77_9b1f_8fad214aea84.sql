@@ -1,5 +1,5 @@
 -- Add some workflow steps for testing (with proper UUIDs)
-INSERT INTO tender_steps (
+/** INSERT INTO tender_steps (
   id,
   tender_id,
   step_number,
@@ -86,3 +86,4 @@ ON CONFLICT (id) DO UPDATE SET
   review_deadline = EXCLUDED.review_deadline,
   approval_deadline = EXCLUDED.approval_deadline,
   updated_at = NOW();
+  **/

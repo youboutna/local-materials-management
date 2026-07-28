@@ -24,10 +24,11 @@ ON btp.workflow_status (entity_id, entity_type, phase_code, stage_code, COALESCE
 
 -- Enable RLS
 ALTER TABLE btp.workflow_status ENABLE ROW LEVEL SECURITY;
-
+/**
 -- Create RLS policies
 CREATE POLICY "Users can view workflow status" ON btp.workflow_status
     FOR SELECT USING (true);
 
 CREATE POLICY "Users can manage workflow status" ON btp.workflow_status
     FOR ALL USING (true);
+    **/

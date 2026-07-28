@@ -1,4 +1,4 @@
-
+/**
 DO $mig$
 DECLARE
   t text;
@@ -97,3 +97,4 @@ BEGIN
   UPDATE btp.form_templates SET usage_count = usage_count + 1 WHERE id = template_id;
 END;
 $function$;
+**/

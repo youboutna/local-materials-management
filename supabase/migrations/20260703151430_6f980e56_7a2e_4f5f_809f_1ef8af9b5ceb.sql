@@ -1,4 +1,4 @@
-
+/**
 -- 1. Créer les tables manquantes dans btp
 DO $mig$
 DECLARE
@@ -183,3 +183,4 @@ AS $function$
          OR p.project_reference ILIKE '%'||search_term||'%')
   ORDER BY p.title LIMIT 50;
 $function$;
+**/

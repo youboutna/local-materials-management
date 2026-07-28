@@ -81,6 +81,7 @@ CREATE TRIGGER trg_btp_tender_lot_documents_updated
   BEFORE UPDATE ON btp.tender_lot_documents
   FOR EACH ROW EXECUTE FUNCTION btp.update_updated_at_column();
 
+/**
 -- Backfill from public if any rows exist there
 INSERT INTO btp.tender_lots (
   id, tender_id, project_id, number, title, description, estimated_amount,
@@ -101,3 +102,4 @@ SELECT id, tender_id, lot_id, title, description, category, file_url,
        file_name, file_size, mime_type, uploaded_by, created_at, updated_at
 FROM btp.tender_lot_documents
 ON CONFLICT (id) DO NOTHING;
+**/

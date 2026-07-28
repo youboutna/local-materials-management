@@ -1,3 +1,4 @@
+/**
 -- Lot 1: Tenders — create missing btp mirror tables, backfill, RLS, GRANTs, triggers.
 
 -- ============================================================
@@ -188,3 +189,5 @@ BEGIN
     EXECUTE format('REVOKE INSERT, UPDATE, DELETE ON public.%I FROM authenticated, anon', t);
   END LOOP;
 END $$;
+
+**/

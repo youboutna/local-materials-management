@@ -1,3 +1,4 @@
+/**
 -- Update some published tenders to be in phase 2 with future deadlines for supplier portal testing
 
 -- Update tender "tttt" to phase 2 with future deadline
@@ -23,3 +24,4 @@ UPDATE tenders
 SET current_phase = 2,
     deadline_date = '2025-11-30'::date  
 WHERE id = '4be7ccea-6d44-4289-9f0e-9569d6d9b4af';
+**/

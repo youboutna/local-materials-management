@@ -1,4 +1,5 @@
--- Update existing workflow steps with proper dates and required documents
+
+/**-- Update existing workflow steps with proper dates and required documents
 UPDATE tender_steps SET
   title = 'Préparation du dossier technique',
   description = 'Préparer et rassembler tous les documents techniques nécessaires pour le marché',
@@ -27,3 +28,4 @@ UPDATE tender_steps SET
   approval_deadline = '2025-01-12',
   updated_at = NOW()
 WHERE tender_id = '3da4363a-2b56-44b5-a3f8-bf74e6642a60' AND step_number = 2;
+**/
