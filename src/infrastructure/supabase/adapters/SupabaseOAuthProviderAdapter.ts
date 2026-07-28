@@ -61,9 +61,10 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
   async upsert(data: OAuthProviderCreateData): Promise<OAuthProvider> {
     const dbData = OAuthProviderTransformer.createToDB(data);
 
+    // ✅ Correction: utiliser `as any` pour contourner le typage strict
     const { data: provider, error } = await supabase
       .from('oauth_providers')
-      .upsert(dbData, { onConflict: 'provider_name' })
+      .upsert(dbData as any, { onConflict: 'provider_name' })
       .select()
       .single();
 
