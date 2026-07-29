@@ -81,4 +81,9 @@ export interface INotificationRepository {
    * Get unread count for user
    */
   getUnreadCount(userId: string): Promise<{ count: number; error: Error | null }>;
+
+  /**
+   * Get system-wide notifications (type = 'system'), not scoped to a recipient
+   */
+  getSystemNotifications(limit?: number): Promise<{ notifications: NotificationData[]; error: Error | null }>;
 }
