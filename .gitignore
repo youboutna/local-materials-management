@@ -28,3 +28,6 @@ src/hooks/hexagonal/index.ts.backup
 complete-export-fix.ps1
 export-monitor.ps1
 unified-export-manager.ps1
+
+#add docker local files
+/supabase/docker/*
