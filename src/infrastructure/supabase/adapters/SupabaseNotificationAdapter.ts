@@ -193,4 +193,41 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
       return { count: 0, error: error as Error };
     }
   }
+
+  /**
+   * Get system-wide notifications (type = 'system')
+   */
+  async getSystemNotifications(limit = 100): Promise<{ notifications: NotificationData[]; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('type', 'system')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        return { notifications: [], error };
+      }
+
+      const notifications: NotificationData[] = (data ?? []).map(item => ({
+        id: item.id,
+        recipient_id: item.recipient_id,
+        title: item.title,
+        message: item.message,
+        type: item.type as NotificationData['type'],
+        read: item.read,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        priority: undefined,
+        expires_at: null,
+        action_url: null,
+        metadata: item.metadata && typeof item.metadata === 'object' ? item.metadata as Record<string, any> : null,
+      }));
+
+      return { notifications, error: null };
+    } catch (error) {
+      return { notifications: [], error: error as Error };
+    }
+  }
 }

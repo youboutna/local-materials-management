@@ -96,4 +96,9 @@ export class LocalNotificationAdapter implements INotificationRepository {
     const count = load().filter((n) => n.recipient_id === userId && !n.read).length;
     return { count, error: null };
   }
+
+  async getSystemNotifications(limit = 100) {
+    const list = load().filter((n) => n.type === 'system').slice(0, limit);
+    return { notifications: list, error: null };
+  }
 }
