@@ -114,17 +114,13 @@ export class NotificationService {
    */
   async getSystemNotifications(): Promise<NotificationDTO[]> {
     try {
-      // System notifications are for all users, not tied to a specific user
-      // For now, we'll use a system user ID as workaround
-      const result = await this.notificationRepository.getUserNotifications('system', 1000);
-      
+      const result = await this.notificationRepository.getSystemNotifications(1000);
+
       if (result.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get system notifications');
       }
 
-      // Filter for system type notifications
-      const systemNotifications = result.notifications.filter(n => n.type === 'system');
-      return systemNotifications.map(notification => this.mapToDTO(notification));
+      return result.notifications.map(notification => this.mapToDTO(notification));
     } catch (error) {
       console.error('NotificationService.getSystemNotifications failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get system notifications');
