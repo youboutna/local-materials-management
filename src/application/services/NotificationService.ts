@@ -40,8 +40,9 @@ export class NotificationService {
       makeCall: async () => ({ success: true, error: null }),
       logCommunication: async () => ({ success: true, error: null }),
       getUserNotifications: async (userId: string, limit?: number) => Promise.resolve({ notifications: [], error: null }),
+      getSystemNotifications: async (limit?: number) => Promise.resolve({ notifications: [], error: null }),
       scheduleCall: async () => ({ success: true, error: null })
-    } as INotificationRepository;
+    } as unknown as INotificationRepository;
   }
 
   /**
