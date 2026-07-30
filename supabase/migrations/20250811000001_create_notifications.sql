@@ -17,22 +17,31 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- 2. Ajouter la contrainte CHECK sur le type (basée sur la liste exhaustive du second script)
--- Les colonnes `type` et `related_id` seront gérées ici si la table est déjà créée.
-ALTER TABLE public.notifications ADD CONSTRAINT IF NOT EXISTS notifications_type_check 
-CHECK (type IN (
-  'task_assigned', 'task_updated', 'task_completed', 'delay_warning', 
-  'bank_guarantee_trigger', 'inspection_overdue', 'contractor_penalty', 
-  'compliance_alert', 'escalation_required', 'inspection_required', 
-  'project_update', 'insurance_expiry', 'insurance_update', 
-  'task_assignment', 'task_overdue', 'project_created', 'project_completed', 
-  'project_milestone', 'payment_due', 'payment_completed', 'payment_failed', 
-  'payment_pending', 'document_review', 'document_shared', 'document_approved', 
-  'document_rejected', 'document_uploaded', 'system', 'payment_blocked', 
-  'payment_warning', 'info' -- 'info' ajouté depuis le premier script
-));
+-- 2. Ajouter la contrainte CHECK sur le type (avec vérification d'existence via pg_constraint)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conrelid = 'public.notifications'::regclass 
+          AND conname = 'notifications_type_check'
+    ) THEN
+        ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check 
+        CHECK (type IN (
+            'task_assigned', 'task_updated', 'task_completed', 'delay_warning', 
+            'bank_guarantee_trigger', 'inspection_overdue', 'contractor_penalty', 
+            'compliance_alert', 'escalation_required', 'inspection_required', 
+            'project_update', 'insurance_expiry', 'insurance_update', 
+            'task_assignment', 'task_overdue', 'project_created', 'project_completed', 
+            'project_milestone', 'payment_due', 'payment_completed', 'payment_failed', 
+            'payment_pending', 'document_review', 'document_shared', 'document_approved', 
+            'document_rejected', 'document_uploaded', 'system', 'payment_blocked', 
+            'payment_warning', 'info'
+        ));
+    END IF;
+END $$;
 
--- 3. Index pour les performances (Fusion des index des deux scripts avec DESC)
+-- 3. Index pour les performances (Index composites et simples)
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient_id ON public.notifications(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(read);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON public.notifications(type);
@@ -42,9 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_recipient_created_at ON public.noti
 -- 4. Activer RLS
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- 5. Trigger updated_at (Utilisation plus robuste du second script + vérification de fonction)
--- On vérifie si la fonction 'update_timestamp' ou 'update_updated_at_column' existe.
--- Si ni l'une ni l'autre n'existe, on laisse tomber pour ne pas casser la migration.
+-- 5. Trigger updated_at (Vérification robuste de la fonction existante)
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_timestamp') THEN
@@ -63,12 +70,11 @@ BEGIN
 END $$;
 
 -- 6. Permissions (GRANT)
--- Utilisation des permissions classiques (avec mention des rôles du second script)
 GRANT SELECT ON public.notifications TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
 GRANT ALL ON public.notifications TO service_role;
 
--- 7. Politiques RLS (Fusion des politiques)
+-- 7. Politiques RLS (Fusion complète des politiques)
 -- Politique : SELECT
 DROP POLICY IF EXISTS select_notifications ON public.notifications;
 DROP POLICY IF EXISTS "Users can view their own notifications" ON public.notifications;

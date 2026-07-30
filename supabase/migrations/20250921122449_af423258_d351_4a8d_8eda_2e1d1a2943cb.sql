@@ -1,6 +1,9 @@
--- Create enhanced tables for project management with relationships, dependencies, and advanced features
+-- =============================================================================
+-- MIGRATION: enhance_project_tables
+-- Description: Ajout de fonctionnalités avancées (dépendances, risques, jalons, ressources)
+-- =============================================================================
 
--- First, let's add missing columns to task_assignments table for comprehensive task management
+-- 1. Ajout des colonnes manquantes à la table task_assignments
 ALTER TABLE btp.task_assignments 
 ADD COLUMN IF NOT EXISTS estimated_duration INTEGER,
 ADD COLUMN IF NOT EXISTS actual_duration INTEGER,
@@ -15,7 +18,7 @@ ADD COLUMN IF NOT EXISTS pessimistic_estimate INTEGER,
 ADD COLUMN IF NOT EXISTS most_likely_estimate INTEGER,
 ADD COLUMN IF NOT EXISTS critical_path BOOLEAN DEFAULT false;
 
--- Create task dependencies table for managing task relationships
+-- 2. Création de la table task_dependencies
 CREATE TABLE IF NOT EXISTS btp.task_dependencies (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id UUID NOT NULL REFERENCES btp.task_assignments(id) ON DELETE CASCADE,
@@ -26,10 +29,8 @@ CREATE TABLE IF NOT EXISTS btp.task_dependencies (
   UNIQUE(task_id, depends_on_task_id)
 );
 
--- Enable RLS on task_dependencies
-ALTER TABLE IF EXISTS btp.task_dependencies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE btp.task_dependencies ENABLE ROW LEVEL SECURITY;
 
--- Create policy for task_dependencies
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -46,7 +47,7 @@ BEGIN
   END IF;
 END $$;
 
--- Add missing columns to project_risks table for enhanced risk management
+-- 3. Ajout des colonnes avancées à project_risks
 ALTER TABLE btp.project_risks 
 ADD COLUMN IF NOT EXISTS probability INTEGER CHECK (probability >= 0 AND probability <= 100),
 ADD COLUMN IF NOT EXISTS impact INTEGER CHECK (impact >= 0 AND impact <= 100),
@@ -57,7 +58,6 @@ ADD COLUMN IF NOT EXISTS due_date DATE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
--- Add risk_score column separately
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -70,12 +70,12 @@ BEGIN
   END IF;
 END $$;
 
--- Create function to calculate risk_score (outside DO block)
+-- 4. Création de la fonction calculate_risk_score
 CREATE OR REPLACE FUNCTION btp.calculate_risk_score()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.probability IS NOT NULL AND NEW.impact IS NOT NULL THEN
-    NEW.risk_score := (NEW.probability * NEW.impact) / 100;
+    NEW.risk_score := (NEW.probability::INTEGER * NEW.impact::INTEGER) / 100;
   ELSE
     NEW.risk_score := NULL;
   END IF;
@@ -83,19 +83,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger to auto-calculate risk_score
+-- 5. Création du trigger pour le calcul automatique
 DROP TRIGGER IF EXISTS calculate_risk_score_trigger ON btp.project_risks;
 CREATE TRIGGER calculate_risk_score_trigger
   BEFORE INSERT OR UPDATE OF probability, impact ON btp.project_risks
   FOR EACH ROW
   EXECUTE FUNCTION btp.calculate_risk_score();
 
--- Update existing rows with calculated risk_score
+-- 6. Mise à jour des lignes existantes
 UPDATE btp.project_risks 
-SET risk_score = (probability * impact) / 100 
+SET risk_score = (probability::INTEGER * impact::INTEGER) / 100 
 WHERE probability IS NOT NULL AND impact IS NOT NULL;
 
--- Create risk-task relationships table
+-- 7. Création de la table risk_task_relations
 CREATE TABLE IF NOT EXISTS btp.risk_task_relations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   risk_id UUID NOT NULL REFERENCES btp.project_risks(id) ON DELETE CASCADE,
@@ -104,10 +104,8 @@ CREATE TABLE IF NOT EXISTS btp.risk_task_relations (
   UNIQUE(risk_id, task_id)
 );
 
--- Enable RLS on risk_task_relations
 ALTER TABLE btp.risk_task_relations ENABLE ROW LEVEL SECURITY;
 
--- Create policy for risk_task_relations
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -124,13 +122,13 @@ BEGIN
   END IF;
 END $$;
 
--- Add phase dependencies to project_phases
+-- 8. Ajout de colonnes aux phases de projet
 ALTER TABLE btp.project_phases 
 ADD COLUMN IF NOT EXISTS weight DECIMAL(3,2) DEFAULT 0.1,
 ADD COLUMN IF NOT EXISTS estimated_duration INTEGER,
 ADD COLUMN IF NOT EXISTS dependencies JSONB DEFAULT '[]'::jsonb;
 
--- Create project milestones table for tracking key deliverables
+-- 9. Création de la table project_milestones
 CREATE TABLE IF NOT EXISTS btp.project_milestones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -147,10 +145,8 @@ CREATE TABLE IF NOT EXISTS btp.project_milestones (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS on project_milestones
 ALTER TABLE btp.project_milestones ENABLE ROW LEVEL SECURITY;
 
--- Create policy for project_milestones
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -166,7 +162,7 @@ BEGIN
   END IF;
 END $$;
 
--- Create resource assignments table for tracking resource allocation to tasks
+-- 10. Création de la table resource_assignments
 CREATE TABLE IF NOT EXISTS btp.resource_assignments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   resource_id UUID NOT NULL REFERENCES btp.project_resources(id) ON DELETE CASCADE,
@@ -179,10 +175,8 @@ CREATE TABLE IF NOT EXISTS btp.resource_assignments (
   UNIQUE(resource_id, task_id)
 );
 
--- Enable RLS on resource_assignments
 ALTER TABLE btp.resource_assignments ENABLE ROW LEVEL SECURITY;
 
--- Create policy for resource_assignments
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -199,17 +193,37 @@ BEGIN
   END IF;
 END $$;
 
--- Add indexes for better performance
+-- 11. Ajout des index pour les performances
 CREATE INDEX IF NOT EXISTS idx_task_dependencies_task_id ON btp.task_dependencies(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_dependencies_depends_on ON btp.task_dependencies(depends_on_task_id);
 CREATE INDEX IF NOT EXISTS idx_risk_task_relations_risk_id ON btp.risk_task_relations(risk_id);
 CREATE INDEX IF NOT EXISTS idx_risk_task_relations_task_id ON btp.risk_task_relations(task_id);
+
+-- Index pour project_milestones
 CREATE INDEX IF NOT EXISTS idx_project_milestones_project_id ON btp.project_milestones(project_id);
+
+-- =============================================================================
+-- CORRECTION DE SÉCURITÉ : On vérifie que la colonne phase_id existe AVANT de créer l'index
+-- =============================================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'btp' 
+    AND table_name = 'project_milestones' 
+    AND column_name = 'phase_id'
+  ) THEN
+    ALTER TABLE btp.project_milestones ADD COLUMN phase_id UUID REFERENCES btp.project_phases(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_project_milestones_phase_id ON btp.project_milestones(phase_id);
+-- =============================================================================
+
 CREATE INDEX IF NOT EXISTS idx_resource_assignments_resource_id ON btp.resource_assignments(resource_id);
 CREATE INDEX IF NOT EXISTS idx_resource_assignments_task_id ON btp.resource_assignments(task_id);
 
--- Create triggers for updating timestamps
+-- 12. Création des triggers pour la mise à jour des timestamps
 CREATE OR REPLACE FUNCTION btp.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -218,7 +232,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add triggers to update timestamps
 DROP TRIGGER IF EXISTS update_project_risks_updated_at ON btp.project_risks;
 CREATE TRIGGER update_project_risks_updated_at
   BEFORE UPDATE ON btp.project_risks
