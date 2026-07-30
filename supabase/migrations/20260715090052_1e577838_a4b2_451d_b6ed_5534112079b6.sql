@@ -1,3 +1,11 @@
+-- =============================================================================
+-- MIGRATION: boq_alignment_complete
+-- Description: Création de boq_lines et migration des données
+-- =============================================================================
+
+-- ============================================================
+-- PARTIE 1 : CRÉATION DE LA TABLE boq_lines
+-- ============================================================
 
 CREATE TABLE IF NOT EXISTS btp.boq_lines (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -52,6 +60,7 @@ CREATE TABLE IF NOT EXISTS btp.boq_lines (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Index
 CREATE INDEX IF NOT EXISTS idx_boq_lines_project_type ON btp.boq_lines(project_id, line_type);
 CREATE INDEX IF NOT EXISTS idx_boq_lines_tender_type  ON btp.boq_lines(tender_id, line_type);
 CREATE INDEX IF NOT EXISTS idx_boq_lines_submission   ON btp.boq_lines(submission_id);
@@ -60,10 +69,12 @@ CREATE INDEX IF NOT EXISTS idx_boq_lines_status       ON btp.boq_lines(status);
 CREATE INDEX IF NOT EXISTS idx_boq_lines_sender       ON btp.boq_lines(sender_id);
 CREATE INDEX IF NOT EXISTS idx_boq_lines_document     ON btp.boq_lines(document_id);
 
+-- Grants
 GRANT USAGE ON SCHEMA btp TO authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.boq_lines TO authenticated;
 GRANT ALL ON btp.boq_lines TO service_role;
 
+-- RLS
 ALTER TABLE btp.boq_lines ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "boq_lines_select" ON btp.boq_lines;
@@ -84,6 +95,7 @@ DROP POLICY IF EXISTS "boq_lines_delete" ON btp.boq_lines;
 CREATE POLICY "boq_lines_delete" ON btp.boq_lines FOR DELETE TO authenticated
   USING (sender_id = auth.uid() OR sender_id IS NULL);
 
+-- Trigger
 CREATE OR REPLACE FUNCTION btp.tg_boq_lines_updated_at()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN NEW.updated_at = now(); RETURN NEW; END $$;
@@ -93,7 +105,50 @@ CREATE TRIGGER trg_boq_lines_updated_at
   BEFORE UPDATE ON btp.boq_lines
   FOR EACH ROW EXECUTE FUNCTION btp.tg_boq_lines_updated_at();
 
--- Migration data : quantity_takeoffs (phase/milestone/task_id sont TEXT côté legacy)
+
+-- ============================================================
+-- PARTIE 2 : AJOUT DES COLONNES MANQUANTES AVANT MIGRATION
+-- ============================================================
+-- Cette étape est CRUCIALE pour que la migration des données fonctionne.
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='btp' AND table_name='quantity_takeoffs') THEN
+    ALTER TABLE btp.quantity_takeoffs
+      ADD COLUMN IF NOT EXISTS source_type text,
+      ADD COLUMN IF NOT EXISTS btp_code text;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='btp' AND table_name='tender_estimate_items') THEN
+    ALTER TABLE btp.tender_estimate_items
+      ADD COLUMN IF NOT EXISTS source_type text,
+      ADD COLUMN IF NOT EXISTS btp_code text;
+  END IF;
+END$$;
+
+-- Ajout des colonnes essentielles manquantes sur tender_estimate_items
+ALTER TABLE btp.tender_estimate_items
+  ADD COLUMN IF NOT EXISTS item_code text,
+  ADD COLUMN IF NOT EXISTS item_type text,
+  ADD COLUMN IF NOT EXISTS description text,
+  ADD COLUMN IF NOT EXISTS unit text,
+  ADD COLUMN IF NOT EXISTS quantity numeric,
+  ADD COLUMN IF NOT EXISTS unit_price numeric,
+  ADD COLUMN IF NOT EXISTS material_id uuid,
+  ADD COLUMN IF NOT EXISTS resource_kind text,
+  ADD COLUMN IF NOT EXISTS source text,
+  ADD COLUMN IF NOT EXISTS submitted_by uuid,
+  ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+
+CREATE INDEX IF NOT EXISTS idx_public_tender_estimate_items_btp_code
+  ON btp.tender_estimate_items(btp_code) WHERE btp_code IS NOT NULL;
+
+
+-- ============================================================
+-- PARTIE 3 : MIGRATION DES DONNÉES VERS boq_lines
+-- ============================================================
+
+-- Migration quantity_takeoffs
 INSERT INTO btp.boq_lines (
   id, project_id, phase_code, milestone_code, task_code,
   resource_id, resource_kind,
@@ -115,17 +170,17 @@ SELECT
 FROM btp.quantity_takeoffs qt
 WHERE NOT EXISTS (SELECT 1 FROM btp.boq_lines b WHERE b.id = qt.id);
 
--- Migration data : tender_estimate_items (phase/milestone/task_id types ?)
+-- Migration tender_estimate_items (Maintenant sécurisée)
 DO $mig$
 DECLARE
   ph_type text; ms_type text; tk_type text;
 BEGIN
   SELECT data_type INTO ph_type FROM information_schema.columns
-    WHERE table_schema='public' AND table_name='tender_estimate_items' AND column_name='phase_id';
+    WHERE table_schema='btp' AND table_name='tender_estimate_items' AND column_name='phase_id';
   SELECT data_type INTO ms_type FROM information_schema.columns
-    WHERE table_schema='public' AND table_name='tender_estimate_items' AND column_name='milestone_id';
+    WHERE table_schema='btp' AND table_name='tender_estimate_items' AND column_name='milestone_id';
   SELECT data_type INTO tk_type FROM information_schema.columns
-    WHERE table_schema='public' AND table_name='tender_estimate_items' AND column_name='task_id';
+    WHERE table_schema='btp' AND table_name='tender_estimate_items' AND column_name='task_id';
 
   IF ph_type = 'uuid' THEN
     INSERT INTO btp.boq_lines (
@@ -168,6 +223,10 @@ BEGIN
   END IF;
 END $mig$;
 
+-- ============================================================
+-- PARTIE 4 : VUES DE COMPATIBILITÉ ET FINALISATION
+-- ============================================================
+
 -- Vues de compatibilité
 CREATE OR REPLACE VIEW btp.v_boq_quantity_takeoffs AS
   SELECT * FROM btp.boq_lines WHERE line_type = 'quantity_takeoff';
@@ -179,3 +238,5 @@ CREATE OR REPLACE VIEW btp.v_boq_invoices AS
 GRANT SELECT ON btp.v_boq_quantity_takeoffs TO authenticated;
 GRANT SELECT ON btp.v_boq_estimates          TO authenticated;
 GRANT SELECT ON btp.v_boq_invoices           TO authenticated;
+
+NOTIFY pgrst, 'reload schema';

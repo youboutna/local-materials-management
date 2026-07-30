@@ -1,6 +1,13 @@
+-- =============================================================================
+-- MIGRATION: normalize_intervention_zones
+-- Description: Ajout de la colonne localisation et normalisation des zones d'intervention
+-- =============================================================================
 
--- 1) Normalization function: converts any legacy shape ([], single-zone object,
---    v2 { zones: [...] }) to canonical v3 { version: 3, zones: [...], geocodingMeta? }
+-- 0. CRÉATION DE LA COLONNE SI ELLE N'EXISTE PAS (Correction ici)
+ALTER TABLE btp.projects 
+ADD COLUMN IF NOT EXISTS localisation jsonb;
+
+-- 1) Normalization function: converts any legacy shape to canonical v3
 CREATE OR REPLACE FUNCTION btp.normalize_intervention_zones(input jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -53,7 +60,7 @@ BEGIN
 END;
 $$;
 
--- 2) Backfill existing rows (idempotent)
+-- 2) Backfill existing rows (idempotent) - Maintenant que la colonne existe
 UPDATE btp.projects
    SET localisation = btp.normalize_intervention_zones(localisation)
  WHERE localisation IS NOT NULL

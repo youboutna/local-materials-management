@@ -8,28 +8,28 @@
 -- ============================================
 
 -- Add last_restock column (TIMESTAMP WITH TIME ZONE)
-ALTER TABLE btp.materials ADD COLUMN last_restock TIMESTAMP WITH TIME ZONE;
+ALTER TABLE btp.materials ADD COLUMN IF NOT EXISTS last_restock TIMESTAMP WITH TIME ZONE;
 
 -- Add material_status column (VARCHAR with enum-like constraint)
-ALTER TABLE btp.materials ADD COLUMN material_status VARCHAR(50) CHECK (material_status IN ('active', 'inactive', 'discontinued', 'pending'));
+ALTER TABLE btp.materials ADD COLUMN IF NOT EXISTS material_status VARCHAR(50) CHECK (material_status IN ('active', 'inactive', 'discontinued', 'pending'));
 
 -- Add min_quantity column (INTEGER)
-ALTER TABLE btp.materials ADD COLUMN min_quantity INTEGER DEFAULT 0;
+ALTER TABLE btp.materials ADD COLUMN IF NOT EXISTS min_quantity INTEGER DEFAULT 0;
 
 -- ============================================
 -- INDEXES (if needed for performance)
 -- ============================================
 
 -- Index for material_status if frequently queried
-CREATE INDEX idx_materials_status ON materials(material_status);
+CREATE INDEX IF NOT EXISTS idx_materials_status ON btp.materials(material_status);
 
 -- Index for last_restock if frequently queried
-CREATE INDEX idx_materials_last_restock ON materials(last_restock);
+CREATE INDEX IF NOT EXISTS idx_materials_last_restock ON btp.materials(last_restock);
 
 -- ============================================
 -- CONSTRAINTS
 -- ============================================
 
 -- Ensure min_quantity is non-negative
-ALTER TABLE btp.materials ADD CONSTRAINT chk_min_quantity_positive
+ALTER TABLE btp.materials ADD CONSTRAINT  IFchk_min_quantity_positive
   CHECK (min_quantity IS NULL OR min_quantity >= 0);

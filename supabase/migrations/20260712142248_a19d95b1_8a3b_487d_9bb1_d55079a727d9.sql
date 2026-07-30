@@ -1,3 +1,9 @@
+-- =============================================================================
+-- MIGRATION: create_boq_alignment_history
+-- Description: Table d'historique d'alignement BOQ (sans vue récursive inutile)
+-- =============================================================================
+
+-- 1. Création de la table
 CREATE TABLE IF NOT EXISTS btp.boq_alignment_history (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   extracted_name text NOT NULL,
@@ -11,22 +17,19 @@ CREATE TABLE IF NOT EXISTS btp.boq_alignment_history (
   UNIQUE (normalized_key, resource_id)
 );
 
+-- 2. Index pour les performances
 CREATE INDEX IF NOT EXISTS boq_alignment_history_key_idx ON btp.boq_alignment_history (normalized_key);
 CREATE INDEX IF NOT EXISTS boq_alignment_history_resource_idx ON btp.boq_alignment_history (resource_id);
 
--- Expose via public view for PostgREST (btp schema is served through mirror views elsewhere).
-CREATE OR REPLACE VIEW btp.boq_alignment_history AS
-  SELECT * FROM btp.boq_alignment_history;
-
+-- 3. Octroi des droits (GRANT) sur la table
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.boq_alignment_history TO authenticated;
 GRANT ALL ON btp.boq_alignment_history TO service_role;
-
 GRANT USAGE ON SCHEMA btp TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.boq_alignment_history TO authenticated;
-GRANT ALL ON btp.boq_alignment_history TO service_role;
 
+-- 4. Activation de RLS
 ALTER TABLE btp.boq_alignment_history ENABLE ROW LEVEL SECURITY;
 
+-- 5. Politiques RLS
 DROP POLICY IF EXISTS "Authenticated can read alignment history" ON btp.boq_alignment_history;
 CREATE POLICY "Authenticated can read alignment history"
   ON btp.boq_alignment_history FOR SELECT
@@ -52,6 +55,7 @@ CREATE POLICY "Owner or admin can delete alignment entries"
   TO authenticated
   USING (created_by = auth.uid() OR btp.is_current_user_admin());
 
+-- 6. Trigger de mise à jour du timestamp
 CREATE OR REPLACE FUNCTION btp.set_boq_alignment_updated_at()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
@@ -60,3 +64,6 @@ DROP TRIGGER IF EXISTS boq_alignment_history_touch ON btp.boq_alignment_history;
 CREATE TRIGGER boq_alignment_history_touch
   BEFORE UPDATE ON btp.boq_alignment_history
   FOR EACH ROW EXECUTE FUNCTION btp.set_boq_alignment_updated_at();
+
+-- 7. Rechargement du schéma pour PostgREST
+NOTIFY pgrst, 'reload schema';

@@ -1,4 +1,3 @@
-
 -- ============================================================
 -- Strategy & Budget linkage tables for projects
 -- ============================================================
@@ -111,12 +110,7 @@ DO $$ BEGIN
     );
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- Public proxy views (multi-schema rule)
-CREATE OR REPLACE VIEW btp.project_strategy_links AS SELECT * FROM btp.project_strategy_links;
-CREATE OR REPLACE VIEW btp.project_budget_links AS SELECT * FROM btp.project_budget_links;
-
+-- GRANT Permissions
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_strategy_links TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_budget_links TO authenticated;
 GRANT USAGE ON SCHEMA btp TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_strategy_links TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_budget_links TO authenticated;

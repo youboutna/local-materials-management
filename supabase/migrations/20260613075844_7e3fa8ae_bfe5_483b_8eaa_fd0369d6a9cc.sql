@@ -1,3 +1,9 @@
+-- =============================================================================
+-- MIGRATION: enhance_project_stakeholders_columns
+-- Description: Ajout des nouvelles colonnes à la table btp.project_stakeholders
+-- =============================================================================
+
+-- 1. Ajout des colonnes à la table (sans toucher aux vues inutiles)
 ALTER TABLE btp.project_stakeholders
   ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS external_name text,
@@ -10,16 +16,21 @@ ALTER TABLE btp.project_stakeholders
   ADD COLUMN IF NOT EXISTS contract_type text,
   ADD COLUMN IF NOT EXISTS notes text;
 
-DROP VIEW IF EXISTS btp.project_stakeholders;
-CREATE VIEW btp.project_stakeholders AS
-  SELECT id, project_id, stakeholder_type, stakeholder_entity_type,
-         employee_id, supplier_id, role_description, is_primary,
-         is_active, external_name, external_email, external_phone,
-         responsibilities, start_date, end_date, hourly_rate,
-         contract_type, notes, created_at, updated_at
-  FROM btp.project_stakeholders;
+-- 2. Mise à jour des commentaires pour documenter les nouveaux champs
+COMMENT ON COLUMN btp.project_stakeholders.is_active IS 'Indique si le stakeholder est actuellement actif sur le projet';
+COMMENT ON COLUMN btp.project_stakeholders.external_name IS 'Nom complet de la personne externe (si pas employee/supplier)';
+COMMENT ON COLUMN btp.project_stakeholders.external_email IS 'Email de la personne externe';
+COMMENT ON COLUMN btp.project_stakeholders.external_phone IS 'Numéro de téléphone de la personne externe';
+COMMENT ON COLUMN btp.project_stakeholders.responsibilities IS 'Liste des responsabilités assumées par ce stakeholder';
+COMMENT ON COLUMN btp.project_stakeholders.start_date IS 'Date de début d''intervention du stakeholder';
+COMMENT ON COLUMN btp.project_stakeholders.end_date IS 'Date de fin d''intervention du stakeholder';
+COMMENT ON COLUMN btp.project_stakeholders.hourly_rate IS 'Taux horaire facturé par le stakeholder (si applicable)';
+COMMENT ON COLUMN btp.project_stakeholders.contract_type IS 'Type de contrat liant le stakeholder au projet';
+COMMENT ON COLUMN btp.project_stakeholders.notes IS 'Notes supplémentaires concernant le stakeholder';
 
+-- 3. Octroi des permissions GRANT (Aucune vue n'est nécessaire)
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_stakeholders TO authenticated;
 GRANT ALL ON btp.project_stakeholders TO service_role;
 
+-- 4. Rechargement du schéma pour PostgREST
 NOTIFY pgrst, 'reload schema';

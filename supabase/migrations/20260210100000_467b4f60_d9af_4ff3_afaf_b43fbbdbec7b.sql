@@ -6,7 +6,7 @@
 -- ============================================
 -- MAIN COMPLIANCE ITEMS TABLE
 -- ============================================
-CREATE TABLE compliance_items (
+CREATE TABLE btp.compliance_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   type VARCHAR(50) NOT NULL CHECK (type IN ('regulatory', 'insurance', 'bank_guarantee', 'technical', 'environmental')),
   title VARCHAR(255) NOT NULL,
@@ -25,19 +25,19 @@ CREATE TABLE compliance_items (
   -- Foreign key constraints
   CONSTRAINT fk_compliance_items_project
     FOREIGN KEY (project_id)
-    REFERENCES projects(id)
+    REFERENCES btp.projects(id)
     ON DELETE CASCADE,
     
   CONSTRAINT fk_compliance_items_bank_guarantee
     FOREIGN KEY (bank_guarantee_id)
-    REFERENCES bank_guarantees(id)
+    REFERENCES btp.bank_guarantees(id)
     ON DELETE SET NULL
 );
 
 -- ============================================
 -- COMPLIANCE DOCUMENTS TABLE
 -- ============================================
-CREATE TABLE compliance_documents (
+CREATE TABLE btp.compliance_documents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   compliance_item_id UUID NOT NULL,
   document_id UUID NOT NULL,
@@ -49,19 +49,19 @@ CREATE TABLE compliance_documents (
   
   CONSTRAINT fk_compliance_documents_item
     FOREIGN KEY (compliance_item_id)
-    REFERENCES compliance_items(id)
+    REFERENCES btp.compliance_items(id)
     ON DELETE CASCADE,
     
   CONSTRAINT fk_compliance_documents_document
     FOREIGN KEY (document_id)
-    REFERENCES documents(id)
+    REFERENCES btp.documents(id)
     ON DELETE CASCADE
 );
 
 -- ============================================
 -- COMPLIANCE NOTES TABLE
 -- ============================================
-CREATE TABLE compliance_notes (
+CREATE TABLE btp.compliance_notes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   compliance_item_id UUID NOT NULL,
   note TEXT NOT NULL,
@@ -70,14 +70,14 @@ CREATE TABLE compliance_notes (
   
   CONSTRAINT fk_compliance_notes_item
     FOREIGN KEY (compliance_item_id)
-    REFERENCES compliance_items(id)
+    REFERENCES btp.compliance_items(id)
     ON DELETE CASCADE
 );
 
 -- ============================================
 -- COMPLIANCE AUDIT LOG TABLE
 -- ============================================
-CREATE TABLE compliance_audit_log (
+CREATE TABLE btp.compliance_audit_log (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   compliance_item_id UUID NOT NULL,
   field_name VARCHAR(100) NOT NULL,
@@ -88,6 +88,6 @@ CREATE TABLE compliance_audit_log (
   
   CONSTRAINT fk_compliance_audit_item
     FOREIGN KEY (compliance_item_id)
-    REFERENCES compliance_items(id)
+    REFERENCES btp.compliance_items(id)
     ON DELETE CASCADE
 );

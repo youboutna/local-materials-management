@@ -4,10 +4,14 @@
 -- Only the creator and admins can access tender estimates
 -- This ensures confidentiality of the "Devis Quantitatif et Estimatif"
 
+-- ========================================
 -- Enable RLS on tender_estimates table
+-- ========================================
 ALTER TABLE btp.tender_estimates ENABLE ROW LEVEL SECURITY;
 
+-- ========================================
 -- Enable RLS on tender_estimate_items table
+-- ========================================
 ALTER TABLE btp.tender_estimate_items ENABLE ROW LEVEL SECURITY;
 
 -- ========================================
@@ -29,6 +33,12 @@ $$;
 -- ========================================
 -- Policies for tender_estimates
 -- ========================================
+
+-- CORRECTION : Suppression avant création pour éviter l'erreur 42710
+DROP POLICY IF EXISTS "Users can view own tender estimates" ON btp.tender_estimates;
+DROP POLICY IF EXISTS "Users can create tender estimates" ON btp.tender_estimates;
+DROP POLICY IF EXISTS "Users can update own tender estimates" ON btp.tender_estimates;
+DROP POLICY IF EXISTS "Users can delete own tender estimates" ON btp.tender_estimates;
 
 -- Policy: Users can view their own estimates
 CREATE POLICY "Users can view own tender estimates"
@@ -77,6 +87,12 @@ USING (
 -- Policies for tender_estimate_items
 -- ========================================
 -- Items inherit permissions from their parent estimate
+
+-- CORRECTION : Suppression des politiques enfants avant création
+DROP POLICY IF EXISTS "Users can view own tender estimate items" ON btp.tender_estimate_items;
+DROP POLICY IF EXISTS "Users can create tender estimate items" ON btp.tender_estimate_items;
+DROP POLICY IF EXISTS "Users can update own tender estimate items" ON btp.tender_estimate_items;
+DROP POLICY IF EXISTS "Users can delete own tender estimate items" ON btp.tender_estimate_items;
 
 -- Policy: Users can view items of estimates they own
 CREATE POLICY "Users can view own tender estimate items"

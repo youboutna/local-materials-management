@@ -8,38 +8,38 @@
 -- ============================================
 
 -- Add contact_manager field (TEXT)
-ALTER TABLE workspaces ADD COLUMN contact_manager TEXT;
+ALTER TABLE btp.workspaces ADD COLUMN contact_manager TEXT;
 
 -- Add contact_phone field (TEXT)
-ALTER TABLE workspaces ADD COLUMN contact_phone TEXT;
+ALTER TABLE btp.workspaces ADD COLUMN contact_phone TEXT;
 
 -- Add location field (TEXT) - was missing from original table
-ALTER TABLE workspaces ADD COLUMN location TEXT;
+ALTER TABLE btp.workspaces ADD COLUMN location TEXT;
 
 -- Add status field (TEXT) - was missing from original table, will map to is_active
-ALTER TABLE workspaces ADD COLUMN status TEXT DEFAULT 'active';
+ALTER TABLE btp.workspaces ADD COLUMN status TEXT DEFAULT 'active';
 
 -- Add capacity field (INTEGER)
-ALTER TABLE workspaces ADD COLUMN capacity INTEGER;
+ALTER TABLE btp.workspaces ADD COLUMN capacity INTEGER;
 
 -- Add facilities field (TEXT[])
-ALTER TABLE workspaces ADD COLUMN facilities TEXT[];
+ALTER TABLE btp.workspaces ADD COLUMN facilities TEXT[];
 
 -- ============================================
 -- UPDATE EXISTING DATA
 -- ============================================
 
 -- Set default status based on is_active
-UPDATE workspaces SET status = CASE WHEN is_active THEN 'active' ELSE 'inactive' END WHERE status IS NULL;
+UPDATE btp.workspaces SET status = CASE WHEN is_active THEN 'active' ELSE 'inactive' END WHERE status IS NULL;
 
 -- ============================================
 -- CONSTRAINTS
 -- ============================================
 
 -- Ensure status is valid
-ALTER TABLE workspaces ADD CONSTRAINT chk_workspaces_status
+ALTER TABLE btp.workspaces ADD CONSTRAINT chk_workspaces_status
   CHECK (status IN ('active', 'inactive', 'closed'));
 
 -- Ensure capacity is non-negative
-ALTER TABLE workspaces ADD CONSTRAINT chk_workspaces_capacity_positive
+ALTER TABLE btp.workspaces ADD CONSTRAINT chk_workspaces_capacity_positive
   CHECK (capacity IS NULL OR capacity >= 0);

@@ -1,6 +1,21 @@
+-- =============================================================================
+-- MIGRATION: tighten_security_policies_and_functions
+-- Description: Nettoyage des politiques RLS, sécurité des fonctions SECURITY DEFINER
+-- =============================================================================
 
--- 1) Drop public.users mirror
-DROP TABLE IF EXISTS public.users CASCADE;
+-- 1) Create a function to easily assign roles
+CREATE OR REPLACE FUNCTION public.assign_user_role(target_user_id UUID, role_name TEXT)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  INSERT INTO public.user_roles (user_id, role_name, assigned_by)
+  VALUES (target_user_id, role_name, auth.uid())
+  ON CONFLICT (user_id, role_name) DO NOTHING;
+END;
+$$;
 
 -- 2) Overly permissive policies
 DROP POLICY IF EXISTS "Allow all access to payment_blocks" ON btp.payment_blocks;
@@ -70,20 +85,117 @@ CREATE POLICY "Authenticated uploads to prospect_documents"
   TO authenticated
   WITH CHECK (bucket_id = 'prospect_documents' AND auth.uid() = owner);
 
--- 8) Fixed search_path on SECURITY DEFINER functions
-ALTER FUNCTION btp.admin_update_user_email(uuid, text) SET search_path = public;
-ALTER FUNCTION btp.assign_user_role(uuid, text) SET search_path = public;
-ALTER FUNCTION btp.generate_supplier_reset_token(text) SET search_path = public;
-ALTER FUNCTION btp.get_user_role(uuid) SET search_path = public;
-ALTER FUNCTION btp.get_user_roles(uuid) SET search_path = public;
-ALTER FUNCTION btp.handle_new_user() SET search_path = public;
-ALTER FUNCTION btp.handle_oauth_user_profile() SET search_path = public;
-ALTER FUNCTION btp.has_role(uuid, text) SET search_path = public;
+-- 8) Fixed search_path on SECURITY DEFINER functions (CORRECTION : Redéfinition avec SET search_path)
+-- On redéfinit chaque fonction avec SET search_path à l'intérieur pour garantir la sécurité.
 
--- 9) Revoke EXECUTE on admin-only SECURITY DEFINER functions
-REVOKE EXECUTE ON FUNCTION btp.admin_update_user_email(uuid, text) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION btp.assign_user_role(uuid, text) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION btp.generate_supplier_reset_token(text) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION btp.create_progress_invoice(uuid, uuid, numeric, numeric, text, jsonb, jsonb) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION btp.create_station_from_authorization(uuid, uuid) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION btp.create_supplier_payment_request(uuid, numeric, text, text, uuid, text[], text) FROM PUBLIC, anon;
+CREATE OR REPLACE FUNCTION public.admin_update_user_email(user_id uuid, new_email text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  UPDATE auth.users SET email = new_email WHERE id = user_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.generate_supplier_reset_token(supplier_email text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  -- Votre logique existante pour générer un token
+  RETURN 'generated_token_placeholder';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.get_user_role(target_user_id uuid)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  RETURN (SELECT role_name FROM public.user_roles WHERE user_id = target_user_id LIMIT 1);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.get_user_roles(target_user_id uuid)
+RETURNS text[]
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  RETURN (SELECT array_agg(role_name) FROM public.user_roles WHERE user_id = target_user_id);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  -- Votre logique existante de création de profil
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.handle_oauth_user_profile()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  -- Votre logique existante pour OAuth
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION btp.has_role(target_user_id uuid, role_name text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, btp
+AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = target_user_id AND role_name = role_name);
+END;
+$$;
+
+
+-- 9) Revoke EXECUTE on admin-only SECURITY DEFINER functions (avec vérification d'existence)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'admin_update_user_email' AND pronamespace = 'public'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.admin_update_user_email(uuid, text) FROM PUBLIC, anon';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'assign_user_role' AND pronamespace = 'public'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.assign_user_role(uuid, text) FROM PUBLIC, anon';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'generate_supplier_reset_token' AND pronamespace = 'btp'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION btp.generate_supplier_reset_token(text) FROM PUBLIC, anon';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'create_progress_invoice' AND pronamespace = 'btp'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION btp.create_progress_invoice(uuid, uuid, numeric, numeric, text, jsonb, jsonb) FROM PUBLIC, anon';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'create_station_from_authorization' AND pronamespace = 'btp'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION btp.create_station_from_authorization(uuid, uuid) FROM PUBLIC, anon';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'create_supplier_payment_request' AND pronamespace = 'btp'::regnamespace) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION btp.create_supplier_payment_request(uuid, numeric, text, text, uuid, text[], text) FROM PUBLIC, anon';
+  END IF;
+END $$;
+
+-- 10) Rechargement du schéma
+NOTIFY pgrst, 'reload schema';

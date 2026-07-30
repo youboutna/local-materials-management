@@ -28,11 +28,12 @@ CREATE TABLE IF NOT EXISTS public.oauth_providers (
 );
 
 ALTER TABLE public.oauth_providers ENABLE ROW LEVEL SECURITY;
-
+/**
 CREATE POLICY "Admins can manage OAuth providers" 
 ON public.oauth_providers 
 FOR ALL 
 USING (auth.role() IN ('admin', 'director'));
+*/
 
 -- 3. Table auth_sessions (dans public)
 CREATE TABLE IF NOT EXISTS public.auth_sessions (
@@ -49,18 +50,18 @@ CREATE TABLE IF NOT EXISTS public.auth_sessions (
 );
 
 ALTER TABLE public.auth_sessions ENABLE ROW LEVEL SECURITY;
-
+/**
 CREATE POLICY "Users can access their own sessions" 
 ON public.auth_sessions 
 FOR ALL 
 USING (user_id = auth.uid());
-
+**/
 -- 4. Index
 CREATE INDEX IF NOT EXISTS idx_oauth_providers_provider_name ON public.oauth_providers(provider_name);
 CREATE INDEX IF NOT EXISTS idx_oauth_providers_enabled ON public.oauth_providers(enabled);
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON public.auth_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_provider ON public.auth_sessions(provider);
-
+/*
 -- 5. Triggers updated_at
 CREATE TRIGGER set_timestamp_oauth_providers
     BEFORE UPDATE ON public.oauth_providers
@@ -71,7 +72,7 @@ CREATE TRIGGER set_timestamp_auth_sessions
     BEFORE UPDATE ON public.auth_sessions
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
-
+*/
 -- 6. Données par défaut (désactivées par défaut)
 INSERT INTO public.oauth_providers (provider_name, auth_url, token_url, user_info_url, scopes, enabled, configuration)
 VALUES 

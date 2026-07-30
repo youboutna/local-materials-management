@@ -1,118 +1,73 @@
+-- =============================================================================
+-- MIGRATION: align_project_tables_columns
+-- Description: Ajout des colonnes manquantes à projects et project_phases
+-- =============================================================================
+
+-- PARTIE 1 : AJOUT DES COLONNES À LA TABLE projects
+-- =============================================================================
+
 ALTER TABLE btp.projects
 ADD COLUMN IF NOT EXISTS referential_code text;
 
-CREATE OR REPLACE VIEW btp.project_phases AS
-SELECT
-  project_phases.id,
-  project_phases.project_id,
-  project_phases.phase_name,
-  project_phases.phase_type,
-  project_phases.start_date,
-  project_phases.end_date,
-  project_phases.status,
-  project_phases.progress,
-  project_phases.description,
-  project_phases.estimated_cost,
-  project_phases.actual_cost,
-  project_phases.dependencies,
-  project_phases.milestones,
-  project_phases.created_at,
-  project_phases.updated_at,
-  project_phases.created_by,
-  project_phases.estimated_duration,
-  project_phases.notes,
-  project_phases.construction_phase,
-  project_phases.construction_stage,
-  project_phases.custom_phase_data,
-  project_phases.materials,
-  project_phases.human_resources,
-  project_phases.suppliers,
-  project_phases.location,
-  project_phases.weight,
-  project_phases.order_index,
-  project_phases.actual_duration
-FROM btp.project_phases;
+COMMENT ON COLUMN btp.projects.referential_code IS 'Code référentiel du projet (ex: SCAPP, etc.)';
 
-CREATE OR REPLACE VIEW btp.projects AS
-SELECT
-  projects.id,
-  projects.title,
-  projects.description,
-  projects.location,
-  projects.status,
-  projects.progress,
-  projects.budget,
-  projects.start_date,
-  projects.end_date,
-  projects.thumbnail,
-  projects.team_size,
-  projects.created_at,
-  projects.updated_at,
-  projects.coordinates_latitude,
-  projects.coordinates_longitude,
-  projects.project_order,
-  projects.financing_source,
-  projects.market_type,
-  projects.selection_mode,
-  projects.launch_date,
-  projects.attribution_date,
-  projects.completion_date,
-  projects.project_reference,
-  projects.project_responsable_id,
-  projects.main_contractor,
-  projects.allows_initial_payment,
-  projects.initial_payment_percentage,
-  projects.current_phase,
-  projects.current_stage,
-  projects.adresse,
-  projects.forme,
-  projects.localisation,
-  projects.created_by,
-  projects.check_schedule_last_run,
-  projects.estimated_days,
-  projects.project_reference_number,
-  projects.currency,
-  projects.payment_mode,
-  projects.payment_frequency,
-  projects.initial_advance_percentage,
-  projects.retention_percentage,
-  projects.priority,
-  projects.project_type,
-  projects.sector,
-  projects.permit_number,
-  projects.funding_source,
-  projects.requires_consultant_validation,
-  projects.requires_ministry_approval,
-  projects.payment_workflow_config,
-  projects.geographic_zone,
-  projects.terrain_type,
-  projects.environmental_constraints,
-  projects.has_utilities,
-  projects.requires_permits,
-  projects.client_id,
-  projects.engineering_consultant_id,
-  projects.technical_manager_id,
-  projects.supervisor_id,
-  projects.workspace_id,
-  projects.area_sqm,
-  projects.site_details,
-  projects.donor_organization,
-  projects.bank_guarantee_required,
-  projects.bank_guarantee_amount,
-  projects.bank_guarantee_percentage,
-  projects.insurance_required,
-  projects.materials_budget,
-  projects.procurement_lead_time,
-  projects.resource_assignment,
-  projects.reception_status,
-  projects.closure_notes,
-  projects.methodology,
-  projects.referential_code
-FROM btp.projects;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.projects TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON btp.project_phases TO authenticated;
-GRANT SELECT ON btp.projects TO anon;
-GRANT SELECT ON btp.project_phases TO anon;
-GRANT ALL ON btp.projects TO service_role;
-GRANT ALL ON btp.project_phases TO service_role;
+-- PARTIE 2 : AJOUT DES COLONNES À LA TABLE project_phases
+-- =============================================================================
+-- Cette section aligne la table avec la définition TypeScript utilisée par le frontend.
+
+ALTER TABLE btp.project_phases
+ADD COLUMN IF NOT EXISTS phase_name text,
+ADD COLUMN IF NOT EXISTS phase_type text,
+ADD COLUMN IF NOT EXISTS status text,
+ADD COLUMN IF NOT EXISTS progress numeric,
+ADD COLUMN IF NOT EXISTS description text,
+ADD COLUMN IF NOT EXISTS estimated_cost numeric,
+ADD COLUMN IF NOT EXISTS actual_cost numeric,
+ADD COLUMN IF NOT EXISTS dependencies jsonb DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS milestones jsonb DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS notes text,
+ADD COLUMN IF NOT EXISTS construction_phase text,
+ADD COLUMN IF NOT EXISTS construction_stage text,
+ADD COLUMN IF NOT EXISTS custom_phase_data jsonb DEFAULT '{}'::jsonb,
+ADD COLUMN IF NOT EXISTS materials jsonb DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS human_resources jsonb DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS suppliers jsonb DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS location text,
+ADD COLUMN IF NOT EXISTS weight numeric DEFAULT 0.1,
+ADD COLUMN IF NOT EXISTS order_index integer,
+ADD COLUMN IF NOT EXISTS actual_duration integer;
+
+COMMENT ON COLUMN btp.project_phases.phase_name IS 'Nom de la phase';
+COMMENT ON COLUMN btp.project_phases.phase_type IS 'Type de phase (ex: conception, construction, livraison)';
+COMMENT ON COLUMN btp.project_phases.status IS 'Statut de la phase';
+COMMENT ON COLUMN btp.project_phases.progress IS 'Pourcentage d''avancement (0-100)';
+COMMENT ON COLUMN btp.project_phases.description IS 'Description détaillée de la phase';
+COMMENT ON COLUMN btp.project_phases.estimated_cost IS 'Coût estimé de la phase';
+COMMENT ON COLUMN btp.project_phases.actual_cost IS 'Coût réel de la phase';
+COMMENT ON COLUMN btp.project_phases.dependencies IS 'Liste des dépendances (JSON)';
+COMMENT ON COLUMN btp.project_phases.milestones IS 'Jalons associés à la phase (JSON)';
+COMMENT ON COLUMN btp.project_phases.notes IS 'Notes supplémentaires sur la phase';
+COMMENT ON COLUMN btp.project_phases.construction_phase IS 'Phase de construction associée';
+COMMENT ON COLUMN btp.project_phases.construction_stage IS 'Étape de construction associée';
+COMMENT ON COLUMN btp.project_phases.custom_phase_data IS 'Données personnalisées de la phase (JSON)';
+COMMENT ON COLUMN btp.project_phases.materials IS 'Matériaux associés (JSON)';
+COMMENT ON COLUMN btp.project_phases.human_resources IS 'Ressources humaines associées (JSON)';
+COMMENT ON COLUMN btp.project_phases.suppliers IS 'Fournisseurs associés (JSON)';
+COMMENT ON COLUMN btp.project_phases.location IS 'Localisation géographique de la phase';
+COMMENT ON COLUMN btp.project_phases.weight IS 'Poids de la phase dans le projet';
+COMMENT ON COLUMN btp.project_phases.order_index IS 'Ordre d''exécution de la phase';
+
+
+-- PARTIE 3 : SUPPRESSION DES VUES RÉCURSIVES (POUR ÉVITER LES ERREURS FUTURES)
+-- =============================================================================
+-- Les vues récursives (vue qui porte le même nom que la table) sont inutiles dans Supabase.
+-- Elles sont supprimées pour garantir la stabilité des futures migrations.
+/*
+DROP VIEW IF EXISTS btp.project_phases CASCADE;
+DROP VIEW IF EXISTS btp.projects CASCADE;
+*/
+
+-- PARTIE 4 : RECHARGEMENT DU SCHÉMA POUR PostgREST
+-- =============================================================================
+NOTIFY pgrst, 'reload schema';
