@@ -1525,7 +1525,6 @@ export const translations = {
                 notifications: { title: "Notifications", description: "Centre d'alertes" },
                 enhanced: { title: "Tableau de bord avancé", description: "Analytique étendue" },
                 profile: { title: "Profil", description: "Préférences personnelles" }
-                }
             },
             features: {
                 title: "Fonctionnalités principales",
@@ -3058,7 +3057,6 @@ export const translations = {
                 notifications: { title: "الإشعارات", description: "مركز التنبيهات" },
                 enhanced: { title: "لوحة قيادة متقدمة", description: "تحليلات موسعة" },
                 profile: { title: "الملف الشخصي", description: "التفضيلات الشخصية" }
-                }
             },
             features: {
                 title: "الميزات",
@@ -4506,7 +4504,6 @@ procurement_features: {
                 notifications: { title: "Notifications", description: "Alert center" },
                 enhanced: { title: "Advanced dashboard", description: "Extended analytics" },
                 profile: { title: "Profile", description: "Personal preferences" }
-                }
             },
             features: {
                 title: "Features",
