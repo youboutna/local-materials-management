@@ -1997,70 +1997,43 @@ export type Database = {
       }
       project_milestones: {
         Row: {
-          completed_date: string | null
+          completion_date: string | null
           created_at: string | null
           created_by: string | null
-          dependencies: Json | null
           description: string | null
           id: string
-          notes: string | null
-          phase_id: string | null
-          priority: string | null
+          progress_percentage: number | null
           project_id: string
-          stage_type: string | null
           status: string | null
           target_date: string | null
           title: string
-          type: string | null
           updated_at: string | null
-          weight: number | null
-          material_usage: Json
-          material_cost_estimate: number | null
-          actual_material_cost: number | null
         }
         Insert: {
-          completed_date?: string | null
+          completion_date?: string | null
           created_at?: string | null
           created_by?: string | null
-          dependencies?: Json | null
           description?: string | null
           id?: string
-          notes?: string | null
-          phase_id?: string | null
-          priority?: string | null
+          progress_percentage?: number | null
           project_id: string
-          stage_type?: string | null
           status?: string | null
           target_date?: string | null
           title: string
-          type?: string | null
           updated_at?: string | null
-          weight?: number | null
-          material_usage?: Json
-          material_cost_estimate?: number | null
-          actual_material_cost?: number | null
         }
         Update: {
-          completed_date?: string | null
+          completion_date?: string | null
           created_at?: string | null
           created_by?: string | null
-          dependencies?: Json | null
           description?: string | null
           id?: string
-          notes?: string | null
-          phase_id?: string | null
-          priority?: string | null
+          progress_percentage?: number | null
           project_id?: string
-          stage_type?: string | null
           status?: string | null
           target_date?: string | null
           title?: string
-          type?: string | null
           updated_at?: string | null
-          weight?: number | null
-          material_usage?: Json
-          material_cost_estimate?: number | null
-          actual_material_cost?: number | null
         }
         Relationships: [
           {
@@ -4528,6 +4501,54 @@ export type Database = {
           superior_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      enhanced_project_milestones: {
+        Row: {
+          completed_date: string | null
+          created_at: string | null
+          dependencies: Json | null
+          description: string | null
+          id: string | null
+          notes: string | null
+          phase_id: string | null
+          project_id: string | null
+          status: string | null
+          target_date: string | null
+          title: string | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          completed_date?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          phase_id?: string | null
+          project_id?: string | null
+          status?: string | null
+          target_date?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          completed_date?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          phase_id?: string | null
+          project_id?: string | null
+          status?: string | null
+          target_date?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weight?: number | null
         }
         Relationships: []
       }
