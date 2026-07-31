@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAppConfig, AuthProvider } from '@/config/app';
 import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthManager';
 import { UnifiedUser, UnifiedSession, UnifiedAuthContextType, AuthUser } from '@/dtos/entities/AuthDTO';
+import { DEV_MODE, getDevUsersSnapshot } from '@/config/constants';
 
 const UnifiedAuthContext = createContext<UnifiedAuthContextType | undefined>(undefined);
 
@@ -401,11 +402,23 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       console.log('🆔 Attempting national ID sign in...');
+
+      if (DEV_MODE) {
+        const localProfile = Object.values(getDevUsersSnapshot()).find(
+          (candidate) => candidate.user_metadata.national_id.trim().toLowerCase() === nationalId.trim().toLowerCase(),
+        );
+        if (!localProfile) {
+          throw new Error("Aucun compte associé à cet ID national.");
+        }
+        await signIn(localProfile.email, password);
+        return;
+      }
       
-      // Query profiles table to find user ID associated with national ID
+      // Profiles may carry the provider email in provider_data. Never query a
+      // public users mirror: authentication identities remain owned by Auth.
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('provider_data')
         .eq('national_id', nationalId)
         .maybeSingle();
       
@@ -423,25 +436,22 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // Get the user email using a direct query to the users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', profile.id)
-        .single();
-      
-      if (userError || !userData?.email) {
-        console.error('❌ User lookup error:', userError);
+      const providerData = profile.provider_data;
+      const email = providerData && typeof providerData === 'object' && !Array.isArray(providerData)
+        ? providerData.email
+        : undefined;
+
+      if (typeof email !== 'string' || !email) {
         toast({
           title: t('common.error'),
-          description: "Erreur lors de la récupération de l'email utilisateur.",
+          description: "Ce profil ne permet pas la connexion par ID national.",
           variant: "destructive"
         });
         return;
       }
       
       // Sign in with the found email
-      await signIn(userData.email, password);
+      await signIn(email, password);
     } catch (error) {
       console.error('National ID sign in error:', error);
       throw error;

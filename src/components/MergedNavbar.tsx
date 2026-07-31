@@ -60,8 +60,8 @@ const MergedNavbar = () => {
   const location = useLocation();
 
   // Check authentication
-  const isUserAuthenticated = DEV_MODE || !!authUser || isAuthenticated;
-  const canManageUsers = DEV_MODE || hasAnyRole(["admin", "director"]);
+  const isUserAuthenticated = !!authUser || isAuthenticated;
+  const canManageUsers = hasAnyRole(["admin", "director"]);
   const isSupplier = hasAnyRole(["supplier"]);
   const isSupplierOnly =
     isSupplier && !hasAnyRole(["admin", "director", "manager", "agent"]);

@@ -178,8 +178,8 @@ function buildConfig(): AppConfig {
     defaults.auth.url;
 
   const anonKey =
-    envOpt('VITE_SUPABASE_ANON_KEY') ??
     envOpt('VITE_SUPABASE_PUBLISHABLE_KEY') ??
+    envOpt('VITE_SUPABASE_ANON_KEY') ??
     defaults.auth.anonKey;
 
   const projectId = envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
