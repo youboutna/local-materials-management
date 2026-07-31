@@ -32,6 +32,8 @@ export interface ReferentialPhase {
   description?: MultiLanguageLabel;
   steps: ReferentialStep[];
   order: number;
+  defaultDurationDays?: number;
+  dqeMapping?: { categories: string[]; defaultDurationDays: number };
 }
 
 export interface ProjectReferential {
@@ -43,6 +45,8 @@ export interface ProjectReferential {
   requiresMinistryApproval: boolean;
   paymentWorkflow: 'standard' | 'simplified' | 'custom';
   procurementTypes?: string[];
+  regulatoryDeadlines?: Record<string, { launch: number; analysis: number; attribution: number }>;
+  marketTypeToDQECategory?: Record<string, string[]>;
   phases: ReferentialPhase[];
 }
 
@@ -74,6 +78,7 @@ export const somelecReferential: ProjectReferential = {
         en: 'Pre-feasibility and Preliminary Studies'
       },
       order: 1,
+      dqeMapping: { categories: ['MOBILISATION', 'GENIE_CIVIL'], defaultDurationDays: 90 },
       steps: [
         {
           code: 'NEEDS_ASSESSMENT',
@@ -158,6 +163,7 @@ export const somelecReferential: ProjectReferential = {
         en: 'Design and Tender Dossier'
       },
       order: 2,
+      dqeMapping: { categories: ['GENIE_CIVIL', 'EQUIPEMENT', 'PRESTATIONS'], defaultDurationDays: 150 },
       steps: [
         {
           code: 'PRELIMINARY_DESIGN',
@@ -278,6 +284,7 @@ export const somelecReferential: ProjectReferential = {
         en: 'Execution'
       },
       order: 3,
+      dqeMapping: { categories: ['GENIE_CIVIL', 'EQUIPEMENT', 'POSE_RESEAU', 'TESTS'], defaultDurationDays: 300 },
       steps: [
         {
           code: 'MOBILIZATION',
@@ -362,6 +369,7 @@ export const somelecReferential: ProjectReferential = {
         en: 'Handover & Warranty'
       },
       order: 4,
+      dqeMapping: { categories: ['RECEPTION', 'TESTS'], defaultDurationDays: 180 },
       steps: [
         {
           code: 'PROVISIONAL_ACCEPTANCE',

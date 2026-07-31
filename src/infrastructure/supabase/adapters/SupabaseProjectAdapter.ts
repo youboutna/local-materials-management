@@ -143,6 +143,16 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     return ProjectTransformer.fromSupabase(data as Record<string, unknown>);
   }
 
+  async assignOrganizationToAll(organizationId: string): Promise<number> {
+    const { data, error } = await supabase
+      .from('projects')
+      .update({ organization_id: organizationId } as Record<string, unknown>)
+      .not('id', 'is', null)
+      .select('id');
+    if (error) throw error;
+    return data?.length ?? 0;
+  }
+
   async delete(id: string): Promise<void> {
     if (!id || id.trim() === '') {
       throw new Error('Invalid project ID provided');

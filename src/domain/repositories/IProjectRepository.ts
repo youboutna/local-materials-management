@@ -52,6 +52,8 @@ export interface IProjectRepository {
    */
   update(id: string, updates: Partial<Project>): Promise<Project>;
 
+  assignOrganizationToAll(organizationId: string): Promise<number>;
+
   /**
    * Delete project
    */

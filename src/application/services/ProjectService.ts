@@ -220,6 +220,11 @@ export class ProjectService {
     await this.delete(id);
   }
 
+  async assignOrganizationToAll(organizationId: string): Promise<number> {
+    if (!organizationId) throw new ValidationError('Organization ID is required');
+    return this.projectRepository.assignOrganizationToAll(organizationId);
+  }
+
   // =================== SPECIALIZED QUERIES ===================
 
   /**

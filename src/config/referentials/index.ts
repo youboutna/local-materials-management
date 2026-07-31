@@ -151,6 +151,7 @@ export {
 // PTBA/PPM/PED/TBI — référentiels transverses (alignement docs/ARCHITECTURE_REFERENTIELS.md)
 export * from './indicator-templates.referential';
 export * from './deviation-rules.referential';
+export * from './dqe-context-mapping.referential';
 export * from './weighting-models.referential';
 
 // HadraTech-GPI — référentiels métiers transverses (rapports, vues, DQE, santé).

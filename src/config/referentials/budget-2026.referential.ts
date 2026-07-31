@@ -36,6 +36,9 @@ interface BudgetLine {
   climate?: 'Adaptation' | 'Atténuation' | 'Neutre';
   donor?: string;
   financeType?: 'domestic' | 'grant' | 'loan' | 'mixed';
+  projectTypes?: string[];
+  phaseMapping?: { default: string; phases: string[] };
+  supplierTypes?: string[];
 }
 
 interface BudgetChapter {
@@ -4142,7 +4145,10 @@ export const budget2026Referential: BudgetMinistry[] = [
                   {
                     code: '82_056_01_DGEER_11',
                     label: { code: 'LN_EXTENSION_DUAL_180MW', fr: 'Projet d\'extension de la centrale "Dual" 180 MW d\'une Capacité de 60 MW', ar: 'مشروع توسيع محطة "دوال" 180 ميجاوات بقدرة 60 ميجاوات', en: 'Extension Project of the "Dual" 180 MW Plant with 60 MW Capacity' },
-                    ce: 1550000000, cp: 1550000000, climate: 'Atténuation'
+                    ce: 1550000000, cp: 1550000000, climate: 'Atténuation',
+                    projectTypes: ['CENTRALE_SOLAIRE', 'CENTRALE_THERMIQUE'],
+                    phaseMapping: { default: 'EXECUTION', phases: ['PRE_FEASIBILITY', 'DESIGN_DAO', 'EXECUTION', 'HANDOVER'] },
+                    supplierTypes: ['contractant_principal', 'fournisseur']
                   },
                   {
                     code: '82_056_01_DGEER_12',

@@ -13,18 +13,26 @@
  *   en incluant la zone d'intervention (interventionZone) lorsqu'elle existe.
  */
 
+import { MilestoneService } from '@/application/services/MilestoneService';
+import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectService } from '@/application/services/ProjectService';
-import type { ReferentialType } from '@/config/referentials';
+import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
+import { getReferential, type ReferentialType } from '@/config/referentials';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
+import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type {
-    CreateProjectDTO,
-    ProjectDTO,
+  CreateProjectDTO,
+  ProjectDTO,
 } from '@/dtos/entities/ProjectDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
-export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status'>> {
+export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders'>> {
   title: string;
   description?: string;
   location?: string;
@@ -42,6 +50,51 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   interventionZones?: InterventionZoneDTO[];
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: ReferentialType;
+  externalRef?: string;
+  organizationId?: string;
+  budgetSources?: Array<Record<string, unknown>>;
+  phases?: ProjectImportPhase[];
+  stakeholders?: ProjectImportStakeholder[];
+}
+
+export interface ProjectImportPhase {
+  name: string;
+  code?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  durationDays?: number;
+  order?: number;
+  milestones?: ProjectImportMilestone[];
+  tasks?: ProjectImportTask[];
+  dqeLines?: BoqLineDTO[];
+}
+
+export interface ProjectImportMilestone {
+  title?: string;
+  name?: string;
+  description?: string;
+  targetDate?: string;
+  target_date?: string;
+  status?: string;
+  progress?: number;
+}
+
+export interface ProjectImportTask {
+  title?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+  due_date?: string;
+  assignedTo?: string[];
+}
+
+export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
+  organizationId?: string;
+  externalRef?: string;
+  role?: string;
 }
 
 
@@ -52,6 +105,7 @@ export interface ProjectImportResult {
   failed: number;
   errors: Array<{ row: number; title: string; message: string }>;
   createdIds: string[];
+  details: { phases: number; milestones: number; tasks: number; dqeLines: number; stakeholders: number };
 }
 
 export type ProjectExportFormat = 'json' | 'csv' | 'excel-rows';
@@ -59,11 +113,22 @@ export type ProjectExportFormat = 'json' | 'csv' | 'excel-rows';
 export interface ProjectExportOptions {
   format: ProjectExportFormat;
   includeInterventionZone?: boolean;
+  includeRelations?: boolean;
   ids?: string[];
 }
 
+export interface ProjectImportDataset {
+  projects: ProjectImportRow[];
+}
+
 export class ProjectImportExportService {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly phaseService = new PhaseService(),
+    private readonly milestoneService = new MilestoneService(),
+    private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
+    private readonly stakeholderService = new ProjectStakeholderService(),
+  ) {}
 
   static default(): ProjectImportExportService {
     return new ProjectImportExportService(
@@ -72,6 +137,40 @@ export class ProjectImportExportService {
   }
 
   // ============= IMPORT =============
+ 
+
+validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string; message: string }> {
+  const errors: Array<{ row: number; title: string; message: string }> = [];
+  const keys = new Set<string>();
+  rows.forEach((row, index) => {
+    const title = row.title?.trim() || '(empty)';
+    const key = (row.externalRef || title).toLowerCase();
+    if (!row.title?.trim()) {
+      errors.push({ row: index + 1, title, message: 'Missing title' });
+    } else if (keys.has(key)) {
+      errors.push({ row: index + 1, title, message: `Duplicate import key: ${key}` });
+    } else {
+      keys.add(key);
+    }
+    // NOUVEAU: Vérifier location
+    if (!row.location?.trim() && !row.interventionZone?.address && !row.interventionZones?.length) {
+      errors.push({ row: index + 1, title, message: 'Missing location or intervention zone' });
+    }
+    (row.phases ?? []).forEach((phase, phaseIndex) => {
+      if (!phase.name?.trim()) {
+        errors.push({ row: index + 1, title, message: `Phase ${phaseIndex + 1} is missing a name` });
+      }
+    });
+  });
+  return errors;
+}
+
+  async importDataset(dataset: ProjectImportDataset): Promise<ProjectImportResult> {
+    if (!dataset || !Array.isArray(dataset.projects)) {
+      throw new Error('Invalid import dataset: projects must be an array');
+    }
+    return this.importProjects(dataset.projects);
+  }
 
   async importProjects(rows: ProjectImportRow[]): Promise<ProjectImportResult> {
     const result: ProjectImportResult = {
@@ -81,7 +180,13 @@ export class ProjectImportExportService {
       failed: 0,
       errors: [],
       createdIds: [],
+      details: { phases: 0, milestones: 0, tasks: 0, dqeLines: 0, stakeholders: 0 },
     };
+
+    const validationErrors = this.validateImportRows(rows);
+    const invalidRows = new Set(validationErrors.map((error) => error.row));
+    result.errors.push(...validationErrors);
+    result.failed += validationErrors.length;
 
     let existingTitles = new Set<string>();
     try {
@@ -95,6 +200,7 @@ export class ProjectImportExportService {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const titleKey = (row.title || '').trim().toLowerCase();
+      if (invalidRows.has(i + 1)) continue;
       if (!titleKey) {
         result.failed += 1;
         result.errors.push({ row: i + 1, title: '(empty)', message: 'Missing title' });
@@ -108,6 +214,7 @@ export class ProjectImportExportService {
       try {
         const dto = this.toCreateDTO(row);
         const created = await this.projectService.createProject(dto);
+        await this.importRelations(created.id, row, result.details);
         result.imported += 1;
         if (created?.id) result.createdIds.push(created.id);
         existingTitles.add(titleKey);
@@ -140,7 +247,7 @@ export class ProjectImportExportService {
       currency: row.currency ?? 'MRU',
       startDate: row.startDate ?? new Date().toISOString(),
       endDate: row.endDate,
-      location: row.location ?? firstZone?.address ?? '',
+      location: row.location?.trim() || firstZone?.address?.trim() || 'Adresse non spécifiée',
       latitude: row.latitude ?? firstZone?.coordinates?.[0]?.lat,
       longitude: row.longitude ?? firstZone?.coordinates?.[0]?.lng,
       teamSize: row.teamSize ?? 0,
@@ -151,10 +258,91 @@ export class ProjectImportExportService {
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
+      organizationId: row.organizationId,
+      externalRef: row.externalRef,
+      budgetSources: row.budgetSources,
       interventionZones: zones,
       interventionZone: firstZone,
     } as CreateProjectDTO;
     return dto;
+  }
+
+  /** Persiste les relations après la création du projet, en conservant l’ordre des clés étrangères. */
+  private async importRelations(
+    projectId: string,
+    row: ProjectImportRow,
+    details: ProjectImportResult['details'],
+  ): Promise<void> {
+    for (const phase of row.phases ?? []) {
+      const phaseConfig = row.referentialCode
+        ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
+        : undefined;
+      const createdPhase = await this.phaseService.createPhase({
+        id: crypto.randomUUID(),
+        projectId,
+        name: phase.name,
+        description: phase.description,
+        type: 'execution' as PhaseDTO['type'],
+        orderIndex: phase.order,
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
+        customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
+      } as PhaseDTO, projectId);
+      details.phases += 1;
+
+      for (const milestone of phase.milestones ?? []) {
+        await this.milestoneService.createMilestone({
+          project_id: projectId,
+          phase_id: createdPhase.id,
+          title: milestone.title ?? milestone.name ?? 'Jalon importé',
+          description: milestone.description,
+          target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
+          status: milestone.status as 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined,
+          progress: milestone.progress,
+        });
+        details.milestones += 1;
+      }
+
+      for (const task of phase.tasks ?? []) {
+        await this.taskService.createTask({
+          projectId,
+          phaseId: createdPhase.id,
+          title: task.title ?? task.name ?? 'Tâche importée',
+          description: task.description,
+          status: task.status as TaskStatus | undefined,
+          priority: task.priority as TaskPriority | undefined,
+          dueDate: task.due_date ?? task.dueDate,
+          assignedTo: task.assignedTo,
+        });
+        details.tasks += 1;
+      }
+
+      const dqeLines = (phase.dqeLines ?? []).map((line) => ({
+        ...line,
+        source: 'dqe' as const,
+        contextId: projectId,
+        phaseId: createdPhase.id,
+      }));
+      if (dqeLines.length > 0) {
+        await boqRepository.bulkCreate(dqeLines);
+        details.dqeLines += dqeLines.length;
+      }
+    }
+
+    for (const stakeholder of row.stakeholders ?? []) {
+      if (!stakeholder.supplierId && stakeholder.stakeholderEntityType !== 'employee') continue;
+      await this.stakeholderService.addStakeholder({
+        projectId,
+        stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
+        stakeholderEntityType: stakeholder.stakeholderEntityType ?? 'supplier',
+        supplierId: stakeholder.supplierId,
+        employeeId: stakeholder.employeeId,
+        roleDescription: stakeholder.roleDescription ?? stakeholder.role,
+        isPrimary: stakeholder.isPrimary,
+      });
+      details.stakeholders += 1;
+    }
   }
 
   // ============= EXPORT =============
@@ -171,7 +359,9 @@ export class ProjectImportExportService {
       : all;
 
     const includeZone = opts.includeInterventionZone ?? true;
-    const enriched = selected.map((p) => this.toExportRow(p, includeZone));
+    const enriched = opts.includeRelations
+      ? await Promise.all(selected.map((p) => this.toExportRowWithRelations(p, includeZone)))
+      : selected.map((p) => this.toExportRow(p, includeZone));
 
     switch (opts.format) {
       case 'json':
@@ -197,6 +387,36 @@ export class ProjectImportExportService {
           rows: enriched,
         };
     }
+  }
+
+  public toImportRow(p: ProjectDTO): ProjectImportRow {
+    return {
+      title: p.title,
+      description: p.description,
+      status: p.status,
+      progress: p.progress,
+      budget: p.budget,
+      currency: p.currency,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      location: p.location,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      teamSize: p.teamSize,
+      interventionZones: p.interventionZones,
+    };
+  }
+
+  private async toExportRowWithRelations(p: ProjectDTO, includeZone: boolean): Promise<Record<string, unknown>> {
+    const base = this.toExportRow(p, includeZone);
+    const phases = await this.phaseService.getPhasesByProject(p.id);
+    const phaseRows = await Promise.all(phases.map(async (phase) => ({
+      ...phase,
+      milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
+      tasks: await this.taskService.getTasksByPhase(phase.id),
+      dqeLines: await boqRepository.list({ source: 'dqe', contextId: p.id, projectId: p.id, phaseId: phase.id }),
+    })));
+    return { ...base, phases: phaseRows };
   }
 
   private toExportRow(p: ProjectDTO, includeZone: boolean): Record<string, unknown> {

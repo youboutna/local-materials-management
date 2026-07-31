@@ -115,6 +115,8 @@ import { IContactMessageRepository } from '@/domain/repositories/IContactMessage
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { IHierarchyRepository } from '@/domain/repositories/IHierarchyRepository';
+import { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
+import { IOrganizationHierarchyRepository } from '@/domain/repositories/IOrganizationHierarchyRepository';
 import { IInspectionExecutionRepository } from '@/domain/repositories/IInspectionExecutionRepository';
 import { IInspectionPaymentValidationRepository } from '@/domain/repositories/IInspectionPaymentValidationRepository';
 import { IInspectionPermissionRepository } from '@/domain/repositories/IInspectionPermissionRepository';
@@ -152,6 +154,8 @@ import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRepository';
 import { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
+import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
+import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
 
 // ================================================================
@@ -196,6 +200,8 @@ interface RepositoryRegistry {
   risk?: IRiskRepository;
   supplier?: ISupplierRepository;
   hierarchy?: IHierarchyRepository;
+  organization?: IOrganizationRepository;
+  organizationHierarchy?: IOrganizationHierarchyRepository;
   inspectionScheduling?: IInspectionSchedulingRepository;
   quantityTakeoff?: IQuantityTakeoffRepository;
   inspectionExecution?: IInspectionExecutionRepository;
@@ -363,6 +369,18 @@ export class RepositoryFactory {
     if (registry.phase) return registry.phase;
     registry.phase = new SupabasePhaseAdapter();
     return registry.phase;
+  }
+
+  static getOrganizationRepository(): IOrganizationRepository {
+    if (registry.organization) return registry.organization;
+    registry.organization = new SupabaseOrganizationAdapter();
+    return registry.organization;
+  }
+
+  static getOrganizationHierarchyRepository(): IOrganizationHierarchyRepository {
+    if (registry.organizationHierarchy) return registry.organizationHierarchy;
+    registry.organizationHierarchy = new SupabaseOrganizationHierarchyAdapter();
+    return registry.organizationHierarchy;
   }
 
   static getTaskRepository(): ITaskRepository {

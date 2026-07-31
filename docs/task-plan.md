@@ -4,10 +4,11 @@
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier  
-**OBJECTIVE FINALE** : **Phase Finale - $%100$% Complète-> o missing TypeScript Error Handling and 100% DB CRUD/UI**  
+**OBJECTIF FINAL** : achever la migration hexagonale, sécuriser le typage et valider les parcours CRUD de production.
 **Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)  
 
 ---
+ne pas changer le fichier .env
 en phase de migration :
 
 ```
@@ -53,8 +54,32 @@ Rôle : Interface pour accéder aux données
 Responsabilité : Définir les contrats pour les données
 Usage : Utilisés par les services
 
-## 📊 **ÉTAT ACTUEL DE LA MIGRATION - todo 2026**
-todo
+## 📊 ÉTAT ACTUEL DE LA MIGRATION — 31/07/2026
+
+### Constats vérifiés
+
+- [x] Les services, repositories, DTOs, hooks et adapters d’organisation sont présents dans le dépôt.
+- [x] Une migration Supabase locale couvre le lien organisationnel utilisé par l’import projet.
+- [x] Le référentiel des marchés publics mauritaniens et les référentiels associés sont centralisés dans `src/config/referentials/`.
+- [x] Les pages Projets, Détails projet, Phases et Jalons disposent déjà d’une base CRUD et de vues de suivi.
+- [ ] Le nombre d’accès Supabase directs, les erreurs TypeScript et les types `any` restants doivent être mesurés avant de déclarer la migration terminée.
+- [ ] Les parcours CRUD doivent être couverts par des tests de services, d’adapters et de composants.
+
+### Décision de pilotage
+
+La migration reste **en cours**. Les changements locaux ne sont considérés comme terminés qu’après validation du build, du lint, des tests, de la migration DB et des parcours CRUD concernés. Toute nouvelle fonctionnalité hors de ce périmètre est gelée jusqu’à la clôture.
+
+### Indicateurs de sortie
+
+| Indicateur | Cible | Preuve attendue |
+|---|---:|---|
+| Build TypeScript/Vite | 0 erreur | `npm run build` |
+| Lint | 0 erreur bloquante | `npm run lint` |
+| Tests | 100 % des tests passants | `npm run test` ou commande Vitest équivalente |
+| Supabase direct dans composants/hooks | 0 accès métier | recherche `grep -RIn 'supabase\\.' src/components src/hooks` |
+| DTOs exposés à l’UI | camelCase uniquement | revue des DTOs et transformers |
+| Domaine | 0 import technique | revue `src/domain/` |
+| CRUD prioritaire | lecture, création, modification, suppression | tests + vérification manuelle |
 
 ## 🎯 Objectif
 
@@ -129,6 +154,19 @@ Mettre en œuvre, migrer ou refactoriser le système en respectant **strictement
 
 Ce plan est **opérationnel** et **séquentiel**.  
 Les étapes doivent être suivies **dans l’ordre**.
+
+## 🔁 Ordre de résolution prioritaire — UI vers DB
+
+La migration commence par la frontière visible par l’utilisateur, puis remonte la chaîne technique uniquement lorsque le contrat l’exige :
+
+1. **UI** : identifier le champ, son état de chargement/erreur et le payload réellement envoyé.
+2. **DTO** : ajouter ou corriger le type camelCase et sa validation d’entrée.
+3. **Transformer** : tester les conversions UI/DTO et DTO/entité, y compris `null`, `undefined` et les données partielles.
+4. **Service et domaine** : appliquer les règles métier sans dépendance technique.
+5. **Repository et adapter** : convertir vers le snake_case DB et encapsuler Supabase.
+6. **Retour UI** : vérifier le rendu, la mutation, l’invalidation du cache et le message d’erreur.
+
+Pour toute erreur TypeScript à la frontière UI/DTO, localiser d’abord la source (schéma DB, réponse API ou composant), choisir le chemin de propagation minimal, modifier les couches dans cet ordre, puis valider le transformer avant de corriger l’écran.
 
 ## 🧭 Phase 0 — Pré-requis (OBLIGATOIRE)
 
@@ -446,9 +484,20 @@ il n’a probablement pas sa place là.
 
 
 
-## **🔍 OUTILS D'ANALYSE DYNAMIQUE**
+## 🔍 Analyse dynamique
 
-### **Script PowerShell d'analyse (à exécuter en temps réel)**
+Les chiffres d’architecture doivent être recalculés depuis le dépôt avant chaque revue. Le bloc PowerShell ci-dessous est conservé comme référence historique; sous Linux, utiliser les commandes suivantes :
+
+```bash
+find src/components -type f -name '*.tsx' | wc -l
+find src/hooks -type f -name '*.ts' -print0 | xargs -0 grep -l 'supabase\.' 2>/dev/null | wc -l
+grep -RIn 'supabase\.' src/components src/hooks 2>/dev/null || true
+grep -RInE '(^|[^A-Za-z])any([^A-Za-z]|$)' src/components src/hooks src/application 2>/dev/null || true
+```
+
+Les résultats doivent être consignés dans la revue de migration, jamais présentés comme des valeurs fixes dans ce plan.
+
+### Référence historique — script PowerShell
 ```powershell
 # Script d'analyse complète
 Write-Host "🔍 ANALYSE COMPLÈTE DE LA MIGRATION HEXAGONALE" -ForegroundColor Green
@@ -531,7 +580,6 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 
 # Les résultats changent à chaque exécution selon l'état du code
 ```
-todo 
 ---
 ---
 
@@ -557,5 +605,70 @@ todo
 - Tap target ≥ 44×44 sur mobile (`min-h-11 min-w-11`).
 
 ### Hors scope explicite
-- Aucune migration DB.
-- Aucune modification des services `src/application/services/*` ni des adapters.
+- Aucune nouvelle fonctionnalité hors migration et validation.
+- Les migrations DB et les adapters existants sont modifiés uniquement lorsqu’ils sont nécessaires à un parcours CRUD prioritaire et couverts par une preuve.
+
+---
+
+## 🚦 Séquence d’exécution finale
+
+### Lot A — Socle et contrats
+
+- [ ] Valider `src/integrations/supabase/types.ts` après la dernière migration.
+- [ ] Comparer les tables réellement utilisées avec `sql/`, `supabase/migrations/` et les adapters.
+- [ ] Finaliser les entités, repositories, DTOs et transformers manquants.
+- [ ] Ajouter les tests unitaires des règles métier et des mappings snake_case/camelCase.
+
+**Sortie du lot :** les contrats compilent et aucun type DB ne fuit vers le domaine ou l’UI.
+
+### Lot B — Persistance et services
+
+- [ ] Finaliser les adapters Supabase pour les agrégats prioritaires : projets, organisations, phases, jalons, tâches et matériaux.
+- [ ] Couvrir chaque opération CRUD par un test d’adapter avec succès, absence de résultat et erreur réseau/DB.
+- [ ] Centraliser les erreurs dans un type applicatif stable; ne jamais exposer l’erreur brute de Supabase à l’UI.
+- [ ] Vérifier les règles de rôles et d’accès sur lecture, écriture et suppression.
+
+**Sortie du lot :** les services orchestrent uniquement le domaine et les repositories; les adapters restent les seuls propriétaires de Supabase.
+
+### Lot C — Hooks et écrans
+
+- [ ] Remplacer chaque accès Supabase direct restant dans `src/components/` et `src/hooks/`.
+- [ ] Brancher les hooks hexagonaux sur les écrans CRUD prioritaires.
+- [ ] Vérifier les états chargement, vide, succès et erreur pour chaque mutation.
+- [ ] Vérifier accessibilité, confirmation de suppression, invalidation du cache et navigation après mutation.
+
+**Sortie du lot :** un utilisateur peut créer, consulter, modifier et supprimer les objets prioritaires depuis l’UI sans accès technique direct.
+
+### Lot D — Référentiels et import/export
+
+- [ ] Vérifier que chaque code de procédure, phase, catégorie et règle référentielle est typé et localisable.
+- [ ] Valider l’import avec données valides, champs absents, doublons et organisation inconnue.
+- [ ] Valider l’export et la réimportation sans perte des champs métier.
+- [ ] Documenter les changements de schéma et régénérer les types Supabase si nécessaire.
+
+**Sortie du lot :** les référentiels déterminent le comportement métier sans constantes dupliquées dans les composants.
+
+### Lot E — Nettoyage legacy et release
+
+- [ ] Migrer les services legacy encore utilisés, puis supprimer les chemins morts.
+- [ ] Réduire à zéro les `any` des parcours prioritaires; chaque exception documentée doit être approuvée.
+- [ ] Mettre à jour `docs/ARCHITECTURE.md`, `docs/CONTEXT.md` et ce plan avec les résultats réels.
+- [ ] Exécuter les validations finales et effectuer une recette manuelle des parcours CRUD.
+
+**Sortie du lot :** build, lint et tests passent; les critères de sortie du tableau initial sont tous démontrés par une preuve.
+
+## ✅ Procédure de clôture
+
+1. Exécuter `npm run build`, `npm run lint` et `npx vitest run` (aucun script `test` n’est déclaré actuellement).
+2. Appliquer les migrations sur une base de validation et vérifier les opérations CRUD prioritaires.
+3. Consigner les compteurs avant/après, les tests exécutés et les écarts restants.
+4. Marquer une case `[x]` uniquement quand sa preuve est disponible dans le commit ou le rapport de validation.
+5. Déclarer **GO** seulement si aucun critère bloquant ne reste ouvert; sinon déclarer **NO GO** avec propriétaire et prochaine action.
+
+## 📌 Registre des écarts
+
+| Écart | Impact | Propriétaire | Prochaine action | Échéance |
+|---|---|---|---|---|
+| Suite `EnhancedValidationIntegration.test.ts` dépend de `@jest/globals` | Bloque Vitest | À assigner | Migrer la suite vers Vitest ou l’exclure de la configuration Vitest documentée | Avant GO |
+| `RepositoryFactory.providers.test.ts` attend `SupabaseStorageProvider`, mais reçoit `SupabaseStorageAdapter` | 1 test en échec | À assigner | Aligner le test et le contrat sur l’implémentation retenue | Avant GO |
+| `npm run lint` est bloqué par les permissions de `supabase/docker/volumes/db/data` | Lint non qualifié | Environnement | Exclure le volume de la portée ESLint ou corriger ses permissions, puis relancer | Avant GO |

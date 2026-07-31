@@ -31,6 +31,9 @@ export interface IndicatorTemplate {
   thresholds: IndicatorThresholds;
   /** Codes des types de projet pour lesquels l'indicateur est pertinent. Vide = tous. */
   applicableProjectTypes?: string[];
+  applicableTo?: Array<'project' | 'phase' | 'task'>;
+  dataSource?: 'planning' | 'budget' | 'dqe' | 'inspection' | 'manual';
+  calculationFrequency?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'on_demand';
 }
 
 export const INDICATOR_TEMPLATES: IndicatorTemplate[] = [
@@ -43,6 +46,7 @@ export const INDICATOR_TEMPLATES: IndicatorTemplate[] = [
     direction: 'higher_is_better',
     formula: 'earnedValue / actualCost',
     thresholds: { red: 0.9, amber: 1.0 },
+    applicableTo: ['project', 'phase'], dataSource: 'budget', calculationFrequency: 'monthly',
   },
   {
     code: 'SPI',
@@ -53,6 +57,7 @@ export const INDICATOR_TEMPLATES: IndicatorTemplate[] = [
     direction: 'higher_is_better',
     formula: 'earnedValue / plannedValue',
     thresholds: { red: 0.9, amber: 1.0 },
+    applicableTo: ['project', 'phase', 'task'], dataSource: 'planning', calculationFrequency: 'weekly',
   },
   {
     code: 'TEP',
@@ -63,6 +68,7 @@ export const INDICATOR_TEMPLATES: IndicatorTemplate[] = [
     direction: 'higher_is_better',
     formula: 'Σ(taskProgress × taskWeight) / Σ(taskWeight)',
     thresholds: { red: 50, amber: 75 },
+    applicableTo: ['project', 'phase', 'task'], dataSource: 'planning', calculationFrequency: 'weekly',
   },
   {
     code: 'TEF',

@@ -54,6 +54,18 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
     'CI',
     'EXECUTION'
   ],
+  regulatoryDeadlines: {
+    AOO_PREQUALIF: { launch: 45, analysis: 30, attribution: 15 }, AOO_SANS_PREQUALIF: { launch: 30, analysis: 21, attribution: 10 },
+    AO_2_ETAPES: { launch: 60, analysis: 45, attribution: 15 }, AOR: { launch: 30, analysis: 15, attribution: 7 },
+    CS: { launch: 15, analysis: 10, attribution: 5 }, ED: { launch: 0, analysis: 0, attribution: 0 },
+    SFQC: { launch: 30, analysis: 20, attribution: 10 }, SMC: { launch: 15, analysis: 10, attribution: 5 },
+    SBD: { launch: 30, analysis: 15, attribution: 7 }, SFQT: { launch: 20, analysis: 15, attribution: 7 },
+    QC: { launch: 30, analysis: 20, attribution: 10 }, CI: { launch: 10, analysis: 7, attribution: 5 }, EXECUTION: { launch: 0, analysis: 0, attribution: 0 },
+  },
+  marketTypeToDQECategory: {
+    Travaux: ['GENIE_CIVIL', 'POSE_RESEAU', 'MOBILISATION'], Fournitures: ['EQUIPEMENT', 'MATERIAUX'],
+    'Prestations intellectuelles': ['PRESTATIONS', 'CONSEIL', 'FORMATION'], 'Services Courants': ['SERVICES', 'MAINTENANCE'],
+  },
   phases: [
     {
       code: 'PLANIFICATION',
@@ -64,6 +76,7 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
         en: 'Planning'
       },
       order: 1,
+      defaultDurationDays: 30,
       steps: [
         {
           code: 'ESTIMATION_RESSOURCES',
@@ -148,6 +161,7 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
         en: 'Advertisement'
       },
       order: 2,
+      defaultDurationDays: 45,
       steps: [
         {
           code: 'PUBLICATION_PORTAIL',
@@ -232,6 +246,7 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
         en: 'Reception & Analysis'
       },
       order: 3,
+      defaultDurationDays: 30,
       steps: [
         {
           code: 'SOUMISSION_DOSSIERS',
@@ -316,6 +331,7 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
         en: 'Award'
       },
       order: 4,
+      defaultDurationDays: 30,
       steps: [
         {
           code: 'SELECTION_PRIX',
@@ -400,6 +416,7 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
         en: 'Control & Regulation'
       },
       order: 5,
+      defaultDurationDays: 30,
       steps: [
         {
           code: 'CONTROLE_CNCMP',

@@ -752,6 +752,15 @@ export interface CreateProjectDTO {
   initialAdvancePercentage?: number;
   completionDate?: string;
   estimatedDays?: number;
+  /** Données relationnelles importées avec le projet. */
+  phases?: PhaseDTO[];
+  milestones?: MilestoneDTO[];
+  tasks?: TaskDTO[];
+  dqeLines?: import('@/dtos/boq/BoqLineDTO').BoqLineDTO[];
+  stakeholders?: import('./ProjectStakeholderDTO').CreateProjectStakeholderDTO[];
+  budgetSources?: Array<Record<string, unknown>>;
+  organizationId?: string;
+  externalRef?: string;
   requiresConsultantValidation?: boolean;
   requiresMinistryApproval?: boolean;
   requiresPermits?: boolean;

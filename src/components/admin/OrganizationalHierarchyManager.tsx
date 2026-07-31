@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { OrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
+import { OrganizationService } from '@/application/services/OrganizationService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Users, Building2 } from 'lucide-react';
+import type { CreateOrganizationHierarchyDTO } from '@/dtos/entities/OrganizationHierarchyDTO';
 import { useToast } from '@/hooks/use-toast';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { Building2, Plus, Trash2, Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface OrganizationTemplate {
   id: string;
@@ -136,6 +141,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
     parent: '',
     permissions: { can_approve_projects: false, can_approve_payments: false, can_escalate_to_director: false }
   });
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const handleAddPosition = () => {
@@ -195,19 +201,106 @@ const OrganizationalHierarchyManager: React.FC = () => {
   };
 
   const handleSaveTemplate = async () => {
+    if (template.positions.length === 0) {
+      toast({ title: "Erreur", description: "Ajoutez au moins une position avant d'enregistrer", variant: "destructive" });
+      return;
+    }
+
+    const positionTitles = new Set<string>();
+    for (const position of template.positions) {
+      const normalizedTitle = position.title.trim().toLocaleLowerCase();
+      if (!normalizedTitle) {
+        toast({ title: "Erreur", description: "Chaque position doit avoir un titre", variant: "destructive" });
+        return;
+      }
+      if (positionTitles.has(normalizedTitle)) {
+        toast({ title: "Erreur", description: `Le titre « ${position.title} » est utilisé plusieurs fois`, variant: "destructive" });
+        return;
+      }
+      positionTitles.add(normalizedTitle);
+      if (position.parent && !positionTitles.has(position.parent.trim().toLocaleLowerCase()) &&
+        !template.positions.some((candidate) => candidate.title.trim().toLocaleLowerCase() === position.parent?.trim().toLocaleLowerCase())) {
+        toast({ title: "Erreur", description: `Supérieur hiérarchique introuvable : ${position.parent}`, variant: "destructive" });
+        return;
+      }
+      if (position.parent?.trim().toLocaleLowerCase() === normalizedTitle) {
+        toast({ title: "Erreur", description: `Une position ne peut pas être son propre supérieur : ${position.title}`, variant: "destructive" });
+        return;
+      }
+    }
+
+    setIsSaving(true);
     try {
-      // Here you would implement the actual save logic
-      // For now, we'll just show a success message
+      const organizationService = new OrganizationService();
+      const hierarchyService = new OrganizationHierarchyService();
+      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const organization = await organizationService.upsert({
+        name: template.name,
+        code: 'DEFAULT_BTP',
+        externalRef: 'ORG-DEFAULT-BTP',
+        orgType: 'owner',
+        description: 'Organisation propriétaire par défaut des projets',
+        isActive: true,
+      });
+
+      const positionIds = new Map<string, string>();
+      const pending = [...template.positions];
+      const hierarchyNodes: CreateOrganizationHierarchyDTO[] = [];
+
+      while (pending.length > 0) {
+        const position = pending.shift();
+        if (!position) break;
+        const positionKey = position.title.trim().toLocaleLowerCase();
+        const parentKey = position.parent?.trim().toLocaleLowerCase();
+        if (parentKey && !positionIds.has(parentKey)) {
+          pending.push(position);
+          if (pending.every((candidate) => {
+            const candidateParentKey = candidate.parent?.trim().toLocaleLowerCase();
+            return !!candidateParentKey && !positionIds.has(candidateParentKey);
+          })) {
+            throw new Error(`Supérieur hiérarchique introuvable : ${position.parent}`);
+          }
+          continue;
+        }
+
+        const nodeId = crypto.randomUUID();
+        positionIds.set(positionKey, nodeId);
+        hierarchyNodes.push({
+          id: nodeId,
+          organizationId: organization.id,
+          parentId: parentKey ? positionIds.get(parentKey) : undefined,
+          department: position.department,
+          positionTitle: position.title,
+          level: position.level,
+          canApproveProjects: position.permissions.can_approve_projects,
+          canApprovePayments: position.permissions.can_approve_payments,
+          canEscalateToDirector: position.permissions.can_escalate_to_director,
+          directReportsCount: 0,
+        });
+      }
+
+      hierarchyNodes.forEach((node) => {
+        if (node.parentId) {
+          const parent = hierarchyNodes.find((candidate) => candidate.id === node.parentId);
+          if (parent) parent.directReportsCount = (parent.directReportsCount ?? 0) + 1;
+        }
+      });
+
+      await hierarchyService.replaceForOrganization(organization.id, hierarchyNodes);
+      const projectsUpdated = await projectService.assignOrganizationToAll(organization.id);
+
       toast({
         title: "Organigramme sauvegardé",
-        description: "La structure organisationnelle a été enregistrée avec succès"
+        description: `${hierarchyNodes.length} positions enregistrées et ${projectsUpdated} projets rattachés à ${organization.name}`
       });
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Erreur lors de la sauvegarde de l'organigramme",
+        description: error instanceof Error ? error.message : "Erreur lors de la sauvegarde de l'organigramme",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -220,9 +313,9 @@ const OrganizationalHierarchyManager: React.FC = () => {
             Configurez la structure organisationnelle de votre entreprise
           </p>
         </div>
-        <Button onClick={handleSaveTemplate} className="flex items-center gap-2">
+        <Button onClick={handleSaveTemplate} disabled={isSaving} className="flex items-center gap-2">
           <Building2 className="h-4 w-4" />
-          Sauvegarder l'Organigramme
+          {isSaving ? 'Sauvegarde...' : "Sauvegarder l'Organigramme"}
         </Button>
       </div>
 
