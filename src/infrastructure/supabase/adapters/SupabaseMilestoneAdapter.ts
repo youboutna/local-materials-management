@@ -39,7 +39,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   async findByProjectId(projectId: string): Promise<MilestoneDTO[]> {
     try {
       const { data, error } = await supabase
-        .from('enhanced_project_milestones')
+        .from('project_milestones')
         .select('*')
         .eq('project_id', projectId)
         .order('target_date', { ascending: true });
@@ -62,7 +62,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   async findByPhaseId(phaseId: string): Promise<MilestoneDTO[]> {
     try {
       const { data, error } = await supabase
-        .from('enhanced_project_milestones')
+        .from('project_milestones')
         .select('*')
         .eq('phase_id', phaseId)
         .order('target_date', { ascending: true });
@@ -142,9 +142,15 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         target_date: data.target_date,
         completed_date: data.completed_date || null,
         status: data.status || 'pending',
+        priority: data.priority || 'normal',
+        type: data.type || 'checkpoint',
         weight: data.weight || 0.5,
         dependencies: data.dependencies || [],
         notes: data.notes || null,
+        stage_type: data.stage_type || data.type || null,
+        material_usage: data.material_usage || [],
+        material_cost_estimate: data.material_cost_estimate || null,
+        actual_material_cost: data.actual_material_cost || null,
         created_at: now,
         updated_at: now
       };
@@ -313,21 +319,27 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   private transformToDTO(data: any): MilestoneDTO {
     return {
       id: data.id,
-      project_id: data.project_id,
-      phase_id: data.phase_id,
+      projectId: data.project_id,
+      phaseId: data.phase_id,
       title: data.title,
       description: data.description,
-      target_date: data.target_date,
-      completed_date: data.completed_date,
+      targetDate: data.target_date,
+      completedDate: data.completed_date,
       status: data.status,
       type: data.type || 'checkpoint', // Default to checkpoint if not specified
       priority: data.priority || 'normal', // Default to normal priority
       weight: data.weight,
-      is_from_template: data.is_from_template || false, // Default to false for custom milestones
+      isFromTemplate: data.is_from_template || false, // Default to false for custom milestones
       dependencies: data.dependencies || [],
       notes: data.notes,
-      created_at: data.created_at,
-      updated_at: data.updated_at
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      assignedTo: data.assigned_to,
+      createdBy: data.created_by,
+      stageType: data.stage_type,
+      materialUsage: data.material_usage || [],
+      materialCostEstimate: data.material_cost_estimate,
+      actualMaterialCost: data.actual_material_cost
     };
   }
 }

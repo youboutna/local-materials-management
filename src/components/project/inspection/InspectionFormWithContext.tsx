@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NotificationService } from '@/application/services/NotificationService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
@@ -149,13 +150,10 @@ export function InspectionFormWithContext({
 
       // Update milestone if linked
       if (milestoneContext?.milestoneId && status === 'approved') {
-        await supabase
-          .from('enhanced_project_milestones')
-          .update({ 
+        await RepositoryFactory.getMilestoneRepository().update(milestoneContext.milestoneId, {
             status: 'completed',
             completed_date: format(new Date(), 'yyyy-MM-dd')
-          })
-          .eq('id', milestoneContext.milestoneId);
+        });
       }
 
       // Send notification if enabled

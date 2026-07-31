@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority, MaterialUsageDTO } from '@/dtos/entities/MilestoneDTO';
 
 export interface CreateMilestoneData {
   project_id: string;
@@ -14,9 +14,15 @@ export interface CreateMilestoneData {
   target_date: string;
   completed_date?: string;
   status?: string;
+  priority?: MilestonePriority;
+  type?: MilestoneType;
+  stage_type?: string;
   weight?: number;
   dependencies?: string[];
   notes?: string;
+  material_usage?: MaterialUsageDTO[];
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface UpdateMilestoneData {
@@ -25,9 +31,15 @@ export interface UpdateMilestoneData {
   target_date?: string;
   completed_date?: string;
   status?: string;
+  priority?: MilestonePriority;
+  type?: MilestoneType;
+  stage_type?: string;
   weight?: number;
   dependencies?: string[];
   notes?: string;
+  material_usage?: MaterialUsageDTO[];
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface IMilestoneRepository {

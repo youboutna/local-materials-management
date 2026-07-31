@@ -114,12 +114,12 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     queryKey: ['unified-milestones', projectId, phaseId],
     queryFn: async () => {
       const service = getMilestoneService();
-      const raw = await service.getProjectMilestones(projectId);
-      return raw.filter((m: any) => m.phase_id === phaseId).map((m: any) => ({
-        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+      const raw = await service.getProjectMilestonesDTO(projectId);
+      return raw.filter((m) => m.phaseId === phaseId).map((m) => ({
+        id: m.id, title: m.title, targetDate: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'normal',
-        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name || m.phaseName,
-        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        weight: m.weight || 0.2, phaseId: m.phaseId, phaseName: undefined,
+        completedDate: m.completedDate, isCritical: m.priority === 'critical',
         isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
@@ -131,13 +131,13 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     queryKey: ['milestone-progress', projectId, phaseId],
     queryFn: async () => {
       const service = getMilestoneService();
-      const raw = await service.getProjectMilestones(projectId);
-      const filtered = raw.filter((m: any) => m.phase_id === phaseId);
+      const raw = await service.getProjectMilestonesDTO(projectId);
+      const filtered = raw.filter((m) => m.phaseId === phaseId);
       return {
         total_milestones: filtered.length,
-        completed_milestones: filtered.filter((m: any) => m.status === 'completed').length,
-        delayed_milestones: filtered.filter((m: any) => m.status === 'delayed').length,
-        weighted_progress: Math.round(filtered.filter((m: any) => m.status === 'completed').length / Math.max(1, filtered.length) * 100),
+        completed_milestones: filtered.filter((m) => m.status === 'completed').length,
+        delayed_milestones: filtered.filter((m) => m.status === 'delayed').length,
+        weighted_progress: Math.round(filtered.filter((m) => m.status === 'completed').length / Math.max(1, filtered.length) * 100),
         overdue_milestones: [],
         upcoming_milestones: [],
         schedule_performance_index: 1,

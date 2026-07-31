@@ -4,14 +4,11 @@
  * Integrated with milestones.referential.ts configuration system
  */
 
-import { 
-  DEFAULT_PROJECT_MILESTONES, 
-  DEFAULT_PHASE_MILESTONES,
-  REFERENTIAL_MILESTONES,
-  getMilestoneTemplates,
+import {
+  DEFAULT_PROJECT_MILESTONES,
   getMilestoneTemplatesWithDefaults
 } from '@/config/referentials/milestones.referential';
-import { MilestoneTemplateDTO, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
+import { MilestonePriority, MilestoneTemplateDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 
 export type MilestoneStatus = 
   | 'pending' 
@@ -36,11 +33,24 @@ export interface MilestoneDeliverable {
   assignedTo?: string;
 }
 
+export interface MaterialUsage {
+  materialId: string;
+  plannedQuantity: number;
+  usedQuantity: number;
+  unitCost?: number;
+}
+
 export interface MilestoneConfiguration {
   /** Template source (referential or custom) */
   templateId?: string;
   /** Construction phase this milestone belongs to */
   constructionPhase?: string;
+  /** Phase ID this milestone belongs to */
+  phaseId?: string;
+  /** Stage type for categorization */
+  stageType?: string;
+  /** Operational notes attached to the milestone */
+  notes?: string;
   /** Weight for progress calculation (0.1 - 1.0) */
   weight: number;
   /** If true, this milestone is critical for phase completion (CPM) */
@@ -78,7 +88,10 @@ export class Milestone {
     public readonly createdBy: string | null,
     public readonly createdAt: string | null,
     public readonly updatedAt: string | null,
-    public readonly configuration: MilestoneConfiguration
+    public readonly configuration: MilestoneConfiguration,
+    public readonly materialUsage: MaterialUsage[] = [],
+    public readonly materialCostEstimate: number | null = null,
+    public readonly actualMaterialCost: number | null = null
   ) {}
 
   // ============= Static Factory Methods =============
@@ -124,6 +137,7 @@ export class Milestone {
       new Date().toISOString(),
       {
         templateId: template.id,
+        stageType: template.type,
         weight: template.weight,
         isCritical: template.is_critical,
         type: template.type,
@@ -192,6 +206,7 @@ export class Milestone {
       new Date().toISOString(),
       {
         templateId: undefined,
+        stageType: undefined,
         weight: 0.5,
         isCritical: false,
         type: 'checkpoint',

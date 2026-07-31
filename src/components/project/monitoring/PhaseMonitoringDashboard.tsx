@@ -60,12 +60,12 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
     queryKey: ['phase-milestones-monitoring', projectId, phaseId],
     queryFn: async () => {
       const service = getMilestoneService();
-      const raw = await service.getProjectMilestones(projectId);
-      return raw.filter((m: any) => m.phase_id === phaseId).map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
+      const raw = await service.getProjectMilestonesDTO(projectId);
+      return raw.filter((m) => m.phaseId === phaseId).map((m) => ({
+        id: m.id, title: m.title, target_date: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
+        weight: m.weight || 0.2, phase_id: m.phaseId, phase_name: undefined,
+        completed_date: m.completedDate, is_critical: m.priority === 'critical',
         is_from_template: false,
       })) as MilestoneSummaryDTO[];
     },

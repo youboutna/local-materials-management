@@ -82,6 +82,8 @@ export interface MilestoneDTO {
   type: MilestoneType;
   /** Priority level */
   priority: MilestonePriority;
+  /** Stage category for workflow grouping */
+  stageType?: string;
   weight: number;
   notes?: string;
   /** Whether from referential template or custom */
@@ -103,6 +105,16 @@ export interface MilestoneDTO {
   approvalDate?: string;
   createdAt: string;
   updatedAt: string;
+  materialUsage?: MaterialUsageDTO[];
+  materialCostEstimate?: number;
+  actualMaterialCost?: number;
+}
+
+export interface MaterialUsageDTO {
+  materialId: string;
+  plannedQuantity: number;
+  usedQuantity: number;
+  unitCost?: number;
 }
 
 /**

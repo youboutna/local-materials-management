@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 import type { AutomaticDecompteDTO, CheckpointVerificationResultDTO, MilestoneDTO } from '@/dtos/entities';
 
@@ -329,19 +330,19 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       if (!projectId) return [];
 
-      const { data, error } = await supabase
+      const milestoneData = await RepositoryFactory.getMilestoneRepository().findByProjectId(projectId);
 
-        .from('enhanced_project_milestones')
+      return milestoneData.map(milestone => ({
 
-        .select('*')
+        ...milestone,
 
-        .eq('project_id', projectId)
+        phase_id: milestone.phaseId || null,
 
-        .order('target_date');
+        project_id: milestone.projectId,
 
-      if (error) throw error;
+        target_date: milestone.targetDate,
 
-      return data || [];
+      }));
 
     },
 
@@ -613,8 +614,6 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
   };
 
-
-
   return {
 
     phases: phases as any,
@@ -627,7 +626,15 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
     milestones: milestones as any,
 
-    ...computed,
+    projectVerification: computed.projectVerification,
+
+    phaseVerifications: computed.phaseVerifications,
+
+    projectDecompte: computed.projectDecompte,
+
+    phaseDecomptes: computed.phaseDecomptes,
+
+    metrics: computed.metrics,
 
     isLoading,
 

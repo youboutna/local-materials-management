@@ -78,12 +78,12 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
     queryKey: ['actionable-milestones', projectId],
     queryFn: async () => {
       const service = getMilestoneService();
-      const raw = await service.getProjectMilestones(projectId);
-      return raw.map((m: any) => ({
-        id: m.id, title: m.title, targetDate: m.target_date || m.targetDate, status: m.status,
+      const raw = await service.getProjectMilestonesDTO(projectId);
+      return raw.map((m) => ({
+        id: m.id, title: m.title, targetDate: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'normal',
-        weight: m.weight || 0.2, phaseId: m.phase_id || m.phaseId, phaseName: m.phase_name || m.phaseName,
-        completedDate: m.actual_completion_date || m.completedDate, isCritical: m.priority === 'critical',
+        weight: m.weight || 0.2, phaseId: m.phaseId, phaseName: undefined,
+        completedDate: m.completedDate, isCritical: m.priority === 'critical',
         isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
@@ -95,12 +95,12 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
     queryKey: ['project-milestone-progress', projectId],
     queryFn: async () => {
       const service = getMilestoneService();
-      const raw = await service.getProjectMilestones(projectId);
+      const raw = await service.getProjectMilestonesDTO(projectId);
       return {
         total_milestones: raw.length,
-        completed_milestones: raw.filter((m: any) => m.status === 'completed').length,
-        weighted_progress: Math.round(raw.filter((m: any) => m.status === 'completed').length / Math.max(1, raw.length) * 100),
-        overdue_milestones: raw.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        completed_milestones: raw.filter((m) => m.status === 'completed').length,
+        weighted_progress: Math.round(raw.filter((m) => m.status === 'completed').length / Math.max(1, raw.length) * 100),
+        overdue_milestones: [],
         upcoming_milestones: [],
         schedule_performance_index: 1,
         critical_path_status: 'on_track' as const,

@@ -75,22 +75,22 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
     try {
       setLoading(true);
       const service = getMilestoneService();
-      const rawMilestones = await service.getProjectMilestones(projectId);
+      const rawMilestones = await service.getProjectMilestonesDTO(projectId);
       const filtered = phaseId 
-        ? rawMilestones.filter((m: any) => m.phase_id === phaseId)
+        ? rawMilestones.filter((m) => m.phaseId === phaseId)
         : rawMilestones;
-      const milestonesData: MilestoneSummaryDTO[] = filtered.map((m: any) => ({
-        id: m.id, title: m.title, target_date: m.target_date, status: m.status,
+      const milestonesData: MilestoneSummaryDTO[] = filtered.map((m) => ({
+        id: m.id, title: m.title, target_date: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'medium',
-        weight: m.weight || 0.2, phase_id: m.phase_id, phase_name: m.phase_name,
-        completed_date: m.actual_completion_date, is_critical: m.priority === 'critical',
+        weight: m.weight || 0.2, phase_id: m.phaseId, phase_name: undefined,
+        completed_date: m.completedDate, is_critical: m.priority === 'critical',
         is_from_template: false,
       }));
       const progressData: MilestoneProgressDTO = {
         total_milestones: filtered.length,
-        completed_milestones: filtered.filter((m: any) => m.status === 'completed').length,
-        delayed_milestones: filtered.filter((m: any) => m.status === 'delayed').length,
-        weighted_progress: Math.round(filtered.filter((m: any) => m.status === 'completed').length / Math.max(1, filtered.length) * 100),
+        completed_milestones: filtered.filter((m) => m.status === 'completed').length,
+        delayed_milestones: filtered.filter((m) => m.status === 'delayed').length,
+        weighted_progress: Math.round(filtered.filter((m) => m.status === 'completed').length / Math.max(1, filtered.length) * 100),
         overdue_milestones: [],
         upcoming_milestones: [],
         schedule_performance_index: 1,

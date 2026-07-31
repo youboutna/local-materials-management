@@ -6,7 +6,7 @@
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
-import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
+import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import {
@@ -19,6 +19,7 @@ import {
     MilestoneTemplateDTO,
     MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
+  import type { UserRoleDTO } from '@/dtos/entities/UserDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { differenceInDays } from 'date-fns';
@@ -26,6 +27,7 @@ import { differenceInDays } from 'date-fns';
 export interface Milestone {
   id: string;
   project_id: string;
+  phase_id?: string;
   title: string;
   description?: string;
   target_date: string;
@@ -38,6 +40,13 @@ export interface Milestone {
   assigned_to?: string;
   budget?: number;
   actual_cost?: number;
+  type?: MilestoneType;
+  weight?: number;
+  notes?: string;
+  stage_type?: string;
+  material_usage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +54,7 @@ export interface Milestone {
 // Service DTOs for data exchange
 export interface CreateMilestoneRequestDto {
   project_id: string;
+  phase_id?: string;
   title: string;
   description?: string;
   target_date: string;
@@ -56,6 +66,13 @@ export interface CreateMilestoneRequestDto {
   assigned_to?: string;
   budget?: number;
   actual_cost?: number;
+  type?: MilestoneType;
+  weight?: number;
+  notes?: string;
+  stage_type?: string;
+  material_usage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface UpdateMilestoneRequestDto {
@@ -71,6 +88,13 @@ export interface UpdateMilestoneRequestDto {
   assigned_to?: string;
   budget?: number;
   actual_cost?: number;
+  type?: MilestoneType;
+  weight?: number;
+  notes?: string;
+  stage_type?: string;
+  material_usage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface MilestoneStatsDto {
@@ -94,6 +118,34 @@ export class MilestoneService {
     private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
     private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository()
   ) {}
+
+  private toServiceMilestone(milestone: MilestoneDTO): Milestone {
+    return {
+      id: milestone.id,
+      project_id: milestone.projectId,
+      phase_id: milestone.phaseId,
+      title: milestone.title,
+      description: milestone.description,
+      target_date: milestone.targetDate,
+      actual_completion_date: milestone.completedDate,
+      status: milestone.status,
+      progress: 0,
+      priority: milestone.priority === 'normal' ? 'medium' : milestone.priority,
+      deliverables: milestone.deliverables || [],
+      dependencies: milestone.dependencies || [],
+      assigned_to: milestone.assignedTo?.userId,
+      created_at: milestone.createdAt,
+      updated_at: milestone.updatedAt
+      ,type: milestone.type
+      ,weight: milestone.weight
+      ,notes: milestone.notes
+      ,stage_type: milestone.stageType
+      ,material_usage: milestone.materialUsage
+      ,material_cost_estimate: milestone.materialCostEstimate
+      ,actual_material_cost: milestone.actualMaterialCost
+    };
+  }
+
   /**
    * Get project milestones
    */
@@ -110,51 +162,21 @@ export class MilestoneService {
         return [];
       }
 
-      // Transform to Milestone interface with business logic
       const milestonesWithProgress = await Promise.all(
-        milestones.map(async (milestone: unknown) => {
-          const milestoneData = milestone as {
-            id: string;
-            project_id: string;
-            title: string;
-            description?: string;
-            target_date: string;
-            actual_completion_date?: string;
-            status: string;
-            progress?: number;
-            priority?: string;
-            deliverables?: string[];
-            dependencies?: string[];
-            assigned_to?: string;
-            budget?: number;
-            actual_cost?: number;
-            created_at: string;
-            updated_at: string;
-          };
-
-          // Apply business logic for status determination
-          const calculatedStatus = this.calculateMilestoneStatus(milestoneData);
-          
-          // Calculate progress based on deliverables and inspections
-          const calculatedProgress = await this.calculateMilestoneProgress(milestoneData.id);
+        milestones.map(async milestone => {
+          const serviceMilestone = this.toServiceMilestone(milestone);
+          const calculatedStatus = this.calculateMilestoneStatus({
+            target_date: serviceMilestone.target_date,
+            actual_completion_date: serviceMilestone.actual_completion_date,
+            status: serviceMilestone.status,
+            progress: serviceMilestone.progress
+          });
+          const calculatedProgress = await this.calculateMilestoneProgress(serviceMilestone.id);
 
           return {
-            id: milestoneData.id,
-            project_id: milestoneData.project_id,
-            title: milestoneData.title,
-            description: milestoneData.description,
-            target_date: milestoneData.target_date,
-            actual_completion_date: milestoneData.actual_completion_date,
+            ...serviceMilestone,
             status: calculatedStatus,
-            progress: calculatedProgress,
-            priority: (milestoneData.priority as 'low' | 'medium' | 'high' | 'critical') || 'medium',
-            deliverables: milestoneData.deliverables || [],
-            dependencies: milestoneData.dependencies || [],
-            assigned_to: milestoneData.assigned_to,
-            budget: milestoneData.budget,
-            actual_cost: milestoneData.actual_cost,
-            created_at: milestoneData.created_at,
-            updated_at: milestoneData.updated_at
+            progress: calculatedProgress
           };
         })
       );
@@ -254,10 +276,12 @@ export class MilestoneService {
    */
   private async getMaterialsProgress(milestoneId: string): Promise<number> {
     try {
-      // TODO: Implement proper material tracking when repository supports it
-      // For now, return default progress as materials are not linked to milestones
-      console.log(`Materials progress for milestone ${milestoneId}: Not implemented, returning 0`);
-      return 0;
+      const milestone = await this.milestoneRepository.findById(milestoneId);
+      const usage = milestone?.materialUsage || [];
+      const planned = usage.reduce((total, item) => total + Math.max(item.plannedQuantity, 0), 0);
+      const used = usage.reduce((total, item) => total + Math.min(Math.max(item.usedQuantity, 0), Math.max(item.plannedQuantity, 0)), 0);
+
+      return planned > 0 ? Math.round((used / planned) * 100) : 0;
     } catch (error) {
       console.error('MilestoneService.getMaterialsProgress failed:', error);
       return 0;
@@ -675,50 +699,32 @@ export class MilestoneService {
       }
 
       // Create milestone entity from request
-      const milestoneData = {
+      const milestoneData: CreateMilestoneData = {
         project_id: request.project_id,
+        phase_id: request.phase_id,
         title: request.title,
         description: request.description,
         target_date: request.target_date,
-        actual_completion_date: undefined,
         status: request.status || 'pending',
-        progress: request.progress || 0,
-        priority: request.priority || 'medium',
-        deliverables: request.deliverables || [],
+        priority: request.priority === 'medium' ? 'normal' : request.priority,
+        type: request.type,
+        stage_type: request.stage_type,
+        weight: request.weight,
         dependencies: request.dependencies || [],
-        assigned_to: request.assigned_to,
-        budget: request.budget,
-        actual_cost: request.actual_cost
+        notes: request.notes
+        ,material_usage: request.material_usage
+        ,material_cost_estimate: request.material_cost_estimate
+        ,actual_material_cost: request.actual_material_cost
       };
 
       // Save through repository
-      const createdMilestone = await (this.milestoneRepository as unknown as { create: (data: unknown) => Promise<Milestone> }).create(milestoneData);
+      const createdMilestone = await this.milestoneRepository.create(milestoneData);
       
       if (!createdMilestone) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create milestone');
       }
 
-      // Add missing fields to return proper Milestone type
-      const milestone: Milestone = {
-        id: createdMilestone.id || crypto.randomUUID(),
-        project_id: createdMilestone.project_id || request.project_id,
-        title: createdMilestone.title || request.title,
-        description: createdMilestone.description || request.description,
-        target_date: createdMilestone.target_date || request.target_date,
-        actual_completion_date: createdMilestone.actual_completion_date,
-        status: createdMilestone.status || request.status || 'pending',
-        progress: createdMilestone.progress || request.progress || 0,
-        priority: createdMilestone.priority || request.priority || 'medium',
-        deliverables: createdMilestone.deliverables || request.deliverables || [],
-        dependencies: createdMilestone.dependencies || request.dependencies || [],
-        assigned_to: createdMilestone.assigned_to || request.assigned_to,
-        budget: createdMilestone.budget || request.budget,
-        actual_cost: createdMilestone.actual_cost || request.actual_cost,
-        created_at: createdMilestone.created_at || new Date().toISOString(),
-        updated_at: createdMilestone.updated_at || new Date().toISOString()
-      };
-
-      return milestone;
+      return this.toServiceMilestone(createdMilestone);
     } catch (error) {
       console.error('MilestoneService.createMilestone failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create milestone');
@@ -742,51 +748,31 @@ export class MilestoneService {
       }
 
       // Prepare update data
-      const updateData = {
+      const updateData: UpdateMilestoneData = {
         title: updates.title,
         description: updates.description,
         target_date: updates.target_date,
-        actual_completion_date: updates.actual_completion_date,
+        completed_date: updates.actual_completion_date,
         status: updates.status,
-        progress: updates.progress,
-        priority: updates.priority,
-        deliverables: updates.deliverables,
+        priority: updates.priority === 'medium' ? 'normal' : updates.priority,
+        type: updates.type,
+        stage_type: updates.stage_type,
+        weight: updates.weight,
         dependencies: updates.dependencies,
-        assigned_to: updates.assigned_to,
-        budget: updates.budget,
-        actual_cost: updates.actual_cost,
-        updated_at: new Date().toISOString()
+        notes: updates.notes
+        ,material_usage: updates.material_usage
+        ,material_cost_estimate: updates.material_cost_estimate
+        ,actual_material_cost: updates.actual_material_cost
       };
 
       // Update through repository
-      await (this.milestoneRepository as unknown as { update: (id: string, data: unknown) => Promise<void> }).update(id, updateData);
-      
-      // Get updated milestone
-      const updatedMilestone = await (this.milestoneRepository as unknown as { findById: (id: string) => Promise<unknown> }).findById(id);
+      const updatedMilestone = await this.milestoneRepository.update(id, updateData);
       
       if (!updatedMilestone) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated milestone');
       }
 
-      // Transform to Milestone interface
-      return {
-        id: (updatedMilestone as { id: string }).id,
-        project_id: (updatedMilestone as { project_id: string }).project_id,
-        title: (updatedMilestone as { title: string }).title,
-        description: (updatedMilestone as { description?: string }).description,
-        target_date: (updatedMilestone as { target_date: string }).target_date,
-        actual_completion_date: (updatedMilestone as { actual_completion_date?: string }).actual_completion_date,
-        status: (updatedMilestone as { status: string }).status as 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled',
-        progress: (updatedMilestone as { progress: number }).progress || 0,
-        priority: (updatedMilestone as { priority: string }).priority as 'low' | 'medium' | 'high' | 'critical',
-        deliverables: (updatedMilestone as { deliverables: string[] }).deliverables || [],
-        dependencies: (updatedMilestone as { dependencies: string[] }).dependencies || [],
-        assigned_to: (updatedMilestone as { assigned_to?: string }).assigned_to,
-        budget: (updatedMilestone as { budget?: number }).budget,
-        actual_cost: (updatedMilestone as { actual_cost?: number }).actual_cost,
-        created_at: (updatedMilestone as { created_at: string }).created_at,
-        updated_at: (updatedMilestone as { updated_at: string }).updated_at
-      };
+      return this.toServiceMilestone(updatedMilestone);
     } catch (error) {
       console.error('MilestoneService.updateMilestone failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update milestone');
@@ -1141,24 +1127,23 @@ export class MilestoneService {
         const targetDate = new Date(startDate);
         targetDate.setDate(targetDate.getDate() + template.relative_offset_days);
 
-        const milestoneData: any = {
-          projectId,
-          phaseId,
+        const milestoneData: CreateMilestoneRequestDto = {
+          project_id: projectId,
+          phase_id: phaseId,
           title: template.name,
           description: template.description || '',
-          targetDate: targetDate.toISOString().split('T')[0],
+          target_date: targetDate.toISOString().split('T')[0],
+          status: 'pending',
           type: template.type,
-          priority: template.priority,
+          priority: this.transformPriorityFromForm(template.priority),
           weight: template.weight,
-          isCritical: template.is_critical,
-          tags: template.tags,
+          notes: template.approval_requirements?.join(', '),
           dependencies: template.predecessor_ids,
-          deliverables: template.deliverables,
-          approvalRequirements: template.approval_requirements
+          deliverables: template.deliverables
         };
 
         const milestone = await this.createMilestone(milestoneData);
-        milestones.push(milestone as any);
+        milestones.push(this.transformToMilestoneDTO(milestone));
       }
 
       return milestones;
@@ -1325,22 +1310,40 @@ export class MilestoneService {
     return {
       id: milestone.id,
       projectId: milestone.project_id,
+      phaseId: milestone.phase_id,
       title: milestone.title,
       description: milestone.description,
       targetDate: milestone.target_date,
       completedDate: milestone.actual_completion_date,
       completedate: milestone.actual_completion_date || '',
       status: milestone.status === 'cancelled' ? 'delayed' : milestone.status,
-      type: 'checkpoint' as MilestoneType,
+      type: milestone.type || 'checkpoint',
       priority: this.transformPriority(milestone.priority),
-      weight: 1,
+      weight: milestone.weight || 0.2,
+      stageType: milestone.stage_type,
+      notes: milestone.notes,
       isFromTemplate: false,
       dependencies: milestone.dependencies,
       deliverables: milestone.deliverables,
-      assignedTo: {} as any,
-      createdBy: {} as any,
+      assignedTo: this.emptyUserRoleDTO(),
+      createdBy: this.emptyUserRoleDTO(),
       createdAt: milestone.created_at,
-      updatedAt: milestone.updated_at
+      updatedAt: milestone.updated_at,
+      materialUsage: milestone.material_usage,
+      materialCostEstimate: milestone.material_cost_estimate,
+      actualMaterialCost: milestone.actual_material_cost
+    };
+  }
+
+  private emptyUserRoleDTO(): UserRoleDTO {
+    return {
+      id: '',
+      userId: '',
+      roleName: '',
+      status: 'active',
+      assignedAt: '',
+      createdAt: '',
+      updatedAt: ''
     };
   }
 

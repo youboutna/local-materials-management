@@ -12,7 +12,7 @@ export { Project, type ProjectStatus, type ProjectCoordinates, type ProjectStake
 export { Phase, type PhaseStatus, type PhaseStep, type PhaseTask, type PhaseResources } from './Phase';
 export { Task } from './Task';
 export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
-export { Milestone, type MilestoneDependency, type MilestoneDeliverable, type MilestoneConfiguration } from './Milestone';
+export { Milestone, type MaterialUsage, type MilestoneDependency, type MilestoneDeliverable, type MilestoneConfiguration } from './Milestone';
 
 // ============================================================================
 // ORGANIZATIONAL ENTITIES

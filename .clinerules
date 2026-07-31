@@ -128,7 +128,7 @@ interface IMilestoneRepository {
 // Adapter Supabase (peut être remplacé par JavaApiAdapter, PrismaAdapter, etc.)
 class SupabaseMilestoneAdapter implements IMilestoneRepository {
   async findById(id: string): Promise<MilestoneDTO | null> {
-    const { data } = await supabase.from('enhanced_project_milestones')...
+    const { data } = await supabase.from('project_milestones')...
     return this.mapToDTO(data);
   }
 }
@@ -477,7 +477,7 @@ interface IMilestoneRepository {
 
 // 2. Adapter (Implementation)
 class SupabaseMilestoneAdapter implements IMilestoneRepository {
-  private readonly TABLE_NAME = 'enhanced_project_milestones';
+  private readonly TABLE_NAME = 'project_milestones';
   
   async findByPhaseId(projectId: string, phaseId: string) {
     const { data } = await supabase

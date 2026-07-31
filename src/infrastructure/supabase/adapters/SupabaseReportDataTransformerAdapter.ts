@@ -200,9 +200,9 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    */
   async fetchConstructionMilestones(projectId: string): Promise<ConstructionMilestoneDTO[]> {
     try {
-      // Try enhanced_project_milestones first, then fall back to project_milestones
+      // Read milestones from the unified project_milestones table
       const { data: enhancedMilestones } = await supabase
-        .from('enhanced_project_milestones')
+        .from('project_milestones')
         .select('*')
         .eq('project_id', projectId);
 

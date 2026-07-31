@@ -178,48 +178,23 @@ export class EnhancedReportingService {
 
   private static async fetchConstructionMilestones(projectId: string): Promise<ConstructionMilestoneDTO[]> {
     try {
-      const { data: enhancedMilestones } = await supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
+      const milestones = await RepositoryFactory.getMilestoneRepository().findByProjectId(projectId);
 
-      if (enhancedMilestones && enhancedMilestones.length > 0) {
-        return enhancedMilestones.map(milestone => ({
+      if (milestones.length > 0) {
+        return milestones.map(milestone => ({
           id: milestone.id,
           title: milestone.title,
           description: milestone.description || '',
-          targetDate: new Date(milestone.target_date || Date.now()),
-          completedDate: milestone.completed_date ? new Date(milestone.completed_date) : undefined,
+          targetDate: new Date(milestone.targetDate || Date.now()),
+          completedDate: milestone.completedDate ? new Date(milestone.completedDate) : undefined,
           status: this.mapMilestoneStatus(milestone.status || 'pending'),
-          projectId: milestone.project_id,
-          phaseId: milestone.phase_id || undefined,
+          projectId: milestone.projectId,
+          phaseId: milestone.phaseId || undefined,
           stage: this.inferConstructionStage(milestone.title),
           priority: this.inferMilestonePriority(milestone.title),
           completionPercentage: Math.round((milestone.weight || 0) * 100),
           blockers: [],
-          dependencies: Array.isArray(milestone.dependencies) ? milestone.dependencies.map(d => String(d)) : []
-        }));
-      }
-
-      const { data: milestonesData } = await supabase
-        .from('project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (milestonesData && milestonesData.length > 0) {
-        return milestonesData.map(milestone => ({
-          id: milestone.id,
-          title: milestone.title,
-          description: milestone.description || '',
-          targetDate: new Date(milestone.target_date || Date.now()),
-          completedDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
-          status: this.mapMilestoneStatus(milestone.status || 'pending'),
-          projectId: milestone.project_id,
-          stage: this.inferConstructionStage(milestone.title),
-          priority: this.inferMilestonePriority(milestone.title),
-          completionPercentage: milestone.progress_percentage || 0,
-          blockers: [],
-          dependencies: []
+          dependencies: milestone.dependencies || []
         }));
       }
 

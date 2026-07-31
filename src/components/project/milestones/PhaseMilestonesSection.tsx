@@ -91,10 +91,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const loadData = async () => {
     try {
       setLoading(true);
-      const milestonesData = await milestoneService.getProjectMilestones(projectId);
-      // Filter by phase - milestones don't have phase_id natively, use as any
-      const phaseMilestones = milestonesData.filter((m: any) => m.phase_id === phaseId);
-      setMilestones(phaseMilestones as unknown as MilestoneDTO[]);
+      const milestonesData = await milestoneService.getProjectMilestonesDTO(projectId);
+      const phaseMilestones = milestonesData.filter(milestone => milestone.phaseId === phaseId);
+      setMilestones(phaseMilestones);
     } catch (error) {
       console.error('Error loading milestones:', error);
     } finally {
@@ -118,10 +117,14 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       for (const template of templates) {
         await milestoneService.createMilestone({
           project_id: projectId,
+          phase_id: phaseId,
           title: template.name,
           description: template.description || '',
           target_date: phaseStartDate,
-          priority: 'medium',
+          priority: template.priority === 'normal' ? 'medium' : template.priority,
+          type: template.type,
+          weight: template.weight,
+          notes: template.approval_requirements?.join(', '),
         });
       }
       toast({
@@ -142,15 +145,27 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const handleSave = async () => {
     try {
       if (editingMilestone) {
-        await milestoneService.updateMilestone(editingMilestone.id, formData as any);
+        await milestoneService.updateMilestone(editingMilestone.id, {
+          target_date: formData.target_date,
+          title: formData.title,
+          description: formData.description,
+          priority: formData.priority === 'normal' ? 'medium' : formData.priority,
+          type: formData.type,
+          weight: formData.weight,
+          notes: formData.notes
+        });
         toast({ title: 'Jalon modifié' });
       } else {
         await milestoneService.createMilestone({
           project_id: projectId,
+          phase_id: phaseId,
           title: formData.title,
           description: formData.description,
           target_date: formData.target_date,
-          priority: formData.priority as any,
+          priority: formData.priority === 'normal' ? 'medium' : formData.priority,
+          type: formData.type,
+          weight: formData.weight,
+          notes: formData.notes,
         });
         toast({ title: 'Jalon ajouté' });
       }
@@ -170,7 +185,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const handleToggleComplete = async (milestone: MilestoneDTO) => {
     try {
       const newStatus = milestone.status === 'completed' ? 'pending' : 'completed';
-      await milestoneService.updateMilestone(milestone.id, { status: newStatus } as any);
+      await milestoneService.updateMilestone(milestone.id, { status: newStatus });
       toast({
         title: milestone.status === 'completed' ? 'Jalon marqué en attente' : 'Jalon terminé'
       });

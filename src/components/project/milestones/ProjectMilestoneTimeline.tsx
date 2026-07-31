@@ -52,26 +52,26 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
     try {
       setLoading(true);
       const service = getMilestoneService();
-      const rawMilestones = await service.getProjectMilestones(projectId);
-      const milestonesData: MilestoneSummaryDTO[] = rawMilestones.map((m: any) => ({
+      const rawMilestones = await service.getProjectMilestonesDTO(projectId);
+      const milestonesData: MilestoneSummaryDTO[] = rawMilestones.map((m) => ({
         id: m.id,
         title: m.title,
-        targetDate: m.target_date || m.targetDate,
+        targetDate: m.targetDate,
         status: m.status,
         type: m.type || 'checkpoint',
         priority: m.priority || 'medium',
         weight: m.weight || 0.2,
-        phaseId: m.phase_id || m.phaseId,
-        phaseDame: m.phase_name || m.phaseName,
-        completedDate: m.actual_completion_date || m.completed_date || m.completedDate,
+        phaseId: m.phaseId,
+        phaseDame: undefined,
+        completedDate: m.completedDate,
         isCritical: m.priority === 'critical',
       }));
       const progressData: MilestoneProgressDTO = {
         totalMilestones: rawMilestones.length,
-        completedMilestones: rawMilestones.filter((m: any) => m.status === 'completed').length,
-        delayedMilestones: rawMilestones.filter((m: any) => m.status === 'delayed').length,
-        weightedProgress: Math.round(rawMilestones.filter((m: any) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
-        overdueMilestones: rawMilestones.filter((m: any) => m.status === 'delayed').map((m: any) => m.id),
+        completedMilestones: rawMilestones.filter((m) => m.status === 'completed').length,
+        delayedMilestones: rawMilestones.filter((m) => m.status === 'delayed').length,
+        weightedProgress: Math.round(rawMilestones.filter((m) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
+        overdueMilestones: [],
         upcomingMilestones: [],
         schedulePerformance_index: 1,
         criticalPath_status: 'on_track',

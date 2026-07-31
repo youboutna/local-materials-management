@@ -17,7 +17,8 @@ import {
   MilestoneStatus, 
   MilestoneDependency,
   MilestoneDeliverable,
-  MilestoneConfiguration
+  MilestoneConfiguration,
+  MaterialUsage
 } from '@/domain/entities/Milestone';
 import { 
   MilestoneDTO, 
@@ -46,6 +47,11 @@ export interface CreateMilestoneRequestDTO {
   tags?: string[];
   templateId?: string;
   approvalRequirements?: string[];
+  stageType?: string;
+  notes?: string;
+  materialUsage?: MaterialUsage[];
+  materialCostEstimate?: number;
+  actualMaterialCost?: number;
 }
 
 export interface UpdateMilestoneRequestDTO {
@@ -63,6 +69,9 @@ export interface UpdateMilestoneRequestDTO {
   progressPercentage?: number;
   notes?: string;
   tags?: string[];
+  materialUsage?: MaterialUsage[];
+  materialCostEstimate?: number;
+  actualMaterialCost?: number;
 }
 
 export class MilestoneTransformer {
@@ -115,6 +124,9 @@ export class MilestoneTransformer {
       {
         templateId: (row.template_id as string) || undefined,
         constructionPhase: undefined,
+        phaseId: (row.phase_id as string) || undefined,
+        stageType: (row.stage_type as string) || undefined,
+        notes: (row.notes as string) || undefined,
         weight: (row.weight as number) ||1,
         isCritical: (row.is_critical as boolean) || false,
         type: (row.type as MilestoneType) || 'checkpoint',
@@ -124,7 +136,10 @@ export class MilestoneTransformer {
         expectedDeliverables: (row.deliverables as string[]) || [],
         approvalRequirements: (row.approval_requirements as string[]) || [],
         relativeOffsetDays: 0
-      }
+      },
+      (Array.isArray(row.material_usage) ? row.material_usage : []) as MaterialUsage[],
+      (row.material_cost_estimate as number) || null,
+      (row.actual_material_cost as number) || null
     );
   }
 
@@ -135,30 +150,85 @@ export class MilestoneTransformer {
   static toSupabase(milestone: Milestone): Record<string, unknown> {
     return {
       id: milestone.id,
-      projectId: milestone.projectId,
+      project_id: milestone.projectId,
+      phase_id: milestone.configuration.phaseId,
       title: milestone.title,
       description: milestone.description,
-      targetDate: milestone.targetDate,
-      completedDate: milestone.completionDate,
+      target_date: milestone.targetDate,
+      completed_date: milestone.completionDate,
       status: this.toDatabaseStatus(milestone.status),
-      progressPercentage: milestone.progressPercentage,
+      progress_percentage: milestone.progressPercentage,
       dependencies: milestone.dependencies.map(dep => dep.description),
       deliverables: milestone.deliverables.map(del => del.name),
-      assignedTo: milestone.assignedTo,
-      createdBy: milestone.createdBy,
-      createdAt: milestone.createdAt,
-      updatedAt: milestone.updatedAt,
+      assigned_to: milestone.assignedTo,
+      created_by: milestone.createdBy,
+      created_at: milestone.createdAt,
+      updated_at: milestone.updatedAt,
       // Configuration fields
-      templateId: milestone.configuration.templateId,
+      template_id: milestone.configuration.templateId,
       type: milestone.configuration.type,
       priority: milestone.configuration.priority,
       weight: milestone.configuration.weight,
-      isCritical: milestone.configuration.isCritical,
+      is_critical: milestone.configuration.isCritical,
       tags: milestone.configuration.tags,
-      predecessorIds: milestone.configuration.predecessorIds,
-      expectedDeliverables: milestone.configuration.expectedDeliverables,
-      approvalRequirements: milestone.configuration.approvalRequirements,
-      relativeOffsetDays: milestone.configuration.relativeOffsetDays
+      predecessor_ids: milestone.configuration.predecessorIds,
+      expected_deliverables: milestone.configuration.expectedDeliverables,
+      approval_requirements: milestone.configuration.approvalRequirements,
+      stage_type: milestone.configuration.stageType,
+      notes: milestone.configuration.notes,
+      relative_offset_days: milestone.configuration.relativeOffsetDays,
+      material_usage: milestone.materialUsage,
+      material_cost_estimate: milestone.materialCostEstimate,
+      actual_material_cost: milestone.actualMaterialCost
+    };
+  }
+
+  static toLegacyFormat(dto: MilestoneDTO): Record<string, unknown> {
+    return {
+      id: dto.id,
+      project_id: dto.projectId,
+      phase_id: dto.phaseId,
+      title: dto.title,
+      description: dto.description,
+      target_date: dto.targetDate,
+      completed_date: dto.completedDate,
+      status: dto.status,
+      type: dto.type,
+      priority: dto.priority,
+      stage_type: dto.stageType,
+      weight: dto.weight,
+      notes: dto.notes,
+      dependencies: dto.dependencies || [],
+      material_usage: dto.materialUsage || [],
+      material_cost_estimate: dto.materialCostEstimate,
+      actual_material_cost: dto.actualMaterialCost,
+      created_at: dto.createdAt,
+      updated_at: dto.updatedAt
+    };
+  }
+
+  static fromLegacyFormat(row: Record<string, unknown>): Partial<MilestoneDTO> {
+    return {
+      id: row.id as string,
+      projectId: row.project_id as string,
+      phaseId: row.phase_id as string | undefined,
+      title: row.title as string,
+      description: row.description as string | undefined,
+      targetDate: row.target_date as string,
+      completedDate: row.completed_date as string | undefined,
+      status: (row.status as DTOStatus) || 'pending',
+      type: (row.type as MilestoneType) || 'checkpoint',
+      priority: (row.priority as DTOPriority) || 'normal',
+      stageType: row.stage_type as string | undefined,
+      weight: (row.weight as number) || 0,
+      notes: row.notes as string | undefined,
+      dependencies: (row.dependencies as string[]) || [],
+      materialUsage: (row.material_usage as MaterialUsage[]) || [],
+      materialCostEstimate: row.material_cost_estimate as number | undefined,
+      actualMaterialCost: row.actual_material_cost as number | undefined,
+      isFromTemplate: false,
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string
     };
   }
 
@@ -170,23 +240,29 @@ export class MilestoneTransformer {
     const now = new Date().toISOString();
     
     return {
-      projectId: request.projectId,
+      project_id: request.projectId,
+      phase_id: request.phaseId,
       title: request.title,
       description: request.description,
-      targetDate: request.targetDate,
+      target_date: request.targetDate,
       status: 'pending',
       priority: request.priority || 'normal',
       weight: request.weight || 1,
       type: request.type || 'checkpoint',
-      isCritical: request.isCritical || false,
+      is_critical: request.isCritical || false,
       dependencies: request.dependencies || [],
       deliverables: request.deliverables || [],
-      assignedTo: request.assignedTo,
+      assigned_to: request.assignedTo,
       tags: request.tags || [],
-      templateId: request.templateId,
-      approvalRequirements: request.approvalRequirements || [],
-      createdAt: now,
-      updatedAt: now
+      template_id: request.templateId,
+      approval_requirements: request.approvalRequirements || [],
+      stage_type: request.stageType,
+      notes: request.notes,
+      material_usage: request.materialUsage || [],
+      material_cost_estimate: request.materialCostEstimate,
+      actual_material_cost: request.actualMaterialCost,
+      created_at: now,
+      updated_at: now
     };
   }
 
@@ -221,7 +297,7 @@ export class MilestoneTransformer {
 
       id: milestone.id,
       projectId: milestone.projectId,
-      phaseId: undefined, // Will be set by service layer
+      phaseId: milestone.configuration.phaseId,
       title: milestone.title,
       description: milestone.description || undefined,
       targetDate: milestone.targetDate || '',
@@ -230,8 +306,9 @@ export class MilestoneTransformer {
       status: this.toDTOStatus(milestone.status),
       type: milestone.configuration.type,
       priority: milestone.configuration.priority,
+      stageType: milestone.configuration.stageType,
       weight: milestone.configuration.weight,
-      notes: undefined,
+      notes: milestone.configuration.notes,
       isFromTemplate: !!milestone.configuration.templateId,
       templateId: milestone.configuration.templateId,
       dependencies: milestone.dependencies.map(dep => dep.description),
@@ -242,7 +319,10 @@ export class MilestoneTransformer {
       approvedBy: undefined,
       approvalDate: undefined,
       createdAt: milestone.createdAt || '',
-      updatedAt: milestone.updatedAt || ''
+      updatedAt: milestone.updatedAt || '',
+      materialUsage: milestone.materialUsage,
+      materialCostEstimate: milestone.materialCostEstimate ?? undefined,
+      actualMaterialCost: milestone.actualMaterialCost ?? undefined
     };
   }
 
@@ -293,6 +373,8 @@ export class MilestoneTransformer {
       {
         templateId: dto.templateId,
         constructionPhase: undefined,
+        stageType: dto.stageType,
+        notes: dto.notes,
         weight: dto.weight,
         isCritical: dto.isOnCriticalPath || false,
         type: dto.type,
@@ -302,7 +384,10 @@ export class MilestoneTransformer {
         expectedDeliverables: dto.deliverables || [],
         approvalRequirements: [],
         relativeOffsetDays: 0
-      }
+      },
+      dto.materialUsage || [],
+      dto.materialCostEstimate ?? null,
+      dto.actualMaterialCost ?? null
     );
   }
 
@@ -361,6 +446,8 @@ export class MilestoneTransformer {
         predecessorIds: request.dependencies || [],
         expectedDeliverables: request.deliverables || [],
         approvalRequirements: request.approvalRequirements || [],
+        stageType: request.stageType,
+        notes: request.notes,
         relativeOffsetDays: 0
       }
     );
