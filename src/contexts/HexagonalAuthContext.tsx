@@ -199,7 +199,7 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   // Set up auth state listener for real-time updates
   useEffect(() => {
     if (DEV_MODE) {
-      console.log('🛠️ DEV_MODE=true — skipping Supabase auth listener, using DEV_USER session.');
+      console.log('🛠️ DEV_MODE=true — skipping Supabase listener; local session remains login-gated.');
       return;
     }
     console.log('🔧 Setting up hexagonal auth state listener...');

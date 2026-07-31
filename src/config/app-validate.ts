@@ -54,20 +54,10 @@ export function validateProviders(cfg: {
     errors.push(`Invalid auth/data combination: auth=${cfg.auth} is not compatible with data=${cfg.data}`);
   }
 
-  requireEnv('VITE_SUPABASE_URL', cfg.auth === 'supabase' || cfg.data === 'supabase' || cfg.storage === 'supabase', errors);
-  requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY', cfg.auth === 'supabase' || cfg.data === 'supabase' || cfg.storage === 'supabase', errors);
-  requireEnv('VITE_GOTRUE_URL', cfg.auth === 'gotrue', errors);
-  requireEnv('VITE_KEYCLOAK_URL', cfg.auth === 'keycloak', errors);
-  requireEnv('VITE_KEYCLOAK_REALM', cfg.auth === 'keycloak', errors);
-  requireEnv('VITE_KEYCLOAK_CLIENT_ID', cfg.auth === 'keycloak', errors);
-  requireEnv('VITE_POSTGREST_URL', cfg.data === 'postgrest', errors);
-  requireEnv('VITE_STORAGE_ENDPOINT', cfg.storage === 's3' || cfg.storage === 'minio', errors);
-  requireEnv('VITE_STORAGE_BUCKET', cfg.storage === 's3' || cfg.storage === 'minio', errors);
-
-  // Mode B / self-hosted: LocalAuthAdapter must sign JWTs the backend can verify.
-  if (cfg.auth === 'local' && (cfg.data === 'supabase' || cfg.data === 'postgrest')) {
-    requireEnv('VITE_JWT_SECRET', true, errors);
-  }
+  // This function validates provider taxonomy and compatibility only. Concrete
+  // credentials are resolved centrally by getAppConfig() and checked below by
+  // validateAppConfig(); reading raw import.meta.env here caused false errors
+  // when configuration was injected at runtime.
 
   if (errors.length) {
     console.error('[ProviderValidation]', errors.join('\n'));

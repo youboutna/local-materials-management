@@ -51,15 +51,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "auth_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       blocked_senders: {
         Row: {
@@ -89,15 +81,7 @@ export type Database = {
           is_active?: boolean
           reason?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "blocked_senders_blocked_by_fkey"
-            columns: ["blocked_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       brand_managers: {
         Row: {
@@ -132,25 +116,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "brand_managers_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
             foreignKeyName: "brand_managers_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_managers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
           },
         ]
       }
@@ -602,15 +572,7 @@ export type Database = {
           updated_at?: string | null
           variables?: Json | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "email_templates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       form_templates: {
         Row: {
@@ -942,6 +904,83 @@ export type Database = {
         }
         Relationships: []
       }
+      inspector_availability: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          inspector_id: string
+          is_available: boolean
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          inspector_id: string
+          is_available?: boolean
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          inspector_id?: string
+          is_available?: boolean
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspector_availability_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "inspectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspectors: {
+        Row: {
+          certifications: string[]
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          specializations: string[]
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          certifications?: string[]
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          specializations?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          certifications?: string[]
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          specializations?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       insurance_companies: {
         Row: {
           address: string | null
@@ -1080,15 +1119,7 @@ export type Database = {
           updated_at?: string
           wilaya?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "national_depots_manager_id_fkey"
-            columns: ["manager_id"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -1129,51 +1160,51 @@ export type Database = {
         }
         Relationships: []
       }
-   oauth_providers: {
-      Row: {
-        auth_url: string | null;
-        client_id: string | null;
-        client_secret: string | null;
-        configuration: Json | null;
-        created_at: string | null;
-        enabled: boolean | null;
-        id: string;
-        provider_name: string;
-        scopes: string[] | null;
-        token_url: string | null;
-        updated_at: string | null;
-        user_info_url: string | null;
-      };
-      Insert: {
-        auth_url?: string | null;
-        client_id?: string | null;
-        client_secret?: string | null;
-        configuration?: Json | null;
-        created_at?: string | null;
-        enabled?: boolean | null;
-        id?: string;
-        provider_name: string;
-        scopes?: string[] | null;
-        token_url?: string | null;
-        updated_at?: string | null;
-        user_info_url?: string | null;
-      };
-      Update: {
-        auth_url?: string | null;
-        client_id?: string | null;
-        client_secret?: string | null;
-        configuration?: Json | null;
-        created_at?: string | null;
-        enabled?: boolean | null;
-        id?: string;
-        provider_name?: string;
-        scopes?: string[] | null;
-        token_url?: string | null;
-        updated_at?: string | null;
-        user_info_url?: string | null;
-      };
-      Relationships: [];
-    };
+      oauth_providers: {
+        Row: {
+          auth_url: string | null
+          client_id: string | null
+          client_secret: string | null
+          configuration: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          provider_name: string
+          scopes: string[] | null
+          token_url: string | null
+          updated_at: string | null
+          user_info_url: string | null
+        }
+        Insert: {
+          auth_url?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          provider_name: string
+          scopes?: string[] | null
+          token_url?: string | null
+          updated_at?: string | null
+          user_info_url?: string | null
+        }
+        Update: {
+          auth_url?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          provider_name?: string
+          scopes?: string[] | null
+          token_url?: string | null
+          updated_at?: string | null
+          user_info_url?: string | null
+        }
+        Relationships: []
+      }
       payment_blocks: {
         Row: {
           amount: number
@@ -1217,6 +1248,56 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_control_actions: {
+        Row: {
+          action_type: string
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          payment_block_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          payment_block_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          payment_block_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_control_actions_payment_block_id_fkey"
+            columns: ["payment_block_id"]
+            isOneToOne: false
+            referencedRelation: "payment_blocks"
             referencedColumns: ["id"]
           },
         ]
@@ -1705,15 +1786,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       profit_distributions: {
         Row: {
@@ -1763,6 +1836,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profit_distributions_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1832,25 +1912,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "project_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
             foreignKeyName: "project_alerts_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
           },
         ]
       }
@@ -1898,6 +1964,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      project_members: {
+        Row: {
+          access_level: number
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_level?: number
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_level?: number
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       project_milestones: {
         Row: {
@@ -2105,6 +2201,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "project_risks_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "project_risks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -2168,15 +2271,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "prospect_subscription_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       resource_assignments: {
         Row: {
@@ -2457,20 +2552,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "stock_alerts_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
-            foreignKeyName: "stock_alerts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
             foreignKeyName: "stock_alerts_stock_id_fkey"
             columns: ["stock_id"]
             isOneToOne: false
@@ -2530,13 +2611,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "stock_thresholds_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
           {
             foreignKeyName: "stock_thresholds_stock_id_fkey"
             columns: ["stock_id"]
@@ -2684,13 +2758,6 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "submission_access_logs_accessed_by_fkey"
-            columns: ["accessed_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
           {
             foreignKeyName: "submission_access_logs_submission_id_fkey"
             columns: ["submission_id"]
@@ -2944,6 +3011,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "supply_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "supply_requests_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
@@ -2963,6 +3037,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -3075,22 +3156,7 @@ export type Database = {
           tender_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tender_document_submissions_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
-            foreignKeyName: "tender_document_submissions_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
+        Relationships: []
       }
       tender_estimate_items: {
         Row: {
@@ -3605,135 +3671,6 @@ export type Database = {
           role_name?: string
           status?: string | null
           user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_full"
-            referencedColumns: ["auth_id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          aud: string | null
-          banned_until: string | null
-          confirmation_sent_at: string | null
-          confirmation_token: string | null
-          confirmed_at: string | null
-          created_at: string | null
-          deleted_at: string | null
-          email: string | null
-          email_change: string | null
-          email_change_confirm_status: number | null
-          email_change_sent_at: string | null
-          email_change_token_current: string | null
-          email_change_token_new: string | null
-          email_confirmed_at: string | null
-          encrypted_password: string | null
-          id: string
-          instance_id: string | null
-          invited_at: string | null
-          is_anonymous: boolean | null
-          is_sso_user: boolean | null
-          is_super_admin: boolean | null
-          last_sign_in_at: string | null
-          phone: string | null
-          phone_change: string | null
-          phone_change_sent_at: string | null
-          phone_change_token: string | null
-          phone_confirmed_at: string | null
-          raw_app_meta_data: Json | null
-          raw_user_meta_data: Json | null
-          reauthentication_sent_at: string | null
-          reauthentication_token: string | null
-          recovery_sent_at: string | null
-          recovery_token: string | null
-          role: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          aud?: string | null
-          banned_until?: string | null
-          confirmation_sent_at?: string | null
-          confirmation_token?: string | null
-          confirmed_at?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email?: string | null
-          email_change?: string | null
-          email_change_confirm_status?: number | null
-          email_change_sent_at?: string | null
-          email_change_token_current?: string | null
-          email_change_token_new?: string | null
-          email_confirmed_at?: string | null
-          encrypted_password?: string | null
-          id: string
-          instance_id?: string | null
-          invited_at?: string | null
-          is_anonymous?: boolean | null
-          is_sso_user?: boolean | null
-          is_super_admin?: boolean | null
-          last_sign_in_at?: string | null
-          phone?: string | null
-          phone_change?: string | null
-          phone_change_sent_at?: string | null
-          phone_change_token?: string | null
-          phone_confirmed_at?: string | null
-          raw_app_meta_data?: Json | null
-          raw_user_meta_data?: Json | null
-          reauthentication_sent_at?: string | null
-          reauthentication_token?: string | null
-          recovery_sent_at?: string | null
-          recovery_token?: string | null
-          role?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          aud?: string | null
-          banned_until?: string | null
-          confirmation_sent_at?: string | null
-          confirmation_token?: string | null
-          confirmed_at?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email?: string | null
-          email_change?: string | null
-          email_change_confirm_status?: number | null
-          email_change_sent_at?: string | null
-          email_change_token_current?: string | null
-          email_change_token_new?: string | null
-          email_confirmed_at?: string | null
-          encrypted_password?: string | null
-          id?: string
-          instance_id?: string | null
-          invited_at?: string | null
-          is_anonymous?: boolean | null
-          is_sso_user?: boolean | null
-          is_super_admin?: boolean | null
-          last_sign_in_at?: string | null
-          phone?: string | null
-          phone_change?: string | null
-          phone_change_sent_at?: string | null
-          phone_change_token?: string | null
-          phone_confirmed_at?: string | null
-          raw_app_meta_data?: Json | null
-          raw_user_meta_data?: Json | null
-          reauthentication_sent_at?: string | null
-          reauthentication_token?: string | null
-          recovery_sent_at?: string | null
-          recovery_token?: string | null
-          role?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -7390,45 +7327,21 @@ export type Database = {
         }
         Relationships: []
       }
-      user_full: {
+      user_profiles: {
         Row: {
-          aud: string | null
-          auth_email: string | null
-          auth_id: string | null
-          banned_until: string | null
-          confirmation_sent_at: string | null
-          confirmation_token: string | null
-          confirmed_at: string | null
-          created_at: string | null
-          deleted_at: string | null
-          email: string | null
-          email_change: string | null
-          email_change_confirm_status: number | null
-          email_change_sent_at: string | null
-          email_change_token_current: string | null
-          email_change_token_new: string | null
-          email_confirmed_at: string | null
-          encrypted_password: string | null
-          id: string | null
-          instance_id: string | null
-          invited_at: string | null
-          is_anonymous: boolean | null
-          is_sso_user: boolean | null
-          is_super_admin: boolean | null
-          last_sign_in_at: string | null
-          phone: string | null
-          phone_change: string | null
-          phone_change_sent_at: string | null
-          phone_change_token: string | null
-          phone_confirmed_at: string | null
-          raw_app_meta_data: Json | null
-          raw_user_meta_data: Json | null
-          reauthentication_sent_at: string | null
-          reauthentication_token: string | null
-          recovery_sent_at: string | null
-          recovery_token: string | null
+          full_name: string | null
           role: string | null
-          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          full_name?: string | null
+          role?: never
+          user_id?: string | null
+        }
+        Update: {
+          full_name?: string | null
+          role?: never
+          user_id?: string | null
         }
         Relationships: []
       }

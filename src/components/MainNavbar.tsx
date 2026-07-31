@@ -32,12 +32,11 @@ const MainNavbar = () => {
   const { user: keycloakUser, isAuthenticated, logout } = useKeycloakAuth();
   const { hasRole, hasAnyRole } = useCurrentUserRoles();
 
-  // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
-  // In dev mode, consider user as authenticated for navigation purposes
-  const isUserAuthenticated = DEV_MODE || !!authUser || isAuthenticated;
+  // DEV_MODE uses local credentials but still requires an authenticated session.
+  const isUserAuthenticated = !!authUser || isAuthenticated;
 
   // Check if user can manage users (admin or director)
-  const canManageUsers = DEV_MODE || hasAnyRole(['admin', 'director']);
+  const canManageUsers = hasAnyRole(['admin', 'director']);
   const isSupplier = hasAnyRole(['supplier']);
   const isSupplierOnly = isSupplier && !hasAnyRole(['admin','director','manager','agent']);
   const handleLanguageChange = (newLanguage: Language) => {

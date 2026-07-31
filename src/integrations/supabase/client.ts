@@ -3,8 +3,19 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const runtimeConfig = typeof window !== 'undefined'
+  ? (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__
+  : undefined;
+const SUPABASE_URL = runtimeConfig?.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY =
+  runtimeConfig?.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  runtimeConfig?.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Supabase configuration missing: URL and publishable key are required');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

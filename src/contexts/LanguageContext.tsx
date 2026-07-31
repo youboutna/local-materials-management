@@ -1511,7 +1511,20 @@ export const translations = {
                 dashboard: {
                     title: "Tableau de bord",
                     description: "Vue d'ensemble"
-                }
+                },
+                monitoring: { title: "Suivi & Contrôle", description: "PTBA, PPM, PED et analyse des écarts" },
+                tasks: { title: "Tâches", description: "Affectation et suivi des tâches" },
+                inspections: { title: "Inspections", description: "Contrôles qualité et procès-verbaux" },
+                suppliers: { title: "Fournisseurs", description: "Annuaire et suivi des performances" },
+                tenders: { title: "Appels d'offres", description: "DAO, soumissions et évaluation" },
+                payments: { title: "Paiements", description: "Contrôle et déblocage des paiements" },
+                guarantees: { title: "Cautions bancaires", description: "Suivi des garanties" },
+                insurance: { title: "Assurances", description: "Certificats et échéances" },
+                employees: { title: "Employés", description: "Gestion des ressources humaines" },
+                users: { title: "Utilisateurs", description: "Comptes et rôles" },
+                notifications: { title: "Notifications", description: "Centre d'alertes" },
+                enhanced: { title: "Tableau de bord avancé", description: "Analytique étendue" },
+                profile: { title: "Profil", description: "Préférences personnelles" }
             },
             features: {
                 title: "Fonctionnalités principales",
@@ -3030,7 +3043,20 @@ export const translations = {
                 dashboard: {
                     title: "لوحة التحكم",
                     description: "نظرة عامة"
-                }
+                },
+                monitoring: { title: "المتابعة والرقابة", description: "متابعة الخطط وتحليل الانحرافات" },
+                tasks: { title: "المهام", description: "إسناد المهام ومتابعتها" },
+                inspections: { title: "التفتيش", description: "مراقبة الجودة والمحاضر" },
+                suppliers: { title: "الموردون", description: "الدليل ومتابعة الأداء" },
+                tenders: { title: "المناقصات", description: "الملفات والعروض والتقييم" },
+                payments: { title: "المدفوعات", description: "المراقبة والإفراج عن الدفع" },
+                guarantees: { title: "الضمانات البنكية", description: "متابعة الضمانات" },
+                insurance: { title: "التأمين", description: "الشهادات والاستحقاقات" },
+                employees: { title: "الموظفون", description: "إدارة الموارد البشرية" },
+                users: { title: "المستخدمون", description: "الحسابات والأدوار" },
+                notifications: { title: "الإشعارات", description: "مركز التنبيهات" },
+                enhanced: { title: "لوحة قيادة متقدمة", description: "تحليلات موسعة" },
+                profile: { title: "الملف الشخصي", description: "التفضيلات الشخصية" }
             },
             features: {
                 title: "الميزات",
@@ -4464,7 +4490,20 @@ procurement_features: {
                 dashboard: {
                     title: "Dashboard",
                     description: "Overview"
-                }
+                },
+                monitoring: { title: "Monitoring & Control", description: "PTBA, PPM, PED and variance analysis" },
+                tasks: { title: "Tasks", description: "Task assignment and tracking" },
+                inspections: { title: "Inspections", description: "Quality controls and reports" },
+                suppliers: { title: "Suppliers", description: "Directory and performance tracking" },
+                tenders: { title: "Tenders", description: "Tender files, submissions and evaluation" },
+                payments: { title: "Payments", description: "Payment control and release" },
+                guarantees: { title: "Bank guarantees", description: "Guarantee tracking" },
+                insurance: { title: "Insurance", description: "Certificates and due dates" },
+                employees: { title: "Employees", description: "Human resources management" },
+                users: { title: "Users", description: "Accounts and roles" },
+                notifications: { title: "Notifications", description: "Alert center" },
+                enhanced: { title: "Advanced dashboard", description: "Extended analytics" },
+                profile: { title: "Profile", description: "Personal preferences" }
             },
             features: {
                 title: "Features",

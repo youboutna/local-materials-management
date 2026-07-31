@@ -208,6 +208,7 @@ export const hasDevRole = (userRole: string, requiredRole: string): boolean => {
 export const DEV_CONFIG = {
   enableMockData: DEV_MODE,
   enableDebugLogs: DEV_MODE,
-  skipAuthChecks: DEV_MODE,
+  // DEV_MODE selects local adapters but never authenticates a user implicitly.
+  skipAuthChecks: false,
   mockApiDelay: 500, // ms
 };
