@@ -17,9 +17,9 @@ try { RepositoryFactory.init(); } catch (e) { console.warn('[RepositoryFactory.i
 // Wire the persistent alignment repository (falls back silently to in-memory if the API is unreachable).
 try { setAlignmentRepository(new SupabaseAlignmentRepository()); } catch { /* noop */ }
 
-// In development mode, log that authentication is bypassed
+// Development mode uses local adapters; authentication remains mandatory.
 if (DEV_MODE) {
-  console.log('🛠️ Development mode active: Authentication is bypassed');
+  console.log('🛠️ Development mode active: local authentication enabled');
 }
 
 // Wrap the app with an error boundary to catch and handle errors gracefully
