@@ -245,7 +245,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     const validationErrors = this.validateImportRows(rows);
     const invalidRows = new Set(validationErrors.map((error) => error.row));
     result.errors.push(...validationErrors);
-    result.failed += validationErrors.length;
+    result.failed += invalidRows.size;
 
     let existingProjects: ProjectDTO[] = [];
     try {
@@ -267,7 +267,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       try {
         const externalRef = this.getExternalRef(row);
          const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
-        const dto = this.toCreateDTO(row, references.organizations);
+        const dto = this.mapImportRowToCreateDTO(row, references.organizations);
         const project = existing
           ? await this.projectService.updateProject(existing.id, dto as never)
           : await this.projectService.createProject(dto);
@@ -366,7 +366,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     }) ?? null;
   }
 
-  private toCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
+  /** Mapping pur et testable du format d'échange vers le contrat de création. */
+  public mapImportRowToCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
     const input = row as ProjectImportRow & {
       budget?: number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> };
       timeline?: { startDate?: string; endDate?: string };
@@ -396,6 +397,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       marketType: row.marketType,
       selectionMode: row.selectionMode,
       projectType: row.projectType ?? input.type ?? row.referentialCode,
+      referentialCode: row.referentialCode,
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
@@ -633,6 +635,9 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
 
   public toImportRow(p: ProjectDTO): ProjectImportRow {
     return {
+      id: p.id,
+      externalRef: p.externalRef,
+      reference: p.projectReference,
       title: p.title,
       description: p.description,
       status: p.status,
@@ -645,6 +650,14 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       latitude: p.latitude,
       longitude: p.longitude,
       teamSize: p.teamSize,
+      projectType: p.subCategory,
+      referentialCode: p.referentialCode,
+      organizationId: p.organizationId,
+      financingSource: p.financingSource,
+      marketType: p.marketType,
+      selectionMode: p.selectionMode,
+      launchDate: p.launchDate,
+      attributionDate: p.attributionDate,
       interventionZones: p.interventionZones,
     };
   }
