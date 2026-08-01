@@ -185,3 +185,25 @@ export const ErrorHandler = {
     console.error('Application Error:', errorInfo);
   }
 };
+
+/**
+ * Serialize any thrown value (Error, PostgREST error object, string) into a
+ * readable message. Prevents "[object Object]" leaking into the UI toasts.
+ */
+export function formatUnknownError(error: unknown): string {
+  if (!error) return 'Erreur inconnue';
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object') {
+    const e = error as Record<string, unknown>;
+    const parts = [e.message, e.details, e.hint, e.code]
+      .filter((p) => typeof p === 'string' && p.length > 0);
+    if (parts.length) return parts.join(' — ');
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'Erreur inconnue';
+    }
+  }
+  return String(error);
+}
