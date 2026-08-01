@@ -59,9 +59,10 @@ const Dashboard: React.FC = () => {
 
   // Map domain entities to projects for compatibility with ProjectData
   const projects = useMemo(() => 
-    hexProjects.map(p => ({
-      id: p.id,
-      title: p.title,
+    hexProjects.map(p => {
+      const coordinates = getProjectCoordinates(p);
+      return {
+      ...p,
       description: p.description || '',
       location: p.location || '',
       status: p.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
@@ -70,10 +71,10 @@ const Dashboard: React.FC = () => {
       teamSize: p.teamSize || 0,
       startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      latitude: getProjectCoordinates(p)?.latitude,
-      longitude: getProjectCoordinates(p)?.longitude,
-      coordinates: getProjectCoordinates(p),
-    }))
+      latitude: coordinates?.latitude,
+      longitude: coordinates?.longitude,
+      coordinates,
+    }})
   , [hexProjects]);
 
   // Compute location distribution from hexProjects as fallback
@@ -419,11 +420,10 @@ const Dashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent className="h-80">
                       {projects && projects.length > 0 ? (() => {
-                        const zoneCount = (projects as any[]).reduce(
-                          (acc, p) => acc + (Array.isArray(p?.interventionZones) ? p.interventionZones.length : 0),
-                          0,
-                        );
-                        console.info('[Dashboard] map rendered', zoneCount, 'zones for', projects.length, 'projects');
+                        const geolocatedCount = projects.filter((project) =>
+                          Boolean(getProjectCoordinates(project)),
+                        ).length;
+                        console.info('[Dashboard] map rendered', geolocatedCount, 'locations for', projects.length, 'projects');
                         return (
                           <ProjectMap
                             projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}

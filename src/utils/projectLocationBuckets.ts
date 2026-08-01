@@ -1,5 +1,6 @@
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { findRegionByLocation } from '@/utils/mauritaniaUtils';
+import { MAURITANIA_CITIES, MAURITANIA_REGIONS } from '@/utils/mauritania';
 
 const DEFAULT_LOCATION_COLORS = [
   '#3b82f6',
@@ -14,22 +15,41 @@ const DEFAULT_LOCATION_COLORS = [
 
 const NATIONAL_LOCATION_PATTERNS = [/\bnational\b/i, /\bmauritanie\b/i, /\bpays\b/i];
 
-type ProjectCoordinatesLike = Pick<ProjectDTO, 'latitude' | 'longitude' | 'coordinates'>;
+type ProjectCoordinatesLike = Pick<ProjectDTO, 'latitude' | 'longitude' | 'coordinates'> & {
+  location?: string | null;
+};
+
+const normalizeLocationText = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase();
 
 export const getProjectCoordinates = (project: ProjectCoordinatesLike) => {
   const latitude = project.latitude ?? project.coordinates?.latitude;
   const longitude = project.longitude ?? project.coordinates?.longitude;
 
   if (
-    typeof latitude !== 'number' ||
-    !Number.isFinite(latitude) ||
-    typeof longitude !== 'number' ||
-    !Number.isFinite(longitude)
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude)
   ) {
-    return undefined;
+    return { latitude, longitude };
   }
 
-  return { latitude, longitude };
+  if (!project.location?.trim()) return undefined;
+  const location = normalizeLocationText(project.location);
+  const city = MAURITANIA_CITIES.find((candidate) =>
+    location.includes(normalizeLocationText(candidate.name)) ||
+    location.includes(normalizeLocationText(candidate.nameAr)),
+  );
+  if (city) return { latitude: city.lat, longitude: city.lng };
+
+  const region = MAURITANIA_REGIONS.find((candidate) =>
+    location.includes(normalizeLocationText(candidate.name)) ||
+    location.includes(normalizeLocationText(candidate.nameAr)),
+  );
+  return region ? { latitude: region.lat, longitude: region.lng } : undefined;
 };
 
 export const normalizeProjectRegionName = (location?: string | null) => {
