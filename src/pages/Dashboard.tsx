@@ -84,14 +84,14 @@ const Dashboard: React.FC = () => {
   // Use stats from hexagonal dashboard hook with safe defaults
   const stats = useMemo(() => {
     const baseStats = {
-      activeProjects: dashboardStats?.activeProjects || hexProjects.filter(p => {
+      activeProjects: dashboardStats?.activeProjects ?? hexProjects.filter(p => {
         const s = String(p.status);
         return s === 'en cours' || s === 'in_progress' || s === 'en_cours_v2' || s === 'enCours';
       }).length,
-      totalBudget: dashboardStats?.totalBudget || hexProjects.reduce((s, p) => s + (p.budget || 0), 0),
-      teamMembers: dashboardStats?.totalEmployees || 0,
-      materials: dashboardStats?.totalMaterials || 0,
-      statusDistribution: dashboardStats?.statusDistribution || [],
+      totalBudget: dashboardStats?.totalBudget ?? hexProjects.reduce((s, p) => s + (p.budget || 0), 0),
+      teamMembers: dashboardStats?.totalEmployees ?? 0,
+      materials: dashboardStats?.totalMaterials ?? 0,
+      statusDistribution: dashboardStats?.statusDistribution ?? [],
       locationDistribution: (dashboardStats?.locationDistribution && dashboardStats.locationDistribution.length > 0) 
         ? dashboardStats.locationDistribution 
         : locationDistributionFromProjects,

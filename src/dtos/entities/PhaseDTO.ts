@@ -125,6 +125,8 @@ export interface PhaseDTO extends BaseEntityDTO {
   dqeLines?: Array<import('../boq/BoqLineDTO').BoqLineDTO>;
   /** Référence métier idempotente (import) */
   phaseCode?: string;
+  /** Clé externe stable utilisée pour les réimports idempotents. */
+  externalRef?: string;
 
   
   // Resources

@@ -213,7 +213,7 @@ export class ProjectWorkflowService {
     return {
       mode,
       currentStep: 1,
-      totalSteps: 9
+      totalSteps: this.getWorkflowSteps().length,
     };
   }
 
@@ -271,7 +271,7 @@ export class ProjectWorkflowService {
         status: phase.status || 'not_started',
         type: phase.type || phase.phaseType || 'custom',
         priority: phase.priority || 'medium',
-        orderIndex: phase.orderIndex || 0,
+        orderIndex: phase.orderIndex ?? phase.order ?? 0,
         estimatedCost: phase.estimatedCost || 0,
         estimatedDuration: phase.estimatedDuration || 0,
         constructionStage: phase.constructionStage || '',
@@ -314,9 +314,9 @@ export class ProjectWorkflowService {
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
-          totalSteps: 8,
+          totalSteps: this.getWorkflowSteps().length,
           completedSteps: 1,
-          progressPercentage: 12,
+          progressPercentage: Math.round(100 / this.getWorkflowSteps().length),
         },
       };
 
@@ -528,6 +528,25 @@ export class ProjectWorkflowService {
         marketType: projectData.marketType,
         selectionMode: projectData.selectionMode,
         projectReference: projectData.projectReference,
+        referentialCode: projectData.referentialCode,
+        organizationId: projectData.organizationId,
+        externalRef: projectData.externalRef,
+        projectType: projectData.subCategory,
+        category: projectData.category,
+        methodology: projectData.methodology,
+        priorityLevel: projectData.priorityLevel,
+        geographicZone: projectData.geographicZone,
+        terrainType: projectData.terrainType,
+        requiresPermits: projectData.requiresPermits,
+        permitNumber: projectData.permitNumber,
+        hasUtilities: projectData.hasUtilities,
+        areaSqm: projectData.areaSqm,
+        insuranceRequired: projectData.insuranceRequired,
+        bankGuaranteeRequired: projectData.bankGuaranteeRequired,
+        bankGuaranteeAmount: projectData.bankGuaranteeAmount,
+        launchDate: projectData.launchDate,
+        attributionDate: projectData.attributionDate,
+        completionDate: projectData.completionDate,
         currentPhase: projectData.currentPhase,
         currentStage: projectData.currentStage,
         mainContractor,
@@ -560,6 +579,25 @@ export class ProjectWorkflowService {
       marketType: projectData.marketType,
       selectionMode: projectData.selectionMode,
       projectReference: projectData.projectReference,
+      referentialCode: projectData.referentialCode,
+      organizationId: projectData.organizationId,
+      externalRef: projectData.externalRef,
+      projectType: projectData.subCategory,
+      category: projectData.category,
+      methodology: projectData.methodology,
+      priorityLevel: projectData.priorityLevel,
+      geographicZone: projectData.geographicZone,
+      terrainType: projectData.terrainType,
+      requiresPermits: projectData.requiresPermits,
+      permitNumber: projectData.permitNumber,
+      hasUtilities: projectData.hasUtilities,
+      areaSqm: projectData.areaSqm,
+      insuranceRequired: projectData.insuranceRequired,
+      bankGuaranteeRequired: projectData.bankGuaranteeRequired,
+      bankGuaranteeAmount: projectData.bankGuaranteeAmount,
+      launchDate: projectData.launchDate,
+      attributionDate: projectData.attributionDate,
+      completionDate: projectData.completionDate,
       mainContractor,
       allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
       initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
@@ -590,7 +628,6 @@ export class ProjectWorkflowService {
   private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
     if (!phases.length) return;
     const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => [] as any[]);
-    const existingIds = new Set(existing.map((p: any) => p.id));
     for (const phase of phases) {
       const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
       const existingPhase = existing.find((candidate: any) =>
@@ -609,6 +646,11 @@ export class ProjectWorkflowService {
 
   private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
     const persistedPhases = await this.phaseRepository.findByProjectId(projectId);
+    const existingDqeByPhase = new Map<string, BoqLineDTO[]>();
+    await Promise.all(persistedPhases.map(async (phase) => {
+      const lines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: phase.id }).catch(() => []);
+      existingDqeByPhase.set(phase.id, lines);
+    }));
     for (const phase of phases) {
       const persisted = persistedPhases.find((candidate: any) =>
         (phase.id && candidate.id === phase.id) ||
@@ -653,10 +695,13 @@ export class ProjectWorkflowService {
         }
       }
 
-      const lines = dqeLines.filter((line) => line.phaseId === phase.id || line.phaseId === persisted.id);
+      const lines = [
+        ...(phase.dqeLines ?? []),
+        ...dqeLines.filter((line) => line.phaseId === phase.id || line.phaseId === persisted.id),
+      ];
+      const existingPhaseLines = existingDqeByPhase.get(persisted.id) ?? [];
       for (const line of lines) {
-        const existing = (await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: persisted.id }))
-          .find((candidate) => candidate.btpCode === line.btpCode);
+        const existing = existingPhaseLines.find((candidate) => candidate.btpCode === line.btpCode);
         const payload = { ...line, phaseId: persisted.id, projectId, source: 'dqe' as const };
         if (existing) await boqRepository.update(existing.id as string, payload);
         else await boqRepository.create(payload);

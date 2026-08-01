@@ -23,7 +23,7 @@ import { TaskPriority, TaskService, TaskStatus } from '@/application/services/Ta
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
-import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhasePriority, PhaseStatus, PhaseType, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type {
   CreateProjectDTO,
   ProjectDTO,
@@ -66,12 +66,14 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
 }
 
 export interface ProjectImportPhase {
+  externalRef?: string;
   name: string;
   code?: string;
   description?: string;
   startDate?: string;
   endDate?: string;
   durationDays?: number;
+  progress?: number;
   order?: number;
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
@@ -79,6 +81,7 @@ export interface ProjectImportPhase {
 }
 
 export interface ProjectImportMilestone {
+  externalRef?: string;
   title?: string;
   name?: string;
   description?: string;
@@ -86,6 +89,7 @@ export interface ProjectImportMilestone {
   target_date?: string;
   status?: string;
   progress?: number;
+  progressPercent?: number;
 }
 
 export interface ProjectImportTask {
@@ -241,12 +245,11 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     const validationErrors = this.validateImportRows(rows);
     const invalidRows = new Set(validationErrors.map((error) => error.row));
     result.errors.push(...validationErrors);
-    result.failed += validationErrors.length;
+    result.failed += invalidRows.size;
 
-    let existingTitles = new Set<string>();
+    let existingProjects: ProjectDTO[] = [];
     try {
-      const existing = await this.projectService.getAllProjects();
-      existingTitles = new Set(existing.map((p) => p.title?.trim().toLowerCase()));
+      existingProjects = await this.projectService.getAllProjects();
     } catch (e) {
       // non-blocking; we still attempt import. Errors will surface per-row if any.
       console.warn('[ProjectImportExportService] Cannot list existing projects:', e);
@@ -263,15 +266,17 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
       try {
         const externalRef = this.getExternalRef(row);
-        const existing = await this.findExistingProject(externalRef, row.reference, row.title);
-        const dto = this.toCreateDTO(row, references.organizations);
+         const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
+        const dto = this.mapImportRowToCreateDTO(row, references.organizations);
         const project = existing
           ? await this.projectService.updateProject(existing.id, dto as never)
           : await this.projectService.createProject(dto);
         await this.importRelations(project.id, row, result.details, references.suppliers, references.organizations);
         result.imported += 1;
         if (project?.id) result.createdIds.push(project.id);
-        existingTitles.add(titleKey);
+        const existingIndex = existingProjects.findIndex((candidate) => candidate.id === project.id);
+        if (existingIndex >= 0) existingProjects[existingIndex] = project;
+        else existingProjects.push(project);
       } catch (e) {
         result.failed += 1;
         result.errors.push({
@@ -351,8 +356,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return row.externalRef || row.id || row.projectReference || row.reference;
   }
 
-  private async findExistingProject(externalRef?: string, reference?: string, title?: string): Promise<ProjectDTO | null> {
-    const projects = await this.projectService.getAllProjects();
+  private findExistingProject(projects: ProjectDTO[], externalRef?: string, reference?: string, title?: string): ProjectDTO | null {
     return projects.find((project) => {
       const candidate = project as ProjectDTO & { reference?: string };
       return (externalRef && candidate.externalRef === externalRef) ||
@@ -362,7 +366,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     }) ?? null;
   }
 
-  private toCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
+  /** Mapping pur et testable du format d'échange vers le contrat de création. */
+  public mapImportRowToCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
     const input = row as ProjectImportRow & {
       budget?: number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> };
       timeline?: { startDate?: string; endDate?: string };
@@ -392,13 +397,14 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       marketType: row.marketType,
       selectionMode: row.selectionMode,
       projectType: row.projectType ?? input.type ?? row.referentialCode,
+      referentialCode: row.referentialCode,
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
       organizationId: row.organizationId && organizations?.get(row.organizationId) || row.organizationId,
       externalRef: this.getExternalRef(row),
       projectReference: input.reference,
-      budgetSources: row.budgetSources,
+      budgetSources: row.budgetSources ?? (typeof input.budget === 'object' ? input.budget.sources : undefined),
       interventionZones: zones,
       interventionZone: firstZone,
     } as CreateProjectDTO;
@@ -425,17 +431,24 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
           phaseRecord.name === phase.name;
       });
       const phaseData = {
-        id: crypto.randomUUID(),
+        id: existingPhase?.id ?? '',
         projectId,
         name: phase.name,
+        phaseCode: phase.code,
+        externalRef: phase.externalRef ?? (phase.code ? `${this.getExternalRef(row) ?? projectId}:${phase.code}` : undefined),
         description: phase.description,
-        type: 'execution' as PhaseDTO['type'],
+        type: PhaseType.STRUCTURAL,
+        status: PhaseStatus.PENDING,
+        priority: PhasePriority.MEDIUM,
+        progress: phase.progress ?? 0,
         orderIndex: phase.order,
         startDate: phase.startDate,
         endDate: phase.endDate,
         estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
         customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
-      } as PhaseDTO;
+        createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } satisfies PhaseDTO;
       const createdPhase = existingPhase
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
@@ -451,7 +464,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
           description: milestone.description,
           target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
           status: this.normalizeMilestoneStatus(milestone.status),
-          progress: milestone.progress,
+          progress: milestone.progress ?? milestone.progressPercent,
+          external_ref: milestone.externalRef,
         };
         if (existingMilestone) await this.milestoneService.updateMilestone(existingMilestone.id, milestoneData);
         else await this.milestoneService.createMilestone(milestoneData);
@@ -621,6 +635,9 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
 
   public toImportRow(p: ProjectDTO): ProjectImportRow {
     return {
+      id: p.id,
+      externalRef: p.externalRef,
+      reference: p.projectReference,
       title: p.title,
       description: p.description,
       status: p.status,
@@ -633,25 +650,40 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       latitude: p.latitude,
       longitude: p.longitude,
       teamSize: p.teamSize,
+      projectType: p.subCategory,
+      referentialCode: p.referentialCode,
+      organizationId: p.organizationId,
+      financingSource: p.financingSource,
+      marketType: p.marketType,
+      selectionMode: p.selectionMode,
+      launchDate: p.launchDate,
+      attributionDate: p.attributionDate,
       interventionZones: p.interventionZones,
     };
   }
 
   private async toExportRowWithRelations(p: ProjectDTO, includeZone: boolean): Promise<Record<string, unknown>> {
     const base = this.toExportRow(p, includeZone);
-    const phases = await this.phaseService.getPhasesByProject(p.id);
+    const [phases, stakeholders] = await Promise.all([
+      this.phaseService.getPhasesByProject(p.id),
+      this.stakeholderService.getProjectStakeholders(p.id),
+    ]);
     const phaseRows = await Promise.all(phases.map(async (phase) => ({
       ...phase,
       milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
       tasks: await this.taskService.getTasksByPhase(phase.id),
       dqeLines: await boqRepository.list({ source: 'dqe', contextId: p.id, projectId: p.id, phaseId: phase.id }),
     })));
-    return { ...base, phases: phaseRows };
+    const dqeLines = phaseRows.flatMap((phase) => phase.dqeLines as BoqLineDTO[]);
+    return { ...base, phases: phaseRows, dqeLines, stakeholders };
   }
 
   private toExportRow(p: ProjectDTO, includeZone: boolean): Record<string, unknown> {
     const base: Record<string, unknown> = {
       id: p.id,
+      externalRef: p.externalRef,
+      organizationId: p.organizationId,
+      reference: p.projectReference,
       title: p.title,
       description: p.description,
       status: p.status,
@@ -668,6 +700,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       marketType: p.marketType,
       selectionMode: p.selectionMode,
       projectType: p.subCategory,
+      referentialCode: p.referentialCode,
       sector: p.sector,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,

@@ -19,6 +19,7 @@ import { MaterialService } from './MaterialService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
+import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
 /**
  * Custom error class for dashboard operations
@@ -95,10 +96,15 @@ export class DashboardService {
       });
 
       // Calculate basic statistics - handle various status formats
-      const activeProjects = projectsData.filter(p => {
-        const status = String(p.status);
-        return status === 'en cours' || status === 'in_progress';
-      }).length;
+      const normalizeStatus = (status: unknown): 'active' | 'completed' | 'pending' | 'cancelled' | 'other' => {
+        const value = String(status ?? '').toLowerCase();
+        if ([ProjectStatus.EN_COURS, ProjectStatus.EN_CONSTRUCTION, ProjectStatus.EN_COURS_LEGACY, 'en cours', 'in_progress', 'en_cours'].includes(value as ProjectStatus)) return 'active';
+        if ([ProjectStatus.TERMINE, ProjectStatus.COMPLETED, ProjectStatus.TERMINE_LEGACY, 'terminé'].includes(value as ProjectStatus)) return 'completed';
+        if ([ProjectStatus.DRAFT, ProjectStatus.PLANNED, ProjectStatus.PLANIFIE, ProjectStatus.PLANIFIE_LEGACY, ProjectStatus.EN_ATTENTE, ProjectStatus.EN_ATTENTE_LEGACY, 'pending', 'planification'].includes(value as ProjectStatus)) return 'pending';
+        if ([ProjectStatus.ANNULE, ProjectStatus.CANCELLED, ProjectStatus.ANNULE_LEGACY, 'annulé'].includes(value as ProjectStatus)) return 'cancelled';
+        return 'other';
+      };
+      const activeProjects = projectsData.filter(p => normalizeStatus(p.status) === 'active').length;
       const totalProjects = projectsData.length;
       const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0);
 
@@ -115,10 +121,10 @@ export class DashboardService {
       };
 
       const statusDistribution = [
-        { name: 'in_progress', value: projectsData.filter(p => String(p.status) === 'in_progress' || String(p.status) === 'en cours').length, color: statusColors['in_progress'] },
-        { name: 'completed', value: projectsData.filter(p => String(p.status) === 'completed' || String(p.status) === 'terminé').length, color: statusColors['completed'] },
-        { name: 'pending', value: projectsData.filter(p => String(p.status) === 'pending' || String(p.status) === 'en attente').length, color: statusColors['pending'] },
-        { name: 'cancelled', value: projectsData.filter(p => String(p.status) === 'cancelled' || String(p.status) === 'annulé').length, color: statusColors['cancelled'] },
+        { name: 'in_progress', value: projectsData.filter(p => normalizeStatus(p.status) === 'active').length, color: statusColors['in_progress'] },
+        { name: 'completed', value: projectsData.filter(p => normalizeStatus(p.status) === 'completed').length, color: statusColors['completed'] },
+        { name: 'pending', value: projectsData.filter(p => normalizeStatus(p.status) === 'pending').length, color: statusColors['pending'] },
+        { name: 'cancelled', value: projectsData.filter(p => normalizeStatus(p.status) === 'cancelled').length, color: statusColors['cancelled'] },
       ];
 
       // Health distribution based on project progress

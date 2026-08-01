@@ -203,14 +203,18 @@ export function useUnifiedProjectWorkflow(
     }
   }, [workflowState.currentStep]);
 
-  const saveCurrentStep = useCallback(async (stepNumber?: number) => {
-    if (!formData) {
+  const saveCurrentStep = useCallback(async (
+    stepNumber?: number,
+    dataOverride?: ProjectWorkflowData,
+  ) => {
+    const dataToSave = dataOverride ?? formData;
+    if (!dataToSave) {
       toast({ title: "Erreur", description: "Aucune donnée à sauvegarder", variant: "destructive" });
       return { success: false, message: 'No data' } as SaveResult;
     }
     try {
       return await saveStepMutation.mutateAsync({
-        data: formData,
+        data: dataToSave,
         stepNumber: stepNumber ?? workflowState.currentStep,
       });
     } catch (error: unknown) {

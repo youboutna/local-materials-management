@@ -125,7 +125,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const defaultTab = searchParams.get("tab") || "overview";
   const [activeTab, setActiveTab] = useState(defaultTab);
   const queryClient = useQueryClient();
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   // Fetch project data using ProjectService
   const {
