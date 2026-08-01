@@ -15,6 +15,7 @@ import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entiti
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { formatUnknownError } from '@/utils/errors';
 import { ReferentialService } from './ReferentialService';
 
 /**
