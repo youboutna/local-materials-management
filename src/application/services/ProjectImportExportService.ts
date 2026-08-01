@@ -292,10 +292,16 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
 
   private async importOrganizations(rows: ProjectImportOrganization[]): Promise<Map<string, string>> {
     const references = new Map<string, string>();
+    const existing = await this.organizationService.list();
     for (const row of rows) {
       if (!row.id || !row.name?.trim()) continue;
-      const organization = await this.organizationService.upsert({
-        id: this.isUUID(row.id) ? row.id : undefined,
+      const current = existing.find((organization) =>
+        organization.id === row.id ||
+        organization.externalRef === row.id ||
+        (!!row.code && organization.code?.trim().toLowerCase() === row.code.trim().toLowerCase()) ||
+        organization.name.trim().toLowerCase() === row.name.trim().toLowerCase(),
+      );
+      const payload = {
         name: row.name.trim(),
         code: row.code,
         orgType: row.type,
@@ -305,8 +311,17 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         email: row.email,
         isActive: row.isActive ?? true,
         externalRef: this.isUUID(row.id) ? undefined : row.id,
-      });
+      };
+      const organization = current
+        ? await this.organizationService.update(current.id, payload)
+        : await this.organizationService.create({
+          ...payload,
+          id: this.isUUID(row.id) ? row.id : undefined,
+        });
       references.set(row.id, organization.id);
+      const existingIndex = existing.findIndex((candidate) => candidate.id === organization.id);
+      if (existingIndex >= 0) existing[existingIndex] = organization;
+      else existing.push(organization);
     }
     return references;
   }

@@ -7,6 +7,7 @@ import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
+import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 export type ProjectStatus =
   | "en cours"
@@ -78,20 +79,15 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       setMapLocations(locations);
     } else if (projects) {
       const projectLocations: MapLocation[] = projects
-        .filter(
-          (project) =>
-            (project.latitude && project.longitude) ||
-            (project.coordinates && typeof project.coordinates === 'object' && 'latitude' in project.coordinates && 'longitude' in project.coordinates)
-        )
-        .map((project) => {
-          const lat = project.latitude || (project.coordinates as { latitude: number; longitude: number } | undefined)?.latitude || 0;
-          const lng = project.longitude || (project.coordinates as { latitude: number; longitude: number } | undefined)?.longitude || 0;
+        .flatMap((project) => {
+          const coordinates = getProjectCoordinates(project);
+          if (!coordinates) return [];
           return {
             id: project.id,
             name: project.title,
             type: "project" as const,
-            latitude: lat,
-            longitude: lng,
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
             status: project.status,
             region: project.location,
             startDate: project.startDate,
