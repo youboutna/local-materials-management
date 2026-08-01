@@ -3,7 +3,8 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 export interface Milestone {
   id: string;
@@ -19,21 +20,22 @@ export interface Milestone {
 }
 
 export function useMilestonesHex(projectId?: string, phaseId?: string) {
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchMilestones = useCallback(async () => {
-    if (!projectId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
+  const {
+    data: milestones = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery<Milestone[]>({
+    queryKey: ['milestones-hex', projectId],
+    enabled: !!projectId,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    queryFn: async () => {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
-      const data = await milestoneRepo.findByProjectId(projectId);
-
-      setMilestones((data || []).map((m: any) => ({
+      const data = await milestoneRepo.findByProjectId(projectId!);
+      return (data || []).map((m: any) => ({
         id: m.id,
         projectId: m.project_id || m.projectId,
         phaseId: m.phase_id || m.phaseId || undefined,
@@ -42,19 +44,17 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
         targetDate: m.target_date || m.targetDate,
         completedDate: m.completed_date || m.completedDate || undefined,
         status: (m.status || 'pending') as Milestone['status'],
-        weight: m.weight || 0.1,
+        weight: m.weight ?? 0.1,
         notes: m.notes || undefined,
-      })));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load milestones');
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, phaseId]);
+      }));
+    },
+  });
 
-  useEffect(() => {
-    fetchMilestones();
-  }, [fetchMilestones]);
+  const error = queryError instanceof Error ? queryError.message : null;
+
+  const fetchMilestones = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['milestones-hex', projectId] });
+  }, [queryClient, projectId]);
 
   const createMilestone = useCallback(async (
     milestone: Omit<Milestone, 'id'>
@@ -141,7 +141,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     milestones,
     loading,
     error,
-    refetch: fetchMilestones,
+    refetch,
     createMilestone,
     updateMilestone,
     toggleMilestoneStatus,
