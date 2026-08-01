@@ -201,7 +201,7 @@ export class ProjectTransformer {
    * Converts camelCase domain properties to snake_case database fields
    */
   static toSupabase(project: Project): Record<string, unknown> {
-    return {
+    const payload: Record<string, unknown> = {
       id: project.id,
       title: project.title,
       description: project.description,
@@ -258,9 +258,43 @@ export class ProjectTransformer {
       sector: project.sector,
       site_details: project.siteDetails,
       supervisor_id: project.supervisorId,
-      terrain_type: project.terrainType || '',
+      terrain_type: project.terrainType,
+
+      // === Symétrie DB → DTO → DB (Règle #1 : la flèche doit être bijective) ===
+      // Ces colonnes étaient hydratées par fromSupabase() mais jamais réécrites,
+      // ce qui cassait le round-trip UI → DB (type de marché, mode de sélection,
+      // méthodologie, priorité, zone géographique, permis, assurances…).
+      market_type: project.marketType,
+      selection_mode: project.selectionMode,
+      methodology: project.methodology,
+      current_phase: project.currentPhase,
+      current_stage: project.currentStage,
+      project_type: project.projectType,
+      priority: project.priority,
+      geographic_zone: project.geographicZone,
+      environmental_constraints: project.environmentalConstraints,
+      area_sqm: project.areaSqm,
+      client_id: project.clientId,
+      technical_manager_id: project.technicalManager?.id,
+      requires_permits: project.requiresPermits,
+      permit_number: project.permitNumber,
+      has_utilities: project.hasUtilities,
+      insurance_required: project.insuranceRequired,
+      allows_initial_payment: project.allowsInitialPayment,
+      launch_date: project.launchDate instanceof Date
+        ? project.launchDate.toISOString()
+        : project.launchDate,
     };
+
+    // Un update partiel ne doit jamais écraser une colonne avec `undefined` :
+    // on élague les clés non renseignées avant l'envoi à PostgREST.
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) delete payload[key];
+    });
+
+    return payload;
   }
+
 
   /**
    * Batch: Supabase Rows → Domain Entities

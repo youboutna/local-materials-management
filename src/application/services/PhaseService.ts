@@ -15,6 +15,7 @@ import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entiti
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { formatUnknownError } from '@/utils/errors';
 import { ReferentialService } from './ReferentialService';
 
 /**
@@ -57,7 +58,7 @@ export class PhaseService {
       return savedPhase;
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create phase: ${error}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create phase: ${formatUnknownError(error)}`);
     }
   }
 
@@ -174,7 +175,7 @@ export class PhaseService {
       return savedPhases;
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create phases from referential: ${error}`);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to create phases from referential: ${formatUnknownError(error)}`);
     }
   }
 
