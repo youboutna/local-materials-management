@@ -46,8 +46,10 @@ import { PhaseDTO, PhasePriority, PhaseStatus, PhaseType } from '@/dtos/entities
 import { CreateProjectDTO, ProjectDTO, ProjectStatus, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { ProjectWorkflowData, SaveResult, StepRelatedDataDTO, ValidationResult, WorkflowStep, WorkflowTransition } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
 
@@ -188,6 +190,23 @@ export class ProjectWorkflowService {
     this.insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
   }
 
+  static default(): ProjectWorkflowService {
+    return new ProjectWorkflowService(
+      RepositoryFactory.getProjectRepository(),
+      RepositoryFactory.getPhaseRepository(),
+      RepositoryFactory.getRiskRepository(),
+      RepositoryFactory.getProjectStakeholderRepository(),
+      RepositoryFactory.getMilestoneRepository(),
+      RepositoryFactory.getTaskRepository(),
+      RepositoryFactory.getMaterialRepository(),
+      RepositoryFactory.getInspectionRepository(),
+      RepositoryFactory.getDocumentRepository(),
+      RepositoryFactory.getPaymentRepository(),
+      RepositoryFactory.getEmployeeRepository(),
+      RepositoryFactory.getSupplierRepository(),
+    );
+  }
+
   // =================== WORKFLOW INITIALIZATION ===================
 
   initializeWorkflow(mode: 'creation' | 'edit'): { mode: string; currentStep: number; totalSteps: number } {
@@ -240,6 +259,36 @@ export class ProjectWorkflowService {
       ]);
 
       // Build complete workflow data
+      const phaseData = await Promise.all((phases || []).map(async (phase: any) => ({
+        id: phase.id,
+        projectId: phase.projectId || projectId,
+        name: phase.name || phase.phaseName || '',
+        phaseCode: phase.phaseCode || phase.phase_code || phase.customPhaseData?.phaseCode,
+        description: phase.description || '',
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        progress: phase.progress || 0,
+        status: phase.status || 'not_started',
+        type: phase.type || phase.phaseType || 'custom',
+        priority: phase.priority || 'medium',
+        orderIndex: phase.orderIndex || 0,
+        estimatedCost: phase.estimatedCost || 0,
+        estimatedDuration: phase.estimatedDuration || 0,
+        constructionStage: phase.constructionStage || '',
+        milestones: this.milestoneService
+          ? await this.milestoneService.getPhaseMilestones(projectId, phase.id).catch(() => [])
+          : [],
+        tasks: this.taskService
+          ? await this.taskService.getTasksByPhase(phase.id).catch(() => [])
+          : [],
+        dqeLines: await boqRepository.list({
+          source: 'dqe',
+          contextId: projectId,
+          projectId,
+          phaseId: phase.id,
+        }).catch(() => []),
+      }))) as PhaseDTO[];
+
       const workflowData: ProjectWorkflowData = {
         projectId,
         currentStep: 1,
@@ -247,22 +296,9 @@ export class ProjectWorkflowService {
         isComplete: projectDTO.status === ProjectStatus.TERMINE || projectDTO.status === ProjectStatus.COMPLETED,
         projectData: projectDTO,
         relatedData: {
-          phases: (phases || []).map((p: any) => ({
-            id: p.id,
-            projectId: p.projectId || projectId,
-            name: p.name || p.phaseName || '',
-            description: p.description || '',
-            startDate: p.startDate,
-            endDate: p.endDate,
-            progress: p.progress || 0,
-            status: p.status || 'not_started',
-            type: p.type || p.phaseType || 'custom',
-            priority: p.priority || 'medium',
-            orderIndex: p.orderIndex || 0,
-            estimatedCost: p.estimatedCost || 0,
-            estimatedDuration: p.estimatedDuration || 0,
-            constructionStage: p.constructionStage || '',
-          })) as PhaseDTO[],
+          phases: phaseData,
+          milestones: phaseData.flatMap((phase) => phase.milestones ?? []),
+          dqeLines: phaseData.flatMap((phase) => phase.dqeLines ?? []) as BoqLineDTO[],
           risks: (risks || []).map((r: any) => ({
             id: r.id,
             projectId: r.projectId || projectId,
@@ -274,7 +310,7 @@ export class ProjectWorkflowService {
             status: r.status || 'identified',
             mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
           })) as RiskDTO[],
-          stakeholders: (stakeholders || []) as any,
+          stakeholders: (stakeholders || []) as ProjectWorkflowData['relatedData']['stakeholders'],
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
@@ -410,6 +446,7 @@ export class ProjectWorkflowService {
         case 4: {
           if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
           await this.upsertPhases(projectId, data.relatedData?.phases || []);
+          await this.upsertPhaseRelations(projectId, data.relatedData?.phases || [], data.relatedData?.dqeLines || []);
           break;
         }
         case 5: {
@@ -556,11 +593,73 @@ export class ProjectWorkflowService {
     const existingIds = new Set(existing.map((p: any) => p.id));
     for (const phase of phases) {
       const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
-      if (phase.id && existingIds.has(phase.id)) {
-        await this.phaseRepository.update(phase.id, payload as unknown as Partial<Phase>);
+      const existingPhase = existing.find((candidate: any) =>
+        (phase.id && candidate.id === phase.id) ||
+        (phase.phaseCode && (candidate.phaseCode === phase.phaseCode || candidate.customPhaseData?.phaseCode === phase.phaseCode)) ||
+        (!phase.phaseCode && candidate.name === phase.name),
+      );
+      if (existingPhase) {
+        await this.phaseRepository.update(existingPhase.id, payload as unknown as Partial<Phase>);
       } else {
         const { id: _omit, ...toCreate } = payload as any;
         await this.phaseRepository.create(toCreate as unknown as Phase);
+      }
+    }
+  }
+
+  private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
+    const persistedPhases = await this.phaseRepository.findByProjectId(projectId);
+    for (const phase of phases) {
+      const persisted = persistedPhases.find((candidate: any) =>
+        (phase.id && candidate.id === phase.id) ||
+        (phase.phaseCode && candidate.phaseCode === phase.phaseCode) ||
+        candidate.name === phase.name,
+      );
+      if (!persisted) continue;
+      for (const milestone of phase.milestones ?? []) {
+        if (!this.milestoneService) continue;
+        const existing = await this.milestoneService.getPhaseMilestones(projectId, persisted.id).catch(() => []);
+        const match = existing.find((candidate) => candidate.title === milestone.title);
+        const payload = {
+          project_id: projectId,
+          phase_id: persisted.id,
+          title: milestone.title,
+          description: milestone.description,
+          target_date: milestone.targetDate || new Date().toISOString(),
+          status: milestone.status,
+          progress: milestone.progress,
+        };
+        if (match) await this.milestoneService.updateMilestone(match.id, payload);
+        else await this.milestoneService.createMilestone(payload);
+      }
+
+      if (this.taskService) {
+        const existingTasks = await this.taskService.getTasksByPhase(persisted.id).catch(() => []);
+        for (const task of phase.tasks ?? []) {
+          const taskName = task.title ?? task.name ?? 'Tâche importée';
+          const existingTask = existingTasks.find((candidate) => candidate.title === taskName);
+          const payload = {
+            projectId,
+            phaseId: persisted.id,
+            title: taskName,
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            dueDate: task.dueDate ?? task.due_date,
+            assignedTo: task.assignedTo,
+          };
+          if (existingTask) await this.taskService.updateTask(existingTask.id, payload);
+          else await this.taskService.createTask(payload);
+        }
+      }
+
+      const lines = dqeLines.filter((line) => line.phaseId === phase.id || line.phaseId === persisted.id);
+      for (const line of lines) {
+        const existing = (await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: persisted.id }))
+          .find((candidate) => candidate.btpCode === line.btpCode);
+        const payload = { ...line, phaseId: persisted.id, projectId, source: 'dqe' as const };
+        if (existing) await boqRepository.update(existing.id, payload);
+        else await boqRepository.create(payload);
       }
     }
   }
@@ -833,9 +932,15 @@ export class ProjectWorkflowService {
         await this.projectRepository.update(savedProjectId, projectEntity);
       }
 
-      // Save related data
+      // Save related data through the same idempotent path used by step saves.
       if (savedProjectId && data.relatedData) {
-        await this.saveRelatedData(savedProjectId, data.relatedData);
+        await this.upsertPhases(savedProjectId, data.relatedData.phases || []);
+        await this.upsertPhaseRelations(
+          savedProjectId,
+          data.relatedData.phases || [],
+          data.relatedData.dqeLines || [],
+        );
+        await this.saveRelatedData(savedProjectId, data.relatedData, { skipPhases: true, skipRelations: true });
       }
 
       return {
@@ -851,9 +956,14 @@ export class ProjectWorkflowService {
     }
   }
 
-  private async saveRelatedData(projectId: string, relatedData: StepRelatedDataDTO & { milestones?: MilestoneDTO[]; documents?: DocumentDTO[]; payments?: PaymentDTO[]; bankGuarantees?: BankGuaranteeDTO[]; insuranceCertificates?: InsuranceCertificateDTO[]; receptions?: any[] }): Promise<void> {
-    // Save phases if provided
-    if (relatedData.phases && relatedData.phases.length > 0) {
+  private async saveRelatedData(
+    projectId: string,
+    relatedData: StepRelatedDataDTO & { milestones?: MilestoneDTO[]; documents?: DocumentDTO[]; payments?: PaymentDTO[]; bankGuarantees?: BankGuaranteeDTO[]; insuranceCertificates?: InsuranceCertificateDTO[]; receptions?: any[] },
+    options: { skipPhases?: boolean; skipRelations?: boolean } = {},
+  ): Promise<void> {
+    // Legacy callers can still use this method; normal workflow saves pass
+    // through the idempotent phase/relation helpers above.
+    if (!options.skipPhases && relatedData.phases && relatedData.phases.length > 0) {
       for (const phase of relatedData.phases) {
         const phaseEntity = {
           ...phase,
@@ -877,7 +987,7 @@ export class ProjectWorkflowService {
     }
 
     // Save milestones if provided
-    if (relatedData.milestones && relatedData.milestones.length > 0 && this.milestoneService) {
+    if (!options.skipRelations && relatedData.milestones && relatedData.milestones.length > 0 && this.milestoneService) {
       for (const milestone of relatedData.milestones) {
         await this.milestoneService.createMilestone({
           ...milestone,
@@ -887,7 +997,7 @@ export class ProjectWorkflowService {
     }
 
     // Save tasks if provided
-    if (relatedData.tasks && relatedData.tasks.length > 0 && this.taskService) {
+    if (!options.skipRelations && relatedData.tasks && relatedData.tasks.length > 0 && this.taskService) {
       for (const task of relatedData.tasks) {
         await this.taskService.createTask({
           ...task,
@@ -1481,14 +1591,14 @@ export function createProjectWorkflowService(
   phaseRepo: IPhaseRepository,
   riskRepo: IRiskRepository,
   stakeholderRepo: IProjectStakeholderRepository,
-  milestoneRepo?: IMilestoneRepository,
-  taskRepo?: ITaskRepository,
-  materialRepo?: IMaterialRepository,
-  inspectionRepo?: IInspectionRepository,
-  documentRepo?: IDocumentRepository,
-  paymentRepo?: IPaymentRepository,
-  employeeRepo?: IEmployeeRepository,
-  supplierRepo?: ISupplierRepository,
+  milestoneRepo: IMilestoneRepository = RepositoryFactory.getMilestoneRepository(),
+  taskRepo: ITaskRepository = RepositoryFactory.getTaskRepository(),
+  materialRepo: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
+  inspectionRepo: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
+  documentRepo: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
+  paymentRepo: IPaymentRepository = RepositoryFactory.getPaymentRepository(),
+  employeeRepo: IEmployeeRepository = RepositoryFactory.getEmployeeRepository(),
+  supplierRepo: ISupplierRepository = RepositoryFactory.getSupplierRepository(),
   receptionRepo?: IReceptionRepository
 ) {
   return new ProjectWorkflowService(

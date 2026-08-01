@@ -26,6 +26,8 @@ export interface ProjectStakeholder {
   stakeholderEntityType: StakeholderEntityType;
   employeeId?: string | null;
   supplierId?: string | null;
+  organizationId?: string | null;
+  externalRef?: string | null;
   externalName?: string | null;
   externalEmail?: string | null;
   externalPhone?: string | null;
@@ -49,6 +51,8 @@ export interface ProjectStakeholderEntityProps {
   stakeholderEntityType: StakeholderEntityType;
   employeeId?: string | null;
   supplierId?: string | null;
+  organizationId?: string | null;
+  externalRef?: string | null;
   externalName?: string | null;
   externalEmail?: string | null;
   externalPhone?: string | null;
@@ -72,6 +76,8 @@ export class ProjectStakeholderEntity implements ProjectStakeholder {
     public readonly stakeholderEntityType: StakeholderEntityType,
     public readonly employeeId: string | null,
     public readonly supplierId: string | null,
+    public readonly organizationId: string | null,
+    public readonly externalRef: string | null,
     public readonly externalName: string | null,
     public readonly externalEmail: string | null,
     public readonly externalPhone: string | null,
@@ -96,6 +102,8 @@ export class ProjectStakeholderEntity implements ProjectStakeholder {
       props.stakeholderEntityType,
       props.employeeId ?? null,
       props.supplierId ?? null,
+      props.organizationId ?? null,
+      props.externalRef ?? null,
       props.externalName ?? null,
       props.externalEmail ?? null,
       props.externalPhone ?? null,

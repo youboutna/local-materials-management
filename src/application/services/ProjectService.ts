@@ -91,29 +91,9 @@ export class ProjectService {
     try {
       this.validateCreateRequest(request);
       
-      const projectData: Partial<Project> = {
-        title: request.title,
-        description: request.description,
-        location: request.location,
-        status: 'en_attente' as ProjectStatus, // Cast to ProjectStatus type
-        budget: request.budget,
-        progress: 0,
-        startDate: request.startDate ? new Date(request.startDate) : null,
-        endDate: request.endDate ? new Date(request.endDate) : null,
-        teamSize: request.teamSize || 0,
-        // Additional fields from CreateProjectDTO that are allowed
-        currency: request.currency || 'EUR'
-      };
-
-      // Handle coordinates if provided
-      if (request.latitude && request.longitude) {
-        const coordinates = new ProjectCoordinates(
-          Number(request.latitude),
-          Number(request.longitude)
-        );
-        // Coordinates will be set during Project construction
-        (projectData as Partial<Project> & { coordinates?: ProjectCoordinates }).coordinates = coordinates;
-      }
+      // Keep the complete UI -> DTO -> domain/adapter mapping in one place.
+      // The adapter then converts this camelCase object to database snake_case.
+      const projectData = ProjectTransformer.fromCreateDTOToEntity(request);
 
       const project = await this.projectRepository.create(projectData);
       return ProjectTransformer.toDTO(project);
@@ -300,7 +280,7 @@ export class ProjectService {
       // Update project with new status
       const updateData: UpdateProjectDTO = {
         id,
-        status: newStatus as any
+        status: newStatus as ProjectStatus
       };
 
       const updatedProject = await this.update(id, updateData);

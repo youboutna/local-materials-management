@@ -76,8 +76,24 @@ export class SupabaseOrganizationAdapter implements IOrganizationRepository {
 
   async upsert(data: CreateOrganizationDTO): Promise<OrganizationDTO> {
     const payload = toRow(data);
-    const onConflict = data.externalRef ? 'external_ref' : 'id';
-    const { data: row, error } = await (supabase as any).from(TABLE).upsert(payload, { onConflict }).select().single();
+    if (data.externalRef) {
+      const { data: existing, error: findError } = await (supabase as any)
+        .from(TABLE)
+        .select('id')
+        .eq('external_ref', data.externalRef)
+        .maybeSingle();
+      if (findError) throw new Error(findError.message);
+
+      if (existing?.id) {
+        return this.update(existing.id, data);
+      }
+    }
+
+    const { data: row, error } = await (supabase as any)
+      .from(TABLE)
+      .insert(payload)
+      .select()
+      .single();
     if (error) throw new Error(error.message);
     return toDTO(row);
   }

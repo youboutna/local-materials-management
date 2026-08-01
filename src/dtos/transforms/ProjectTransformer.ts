@@ -8,30 +8,29 @@
  * Batch operations (manyFromSupabase, manyToDTO, manyToUI)
  */
 
+import type { ReferentialType } from '@/config/referentials';
+import { InspectionStatus } from '@/domain/entities/Inspection';
+import { InterventionZone, InterventionZoneCollection } from '@/domain/entities/InterventionZone';
 import { Project, ProjectCoordinates, ProjectResource } from '@/domain/entities/Project';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
+import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import {
+  CreateProjectDTO,
+  ProjectDetailDTO,
   ProjectDTO,
   ProjectStatus,
-  CreateProjectDTO,
-  UpdateProjectDTO,
-  ProjectDetailDTO,
   ProjectSummaryDTO,
-  CreateProjectRequestDTO
+  UpdateProjectDTO
 } from '@/dtos/entities/ProjectDTO';
-import type { ConstructionStage } from '@/dtos/entities/ProjectDTO';
-import { InterventionZone, InterventionZoneCollection } from '@/domain/entities/InterventionZone';
-import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
-import { PhaseTransformer } from './PhaseTransformer';
-import { TaskTransformer } from './TaskTransformer';
-import { RiskTransformer } from './RiskTransformer';
+import { InspectionTransformer } from './InspectionTransformer';
+import { MaterialTransformer } from './MaterialTransformer';
 import { MilestoneTransformer } from './MilestoneTransformer';
 import { PaymentTransformer } from './PaymentTransformer';
-import { TenderDomainTransformer } from './TenderDomainTransformer';
-import { MaterialTransformer } from './MaterialTransformer';
-import { InspectionTransformer } from './InspectionTransformer';
+import { PhaseTransformer } from './PhaseTransformer';
+import { RiskTransformer } from './RiskTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
-import { InspectionStatus } from '@/domain/entities/Inspection';
-import type { ReferentialType } from '@/config/referentials';
+import { TaskTransformer } from './TaskTransformer';
+import { TenderDomainTransformer } from './TenderDomainTransformer';
 
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
@@ -190,6 +189,8 @@ export class ProjectTransformer {
       insuranceRequired: row.insurance_required as boolean | undefined,
       launchDate: row.launch_date ? new Date(row.launch_date as string) : undefined,
       projectReference: (row.project_reference as string) || undefined,
+      externalRef: (row.external_ref as string) || undefined,
+      organizationId: (row.organization_id as string) || undefined,
       referentialCode: (row.referential_code as ReferentialType) || undefined,
       allowsInitialPayment: row.allows_initial_payment as boolean | undefined,
     });
@@ -245,6 +246,8 @@ export class ProjectTransformer {
       project_order: project.projectOrder,
       project_reference_number: project.projectReferenceNumber,
       project_reference: project.projectReference,
+      external_ref: project.externalRef,
+      organization_id: project.organizationId,
       referential_code: project.referentialCode,
       project_responsable_id: project.projectManagerId,
       reception_status: project.receptionStatus,
@@ -327,6 +330,8 @@ export class ProjectTransformer {
       currentStage: project.currentStage as ConstructionStage | undefined,
       methodology: project.methodology as "waterfall" | "agile" | "hybrid" | undefined,
       projectReference: project.projectReference,
+      externalRef: project.externalRef,
+      organizationId: project.organizationId,
       projectReferenceNumber: project.projectReferenceNumber,
       referentialCode: project.referentialCode,
       selectionMode: project.selectionMode || undefined,
@@ -747,6 +752,8 @@ export class ProjectTransformer {
     if (dto.environmentalConstraints !== undefined) entityData.environmentalConstraints = dto.environmentalConstraints;
     if (dto.projectReferenceNumber !== undefined) entityData.projectReferenceNumber = dto.projectReferenceNumber;
     if (dto.projectReference !== undefined) entityData.projectReference = dto.projectReference;
+    if (dto.externalRef !== undefined) entityData.externalRef = dto.externalRef;
+    if (dto.organizationId !== undefined) entityData.organizationId = dto.organizationId;
     if (dto.referentialCode !== undefined) entityData.referentialCode = dto.referentialCode;
     if (dto.projectOrder !== undefined) entityData.projectOrder = dto.projectOrder;
     if (dto.clientId !== undefined) entityData.clientId = dto.clientId;
@@ -803,6 +810,8 @@ export class ProjectTransformer {
     if (dto.projectReference !== undefined) updates.projectReferenceNumber = dto.projectReference;
     if (dto.projectReferenceNumber !== undefined) updates.projectReferenceNumber = dto.projectReferenceNumber;
     if (dto.projectReference !== undefined) updates.projectReference = dto.projectReference;
+    if (dto.externalRef !== undefined) updates.externalRef = dto.externalRef;
+    if (dto.organizationId !== undefined) updates.organizationId = dto.organizationId;
     if (dto.referentialCode !== undefined) updates.referentialCode = dto.referentialCode;
     if (dto.currentPhase !== undefined) updates.currentPhase = dto.currentPhase;
     if (dto.currentStage !== undefined) updates.currentStage = dto.currentStage;

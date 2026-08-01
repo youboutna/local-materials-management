@@ -6,6 +6,7 @@
 import { BaseEntityDTO, ContactInfoDTO } from '../shared';
 
 export interface SupplierDTO extends BaseEntityDTO {
+  externalRef?: string;
   name: string;
   email?: string;
   phone?: string;
@@ -72,6 +73,7 @@ export interface SupplierSummaryDTO {
 }
 
 export interface CreateSupplierDTO {
+  externalRef?: string;
   name: string;
   email?: string;
   phone?: string;

@@ -4,12 +4,11 @@
  * Follows hexagonal architecture principles from PROMPTS.md
  */
 
-import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { Supplier } from '@/domain/entities/Supplier';
-import { 
-  SupplierDTO,
-  SearchSuppliersOptions,
-  SearchSuppliersResult
+import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
+import {
+    SearchSuppliersOptions,
+    SearchSuppliersResult
 } from '@/dtos/entities/SupplierDTO';
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
@@ -106,6 +105,9 @@ export class SupplierService {
         new Date().toISOString(),
         new Date().toISOString()
       );
+      if (supplierData.externalRef !== undefined) {
+        newSupplier.externalRef = supplierData.externalRef;
+      }
       
       await this.supplierRepository.save(newSupplier);
       

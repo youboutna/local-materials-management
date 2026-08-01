@@ -1,9 +1,10 @@
 // Repository interface for Supplier entity
-import { Supplier, SupplierStatus, SupplierCategory } from '../entities/Supplier';
+import { Supplier, SupplierCategory, SupplierStatus } from '../entities/Supplier';
 
 export interface ISupplierRepository {
   // CRUD operations
   findById(id: string): Promise<Supplier | null>;
+  findByExternalRef(externalRef: string): Promise<Supplier | null>;
   findAll(): Promise<Supplier[]>;
   save(supplier: Supplier): Promise<void>;
   update(id: string, data: Partial<Supplier>): Promise<void>;

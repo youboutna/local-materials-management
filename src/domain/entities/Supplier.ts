@@ -31,6 +31,7 @@ export interface SupplierRating {
  */
 export interface SupplierProps {
   id: string;
+  externalRef?: string | null;
   name: string;
   email?: string | null;
   phone?: string | null;
@@ -48,6 +49,7 @@ export interface SupplierProps {
 }
 
 export class Supplier {
+  private _externalRef: string | null;
   // Private fields for encapsulation
   private _id: string;
   private _name: string;
@@ -82,6 +84,7 @@ export class Supplier {
     createdAt: string,
     updatedAt: string
   ) {
+    this._externalRef = null;
     this._id = this.validateId(id);
     this._name = this.validateName(name);
     this._email = this.validateEmail(email);
@@ -101,6 +104,7 @@ export class Supplier {
 
   // ============= Getters =============
   get id(): string { return this._id; }
+  get externalRef(): string | null { return this._externalRef; }
   get name(): string { return this._name; }
   get email(): string | null { return this._email; }
   get phone(): string | null { return this._phone; }
@@ -136,6 +140,11 @@ export class Supplier {
   // ============= Setters with Validation =============
   set name(value: string) { 
     this._name = this.validateName(value); 
+    this._updatedAt = new Date().toISOString();
+  }
+
+  set externalRef(value: string | null) {
+    this._externalRef = value?.trim() || null;
     this._updatedAt = new Date().toISOString();
   }
   
@@ -216,7 +225,7 @@ export class Supplier {
    * This is the ONLY way external code should create Supplier instances
    */
   static create(props: SupplierProps): Supplier {
-    return new Supplier(
+    const supplier = new Supplier(
       props.id,
       props.name,
       props.email ?? null,
@@ -233,12 +242,15 @@ export class Supplier {
       props.createdAt ?? new Date().toISOString(),
       props.updatedAt ?? new Date().toISOString()
     );
+    supplier._externalRef = props.externalRef ?? null;
+    return supplier;
   }
 
   // ============= Data Transformation Methods =============
   toPlainObject(): Record<string, unknown> {
     return {
       id: this._id,
+      externalRef: this._externalRef,
       name: this._name,
       email: this._email,
       phone: this._phone,
@@ -260,6 +272,7 @@ export class Supplier {
   private toProps(): SupplierProps {
     return {
       id: this._id,
+      externalRef: this._externalRef,
       name: this._name,
       email: this._email,
       phone: this._phone,

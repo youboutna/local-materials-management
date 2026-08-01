@@ -42,12 +42,7 @@ export class AppError extends Error {
 
 export function useProjectEditWorkflowHex(projectId?: string) {
   const queryClient = useQueryClient();
-  const projectWorkflowService = new ProjectWorkflowService(
-    RepositoryFactory.getProjectRepository(),
-    RepositoryFactory.getPhaseRepository(),
-    RepositoryFactory.getRiskRepository(),
-    RepositoryFactory.getProjectStakeholderRepository()
-  );
+  const projectWorkflowService = ProjectWorkflowService.default();
 
   // Query pour initialiser le workflow d'édition
   const initializeWorkflowQuery = useQuery({

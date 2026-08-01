@@ -41,12 +41,7 @@ export class AppError extends Error {
 
 export function useProjectCreationHex() {
   const queryClient = useQueryClient();
-  const projectCreationService = new ProjectWorkflowService(
-    RepositoryFactory.getProjectRepository(),
-    RepositoryFactory.getPhaseRepository(),
-    RepositoryFactory.getRiskRepository(),
-    RepositoryFactory.getProjectStakeholderRepository()
-  );
+  const projectCreationService = ProjectWorkflowService.default();
 
   // Mutation pour créer un projet avec validation référentielle
   const createProjectMutation = useMutation({

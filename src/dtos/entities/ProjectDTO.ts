@@ -4,15 +4,27 @@
  */
 
 
-import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardStatus, StandardPriority } from '../shared';
+import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardPriority, StandardStatus } from '../shared';
 import { PerformanceMetricsDTO } from '../transforms';
 
 // Import location types
 import { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
 
 // Import ProjectResource for resource assignments
-import { ProjectResource } from '@/domain/entities/Project';
 import type { ReferentialType } from '@/config/referentials';
+import { ProjectResource } from '@/domain/entities/Project';
+import { DocumentDTO } from './DocumentDTO';
+import { InspectionDTO, InspectionStatus } from './InspectionDTO';
+import { MaterialDTO } from './MaterialDTO';
+import { MilestoneDTO } from './MilestoneDTO';
+import { NotificationDTO } from './NotificationDTO';
+import { PaymentDTO } from './PaymentDTO';
+import { PhaseDTO } from './PhaseDTO';
+import { ProjectAnalyticsDTO } from './ProjectAnalyticsDTO';
+import { RiskDTO } from './RiskDTO';
+import { StakeholderDTO } from './StakeholderDTO';
+import { TaskDTO } from './TaskDTO';
+import { TenderDTO } from './TenderDTO';
 
 // Project Location Data Interface - Enhanced location handling
 export interface ProjectLocationData {
@@ -42,18 +54,6 @@ export type ConstructionPhase =
   | "finishing"
   | "post_construction"
   | "handover";
-import { MaterialDTO } from './MaterialDTO';
-import { MilestoneDTO } from './MilestoneDTO';
-import { NotificationDTO } from './NotificationDTO';
-import { PaymentDTO } from './PaymentDTO';
-import { PhaseDTO } from './PhaseDTO';
-import { ProjectAnalyticsDTO } from './ProjectAnalyticsDTO';
-import { RiskDTO } from './RiskDTO';
-import { StakeholderDTO } from './StakeholderDTO';
-import { TaskDTO } from './TaskDTO';
-import { TenderDTO } from './TenderDTO';
-import { InspectionDTO, InspectionStatus } from './InspectionDTO';
-import { DocumentDTO } from './DocumentDTO';
 
 // Core project status types - standardized and comprehensive
 export enum ProjectStatus {
@@ -321,6 +321,8 @@ export interface ProjectEvmData {
 export interface ProjectDTO extends BaseEntityDTO {
   // Core identification
   id: string;
+  externalRef?: string;
+  organizationId?: string;
   title: string;
   description: string;
   

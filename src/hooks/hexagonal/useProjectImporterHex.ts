@@ -3,7 +3,7 @@
  * Uses ProjectRepository instead of direct Supabase access
  */
 
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { ProjectImportExportService } from '@/application/services/ProjectImportExportService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface ProjectImportData {
@@ -27,45 +27,29 @@ export interface ProjectImportData {
 
 export function useImportProjectsHex() {
   const queryClient = useQueryClient();
+  const service = ProjectImportExportService.default();
 
   return useMutation({
     mutationFn: async (projects: ProjectImportData[]) => {
-      const projectRepo = RepositoryFactory.getProjectRepository();
-      const results: any[] = [];
-
-      for (const projectData of projects) {
-        try {
-          // Check if project already exists by fetching all and filtering
-          const allProjects = await projectRepo.findAll();
-          const existing = allProjects.find(p => (p as any).title === projectData.title);
-
-          if (!existing) {
-            const data = await projectRepo.create({
-              title: projectData.title,
-              description: projectData.description,
-              location: projectData.location,
-              status: projectData.status,
-              progress: projectData.progress,
-              budget: projectData.budget,
-              start_date: projectData.start_date,
-              end_date: projectData.end_date,
-              team_size: projectData.team_size,
-              financing_source: projectData.financing_source,
-              market_type: projectData.market_type,
-              selection_mode: projectData.selection_mode,
-              launch_date: projectData.launch_date,
-              attribution_date: projectData.attribution_date,
-              completion_date: projectData.completion_date,
-            } as any);
-
-            if (data) results.push(data);
-          }
-        } catch (error) {
-          console.error('Error importing project:', projectData.title, error);
-        }
-      }
-
-      return results;
+      const result = await service.importProjects(projects.map((project) => ({
+        id: project.project_order ? String(project.project_order) : undefined,
+        title: project.title,
+        description: project.description,
+        location: project.location,
+        status: project.status,
+        progress: project.progress,
+        budget: project.budget,
+        startDate: project.start_date,
+        endDate: project.end_date,
+        teamSize: project.team_size,
+        financingSource: project.financing_source,
+        marketType: project.market_type,
+        selectionMode: project.selection_mode,
+        launchDate: project.launch_date,
+        attributionDate: project.attribution_date,
+        completionDate: project.completion_date,
+      })));
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });

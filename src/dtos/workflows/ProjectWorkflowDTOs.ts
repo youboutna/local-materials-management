@@ -17,6 +17,9 @@ import { BankGuaranteeDTO } from '../entities/BankGuaranteeDTO';
 import { ComplianceItemDTO } from '../entities/ComplianceDTO';
 import { ProjectStrategyLinkDTO } from '../entities/ProjectStrategyLinkDTO';
 import { ProjectBudgetLinkDTO } from '../entities/ProjectBudgetLinkDTO';
+import { MilestoneDTO } from '../entities/MilestoneDTO';
+import { ProjectStakeholderDTO } from '../entities/ProjectStakeholderDTO';
+import type { BoqLineDTO } from '../boq/BoqLineDTO';
 
 export interface ProjectWorkflowData {
   projectId?: string;
@@ -38,9 +41,11 @@ export interface WorkflowMetadataDTO {
 
 export interface StepRelatedDataDTO {
   phases?: PhaseDTO[];
+  milestones?: MilestoneDTO[];
+  dqeLines?: BoqLineDTO[];
   risks?: RiskDTO[];
   materials?: MaterialDTO[];
-  stakeholders?: EmployeeDTO[];
+  stakeholders?: ProjectStakeholderDTO[];
   compliance?: ComplianceDataDTO;
   tasks?: TaskDTO[];
   inspections?: InspectionDTO[];

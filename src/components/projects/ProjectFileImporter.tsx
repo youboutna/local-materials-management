@@ -1,4 +1,5 @@
 import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectImportExportService } from '@/application/services/ProjectImportExportService';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,6 +68,10 @@ export default function ProjectFileImporter({
     () => new ProjectService(RepositoryFactory.getProjectRepository()),
     [],
   );
+  const projectImportService = useMemo(
+    () => ProjectImportExportService.default(),
+    [],
+  );
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -129,14 +134,16 @@ export default function ProjectFileImporter({
     });
   };
 
-  const parseJsonFile = async (file: File): Promise<any[]> => {
+  const parseJsonFile = async (file: File): Promise<any> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const content = e.target?.result as string;
           const data = JSON.parse(content);
-          resolve(Array.isArray(data) ? data : [data]);
+          // Preserve dataset envelopes so organizations, suppliers and
+          // projects are imported together by the application service.
+          resolve(data);
         } catch (error) {
           reject(new Error(t("projects.import.invalidJson")));
         }
@@ -175,7 +182,7 @@ export default function ProjectFileImporter({
     });
   };
 
-  const parseFile = async (file: File): Promise<any[]> => {
+  const parseFile = async (file: File): Promise<any> => {
     switch (file.type) {
       case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
       case "application/vnd.ms-excel":
@@ -344,7 +351,12 @@ export default function ProjectFileImporter({
       console.log("Starting file parsing...");
       setImportProgress(25);
       const rawData = await parseFile(selectedFile);
-      console.log("File parsed successfully, rows:", rawData.length);
+      const parsedProjectCount = Array.isArray(rawData)
+        ? rawData.length
+        : Array.isArray(rawData?.projects)
+          ? rawData.projects.length
+          : 0;
+      console.log("File parsed successfully, projects:", parsedProjectCount);
 
       if (!rawData || rawData.length === 0) {
         throw new Error(t("projects.import.noData"));
@@ -352,246 +364,16 @@ export default function ProjectFileImporter({
 
       setImportProgress(50);
 
-      // Transform and import projects
-      let importedCount = 0;
-      let updatedCount = 0;
-      const errors: string[] = [];
-
-      for (let i = 0; i < rawData.length; i++) {
-        try {
-          const projectData = transformToProjectData(rawData[i]);
-          const projectId = rawData[i].id;
-
-          // LOG pour voir les données AVANT création
-          console.log("🚀 CRÉATION PROJET:", {
-            title: projectData.title,
-            hasPhases: !!projectData.phases,
-            phasesCount: projectData.phases?.length,
-            phases: projectData.phases,
-          });
-
-          if (importMode === "create") {
-            console.log("Creating project:", projectData.title);
-
-            // Ensure required fields for creation
-            const createDTO = {
-              title: projectData.title || t("projects.import.defaultTitle"),
-              description: projectData.description || "",
-              location: projectData.location || "",
-              budget: projectData.budget || 0,
-              status: "en cours" as const,
-              startDate: projectData.startDate || new Date().toISOString().split('T')[0],
-              endDate: projectData.endDate,
-              teamSize: projectData.teamSize,
-              financingSource: projectData.financingSource,
-              marketType: projectData.marketType,
-              selectionMode: projectData.selectionMode,
-              allowsInitialPayment: projectData.allowsInitialPayment,
-              initialPaymentPercentage: projectData.initialPaymentPercentage,
-              category: projectData.category,
-              subCategory: projectData.subCategory,
-              priorityLevel: projectData.priorityLevel,
-              riskLevel: projectData.riskLevel,
-              thumbnail: projectData.thumbnail,
-            };
-
-            // 1. Créer le projet d'abord
-            const createdProject = await projectService.createProject(createDTO as any);
-
-            // LOG pour vérifier la création
-            console.log("🔍 RÉSULTAT CRÉATION PROJET:", {
-              createdProject,
-              hasId: !!createdProject?.id,
-              id: createdProject?.id,
-              title: createdProject?.title,
-            });
-
-            // 2. SAUVEGARDER LES PHASES SÉPARÉMENT si le projet est créé avec succès
-            if (createdProject && createdProject.id) {
-              console.log("✅ Projet créé avec ID:", createdProject.id);
-
-              if (projectData.phases && projectData.phases.length > 0) {
-                console.log(
-                  "💾 Début sauvegarde des phases pour:",
-                  createdProject.id
-                );
-                console.log("📊 Structure des phases:", {
-                  projectId: createdProject.id,
-                  phasesCount: projectData.phases.length,
-                  firstPhase: projectData.phases[0],
-                });
-
-                try {
-                  // Note: PhaseService.saveProjectPhases is not available as static
-                  // Phases are handled via PhaseService instance method
-                  console.log("💾 Phases data prepared for:", createdProject.id);
-                  // TODO: Implement phase saving via PhaseService instance when needed
-                  console.log(
-                    "✅ Phases prepared for:",
-                    projectData.title
-                  );
-                } catch (phaseError) {
-                  console.error(
-                    "❌ Erreur détaillée sauvegarde phases:",
-                    phaseError
-                  );
-                  console.error(
-                    "❌ Stack trace:",
-                    phaseError instanceof Error ? phaseError.stack : "No stack"
-                  );
-
-                  // Ne pas bloquer l'import si les phases échouent
-                  const phaseErrorMsg = `Erreur phases - ${
-                    phaseError instanceof Error
-                      ? phaseError.message
-                      : "Erreur inconnue"
-                  }`;
-                  errors.push(
-                    `${t("projects.import.line")} ${i + 1}: ${phaseErrorMsg}`
-                  );
-                }
-              } else {
-                console.log(
-                  "ℹ️ Aucune phase à sauvegarder pour:",
-                  projectData.title
-                );
-              }
-            } else {
-              console.error("❌ Projet créé mais sans ID:", createdProject);
-              errors.push(
-                `${t("projects.import.line")} ${i + 1}: Projet créé sans ID`
-              );
-            }
-
-            importedCount++;
-          } else if (importMode === "update" || importMode === "patch") {
-            // Try to find existing project by ID or reference
-            if (projectId) {
-              console.log(
-                `${importMode === "update" ? "Updating" : "Patching"} project:`,
-                projectData.title
-              );
-
-              // Build update DTO
-              const updateDTO: Partial<CreateProjectDTO> = {
-                title: projectData.title,
-                description: projectData.description,
-                location: projectData.location,
-                budget: projectData.budget,
-                startDate: projectData.startDate,
-                endDate: projectData.endDate,
-                teamSize: projectData.teamSize,
-                financingSource: projectData.financingSource,
-                marketType: projectData.marketType,
-                selectionMode: projectData.selectionMode,
-              };
-
-              if (importMode === "update") {
-                // Full update - replace all fields
-                await projectService.updateProject(projectId, updateDTO as any);
-              } else {
-                // Patch - only update provided fields
-                const fieldsToUpdate: Record<string, any> = {};
-                Object.keys(rawData[i]).forEach((key) => {
-                  if (
-                    rawData[i][key] !== undefined &&
-                    rawData[i][key] !== null &&
-                    rawData[i][key] !== ""
-                  ) {
-                    const value = (updateDTO as any)[key];
-                    if (value !== undefined) {
-                      fieldsToUpdate[key] = value;
-                    }
-                  }
-                });
-                await projectService.updateProject(projectId, fieldsToUpdate as any);
-              }
-
-              // SAUVEGARDER LES PHASES POUR UPDATE AUSSI
-              if (projectData.phases && projectData.phases.length > 0) {
-                console.log("💾 Phases data prepared for update:", projectId);
-                console.log(
-                  "✅ Phases prepared for update:",
-                  projectData.title
-                );
-              }
-
-              updatedCount++;
-            } else {
-              // No ID provided, create new project
-              console.log("No ID found, creating project:", projectData.title);
-              
-              // Ensure required fields for creation
-              const createDTO = {
-                title: projectData.title || t("projects.import.defaultTitle"),
-                description: projectData.description || "",
-                location: projectData.location || "",
-                budget: projectData.budget || 0,
-                status: "en cours" as const,
-                startDate: projectData.startDate || new Date().toISOString().split('T')[0],
-                endDate: projectData.endDate,
-                teamSize: projectData.teamSize,
-              };
-              
-              const createdProject = await projectService.createProject(createDTO as any);
-
-              // SAUVEGARDER LES PHASES POUR CRÉATION SANS ID
-              if (
-                createdProject &&
-                createdProject.id &&
-                projectData.phases &&
-                projectData.phases.length > 0
-              ) {
-                console.log(
-                  "💾 Phases data prepared for creation:",
-                  createdProject.id
-                );
-                // TODO: Implement phase saving via PhaseService instance
-                console.log(
-                  "✅ Phases prepared for creation:",
-                  projectData.title
-                );
-              }
-
-              importedCount++;
-            }
-          }
-
-          console.log(
-            `✅ Projet ${i + 1}/${rawData.length} traité avec succès`
-          );
-        } catch (error) {
-          console.error(`❌ Error on line ${i + 1}:`, error);
-
-          // Capturer les détails complets de l'erreur
-          let errorMessage = "Unknown error";
-          if (error instanceof Error) {
-            errorMessage = error.message;
-          } else if (typeof error === "object" && error !== null) {
-            errorMessage = JSON.stringify(error);
-          }
-
-          const errorMsg = `${t("projects.import.line")} ${
-            i + 1
-          }: ${errorMessage}`;
-          console.error("Full error details:", error);
-          errors.push(errorMsg);
-        }
-        setImportProgress(50 + (i / rawData.length) * 50);
-      }
-
-      const totalProcessed = importedCount + updatedCount;
-      let message = "";
-      if (importMode === "create") {
-        message = `${importedCount} ${t("projects.import.projectsImported")}`;
-      } else {
-        message = `${importedCount} ${t(
-          "projects.import.projectsCreated"
-        )}, ${updatedCount} ${t("projects.import.projectsUpdated")}`;
-      }
-      if (errors.length > 0) {
-        message += ` (${errors.length} ${t("projects.import.errors")})`;
-      }
+      const dataset = Array.isArray(rawData)
+        ? { projects: rawData }
+        : rawData;
+      const importResult = await projectImportService.importDataset(dataset);
+      const errors = importResult.errors.map(
+        (error) => `${t("projects.import.line")} ${error.row}: ${error.message}`,
+      );
+      const totalProcessed = importResult.imported;
+      const message = `${totalProcessed} ${t("projects.import.projectsImported")}` +
+        (importResult.failed > 0 ? ` (${importResult.failed} ${t("projects.import.errors")})` : "");
 
       const result: ImportResult = {
         success: totalProcessed > 0,

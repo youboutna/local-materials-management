@@ -14,9 +14,11 @@
  */
 
 import { MilestoneService } from '@/application/services/MilestoneService';
+import { OrganizationService } from '@/application/services/OrganizationService';
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { SupplierService } from '@/application/services/SupplierService';
 import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -32,15 +34,19 @@ import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
-export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders'>> {
+export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType'>> {
+  id?: string;
+  reference?: string;
   title: string;
   description?: string;
   location?: string;
   status?: string;
   progress?: number;
-  budget?: number;
+  budget?: number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> };
   startDate?: string;
   endDate?: string;
+  timeline?: { startDate?: string; endDate?: string; durationDays?: number };
+  type?: string;
   teamSize?: number;
   latitude?: number;
   longitude?: number;
@@ -53,6 +59,7 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   externalRef?: string;
   organizationId?: string;
   budgetSources?: Array<Record<string, unknown>>;
+  dqeLines?: BoqLineDTO[];
   phases?: ProjectImportPhase[];
   stakeholders?: ProjectImportStakeholder[];
 }
@@ -93,6 +100,7 @@ export interface ProjectImportTask {
 
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
   organizationId?: string;
+  supplierId?: string;
   externalRef?: string;
   role?: string;
 }
@@ -119,6 +127,33 @@ export interface ProjectExportOptions {
 
 export interface ProjectImportDataset {
   projects: ProjectImportRow[];
+  organizations?: ProjectImportOrganization[];
+  suppliers?: ProjectImportSupplier[];
+}
+
+export interface ProjectImportOrganization {
+  id: string;
+  name: string;
+  code?: string;
+  type?: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  isActive?: boolean;
+}
+
+export interface ProjectImportSupplier {
+  id: string;
+  name: string;
+  type?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  rating?: number;
+  isActive?: boolean;
+  nif?: string;
+  bankInfo?: { bank?: string; account?: string; iban?: string };
 }
 
 export class ProjectImportExportService {
@@ -128,6 +163,8 @@ export class ProjectImportExportService {
     private readonly milestoneService = new MilestoneService(),
     private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
     private readonly stakeholderService = new ProjectStakeholderService(),
+    private readonly organizationService = new OrganizationService(),
+    private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
   ) {}
 
   static default(): ProjectImportExportService {
@@ -169,10 +206,27 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     if (!dataset || !Array.isArray(dataset.projects)) {
       throw new Error('Invalid import dataset: projects must be an array');
     }
-    return this.importProjects(dataset.projects);
+    try {
+      const references = {
+        organizations: await this.importOrganizations(dataset.organizations ?? []),
+        suppliers: await this.importSuppliers(dataset.suppliers ?? []),
+      };
+      return await this.importProjects(dataset.projects, references);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (/row-level security|permission denied|403/i.test(message)) {
+        throw new Error(
+          'Import complet refusé par la sécurité Supabase. Appliquez la migration 20260801000004_allow_full_dataset_import.sql et utilisez un compte admin, director ou manager.',
+        );
+      }
+      throw error;
+    }
   }
 
-  async importProjects(rows: ProjectImportRow[]): Promise<ProjectImportResult> {
+  async importProjects(
+    rows: ProjectImportRow[],
+    references: { organizations?: Map<string, string>; suppliers?: Map<string, string> } = {},
+  ): Promise<ProjectImportResult> {
     const result: ProjectImportResult = {
       total: rows.length,
       imported: 0,
@@ -206,17 +260,16 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         result.errors.push({ row: i + 1, title: '(empty)', message: 'Missing title' });
         continue;
       }
-      if (existingTitles.has(titleKey)) {
-        result.skipped += 1;
-        continue;
-      }
-
       try {
-        const dto = this.toCreateDTO(row);
-        const created = await this.projectService.createProject(dto);
-        await this.importRelations(created.id, row, result.details);
+        const externalRef = this.getExternalRef(row);
+        const existing = await this.findExistingProject(externalRef, row.reference, row.title);
+        const dto = this.toCreateDTO(row, references.organizations);
+        const project = existing
+          ? await this.projectService.updateProject(existing.id, dto as never)
+          : await this.projectService.createProject(dto);
+        await this.importRelations(project.id, row, result.details, references.suppliers, references.organizations);
         result.imported += 1;
-        if (created?.id) result.createdIds.push(created.id);
+        if (project?.id) result.createdIds.push(project.id);
         existingTitles.add(titleKey);
       } catch (e) {
         result.failed += 1;
@@ -231,7 +284,90 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return result;
   }
 
-  private toCreateDTO(row: ProjectImportRow): CreateProjectDTO {
+  private async importOrganizations(rows: ProjectImportOrganization[]): Promise<Map<string, string>> {
+    const references = new Map<string, string>();
+    for (const row of rows) {
+      if (!row.id || !row.name?.trim()) continue;
+      const organization = await this.organizationService.upsert({
+        id: this.isUUID(row.id) ? row.id : undefined,
+        name: row.name.trim(),
+        code: row.code,
+        orgType: row.type,
+        description: row.description,
+        address: row.address,
+        phone: row.phone,
+        email: row.email,
+        isActive: row.isActive ?? true,
+        externalRef: this.isUUID(row.id) ? undefined : row.id,
+      });
+      references.set(row.id, organization.id);
+    }
+    return references;
+  }
+
+  private async importSuppliers(rows: ProjectImportSupplier[]): Promise<Map<string, string>> {
+    const references = new Map<string, string>();
+    const existing = await this.supplierService.getAllSuppliers();
+    const supplierRepository = RepositoryFactory.getSupplierRepository();
+    for (const row of rows) {
+      if (!row.id || !row.name?.trim()) continue;
+      const current = await supplierRepository.findByExternalRef(row.id) ?? existing.find((supplier) =>
+        (row.contactEmail && supplier.email === row.contactEmail) ||
+        (row.nif && supplier.nif === row.nif) ||
+        supplier.name.trim().toLowerCase() === row.name.trim().toLowerCase(),
+      );
+      const rating = row.rating == null ? undefined : {
+        quality: row.rating,
+        delivery: row.rating,
+        price: row.rating,
+        communication: row.rating,
+        overall: row.rating,
+      };
+      const supplier = current
+        ? await this.supplierService.updateSupplier(current.id, {
+          name: row.name.trim(), email: row.contactEmail, phone: row.contactPhone,
+          address: row.address, nif: row.nif, rating,
+          status: row.isActive === false ? 'inactive' : 'active',
+          externalRef: row.id,
+        })
+        : await this.supplierService.createSupplier({
+          name: row.name.trim(), email: row.contactEmail, phone: row.contactPhone,
+          address: row.address, nif: row.nif, rating,
+          status: row.isActive === false ? 'inactive' : 'active',
+          externalRef: row.id,
+        });
+      references.set(row.id, supplier.id);
+      existing.push(supplier);
+    }
+    return references;
+  }
+
+  private isUUID(value?: string): boolean {
+    return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  private getExternalRef(row: ProjectImportRow): string | undefined {
+    return row.externalRef || row.id || row.projectReference || row.reference;
+  }
+
+  private async findExistingProject(externalRef?: string, reference?: string, title?: string): Promise<ProjectDTO | null> {
+    const projects = await this.projectService.getAllProjects();
+    return projects.find((project) => {
+      const candidate = project as ProjectDTO & { reference?: string };
+      return (externalRef && candidate.externalRef === externalRef) ||
+        (reference && candidate.projectReference === reference) ||
+        (reference && candidate.reference === reference) ||
+        (title && candidate.title?.trim().toLowerCase() === title.trim().toLowerCase());
+    }) ?? null;
+  }
+
+  private toCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
+    const input = row as ProjectImportRow & {
+      budget?: number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> };
+      timeline?: { startDate?: string; endDate?: string };
+      type?: string;
+      reference?: string;
+    };
     const zones = row.interventionZones && row.interventionZones.length > 0
       ? row.interventionZones
       : row.interventionZone
@@ -243,10 +379,10 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       description: row.description ?? '',
       status: (row.status as ProjectStatus) ?? ProjectStatus.DRAFT,
       progress: row.progress ?? 0,
-      budget: row.budget ?? 0,
-      currency: row.currency ?? 'MRU',
-      startDate: row.startDate ?? new Date().toISOString(),
-      endDate: row.endDate,
+      budget: typeof input.budget === 'number' ? input.budget : input.budget?.total ?? 0,
+      currency: row.currency ?? (typeof input.budget === 'object' ? input.budget.currency : undefined) ?? 'MRU',
+      startDate: row.startDate ?? input.timeline?.startDate ?? new Date().toISOString(),
+      endDate: row.endDate ?? input.timeline?.endDate,
       location: row.location?.trim() || firstZone?.address?.trim() || 'Adresse non spécifiée',
       latitude: row.latitude ?? firstZone?.coordinates?.[0]?.lat,
       longitude: row.longitude ?? firstZone?.coordinates?.[0]?.lng,
@@ -254,12 +390,13 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       financingSource: row.financingSource,
       marketType: row.marketType,
       selectionMode: row.selectionMode,
-      projectType: row.projectType ?? row.referentialCode,
+      projectType: row.projectType ?? input.type ?? row.referentialCode,
       attributionDate: row.attributionDate,
       launchDate: row.launchDate,
       completionDate: row.completionDate,
-      organizationId: row.organizationId,
-      externalRef: row.externalRef,
+      organizationId: row.organizationId && organizations?.get(row.organizationId) || row.organizationId,
+      externalRef: this.getExternalRef(row),
+      projectReference: input.reference,
       budgetSources: row.budgetSources,
       interventionZones: zones,
       interventionZone: firstZone,
@@ -272,12 +409,21 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     projectId: string,
     row: ProjectImportRow,
     details: ProjectImportResult['details'],
+    suppliers?: Map<string, string>,
+    organizations?: Map<string, string>,
   ): Promise<void> {
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
         : undefined;
-      const createdPhase = await this.phaseService.createPhase({
+      const phases = await this.phaseService.getPhasesByProject(projectId);
+      const existingPhase = phases.find((candidate) => {
+        const phaseRecord = candidate as unknown as PhaseDTO & { phaseCode?: string; phase_code?: string };
+        return phaseRecord.phaseCode === phase.code ||
+          phaseRecord.phase_code === phase.code ||
+          phaseRecord.name === phase.name;
+      });
+      const phaseData = {
         id: crypto.randomUUID(),
         projectId,
         name: phase.name,
@@ -288,61 +434,143 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         endDate: phase.endDate,
         estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
         customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
-      } as PhaseDTO, projectId);
+      } as PhaseDTO;
+      const createdPhase = existingPhase
+        ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
+        : await this.phaseService.createPhase(phaseData, projectId);
       details.phases += 1;
 
       for (const milestone of phase.milestones ?? []) {
-        await this.milestoneService.createMilestone({
+        const milestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
+        const existingMilestone = milestones.find((candidate) => candidate.title === (milestone.title ?? milestone.name));
+        const milestoneData = {
           project_id: projectId,
           phase_id: createdPhase.id,
           title: milestone.title ?? milestone.name ?? 'Jalon importé',
           description: milestone.description,
           target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
-          status: milestone.status as 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined,
+          status: this.normalizeMilestoneStatus(milestone.status),
           progress: milestone.progress,
-        });
+        };
+        if (existingMilestone) await this.milestoneService.updateMilestone(existingMilestone.id, milestoneData);
+        else await this.milestoneService.createMilestone(milestoneData);
         details.milestones += 1;
       }
 
       for (const task of phase.tasks ?? []) {
-        await this.taskService.createTask({
+        const tasks = await this.taskService.getTasksByPhase(createdPhase.id);
+        const taskName = task.title ?? task.name ?? 'Tâche importée';
+        const existingTask = tasks.find((candidate) => candidate.title === taskName);
+        const taskData = {
           projectId,
           phaseId: createdPhase.id,
-          title: task.title ?? task.name ?? 'Tâche importée',
+          title: taskName,
           description: task.description,
           status: task.status as TaskStatus | undefined,
           priority: task.priority as TaskPriority | undefined,
           dueDate: task.due_date ?? task.dueDate,
           assignedTo: task.assignedTo,
-        });
+        };
+        if (existingTask) await this.taskService.updateTask(existingTask.id, taskData);
+        else await this.taskService.createTask(taskData);
         details.tasks += 1;
       }
 
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
+        btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
         source: 'dqe' as const,
         contextId: projectId,
         phaseId: createdPhase.id,
       }));
-      if (dqeLines.length > 0) {
-        await boqRepository.bulkCreate(dqeLines);
-        details.dqeLines += dqeLines.length;
+      await this.upsertDqeLines(projectId, createdPhase.id, dqeLines, details);
+    }
+
+    // The fixture also carries a project-level DQE list. Reuse the phase
+    // association when possible; the external_ref/code makes this idempotent.
+    for (const line of row.dqeLines ?? []) {
+      const lineCode = this.getDqeCode(line);
+      const phase = (row.phases ?? []).find((candidate) =>
+        candidate.dqeLines?.some((candidateLine) => this.getDqeCode(candidateLine) === lineCode),
+      );
+      if (!phase) continue;
+      const persistedPhase = (await this.phaseService.getPhasesByProject(projectId)).find((candidate) =>
+        candidate.name === phase.name,
+      );
+      if (persistedPhase) {
+        await this.upsertDqeLines(projectId, persistedPhase.id, [{
+          ...line,
+          btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
+          source: 'dqe' as const,
+          contextId: projectId,
+          phaseId: persistedPhase.id,
+        }], details, false);
       }
     }
 
     for (const stakeholder of row.stakeholders ?? []) {
-      if (!stakeholder.supplierId && stakeholder.stakeholderEntityType !== 'employee') continue;
-      await this.stakeholderService.addStakeholder({
+      const organizationRef = stakeholder.organizationId;
+      const supplierId = stakeholder.supplierId ? suppliers?.get(stakeholder.supplierId) || stakeholder.supplierId : undefined;
+      if (!supplierId && !organizationRef && stakeholder.stakeholderEntityType !== 'employee') continue;
+      const stakeholders = await this.stakeholderService.getProjectStakeholders(projectId);
+      const existingStakeholder = stakeholders.find((candidate) =>
+        candidate.supplierId === supplierId ||
+        (organizationRef && candidate.roleDescription?.includes(organizationRef)),
+      );
+      const stakeholderData = {
         projectId,
         stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
-        stakeholderEntityType: stakeholder.stakeholderEntityType ?? 'supplier',
-        supplierId: stakeholder.supplierId,
+        stakeholderEntityType: stakeholder.stakeholderEntityType ?? (supplierId ? 'supplier' : 'external'),
+        supplierId,
+        organizationId: organizationRef && organizations?.get(organizationRef),
+        externalRef: stakeholder.externalRef || this.generateExternalRef('SH', projectId, organizationRef || stakeholder.supplierId || ''),
         employeeId: stakeholder.employeeId,
-        roleDescription: stakeholder.roleDescription ?? stakeholder.role,
+        roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
-      });
+      };
+      if (existingStakeholder) await this.stakeholderService.updateProjectStakeholder(existingStakeholder.id, stakeholderData);
+      else await this.stakeholderService.addStakeholder(stakeholderData);
       details.stakeholders += 1;
     }
+  }
+
+  private async upsertDqeLines(
+    projectId: string,
+    phaseId: string,
+    dqeLines: Array<Record<string, unknown>>,
+    details: ProjectImportResult['details'],
+    count = true,
+  ): Promise<void> {
+    if (dqeLines.length === 0) return;
+    const existingLines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId });
+    for (const dqeLine of dqeLines) {
+      const existingLine = existingLines.find((line) => line.btpCode === dqeLine.btpCode);
+      if (existingLine) await boqRepository.update(existingLine.id, dqeLine);
+      else await boqRepository.create(dqeLine);
+    }
+    if (count) details.dqeLines += dqeLines.length;
+  }
+
+  private getDqeCode(line: BoqLineDTO): string | undefined {
+    const candidate = line as BoqLineDTO & { code?: string };
+    return line.btpCode ?? candidate.code;
+  }
+
+  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
+    if (!status) return undefined;
+    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
+      planifie: 'pending',
+      planned: 'pending',
+      en_cours: 'in_progress',
+      'en cours': 'in_progress',
+      termine: 'completed',
+      terminé: 'completed',
+      delayed: 'delayed',
+      en_retard: 'delayed',
+      annule: 'cancelled',
+      annulé: 'cancelled',
+    };
+    return statuses[status.toLowerCase()] ?? 'pending';
   }
 
   // ============= EXPORT =============

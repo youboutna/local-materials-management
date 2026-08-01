@@ -12,6 +12,7 @@
 export interface PhaseTaskDTO {
   id: string;
   name: string;
+  phaseCode?: string;
   description?: string;
   status: PhaseStatus;
   progress: number;
@@ -28,6 +29,8 @@ export interface PhaseTaskDTO {
 export interface PhaseStepDTO {
   id: string;
   name: string;
+  /** Business reference used to idempotently import a phase. */
+  phaseCode?: string;
   description?: string;
   status: PhaseStatus;
   progress: number;

@@ -5,10 +5,10 @@
  * Rule #9: DB → Transformer → Entity → Repository → Service
  * Adapter NEVER calls `new Entity()` — always uses Transformer
  */
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Supplier, SupplierCategory, SupplierStatus } from '@/domain/entities/Supplier';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
-import { Supplier, SupplierStatus, SupplierCategory } from '@/domain/entities/Supplier';
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Database } from '@/integrations/supabase/types';
 
 type SupplierRow = Database['public']['Tables']['suppliers']['Row'];
@@ -20,6 +20,12 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
 
   async findById(id: string): Promise<Supplier | null> {
     const { data, error } = await supabase.from('suppliers').select('*').eq('id', id).single();
+    if (error || !data) return null;
+    return this.mapToEntity(data);
+  }
+
+  async findByExternalRef(externalRef: string): Promise<Supplier | null> {
+    const { data, error } = await (supabase as any).from('suppliers').select('*').eq('external_ref', externalRef).maybeSingle();
     if (error || !data) return null;
     return this.mapToEntity(data);
   }
@@ -45,6 +51,7 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
     if (data.nif !== undefined) updateData.nif = data.nif;
     if (data.category !== undefined) updateData.category = data.category;
     if (data.status !== undefined) updateData.is_active = data.status === 'active';
+    if (data.externalRef !== undefined) updateData.external_ref = data.externalRef;
 
     const { error } = await supabase.from('suppliers').update(updateData as Database['public']['Tables']['suppliers']['Update']).eq('id', id);
     if (error) throw new Error(`Failed to update supplier: ${error.message}`);

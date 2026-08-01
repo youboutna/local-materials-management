@@ -4,9 +4,9 @@
  * Implements IProjectStakeholderRepository using Supabase
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 // Database row interface for project_stakeholders table
 interface ProjectStakeholderRow {
@@ -16,6 +16,8 @@ interface ProjectStakeholderRow {
   stakeholder_entity_type: string;
   employee_id?: string | null;
   supplier_id?: string | null;
+  organization_id?: string | null;
+  external_ref?: string | null;
   external_name?: string | null;
   external_email?: string | null;
   external_phone?: string | null;
@@ -38,6 +40,8 @@ interface ProjectStakeholderInsertData {
   stakeholder_entity_type?: string;
   employee_id?: string | null;
   supplier_id?: string | null;
+  organization_id?: string | null;
+  external_ref?: string | null;
   external_name?: string | null;
   external_email?: string | null;
   external_phone?: string | null;
@@ -287,6 +291,8 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       stakeholderEntityType: data.stakeholder_entity_type,
       employeeId: data.employee_id || null,
       supplierId: data.supplier_id || null,
+      organizationId: data.organization_id || null,
+      externalRef: data.external_ref || null,
       externalName: data.external_name || null,
       externalEmail: data.external_email || null,
       externalPhone: data.external_phone || null,
@@ -310,6 +316,8 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     if (entity.stakeholderEntityType !== undefined) row.stakeholder_entity_type = entity.stakeholderEntityType;
     if (entity.employeeId !== undefined) row.employee_id = entity.employeeId;
     if (entity.supplierId !== undefined) row.supplier_id = entity.supplierId;
+    if (entity.organizationId !== undefined) row.organization_id = entity.organizationId;
+    if (entity.externalRef !== undefined) row.external_ref = entity.externalRef;
     if (entity.externalName !== undefined) row.external_name = entity.externalName;
     if (entity.externalEmail !== undefined) row.external_email = entity.externalEmail;
     if (entity.externalPhone !== undefined) row.external_phone = entity.externalPhone;

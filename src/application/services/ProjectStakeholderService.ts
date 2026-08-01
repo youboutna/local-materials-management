@@ -66,6 +66,8 @@ export class ProjectStakeholderService {
         stakeholderEntityType: stakeholder.stakeholderEntityType === 'external' ? 'supplier' : stakeholder.stakeholderEntityType as 'employee' | 'supplier',
         employeeId: stakeholder.employeeId || undefined,
         supplierId: stakeholder.supplierId || undefined,
+        organizationId: stakeholder.organizationId || undefined,
+        externalRef: stakeholder.externalRef || undefined,
         roleDescription: stakeholder.roleDescription || undefined,
         isPrimary: stakeholder.isActive,
         createdAt: stakeholder.createdAt,
@@ -97,6 +99,8 @@ export class ProjectStakeholderService {
         stakeholderEntityType: updates.stakeholderEntityType as any,
         employeeId: updates.employeeId ?? null,
         supplierId: updates.supplierId ?? null,
+        organizationId: updates.organizationId ?? null,
+        externalRef: updates.externalRef ?? null,
         roleDescription: updates.roleDescription ?? null,
         isActive: updates.isPrimary ?? true
       };
@@ -109,6 +113,8 @@ export class ProjectStakeholderService {
         stakeholderEntityType: updatedStakeholder.stakeholderEntityType === 'external' ? 'supplier' : updatedStakeholder.stakeholderEntityType as 'employee' | 'supplier',
         employeeId: updatedStakeholder.employeeId || undefined,
         supplierId: updatedStakeholder.supplierId || undefined,
+        organizationId: updatedStakeholder.organizationId || undefined,
+        externalRef: updatedStakeholder.externalRef || undefined,
         roleDescription: updatedStakeholder.roleDescription || undefined,
         isPrimary: updatedStakeholder.isActive,
         createdAt: updatedStakeholder.createdAt,
@@ -197,6 +203,8 @@ export class ProjectStakeholderService {
         stakeholderEntityType: request.stakeholderEntityType as any,
         employeeId: request.employeeId ?? null,
         supplierId: request.supplierId ?? null,
+        organizationId: request.organizationId ?? null,
+        externalRef: request.externalRef ?? null,
         roleDescription: request.roleDescription ?? null,
         isActive: request.isPrimary ?? true
       };
@@ -210,6 +218,8 @@ export class ProjectStakeholderService {
         stakeholderEntityType: createdStakeholder.stakeholderEntityType === 'external' ? 'supplier' : createdStakeholder.stakeholderEntityType as 'employee' | 'supplier',
         employeeId: createdStakeholder.employeeId || undefined,
         supplierId: createdStakeholder.supplierId || undefined,
+        organizationId: createdStakeholder.organizationId || undefined,
+        externalRef: createdStakeholder.externalRef || undefined,
         roleDescription: createdStakeholder.roleDescription || undefined,
         isPrimary: createdStakeholder.isActive,
         createdAt: createdStakeholder.createdAt,

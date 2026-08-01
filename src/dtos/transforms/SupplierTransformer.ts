@@ -6,8 +6,8 @@
  * This ensures domain entities are decoupled from infrastructure
  */
 
-import { Supplier, SupplierCategory, SupplierStatus, SupplierProps } from '@/domain/entities/Supplier';
-import { SupplierDTO, CreateSupplierDTO, UpdateSupplierDTO, SupplierSummaryDTO } from '@/dtos/entities/SupplierDTO';
+import { Supplier, SupplierCategory, SupplierProps, SupplierStatus } from '@/domain/entities/Supplier';
+import { SupplierDTO, SupplierSummaryDTO } from '@/dtos/entities/SupplierDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 // DTO legacy compatible avec le code existant
@@ -33,6 +33,7 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
   static fromDatabaseRow(row: Record<string, unknown>): Supplier {
     const props: SupplierProps = {
       id: row.id as string,
+      externalRef: (row.external_ref as string) || null,
       name: row.name as string,
       email: (row.email as string) || null,
       phone: (row.phone as string) || null,
@@ -63,6 +64,7 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
   static toSupabase(entity: Supplier): Record<string, unknown> {
     return {
       id: entity.id,
+      external_ref: entity.externalRef,
       name: entity.name,
       email: entity.email,
       phone: entity.phone,
@@ -85,6 +87,7 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
   static toDTO(entity: Supplier): SupplierDTO {
     return {
       id: entity.id,
+      externalRef: entity.externalRef || undefined,
       name: entity.name,
       email: entity.email || undefined,
       phone: entity.phone || undefined,

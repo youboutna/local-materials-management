@@ -190,6 +190,8 @@ export class Project {
   private _suppliers?: Supplier[];
   private _employees?: Employee[];
   private _projectReference?: string;
+  private _externalRef?: string;
+  private _organizationId?: string;
 
   // Additional relationship properties
   private _bankGuarantees?: { id: string; amount: number }[];
@@ -357,6 +359,8 @@ export class Project {
   get employees(): Employee[] | undefined { return this._employees; }
   get currentStage(): string | undefined { return this._currentStage; }
   get projectReference(): string | undefined { return this._projectReference; }
+  get externalRef(): string | undefined { return this._externalRef; }
+  get organizationId(): string | undefined { return this._organizationId; }
   get referentialCode(): ReferentialType | undefined { return this._referentialCode; }
 
   // Additional properties for UI DTO compatibility
@@ -483,6 +487,8 @@ export class Project {
     insuranceRequired?: boolean;
     launchDate?: Date;
     projectReference?: string;
+    externalRef?: string;
+    organizationId?: string;
     referentialCode?: ReferentialType;
     allowsInitialPayment?: boolean;
   }): Project {
@@ -569,6 +575,8 @@ export class Project {
     if (data.insuranceRequired !== undefined) project._insuranceRequired = data.insuranceRequired;
     if (data.launchDate !== undefined) project._launchDate = data.launchDate;
     if (data.projectReference !== undefined) project._projectReference = data.projectReference;
+    if (data.externalRef !== undefined) project._externalRef = data.externalRef;
+    if (data.organizationId !== undefined) project._organizationId = data.organizationId;
     if (data.referentialCode !== undefined) project._referentialCode = data.referentialCode;
     if (data.allowsInitialPayment !== undefined) project._allowsInitialPayment = data.allowsInitialPayment;
 

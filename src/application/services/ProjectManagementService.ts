@@ -145,12 +145,7 @@ export class ProjectManagementService {
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
     this.analyticsService = new ProjectAnalyticsService();
     this.calculationService = ProjectCalculationService;
-    this.workflowService = new ProjectWorkflowService(
-      RepositoryFactory.getProjectRepository(),
-      RepositoryFactory.getPhaseRepository(),
-      RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getProjectStakeholderRepository()
-    ) as any;
+    this.workflowService = ProjectWorkflowService.default();
     this.stakeholderService = new ProjectStakeholderService();
     this.managerService = null as any; // Lazy init - requires project context
   }
@@ -377,10 +372,10 @@ export class ProjectManagementService {
       const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
       const averageProgress = totalProjects > 0 ? projects.reduce((sum, p) => sum + (p.progress || 0), 0) / totalProjects : 0;
 
-      let spentBudget = 0;
-      let onTimeDelivery = 0;
-      let budgetUtilization = 0;
-      let qualityScore = 0;
+      const spentBudget = 0;
+      const onTimeDelivery = 0;
+      const budgetUtilization = 0;
+      const qualityScore = 0;
 
       const statusDistribution = projects.reduce((acc, project) => {
         const status = project.status as ProjectStatus;

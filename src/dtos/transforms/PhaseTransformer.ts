@@ -30,10 +30,18 @@ export class PhaseTransformer {
       try { return JSON.parse(val); } catch { return fallback; }
     };
 
+    const customPhaseData = row.custom_phase_data && typeof row.custom_phase_data === 'object'
+      ? row.custom_phase_data as Record<string, unknown>
+      : {};
+
     return Phase.create({
       id: row.id,
       projectId: row.project_id,
       phaseName: row.phase_name || row.name || '',
+      customPhaseData: {
+        ...customPhaseData,
+        ...(row.phase_code ? { phaseCode: row.phase_code } : {}),
+      },
       description: row.description ?? null,
       status: row.status || 'pending',
       progress: row.progress ?? 0,
@@ -53,9 +61,8 @@ export class PhaseTransformer {
       materials: safeJson(row.materials, []),
       suppliers: safeJson(row.suppliers, []),
       location: row.location ?? null,
-      customPhaseData: row.custom_phase_data ?? null,
       notes: row.notes ?? null,
-      weight: row.weight ?? null,
+      weight: row.weight ?? 0.1,
       createdBy: row.created_by ?? null,
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at || new Date().toISOString(),
@@ -91,6 +98,8 @@ export class PhaseTransformer {
       id: phase.id,
       projectId: phase.projectId,
       name: phase.phaseName,
+      phaseCode: (phase.customPhaseData as { phaseCode?: string } | null)?.phaseCode,
+      phaseCode: (phase.customPhaseData as { phaseCode?: string } | null)?.phaseCode,
       description: phase.description || '',
       status: phase.status as DTOStatus,
       progress: phase.progress || 0,
@@ -134,6 +143,7 @@ export class PhaseTransformer {
     set('progress', phase.progress);
     set('order_index', phase.orderIndex);
     set('phase_type', phase.phaseType);
+    set('phase_code', phase.phaseCode ?? (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode);
     set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
     set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as unknown as Date).toISOString() : phase.endDate);
     set('estimated_duration', phase.estimatedDuration);
@@ -142,7 +152,7 @@ export class PhaseTransformer {
     set('actual_cost', phase.actualCost);
     set('construction_phase', phase.constructionPhase);
     set('construction_stage', phase.constructionStage);
-    set('weight', phase.weight);
+    set('weight', phase.weight ?? 0.1);
     set('notes', phase.notes);
     set('location', phase.location);
     set('custom_phase_data', phase.customPhaseData);
@@ -282,7 +292,7 @@ export class PhaseTransformer {
       customPhaseData: null,
       // Note: steps removed - handled as separate entities
       notes: null,
-      weight: null,
+      weight: dto.weight ?? 0.1,
       createdBy: null,
       createdAt: dto.createdAt || new Date().toISOString(),
       updatedAt: dto.updatedAt || new Date().toISOString()

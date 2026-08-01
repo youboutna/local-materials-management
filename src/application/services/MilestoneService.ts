@@ -1072,9 +1072,10 @@ export class MilestoneService {
    */
   async getPhaseMilestones(projectId: string, phaseId: string): Promise<MilestoneDTO[]> {
     try {
-      // For now, return project milestones filtered by phase if available
       const milestones = await this.getProjectMilestones(projectId);
-      return milestones.map(m => this.transformToMilestoneDTO(m));
+      return milestones
+        .filter((milestone) => !phaseId || milestone.phase_id === phaseId || milestone.phaseId === phaseId)
+        .map(m => this.transformToMilestoneDTO(m));
     } catch (error) {
       console.error('MilestoneService.getPhaseMilestones failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get phase milestones');

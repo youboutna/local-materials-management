@@ -34,12 +34,7 @@ export interface SaveResult {
 export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?: string) {
   const queryClient = useQueryClient();
   
-  const workflowService = new ProjectWorkflowService(
-    RepositoryFactory.getProjectRepository(),
-    RepositoryFactory.getPhaseRepository(),
-    RepositoryFactory.getRiskRepository(),
-    RepositoryFactory.getProjectStakeholderRepository()
-  );
+  const workflowService = ProjectWorkflowService.default();
 
   const [workflowState, setWorkflowState] = useState<UnifiedWorkflowState>({
     mode,

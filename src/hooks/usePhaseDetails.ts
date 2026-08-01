@@ -51,12 +51,7 @@ const defaultMetrics: PhaseMetrics = {
 
 export function usePhaseDetails(phaseId: string | undefined) {
   const queryClient = useQueryClient();
-  const workflowService = new ProjectWorkflowService(
-    RepositoryFactory.getProjectRepository(),
-    RepositoryFactory.getPhaseRepository(),
-    RepositoryFactory.getRiskRepository(),
-    RepositoryFactory.getProjectStakeholderRepository()
-  );
+  const workflowService = ProjectWorkflowService.default();
   const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
 
   // Fetch phase details using PhaseService DTO method
