@@ -218,6 +218,7 @@
   "projects": [
     {
       "id": "PRJ-SOMELEC-TRANSFO-ALEG-2026",
+      "uuid": "39a522cc-591f-477d-9daf-c21bc0b80d17",
       "title": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA au poste d'Aleg",
       "reference": "PPM_SOMELEC_2026_5_1",
       "status": "en_cours",
@@ -243,7 +244,7 @@
         "endDate": "2027-01-25",
         "durationDays": 189
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "PPM_SOMELEC_2026_5_1",
@@ -387,6 +388,7 @@
     },
     {
       "id": "PRJ-SOMELEC-SOLAR-50MW-2026",
+      "uuid": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
       "title": "Construction d'une centrale solaire de 50 MWc avec une capacité de stockage de 35MW/70 MWh",
       "reference": "PPM_SOMELEC_2026_5_12",
       "status": "planification",
@@ -412,7 +414,7 @@
         "endDate": "2028-03-30",
         "durationDays": 365
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "PPM_SOMELEC_2026_5_12",
@@ -631,6 +633,7 @@
     },
     {
       "id": "PRJ-SOMELEC-ALEG-ELGHRA-2026",
+      "uuid": "1a91ada4-8325-4830-9cb4-540d14845995",
       "title": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV",
       "reference": "PPM_SOMELEC_2026_5_3",
       "status": "planification",
@@ -656,7 +659,7 @@
         "endDate": "2028-11-21",
         "durationDays": 700
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "PPM_SOMELEC_2026_5_3",
@@ -795,6 +798,7 @@
     },
     {
       "id": "PRJ-SOMELEC-LIGNE225-KIFFA-2026",
+      "uuid": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
       "title": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa",
       "reference": "PPM_SOMELEC_2026_5_4",
       "status": "planification",
@@ -820,7 +824,7 @@
         "endDate": "2028-02-08",
         "durationDays": 337
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "PPM_SOMELEC_2026_5_4",
@@ -924,6 +928,7 @@
     },
     {
       "id": "PRJ-SOMELEC-PNAGSB-2026",
+      "uuid": "8172615e-a66b-4fcc-888a-048f0a652ec2",
       "title": "Programme National d'Accès Généralisé aux Services de Base - Composante Électricité",
       "reference": "PNAGSB-ELEC-2026-001",
       "status": "planification",
@@ -1059,6 +1064,7 @@
     },
     {
       "id": "PRJ-SOMELEC-INTERCO-RIM-SEN-2025",
+      "uuid": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
       "title": "Renforcement de l'interconnexion Électrique entre la Mauritanie et le Sénégal (ligne Nouakchott-Tobène)",
       "reference": "OMVS-INTERCO-2025-001",
       "status": "en_cours",
@@ -1084,7 +1090,7 @@
         "endDate": "2027-06-30",
         "durationDays": 850
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "OMVS-INTERCO-2025-001",
@@ -1236,6 +1242,7 @@
     },
     {
       "id": "PRJ-SOMELEC-REHAB-NKTT-2024",
+      "uuid": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
       "title": "Réhabilitation du réseau de distribution Haute Tension à Nouakchott",
       "reference": "DAO N°11/CMI/2024",
       "status": "en_cours",
@@ -1261,7 +1268,7 @@
         "endDate": "2025-06-30",
         "durationDays": 545
       },
-      "procurement": {
+      "tender": {
         "type": "Travaux",
         "mode": "DAO",
         "reference": "DAO N°11/CMI/2024",
@@ -1374,6 +1381,7 @@
     },
     {
       "id": "PRJ-DGEER-DREAM-2024",
+      "uuid": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
       "title": "Projet DREAM 1 - Définition des Indicateurs de Performance",
       "reference": "DREAM-1-2024",
       "status": "termine",
@@ -1399,7 +1407,7 @@
         "endDate": "2024-12-31",
         "durationDays": 365
       },
-      "procurement": {
+      "tender": {
         "type": "AOO",
         "reference": "DREAM-1-2024",
         "attributaireId": "SUP-MKAC-001",
