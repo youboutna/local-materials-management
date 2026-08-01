@@ -23,7 +23,7 @@ import { TaskPriority, TaskService, TaskStatus } from '@/application/services/Ta
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
-import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhasePriority, PhaseStatus, PhaseType, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type {
   CreateProjectDTO,
   ProjectDTO,
@@ -428,18 +428,24 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
           phaseRecord.name === phase.name;
       });
       const phaseData = {
+        id: existingPhase?.id ?? '',
         projectId,
         name: phase.name,
         phaseCode: phase.code,
         externalRef: phase.externalRef ?? (phase.code ? `${this.getExternalRef(row) ?? projectId}:${phase.code}` : undefined),
         description: phase.description,
-        type: 'execution' as PhaseDTO['type'],
+        type: PhaseType.STRUCTURAL,
+        status: PhaseStatus.PENDING,
+        priority: PhasePriority.MEDIUM,
+        progress: phase.progress ?? 0,
         orderIndex: phase.order,
         startDate: phase.startDate,
         endDate: phase.endDate,
         estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
         customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
-      } as PhaseDTO;
+        createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } satisfies PhaseDTO;
       const createdPhase = existingPhase
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
