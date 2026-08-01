@@ -59,9 +59,10 @@ const Dashboard: React.FC = () => {
 
   // Map domain entities to projects for compatibility with ProjectData
   const projects = useMemo(() => 
-    hexProjects.map(p => ({
-      id: p.id,
-      title: p.title,
+    hexProjects.map(p => {
+      const coordinates = getProjectCoordinates(p);
+      return {
+      ...p,
       description: p.description || '',
       location: p.location || '',
       status: p.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
@@ -70,10 +71,10 @@ const Dashboard: React.FC = () => {
       teamSize: p.teamSize || 0,
       startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
       endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
-      latitude: getProjectCoordinates(p)?.latitude,
-      longitude: getProjectCoordinates(p)?.longitude,
-      coordinates: getProjectCoordinates(p),
-    }))
+      latitude: coordinates?.latitude,
+      longitude: coordinates?.longitude,
+      coordinates,
+    }})
   , [hexProjects]);
 
   // Compute location distribution from hexProjects as fallback
