@@ -99,7 +99,6 @@ export class PhaseTransformer {
       projectId: phase.projectId,
       name: phase.phaseName,
       phaseCode: (phase.customPhaseData as { phaseCode?: string } | null)?.phaseCode,
-      phaseCode: (phase.customPhaseData as { phaseCode?: string } | null)?.phaseCode,
       description: phase.description || '',
       status: phase.status as DTOStatus,
       progress: phase.progress || 0,
@@ -113,7 +112,7 @@ export class PhaseTransformer {
       type: mappedType || ('execution' as DTOType),
       priority: 'medium' as DTOPriority, // Priority not persisted yet in project_phases
       dependencies: phase.dependencies || [],
-      milestones: phase.milestones || [],
+      milestones: [], // Hydratés par MilestoneService (workflow projet)
       createdAt: phase.createdAt,
       updatedAt: phase.updatedAt,
 
@@ -217,7 +216,7 @@ export class PhaseTransformer {
       estimatedCost: dto.estimatedCost,
       actualCost: dto.actualCost,
       dependencies: [], // Will be loaded separately
-      milestones: dto.milestones || [],
+      milestones: (dto.milestones ?? []).map((m) => (typeof m === 'string' ? m : m.id)),
       humanResources: null, // Will be loaded separately
       materials: [], // Will be loaded separately
       suppliers: [], // Will be loaded separately
@@ -284,7 +283,7 @@ export class PhaseTransformer {
       estimatedCost: dto.estimatedCost || null,
       actualCost: dto.actualCost || null,
       dependencies: [],
-      milestones: dto.milestones || [],
+      milestones: (dto.milestones ?? []).map((m) => (typeof m === 'string' ? m : m.id)),
       humanResources: null,
       materials: [],
       suppliers: [],
