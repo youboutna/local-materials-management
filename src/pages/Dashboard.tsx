@@ -21,7 +21,6 @@ import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex 
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/use-auth";
 import { toast } from "@/hooks/use-toast";
-import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 import { motion } from "framer-motion";
 import {
   ArrowRight,
