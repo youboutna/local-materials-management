@@ -1,0 +1,1528 @@
+{
+  "version": "1.0",
+  "exportDate": "2026-07-31T10:00:00Z",
+  "type": "PROJECTS_IMPORT",
+  "source": "HADRATECH-GPI",
+  "organizations": [
+    {
+      "id": "ORG-MPE-001",
+      "name": "Ministère du Pétrole et de l'Énergie",
+      "code": "MPE",
+      "type": "ministere",
+      "description": "Ministère de tutelle du secteur pétrolier et énergétique",
+      "address": "Nouakchott, Mauritanie",
+      "phone": "+222 45 25 25 25",
+      "email": "contact@energie.gov.mr",
+      "isActive": true
+    },
+    {
+      "id": "ORG-DGEER-001",
+      "name": "Direction Générale de l'Électricité et des Énergies Renouvelables",
+      "code": "DGEER",
+      "type": "direction_technique",
+      "description": "Direction technique chargée de l'électricité et des énergies renouvelables",
+      "address": "Nouakchott, Mauritanie",
+      "phone": "+222 45 25 25 26",
+      "email": "dgeer@energie.gov.mr",
+      "isActive": true
+    },
+    {
+      "id": "ORG-SOMELEC-001",
+      "name": "SOMELEC - Société Mauritanienne d'Électricité",
+      "code": "SOMELEC",
+      "type": "entreprise_publique",
+      "description": "Société nationale de production, transport et distribution d'électricité",
+      "address": "Nouakchott, Mauritanie",
+      "phone": "+222 45 25 25 25",
+      "email": "contact@somelec.mr",
+      "isActive": true
+    },
+    {
+      "id": "ORG-AR-001",
+      "name": "Autorité de Régulation Multisectorielle",
+      "code": "AR",
+      "type": "autorite_regulation",
+      "description": "Autorité de régulation du secteur de l'électricité",
+      "address": "Nouakchott, Mauritanie",
+      "phone": "+222 45 25 25 27",
+      "email": "contact@ar.mr",
+      "isActive": true
+    },
+    {
+      "id": "ORG-OMVS-001",
+      "name": "OMVS - Organisation pour la Mise en Valeur du Fleuve Sénégal",
+      "code": "OMVS",
+      "type": "organisation_internationale",
+      "description": "Organisation intergouvernementale pour la gestion des ressources en eau du Fleuve Sénégal",
+      "address": "Dakar, Sénégal",
+      "phone": "+221 33 859 88 88",
+      "email": "contact@omvs.org",
+      "isActive": true
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "SUP-TEK-001",
+      "name": "TEK TRANSFORMATÖR",
+      "type": "fournisseur",
+      "contactEmail": "info@tektransformer.com.tr",
+      "contactPhone": "+90 212 555 55 55",
+      "address": "Istanbul, Turquie",
+      "specialization": ["transformateurs", "equipements_electriques"],
+      "rating": 4.7,
+      "isActive": true,
+      "contractStart": "2025-03-01",
+      "contractEnd": "2026-03-31"
+    },
+    {
+      "id": "SUP-TEKGEN-001",
+      "name": "Tek Transfo – Gen Power",
+      "type": "fournisseur",
+      "contactEmail": "info@tektransfo-genpower.com.tr",
+      "contactPhone": "+90 212 555 55 56",
+      "address": "Istanbul, Turquie",
+      "specialization": ["groupes_electrogenes", "equipements"],
+      "rating": 4.5,
+      "isActive": true,
+      "contractStart": "2025-03-01",
+      "contractEnd": "2026-03-31"
+    },
+    {
+      "id": "SUP-TECHNO-001",
+      "name": "Techno-Systèmes",
+      "type": "contractant_principal",
+      "contactEmail": "contact@techno-systemes.mr",
+      "contactPhone": "+222 45 25 25 25",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["centrales_hybrides", "solaire", "thermique", "ingenierie"],
+      "rating": 4.5,
+      "isActive": true,
+      "contractStart": "2025-06-01",
+      "contractEnd": "2026-12-31"
+    },
+    {
+      "id": "SUP-ESB-001",
+      "name": "Société ESB",
+      "type": "contractant_principal",
+      "contactEmail": "contact@esb.mr",
+      "contactPhone": "+222 45 25 25 26",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["electrification_rurale", "reseaux", "infrastructures"],
+      "rating": 4.2,
+      "isActive": true,
+      "contractStart": "2025-07-01",
+      "contractEnd": "2026-12-31"
+    },
+    {
+      "id": "SUP-CTM-001",
+      "name": "CTM Bâtiment",
+      "type": "contractant_principal",
+      "contactEmail": "contact@ctm.mr",
+      "contactPhone": "+222 45 25 25 27",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["reseaux", "distribution", "genie_civil"],
+      "rating": 4.0,
+      "isActive": true,
+      "contractStart": "2024-01-01",
+      "contractEnd": "2025-06-30"
+    },
+    {
+      "id": "SUP-GENISERVICES-001",
+      "name": "Groupement Geniservices / Yuancheng Electric Power",
+      "type": "contractant_principal",
+      "contactEmail": "contact@geniservices.mr",
+      "contactPhone": "+222 45 25 25 28",
+      "address": "Nouakchott, Mauritanie / Chine",
+      "specialization": ["infrastructures", "reseaux", "travaux_publics"],
+      "rating": 4.3,
+      "isActive": true,
+      "contractStart": "2024-02-01",
+      "contractEnd": "2025-12-31"
+    },
+    {
+      "id": "SUP-IDE-001",
+      "name": "Ingénierie et Distribution Électrique (I.D.E)",
+      "type": "fournisseur",
+      "contactEmail": "contact@ide.ma",
+      "contactPhone": "+212 522 55 55 55",
+      "address": "Casablanca, Maroc",
+      "specialization": ["reseaux", "distribution", "electrification"],
+      "rating": 4.4,
+      "isActive": true
+    },
+    {
+      "id": "SUP-SDES-001",
+      "name": "S.D.E.S SARL",
+      "type": "sous_traitant",
+      "contactEmail": "contact@sdes.ml",
+      "contactPhone": "+223 22 55 55 55",
+      "address": "Bamako, Mali",
+      "specialization": ["electrification_rurale", "montage", "equipements"],
+      "rating": 4.0,
+      "isActive": true,
+      "parentSupplierId": "SUP-ESB-001"
+    },
+    {
+      "id": "SUP-ETM-001",
+      "name": "Groupement ETM-ASTOR",
+      "type": "sous_traitant",
+      "contactEmail": "contact@etm-astor.mr",
+      "contactPhone": "+222 45 25 25 29",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["installations", "postes", "transformateurs"],
+      "rating": 4.1,
+      "isActive": true
+    },
+    {
+      "id": "SUP-ECE-001",
+      "name": "Electromechanical & Communication Engineers / CTMTurnkeySolution",
+      "type": "sous_traitant",
+      "contactEmail": "contact@ece.mr",
+      "contactPhone": "+222 45 25 25 30",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["installations", "postes", "ingenierie"],
+      "rating": 4.2,
+      "isActive": true
+    },
+    {
+      "id": "SUP-MKAC-001",
+      "name": "Groupement MKAC/EY (Ernst & Young)",
+      "type": "bureau_conseil",
+      "contactEmail": "contact@ey.mr",
+      "contactPhone": "+222 45 25 25 31",
+      "address": "Nouakchott, Mauritanie",
+      "specialization": ["audit", "conseil", "performance", "indicateurs"],
+      "rating": 4.8,
+      "isActive": true,
+      "contractStart": "2024-01-01",
+      "contractEnd": "2024-12-31"
+    },
+    {
+      "id": "SUP-HADRATECH-001",
+      "name": "HADRATECH-SUARL",
+      "type": "bureau_conseil",
+      "contactEmail": "contact@hadratech.com",
+      "contactPhone": "+222 41 43 00 00",
+      "address": "AV - OULD MEKNASS, Nouakchott, Mauritanie",
+      "specialization": ["geoportail", "gnss", "cartographie", "formation"],
+      "rating": 4.6,
+      "isActive": true,
+      "nif": "01366608",
+      "bankInfo": {
+        "bank": "MMM",
+        "account": "1005075",
+        "iban": "MR130001800008210000000125"
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "PRJ-SOMELEC-TRANSFO-ALEG-2026",
+      "title": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA au poste d'Aleg",
+      "reference": "PPM_SOMELEC_2026_5_1",
+      "status": "en_cours",
+      "type": "EQUIPEMENTS",
+      "organizationId": "ORG-SOMELEC-001",
+      "department": "DCERTN",
+      "description": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA au poste d'Aleg pour le renforcement du réseau électrique",
+      "location": "Aleg, Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_DGEER_11",
+            "source": "Budget État",
+            "amount": 0,
+            "type": "domestic"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2026-07-20",
+        "endDate": "2027-01-25",
+        "durationDays": 189
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "Appel d'Offres Ouvert International",
+        "reference": "PPM_SOMELEC_2026_5_1",
+        "attributaireId": "SUP-TEK-001",
+        "attributaireName": "TEK TRANSFORMATÖR",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2026-05-18", "status": "termine" },
+          { "name": "Attribution", "date": "2026-06-22", "status": "termine" },
+          { "name": "Démarrage", "date": "2026-07-20", "status": "en_cours" },
+          { "name": "Achèvement", "date": "2027-01-25", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "FABRICATION",
+          "name": "Fabrication et Livraison",
+          "order": 1,
+          "durationDays": 60,
+          "startDate": "2026-07-20",
+          "endDate": "2026-09-18",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "DCERTN",
+            "position": "Ingénieur DCERTN"
+          },
+          "milestones": [
+            {
+              "name": "Commande passée",
+              "progressPercent": 25,
+              "targetDate": "2026-07-20",
+              "status": "termine"
+            },
+            {
+              "name": "Fabrication terminée",
+              "progressPercent": 50,
+              "targetDate": "2026-09-18",
+              "status": "en_cours"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "EQUIPEMENT",
+              "designation": "Transformateur 90/33 kV - 15 MVA",
+              "unit": "unité",
+              "quantity": 2,
+              "unitPrice": 0,
+              "totalPrice": 0,
+              "status": "en_cours"
+            }
+          ]
+        },
+        {
+          "code": "INSTALLATION",
+          "name": "Installation et Mise en Service",
+          "order": 2,
+          "durationDays": 90,
+          "startDate": "2026-10-01",
+          "endDate": "2026-12-30",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "DCERTN",
+            "position": "Chef de projet SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Installation terminée",
+              "progressPercent": 75,
+              "targetDate": "2026-12-30",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "PRESTATIONS",
+              "designation": "Installation et mise en service",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0,
+              "status": "planifie"
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Réception",
+          "order": 3,
+          "durationDays": 25,
+          "startDate": "2026-12-31",
+          "endDate": "2027-01-25",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Réception définitive",
+              "progressPercent": 100,
+              "targetDate": "2027-01-25",
+              "status": "planifie"
+            }
+          ]
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "EQUIPEMENT",
+          "designation": "Transformateur 90/33 kV - 15 MVA",
+          "unit": "unité",
+          "quantity": 2,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "PRESTATIONS",
+          "designation": "Installation et mise en service",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-SOMELEC-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "supplierId": "SUP-TEK-001",
+          "role": "Attributaire",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-SOLAR-50MW-2026",
+      "title": "Construction d'une centrale solaire de 50 MWc avec une capacité de stockage de 35MW/70 MWh",
+      "reference": "PPM_SOMELEC_2026_5_12",
+      "status": "planification",
+      "type": "CENTRALE_SOLAIRE",
+      "organizationId": "ORG-DGEER-001",
+      "department": "Direction des Énergies Renouvelables",
+      "description": "Construction d'une centrale solaire photovoltaïque de 50 MWc avec système de stockage par batteries de 35MW/70MWh pour augmenter la capacité de production d'énergie renouvelable",
+      "location": "Mauritanie (site à déterminer par EIES)",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_DGEER_11",
+            "source": "Budget État",
+            "amount": 0,
+            "type": "domestic"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2027-03-31",
+        "endDate": "2028-03-30",
+        "durationDays": 365
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "Appel d'Offres Ouvert International",
+        "reference": "PPM_SOMELEC_2026_5_12",
+        "attributaireId": null,
+        "attributaireName": "À déterminer",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2026-12-21", "status": "planifie" },
+          { "name": "Attribution", "date": "2027-03-17", "status": "planifie" },
+          { "name": "Démarrage", "date": "2027-03-31", "status": "planifie" },
+          { "name": "Achèvement", "date": "2028-03-30", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "PRE_FEASIBILITY",
+          "name": "Pré-faisabilité et Études",
+          "order": 1,
+          "durationDays": 90,
+          "startDate": "2027-03-31",
+          "endDate": "2027-06-29",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Énergies Renouvelables",
+            "position": "Directeur des Énergies Renouvelables"
+          },
+          "milestones": [
+            {
+              "name": "Études de faisabilité validées",
+              "progressPercent": 25,
+              "targetDate": "2027-06-29",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "MOBILISATION",
+              "designation": "Études de faisabilité et EIES",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "DESIGN_DAO",
+          "name": "Conception et DAO",
+          "order": 2,
+          "durationDays": 120,
+          "startDate": "2027-06-30",
+          "endDate": "2027-10-28",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Infrastructures Électriques",
+            "position": "Directeur des Infrastructures Électriques"
+          },
+          "milestones": [
+            {
+              "name": "DAO validé",
+              "progressPercent": 50,
+              "targetDate": "2027-10-28",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "GENIE_CIVIL",
+              "designation": "Conception technique détaillée",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "EXECUTION",
+          "name": "Exécution des travaux",
+          "order": 3,
+          "durationDays": 180,
+          "startDate": "2027-10-29",
+          "endDate": "2028-04-26",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Chef de projet SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Génie civil terminé",
+              "progressPercent": 25,
+              "targetDate": "2027-12-15",
+              "status": "planifie"
+            },
+            {
+              "name": "Installation PV terminée",
+              "progressPercent": 50,
+              "targetDate": "2028-02-15",
+              "status": "planifie"
+            },
+            {
+              "name": "Système stockage installé",
+              "progressPercent": 75,
+              "targetDate": "2028-03-15",
+              "status": "planifie"
+            },
+            {
+              "name": "Tests terminés",
+              "progressPercent": 90,
+              "targetDate": "2028-04-26",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-03",
+              "category": "EQUIPEMENT",
+              "designation": "Centrale solaire 50 MWc",
+              "unit": "MWc",
+              "quantity": 50,
+              "unitPrice": 0,
+              "totalPrice": 0
+            },
+            {
+              "code": "DQE-04",
+              "category": "EQUIPEMENT",
+              "designation": "Stockage 35MW/70 MWh",
+              "unit": "MWh",
+              "quantity": 70,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "HANDOVER",
+          "name": "Réception et Garantie",
+          "order": 4,
+          "durationDays": 60,
+          "startDate": "2028-04-27",
+          "endDate": "2028-06-26",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général DGEER"
+          },
+          "milestones": [
+            {
+              "name": "Réception provisoire",
+              "progressPercent": 95,
+              "targetDate": "2028-05-30",
+              "status": "planifie"
+            },
+            {
+              "name": "Réception définitive",
+              "progressPercent": 100,
+              "targetDate": "2028-06-26",
+              "status": "planifie"
+            }
+          ]
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "MOBILISATION",
+          "designation": "Études de faisabilité et EIES",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "GENIE_CIVIL",
+          "designation": "Conception technique détaillée",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-03",
+          "category": "EQUIPEMENT",
+          "designation": "Centrale solaire 50 MWc",
+          "unit": "MWc",
+          "quantity": 50,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-04",
+          "category": "EQUIPEMENT",
+          "designation": "Stockage 35MW/70 MWh",
+          "unit": "MWh",
+          "quantity": 70,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-DGEER-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "organizationId": "ORG-MPE-001",
+          "role": "Tutelle",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-ALEG-ELGHRA-2026",
+      "title": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV",
+      "reference": "PPM_SOMELEC_2026_5_3",
+      "status": "planification",
+      "type": "TRAVAUX",
+      "organizationId": "ORG-SOMELEC-001",
+      "department": "PIEMM",
+      "description": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV d'Aleg avec une ligne de 18 km en 90 kV",
+      "location": "Nouakchott - Aleg, Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_SOMELEC_04",
+            "source": "Budget État",
+            "amount": 0,
+            "type": "domestic"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2026-12-22",
+        "endDate": "2028-11-21",
+        "durationDays": 700
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "Appel d'Offres Ouvert International",
+        "reference": "PPM_SOMELEC_2026_5_3",
+        "attributaireId": null,
+        "attributaireName": "À déterminer",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2026-07-20", "status": "en_cours" },
+          { "name": "Attribution", "date": "2026-11-23", "status": "planifie" },
+          { "name": "Démarrage", "date": "2026-12-22", "status": "planifie" },
+          { "name": "Achèvement", "date": "2028-11-21", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "ETUDES",
+          "name": "Études Techniques",
+          "order": 1,
+          "durationDays": 90,
+          "startDate": "2026-12-22",
+          "endDate": "2027-03-22",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "PIEMM",
+            "position": "Ingénieur PIEMM"
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "GENIE_CIVIL",
+              "designation": "Études techniques et levés",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "TRAVAUX",
+          "name": "Travaux de Construction",
+          "order": 2,
+          "durationDays": 420,
+          "startDate": "2027-03-23",
+          "endDate": "2028-05-17",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Chef de projet SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Poste 225/90/33 kV terminé",
+              "progressPercent": 50,
+              "targetDate": "2027-12-31",
+              "status": "planifie"
+            },
+            {
+              "name": "Ligne 18 km terminée",
+              "progressPercent": 75,
+              "targetDate": "2028-05-17",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "GENIE_CIVIL",
+              "designation": "Poste 225/90/33 kV Aleg",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0
+            },
+            {
+              "code": "DQE-03",
+              "category": "POSE_RESEAU",
+              "designation": "Ligne 18 km 90 kV",
+              "unit": "km",
+              "quantity": 18,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Réception",
+          "order": 3,
+          "durationDays": 60,
+          "startDate": "2028-05-18",
+          "endDate": "2028-07-17",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général SOMELEC"
+          }
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "GENIE_CIVIL",
+          "designation": "Études techniques et levés",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "GENIE_CIVIL",
+          "designation": "Poste 225/90/33 kV Aleg",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-03",
+          "category": "POSE_RESEAU",
+          "designation": "Ligne 18 km 90 kV",
+          "unit": "km",
+          "quantity": 18,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-SOMELEC-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-LIGNE225-KIFFA-2026",
+      "title": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa",
+      "reference": "PPM_SOMELEC_2026_5_4",
+      "status": "planification",
+      "type": "LIGNE_HT",
+      "organizationId": "ORG-DGEER-001",
+      "department": "Infrastructures Électriques",
+      "description": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa pour le renforcement du réseau électrique",
+      "location": "El Ghaira - Kiffa, Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_DGEER_12",
+            "source": "Budget État",
+            "amount": 0,
+            "type": "domestic"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2027-03-08",
+        "endDate": "2028-02-08",
+        "durationDays": 337
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "Appel d'Offres Ouvert International",
+        "reference": "PPM_SOMELEC_2026_5_4",
+        "attributaireId": null,
+        "attributaireName": "À déterminer",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2026-08-24", "status": "planifie" },
+          { "name": "Attribution", "date": "2027-02-08", "status": "planifie" },
+          { "name": "Démarrage", "date": "2027-03-08", "status": "planifie" },
+          { "name": "Achèvement", "date": "2028-02-08", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "ETUDES",
+          "name": "Études Techniques",
+          "order": 1,
+          "durationDays": 60,
+          "startDate": "2027-03-08",
+          "endDate": "2027-05-07",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Infrastructures Électriques",
+            "position": "Directeur des Infrastructures Électriques"
+          }
+        },
+        {
+          "code": "TRAVAUX",
+          "name": "Travaux de Construction",
+          "order": 2,
+          "durationDays": 210,
+          "startDate": "2027-05-08",
+          "endDate": "2027-12-04",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Chef de projet SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Ligne 225 kV terminée",
+              "progressPercent": 75,
+              "targetDate": "2027-12-04",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "POSE_RESEAU",
+              "designation": "Ligne 225 kV El Ghaira - Kiffa",
+              "unit": "km",
+              "quantity": 0,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Réception",
+          "order": 3,
+          "durationDays": 60,
+          "startDate": "2027-12-05",
+          "endDate": "2028-02-08",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général DGEER"
+          }
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "POSE_RESEAU",
+          "designation": "Ligne 225 kV El Ghaira - Kiffa",
+          "unit": "km",
+          "quantity": 0,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "EQUIPEMENT",
+          "designation": "Postes associés",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-DGEER-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-PNAGSB-2026",
+      "title": "Programme National d'Accès Généralisé aux Services de Base - Composante Électricité",
+      "reference": "PNAGSB-ELEC-2026-001",
+      "status": "planification",
+      "type": "ELECTRIFICATION_RURALE",
+      "organizationId": "ORG-DGEER-001",
+      "department": "Infrastructures Électriques",
+      "description": "Programme National d'Accès Généralisé aux Services de Base pour l'électrification rurale",
+      "location": "Zones rurales Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_DGEER_52",
+            "source": "Budget État",
+            "amount": 0,
+            "type": "domestic"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2026-01-01",
+        "endDate": "2027-12-31",
+        "durationDays": 730
+      },
+      "phases": [
+        {
+          "code": "ETUDES",
+          "name": "Études et Planification",
+          "order": 1,
+          "durationDays": 120,
+          "startDate": "2026-01-01",
+          "endDate": "2026-04-30",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Infrastructures Électriques",
+            "position": "Directeur des Infrastructures Électriques"
+          }
+        },
+        {
+          "code": "TRAVAUX",
+          "name": "Travaux d'Électrification",
+          "order": 2,
+          "durationDays": 360,
+          "startDate": "2026-05-01",
+          "endDate": "2027-04-26",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Chef de projet SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Lots 1-3 terminés",
+              "progressPercent": 50,
+              "targetDate": "2026-12-31",
+              "status": "planifie"
+            },
+            {
+              "name": "Tous lots terminés",
+              "progressPercent": 75,
+              "targetDate": "2027-04-26",
+              "status": "planifie"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "POSE_RESEAU",
+              "designation": "Extension réseaux MT/BT",
+              "unit": "km",
+              "quantity": 0,
+              "unitPrice": 0,
+              "totalPrice": 0
+            },
+            {
+              "code": "DQE-02",
+              "category": "EQUIPEMENT",
+              "designation": "Transformateurs de distribution",
+              "unit": "unité",
+              "quantity": 0,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Réception",
+          "order": 3,
+          "durationDays": 60,
+          "startDate": "2027-05-01",
+          "endDate": "2027-06-30",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général DGEER"
+          }
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "POSE_RESEAU",
+          "designation": "Extension réseaux MT/BT",
+          "unit": "km",
+          "quantity": 0,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "EQUIPEMENT",
+          "designation": "Transformateurs de distribution",
+          "unit": "unité",
+          "quantity": 0,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-DGEER-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "organizationId": "ORG-MPE-001",
+          "role": "Tutelle",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-INTERCO-RIM-SEN-2025",
+      "title": "Renforcement de l'interconnexion Électrique entre la Mauritanie et le Sénégal (ligne Nouakchott-Tobène)",
+      "reference": "OMVS-INTERCO-2025-001",
+      "status": "en_cours",
+      "type": "INTERCONNEXION",
+      "organizationId": "ORG-OMVS-001",
+      "department": "Infrastructures Électriques",
+      "description": "Renforcement de l'interconnexion électrique entre la Mauritanie et le Sénégal (ligne Nouakchott-Tobène) via l'OMVS",
+      "location": "Nouakchott (Mauritanie) - Tobène (Sénégal)",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_SOMELEC_03",
+            "source": "FADES",
+            "amount": 0,
+            "type": "loan"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2025-03-01",
+        "endDate": "2027-06-30",
+        "durationDays": 850
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "Appel d'Offres Ouvert International",
+        "reference": "OMVS-INTERCO-2025-001",
+        "attributaireId": null,
+        "attributaireName": "À déterminer",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2024-10-01", "status": "termine" },
+          { "name": "Attribution", "date": "2025-02-28", "status": "termine" },
+          { "name": "Démarrage", "date": "2025-03-01", "status": "en_cours" },
+          { "name": "Mise en service", "date": "2027-05-31", "status": "planifie" },
+          { "name": "Réception définitive", "date": "2027-06-30", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "ETUDES",
+          "name": "Études et Conception",
+          "order": 1,
+          "durationDays": 90,
+          "startDate": "2025-03-01",
+          "endDate": "2025-05-29",
+          "responsible": {
+            "organizationId": "ORG-OMVS-001",
+            "department": "Infrastructures Électriques",
+            "position": "Directeur des Infrastructures OMVS"
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "GENIE_CIVIL",
+              "designation": "Études techniques et conception",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "TRAVAUX",
+          "name": "Construction Ligne HT",
+          "order": 2,
+          "durationDays": 540,
+          "startDate": "2025-06-01",
+          "endDate": "2026-11-23",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Directeur des Études et des Travaux"
+          },
+          "milestones": [
+            {
+              "name": "Ligne 225 kV terminée",
+              "progressPercent": 75,
+              "targetDate": "2026-11-23",
+              "status": "en_cours"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "POSE_RESEAU",
+              "designation": "Ligne HT 225 kV - 250 km",
+              "unit": "km",
+              "quantity": 250,
+              "unitPrice": 0,
+              "totalPrice": 0
+            },
+            {
+              "code": "DQE-03",
+              "category": "EQUIPEMENT",
+              "designation": "Postes électriques",
+              "unit": "unité",
+              "quantity": 4,
+              "unitPrice": 0,
+              "totalPrice": 0
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Tests et Mise en Service",
+          "order": 3,
+          "durationDays": 90,
+          "startDate": "2026-12-01",
+          "endDate": "2027-03-01",
+          "responsible": {
+            "organizationId": "ORG-MPE-001",
+            "department": "Direction Générale",
+            "position": "Ministre"
+          },
+          "milestones": [
+            {
+              "name": "Mise en service",
+              "progressPercent": 90,
+              "targetDate": "2027-03-01",
+              "status": "planifie"
+            }
+          ]
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "GENIE_CIVIL",
+          "designation": "Études techniques et conception",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "POSE_RESEAU",
+          "designation": "Ligne HT 225 kV - 250 km",
+          "unit": "km",
+          "quantity": 250,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-03",
+          "category": "EQUIPEMENT",
+          "designation": "Postes électriques",
+          "unit": "unité",
+          "quantity": 4,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-OMVS-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "organizationId": "ORG-SOMELEC-001",
+          "role": "Opérateur",
+          "isPrimary": false
+        },
+        {
+          "organizationId": "ORG-MPE-001",
+          "role": "Tutelle",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "PRJ-SOMELEC-REHAB-NKTT-2024",
+      "title": "Réhabilitation du réseau de distribution Haute Tension à Nouakchott",
+      "reference": "DAO N°11/CMI/2024",
+      "status": "en_cours",
+      "type": "RESEAUX",
+      "organizationId": "ORG-SOMELEC-001",
+      "department": "Études et Travaux",
+      "description": "Réhabilitation et renforcement du réseau de distribution Haute Tension à Nouakchott",
+      "location": "Nouakchott, Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "82_056_01_SOMELEC_03",
+            "source": "FADES",
+            "amount": 0,
+            "type": "loan"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2024-01-01",
+        "endDate": "2025-06-30",
+        "durationDays": 545
+      },
+      "procurement": {
+        "type": "Travaux",
+        "mode": "DAO",
+        "reference": "DAO N°11/CMI/2024",
+        "attributaireId": "SUP-CTM-001",
+        "attributaireName": "CTM Bâtiment",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement DAO", "date": "2023-09-01", "status": "termine" },
+          { "name": "Attribution", "date": "2023-11-15", "status": "termine" },
+          { "name": "Démarrage", "date": "2024-01-01", "status": "termine" },
+          { "name": "Réception provisoire", "date": "2025-01-31", "status": "en_cours" },
+          { "name": "Réception définitive", "date": "2025-06-30", "status": "planifie" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "ETUDES",
+          "name": "Études Techniques",
+          "order": 1,
+          "durationDays": 60,
+          "startDate": "2024-01-01",
+          "endDate": "2024-03-01",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Ingénieur Études SOMELEC"
+          }
+        },
+        {
+          "code": "TRAVAUX",
+          "name": "Travaux de Réhabilitation",
+          "order": 2,
+          "durationDays": 240,
+          "startDate": "2024-03-01",
+          "endDate": "2024-10-26",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Études et Travaux",
+            "position": "Chef chantier SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Réseau HT réhabilité",
+              "progressPercent": 75,
+              "targetDate": "2024-10-26",
+              "status": "termine"
+            }
+          ]
+        },
+        {
+          "code": "RECEPTION",
+          "name": "Réception",
+          "order": 3,
+          "durationDays": 60,
+          "startDate": "2024-11-01",
+          "endDate": "2024-12-31",
+          "responsible": {
+            "organizationId": "ORG-SOMELEC-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général SOMELEC"
+          },
+          "milestones": [
+            {
+              "name": "Réception provisoire",
+              "progressPercent": 90,
+              "targetDate": "2025-01-31",
+              "status": "en_cours"
+            },
+            {
+              "name": "Réception définitive",
+              "progressPercent": 100,
+              "targetDate": "2025-06-30",
+              "status": "planifie"
+            }
+          ]
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "GENIE_CIVIL",
+          "designation": "Études techniques",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 0,
+          "totalPrice": 0
+        },
+        {
+          "code": "DQE-02",
+          "category": "POSE_RESEAU",
+          "designation": "Réhabilitation réseau HT",
+          "unit": "km",
+          "quantity": 0,
+          "unitPrice": 0,
+          "totalPrice": 0
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-SOMELEC-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "supplierId": "SUP-CTM-001",
+          "role": "Attributaire",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "PRJ-DGEER-DREAM-2024",
+      "title": "Projet DREAM 1 - Définition des Indicateurs de Performance",
+      "reference": "DREAM-1-2024",
+      "status": "termine",
+      "type": "AUDIT_CONSEIL",
+      "organizationId": "ORG-DGEER-001",
+      "department": "Direction Générale",
+      "description": "Définition des indicateurs de performance des directions centrales du Ministère",
+      "location": "Nouakchott, Mauritanie",
+      "budget": {
+        "total": 0,
+        "currency": "MRU",
+        "sources": [
+          {
+            "code": "DREAM_1",
+            "source": "Banque Mondiale",
+            "amount": 0,
+            "type": "loan"
+          }
+        ]
+      },
+      "timeline": {
+        "startDate": "2024-01-01",
+        "endDate": "2024-12-31",
+        "durationDays": 365
+      },
+      "procurement": {
+        "type": "AOO",
+        "reference": "DREAM-1-2024",
+        "attributaireId": "SUP-MKAC-001",
+        "attributaireName": "Groupement MKAC/EY (Ernst & Young)",
+        "amount": 0,
+        "steps": [
+          { "name": "Lancement", "date": "2023-10-01", "status": "termine" },
+          { "name": "Attribution", "date": "2023-12-15", "status": "termine" },
+          { "name": "Démarrage", "date": "2024-01-01", "status": "termine" },
+          { "name": "Livraison", "date": "2024-12-31", "status": "termine" }
+        ]
+      },
+      "phases": [
+        {
+          "code": "ANALYSE",
+          "name": "Analyse Organisationnelle",
+          "order": 1,
+          "durationDays": 120,
+          "startDate": "2024-01-01",
+          "endDate": "2024-04-29",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général DGEER"
+          }
+        },
+        {
+          "code": "DEFINITION",
+          "name": "Définition des Indicateurs",
+          "order": 2,
+          "durationDays": 120,
+          "startDate": "2024-05-01",
+          "endDate": "2024-08-28",
+          "responsible": {
+            "organizationId": "ORG-DGEER-001",
+            "department": "Direction Générale",
+            "position": "Directeur Général DGEER"
+          }
+        },
+        {
+          "code": "VALIDATION",
+          "name": "Validation et Adoption",
+          "order": 3,
+          "durationDays": 60,
+          "startDate": "2024-09-01",
+          "endDate": "2024-10-31",
+          "responsible": {
+            "organizationId": "ORG-MPE-001",
+            "department": "Direction Générale",
+            "position": "Ministre"
+          }
+        }
+      ],
+      "stakeholders": [
+        {
+          "organizationId": "ORG-DGEER-001",
+          "role": "Maître d'ouvrage",
+          "isPrimary": true
+        },
+        {
+          "supplierId": "SUP-MKAC-001",
+          "role": "Attributaire",
+          "isPrimary": false
+        }
+      ]
+    }
+  ],
+  "budgetReferences": {
+    "82_056_01_DGEER_11": {
+      "action": "Extension centrale Dual 180 MW +60 MW",
+      "program": "Énergie (82_056)",
+      "ce": 1550000000,
+      "cp": 1550000000,
+      "donor": null,
+      "financeType": "domestic"
+    },
+    "82_056_01_DGEER_12": {
+      "action": "Ligne 225 kV Kiffa-Aioun",
+      "program": "Énergie (82_056)",
+      "ce": 193160000,
+      "cp": 83160000,
+      "donor": null,
+      "financeType": "domestic"
+    },
+    "82_056_01_DGEER_52": {
+      "action": "PNAGSB - Accès à l'électricité",
+      "program": "Énergie (82_056)",
+      "ce": 2969600000,
+      "cp": 2000000000,
+      "donor": null,
+      "financeType": "domestic"
+    },
+    "82_056_01_DGEER_60": {
+      "action": "Renforcement capacités SOMELEC",
+      "program": "Énergie (82_056)",
+      "ce": 2000000000,
+      "cp": 2000000000,
+      "donor": null,
+      "financeType": "domestic"
+    },
+    "82_056_01_SOMELEC_03": {
+      "action": "Interconnexion RIM-Sénégal",
+      "program": "Énergie (82_056)",
+      "ce": 1465722304,
+      "cp": 1200000000,
+      "donor": "FADES",
+      "financeType": "loan"
+    },
+    "82_056_01_SOMELEC_04": {
+      "action": "Développement réseaux",
+      "program": "Énergie (82_056)",
+      "ce": 733217927,
+      "cp": 420000000,
+      "donor": "FADES",
+      "financeType": "loan"
+    },
+    "82_056_01_CAB_58": {
+      "action": "DREAM - Phase 1",
+      "program": "Énergie (82_056)",
+      "ce": 3184000000,
+      "cp": 217720000,
+      "donor": "BM-IDA",
+      "financeType": "loan"
+    }
+  }
+}
