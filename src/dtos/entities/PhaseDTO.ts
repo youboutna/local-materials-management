@@ -117,7 +117,15 @@ export interface PhaseDTO extends BaseEntityDTO {
   
   // Dependencies
   dependencies?: string[]; // Phase IDs only for DTO
-  milestones?: string[]; // Milestone IDs only for DTO
+  /** Milestones hydratés (workflow projet / import) */
+  milestones?: Array<import('./MilestoneDTO').MilestoneDTO>;
+  /** Tâches hydratées (workflow projet / import) — tolérant aux alias legacy */
+  tasks?: Array<Record<string, unknown> & { title?: string; name?: string }>;
+  /** Lignes DQE rattachées à la phase */
+  dqeLines?: Array<import('../boq/BoqLineDTO').BoqLineDTO>;
+  /** Référence métier idempotente (import) */
+  phaseCode?: string;
+
   
   // Resources
   assignedTo?: string[]; // Employee IDs only for DTO
