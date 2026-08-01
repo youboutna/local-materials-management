@@ -78,6 +78,19 @@ export class SupabaseOrganizationAdapter implements IOrganizationRepository {
     const payload = toRow(data);
     if (data.externalRef) {
       const { data: existing, error: findError } = await (supabase as any)
+
+    if (data.code) {
+      const { data: existing, error: findError } = await (supabase as any)
+        .from(TABLE)
+        .select("id")
+        .eq("code", data.code)
+        .maybeSingle();
+      if (findError) throw new Error(findError.message);
+
+      if (existing?.id) {
+        return this.update(existing.id, data);
+      }
+    }
         .from(TABLE)
         .select('id')
         .eq('external_ref', data.externalRef)
