@@ -213,8 +213,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       };
       
       // Submit through the unified workflow system
-      await updateFormData(finalWorkflowData);
-      const result = await saveCurrentStep(steps.length);
+      updateFormData(finalWorkflowData);
+      const result = await saveCurrentStep(
+        steps.length,
+        finalWorkflowData as ProjectWorkflowData,
+      );
       
       if (!result || !result.success) {
         throw new Error((result as any)?.errors?.join(', ') || 'Failed to complete project creation');
@@ -331,7 +334,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
           {currentStep === 0 && (
             <ProjectInfoStep
-              mode="create"
+              mode={mode}
               workflowData={formData}
               onStepComplete={(stepData) => {
                 // Step 1 manages CRUD adapters; preserve user-entered status/progress
@@ -524,7 +527,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           {currentStep === steps.length - 1 ? (
             <Button onClick={handleSubmit} disabled={isLoading}>
               <CheckCircle className="h-4 w-4 mr-2" />
-              {isLoading ? 'Création en cours...' : 'Créer le Projet'}
+              {isLoading
+                ? mode === 'edit' ? 'Mise à jour…' : 'Création en cours…'
+                : mode === 'edit' ? 'Finaliser les modifications' : 'Créer le projet'}
             </Button>
           ) : (
             <Button
