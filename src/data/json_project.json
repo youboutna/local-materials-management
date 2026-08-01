@@ -5,7 +5,7 @@
   "source": "HADRATECH-GPI",
   "organizations": [
     {
-      "id": "ORG-MPE-001",
+      "id": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
       "name": "Ministère du Pétrole et de l'Énergie",
       "code": "MPE",
       "type": "ministere",
@@ -16,7 +16,7 @@
       "isActive": true
     },
     {
-      "id": "ORG-DGEER-001",
+      "id": "8328c348-077d-478f-96e2-9fa2cfe44",
       "name": "Direction Générale de l'Électricité et des Énergies Renouvelables",
       "code": "DGEER",
       "type": "direction_technique",
@@ -27,7 +27,7 @@
       "isActive": true
     },
     {
-      "id": "ORG-SOMELEC-001",
+      "id": "f1e179e4-4c98-4e04-8b79-d5fa50879",
       "name": "SOMELEC - Société Mauritanienne d'Électricité",
       "code": "SOMELEC",
       "type": "entreprise_publique",
@@ -38,7 +38,7 @@
       "isActive": true
     },
     {
-      "id": "ORG-AR-001",
+      "id": "447e15fc-4ece-44e6-98b7-d97f46d3e",
       "name": "Autorité de Régulation Multisectorielle",
       "code": "AR",
       "type": "autorite_regulation",
@@ -49,7 +49,7 @@
       "isActive": true
     },
     {
-      "id": "ORG-OMVS-001",
+      "id": "f224f6ba-1910-47b8-8841-304e29acd",
       "name": "OMVS - Organisation pour la Mise en Valeur du Fleuve Sénégal",
       "code": "OMVS",
       "type": "organisation_internationale",
@@ -62,7 +62,7 @@
   ],
   "suppliers": [
     {
-      "id": "SUP-TEK-001",
+      "id": "1cff8c06-7976-4933-8df6-775ded72a",
       "name": "TEK TRANSFORMATÖR",
       "type": "fournisseur",
       "contactEmail": "info@tektransformer.com.tr",
@@ -75,7 +75,7 @@
       "contractEnd": "2026-03-31"
     },
     {
-      "id": "SUP-TEKGEN-001",
+      "id": "0f477b16-70eb-447e-9c4c-2768d2041",
       "name": "Tek Transfo – Gen Power",
       "type": "fournisseur",
       "contactEmail": "info@tektransfo-genpower.com.tr",
@@ -88,7 +88,7 @@
       "contractEnd": "2026-03-31"
     },
     {
-      "id": "SUP-TECHNO-001",
+      "id": "256436de-db39-45a6-8c83-785b921e",
       "name": "Techno-Systèmes",
       "type": "contractant_principal",
       "contactEmail": "contact@techno-systemes.mr",
@@ -101,7 +101,7 @@
       "contractEnd": "2026-12-31"
     },
     {
-      "id": "SUP-ESB-001",
+      "id": "4356e55b-8ea1-4e4b-aa12-8eeaadbcc",
       "name": "Société ESB",
       "type": "contractant_principal",
       "contactEmail": "contact@esb.mr",
@@ -114,7 +114,7 @@
       "contractEnd": "2026-12-31"
     },
     {
-      "id": "SUP-CTM-001",
+      "id": "127f8626-1b29-4a3b-9749-0d58221bc",
       "name": "CTM Bâtiment",
       "type": "contractant_principal",
       "contactEmail": "contact@ctm.mr",
@@ -127,7 +127,7 @@
       "contractEnd": "2025-06-30"
     },
     {
-      "id": "SUP-GENISERVICES-001",
+      "id": "7f731ab6-861c-4c5a-95ac-707fdc7a59",
       "name": "Groupement Geniservices / Yuancheng Electric Power",
       "type": "contractant_principal",
       "contactEmail": "contact@geniservices.mr",
@@ -140,7 +140,7 @@
       "contractEnd": "2025-12-31"
     },
     {
-      "id": "SUP-IDE-001",
+      "id": "4d368c25-c40f-4d72-a326-ed4b9705",
       "name": "Ingénierie et Distribution Électrique (I.D.E)",
       "type": "fournisseur",
       "contactEmail": "contact@ide.ma",
@@ -151,7 +151,7 @@
       "isActive": true
     },
     {
-      "id": "SUP-SDES-001",
+      "id": "bd3ec45f-788d-4290-aa03-0dee21d8",
       "name": "S.D.E.S SARL",
       "type": "sous_traitant",
       "contactEmail": "contact@sdes.ml",
@@ -160,10 +160,10 @@
       "specialization": ["electrification_rurale", "montage", "equipements"],
       "rating": 4.0,
       "isActive": true,
-      "parentSupplierId": "SUP-ESB-001"
+      "parentSupplierId": "4356e55b-8ea1-4e4b-aa12-8eeaadbcc"
     },
     {
-      "id": "SUP-ETM-001",
+      "id": "d6ba723e-807d-48c5-88d0-0ff52b01f",
       "name": "Groupement ETM-ASTOR",
       "type": "sous_traitant",
       "contactEmail": "contact@etm-astor.mr",
@@ -174,7 +174,7 @@
       "isActive": true
     },
     {
-      "id": "SUP-ECE-001",
+      "id": "327bb12e-1d0f-41ae-b8fc-c7fbd5cdb7",
       "name": "Electromechanical & Communication Engineers / CTMTurnkeySolution",
       "type": "sous_traitant",
       "contactEmail": "contact@ece.mr",
@@ -185,7 +185,7 @@
       "isActive": true
     },
     {
-      "id": "SUP-MKAC-001",
+      "id": "4900b294-1f6d-471d-916c-493d91eab",
       "name": "Groupement MKAC/EY (Ernst & Young)",
       "type": "bureau_conseil",
       "contactEmail": "contact@ey.mr",
@@ -198,7 +198,7 @@
       "contractEnd": "2024-12-31"
     },
     {
-      "id": "SUP-HADRATECH-001",
+      "id": "0b1861b6-b26d-4665-a1fd-e68f34d1b0",
       "name": "HADRATECH-SUARL",
       "type": "bureau_conseil",
       "contactEmail": "contact@hadratech.com",
@@ -217,24 +217,23 @@
   ],
   "projects": [
     {
-      "id": "PRJ-SOMELEC-TRANSFO-ALEG-2026",
-      "uuid": "39a522cc-591f-477d-9daf-c21bc0b80d17",
+      "id": "39a522cc-591f-477d-9daf-c21bc0b80d17",
       "title": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA au poste d'Aleg",
       "reference": "PPM_SOMELEC_2026_5_1",
       "status": "en_cours",
       "type": "EQUIPEMENTS",
-      "organizationId": "ORG-SOMELEC-001",
+      "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
       "department": "DCERTN",
       "description": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA au poste d'Aleg pour le renforcement du réseau électrique",
       "location": "Aleg, Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 84000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_DGEER_11",
             "source": "Budget État",
-            "amount": 0,
+            "amount": 84000000,
             "type": "domestic"
           }
         ]
@@ -248,9 +247,9 @@
         "type": "Travaux",
         "mode": "Appel d'Offres Ouvert International",
         "reference": "PPM_SOMELEC_2026_5_1",
-        "attributaireId": "SUP-TEK-001",
+        "attributaireId": "1cff8c06-7976-4933-8df6-775ded72a",
         "attributaireName": "TEK TRANSFORMATÖR",
-        "amount": 0,
+        "amount": 78000000,
         "steps": [
           { "name": "Lancement", "date": "2026-05-18", "status": "termine" },
           { "name": "Attribution", "date": "2026-06-22", "status": "termine" },
@@ -267,7 +266,7 @@
           "startDate": "2026-07-20",
           "endDate": "2026-09-18",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "DCERTN",
             "position": "Ingénieur DCERTN"
           },
@@ -292,8 +291,8 @@
               "designation": "Transformateur 90/33 kV - 15 MVA",
               "unit": "unité",
               "quantity": 2,
-              "unitPrice": 0,
-              "totalPrice": 0,
+              "unitPrice": 32000000,
+              "totalPrice": 64000000,
               "status": "en_cours"
             }
           ]
@@ -306,7 +305,7 @@
           "startDate": "2026-10-01",
           "endDate": "2026-12-30",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "DCERTN",
             "position": "Chef de projet SOMELEC"
           },
@@ -325,8 +324,8 @@
               "designation": "Installation et mise en service",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0,
+              "unitPrice": 14000000,
+              "totalPrice": 14000000,
               "status": "planifie"
             }
           ]
@@ -339,7 +338,7 @@
           "startDate": "2026-12-31",
           "endDate": "2027-01-25",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Direction Générale",
             "position": "Directeur Général SOMELEC"
           },
@@ -360,8 +359,8 @@
           "designation": "Transformateur 90/33 kV - 15 MVA",
           "unit": "unité",
           "quantity": 2,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 32000000,
+          "totalPrice": 64000000
         },
         {
           "code": "DQE-02",
@@ -369,43 +368,48 @@
           "designation": "Installation et mise en service",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 14000000,
+          "totalPrice": 14000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-SOMELEC-001",
+          "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "supplierId": "SUP-TEK-001",
+          "supplierId": "1cff8c06-7976-4933-8df6-775ded72a",
           "role": "Attributaire",
           "isPrimary": false
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-SOLAR-50MW-2026",
-      "uuid": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
+      "id": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
       "title": "Construction d'une centrale solaire de 50 MWc avec une capacité de stockage de 35MW/70 MWh",
       "reference": "PPM_SOMELEC_2026_5_12",
       "status": "planification",
       "type": "CENTRALE_SOLAIRE",
-      "organizationId": "ORG-DGEER-001",
+      "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
       "department": "Direction des Énergies Renouvelables",
-      "description": "Construction d'une centrale solaire photovoltaïque de 50 MWc avec système de stockage par batteries de 35MW/70MWh pour augmenter la capacité de production d'énergie renouvelable",
+      "description": "Construction d'une centrale solaire photovoltaïque de 50 MWc avec système de stockage par batteries de 35MW/70MWh",
       "location": "Mauritanie (site à déterminer par EIES)",
       "budget": {
-        "total": 0,
+        "total": 1250000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_DGEER_11",
             "source": "Budget État",
-            "amount": 0,
+            "amount": 600000000,
             "type": "domestic"
+          },
+          {
+            "code": "82_056_01_DGEER_11",
+            "source": "Banque Mondiale",
+            "amount": 650000000,
+            "type": "loan"
           }
         ]
       },
@@ -437,7 +441,7 @@
           "startDate": "2027-03-31",
           "endDate": "2027-06-29",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Énergies Renouvelables",
             "position": "Directeur des Énergies Renouvelables"
           },
@@ -456,8 +460,8 @@
               "designation": "Études de faisabilité et EIES",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 15000000,
+              "totalPrice": 15000000
             }
           ]
         },
@@ -469,7 +473,7 @@
           "startDate": "2027-06-30",
           "endDate": "2027-10-28",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Infrastructures Électriques",
             "position": "Directeur des Infrastructures Électriques"
           },
@@ -488,8 +492,8 @@
               "designation": "Conception technique détaillée",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 25000000,
+              "totalPrice": 25000000
             }
           ]
         },
@@ -501,7 +505,7 @@
           "startDate": "2027-10-29",
           "endDate": "2028-04-26",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Chef de projet SOMELEC"
           },
@@ -538,8 +542,8 @@
               "designation": "Centrale solaire 50 MWc",
               "unit": "MWc",
               "quantity": 50,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 15000000,
+              "totalPrice": 750000000
             },
             {
               "code": "DQE-04",
@@ -547,8 +551,17 @@
               "designation": "Stockage 35MW/70 MWh",
               "unit": "MWh",
               "quantity": 70,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 6000000,
+              "totalPrice": 420000000
+            },
+            {
+              "code": "DQE-05",
+              "category": "GENIE_CIVIL",
+              "designation": "Génie civil et installations",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 40000000,
+              "totalPrice": 40000000
             }
           ]
         },
@@ -560,7 +573,7 @@
           "startDate": "2028-04-27",
           "endDate": "2028-06-26",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Direction Générale",
             "position": "Directeur Général DGEER"
           },
@@ -587,8 +600,8 @@
           "designation": "Études de faisabilité et EIES",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 15000000,
+          "totalPrice": 15000000
         },
         {
           "code": "DQE-02",
@@ -596,8 +609,8 @@
           "designation": "Conception technique détaillée",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 25000000,
+          "totalPrice": 25000000
         },
         {
           "code": "DQE-03",
@@ -605,8 +618,8 @@
           "designation": "Centrale solaire 50 MWc",
           "unit": "MWc",
           "quantity": 50,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 15000000,
+          "totalPrice": 750000000
         },
         {
           "code": "DQE-04",
@@ -614,42 +627,50 @@
           "designation": "Stockage 35MW/70 MWh",
           "unit": "MWh",
           "quantity": 70,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 6000000,
+          "totalPrice": 420000000
+        },
+        {
+          "code": "DQE-05",
+          "category": "GENIE_CIVIL",
+          "designation": "Génie civil et installations",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 40000000,
+          "totalPrice": 40000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-DGEER-001",
+          "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "organizationId": "ORG-MPE-001",
+          "organizationId": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
           "role": "Tutelle",
           "isPrimary": false
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-ALEG-ELGHRA-2026",
-      "uuid": "1a91ada4-8325-4830-9cb4-540d14845995",
+      "id": "1a91ada4-8325-4830-9cb4-540d14845995",
       "title": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV",
       "reference": "PPM_SOMELEC_2026_5_3",
       "status": "planification",
       "type": "TRAVAUX",
-      "organizationId": "ORG-SOMELEC-001",
+      "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
       "department": "PIEMM",
       "description": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV d'Aleg avec une ligne de 18 km en 90 kV",
       "location": "Nouakchott - Aleg, Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 280000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_SOMELEC_04",
             "source": "Budget État",
-            "amount": 0,
+            "amount": 280000000,
             "type": "domestic"
           }
         ]
@@ -682,7 +703,7 @@
           "startDate": "2026-12-22",
           "endDate": "2027-03-22",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "PIEMM",
             "position": "Ingénieur PIEMM"
           },
@@ -693,8 +714,8 @@
               "designation": "Études techniques et levés",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 12000000,
+              "totalPrice": 12000000
             }
           ]
         },
@@ -706,7 +727,7 @@
           "startDate": "2027-03-23",
           "endDate": "2028-05-17",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Chef de projet SOMELEC"
           },
@@ -731,8 +752,8 @@
               "designation": "Poste 225/90/33 kV Aleg",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 150000000,
+              "totalPrice": 150000000
             },
             {
               "code": "DQE-03",
@@ -740,8 +761,8 @@
               "designation": "Ligne 18 km 90 kV",
               "unit": "km",
               "quantity": 18,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 6000000,
+              "totalPrice": 108000000
             }
           ]
         },
@@ -753,7 +774,7 @@
           "startDate": "2028-05-18",
           "endDate": "2028-07-17",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Direction Générale",
             "position": "Directeur Général SOMELEC"
           }
@@ -766,8 +787,8 @@
           "designation": "Études techniques et levés",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 12000000,
+          "totalPrice": 12000000
         },
         {
           "code": "DQE-02",
@@ -775,8 +796,8 @@
           "designation": "Poste 225/90/33 kV Aleg",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 150000000,
+          "totalPrice": 150000000
         },
         {
           "code": "DQE-03",
@@ -784,37 +805,36 @@
           "designation": "Ligne 18 km 90 kV",
           "unit": "km",
           "quantity": 18,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 6000000,
+          "totalPrice": 108000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-SOMELEC-001",
+          "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-LIGNE225-KIFFA-2026",
-      "uuid": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
+      "id": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
       "title": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa",
       "reference": "PPM_SOMELEC_2026_5_4",
       "status": "planification",
       "type": "LIGNE_HT",
-      "organizationId": "ORG-DGEER-001",
+      "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
       "department": "Infrastructures Électriques",
       "description": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa pour le renforcement du réseau électrique",
       "location": "El Ghaira - Kiffa, Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 350000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_DGEER_12",
             "source": "Budget État",
-            "amount": 0,
+            "amount": 350000000,
             "type": "domestic"
           }
         ]
@@ -847,10 +867,21 @@
           "startDate": "2027-03-08",
           "endDate": "2027-05-07",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Infrastructures Électriques",
             "position": "Directeur des Infrastructures Électriques"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "GENIE_CIVIL",
+              "designation": "Études techniques",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 15000000,
+              "totalPrice": 15000000
+            }
+          ]
         },
         {
           "code": "TRAVAUX",
@@ -860,7 +891,7 @@
           "startDate": "2027-05-08",
           "endDate": "2027-12-04",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Chef de projet SOMELEC"
           },
@@ -874,13 +905,22 @@
           ],
           "dqeLines": [
             {
-              "code": "DQE-01",
+              "code": "DQE-02",
               "category": "POSE_RESEAU",
               "designation": "Ligne 225 kV El Ghaira - Kiffa",
               "unit": "km",
-              "quantity": 0,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "quantity": 150,
+              "unitPrice": 1800000,
+              "totalPrice": 270000000
+            },
+            {
+              "code": "DQE-03",
+              "category": "EQUIPEMENT",
+              "designation": "Postes associés",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 65000000,
+              "totalPrice": 65000000
             }
           ]
         },
@@ -892,7 +932,7 @@
           "startDate": "2027-12-05",
           "endDate": "2028-02-08",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Direction Générale",
             "position": "Directeur Général DGEER"
           }
@@ -901,51 +941,65 @@
       "dqeLines": [
         {
           "code": "DQE-01",
-          "category": "POSE_RESEAU",
-          "designation": "Ligne 225 kV El Ghaira - Kiffa",
-          "unit": "km",
-          "quantity": 0,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "category": "GENIE_CIVIL",
+          "designation": "Études techniques",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 15000000,
+          "totalPrice": 15000000
         },
         {
           "code": "DQE-02",
+          "category": "POSE_RESEAU",
+          "designation": "Ligne 225 kV El Ghaira - Kiffa",
+          "unit": "km",
+          "quantity": 150,
+          "unitPrice": 1800000,
+          "totalPrice": 270000000
+        },
+        {
+          "code": "DQE-03",
           "category": "EQUIPEMENT",
           "designation": "Postes associés",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 65000000,
+          "totalPrice": 65000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-DGEER-001",
+          "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-PNAGSB-2026",
-      "uuid": "8172615e-a66b-4fcc-888a-048f0a652ec2",
+      "id": "8172615e-a66b-4fcc-888a-048f0a652ec2",
       "title": "Programme National d'Accès Généralisé aux Services de Base - Composante Électricité",
       "reference": "PNAGSB-ELEC-2026-001",
       "status": "planification",
       "type": "ELECTRIFICATION_RURALE",
-      "organizationId": "ORG-DGEER-001",
+      "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
       "department": "Infrastructures Électriques",
       "description": "Programme National d'Accès Généralisé aux Services de Base pour l'électrification rurale",
       "location": "Zones rurales Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 800000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_DGEER_52",
             "source": "Budget État",
-            "amount": 0,
+            "amount": 400000000,
             "type": "domestic"
+          },
+          {
+            "code": "82_056_01_DGEER_52",
+            "source": "Banque Mondiale",
+            "amount": 400000000,
+            "type": "loan"
           }
         ]
       },
@@ -963,10 +1017,21 @@
           "startDate": "2026-01-01",
           "endDate": "2026-04-30",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Infrastructures Électriques",
             "position": "Directeur des Infrastructures Électriques"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "GENIE_CIVIL",
+              "designation": "Études et planification",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 20000000,
+              "totalPrice": 20000000
+            }
+          ]
         },
         {
           "code": "TRAVAUX",
@@ -976,7 +1041,7 @@
           "startDate": "2026-05-01",
           "endDate": "2027-04-26",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Chef de projet SOMELEC"
           },
@@ -996,22 +1061,22 @@
           ],
           "dqeLines": [
             {
-              "code": "DQE-01",
+              "code": "DQE-02",
               "category": "POSE_RESEAU",
               "designation": "Extension réseaux MT/BT",
               "unit": "km",
-              "quantity": 0,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "quantity": 500,
+              "unitPrice": 1200000,
+              "totalPrice": 600000000
             },
             {
-              "code": "DQE-02",
+              "code": "DQE-03",
               "category": "EQUIPEMENT",
               "designation": "Transformateurs de distribution",
               "unit": "unité",
-              "quantity": 0,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "quantity": 150,
+              "unitPrice": 800000,
+              "totalPrice": 120000000
             }
           ]
         },
@@ -1023,7 +1088,7 @@
           "startDate": "2027-05-01",
           "endDate": "2027-06-30",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Direction Générale",
             "position": "Directeur Général DGEER"
           }
@@ -1032,56 +1097,70 @@
       "dqeLines": [
         {
           "code": "DQE-01",
-          "category": "POSE_RESEAU",
-          "designation": "Extension réseaux MT/BT",
-          "unit": "km",
-          "quantity": 0,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "category": "GENIE_CIVIL",
+          "designation": "Études et planification",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 20000000,
+          "totalPrice": 20000000
         },
         {
           "code": "DQE-02",
+          "category": "POSE_RESEAU",
+          "designation": "Extension réseaux MT/BT",
+          "unit": "km",
+          "quantity": 500,
+          "unitPrice": 1200000,
+          "totalPrice": 600000000
+        },
+        {
+          "code": "DQE-03",
           "category": "EQUIPEMENT",
           "designation": "Transformateurs de distribution",
           "unit": "unité",
-          "quantity": 0,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "quantity": 150,
+          "unitPrice": 800000,
+          "totalPrice": 120000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-DGEER-001",
+          "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "organizationId": "ORG-MPE-001",
+          "organizationId": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
           "role": "Tutelle",
           "isPrimary": false
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-INTERCO-RIM-SEN-2025",
-      "uuid": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
+      "id": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
       "title": "Renforcement de l'interconnexion Électrique entre la Mauritanie et le Sénégal (ligne Nouakchott-Tobène)",
       "reference": "OMVS-INTERCO-2025-001",
       "status": "en_cours",
       "type": "INTERCONNEXION",
-      "organizationId": "ORG-OMVS-001",
+      "organizationId": "f224f6ba-1910-47b8-8841-304e29acd",
       "department": "Infrastructures Électriques",
       "description": "Renforcement de l'interconnexion électrique entre la Mauritanie et le Sénégal (ligne Nouakchott-Tobène) via l'OMVS",
       "location": "Nouakchott (Mauritanie) - Tobène (Sénégal)",
       "budget": {
-        "total": 0,
+        "total": 450000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_SOMELEC_03",
             "source": "FADES",
-            "amount": 0,
+            "amount": 300000000,
             "type": "loan"
+          },
+          {
+            "code": "82_056_01_SOMELEC_03",
+            "source": "Budget État",
+            "amount": 150000000,
+            "type": "domestic"
           }
         ]
       },
@@ -1114,7 +1193,7 @@
           "startDate": "2025-03-01",
           "endDate": "2025-05-29",
           "responsible": {
-            "organizationId": "ORG-OMVS-001",
+            "organizationId": "f224f6ba-1910-47b8-8841-304e29acd",
             "department": "Infrastructures Électriques",
             "position": "Directeur des Infrastructures OMVS"
           },
@@ -1125,8 +1204,8 @@
               "designation": "Études techniques et conception",
               "unit": "forfait",
               "quantity": 1,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 18000000,
+              "totalPrice": 18000000
             }
           ]
         },
@@ -1138,7 +1217,7 @@
           "startDate": "2025-06-01",
           "endDate": "2026-11-23",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Directeur des Études et des Travaux"
           },
@@ -1157,8 +1236,8 @@
               "designation": "Ligne HT 225 kV - 250 km",
               "unit": "km",
               "quantity": 250,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 1400000,
+              "totalPrice": 350000000
             },
             {
               "code": "DQE-03",
@@ -1166,8 +1245,8 @@
               "designation": "Postes électriques",
               "unit": "unité",
               "quantity": 4,
-              "unitPrice": 0,
-              "totalPrice": 0
+              "unitPrice": 18000000,
+              "totalPrice": 72000000
             }
           ]
         },
@@ -1179,7 +1258,7 @@
           "startDate": "2026-12-01",
           "endDate": "2027-03-01",
           "responsible": {
-            "organizationId": "ORG-MPE-001",
+            "organizationId": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
             "department": "Direction Générale",
             "position": "Ministre"
           },
@@ -1200,8 +1279,8 @@
           "designation": "Études techniques et conception",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 18000000,
+          "totalPrice": 18000000
         },
         {
           "code": "DQE-02",
@@ -1209,8 +1288,8 @@
           "designation": "Ligne HT 225 kV - 250 km",
           "unit": "km",
           "quantity": 250,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 1400000,
+          "totalPrice": 350000000
         },
         {
           "code": "DQE-03",
@@ -1218,47 +1297,46 @@
           "designation": "Postes électriques",
           "unit": "unité",
           "quantity": 4,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 18000000,
+          "totalPrice": 72000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-OMVS-001",
+          "organizationId": "f224f6ba-1910-47b8-8841-304e29acd",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "organizationId": "ORG-SOMELEC-001",
+          "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
           "role": "Opérateur",
           "isPrimary": false
         },
         {
-          "organizationId": "ORG-MPE-001",
+          "organizationId": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
           "role": "Tutelle",
           "isPrimary": false
         }
       ]
     },
     {
-      "id": "PRJ-SOMELEC-REHAB-NKTT-2024",
-      "uuid": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
+      "id": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
       "title": "Réhabilitation du réseau de distribution Haute Tension à Nouakchott",
       "reference": "DAO N°11/CMI/2024",
       "status": "en_cours",
       "type": "RESEAUX",
-      "organizationId": "ORG-SOMELEC-001",
+      "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
       "department": "Études et Travaux",
       "description": "Réhabilitation et renforcement du réseau de distribution Haute Tension à Nouakchott",
       "location": "Nouakchott, Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 95000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "82_056_01_SOMELEC_03",
             "source": "FADES",
-            "amount": 0,
+            "amount": 95000000,
             "type": "loan"
           }
         ]
@@ -1272,9 +1350,9 @@
         "type": "Travaux",
         "mode": "DAO",
         "reference": "DAO N°11/CMI/2024",
-        "attributaireId": "SUP-CTM-001",
+        "attributaireId": "127f8626-1b29-4a3b-9749-0d58221bc",
         "attributaireName": "CTM Bâtiment",
-        "amount": 0,
+        "amount": 85000000,
         "steps": [
           { "name": "Lancement DAO", "date": "2023-09-01", "status": "termine" },
           { "name": "Attribution", "date": "2023-11-15", "status": "termine" },
@@ -1292,10 +1370,21 @@
           "startDate": "2024-01-01",
           "endDate": "2024-03-01",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Ingénieur Études SOMELEC"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "GENIE_CIVIL",
+              "designation": "Études techniques",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 5000000,
+              "totalPrice": 5000000
+            }
+          ]
         },
         {
           "code": "TRAVAUX",
@@ -1305,7 +1394,7 @@
           "startDate": "2024-03-01",
           "endDate": "2024-10-26",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Études et Travaux",
             "position": "Chef chantier SOMELEC"
           },
@@ -1315,6 +1404,17 @@
               "progressPercent": 75,
               "targetDate": "2024-10-26",
               "status": "termine"
+            }
+          ],
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "POSE_RESEAU",
+              "designation": "Réhabilitation réseau HT",
+              "unit": "km",
+              "quantity": 35,
+              "unitPrice": 2200000,
+              "totalPrice": 77000000
             }
           ]
         },
@@ -1326,7 +1426,7 @@
           "startDate": "2024-11-01",
           "endDate": "2024-12-31",
           "responsible": {
-            "organizationId": "ORG-SOMELEC-001",
+            "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
             "department": "Direction Générale",
             "position": "Directeur Général SOMELEC"
           },
@@ -1353,51 +1453,50 @@
           "designation": "Études techniques",
           "unit": "forfait",
           "quantity": 1,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "unitPrice": 5000000,
+          "totalPrice": 5000000
         },
         {
           "code": "DQE-02",
           "category": "POSE_RESEAU",
           "designation": "Réhabilitation réseau HT",
           "unit": "km",
-          "quantity": 0,
-          "unitPrice": 0,
-          "totalPrice": 0
+          "quantity": 35,
+          "unitPrice": 2200000,
+          "totalPrice": 77000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-SOMELEC-001",
+          "organizationId": "f1e179e4-4c98-4e04-8b79-d5fa50879",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "supplierId": "SUP-CTM-001",
+          "supplierId": "127f8626-1b29-4a3b-9749-0d58221bc",
           "role": "Attributaire",
           "isPrimary": false
         }
       ]
     },
     {
-      "id": "PRJ-DGEER-DREAM-2024",
-      "uuid": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
+      "id": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
       "title": "Projet DREAM 1 - Définition des Indicateurs de Performance",
       "reference": "DREAM-1-2024",
       "status": "termine",
       "type": "AUDIT_CONSEIL",
-      "organizationId": "ORG-DGEER-001",
+      "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
       "department": "Direction Générale",
       "description": "Définition des indicateurs de performance des directions centrales du Ministère",
       "location": "Nouakchott, Mauritanie",
       "budget": {
-        "total": 0,
+        "total": 45000000,
         "currency": "MRU",
         "sources": [
           {
             "code": "DREAM_1",
             "source": "Banque Mondiale",
-            "amount": 0,
+            "amount": 45000000,
             "type": "loan"
           }
         ]
@@ -1410,9 +1509,9 @@
       "tender": {
         "type": "AOO",
         "reference": "DREAM-1-2024",
-        "attributaireId": "SUP-MKAC-001",
+        "attributaireId": "4900b294-1f6d-471d-916c-493d91eab",
         "attributaireName": "Groupement MKAC/EY (Ernst & Young)",
-        "amount": 0,
+        "amount": 42000000,
         "steps": [
           { "name": "Lancement", "date": "2023-10-01", "status": "termine" },
           { "name": "Attribution", "date": "2023-12-15", "status": "termine" },
@@ -1429,10 +1528,21 @@
           "startDate": "2024-01-01",
           "endDate": "2024-04-29",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Direction Générale",
             "position": "Directeur Général DGEER"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-01",
+              "category": "PRESTATIONS",
+              "designation": "Audit organisationnel",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 15000000,
+              "totalPrice": 15000000
+            }
+          ]
         },
         {
           "code": "DEFINITION",
@@ -1442,10 +1552,21 @@
           "startDate": "2024-05-01",
           "endDate": "2024-08-28",
           "responsible": {
-            "organizationId": "ORG-DGEER-001",
+            "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
             "department": "Direction Générale",
             "position": "Directeur Général DGEER"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-02",
+              "category": "PRESTATIONS",
+              "designation": "Définition KPI et indicateurs",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 18000000,
+              "totalPrice": 18000000
+            }
+          ]
         },
         {
           "code": "VALIDATION",
@@ -1455,20 +1576,60 @@
           "startDate": "2024-09-01",
           "endDate": "2024-10-31",
           "responsible": {
-            "organizationId": "ORG-MPE-001",
+            "organizationId": "f1e1d388-c7fa-49eb-ba10-50d1c99cf0",
             "department": "Direction Générale",
             "position": "Ministre"
-          }
+          },
+          "dqeLines": [
+            {
+              "code": "DQE-03",
+              "category": "PRESTATIONS",
+              "designation": "Validation et rapport final",
+              "unit": "forfait",
+              "quantity": 1,
+              "unitPrice": 12000000,
+              "totalPrice": 12000000
+            }
+          ]
+        }
+      ],
+      "dqeLines": [
+        {
+          "code": "DQE-01",
+          "category": "PRESTATIONS",
+          "designation": "Audit organisationnel",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 15000000,
+          "totalPrice": 15000000
+        },
+        {
+          "code": "DQE-02",
+          "category": "PRESTATIONS",
+          "designation": "Définition KPI et indicateurs",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 18000000,
+          "totalPrice": 18000000
+        },
+        {
+          "code": "DQE-03",
+          "category": "PRESTATIONS",
+          "designation": "Validation et rapport final",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPrice": 12000000,
+          "totalPrice": 12000000
         }
       ],
       "stakeholders": [
         {
-          "organizationId": "ORG-DGEER-001",
+          "organizationId": "8328c348-077d-478f-96e2-9fa2cfe44",
           "role": "Maître d'ouvrage",
           "isPrimary": true
         },
         {
-          "supplierId": "SUP-MKAC-001",
+          "supplierId": "4900b294-1f6d-471d-916c-493d91eab",
           "role": "Attributaire",
           "isPrimary": false
         }
