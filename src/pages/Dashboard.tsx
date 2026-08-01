@@ -21,6 +21,7 @@ import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex 
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
 import { useAuth } from "@/contexts/use-auth";
 import { toast } from "@/hooks/use-toast";
+import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -419,11 +420,10 @@ const Dashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent className="h-80">
                       {projects && projects.length > 0 ? (() => {
-                        const zoneCount = (projects as any[]).reduce(
-                          (acc, p) => acc + (Array.isArray(p?.interventionZones) ? p.interventionZones.length : 0),
-                          0,
-                        );
-                        console.info('[Dashboard] map rendered', zoneCount, 'zones for', projects.length, 'projects');
+                        const geolocatedCount = projects.filter((project) =>
+                          Boolean(getProjectCoordinates(project)),
+                        ).length;
+                        console.info('[Dashboard] map rendered', geolocatedCount, 'locations for', projects.length, 'projects');
                         return (
                           <ProjectMap
                             projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}

@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardService } from '@/application/services/DashboardService';
 import { DashboardStats } from '@/dtos/entities/DashboardDTO';
 
+const dashboardService = new DashboardService();
+
 export interface UseDashboardHexResult {
   stats: DashboardStats | null;
   loading: boolean;
@@ -19,21 +21,9 @@ export interface UseDashboardHexResult {
  * Uses hexagonal architecture with DashboardService
  */
 export const useDashboardHex = (): UseDashboardHexResult => {
-  const dashboardService = new DashboardService();
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['dashboard-stats'],
-    queryFn: async (): Promise<DashboardStats> => {
-      console.log('useDashboardHex: Fetching dashboard stats...');
-      try {
-        const stats = await dashboardService.getDashboardStats();
-        console.log('useDashboardHex: Stats fetched successfully:', stats);
-        return stats;
-      } catch (err) {
-        console.error('useDashboardHex: Error fetching stats:', err);
-        throw err;
-      }
-    },
+    queryFn: (): Promise<DashboardStats> => dashboardService.getDashboardStats(),
     staleTime: 60_000, // 1 minute
     retry: 2,
     refetchOnWindowFocus: false,
