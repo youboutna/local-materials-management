@@ -5,7 +5,7 @@
  * Following hexagonal architecture principles
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IMilestoneRepository, CreateMilestoneData, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
 import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
 

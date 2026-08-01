@@ -13,4 +13,6 @@
 window.__APP_CONFIG__ = {
   // Public build metadata (optional; safe to expose)
   BUILD_ENV: 'development',
+  // Schéma PostgREST des tables métier (doit être exposé dans Supabase > API).
+  VITE_BTP_SCHEMA: 'btp',
 };

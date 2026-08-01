@@ -33,7 +33,7 @@ import { supabase } from './client';
  * (via `VITE_BTP_SCHEMA=btp` ou en éditant cette constante) UNE FOIS le
  * schéma exposé — sinon PostgREST renvoie PGRST106.
  */
-const DEFAULT_BTP_SCHEMA = 'public';
+const DEFAULT_BTP_SCHEMA = 'btp';
 
 /** Schémas connus de l'écosystème Supabase multi-projets. Pour documentation. */
 export const SCHEMAS = {
@@ -45,8 +45,19 @@ export type SchemaName = string;
 
 /** Résout le nom du schéma BTP courant (env-first, fallback code). */
 export function resolveBtpSchemaName(): SchemaName {
+  // 1. Runtime override (public/config.js) — permet de changer de schéma sans rebuild.
+  const runtime = typeof window !== 'undefined'
+    ? (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__
+    : undefined;
+  const fromRuntime = runtime?.VITE_BTP_SCHEMA;
+  if (fromRuntime && fromRuntime.trim()) return fromRuntime.trim();
+
+  // 2. Variable de build.
   const fromEnv = import.meta.env?.VITE_BTP_SCHEMA as string | undefined;
-  return (fromEnv && fromEnv.trim()) || DEFAULT_BTP_SCHEMA;
+  if (fromEnv && fromEnv.trim()) return fromEnv.trim();
+
+  // 3. Fallback code : les tables métier vivent dans `btp`.
+  return DEFAULT_BTP_SCHEMA;
 }
 
 /**
