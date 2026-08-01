@@ -24,6 +24,7 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     expect(dto.projectReference).toBe(source.reference);
     expect(dto.organizationId).toBe(source.organizationId);
     expect(dto.budget).toBe(typeof source.budget === 'number' ? source.budget : source.budget?.total);
+    expect(dto.budgetSources).toEqual(typeof source.budget === 'object' ? source.budget?.sources : undefined);
     expect(dto.startDate).toBe(source.timeline?.startDate);
   });
 

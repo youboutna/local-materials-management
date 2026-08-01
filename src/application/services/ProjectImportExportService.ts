@@ -404,7 +404,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       organizationId: row.organizationId && organizations?.get(row.organizationId) || row.organizationId,
       externalRef: this.getExternalRef(row),
       projectReference: input.reference,
-      budgetSources: row.budgetSources,
+      budgetSources: row.budgetSources ?? (typeof input.budget === 'object' ? input.budget.sources : undefined),
       interventionZones: zones,
       interventionZone: firstZone,
     } as CreateProjectDTO;

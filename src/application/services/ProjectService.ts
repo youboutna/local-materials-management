@@ -30,6 +30,10 @@ import {
 
 // Import ProjectTransformer for transformations
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { TaskTransformer } from '@/dtos/transforms/TaskTransformer';
+import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 
 // Import location service and types
 import { LocationService } from './LocationService';
@@ -460,13 +464,19 @@ export class ProjectService {
       if (!data.project) return null;
 
       const detailDTO = ProjectTransformer.toDetailDTO(data.project);
+      const phases = PhaseTransformer.manyToDTO(data.phases || []);
+      const tasks = TaskTransformer.manyToDTO(data.tasks || []);
+      const risks = RiskTransformer.manyToDTO(data.risks || []);
+      const payments = PaymentTransformer.manyToDTO(data.payments || []);
       
       return {
         ...detailDTO,
-        phases: data.phases || [],
-        tasks: data.tasks || [],
-        risks: data.risks || [],
-        payments: data.payments || [],
+        phases,
+        plannedPhases: phases,
+        tasks,
+        risks,
+        payments,
+        expenses: payments.filter((payment) => payment.status === 'paid'),
         inspections: data.inspections as InspectionDTO[] || [],
         documents: data.documents || [],
         bankGuarantees: data.bankGuarantees || [],

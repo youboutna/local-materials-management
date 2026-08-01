@@ -213,7 +213,7 @@ export class ProjectWorkflowService {
     return {
       mode,
       currentStep: 1,
-      totalSteps: 9
+      totalSteps: this.getWorkflowSteps().length,
     };
   }
 
@@ -271,7 +271,7 @@ export class ProjectWorkflowService {
         status: phase.status || 'not_started',
         type: phase.type || phase.phaseType || 'custom',
         priority: phase.priority || 'medium',
-        orderIndex: phase.orderIndex || 0,
+        orderIndex: phase.orderIndex ?? phase.order ?? 0,
         estimatedCost: phase.estimatedCost || 0,
         estimatedDuration: phase.estimatedDuration || 0,
         constructionStage: phase.constructionStage || '',
@@ -314,9 +314,9 @@ export class ProjectWorkflowService {
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
-          totalSteps: 8,
+          totalSteps: this.getWorkflowSteps().length,
           completedSteps: 1,
-          progressPercentage: 12,
+          progressPercentage: Math.round(100 / this.getWorkflowSteps().length),
         },
       };
 
