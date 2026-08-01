@@ -287,7 +287,7 @@ export class ProjectWorkflowService {
           projectId,
           phaseId: phase.id,
         }).catch(() => []),
-      }))) as PhaseDTO[];
+      }))) as unknown as PhaseDTO[];
 
       const workflowData: ProjectWorkflowData = {
         projectId,
@@ -310,7 +310,7 @@ export class ProjectWorkflowService {
             status: r.status || 'identified',
             mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
           })) as RiskDTO[],
-          stakeholders: (stakeholders || []) as ProjectWorkflowData['relatedData']['stakeholders'],
+          stakeholders: (stakeholders || []) as NonNullable<ProjectWorkflowData['relatedData']>['stakeholders'],
         },
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
@@ -627,7 +627,7 @@ export class ProjectWorkflowService {
           description: milestone.description,
           target_date: milestone.targetDate || new Date().toISOString(),
           status: milestone.status,
-          progress: milestone.progress,
+          progress: (milestone as { progress?: number }).progress ?? 0,
         };
         if (match) await this.milestoneService.updateMilestone(match.id, payload);
         else await this.milestoneService.createMilestone(payload);
@@ -642,12 +642,12 @@ export class ProjectWorkflowService {
             projectId,
             phaseId: persisted.id,
             title: taskName,
-            description: task.description,
-            status: task.status,
-            priority: task.priority,
-            dueDate: task.dueDate ?? task.due_date,
-            assignedTo: task.assignedTo,
-          };
+            description: task.description as string | undefined,
+            status: task.status as string | undefined,
+            priority: task.priority as string | undefined,
+            dueDate: (task.dueDate ?? task.due_date) as string | undefined,
+            assignedTo: task.assignedTo as string | undefined,
+          } as Parameters<typeof this.taskService.createTask>[0];
           if (existingTask) await this.taskService.updateTask(existingTask.id, payload);
           else await this.taskService.createTask(payload);
         }
@@ -658,7 +658,7 @@ export class ProjectWorkflowService {
         const existing = (await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: persisted.id }))
           .find((candidate) => candidate.btpCode === line.btpCode);
         const payload = { ...line, phaseId: persisted.id, projectId, source: 'dqe' as const };
-        if (existing) await boqRepository.update(existing.id, payload);
+        if (existing) await boqRepository.update(existing.id as string, payload);
         else await boqRepository.create(payload);
       }
     }
