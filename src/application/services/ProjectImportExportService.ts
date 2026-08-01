@@ -73,6 +73,7 @@ export interface ProjectImportPhase {
   startDate?: string;
   endDate?: string;
   durationDays?: number;
+  progress?: number;
   order?: number;
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
