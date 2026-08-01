@@ -210,7 +210,7 @@ export function useProjectCreationHex() {
       relatedData: {
         phases: additionalData.phases || [],
         risks: additionalData.risks || [],
-        stakeholders: additionalData.stakeholders || [],
+        stakeholders: (additionalData.stakeholders ?? []) as unknown as NonNullable<ProjectWorkflowData['relatedData']>['stakeholders'],
         compliance: additionalData.compliance ? {
           regulations: [],
           certifications: [],

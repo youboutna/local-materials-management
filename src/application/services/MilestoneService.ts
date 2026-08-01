@@ -1074,7 +1074,7 @@ export class MilestoneService {
     try {
       const milestones = await this.getProjectMilestones(projectId);
       return milestones
-        .filter((milestone) => !phaseId || milestone.phase_id === phaseId || milestone.phaseId === phaseId)
+        .filter((milestone) => !phaseId || milestone.phase_id === phaseId || (milestone as { phaseId?: string }).phaseId === phaseId)
         .map(m => this.transformToMilestoneDTO(m));
     } catch (error) {
       console.error('MilestoneService.getPhaseMilestones failed:', error);

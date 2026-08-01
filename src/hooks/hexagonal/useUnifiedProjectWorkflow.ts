@@ -31,7 +31,50 @@ export interface SaveResult {
   projectId?: string;
 }
 
-export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?: string) {
+/**
+ * Skeleton de travail (mode création) — garantit que `formData` n'est jamais
+ * null côté UI : sans lui, chaque `updateFormData` était ignoré et aucune
+ * donnée saisie n'atteignait le service (bug de persistance étapes 1→8).
+ */
+export function createEmptyProjectWorkflowData(): ProjectWorkflowData {
+  return {
+    currentStep: 1,
+    isDraft: true,
+    isComplete: false,
+    projectData: {
+      title: '',
+      description: '',
+      location: '',
+      budget: 0,
+      progress: 0,
+      teamSize: 1,
+    } as ProjectWorkflowData['projectData'],
+    relatedData: {
+      phases: [],
+      milestones: [],
+      dqeLines: [],
+      risks: [],
+      materials: [],
+      stakeholders: [],
+      tasks: [],
+      inspections: [],
+      strategyLinks: [],
+      budgetLinks: [],
+    },
+    metadata: {
+      lastSavedAt: '',
+      totalSteps: 8,
+      completedSteps: 0,
+      progressPercentage: 0,
+    },
+  };
+}
+
+export function useUnifiedProjectWorkflow(
+  mode: 'creation' | 'edit',
+  projectId?: string,
+  initialData?: ProjectWorkflowData
+) {
   const queryClient = useQueryClient();
   
   const workflowService = ProjectWorkflowService.default();
@@ -48,8 +91,11 @@ export function useUnifiedProjectWorkflow(mode: 'creation' | 'edit', projectId?:
     lastValidationErrors: []
   });
 
-  const [formData, setFormData] = useState<ProjectWorkflowData | null>(null);
+  const [formData, setFormData] = useState<ProjectWorkflowData | null>(() =>
+    mode === 'creation' ? (initialData ?? createEmptyProjectWorkflowData()) : (initialData ?? null)
+  );
   const [originalData, setOriginalData] = useState<ProjectWorkflowData | null>(null);
+
 
   const { data: workflowSteps } = useQuery({
     queryKey: ['workflow-steps', mode],

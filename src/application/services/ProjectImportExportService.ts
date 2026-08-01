@@ -56,6 +56,7 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   interventionZones?: InterventionZoneDTO[];
   /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: ReferentialType;
+  projectType?: string;
   externalRef?: string;
   organizationId?: string;
   budgetSources?: Array<Record<string, unknown>>;
@@ -495,7 +496,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       );
       if (!phase) continue;
       const persistedPhase = (await this.phaseService.getPhasesByProject(projectId)).find((candidate) =>
-        candidate.name === phase.name,
+        (candidate as { name?: string; phaseName?: string }).phaseName === phase.name ||
+        (candidate as { name?: string }).name === phase.name,
       );
       if (persistedPhase) {
         await this.upsertDqeLines(projectId, persistedPhase.id, [{
@@ -520,10 +522,10 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       const stakeholderData = {
         projectId,
         stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
-        stakeholderEntityType: stakeholder.stakeholderEntityType ?? (supplierId ? 'supplier' : 'external'),
+        stakeholderEntityType: (stakeholder.stakeholderEntityType ?? (supplierId ? 'supplier' : 'employee')) as 'employee' | 'supplier',
         supplierId,
         organizationId: organizationRef && organizations?.get(organizationRef),
-        externalRef: stakeholder.externalRef || this.generateExternalRef('SH', projectId, organizationRef || stakeholder.supplierId || ''),
+        externalRef: stakeholder.externalRef || `SH-${projectId}-${organizationRef || stakeholder.supplierId || 'na'}`,
         employeeId: stakeholder.employeeId,
         roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
@@ -545,8 +547,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     const existingLines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId });
     for (const dqeLine of dqeLines) {
       const existingLine = existingLines.find((line) => line.btpCode === dqeLine.btpCode);
-      if (existingLine) await boqRepository.update(existingLine.id, dqeLine);
-      else await boqRepository.create(dqeLine);
+      if (existingLine) await boqRepository.update(existingLine.id as string, dqeLine as Partial<BoqLineDTO>);
+      else await boqRepository.create(dqeLine as unknown as BoqLineDTO);
     }
     if (count) details.dqeLines += dqeLines.length;
   }
