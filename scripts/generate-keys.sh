@@ -166,7 +166,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Chercher .env dans l'ordre de priorité
 if [ -f "$PROJECT_ROOT/supabase/docker/.env" ]; then
     ENV_FILE="$PROJECT_ROOT/supabase/docker/.env"
-elif [ -f "$PROJECT_ROOT/.env" ]; then
+elif [ -f "$PROJECT_ROOT/.env" ] && [ "${ALLOW_ENV_WRITE:-0}" = "1" ]; then
     ENV_FILE="$PROJECT_ROOT/.env"
     echo -e "${YELLOW}⚠️  Using root .env (not recommended for self-hosted)${NC}"
 else

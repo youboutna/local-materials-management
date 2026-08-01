@@ -440,7 +440,9 @@ echo ""
 echo ""
 echo -e "${YELLOW}${BOLD}[9/8] Synchronisation des clés avec .env racine...${NC}"
 ROOT_ENV="$PROJECT_ROOT/.env"
-if [ -f "$ROOT_ENV" ] && [ -f "$ENV_FILE" ]; then
+if [ "${ALLOW_ENV_WRITE:-0}" != "1" ]; then
+  echo -e "${YELLOW}⏭️  Écriture du .env racine désactivée (protection). Relancer avec ALLOW_ENV_WRITE=1 pour l'autoriser.${NC}"
+elif [ -f "$ROOT_ENV" ] && [ -f "$ENV_FILE" ]; then
   ANON_KEY=$(grep -E '^ANON_KEY=' "$ENV_FILE" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d ' ')
   JWT_SECRET=$(grep -E '^JWT_SECRET=' "$ENV_FILE" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d ' ')
   if [ -n "$ANON_KEY" ]; then

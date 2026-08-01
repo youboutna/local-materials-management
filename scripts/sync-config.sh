@@ -49,8 +49,10 @@ if [ -f "$ENV_HADRATECH" ]; then
     echo -e "${GREEN}✅ $ENV_HADRATECH mis à jour${NC}"
 fi
 
-# Mettre à jour .env (application)
-if [ -f "$ENV_APP" ]; then
+# Mettre à jour .env (application) — protégé
+if [ "${ALLOW_ENV_WRITE:-0}" != "1" ]; then
+    echo -e "${YELLOW}⏭️  .env racine non modifié (protection). ALLOW_ENV_WRITE=1 pour autoriser.${NC}"
+elif [ -f "$ENV_APP" ]; then
     echo -e "${YELLOW}📝 Mise à jour de $ENV_APP...${NC}"
     
     # Mettre à jour VITE_PGRST_SCHEMAS
