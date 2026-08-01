@@ -165,12 +165,36 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
   return errors;
 }
 
-  async importDataset(dataset: ProjectImportDataset): Promise<ProjectImportResult> {
+  /**
+   * Normalise un payload d'import : accepte soit un `ProjectImportDataset` déjà
+   * camelCase, soit le dataset brut hiérarchique « HADRATECH-GPI »
+   * (cf. `src/data/json_project.json`), soit un simple tableau de lignes.
+   * La normalisation est déléguée aux Transformers (règle #1).
+   */
+  normalizeDataset(raw: unknown): ProjectImportDataset {
+    if (Array.isArray(raw)) {
+      return { projects: ProjectImportTransformer.fromRows(raw as Record<string, unknown>[]) };
+    }
+    if (ProjectDatasetTransformer.isRawDataset(raw)) {
+      return ProjectDatasetTransformer.fromRawDataset(raw);
+    }
+    const dataset = raw as ProjectImportDataset | null;
     if (!dataset || !Array.isArray(dataset.projects)) {
       throw new Error('Invalid import dataset: projects must be an array');
     }
-    return this.importProjects(dataset.projects);
+    return dataset;
   }
+
+  /** Métadonnées (organisations / fournisseurs / codes budgétaires) d'un dataset brut. */
+  extractDatasetMeta(raw: unknown): ProjectDatasetMeta {
+    return ProjectDatasetTransformer.extractMeta(raw);
+  }
+
+  async importDataset(dataset: ProjectImportDataset | unknown): Promise<ProjectImportResult> {
+    const normalized = this.normalizeDataset(dataset);
+    return this.importProjects(normalized.projects);
+  }
+
 
   async importProjects(rows: ProjectImportRow[]): Promise<ProjectImportResult> {
     const result: ProjectImportResult = {
