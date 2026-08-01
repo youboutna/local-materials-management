@@ -29,6 +29,12 @@ import type {
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
+import {
+  ProjectDatasetTransformer,
+  type ProjectDatasetMeta,
+} from '@/dtos/transforms/ProjectDatasetTransformer';
+import { ProjectImportTransformer } from '@/dtos/transforms/ProjectImportTransformer';
+
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
