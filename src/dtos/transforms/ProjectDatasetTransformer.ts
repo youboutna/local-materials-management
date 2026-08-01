@@ -77,11 +77,6 @@ const PROJECT_STATUS_MAP: Record<string, ProjectStatus> = {
   brouillon: ProjectStatus.DRAFT,
 };
 
-type MilestoneStatus = NonNullable<Parameters<typeof identity>[0]>;
-function identity<T>(v: T): T {
-  return v;
-}
-
 const MILESTONE_STATUS_MAP: Record<string, ProjectImportMilestone['status']> = {
   planifie: 'pending',
   planifié: 'pending',
@@ -329,7 +324,7 @@ export class ProjectDatasetTransformer {
       const orgRef = str(s.organizationId);
       return {
         stakeholderType: role ?? 'other',
-        stakeholderEntityType: supplierRef ? 'supplier' : 'organization',
+        stakeholderEntityType: 'supplier',
         supplierId: uuidOrUndefined(supplierRef),
         externalRef: supplierRef ?? orgRef,
         organizationId: uuidOrUndefined(orgRef),
