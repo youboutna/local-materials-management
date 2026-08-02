@@ -450,6 +450,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         projectId,
         name: phase.name,
         phaseCode: phase.code,
+        // phase_type normalisé (respecte les contraintes CHECK de project_phases)
+        phaseType: PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name),
         externalRef: phase.externalRef ?? (phase.code ? `${this.getExternalRef(row) ?? projectId}:${phase.code}` : undefined),
         description: phase.description,
         type: PhaseType.STRUCTURAL,
@@ -463,7 +465,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
         createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      } satisfies PhaseDTO;
+      } as PhaseDTO & { phaseType: string };
+
       const createdPhase = existingPhase
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
