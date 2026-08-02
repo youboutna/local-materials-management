@@ -108,9 +108,19 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
 
-  // Merge with existing phases
+  // Merge with existing phases — dédoublonnage par id/code : en édition, le hook
+  // et `workflowData` remontent tous deux les phases persistées.
+  const allPhases = useMemo(() => {
+    const merged = [...constructionPhaseHook.phases, ...existingPhases] as any[];
+    const seen = new Set<string>();
+    return merged.filter((p) => {
+      const key = String(p?.id ?? p?.phaseCode ?? p?.name ?? Math.random());
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [constructionPhaseHook.phases, existingPhases]);
 
-  const allPhases = [...constructionPhaseHook.phases, ...existingPhases];
 
   
 
