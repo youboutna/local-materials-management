@@ -67,6 +67,12 @@ export default function ProjectFileImporter({
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importMode, setImportMode] = useState<ImportMode>("create");
+  const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
+  const [templateFormat, setTemplateFormat] = useState<TemplateFormat>("json");
+  const referentialOptions = useMemo(
+    () => projectImportTemplateService.listReferentials("fr"),
+    [],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
