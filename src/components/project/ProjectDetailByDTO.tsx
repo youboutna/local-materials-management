@@ -19,7 +19,7 @@ import PlanningVarianceView from "@/components/project/PlanningVarianceView";
 import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
-import TeamOverview from "@/components/project/TeamOverview";
+import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
