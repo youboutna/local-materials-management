@@ -141,7 +141,21 @@ export interface WorkflowResult {
   warnings?: string[];
 }
 
+/** Déduplique une collection de sous-objets par `id` (fallback: référence). */
+function dedupeById<T extends { id?: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = item?.id ? String(item.id) : '';
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
 export class ProjectWorkflowService {
+
   private referentialService: ReferentialService;
   
   // Additional services for comprehensive project management (optional)
