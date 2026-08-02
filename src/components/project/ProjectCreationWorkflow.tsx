@@ -241,7 +241,25 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     }
   };
 
+  // ⏳ Mode édition : ne pas monter les étapes avant l'hydratation, sinon les
+  // états locaux des étapes (parties prenantes, phases…) s'initialisent à vide.
+  if (mode === "edit" && !formData) {
+    return (
+      <div className="space-y-3" aria-busy="true">
+        <div className="h-1.5 w-full animate-pulse rounded bg-muted" />
+        <div className="grid grid-cols-8 gap-1.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-9 animate-pulse rounded-md bg-muted" />
+          ))}
+        </div>
+        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+        <p className="text-xs text-muted-foreground">Chargement du projet…</p>
+      </div>
+    );
+  }
+
   return (
+
     <div className="space-y-3">
       {/* Compact progress header + auto-save indicator */}
       <div className="flex items-center gap-3 px-1">

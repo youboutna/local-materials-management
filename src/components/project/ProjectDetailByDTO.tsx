@@ -1162,8 +1162,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
+        {/* Planification — WBS, planning (Gantt/PERT/Kanban) et jalons regroupés */}
         <TabsContent value="phases" className="mt-6">
+          <Tabs defaultValue="wbs" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
+              <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="wbs" className="mt-6">
           <div className="space-y-4">
+
             {/* Phase generation controls */}
             <Card>
               <CardHeader>
@@ -1253,17 +1263,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               />
             </DialogContentUI>
           </DialogUI>
-        </TabsContent>
+            </TabsContent>
 
-        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
-        <TabsContent value="dqe" className="mt-6">
-          <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
-        </TabsContent>
+            <TabsContent value="planning" className="mt-6">
 
-
-
-        {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
-        <TabsContent value="planning" className="mt-6">
           <ProjectBudgetTracking projectId={projectId!} />
           <div className="mt-4">
             <PlanningVarianceView projectId={projectId!} />
@@ -1406,6 +1409,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               )}
             </TabsContent>
           </Tabs>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
+        <TabsContent value="dqe" className="mt-6">
+          <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
@@ -1491,14 +1501,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
 
-        <TabsContent value="risks" className="mt-6">
+        {/* Risques — rattachés au Suivi & Évaluation */}
+        <TabsContent value="monitoring" className="mt-6">
           <EnhancedRiskManager
             projectId={projectId!}
             phases={computedPhases}
           />
         </TabsContent>
 
-        <TabsContent value="resources" className="mt-6">
+        {/* Équipe & ressources — rattachées à l'Exécution */}
+        <TabsContent value="tasks" className="mt-6">
           <TeamOverview
             resources={resources}
             setResources={setResources}
@@ -1507,7 +1519,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-6">
+        {/* Échéancier de paiements — rattaché au Financier */}
+        <TabsContent value="financial" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
@@ -1604,7 +1617,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="kpis" className="mt-6">
+        {/* KPI — rattaché à l'onglet Suivi & Évaluation (pas d'onglet dédié) */}
+        <TabsContent value="monitoring" className="mt-6">
+
           {kpiMetrics ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
