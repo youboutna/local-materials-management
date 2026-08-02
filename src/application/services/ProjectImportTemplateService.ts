@@ -124,15 +124,17 @@ export class ProjectImportTemplateService {
           dqeLines: dqeCategory
             ? ([
                 {
-                  code: `${phase.code}-001`,
+                  source: 'project',
+                  contextId: '',
+                  btpCode: `${phase.code}-001`,
                   designation: `Prestation type — ${dqeCategory}`,
                   unit: 'U',
                   quantity: 1,
                   unitPrice: 0,
-                  category: dqeCategory,
                   resourceType: 'material',
+                  note: `Catégorie DQE référentiel : ${dqeCategory}`,
                 },
-              ] as ProjectImportPhase['dqeLines'])
+              ] as unknown as ProjectImportPhase['dqeLines'])
             : [],
         } as ProjectImportPhase;
       });
