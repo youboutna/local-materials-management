@@ -40,6 +40,8 @@ const str = (value: unknown): string | undefined => {
 /** Normalise un type hétérogène (DQE `labor`, DB `human`, `main d'oeuvre`…). */
 export function normalizeResourceFamily(raw: unknown): ResourceFamily {
   const value = String(raw ?? '')
+    .replace(/œ/gi, 'oe')
+    .replace(/æ/gi, 'ae')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
