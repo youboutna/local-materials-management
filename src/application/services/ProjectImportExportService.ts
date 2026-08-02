@@ -36,7 +36,7 @@ import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
-export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType'>> {
+export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType' | 'tasks'>> {
   id?: string;
   reference?: string;
   title: string;
@@ -64,10 +64,14 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   budgetSources?: Array<Record<string, unknown>>;
   dqeLines?: BoqLineDTO[];
   phases?: ProjectImportPhase[];
+  /** Tâches déclarées au niveau projet (référencent une phase via `phaseId`). */
+  tasks?: ProjectImportTask[];
   stakeholders?: ProjectImportStakeholder[];
 }
 
 export interface ProjectImportPhase {
+  /** Identifiant local du jeu de données (ex: "phase-1-dream"), non-UUID toléré. */
+  id?: string;
   externalRef?: string;
   name: string;
   code?: string;
@@ -95,15 +99,22 @@ export interface ProjectImportMilestone {
 }
 
 export interface ProjectImportTask {
+  id?: string;
   title?: string;
   name?: string;
   description?: string;
   status?: string;
   priority?: string;
+  progress?: number;
+  startDate?: string;
+  endDate?: string;
   dueDate?: string;
   due_date?: string;
-  assignedTo?: string[];
+  /** Référence la phase locale (`phase.id` ou `phase.code`) quand la tâche est au niveau projet. */
+  phaseId?: string;
+  assignedTo?: string | string[];
 }
+
 
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
   organizationId?: string;
@@ -438,6 +449,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     suppliers?: Map<string, string>,
     organizations?: Map<string, string>,
   ): Promise<void> {
+    /** Résolution des identifiants locaux de phases (ex: "phase-1-dream") vers les UUID persistés. */
+    const phaseIdMap = new Map<string, string>();
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
@@ -475,6 +488,10 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
       details.phases += 1;
+      for (const key of [phase.id, phase.code, phase.name, phase.externalRef]) {
+        if (key) phaseIdMap.set(key, createdPhase.id);
+      }
+
 
       for (const milestone of phase.milestones ?? []) {
         const milestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
@@ -495,23 +512,9 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
 
       for (const task of phase.tasks ?? []) {
-        const tasks = await this.taskService.getTasksByPhase(createdPhase.id);
-        const taskName = task.title ?? task.name ?? 'Tâche importée';
-        const existingTask = tasks.find((candidate) => candidate.title === taskName);
-        const taskData = {
-          projectId,
-          phaseId: createdPhase.id,
-          title: taskName,
-          description: task.description,
-          status: task.status as TaskStatus | undefined,
-          priority: task.priority as TaskPriority | undefined,
-          dueDate: task.due_date ?? task.dueDate,
-          assignedTo: task.assignedTo,
-        };
-        if (existingTask) await this.taskService.updateTask(existingTask.id, taskData);
-        else await this.taskService.createTask(taskData);
-        details.tasks += 1;
+        await this.upsertTask(projectId, createdPhase.id, task, details, suppliers);
       }
+
 
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
@@ -546,13 +549,20 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
     }
 
+    // Tâches déclarées au niveau projet : rattachées à leur phase via l'id local.
+    for (const task of row.tasks ?? []) {
+      const phaseId = task.phaseId ? phaseIdMap.get(task.phaseId) : undefined;
+      await this.upsertTask(projectId, phaseId, task, details, suppliers);
+    }
+
     for (const stakeholder of row.stakeholders ?? []) {
       const organizationRef = stakeholder.organizationId;
-      const supplierId = stakeholder.supplierId ? suppliers?.get(stakeholder.supplierId) || stakeholder.supplierId : undefined;
-      if (!supplierId && !organizationRef && stakeholder.stakeholderEntityType !== 'employee') continue;
+      const supplierId = this.resolveReference(stakeholder.supplierId, suppliers);
+      const organizationId = this.resolveReference(organizationRef, organizations);
+      if (!supplierId && !organizationId && stakeholder.stakeholderEntityType !== 'employee') continue;
       const stakeholders = await this.stakeholderService.getProjectStakeholders(projectId);
       const existingStakeholder = stakeholders.find((candidate) =>
-        candidate.supplierId === supplierId ||
+        (supplierId && candidate.supplierId === supplierId) ||
         (organizationRef && candidate.roleDescription?.includes(organizationRef)),
       );
       const stakeholderData = {
@@ -560,9 +570,9 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
         stakeholderEntityType: (stakeholder.stakeholderEntityType ?? (supplierId ? 'supplier' : 'employee')) as 'employee' | 'supplier',
         supplierId,
-        organizationId: organizationRef && organizations?.get(organizationRef),
+        organizationId,
         externalRef: stakeholder.externalRef || `SH-${projectId}-${organizationRef || stakeholder.supplierId || 'na'}`,
-        employeeId: stakeholder.employeeId,
+        employeeId: this.isUUID(stakeholder.employeeId) ? stakeholder.employeeId : undefined,
         roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
       };
@@ -572,10 +582,94 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     }
   }
 
+  /**
+   * Résout une référence externe (id local non-UUID) via la table de correspondance.
+   * Retourne `undefined` plutôt qu'un id invalide pour éviter les erreurs de clé étrangère.
+   */
+  private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
+    if (!reference) return undefined;
+    const mapped = map?.get(reference);
+    if (mapped) return mapped;
+    return this.isUUID(reference) ? reference : undefined;
+  }
+
+  private normalizeTaskStatus(status?: string, progress?: number): TaskStatus | undefined {
+    const normalized = (status ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+    const map: Record<string, TaskStatus> = {
+      termine: TaskStatus.COMPLETED,
+      terminee: TaskStatus.COMPLETED,
+      completed: TaskStatus.COMPLETED,
+      done: TaskStatus.COMPLETED,
+      en_cours: TaskStatus.IN_PROGRESS,
+      in_progress: TaskStatus.IN_PROGRESS,
+      planifie: TaskStatus.PENDING,
+      planifiee: TaskStatus.PENDING,
+      en_attente: TaskStatus.PENDING,
+      pending: TaskStatus.PENDING,
+      annule: TaskStatus.CANCELLED,
+      annulee: TaskStatus.CANCELLED,
+      cancelled: TaskStatus.CANCELLED,
+    };
+    if (map[normalized]) return map[normalized];
+    if (progress != null) {
+      if (progress >= 100) return TaskStatus.COMPLETED;
+      if (progress > 0) return TaskStatus.IN_PROGRESS;
+      return TaskStatus.PENDING;
+    }
+    return undefined;
+  }
+
+  private normalizeTaskPriority(priority?: string): TaskPriority | undefined {
+    const normalized = (priority ?? '').trim().toLowerCase();
+    const map: Record<string, TaskPriority> = {
+      basse: TaskPriority.LOW, low: TaskPriority.LOW,
+      moyenne: TaskPriority.MEDIUM, moyen: TaskPriority.MEDIUM, medium: TaskPriority.MEDIUM,
+      haute: TaskPriority.HIGH, elevee: TaskPriority.HIGH, high: TaskPriority.HIGH,
+    };
+    return map[normalized];
+  }
+
+  /** Upsert idempotent d'une tâche (par titre dans la phase / le projet). */
+  private async upsertTask(
+    projectId: string,
+    phaseId: string | undefined,
+    task: ProjectImportTask,
+    details: ProjectImportResult['details'],
+    suppliers?: Map<string, string>,
+  ): Promise<void> {
+    const title = task.title ?? task.name ?? 'Tâche importée';
+    const existingTasks = phaseId
+      ? await this.taskService.getTasksByPhase(phaseId)
+      : await this.taskService.getProjectTasks(projectId);
+    const existingTask = existingTasks.find((candidate) => candidate.title === title);
+    const assignees = (Array.isArray(task.assignedTo) ? task.assignedTo : task.assignedTo ? [task.assignedTo] : [])
+      .map((assignee) => this.resolveReference(assignee, suppliers))
+      .filter((assignee): assignee is string => !!assignee);
+    const taskData = {
+      projectId,
+      phaseId,
+      title,
+      description: task.description,
+      status: this.normalizeTaskStatus(task.status, task.progress),
+      priority: this.normalizeTaskPriority(task.priority),
+      dueDate: task.due_date ?? task.dueDate ?? task.endDate,
+      assignedTo: assignees.length > 0 ? assignees : undefined,
+    };
+    if (existingTask) await this.taskService.updateTask(existingTask.id, taskData);
+    else await this.taskService.createTask(taskData);
+    details.tasks += 1;
+  }
+
   private async upsertDqeLines(
     projectId: string,
     phaseId: string,
     dqeLines: Array<Record<string, unknown>>,
+
     details: ProjectImportResult['details'],
     count = true,
   ): Promise<void> {
