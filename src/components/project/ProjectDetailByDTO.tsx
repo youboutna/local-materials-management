@@ -1524,15 +1524,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        {/* Équipe & ressources — rattachées à l'Exécution */}
+        {/* Conteneur sémantique « Ressources » (humaines / matériaux / équipements) */}
         <TabsContent value="tasks" className="mt-6">
-          <TeamOverview
+          <ProjectResourcesContainer
+            projectId={projectId!}
+            phases={computedPhases as any}
+            boqLines={(projectDetail as any)?.dqeLines ?? []}
+            executedResources={(projectDetail as any)?.resources ?? []}
+            executedMaterials={(projectDetail as any)?.materials ?? []}
             resources={resources}
             setResources={setResources}
-            projectId={projectId!}
-            phases={computedPhases}
           />
         </TabsContent>
+
 
         {/* Échéancier de paiements — rattaché au Financier */}
         <TabsContent value="financial" className="mt-6">
