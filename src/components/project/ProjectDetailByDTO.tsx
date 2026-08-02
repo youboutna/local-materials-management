@@ -1253,17 +1253,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               />
             </DialogContentUI>
           </DialogUI>
-        </TabsContent>
+            </TabsContent>
 
-        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
-        <TabsContent value="dqe" className="mt-6">
-          <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
-        </TabsContent>
+            <TabsContent value="planning" className="mt-6">
 
-
-
-        {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
-        <TabsContent value="planning" className="mt-6">
           <ProjectBudgetTracking projectId={projectId!} />
           <div className="mt-4">
             <PlanningVarianceView projectId={projectId!} />
