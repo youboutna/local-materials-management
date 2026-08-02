@@ -78,6 +78,22 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const [segment, setSegment] = useState<Segment>("all");
   const [docsFor, setDocsFor] = useState<StakeholderDTO | null>(null);
 
+  /**
+   * Hydratation (mode édition) : `workflowData` arrive de façon asynchrone après
+   * le premier rendu, or `useState(initial)` ne lit la valeur qu'au montage —
+   * les parties prenantes déjà persistées restaient donc invisibles.
+   */
+  const hydratedKey = React.useRef<string>("");
+  React.useEffect(() => {
+    const persisted =
+      ((workflowData?.relatedData?.stakeholders as unknown) as StakeholderDTO[]) || [];
+    const key = `${projectId ?? ""}:${persisted.map((s) => s?.id).join(",")}`;
+    if (persisted.length === 0 || key === hydratedKey.current) return;
+    hydratedKey.current = key;
+    setLocalStakeholders(persisted);
+  }, [workflowData, projectId]);
+
+
   const notifyUpdate = (next: StakeholderDTO[]) => {
     onStepComplete({ stakeholders: next });
   };
