@@ -252,11 +252,14 @@ export class ProjectWorkflowService {
       const projectDTO = ProjectTransformer.toDTO(project);
 
       // Load related data in parallel
-      const [phases, risks, stakeholders] = await Promise.all([
+      const [phases, risks, stakeholders, projectMilestones, projectTasks] = await Promise.all([
         this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+        this.milestoneService?.getProjectMilestonesDTO(projectId).catch(() => []) || Promise.resolve([]),
+        this.taskService?.getProjectTasks(projectId).catch(() => []) || Promise.resolve([]),
       ]);
+
 
       // Build complete workflow data
       const phaseData = await Promise.all((phases || []).map(async (phase: any) => ({
