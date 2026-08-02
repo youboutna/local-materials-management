@@ -1034,6 +1034,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     );
                   })()}
                 </div>
+              </CardContent>
+            </Card>
+
+
 
 
             <Card>
