@@ -44,3 +44,22 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     expect(exported.title).toBe(source.title);
   });
 });
+describe('Normalisation phase_type (contrainte CHECK project_phases)', () => {
+  it('mappe les codes métier vers des valeurs snake_case minuscules', async () => {
+    const { PhaseTransformer } = await import('@/dtos/transforms/PhaseTransformer');
+    const cases: Record<string, string> = {
+      ETUDES: 'etudes',
+      DESIGN_DAO: 'design_dao',
+      TRAVAUX: 'travaux',
+      EXECUTION: 'travaux',
+      RECEPTION: 'reception',
+      HANDOVER: 'reception',
+      ANALYSE: 'preparation',
+      'Pré-Faisabilité': 'pre_faisabilite',
+    };
+    for (const [input, expected] of Object.entries(cases)) {
+      expect(PhaseTransformer.normalizeDbPhaseType(input)).toBe(expected);
+    }
+    expect(PhaseTransformer.normalizeDbPhaseType(undefined)).toBe('standard');
+  });
+});
