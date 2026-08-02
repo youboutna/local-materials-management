@@ -314,12 +314,14 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         isActive: row.isActive ?? true,
         externalRef: this.isUUID(row.id) ? undefined : row.id,
       };
+      // Upsert réel : évite les violations de contrainte unique (code / external_ref)
       const organization = current
         ? await this.organizationService.update(current.id, payload)
-        : await this.organizationService.create({
+        : await this.organizationService.upsert({
           ...payload,
           id: this.isUUID(row.id) ? row.id : undefined,
         });
+
       references.set(row.id, organization.id);
       const existingIndex = existing.findIndex((candidate) => candidate.id === organization.id);
       if (existingIndex >= 0) existing[existingIndex] = organization;
