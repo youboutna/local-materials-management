@@ -44,10 +44,11 @@ export function normalizeResourceFamily(raw: unknown): ResourceFamily {
     .replace(/æ/gi, 'ae')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_');
 
-  if (!value) return 'material';
-  if (/(labor|labour|human|humain|main_?d?_?oeuvre|personnel|employe|team|equipe)/.test(value)) return 'human';
+  if (!value || value === '_') return 'material';
+  if (/(labor|labour|human|humain|main_?d_?oeuvre|main_?oeuvre|oeuvre|personnel|employe|team|equipe)/.test(value)) return 'human';
   if (/(equip|engin|machine|vehicule|outil|tool)/.test(value)) return 'equipment';
   return 'material';
 }
