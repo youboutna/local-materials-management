@@ -19,7 +19,7 @@ import PlanningVarianceView from "@/components/project/PlanningVarianceView";
 import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
-import TeamOverview from "@/components/project/TeamOverview";
+import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
@@ -1524,15 +1524,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        {/* Équipe & ressources — rattachées à l'Exécution */}
+        {/* Conteneur sémantique « Ressources » (humaines / matériaux / équipements) */}
         <TabsContent value="tasks" className="mt-6">
-          <TeamOverview
+          <ProjectResourcesContainer
+            projectId={projectId!}
+            phases={computedPhases as any}
+            boqLines={(projectDetail as any)?.dqeLines ?? []}
+            executedResources={(projectDetail as any)?.resources ?? []}
+            executedMaterials={(projectDetail as any)?.materials ?? []}
             resources={resources}
             setResources={setResources}
-            projectId={projectId!}
-            phases={computedPhases}
           />
         </TabsContent>
+
 
         {/* Échéancier de paiements — rattaché au Financier */}
         <TabsContent value="financial" className="mt-6">
