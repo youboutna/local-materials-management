@@ -499,14 +499,59 @@ export default function ProjectFileImporter({
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={downloadTemplate}
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            {t("projects.import.downloadTemplate")}
-          </Button>
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+            <Label className="text-sm font-medium">
+              {t("projects.import.downloadTemplate")}
+            </Label>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Référentiel projet</Label>
+                <Select
+                  value={templateReferential}
+                  onValueChange={(v) => setTemplateReferential(v as ReferentialType)}
+                >
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referentialOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Format</Label>
+                <Select
+                  value={templateFormat}
+                  onValueChange={(v) => setTemplateFormat(v as TemplateFormat)}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="json">JSON (complet)</SelectItem>
+                    <SelectItem value="csv">CSV (à plat)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                onClick={downloadTemplate}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                {t("projects.import.downloadTemplate")}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Le modèle JSON contient les phases, jalons, tâches et lignes DQE issues du
+              référentiel sélectionné (codes métier dans <code>phases[].code</code>). Le CSV ne
+              couvre que les champs projet à plat.
+            </p>
+          </div>
         </div>
 
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
