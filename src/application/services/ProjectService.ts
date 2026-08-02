@@ -481,7 +481,14 @@ export class ProjectService {
         documents: data.documents || [],
         bankGuarantees: data.bankGuarantees || [],
         insuranceCertificates: data.insuranceCertificates || [],
+        // Sous-objets hydratés depuis le repository (jalons, parties prenantes, ressources…)
+        milestones: (data.milestones || []) as ProjectDetailDTO['milestones'],
+        stakeholders: (data.stakeholders || []) as unknown as StakeholderDTO[],
+        resources: (data.resources || []) as ProjectDetailDTO['resources'],
+        contacts: (data.contacts || []) as unknown as ProjectDetailDTO['contacts'],
+        materials: (data.materials || []) as unknown as ProjectDetailDTO['materials'],
       };
+
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get project details: ${error instanceof Error ? error.message : 'Unknown error'}`,
