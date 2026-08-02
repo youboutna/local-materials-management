@@ -1604,7 +1604,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="kpis" className="mt-6">
+        {/* KPI — rattaché à l'onglet Suivi & Évaluation (pas d'onglet dédié) */}
+        <TabsContent value="monitoring" className="mt-6">
+
           {kpiMetrics ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
