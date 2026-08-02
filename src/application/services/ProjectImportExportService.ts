@@ -24,6 +24,8 @@ import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, PhaseType, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+
 import type {
   CreateProjectDTO,
   ProjectDTO,
