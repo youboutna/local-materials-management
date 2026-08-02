@@ -449,6 +449,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     suppliers?: Map<string, string>,
     organizations?: Map<string, string>,
   ): Promise<void> {
+    /** Résolution des identifiants locaux de phases (ex: "phase-1-dream") vers les UUID persistés. */
+    const phaseIdMap = new Map<string, string>();
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
