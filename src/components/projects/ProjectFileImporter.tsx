@@ -430,128 +430,19 @@ export default function ProjectFileImporter({
   };
 
   const downloadTemplate = () => {
-    const template = [
-      {
-        id: "00000000-0000-0000-0000-000000000000",
-        title: t("projects.import.exampleProject"),
-        description: t("projects.import.exampleDescription"),
-        location: "Nouakchott",
-        budget: 50000000,
-        startDate: "2025-01-01",
-        endDate: "2025-12-31",
-        teamSize: 5,
-        latitude: 18.0735,
-        longitude: -15.9582,
-
-        // Procurement details
-        financingSource: "État",
-        marketType: "Public",
-        selectionMode: "Appel d'offres",
-        launchDate: "2025-01-15",
-        attributionDate: "2025-02-01",
-        projectReference: "PRJ-2025-001",
-        mainContractor: "Entreprise Exemple SA",
-        allowsInitialPayment: true,
-        initialPaymentPercentage: 15,
-
-        // Classification
-        category: "Infrastructure",
-        subCategory: "Travaux publics",
-        priorityLevel: "Élevée",
-        riskLevel: "Moyen",
-        environmentalImpact: "Faible",
-        sustainabilityScore: 75,
-
-        status: "en cours",
-        progress: 25,
-
-        // Milestones
-        milestones: [
-          {
-            name: "Démarrage des travaux",
-            plannedDate: "2025-01-15",
-            actualDate: "2025-01-15",
-            status: "completed",
-          },
-          {
-            name: "Fin de la phase 1",
-            plannedDate: "2025-06-30",
-            actualDate: null,
-            status: "in_progress",
-          },
-        ],
-
-        // Documents
-        documents: [
-          {
-            name: "Dossier_Technique.pdf",
-            type: "Dossier technique",
-            url: "https://example.com/documents/technique.pdf",
-            uploadDate: "2025-01-10",
-          },
-        ],
-
-        // Inspections
-        inspections: [
-          {
-            inspectionDate: "2025-02-15",
-            inspector: "Mohamed Ould Ahmed",
-            status: "completed",
-            progressAtInspection: 15,
-            comments: "Travaux conformes aux spécifications",
-            issues: ["Quelques retards mineurs"],
-            recommendations: ["Accélérer le rythme des travaux"],
-          },
-          {
-            inspectionDate: "2025-03-15",
-            inspector: "Fatima Mint Salem",
-            status: "planned",
-            progressAtInspection: 30,
-            comments: "",
-            issues: [],
-            recommendations: [],
-          },
-        ],
-
-        // Stakeholders
-        stakeholders: [
-          {
-            name: "Ahmed Ould Mohamed",
-            email: "ahmed@example.com",
-            phone: "+22212345678",
-            role: "Chef de projet",
-            organization: "Entreprise Exemple SA",
-            isPrimary: true,
-          },
-          {
-            name: "Mariem Mint Abdallahi",
-            email: "mariem@ministry.mr",
-            phone: "+22298765432",
-            role: "Responsable technique",
-            organization: "Ministère des Infrastructures",
-            isPrimary: false,
-          },
-          {
-            name: "Sidi Ould Cheikh",
-            email: "sidi@control.mr",
-            phone: "+22287654321",
-            role: "Bureau de contrôle",
-            organization: "Bureau Contrôle Qualité",
-            isPrimary: false,
-          },
-        ],
-      },
-    ];
-
-    const dataStr = JSON.stringify(template, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
+    const { content, mimeType, filename } = projectImportTemplateService.serialize(
+      templateFormat,
+      { referentialCode: templateReferential, language: "fr", withRelations: true },
+    );
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "template_projets.json";
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
   };
+
 
   return (
     <Card className="w-full">
