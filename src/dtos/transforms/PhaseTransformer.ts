@@ -268,6 +268,11 @@ export class PhaseTransformer {
   // =================== Create Operations ===================
 
   static fromCreateDTO(dto: Partial<PhaseDTO>): Phase {
+    const phaseCode = (dto as { phaseCode?: string }).phaseCode;
+    const customPhaseData = {
+      ...((dto.customPhaseData as Record<string, unknown> | undefined) ?? {}),
+      ...(phaseCode ? { phaseCode } : {}),
+    };
     return Phase.create({
       id: dto.id,
       projectId: dto.projectId || '',
@@ -276,6 +281,10 @@ export class PhaseTransformer {
       status: (dto.status as PhaseStatus) || 'pending',
       progress: dto.progress || 0,
       orderIndex: dto.orderIndex || 0,
+      // Type de phase normalisé pour respecter les contraintes CHECK côté DB
+      phaseType: PhaseTransformer.normalizeDbPhaseType(
+        (dto as { phaseType?: string }).phaseType ?? phaseCode ?? dto.type,
+      ),
       startDate: dto.startDate || null,
       endDate: dto.endDate || null,
       estimatedDuration: dto.estimatedDuration || null,
@@ -288,7 +297,7 @@ export class PhaseTransformer {
       materials: [],
       suppliers: [],
       location: null,
-      customPhaseData: null,
+      customPhaseData: Object.keys(customPhaseData).length > 0 ? customPhaseData : null,
       // Note: steps removed - handled as separate entities
       notes: null,
       weight: dto.weight ?? 0.1,
@@ -297,6 +306,39 @@ export class PhaseTransformer {
       updatedAt: dto.updatedAt || new Date().toISOString()
     });
   }
+
+  /**
+   * Normalise un code/type source (ETUDES, "Travaux", TRAVAUX_RESEAU, ...) vers
+   * une valeur snake_case minuscule acceptée par `project_phases.phase_type`.
+   * Les codes métier restent conservés dans `phase_code` / `custom_phase_data`.
+   */
+  static normalizeDbPhaseType(raw?: string | null): string {
+    const value = (raw ?? '').toString().trim();
+    if (!value) return 'standard';
+    const normalized = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    const aliases: Record<string, string> = {
+      etude: 'etudes',
+      etudes: 'etudes',
+      conception: 'etudes',
+      design: 'etudes',
+      travaux: 'travaux',
+      execution: 'travaux',
+      construction: 'travaux',
+      reception: 'reception',
+      cloture: 'reception',
+      livraison: 'reception',
+      handover: 'reception',
+      preparation: 'preparation',
+      analyse: 'preparation',
+    };
+    return aliases[normalized] ?? normalized ?? 'standard';
+  }
+
 
   // =================== Validation ===================
 

@@ -1011,8 +1011,34 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     {project.marketType || "Non spécifié"}
                   </p>
                 </div>
+                <div>
+                  <p className="text-sm font-medium">Localisation</p>
+                  <p className="text-sm text-muted-foreground">
+                    {project.location || "Localisation non spécifiée"}
+                  </p>
+                  {(() => {
+                    const lat =
+                      project?.coordinates?.latitude ??
+                      (project as unknown as { latitude?: number }).latitude;
+                    const lng =
+                      project?.coordinates?.longitude ??
+                      (project as unknown as { longitude?: number }).longitude;
+                    const hasCoords =
+                      typeof lat === "number" && typeof lng === "number";
+                    return (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {hasCoords
+                          ? `Coordonnées : ${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`
+                          : "Aucune coordonnée — voir l'onglet Cartographie"}
+                      </p>
+                    );
+                  })()}
+                </div>
               </CardContent>
             </Card>
+
+
+
 
             <Card>
               <CardHeader>

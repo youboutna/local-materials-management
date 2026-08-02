@@ -24,6 +24,8 @@ import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, PhaseType, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+
 import type {
   CreateProjectDTO,
   ProjectDTO,
@@ -312,12 +314,14 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         isActive: row.isActive ?? true,
         externalRef: this.isUUID(row.id) ? undefined : row.id,
       };
+      // Upsert réel : évite les violations de contrainte unique (code / external_ref)
       const organization = current
         ? await this.organizationService.update(current.id, payload)
-        : await this.organizationService.create({
+        : await this.organizationService.upsert({
           ...payload,
           id: this.isUUID(row.id) ? row.id : undefined,
         });
+
       references.set(row.id, organization.id);
       const existingIndex = existing.findIndex((candidate) => candidate.id === organization.id);
       if (existingIndex >= 0) existing[existingIndex] = organization;
@@ -450,6 +454,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         projectId,
         name: phase.name,
         phaseCode: phase.code,
+        // phase_type normalisé (respecte les contraintes CHECK de project_phases)
+        phaseType: PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name),
         externalRef: phase.externalRef ?? (phase.code ? `${this.getExternalRef(row) ?? projectId}:${phase.code}` : undefined),
         description: phase.description,
         type: PhaseType.STRUCTURAL,
@@ -463,7 +469,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
         createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      } satisfies PhaseDTO;
+      } as PhaseDTO & { phaseType: string };
+
       const createdPhase = existingPhase
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
