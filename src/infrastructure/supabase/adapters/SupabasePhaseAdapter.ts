@@ -96,23 +96,23 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     run: (payload: Record<string, unknown>) => Promise<{ data: T; error: any }>,
   ): Promise<T> {
     const original = row.phase_type;
-    const candidates: Array<Record<string, unknown>> = [row];
-    if (original !== undefined) {
-      if (original !== 'standard') candidates.push({ ...row, phase_type: 'standard' });
-      if (original !== 'custom') candidates.push({ ...row, phase_type: 'custom' });
-      const withoutType = { ...row };
-      delete withoutType.phase_type;
-      candidates.push(withoutType);
-    }
+    const base = original == null || original === ''
+      ? { ...row, phase_type: 'standard' }
+      : row;
+    const candidates: Array<Record<string, unknown>> = [base];
+    if (base.phase_type !== 'standard') candidates.push({ ...base, phase_type: 'standard' });
+    if (base.phase_type !== 'custom') candidates.push({ ...base, phase_type: 'custom' });
 
     let lastError: any = null;
     for (const payload of candidates) {
       const { data, error } = await run(payload);
       if (!error) return data;
       lastError = error;
-      const isPhaseTypeCheck =
-        error.code === '23514' || /phase_type/i.test(error.message ?? '');
-      if (!isPhaseTypeCheck) break;
+      const isPhaseTypeIssue =
+        error.code === '23514' ||
+        error.code === '23502' ||
+        /phase_type/i.test(error.message ?? '');
+      if (!isPhaseTypeIssue) break;
     }
     throw lastError;
   }

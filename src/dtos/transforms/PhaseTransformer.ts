@@ -141,7 +141,14 @@ export class PhaseTransformer {
     set('status', phase.status);
     set('progress', phase.progress);
     set('order_index', phase.orderIndex);
-    set('phase_type', phase.phaseType);
+    // `phase_type` est NOT NULL en base : on garantit toujours une valeur normalisée.
+    out['phase_type'] = PhaseTransformer.normalizeDbPhaseType(
+      phase.phaseType ??
+        phase.phase_type ??
+        phase.phaseCode ??
+        (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode ??
+        phase.type,
+    );
     set('phase_code', phase.phaseCode ?? (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode);
     set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
     set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as unknown as Date).toISOString() : phase.endDate);
