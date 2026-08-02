@@ -182,11 +182,12 @@ export class ProjectImportTemplateService {
         phases: this.buildPhasesFromReferential(referentialCode, language),
         stakeholders: [
           {
-            name: 'Chef de projet',
-            role: 'project_manager',
-            email: 'chef.projet@example.mr',
-            phone: '+22212345678',
+            stakeholderType: 'project_manager',
+            stakeholderEntityType: 'employee',
+            roleDescription: 'Chef de projet',
+            externalRef: 'EXT-STK-0001',
             organizationId: 'EXT-ORG-0001',
+            isPrimary: true,
           },
         ] as ProjectImportRow['stakeholders'],
       },
