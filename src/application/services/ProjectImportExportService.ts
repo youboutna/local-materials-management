@@ -64,10 +64,14 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   budgetSources?: Array<Record<string, unknown>>;
   dqeLines?: BoqLineDTO[];
   phases?: ProjectImportPhase[];
+  /** Tâches déclarées au niveau projet (référencent une phase via `phaseId`). */
+  tasks?: ProjectImportTask[];
   stakeholders?: ProjectImportStakeholder[];
 }
 
 export interface ProjectImportPhase {
+  /** Identifiant local du jeu de données (ex: "phase-1-dream"), non-UUID toléré. */
+  id?: string;
   externalRef?: string;
   name: string;
   code?: string;
@@ -95,15 +99,22 @@ export interface ProjectImportMilestone {
 }
 
 export interface ProjectImportTask {
+  id?: string;
   title?: string;
   name?: string;
   description?: string;
   status?: string;
   priority?: string;
+  progress?: number;
+  startDate?: string;
+  endDate?: string;
   dueDate?: string;
   due_date?: string;
-  assignedTo?: string[];
+  /** Référence la phase locale (`phase.id` ou `phase.code`) quand la tâche est au niveau projet. */
+  phaseId?: string;
+  assignedTo?: string | string[];
 }
+
 
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
   organizationId?: string;
