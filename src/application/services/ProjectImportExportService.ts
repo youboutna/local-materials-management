@@ -488,6 +488,10 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
         : await this.phaseService.createPhase(phaseData, projectId);
       details.phases += 1;
+      for (const key of [phase.id, phase.code, phase.name, phase.externalRef]) {
+        if (key) phaseIdMap.set(key, createdPhase.id);
+      }
+
 
       for (const milestone of phase.milestones ?? []) {
         const milestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
