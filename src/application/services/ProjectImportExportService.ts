@@ -506,23 +506,9 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
 
       for (const task of phase.tasks ?? []) {
-        const tasks = await this.taskService.getTasksByPhase(createdPhase.id);
-        const taskName = task.title ?? task.name ?? 'Tâche importée';
-        const existingTask = tasks.find((candidate) => candidate.title === taskName);
-        const taskData = {
-          projectId,
-          phaseId: createdPhase.id,
-          title: taskName,
-          description: task.description,
-          status: task.status as TaskStatus | undefined,
-          priority: task.priority as TaskPriority | undefined,
-          dueDate: task.due_date ?? task.dueDate,
-          assignedTo: task.assignedTo,
-        };
-        if (existingTask) await this.taskService.updateTask(existingTask.id, taskData);
-        else await this.taskService.createTask(taskData);
-        details.tasks += 1;
+        await this.upsertTask(projectId, createdPhase.id, task, details, suppliers);
       }
+
 
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
