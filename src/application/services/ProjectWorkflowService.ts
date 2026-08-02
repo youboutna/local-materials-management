@@ -300,7 +300,15 @@ export class ProjectWorkflowService {
         projectData: projectDTO,
         relatedData: {
           phases: phaseData,
-          milestones: phaseData.flatMap((phase) => phase.milestones ?? []),
+          // Jalons/tâches : union des sous-objets rattachés aux phases + ceux au niveau projet
+          milestones: dedupeById([
+            ...phaseData.flatMap((phase) => phase.milestones ?? []),
+            ...((projectMilestones || []) as any[]),
+          ]),
+          tasks: dedupeById([
+            ...phaseData.flatMap((phase: any) => phase.tasks ?? []),
+            ...((projectTasks || []) as any[]),
+          ]),
           dqeLines: phaseData.flatMap((phase) => phase.dqeLines ?? []) as BoqLineDTO[],
           risks: (risks || []).map((r: any) => ({
             id: r.id,
@@ -315,6 +323,7 @@ export class ProjectWorkflowService {
           })) as RiskDTO[],
           stakeholders: (stakeholders || []) as NonNullable<ProjectWorkflowData['relatedData']>['stakeholders'],
         },
+
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
           totalSteps: this.getWorkflowSteps().length,
