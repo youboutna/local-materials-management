@@ -645,7 +645,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     const title = task.title ?? task.name ?? 'Tâche importée';
     const existingTasks = phaseId
       ? await this.taskService.getTasksByPhase(phaseId)
-      : await this.taskService.getTasksByProject(projectId);
+      : await this.taskService.getProjectTasks(projectId);
     const existingTask = existingTasks.find((candidate) => candidate.title === title);
     const assignees = (Array.isArray(task.assignedTo) ? task.assignedTo : task.assignedTo ? [task.assignedTo] : [])
       .map((assignee) => this.resolveReference(assignee, suppliers))
