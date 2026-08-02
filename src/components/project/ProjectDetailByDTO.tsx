@@ -2109,14 +2109,27 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="map" className="mt-6 space-y-4">
           {(() => {
             const rawZones =
+              (projectDetail as unknown as { interventionZones?: unknown[] } | null)?.interventionZones ??
               (project as unknown as { interventionZones?: unknown[] }).interventionZones ??
               [];
             const zoneList = Array.isArray(rawZones)
               ? (rawZones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
               : [];
-            const lat = project?.coordinates?.latitude ?? (project as any)?.latitude;
-            const lng = project?.coordinates?.longitude ?? (project as any)?.longitude;
-            const address = (project as any)?.location || (project as any)?.address;
+            const lat =
+              projectDetail?.coordinates?.latitude ??
+              (projectDetail as any)?.latitude ??
+              project?.coordinates?.latitude ??
+              (project as any)?.latitude;
+            const lng =
+              projectDetail?.coordinates?.longitude ??
+              (projectDetail as any)?.longitude ??
+              project?.coordinates?.longitude ??
+              (project as any)?.longitude;
+            const address =
+              (projectDetail as any)?.location ||
+              (projectDetail as any)?.address ||
+              (project as any)?.location ||
+              (project as any)?.address;
             const hasCenter = typeof lat === 'number' && typeof lng === 'number';
             const willSynthesize = zoneList.length === 0 && hasCenter;
 
