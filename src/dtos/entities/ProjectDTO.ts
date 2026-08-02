@@ -537,6 +537,19 @@ export interface ProjectDetailDTO extends ProjectDTO {
   
   // Resource allocation - ADDING MISSING PROPERTY
   resources?: ProjectResource[];
+
+  /** Contacts projet (btp.project_contacts) */
+  contacts?: Array<{
+    id: string;
+    projectId?: string;
+    name: string;
+    role: string;
+    email?: string;
+    phone?: string;
+    company?: string;
+    isPrimary?: boolean;
+  }>;
+
   
   // Performance data
   escalationThresholds?: {

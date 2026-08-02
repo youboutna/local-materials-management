@@ -45,21 +45,31 @@ describe('ProjectImportExportService — fixture round-trip', () => {
   });
 });
 describe('Normalisation phase_type (contrainte CHECK project_phases)', () => {
-  it('mappe les codes métier vers des valeurs snake_case minuscules', async () => {
+  it('mappe les codes métier vers les seules valeurs autorisées standard|custom', async () => {
     const { PhaseTransformer } = await import('@/dtos/transforms/PhaseTransformer');
     const cases: Record<string, string> = {
-      ETUDES: 'etudes',
-      DESIGN_DAO: 'design_dao',
-      TRAVAUX: 'travaux',
-      EXECUTION: 'travaux',
-      RECEPTION: 'reception',
-      HANDOVER: 'reception',
-      ANALYSE: 'preparation',
-      'Pré-Faisabilité': 'pre_faisabilite',
+      ETUDES: 'standard',
+      TRAVAUX: 'standard',
+      EXECUTION: 'standard',
+      RECEPTION: 'standard',
+      HANDOVER: 'standard',
+      ANALYSE: 'standard',
+      standard: 'standard',
+      custom: 'custom',
+      DESIGN_DAO: 'custom',
+      'Pré-Faisabilité': 'custom',
     };
     for (const [input, expected] of Object.entries(cases)) {
       expect(PhaseTransformer.normalizeDbPhaseType(input)).toBe(expected);
     }
     expect(PhaseTransformer.normalizeDbPhaseType(undefined)).toBe('standard');
   });
+
+  it('conserve le code métier dans phase_code', async () => {
+    const { PhaseTransformer } = await import('@/dtos/transforms/PhaseTransformer');
+    const row = PhaseTransformer.toDB({ name: 'Études', phaseType: 'ETUDES' } as never);
+    expect(row['phase_type']).toBe('standard');
+    expect(row['phase_code']).toBe('ETUDES');
+  });
 });
+

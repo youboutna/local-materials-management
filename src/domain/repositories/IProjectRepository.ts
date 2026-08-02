@@ -27,7 +27,14 @@ export interface ProjectWithRelatedData {
   documents: any[];
   bankGuarantees: any[];
   insuranceCertificates: any[];
+  /** Sous-objets additionnels hydratés pour le détail / l'édition */
+  milestones?: any[];
+  stakeholders?: any[];
+  resources?: any[];
+  contacts?: any[];
+  materials?: any[];
 }
+
 
 export interface IProjectRepository {
   // ============= CRUD Operations =============

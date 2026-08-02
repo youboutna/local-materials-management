@@ -141,7 +141,21 @@ export interface WorkflowResult {
   warnings?: string[];
 }
 
+/** Déduplique une collection de sous-objets par `id` (fallback: référence). */
+function dedupeById<T extends { id?: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = item?.id ? String(item.id) : '';
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
 export class ProjectWorkflowService {
+
   private referentialService: ReferentialService;
   
   // Additional services for comprehensive project management (optional)
@@ -252,11 +266,14 @@ export class ProjectWorkflowService {
       const projectDTO = ProjectTransformer.toDTO(project);
 
       // Load related data in parallel
-      const [phases, risks, stakeholders] = await Promise.all([
+      const [phases, risks, stakeholders, projectMilestones, projectTasks] = await Promise.all([
         this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
+        this.milestoneService?.getProjectMilestonesDTO(projectId).catch(() => []) || Promise.resolve([]),
+        this.taskService?.getProjectTasks(projectId).catch(() => []) || Promise.resolve([]),
       ]);
+
 
       // Build complete workflow data
       const phaseData = await Promise.all((phases || []).map(async (phase: any) => ({
@@ -297,7 +314,15 @@ export class ProjectWorkflowService {
         projectData: projectDTO,
         relatedData: {
           phases: phaseData,
-          milestones: phaseData.flatMap((phase) => phase.milestones ?? []),
+          // Jalons/tâches : union des sous-objets rattachés aux phases + ceux au niveau projet
+          milestones: dedupeById([
+            ...phaseData.flatMap((phase) => phase.milestones ?? []),
+            ...((projectMilestones || []) as any[]),
+          ]),
+          tasks: dedupeById([
+            ...phaseData.flatMap((phase: any) => phase.tasks ?? []),
+            ...((projectTasks || []) as any[]),
+          ]),
           dqeLines: phaseData.flatMap((phase) => phase.dqeLines ?? []) as BoqLineDTO[],
           risks: (risks || []).map((r: any) => ({
             id: r.id,
@@ -312,6 +337,7 @@ export class ProjectWorkflowService {
           })) as RiskDTO[],
           stakeholders: (stakeholders || []) as NonNullable<ProjectWorkflowData['relatedData']>['stakeholders'],
         },
+
         metadata: {
           lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
           totalSteps: this.getWorkflowSteps().length,
