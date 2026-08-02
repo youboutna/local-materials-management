@@ -86,32 +86,57 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     return this.getPhasesByProjectId(projectId);
   }
 
+  /**
+   * Certaines bases historiques portent un CHECK restrictif sur `phase_type`
+   * (ex: IN ('standard','custom')). On tente la valeur métier normalisée puis
+   * on dégrade proprement au lieu de faire échouer tout l'import.
+   */
+  private async withPhaseTypeFallback<T>(
+    row: Record<string, unknown>,
+    run: (payload: Record<string, unknown>) => Promise<{ data: T; error: any }>,
+  ): Promise<T> {
+    const original = row.phase_type;
+    const candidates: Array<Record<string, unknown>> = [row];
+    if (original !== undefined) {
+      if (original !== 'standard') candidates.push({ ...row, phase_type: 'standard' });
+      if (original !== 'custom') candidates.push({ ...row, phase_type: 'custom' });
+      const withoutType = { ...row };
+      delete withoutType.phase_type;
+      candidates.push(withoutType);
+    }
+
+    let lastError: any = null;
+    for (const payload of candidates) {
+      const { data, error } = await run(payload);
+      if (!error) return data;
+      lastError = error;
+      const isPhaseTypeCheck =
+        error.code === '23514' || /phase_type/i.test(error.message ?? '');
+      if (!isPhaseTypeCheck) break;
+    }
+    throw lastError;
+  }
+
   async create(phase: Partial<Phase>): Promise<Phase> {
     const entityData = await this.mapToEntity(phase);
 
-    const { data, error } = await supabase
-      .from('project_phases')
-      .insert(entityData)
-      .select()
-      .single();
+    const data = await this.withPhaseTypeFallback(entityData as Record<string, unknown>, (payload) =>
+      supabase.from('project_phases').insert(payload).select().single(),
+    );
 
-    if (error) throw error;
     return PhaseTransformer.fromDTO(data);
   }
 
   async update(id: string, updates: Partial<Phase>): Promise<Phase> {
     const entityData = await this.mapToEntity(updates);
 
-    const { data, error } = await supabase
-      .from('project_phases')
-      .update(entityData)
-      .eq('id', id)
-      .select()
-      .single();
+    const data = await this.withPhaseTypeFallback(entityData as Record<string, unknown>, (payload) =>
+      supabase.from('project_phases').update(payload).eq('id', id).select().single(),
+    );
 
-    if (error) throw error;
     return PhaseTransformer.fromDTO(data);
   }
+
 
   async delete(id: string): Promise<void> {
     const { error } = await supabase
