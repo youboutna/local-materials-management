@@ -1491,14 +1491,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
 
-        <TabsContent value="risks" className="mt-6">
+        {/* Risques — rattachés au Suivi & Évaluation */}
+        <TabsContent value="monitoring" className="mt-6">
           <EnhancedRiskManager
             projectId={projectId!}
             phases={computedPhases}
           />
         </TabsContent>
 
-        <TabsContent value="resources" className="mt-6">
+        {/* Équipe & ressources — rattachées à l'Exécution */}
+        <TabsContent value="tasks" className="mt-6">
           <TeamOverview
             resources={resources}
             setResources={setResources}
@@ -1507,7 +1509,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-6">
+        {/* Échéancier de paiements — rattaché au Financier */}
+        <TabsContent value="financial" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
