@@ -540,7 +540,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         status: r.status || "identified",
         relatedTasks: r.relatedTasks || [],
       })),
-      contacts: projectDetail?.mainContractor
+      // Contacts réels (btp.project_contacts) — fallback sur l'entreprise titulaire.
+      contacts: (projectDetail?.contacts?.length
+        ? projectDetail.contacts
+        : projectDetail?.mainContractor
         ? [
             {
               id: `contractor-${String(projectDetail.mainContractor).replace(/\s+/g, '-').toLowerCase()}`,
@@ -550,8 +553,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               isPrimary: true,
             },
           ]
-        : undefined,
-      stakeholders: projectDetail?.financingSource
+        : undefined) as any,
+      // Parties prenantes réelles (btp.project_stakeholders) — fallback bailleur.
+      stakeholders: (projectDetail?.stakeholders?.length
+        ? (projectDetail.stakeholders as any[]).map((s: any) => ({
+            id: s.id,
+            name: s.name || s.roleDescription || s.stakeholderType || "Partie prenante",
+            email: s.email || "",
+            phone: s.phone || "",
+            role: s.stakeholderType || s.role || "stakeholder",
+            organization: s.organization || s.roleDescription || "",
+            isPrimary: !!s.isPrimary,
+          }))
+        : projectDetail?.financingSource
         ? [
             {
               id: `stakeholder-${projectDetail.financingSource.replace(/\s+/g, '-').toLowerCase()}`,
@@ -563,7 +577,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               isPrimary: true,
             },
           ]
-        : undefined,
+        : undefined) as any,
+
       methodology: projectDetail?.methodology || undefined,
     };
   }, [
