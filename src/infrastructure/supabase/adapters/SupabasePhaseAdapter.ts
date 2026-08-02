@@ -87,31 +87,48 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
   }
 
   /**
-   * Certaines bases historiques portent un CHECK restrictif sur `phase_type`
-   * (ex: IN ('standard','custom')). On tente la valeur métier normalisée puis
-   * on dégrade proprement au lieu de faire échouer tout l'import.
+   * Certaines bases portent un CHECK restrictif sur `phase_type`
+   * (ex: IN ('standard','custom')) dont la liste exacte varie selon
+   * l'environnement. On essaie successivement les valeurs plausibles puis, en
+   * dernier recours, on omet la colonne — au lieu de faire échouer l'import.
+   * La valeur acceptée est mémorisée pour les lignes suivantes.
    */
+  private static acceptedPhaseType: string | null | undefined = undefined;
+
   private async withPhaseTypeFallback<T>(
     row: Record<string, unknown>,
     run: (payload: Record<string, unknown>) => Promise<{ data: T; error: any }>,
   ): Promise<T> {
-    const original = row.phase_type;
-    const base = original == null || original === ''
-      ? { ...row, phase_type: 'standard' }
-      : row;
-    const candidates: Array<Record<string, unknown>> = [base];
-    if (base.phase_type !== 'standard') candidates.push({ ...base, phase_type: 'standard' });
-    if (base.phase_type !== 'custom') candidates.push({ ...base, phase_type: 'custom' });
+    const original =
+      row.phase_type == null || row.phase_type === '' ? 'standard' : String(row.phase_type);
+
+    const order: Array<string | null> = [];
+    const push = (v: string | null) => { if (!order.includes(v)) order.push(v); };
+    if (SupabasePhaseAdapter.acceptedPhaseType !== undefined) {
+      push(SupabasePhaseAdapter.acceptedPhaseType);
+    }
+    push(original);
+    push('standard');
+    push('custom');
+    push(null); // omission de la colonne (si nullable)
 
     let lastError: any = null;
-    for (const payload of candidates) {
+    for (const candidate of order) {
+      const payload = { ...row };
+      if (candidate === null) delete payload.phase_type;
+      else payload.phase_type = candidate;
+
       const { data, error } = await run(payload);
-      if (!error) return data;
+      if (!error) {
+        SupabasePhaseAdapter.acceptedPhaseType = candidate;
+        return data;
+      }
       lastError = error;
       const isPhaseTypeIssue =
         error.code === '23514' ||
         error.code === '23502' ||
-        /phase_type/i.test(error.message ?? '');
+        /phase_type/i.test(error.message ?? '') ||
+        /phase_type/i.test(error.details ?? '');
       if (!isPhaseTypeIssue) break;
     }
     throw lastError;
