@@ -1,4 +1,5 @@
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { findRegionByLocation } from '@/utils/mauritaniaUtils';
 import { MAURITANIA_CITIES, MAURITANIA_REGIONS } from '@/utils/mauritania';
 
@@ -50,6 +51,54 @@ export const getProjectCoordinates = (project: ProjectCoordinatesLike) => {
     location.includes(normalizeLocationText(candidate.nameAr)),
   );
   return region ? { latitude: region.lat, longitude: region.lng } : undefined;
+};
+
+/**
+ * Résout une localisation textuelle/coordonnée vers le point cartographique
+ * canonique consommé par le workflow d'édition et le détail projet.
+ *
+ * Une adresse issue d'un import (ex. "Aleg, Mauritanie") reste une adresse,
+ * mais devient aussi un point de référence quand aucune géométrie n'a été
+ * dessinée. Le point est ensuite persisté normalement si l'utilisateur sauve
+ * l'étape Localisation.
+ */
+export const getProjectLocationPoint = (
+  project: ProjectCoordinatesLike,
+): InterventionZoneDTO | undefined => {
+  const coordinates = getProjectCoordinates(project);
+  if (!coordinates) return undefined;
+
+  const normalizedLocation = project.location
+    ? normalizeLocationText(project.location)
+    : '';
+  const city = normalizedLocation
+    ? MAURITANIA_CITIES.find((candidate) =>
+        normalizedLocation.includes(normalizeLocationText(candidate.name)) ||
+        normalizedLocation.includes(normalizeLocationText(candidate.nameAr)),
+      )
+    : undefined;
+  const region = city
+    ? MAURITANIA_REGIONS.find((candidate) => candidate.code === city.parentCode)
+    : normalizedLocation
+    ? MAURITANIA_REGIONS.find((candidate) =>
+        normalizedLocation.includes(normalizeLocationText(candidate.name)) ||
+        normalizedLocation.includes(normalizeLocationText(candidate.nameAr)),
+      )
+    : undefined;
+
+  return {
+    type: 'point',
+    coordinates: [{ lat: coordinates.latitude, lng: coordinates.longitude }],
+    label: city?.name ?? region?.name ?? project.location?.trim() ?? 'Localisation',
+    address: project.location?.trim() || undefined,
+    cityCode: city?.code,
+    regionCode: city?.parentCode ?? region?.code,
+    geocodingMeta: {
+      provider: city || region ? 'mauritania-referential' : 'project-coordinates',
+      confidence: city || region ? 1 : undefined,
+      displayName: project.location?.trim() || city?.name || region?.name,
+    },
+  };
 };
 
 export const normalizeProjectRegionName = (location?: string | null) => {

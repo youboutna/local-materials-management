@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getProjectCoordinates } from '../projectLocationBuckets';
+import { getProjectCoordinates, getProjectLocationPoint } from '../projectLocationBuckets';
 
 describe('getProjectCoordinates', () => {
   it('conserve les coordonnées explicites', () => {
@@ -17,5 +17,19 @@ describe('getProjectCoordinates', () => {
 
   it('ne fabrique pas de coordonnées pour une adresse inconnue', () => {
     expect(getProjectCoordinates({ location: 'Site à déterminer' })).toBeUndefined();
+  });
+
+  it('produit une zone point complète depuis Aleg pour édition et détail', () => {
+    expect(getProjectLocationPoint({ location: 'Aleg, Mauritanie' })).toMatchObject({
+      type: 'point',
+      label: 'Aleg',
+      address: 'Aleg, Mauritanie',
+      cityCode: 'ALG',
+      regionCode: 'BRK',
+      geocodingMeta: { provider: 'mauritania-referential', confidence: 1 },
+    });
+    expect(getProjectLocationPoint({ location: 'Aleg, Mauritanie' })?.coordinates).toEqual([
+      { lat: 17.0333, lng: -13.2833 },
+    ]);
   });
 });

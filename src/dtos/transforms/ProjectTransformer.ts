@@ -31,6 +31,7 @@ import { RiskTransformer } from './RiskTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
 import { TaskTransformer } from './TaskTransformer';
 import { TenderDomainTransformer } from './TenderDomainTransformer';
+import { getProjectLocationPoint } from '@/utils/projectLocationBuckets';
 
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
@@ -310,6 +311,36 @@ export class ProjectTransformer {
    * Converts domain entity to DTO for API responses
    */
   static toDTO(project: Project): ProjectDTO {
+    const storedCollection = InterventionZoneCollection.fromJSON(project.localisation);
+    const storedZones = storedCollection.zones.map(
+      (zone) => zone.toJSON() as InterventionZoneDTO,
+    );
+    const locationPoint = storedZones.length === 0
+      ? getProjectLocationPoint({
+          location: project.location,
+          latitude: project.coordinates?.latitude,
+          longitude: project.coordinates?.longitude,
+          coordinates: project.coordinates
+            ? {
+                latitude: project.coordinates.latitude,
+                longitude: project.coordinates.longitude,
+              }
+            : undefined,
+        })
+      : undefined;
+    const displayZones = storedZones.length > 0
+      ? storedZones
+      : locationPoint
+      ? [locationPoint]
+      : [];
+    const displayCenter = storedCollection.getBoundingCenter() ??
+      (locationPoint?.coordinates[0]
+        ? {
+            lat: locationPoint.coordinates[0].lat,
+            lng: locationPoint.coordinates[0].lng,
+          }
+        : undefined);
+
     return {
       id: project.id,
       title: project.title,
@@ -317,24 +348,16 @@ export class ProjectTransformer {
       status: project.status as ProjectStatus,
       progress: project.progress,
       location: project.location || '',
-      latitude: project.coordinates?.latitude,
-      longitude: project.coordinates?.longitude,
-      coordinates: project.coordinates
+      latitude: project.coordinates?.latitude ?? displayCenter?.lat,
+      longitude: project.coordinates?.longitude ?? displayCenter?.lng,
+      coordinates: project.coordinates || displayCenter
         ? {
-            latitude: project.coordinates.latitude,
-            longitude: project.coordinates.longitude,
+            latitude: project.coordinates?.latitude ?? displayCenter?.lat ?? 0,
+            longitude: project.coordinates?.longitude ?? displayCenter?.lng ?? 0,
           }
         : undefined,
-      interventionZones: (() => {
-        const collection = InterventionZoneCollection.fromJSON(project.localisation);
-        return collection.isEmpty()
-          ? undefined
-          : collection.zones.map((z) => z.toJSON() as InterventionZoneDTO);
-      })(),
-      interventionZone: (() => {
-        const collection = InterventionZoneCollection.fromJSON(project.localisation);
-        return collection.isEmpty() ? undefined : (collection.zones[0].toJSON() as InterventionZoneDTO);
-      })(),
+      interventionZones: displayZones.length > 0 ? displayZones : undefined,
+      interventionZone: displayZones[0],
       startDate: project.startDate?.toISOString() || '',
       endDate: project.endDate?.toISOString(),
       budget: project.budget,
