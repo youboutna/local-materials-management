@@ -209,11 +209,18 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async findWithRelatedData(id: string): Promise<ProjectWithRelatedData> {
-    if (!id || id.trim() === '') {
-      return { project: null, phases: [], tasks: [], risks: [], inspections: [], payments: [], documents: [], bankGuarantees: [], insuranceCertificates: [] };
-    }
+    const empty: ProjectWithRelatedData = {
+      project: null, phases: [], tasks: [], risks: [], inspections: [], payments: [],
+      documents: [], bankGuarantees: [], insuranceCertificates: [],
+      milestones: [], stakeholders: [], resources: [], contacts: [], materials: [],
+    };
+    if (!id || id.trim() === '') return empty;
 
-    const [projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult, documentsResult, bankGuaranteesResult, insuranceResult] = await Promise.all([
+    const [
+      projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult,
+      documentsResult, bankGuaranteesResult, insuranceResult,
+      milestonesResult, stakeholdersResult, resourcesResult, contactsResult, materialsResult,
+    ] = await Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('project_phases').select('*').eq('project_id', id).order('order_index'),
       supabase.from('task_assignments').select('*').eq('project_id', id),
@@ -223,7 +230,74 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       supabase.from('documents').select('*').eq('project_id', id),
       supabase.from('bank_guarantees').select('*').eq('project_id', id),
       supabase.from('insurance_certificates').select('*').eq('project_id', id),
+      // ⬇️ Sous-objets manquants jusqu'ici : jalons, parties prenantes, ressources, contacts, matériaux
+      supabase.from('project_milestones').select('*').eq('project_id', id),
+      supabase.from('project_stakeholders').select('*').eq('project_id', id),
+      supabase.from('project_resources').select('*').eq('project_id', id),
+      supabase.from('project_contacts').select('*').eq('project_id', id),
+      supabase.from('project_materials').select('*').eq('project_id', id),
     ]);
+
+    const milestones = (milestonesResult.data || []).map((row: Record<string, any>) => ({
+      id: row.id,
+      projectId: row.project_id,
+      phaseId: row.phase_id ?? undefined,
+      title: row.title ?? row.name ?? 'Jalon',
+      description: row.description ?? '',
+      targetDate: row.target_date ?? null,
+      completionDate: row.completion_date ?? row.completed_date ?? null,
+      status: row.status ?? 'pending',
+      progress: row.progress ?? row.progress_percentage ?? 0,
+      externalRef: row.external_ref ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    const stakeholders = (stakeholdersResult.data || []).map((row: Record<string, any>) => ({
+      id: row.id,
+      projectId: row.project_id,
+      stakeholderType: row.stakeholder_type,
+      entityType: row.stakeholder_entity_type,
+      stakeholderId: row.stakeholder_id ?? row.supplier_id ?? row.employee_id ?? undefined,
+      supplierId: row.supplier_id ?? undefined,
+      employeeId: row.employee_id ?? undefined,
+      organizationId: row.organization_id ?? undefined,
+      role: row.stakeholder_type,
+      roleDescription: row.role_description ?? '',
+      name: row.name ?? row.role_description ?? row.stakeholder_type ?? '',
+      isPrimary: row.is_primary ?? false,
+      isActive: row.is_active ?? true,
+      externalRef: row.external_ref ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    const resources = (resourcesResult.data || []).map((row: Record<string, any>) => ({
+      id: row.id,
+      projectId: row.project_id,
+      name: row.name,
+      type: row.type,
+      quantity: row.quantity ?? undefined,
+      unit: row.unit ?? undefined,
+      costPerHour: row.cost_per_hour ?? undefined,
+      costPerUnit: row.cost_per_unit ?? undefined,
+      availability: row.availability ?? 100,
+      skills: row.skills ?? [],
+      assignedTasks: row.assigned_tasks ?? [],
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    const contacts = (contactsResult.data || []).map((row: Record<string, any>) => ({
+      id: row.id,
+      projectId: row.project_id,
+      name: row.name,
+      role: row.role,
+      email: row.email ?? '',
+      phone: row.phone ?? undefined,
+      company: row.company ?? undefined,
+      isPrimary: row.is_primary ?? false,
+    }));
 
     return {
       project: projectResult.data ? ProjectTransformer.fromSupabase(projectResult.data as Record<string, unknown>) : null,
@@ -235,8 +309,14 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       documents: documentsResult.data || [],
       bankGuarantees: bankGuaranteesResult.data || [],
       insuranceCertificates: insuranceResult.data || [],
+      milestones,
+      stakeholders,
+      resources,
+      contacts,
+      materials: materialsResult.data || [],
     };
   }
+
 
   async findSummary(id: string): Promise<ProjectSummary | null> {
     const related = await this.findWithRelatedData(id);
