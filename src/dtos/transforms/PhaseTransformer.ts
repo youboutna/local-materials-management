@@ -149,7 +149,16 @@ export class PhaseTransformer {
         (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode ??
         phase.type,
     );
-    set('phase_code', phase.phaseCode ?? (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode);
+    // `phase_code` conserve le code métier source (ETUDES, TRAVAUX…) puisque
+    // `phase_type` est contraint à 'standard' | 'custom'.
+    set(
+      'phase_code',
+      phase.phaseCode ??
+        (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode ??
+        (typeof phase.phaseType === 'string' ? phase.phaseType : undefined) ??
+        (typeof phase.type === 'string' ? phase.type : undefined),
+    );
+
     set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
     set('end_date', (phase.endDate as any) instanceof Date ? (phase.endDate as unknown as Date).toISOString() : phase.endDate);
     set('estimated_duration', phase.estimatedDuration);
