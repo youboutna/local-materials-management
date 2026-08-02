@@ -319,6 +319,12 @@ export class PhaseTransformer {
    * une valeur snake_case minuscule acceptée par `project_phases.phase_type`.
    * Les codes métier restent conservés dans `phase_code` / `custom_phase_data`.
    */
+  /**
+   * Normalise `phase_type` vers les SEULES valeurs acceptées par la contrainte
+   * `project_phases_phase_type_check` : 'standard' | 'custom'.
+   * Le code métier d'origine (ETUDES, TRAVAUX, RECEPTION…) reste porté par
+   * `phase_code` / `custom_phase_data`, jamais par `phase_type`.
+   */
   static normalizeDbPhaseType(raw?: string | null): string {
     const value = (raw ?? '').toString().trim();
     if (!value) return 'standard';
@@ -328,23 +334,22 @@ export class PhaseTransformer {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
-    const aliases: Record<string, string> = {
-      etude: 'etudes',
-      etudes: 'etudes',
-      conception: 'etudes',
-      design: 'etudes',
-      travaux: 'travaux',
-      execution: 'travaux',
-      construction: 'travaux',
-      reception: 'reception',
-      cloture: 'reception',
-      livraison: 'reception',
-      handover: 'reception',
-      preparation: 'preparation',
-      analyse: 'preparation',
-    };
-    return aliases[normalized] ?? normalized ?? 'standard';
+
+    if (normalized === 'custom') return 'custom';
+    if (normalized === 'standard') return 'standard';
+
+    // Familles métier connues → phase standard
+    const standardFamilies = new Set([
+      'etude', 'etudes', 'conception', 'design',
+      'travaux', 'execution', 'construction', 'realisation',
+      'reception', 'cloture', 'livraison', 'handover',
+      'preparation', 'analyse', 'planification', 'planning',
+      'pre_construction', 'site_preparation', 'foundation', 'framing',
+      'structural_work', 'finishing', 'post_construction',
+    ]);
+    return standardFamilies.has(normalized) ? 'standard' : 'custom';
   }
+
 
 
   // =================== Validation ===================
