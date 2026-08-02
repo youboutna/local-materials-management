@@ -1162,8 +1162,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
+        {/* Planification — WBS, planning (Gantt/PERT/Kanban) et jalons regroupés */}
         <TabsContent value="phases" className="mt-6">
+          <Tabs defaultValue="wbs" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
+              <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="wbs" className="mt-6">
           <div className="space-y-4">
+
             {/* Phase generation controls */}
             <Card>
               <CardHeader>
