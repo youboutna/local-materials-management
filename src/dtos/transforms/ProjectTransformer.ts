@@ -355,9 +355,11 @@ export class ProjectTransformer {
    */
   static toDTO(project: Project): ProjectDTO {
     const storedCollection = InterventionZoneCollection.fromJSON(project.localisation);
-    const storedZones = storedCollection.zones.map(
-      (zone) => zone.toJSON() as InterventionZoneDTO,
+    const storedZones = ProjectTransformer.sanitizeZones(
+      storedCollection.zones.map((zone) => zone.toJSON() as InterventionZoneDTO),
+      project.location,
     );
+
     const locationPoint = storedZones.length === 0
       ? getProjectLocationPoint({
           location: project.location,
