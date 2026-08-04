@@ -5,7 +5,7 @@
  * Following hexagonal architecture principles
  */
 
-import { ReferentialService } from '@/application/services/ReferentialService';
+import { getAllReferentials } from '@/config/referentials';
 import { Phase, PhasePriority, PhaseStatus, PhaseStep, PhaseTask, PhaseType } from '@/domain/entities/Phase';
 import {
   PhasePriority as DTOPriority,
@@ -433,8 +433,7 @@ export class PhaseTransformer {
 
     // 4. Récupérer les codes depuis le ReferentialService
     try {
-      const referentialService = ReferentialService.getInstance();
-      const referentials = referentialService.getAllReferentials();
+      const referentials = getAllReferentials();
       
       for (const ref of referentials) {
         for (const phase of ref.phases) {
