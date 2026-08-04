@@ -252,8 +252,8 @@ export class TaskService {
       const patch: Record<string, unknown> = {};
       if (updateDTO.title !== undefined) patch.title = updateDTO.title;
       if (updateDTO.description !== undefined) patch.description = updateDTO.description;
-      if (updateDTO.status !== undefined) patch.status = String(updateDTO.status);
-      if (updateDTO.priority !== undefined) patch.priority = String(updateDTO.priority);
+      if (updateDTO.status !== undefined) patch.status = this.toDomainStatus(String(updateDTO.status));
+      if (updateDTO.priority !== undefined) patch.priority = this.toDomainPriority(String(updateDTO.priority));
       if (updateDTO.dueDate !== undefined) patch.dueDate = updateDTO.dueDate;
       if (updateDTO.phaseId !== undefined) patch.phaseId = updateDTO.phaseId;
       if ((updateDTO as any).assignedTo !== undefined) patch.assignedTo = (updateDTO as any).assignedTo;
