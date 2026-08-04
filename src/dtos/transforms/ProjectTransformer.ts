@@ -102,13 +102,16 @@ export class ProjectTransformer {
     zones?: InterventionZoneDTO[] | null,
     fallbackSingle?: InterventionZoneDTO | null,
   ): { payload?: Record<string, unknown>; forme?: string } {
-    const src = zones && zones.length > 0
+    const raw = zones && zones.length > 0
       ? zones
       : fallbackSingle
         ? [fallbackSingle]
         : [];
+    // Ne jamais persister de sommets invalides / (0,0).
+    const src = ProjectTransformer.sanitizeZones(raw);
     if (src.length === 0) return {};
     const entities = src
+
       .map((z) => {
         try {
           return InterventionZone.create({
