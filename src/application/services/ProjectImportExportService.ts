@@ -514,8 +514,8 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
 
       // Milestones
+      const existingMilestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
       for (const milestone of phase.milestones ?? []) {
-        const existingMilestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
         const existingMilestone = existingMilestones.find((candidate) => 
           candidate.title === (milestone.title ?? milestone.name)
         );
