@@ -150,16 +150,27 @@ export class ProjectTransformer {
     // Hydrate the intervention zones from `localisation` jsonb when available,
     // and derive coordinates from the bounding centroid when explicit lat/lng are missing.
     const zoneCollection = InterventionZoneCollection.fromJSON(row.localisation);
-    const center = zoneCollection.getBoundingCenter();
-    const lat = row.coordinates_latitude != null
-      ? Number(row.coordinates_latitude)
-      : center?.lat;
-    const lng = row.coordinates_longitude != null
-      ? Number(row.coordinates_longitude)
-      : center?.lng;
-    const coordinates = lat != null && lng != null
-      ? new ProjectCoordinates(lat, lng)
+    const sanitizedZones = ProjectTransformer.sanitizeZones(
+      zoneCollection.zones.map((z) => z.toJSON() as InterventionZoneDTO),
+      (row.location as string | null) ?? undefined,
+    );
+    const zonePoints = sanitizedZones.flatMap((z) => z.coordinates ?? []);
+    const center = zonePoints.length > 0
+      ? {
+          lat: zonePoints.reduce((a, p) => a + p.lat, 0) / zonePoints.length,
+          lng: zonePoints.reduce((a, p) => a + p.lng, 0) / zonePoints.length,
+        }
       : undefined;
+    const rawLat = row.coordinates_latitude != null ? Number(row.coordinates_latitude) : undefined;
+    const rawLng = row.coordinates_longitude != null ? Number(row.coordinates_longitude) : undefined;
+    const explicit = ProjectTransformer.isUsableLatLng({ lat: rawLat, lng: rawLng })
+      ? { lat: rawLat as number, lng: rawLng as number }
+      : undefined;
+    const resolved = explicit ?? (ProjectTransformer.isUsableLatLng(center) ? center : undefined);
+    const coordinates = resolved
+      ? new ProjectCoordinates(resolved.lat, resolved.lng)
+      : undefined;
+
 
 
 
