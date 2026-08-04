@@ -5,6 +5,19 @@ import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
 import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
 
 export class SupabaseTaskAdapter implements ITaskRepository {
+  /** Legacy persistence enum → canonical domain enum. */
+  private toDomainStatus(status?: string): TaskStatus {
+    if (status === 'pending' || status === 'assigned') return 'not_started' as TaskStatus;
+    return (status || 'not_started') as TaskStatus;
+  }
+
+  /** Canonical domain enum → enum currently enforced by task_assignments. */
+  private toPersistenceStatus(status?: TaskStatus): string {
+    if (!status || status === ('not_started' as TaskStatus)) return 'pending';
+    if (status === ('delayed' as TaskStatus) || status === ('blocked' as TaskStatus)) return 'pending';
+    return status;
+  }
+
   private mapToEntity(data: any): Task {
     const assigneeId = data.assignee_id ?? data.assigned_to;
     return Task.create({
@@ -14,7 +27,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       stepId: data.step_id || undefined,
       title: data.title,
       description: data.description || undefined,
-      status: (data.status || 'not_started') as TaskStatus,
+      status: this.toDomainStatus(data.status),
       priority: (data.priority || 'medium') as TaskPriority,
       progress: data.progress || 0,
       startDate: data.start_date || undefined,
@@ -90,7 +103,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
         step_id: task.stepId || null,
         title: task.title,
         description: task.description,
-        status: task.status,
+        status: this.toPersistenceStatus(task.status),
         priority: task.priority,
         // Canonical assignment plus the transitional legacy mirror.
         assignee_id: assigneeId,
@@ -110,7 +123,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.status = this.toPersistenceStatus(data.status);
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
     if (data.startDate !== undefined) updateData.start_date = data.startDate;
