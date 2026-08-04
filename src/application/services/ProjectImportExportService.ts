@@ -34,6 +34,9 @@ import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
+import { mapDqeStatus } from '@/utils/dqeStatusMapper';
+import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType' | 'tasks'>> {
