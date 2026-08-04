@@ -5,7 +5,21 @@ import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
 import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
 
 export class SupabaseTaskAdapter implements ITaskRepository {
+  /** Legacy persistence enum → canonical domain enum. */
+  private toDomainStatus(status?: string): TaskStatus {
+    if (status === 'pending' || status === 'assigned') return 'not_started' as TaskStatus;
+    return (status || 'not_started') as TaskStatus;
+  }
+
+  /** Canonical domain enum → enum currently enforced by task_assignments. */
+  private toPersistenceStatus(status?: TaskStatus): string {
+    if (!status || status === ('not_started' as TaskStatus)) return 'pending';
+    if (status === ('delayed' as TaskStatus) || status === ('blocked' as TaskStatus)) return 'pending';
+    return status;
+  }
+
   private mapToEntity(data: any): Task {
+    const assigneeId = data.assignee_id ?? data.assigned_to;
     return Task.create({
       id: data.id,
       projectId: data.project_id,
@@ -13,7 +27,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       stepId: data.step_id || undefined,
       title: data.title,
       description: data.description || undefined,
-      status: (data.status || 'not_started') as TaskStatus,
+      status: this.toDomainStatus(data.status),
       priority: (data.priority || 'medium') as TaskPriority,
       progress: data.progress || 0,
       startDate: data.start_date || undefined,
@@ -21,7 +35,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       dueDate: data.due_date || undefined,
       estimatedDuration: data.estimated_duration || undefined,
       notes: data.notes || undefined,
-      assignedTo: data.assigned_to ? [data.assigned_to] : [],
+      assignedTo: assigneeId ? [assigneeId] : [],
       assignedById: data.assigned_by || undefined
     });
   }
@@ -80,6 +94,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async save(task: Task): Promise<void> {
+    const assigneeId = task.assignedTo[0] || null;
     await this.writeWithSchemaFallback(
       {
         id: task.id,
@@ -88,9 +103,11 @@ export class SupabaseTaskAdapter implements ITaskRepository {
         step_id: task.stepId || null,
         title: task.title,
         description: task.description,
-        status: task.status,
+        status: this.toPersistenceStatus(task.status),
         priority: task.priority,
-        assigned_to: task.assignedTo[0] || null,
+        // Canonical assignment plus the transitional legacy mirror.
+        assignee_id: assigneeId,
+        assigned_to: assigneeId,
         assigned_by: task.assignedBy || null,
         due_date: task.dueDate || null,
         start_date: task.startDate || null,
@@ -106,7 +123,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.status = this.toPersistenceStatus(data.status);
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
     if (data.startDate !== undefined) updateData.start_date = data.startDate;
@@ -116,7 +133,9 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if ((data as any).assignedTo !== undefined) {
       const list = (data as any).assignedTo as string[] | undefined;
-      updateData.assigned_to = list && list.length ? list[0] : null;
+      const assigneeId = list && list.length ? list[0] : null;
+      updateData.assignee_id = assigneeId;
+      updateData.assigned_to = assigneeId;
     }
 
     await this.writeWithSchemaFallback(updateData, (payload) =>
@@ -183,11 +202,21 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async findByAssignee(userId: string): Promise<Task[]> {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assigned_to', userId)
+      .eq('assignee_id', userId)
       .order('created_at', { ascending: false });
+
+    if (error?.code === 'PGRST204') {
+      const fallback = await supabase
+        .from('task_assignments')
+        .select('*')
+        .eq('assigned_to', userId)
+        .order('created_at', { ascending: false });
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
