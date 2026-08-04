@@ -82,7 +82,7 @@ export interface MockInspection {
   type: string;
   status: 'scheduled' | 'in_progress' | 'completed' | 'failed';
   scheduledDate: string;
-  completedDate: string | null;
+  completionDate: string | null;
   result: string | null;
   recommendations: string[];
   createdAt: string;
@@ -386,7 +386,7 @@ export const allInspectionsData: MockInspection[] = [
     type: "Inspection des fondations",
     status: "completed",
     scheduledDate: "2024-01-15T00:00:00Z",
-    completedDate: "2024-01-15T00:00:00Z",
+    completionDate: "2024-01-15T00:00:00Z",
     result: "Conforme aux normes de construction",
     recommendations: ["Continuer avec les travaux de superstructure", "Maintenir les dossiers de suivi"],
     createdAt: "2024-01-10T00:00:00Z",
@@ -399,7 +399,7 @@ export const allInspectionsData: MockInspection[] = [
     type: "Inspection de structure",
     status: "scheduled",
     scheduledDate: "2024-02-01T00:00:00Z",
-    completedDate: null,
+    completionDate: null,
     result: null,
     recommendations: [],
     createdAt: "2024-01-20T00:00:00Z",

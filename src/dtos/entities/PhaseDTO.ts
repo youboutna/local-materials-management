@@ -311,7 +311,7 @@ export interface PhaseMilestoneDTO {
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'overdue';
   targetDate?: string;
-  completedDate?: string;
+  completionDate?: string;
   progress?: number;
   deliverables?: string[];
   dependencies?: string[]; // Phase IDs only for DTO

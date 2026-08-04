@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority, MaterialUsageDTO } from '@/dtos/entities/MilestoneDTO';
+import { MaterialUsageDTO, MilestoneDTO, MilestonePriority, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 
 export interface CreateMilestoneData {
   project_id: string;
@@ -12,7 +12,7 @@ export interface CreateMilestoneData {
   title: string;
   description?: string;
   target_date: string;
-  completed_date?: string;
+  completion_date?: string;
   status?: string;
   priority?: MilestonePriority;
   type?: MilestoneType;
@@ -29,7 +29,7 @@ export interface UpdateMilestoneData {
   title?: string;
   description?: string;
   target_date?: string;
-  completed_date?: string;
+  completion_date?: string;
   status?: string;
   priority?: MilestonePriority;
   type?: MilestoneType;
@@ -86,7 +86,7 @@ export interface IMilestoneRepository {
   /**
    * Mark milestone as completed
    */
-  markAsCompleted(id: string, completedDate?: string): Promise<MilestoneDTO | null>;
+  markAsCompleted(id: string, completionDate?: string): Promise<MilestoneDTO | null>;
 
   /**
    * Get milestones by status

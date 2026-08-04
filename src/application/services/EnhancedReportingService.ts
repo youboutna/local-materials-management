@@ -186,7 +186,7 @@ export class EnhancedReportingService {
           title: milestone.title,
           description: milestone.description || '',
           targetDate: new Date(milestone.targetDate || Date.now()),
-          completedDate: milestone.completedDate ? new Date(milestone.completedDate) : undefined,
+          completionDate: milestone.completionDate ? new Date(milestone.completionDate) : undefined,
           status: this.mapMilestoneStatus(milestone.status || 'pending'),
           projectId: milestone.projectId,
           phaseId: milestone.phaseId || undefined,

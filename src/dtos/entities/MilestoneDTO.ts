@@ -76,7 +76,7 @@ export interface MilestoneDTO {
   earlyStartDate?: string;
   /** Latest finish date without delay (PERT backward pass) */
   lateFinishDate?: string;
-  completedDate?: string;
+  completionDate?: string;
   status: MilestoneStatus;
   /** Milestone type */
   type: MilestoneType;
@@ -124,7 +124,7 @@ export interface MilestoneSummaryDTO {
   id: string;
   title: string;
   targetDate: string;
-  completedDate?: string;
+  completionDate?: string;
   status: MilestoneStatus;
   type: MilestoneType;
   priority: MilestonePriority;

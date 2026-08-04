@@ -441,7 +441,7 @@ const ProjectExporter = () => {
           project: project.title,
           name: milestone.name || milestone.title,
           plannedDate: milestone.plannedDate || milestone.targetDate,
-          actualDate: milestone.actualDate || milestone.completedDate,
+          actualDate: milestone.actualDate || milestone.completionDate,
           status: milestone.status
         });
       });

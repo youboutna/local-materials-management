@@ -6,7 +6,6 @@
  */
 
 import { CheckpointDTO, CheckpointVerificationResultDTO } from '@/dtos/entities';
-import { VerificationItemDTO } from '@/dtos/entities';
 
 // Entités de domaine (à créer si nécessaire)
 interface CheckpointEntity {
@@ -31,7 +30,7 @@ interface CheckpointEntity {
   triggersNotification: boolean;
   notificationRecipients?: string[];
   targetDate?: string;
-  completedDate?: string;
+  completionDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,7 +65,7 @@ export class CheckpointDomainTransformer {
       triggers_notification: entity.triggersNotification,
       notification_recipients: entity.notificationRecipients,
       target_date: entity.targetDate,
-      completed_date: entity.completedDate,
+      completion_date: entity.completionDate,
       created_at: entity.createdAt,
       updated_at: entity.updatedAt
     };
@@ -98,7 +97,7 @@ export class CheckpointDomainTransformer {
       triggersNotification: dto.triggers_notification,
       notificationRecipients: dto.notification_recipients,
       targetDate: dto.target_date,
-      completedDate: dto.completed_date,
+      completionDate: dto.completion_date,
       createdAt: dto.created_at,
       updatedAt: dto.updated_at
     };

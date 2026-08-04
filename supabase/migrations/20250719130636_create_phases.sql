@@ -6,7 +6,15 @@
 CREATE TABLE IF NOT EXISTS btp.phases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES btp.projects(id) ON DELETE CASCADE,
-    phase_type TEXT NOT NULL DEFAULT 'standard' CHECK (phase_type IN ('standard', 'custom')),
+    phase_type TEXT NOT NULL DEFAULT 'standard' CHECK (phase_type IN (
+  'standard', 'custom',
+  'pre_construction', 'site_preparation', 'foundation', 
+  'framing', 'structural_work', 'finishing', 'post_construction', 'handover',
+  'etudes', 'travaux', 'reception', 'fabrication', 'installation',
+  'analyse', 'definition', 'validation', 'execution',
+  'pre_feasibility', 'design_dao', 'conception', 'preparation',
+  'design', 'construction', 'cloture', 'livraison', 'planification', 'planning'
+)),
     phase_name TEXT,
     stage_name TEXT,
     custom_phase_number INTEGER,

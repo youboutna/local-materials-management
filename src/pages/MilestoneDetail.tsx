@@ -1,14 +1,13 @@
-import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ExternalLink, Calendar, Flag } from 'lucide-react';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
 import { entityToasts } from '@/hooks/projects/projectToasts';
-import { useState } from 'react';
+import { ArrowLeft, Calendar, ExternalLink, Flag } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 const milestoneToasts = entityToasts('jalon');
 
@@ -77,7 +76,7 @@ const MilestoneDetail: React.FC = () => {
               />
               <Field
                 label="Date de complétion"
-                value={milestone.completedDate ? new Date(milestone.completedDate).toLocaleDateString('fr-FR') : null}
+                value={milestone.completionDate ? new Date(milestone.completionDate).toLocaleDateString('fr-FR') : null}
               />
               <Field label="Poids" value={`${(milestone.weight * 100).toFixed(0)} %`} />
               <Field label="Notes" value={milestone.notes} />

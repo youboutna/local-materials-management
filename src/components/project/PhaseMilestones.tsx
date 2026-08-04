@@ -1,22 +1,22 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Target, Plus, CheckCircle, Clock } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { ElectricSpinner } from "../loading-page";
-import { useMilestonesHex, Milestone, usePhaseInspectionsHex } from "@/hooks/hexagonal";
+import { Milestone, useMilestonesHex, usePhaseInspectionsHex } from "@/hooks/hexagonal";
 import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
+import { toast } from "@/hooks/use-toast";
+import { CalendarDays, CheckCircle, Clock, Plus, Target } from "lucide-react";
+import React, { useState } from "react";
+import { ElectricSpinner } from "../loading-page";
 
 interface PhaseMilestonesProps {
   phaseId: string;
@@ -322,12 +322,12 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                         Cible:{" "}
                         {new Date(milestone.targetDate).toLocaleDateString()}
                       </div>
-                      {milestone.completedDate && (
+                      {milestone.completionDate && (
                         <div className="flex items-center gap-1">
                           <CheckCircle className="h-4 w-4" />
                           Terminé:{" "}
                           {new Date(
-                            milestone.completedDate
+                            milestone.completionDate
                           ).toLocaleDateString()}
                         </div>
                       )}

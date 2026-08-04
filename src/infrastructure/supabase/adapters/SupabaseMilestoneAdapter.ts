@@ -5,9 +5,9 @@
  * Following hexagonal architecture principles
  */
 
+import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
+import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IMilestoneRepository, CreateMilestoneData, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
-import { MilestoneDTO, MilestoneStatus, MilestoneType, MilestonePriority } from '@/dtos/entities/MilestoneDTO';
 
 export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   /**
@@ -89,7 +89,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         .select('*')
         .eq('project_id', projectId)
         .eq('status', 'completed')
-        .order('completed_date', { ascending: true });
+        .order('completion_date', { ascending: true });
 
       if (error) {
         console.error('Error finding completed milestones by project ID:', error);
@@ -140,7 +140,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         title: data.title,
         description: data.description || null,
         target_date: data.target_date,
-        completed_date: data.completed_date || null,
+        completion_date: data.completion_date || null,
         status: data.status || 'pending',
         priority: data.priority || 'normal',
         type: data.type || 'checkpoint',
@@ -227,11 +227,11 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   /**
    * Mark milestone as completed
    */
-  async markAsCompleted(id: string, completedDate?: string): Promise<MilestoneDTO | null> {
+  async markAsCompleted(id: string, completionDate?: string): Promise<MilestoneDTO | null> {
     try {
       const updateData = {
         status: 'completed',
-        completed_date: completedDate || new Date().toISOString(),
+        completion_date: completionDate || new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
@@ -324,7 +324,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       title: data.title,
       description: data.description,
       targetDate: data.target_date,
-      completedDate: data.completed_date,
+      completionDate: data.completion_date,
       status: data.status,
       type: data.type || 'checkpoint', // Default to checkpoint if not specified
       priority: data.priority || 'normal', // Default to normal priority

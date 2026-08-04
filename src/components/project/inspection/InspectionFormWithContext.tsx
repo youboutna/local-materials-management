@@ -152,7 +152,7 @@ export function InspectionFormWithContext({
       if (milestoneContext?.milestoneId && status === 'approved') {
         await RepositoryFactory.getMilestoneRepository().update(milestoneContext.milestoneId, {
             status: 'completed',
-            completed_date: format(new Date(), 'yyyy-MM-dd')
+            completion_date: format(new Date(), 'yyyy-MM-dd')
         });
       }
 

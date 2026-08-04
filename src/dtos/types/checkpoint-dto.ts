@@ -94,7 +94,7 @@ export interface CheckpointDTO {
   
   // Dates
   target_date?: string;
-  completed_date?: string;
+  completion_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -232,7 +232,7 @@ export interface PhaseMilestoneDTO {
   
   // Progression
   target_date: string;
-  completed_date?: string;
+  completion_date?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'delayed';
   weight: number;
   

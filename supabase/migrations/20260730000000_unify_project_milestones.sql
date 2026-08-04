@@ -18,7 +18,7 @@ BEGIN
     IF to_regclass('btp.enhanced_project_milestones') IS NOT NULL THEN
         INSERT INTO btp.project_milestones (
                 id, project_id, title, description, phase_id,
-                target_date, completed_date, status, notes, weight,
+                target_date, completion_date, status, notes, weight,
                 dependencies, created_at, updated_at
         )
         SELECT

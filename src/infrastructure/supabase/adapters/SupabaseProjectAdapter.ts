@@ -245,7 +245,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       title: row.title ?? row.name ?? 'Jalon',
       description: row.description ?? '',
       targetDate: row.target_date ?? null,
-      completionDate: row.completion_date ?? row.completed_date ?? null,
+      completionDate: row.completion_date ?? row.completion_date ?? null,
       status: row.status ?? 'pending',
       progress: row.progress ?? row.progress_percentage ?? 0,
       externalRef: row.external_ref ?? undefined,

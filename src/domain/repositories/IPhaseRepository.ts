@@ -123,4 +123,9 @@ export interface IPhaseRepository {
    * Recalculate phase progress from steps/tasks
    */
   recalculateProgress(id: string): Promise<number>;
+
+    /**
+   * Find a phase by project ID and phase code
+   */
+  findByProjectIdAndCode(projectId: string, phaseCode: string): Promise<Phase | null>;
 }

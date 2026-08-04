@@ -12,21 +12,18 @@
  * - Rule #5: UI/DOMAIN separation (clean boundaries)
  */
 
-import { 
-  Milestone, 
-  MilestoneStatus, 
-  MilestoneDependency,
-  MilestoneDeliverable,
-  MilestoneConfiguration,
-  MaterialUsage
+import {
+    MaterialUsage,
+    Milestone,
+    MilestoneDeliverable,
+    MilestoneDependency,
+    MilestoneStatus
 } from '@/domain/entities/Milestone';
-import { 
-  MilestoneDTO, 
-  MilestoneFormDTO,
-  MilestoneTemplateDTO,
-  MilestoneStatus as DTOStatus,
-  MilestoneType,
-  MilestonePriority as DTOPriority
+import {
+    MilestonePriority as DTOPriority,
+    MilestoneStatus as DTOStatus,
+    MilestoneDTO,
+    MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
 import { UserRoleDTO } from '@/dtos/entities/UserDTO';
 
@@ -111,7 +108,7 @@ export class MilestoneTransformer {
       row.title as string,
       (row.description as string) || null,
       row.target_date as string || null,
-      row.completed_date as string || null,
+      row.completion_date as string || null,
       this.fromDatabaseStatus(row.status as string),
       (row.priority as DTOPriority) || 'normal',
       (row.progress_percentage as number) || null,
@@ -155,7 +152,7 @@ export class MilestoneTransformer {
       title: milestone.title,
       description: milestone.description,
       target_date: milestone.targetDate,
-      completed_date: milestone.completionDate,
+      completion_date: milestone.completionDate,
       status: this.toDatabaseStatus(milestone.status),
       progress_percentage: milestone.progressPercentage,
       dependencies: milestone.dependencies.map(dep => dep.description),
@@ -191,7 +188,7 @@ export class MilestoneTransformer {
       title: dto.title,
       description: dto.description,
       target_date: dto.targetDate,
-      completed_date: dto.completedDate,
+      completion_date: dto.completionDate,
       status: dto.status,
       type: dto.type,
       priority: dto.priority,
@@ -215,7 +212,7 @@ export class MilestoneTransformer {
       title: row.title as string,
       description: row.description as string | undefined,
       targetDate: row.target_date as string,
-      completedDate: row.completed_date as string | undefined,
+      completionDate: row.completion_date as string | undefined,
       status: (row.status as DTOStatus) || 'pending',
       type: (row.type as MilestoneType) || 'checkpoint',
       priority: (row.priority as DTOPriority) || 'normal',
@@ -360,7 +357,7 @@ export class MilestoneTransformer {
       dto.title,
       dto.description || null,
       dto.targetDate,
-      dto.completedDate || null,
+      dto.completionDate || null,
       this.fromDTOStatus(dto.status),
       dto.priority,
       null, // progressPercentage not in DTO
@@ -505,7 +502,7 @@ export class MilestoneTransformer {
       ...dto,
       // UI-specific properties
       formattedTargetDate: targetDate.toLocaleDateString(),
-      formattedCompletionDate: dto.completedDate ? new Date(dto.completedDate).toLocaleDateString() : null,
+      formattedCompletionDate: dto.completionDate ? new Date(dto.completionDate).toLocaleDateString() : null,
       daysRemaining: daysRemaining,
       isOverdue: daysRemaining < 0 && dto.status !== 'completed',
       isToday: daysRemaining === 0,

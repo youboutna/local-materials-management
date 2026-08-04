@@ -1,18 +1,64 @@
+
 /**
  * Phase Transformer - Hexagonal Architecture
  * Handles transformations between Phase domain entities and PhaseDTO
  * Following hexagonal architecture principles
  */
 
-import { Phase, PhaseStep, PhaseTask, PhaseResources, PhaseStatus, PhaseType, PhasePriority } from '@/domain/entities/Phase';
-import { 
-  PhaseDTO, 
-  PhaseStepDTO,
-  PhaseTaskDTO,
+import { ReferentialService } from '@/application/services/ReferentialService';
+import { Phase, PhasePriority, PhaseStatus, PhaseStep, PhaseTask, PhaseType } from '@/domain/entities/Phase';
+import {
+  PhasePriority as DTOPriority,
   PhaseStatus as DTOStatus,
   PhaseType as DTOType,
-  PhasePriority as DTOPriority
+  PhaseDTO,
+  PhaseStepDTO,
+  PhaseTaskDTO
 } from '@/dtos/entities/PhaseDTO';
+
+// =============================================================================
+// PHASE TYPE CONSTANTS
+// =============================================================================
+
+export const PHASE_TYPES = {
+  STANDARD: 'standard',
+  CUSTOM: 'custom',
+  
+  // Valeurs métier du projet
+  ETUDES: 'etudes',
+  TRAVAUX: 'travaux',
+  RECEPTION: 'reception',
+  FABRICATION: 'fabrication',
+  INSTALLATION: 'installation',
+  ANALYSE: 'analyse',
+  DEFINITION: 'definition',
+  VALIDATION: 'validation',
+  EXECUTION: 'execution',
+  PRE_FEASIBILITY: 'pre_feasibility',
+  DESIGN_DAO: 'design_dao',
+  CONCEPTION: 'conception',
+  PREPARATION: 'preparation',
+  DESIGN: 'design',
+  CONSTRUCTION: 'construction',
+  CLOTURE: 'cloture',
+  LIVRAISON: 'livraison',
+  PLANIFICATION: 'planification',
+  PLANNING: 'planning',
+  
+  // Valeurs originales de la migration project_phases
+  PRE_CONSTRUCTION: 'pre_construction',
+  SITE_PREPARATION: 'site_preparation',
+  FOUNDATION: 'foundation',
+  FRAMING: 'framing',
+  STRUCTURAL_WORK: 'structural_work',
+  FINISHING: 'finishing',
+  POST_CONSTRUCTION: 'post_construction',
+  HANDOVER: 'handover',
+} as const;
+
+export type PhaseTypeValue = typeof PHASE_TYPES[keyof typeof PHASE_TYPES];
+
+export const VALID_PHASE_TYPES: PhaseTypeValue[] = Object.values(PHASE_TYPES);
 
 export class PhaseTransformer {
   // =================== DB Row (snake_case) → Domain Entity ===================
@@ -141,22 +187,25 @@ export class PhaseTransformer {
     set('status', phase.status);
     set('progress', phase.progress);
     set('order_index', phase.orderIndex);
+    
     // `phase_type` est NOT NULL en base : on garantit toujours une valeur normalisée.
     out['phase_type'] = PhaseTransformer.normalizeDbPhaseType(
       phase.phaseType ??
         phase.phase_type ??
         phase.phaseCode ??
         (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode ??
-        phase.type,
+        phase.type ??
+        phase.name,
     );
-    // `phase_code` conserve le code métier source (ETUDES, TRAVAUX…) puisque
-    // `phase_type` est contraint à 'standard' | 'custom'.
+    
+    // `phase_code` conserve le code métier source (ETUDES, TRAVAUX…)
     set(
       'phase_code',
       phase.phaseCode ??
         (phase.customPhaseData as { phaseCode?: string } | undefined)?.phaseCode ??
         (typeof phase.phaseType === 'string' ? phase.phaseType : undefined) ??
-        (typeof phase.type === 'string' ? phase.type : undefined),
+        (typeof phase.type === 'string' ? phase.type : undefined) ??
+        (typeof phase.name === 'string' ? phase.name : undefined),
     );
 
     set('start_date', (phase.startDate as any) instanceof Date ? (phase.startDate as unknown as Date).toISOString() : phase.startDate);
@@ -328,15 +377,10 @@ export class PhaseTransformer {
    * une valeur snake_case minuscule acceptée par `project_phases.phase_type`.
    * Les codes métier restent conservés dans `phase_code` / `custom_phase_data`.
    */
-  /**
-   * Normalise `phase_type` vers les SEULES valeurs acceptées par la contrainte
-   * `project_phases_phase_type_check` : 'standard' | 'custom'.
-   * Le code métier d'origine (ETUDES, TRAVAUX, RECEPTION…) reste porté par
-   * `phase_code` / `custom_phase_data`, jamais par `phase_type`.
-   */
   static normalizeDbPhaseType(raw?: string | null): string {
     const value = (raw ?? '').toString().trim();
-    if (!value) return 'standard';
+    if (!value) return PHASE_TYPES.STANDARD;
+
     const normalized = value
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -344,22 +388,76 @@ export class PhaseTransformer {
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
 
-    if (normalized === 'custom') return 'custom';
-    if (normalized === 'standard') return 'standard';
+    // 1. Vérifier les valeurs spéciales
+    if (normalized === PHASE_TYPES.CUSTOM) return PHASE_TYPES.CUSTOM;
+    if (normalized === PHASE_TYPES.STANDARD) return PHASE_TYPES.STANDARD;
 
-    // Familles métier connues → phase standard
-    const standardFamilies = new Set([
-      'etude', 'etudes', 'conception', 'design',
-      'travaux', 'execution', 'construction', 'realisation',
-      'reception', 'cloture', 'livraison', 'handover',
-      'preparation', 'analyse', 'planification', 'planning',
-      'pre_construction', 'site_preparation', 'foundation', 'framing',
-      'structural_work', 'finishing', 'post_construction',
-    ]);
-    return standardFamilies.has(normalized) ? 'standard' : 'custom';
+    // 2. Mapper les codes métier vers les valeurs autorisées
+    const mapping: Record<string, string> = {
+      // Valeurs métier du projet
+      'analyse': PHASE_TYPES.ANALYSE,
+      'definition': PHASE_TYPES.DEFINITION,
+      'validation': PHASE_TYPES.VALIDATION,
+      'etude': PHASE_TYPES.ETUDES,
+      'etudes': PHASE_TYPES.ETUDES,
+      'travaux': PHASE_TYPES.TRAVAUX,
+      'reception': PHASE_TYPES.RECEPTION,
+      'fabrication': PHASE_TYPES.FABRICATION,
+      'installation': PHASE_TYPES.INSTALLATION,
+      'execution': PHASE_TYPES.EXECUTION,
+      'handover': PHASE_TYPES.HANDOVER,
+      'pre_feasibility': PHASE_TYPES.PRE_FEASIBILITY,
+      'design_dao': PHASE_TYPES.DESIGN_DAO,
+      'conception': PHASE_TYPES.CONCEPTION,
+      'preparation': PHASE_TYPES.PREPARATION,
+      'design': PHASE_TYPES.DESIGN,
+      'construction': PHASE_TYPES.CONSTRUCTION,
+      'cloture': PHASE_TYPES.CLOTURE,
+      'livraison': PHASE_TYPES.LIVRAISON,
+      'planification': PHASE_TYPES.PLANIFICATION,
+      'planning': PHASE_TYPES.PLANNING,
+      // Valeurs originales de la migration
+      'pre_construction': PHASE_TYPES.PRE_CONSTRUCTION,
+      'site_preparation': PHASE_TYPES.SITE_PREPARATION,
+      'foundation': PHASE_TYPES.FOUNDATION,
+      'framing': PHASE_TYPES.FRAMING,
+      'structural_work': PHASE_TYPES.STRUCTURAL_WORK,
+      'finishing': PHASE_TYPES.FINISHING,
+      'post_construction': PHASE_TYPES.POST_CONSTRUCTION,
+    };
+
+    if (mapping[normalized]) return mapping[normalized];
+
+    // 3. Vérifier si la valeur est déjà dans la liste des valeurs autorisées
+    if (VALID_PHASE_TYPES.includes(normalized as PhaseTypeValue)) return normalized;
+
+    // 4. Récupérer les codes depuis le ReferentialService
+    try {
+      const referentialService = ReferentialService.getInstance();
+      const referentials = referentialService.getAllReferentials();
+      
+      for (const ref of referentials) {
+        for (const phase of ref.phases) {
+          const code = typeof phase === 'string' ? phase : phase.code;
+          if (code && code.toLowerCase() === normalized) {
+            // Vérifier si le code est dans les valeurs autorisées
+            const lowerCode = code.toLowerCase();
+            if (VALID_PHASE_TYPES.includes(lowerCode as PhaseTypeValue)) {
+              return lowerCode;
+            }
+            // Sinon, le code métier devient custom
+            return PHASE_TYPES.CUSTOM;
+          }
+        }
+      }
+    } catch (error) {
+      // Silencieux : fallback standard
+      console.warn('[PhaseTransformer] ReferentialService unavailable, using fallback');
+    }
+
+    // 5. Fallback
+    return PHASE_TYPES.STANDARD;
   }
-
-
 
   // =================== Validation ===================
 

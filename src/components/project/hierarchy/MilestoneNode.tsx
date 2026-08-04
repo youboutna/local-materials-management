@@ -39,7 +39,7 @@ interface MilestoneNodeProps {
     type?: MilestoneType | string;
     status: string;
     due_date?: string;
-    completed_date?: string;
+    completion_date?: string;
     step_id?: string;
     phase_id?: string;
     documents?: any[];
@@ -238,10 +238,10 @@ export const MilestoneNode: React.FC<MilestoneNodeProps> = ({
                 <span>Échéance: {formatDate(milestone.due_date)}</span>
               </div>
             )}
-            {milestone.completed_date && (
+            {milestone.completion_date && (
               <div className="flex items-center gap-1 text-success">
                 <CheckCircle className="h-3 w-3" />
-                <span>Complété: {formatDate(milestone.completed_date)}</span>
+                <span>Complété: {formatDate(milestone.completion_date)}</span>
               </div>
             )}
             {milestone.documents && milestone.documents.length > 0 && (

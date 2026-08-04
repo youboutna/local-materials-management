@@ -114,7 +114,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
       weight: milestone.weight || 0,
       targetDate: milestone.targetDate || '',
       status: milestone.status || 'pending',
-      completedDate: milestone.completedDate,
+      completionDate: milestone.completionDate,
       phaseId: milestone.phaseId || '',
       progress: milestone.progress || 0,
     }));
@@ -142,7 +142,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
           id: milestone.id,
           title: milestone.title || '',
           weight: milestone.weight || 0,
-          completedDate: milestone.completedDate || new Date().toISOString(),
+          completionDate: milestone.completionDate || new Date().toISOString(),
           phaseId: milestone.phaseId,
           phaseEstimatedCost: phase?.estimatedCost || 0,
         });
@@ -150,7 +150,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     }
 
     return verifiedMilestones.sort((a, b) => 
-      new Date(a.completedDate).getTime() - new Date(b.completedDate).getTime()
+      new Date(a.completionDate).getTime() - new Date(b.completionDate).getTime()
     );
   }
 

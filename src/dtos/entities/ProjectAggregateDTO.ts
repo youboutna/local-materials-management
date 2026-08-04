@@ -233,7 +233,7 @@ export interface ProjectData {
     phase: ConstructionPhase;
     stage: ConstructionStage;
     targetDate: string;
-    completedDate?: string;
+    completionDate?: string;
     status: "pending" | "completed" | "overdue";
     notes?: string;
     weight: number;

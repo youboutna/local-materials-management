@@ -19,7 +19,7 @@ import {
     MilestoneTemplateDTO,
     MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
-  import type { UserRoleDTO } from '@/dtos/entities/UserDTO';
+import type { UserRoleDTO } from '@/dtos/entities/UserDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { differenceInDays } from 'date-fns';
@@ -127,7 +127,7 @@ export class MilestoneService {
       title: milestone.title,
       description: milestone.description,
       target_date: milestone.targetDate,
-      actual_completion_date: milestone.completedDate,
+      actual_completion_date: milestone.completionDate,
       status: milestone.status,
       progress: 0,
       priority: milestone.priority === 'normal' ? 'medium' : milestone.priority,
@@ -752,7 +752,7 @@ export class MilestoneService {
         title: updates.title,
         description: updates.description,
         target_date: updates.target_date,
-        completed_date: updates.actual_completion_date,
+        completion_date: updates.actual_completion_date,
         status: updates.status,
         priority: updates.priority === 'medium' ? 'normal' : updates.priority,
         type: updates.type,
@@ -1315,7 +1315,7 @@ export class MilestoneService {
       title: milestone.title,
       description: milestone.description,
       targetDate: milestone.target_date,
-      completedDate: milestone.actual_completion_date,
+      completionDate: milestone.actual_completion_date,
       completedate: milestone.actual_completion_date || '',
       status: milestone.status === 'cancelled' ? 'delayed' : milestone.status,
       type: milestone.type || 'checkpoint',

@@ -13,7 +13,7 @@ export interface Milestone {
   title: string;
   description?: string;
   targetDate: string;
-  completedDate?: string;
+  completionDate?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'delayed';
   weight: number;
   notes?: string;
@@ -42,7 +42,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
         title: m.title,
         description: m.description || undefined,
         targetDate: m.target_date || m.targetDate,
-        completedDate: m.completed_date || m.completedDate || undefined,
+        completionDate: m.completion_date || m.completionDate || undefined,
         status: (m.status || 'pending') as Milestone['status'],
         weight: m.weight ?? 0.1,
         notes: m.notes || undefined,
@@ -90,7 +90,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       if (updates.title) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.targetDate) updateData.target_date = updates.targetDate;
-      if (updates.completedDate !== undefined) updateData.completed_date = updates.completedDate;
+      if (updates.completionDate !== undefined) updateData.completion_date = updates.completionDate;
       if (updates.status) updateData.status = updates.status;
       if (updates.weight !== undefined) updateData.weight = updates.weight;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
@@ -109,7 +109,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     currentStatus: string
   ): Promise<boolean> => {
     const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-    const completedDate = newStatus === 'completed' 
+    const completionDate = newStatus === 'completed' 
       ? new Date().toISOString().split('T')[0] 
       : null;
 
@@ -117,7 +117,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       await milestoneRepo.update(id, {
         status: newStatus,
-        completed_date: completedDate || undefined,
+        completion_date: completionDate || undefined,
       });
 
       await fetchMilestones();

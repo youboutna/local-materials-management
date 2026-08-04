@@ -30,7 +30,7 @@ interface Milestone {
   type?: string;
   status: string;
   due_date?: string;
-  completed_date?: string;
+  completion_date?: string;
 }
 
 interface StepNodeProps {

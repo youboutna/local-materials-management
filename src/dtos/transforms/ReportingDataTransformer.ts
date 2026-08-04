@@ -3,11 +3,9 @@
  * Ensures proper UI->DB round-trip for reporting data following hexagonal architecture
  */
 
-import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
-import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 
 // Reporting-specific DTOs
@@ -25,7 +23,7 @@ export interface ConstructionMilestoneDTO {
   title: string;
   description: string;
   targetDate: Date;
-  completedDate?: Date;
+  completionDate?: Date;
   status: 'pending' | 'completed' | 'overdue';
   projectId: string;
   phaseId?: string;
@@ -193,7 +191,7 @@ export class ReportingDataTransformer {
       title: milestone.title || 'Untitled Milestone',
       description: milestone.description || '',
       targetDate: new Date(milestone.targetDate || Date.now()),
-      completedDate: milestone.completedDate ? new Date(milestone.completedDate) : undefined,
+      completionDate: milestone.completionDate ? new Date(milestone.completionDate) : undefined,
       status: milestone.status || 'pending',
       projectId: milestone.projectId || '',
       phaseId: milestone.phaseId,

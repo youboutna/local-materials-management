@@ -371,7 +371,7 @@ export class WorkflowOrchestrator {
       const milestoneDTO = MilestoneTransformer.toDTO(milestone);
       await this.milestoneRepository.update(milestone.id, {
         status: milestone.status as string,
-        completed_date: milestone.completionDate || undefined
+        completion_date: milestone.completionDate || undefined
       });
     } catch (error) {
       console.error('Failed to update milestone in repository:', error);

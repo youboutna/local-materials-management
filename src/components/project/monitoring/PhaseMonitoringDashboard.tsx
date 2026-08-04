@@ -4,39 +4,36 @@
  * Utilise les hooks hexagonaux pour les données
  */
 
-import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { 
-  CheckSquare, 
-  ClipboardCheck, 
-  DollarSign, 
-  Target,
-  Plus,
-  TrendingUp,
-  AlertTriangle,
-  Eye,
-  Play,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO } from '@/dtos/types/milestone-dto';
-import { MilestoneCheckpointActions, MilestoneActionContext } from '@/components/project/milestones';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { InspectionFormWithContext } from '@/components/project/inspection';
+import { MilestoneActionContext, MilestoneCheckpointActions } from '@/components/project/milestones';
 import { PaymentFormWithContext } from '@/components/project/payment';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MilestoneSummaryDTO } from '@/dtos/types/milestone-dto';
 import { usePhaseMonitoringSummaryHex } from '@/hooks/hexagonal';
+import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    CheckSquare,
+    ClipboardCheck,
+    Clock,
+    DollarSign,
+    Eye,
+    Plus,
+    Target,
+    TrendingUp
+} from 'lucide-react';
+import React, { useState } from 'react';
 
 // Import existing components
-import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhasePayments from '@/components/project/PhasePayments';
+import PhaseTasks from '@/components/project/PhaseTasks';
 
 interface PhaseMonitoringDashboardProps {
   phaseId: string;
@@ -65,7 +62,7 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
         id: m.id, title: m.title, target_date: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'medium',
         weight: m.weight || 0.2, phase_id: m.phaseId, phase_name: undefined,
-        completed_date: m.completedDate, is_critical: m.priority === 'critical',
+        completion_date: m.completionDate, is_critical: m.priority === 'critical',
         is_from_template: false,
       })) as MilestoneSummaryDTO[];
     },

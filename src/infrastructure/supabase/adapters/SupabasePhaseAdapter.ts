@@ -5,11 +5,10 @@
  * Handles both regular phases and construction phases with semantic logic
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { Phase, PhaseStep, PhaseTask, PhaseStatus } from '@/domain/entities';
+import { Phase, PhaseStatus, PhaseStep, PhaseTask } from '@/domain/entities';
 import { IPhaseRepository } from '@/domain/repositories';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
-import { PhaseDTO, CreatePhaseDTO, UpdatePhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 // Define PhaseMetrics interface locally since it's not in domain entities
 interface PhaseMetrics {
@@ -110,19 +109,19 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     push(original);
     push('standard');
     push('custom');
-    push(null); // omission de la colonne (si nullable)
+    //push(null); // omission de la colonne (si nullable)
 
     let lastError: any = null;
     for (const candidate of order) {
       const payload = { ...row };
       if (candidate === null) delete payload.phase_type;
       else payload.phase_type = candidate;
-
       const { data, error } = await run(payload);
       if (!error) {
         SupabasePhaseAdapter.acceptedPhaseType = candidate;
         return data;
       }
+      console.log(`Phase type "${candidate}" rejected: ${error.message}`);
       lastError = error;
       const isPhaseTypeIssue =
         error.code === '23514' ||
@@ -449,4 +448,53 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     if (error) throw error;
     return data.map(d => PhaseTransformer.fromDTO(d));
   }
+
+
+
+async findByProjectIdAndCode(
+  projectId: string,
+  phaseCode: string
+): Promise<Phase | null> {
+  try {
+    // Récupérer toutes les phases du projet
+    const phases = await this.findByProjectId(projectId);
+    
+    // Filtrer par phase_code dans custom_phase_data
+    return phases.find((phase) => {
+      const customData = phase.customPhaseData as { phaseCode?: string } | null;
+      return customData?.phaseCode === phaseCode;
+    }) ?? null;
+    
+  } catch (error) {
+    console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
+    return null;
+  }
 }
+
+// OU requête SQL directe (plus performant)
+async findByProjectIdAndCode(
+  projectId: string,
+  phaseCode: string
+): Promise<Phase | null> {
+  try {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('phase_code', phaseCode)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
+      return null;
+    }
+
+    return data ? PhaseTransformer.fromDB(data) : null;
+    
+  } catch (error) {
+    console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
+    return null;
+  }
+}
+}
+

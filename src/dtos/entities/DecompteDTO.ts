@@ -170,7 +170,7 @@ export interface VerifiedMilestone {
   id: string;
   title: string;
   weight: number;
-  completedDate: string;
+  completionDate: string;
   amount: number;
   phaseId?: string;
   phaseEstimatedCost?: number;

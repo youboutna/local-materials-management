@@ -3,46 +3,45 @@
  * Actions: déclencher inspection, programmer paiement, naviguer vers services
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { 
-  Target,
-  ClipboardCheck, 
-  DollarSign, 
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  ExternalLink,
-  Play,
-  CalendarPlus,
-  ArrowRight,
-  ShieldCheck,
-  Package,
-  Flag,
-  Eye,
-  TrendingUp,
-  TrendingDown
-} from 'lucide-react';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { MilestoneSummaryDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
-import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+    AlertTriangle,
+    ArrowRight,
+    CalendarPlus,
+    CheckCircle,
+    ClipboardCheck,
+    Clock,
+    DollarSign,
+    ExternalLink,
+    Flag,
+    Package,
+    Play,
+    ShieldCheck,
+    Target,
+    TrendingDown,
+    TrendingUp
+} from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface ActionableProjectMilestonesProps {
   projectId: string;
@@ -83,7 +82,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
         id: m.id, title: m.title, targetDate: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'normal',
         weight: m.weight || 0.2, phaseId: m.phaseId, phaseName: undefined,
-        completedDate: m.completedDate, isCritical: m.priority === 'critical',
+        completionDate: m.completionDate, isCritical: m.priority === 'critical',
         isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },

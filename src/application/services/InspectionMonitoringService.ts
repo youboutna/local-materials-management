@@ -19,7 +19,7 @@ export interface InspectionData {
   inspectionType: string;
   status?: InspectionStatus;
   scheduledDate: string;
-  completedDate?: string;
+  completionDate?: string;
   location: string;
   findings?: {
     photos: string[];
@@ -31,7 +31,7 @@ export interface InspectionData {
 
 export interface InspectionUpdates {
   status: InspectionStatus;
-  completedDate?: string;
+  completionDate?: string;
   notes?: string;
   inspectorId?: string;
   findings?: InspectionFinding[];

@@ -4506,7 +4506,7 @@ export type Database = {
       }
       enhanced_project_milestones: {
         Row: {
-          completed_date: string | null
+          completion_date: string | null
           created_at: string | null
           dependencies: Json | null
           description: string | null
@@ -4521,7 +4521,7 @@ export type Database = {
           weight: number | null
         }
         Insert: {
-          completed_date?: string | null
+          completion_date?: string | null
           created_at?: string | null
           dependencies?: Json | null
           description?: string | null
@@ -4536,7 +4536,7 @@ export type Database = {
           weight?: number | null
         }
         Update: {
-          completed_date?: string | null
+          completion_date?: string | null
           created_at?: string | null
           dependencies?: Json | null
           description?: string | null

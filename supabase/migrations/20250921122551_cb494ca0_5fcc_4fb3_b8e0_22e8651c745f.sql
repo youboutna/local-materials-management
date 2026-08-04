@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS btp.enhanced_project_milestones (
   project_id UUID NOT NULL REFERENCES btp.projects(id) ON DELETE CASCADE,
   phase_id UUID REFERENCES btp.project_phases(id) ON DELETE SET NULL,
   target_date DATE NOT NULL,
-  completed_date DATE,
+  completion_date DATE,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'delayed')),
   weight DECIMAL(3,2) DEFAULT 0.1,
   notes TEXT,

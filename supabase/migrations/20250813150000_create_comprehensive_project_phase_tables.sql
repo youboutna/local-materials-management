@@ -10,7 +10,15 @@ CREATE SCHEMA IF NOT EXISTS btp;
 CREATE TABLE IF NOT EXISTS btp.project_phases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL,
-    phase_type TEXT NOT NULL CHECK (phase_type IN ('pre_construction', 'site_preparation', 'foundation', 'framing', 'structural_work', 'finishing', 'post_construction', 'handover')),
+    phase_type TEXT NOT NULL DEFAULT 'standard' CHECK (phase_type IN (
+  'standard', 'custom',
+  'pre_construction', 'site_preparation', 'foundation', 
+  'framing', 'structural_work', 'finishing', 'post_construction', 'handover',
+  'etudes', 'travaux', 'reception', 'fabrication', 'installation',
+  'analyse', 'definition', 'validation', 'execution',
+  'pre_feasibility', 'design_dao', 'conception', 'preparation',
+  'design', 'construction', 'cloture', 'livraison', 'planification', 'planning'
+)),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     estimated_duration INTEGER NOT NULL,
@@ -26,10 +34,18 @@ CREATE TABLE IF NOT EXISTS btp.project_milestones (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL,
     title TEXT NOT NULL,
-    phase_type TEXT NOT NULL CHECK (phase_type IN ('pre_construction', 'site_preparation', 'foundation', 'framing', 'structural_work', 'finishing', 'post_construction', 'handover')),
+    phase_type TEXT NOT NULL DEFAULT 'standard'  CHECK (phase_type IN (
+  'standard', 'custom',
+  'pre_construction', 'site_preparation', 'foundation', 
+  'framing', 'structural_work', 'finishing', 'post_construction', 'handover',
+  'etudes', 'travaux', 'reception', 'fabrication', 'installation',
+  'analyse', 'definition', 'validation', 'execution',
+  'pre_feasibility', 'design_dao', 'conception', 'preparation',
+  'design', 'construction', 'cloture', 'livraison', 'planification', 'planning'
+)),
     stage_type TEXT NOT NULL CHECK (stage_type IN ('planning_design', 'permits_approvals', 'site_clearing', 'excavation', 'foundation_work', 'structural_framing', 'roofing', 'electrical_plumbing', 'interior_finishing', 'exterior_finishing', 'final_inspection', 'handover_complete')),
     target_date DATE NOT NULL,
-    completed_date DATE,
+    completion_date DATE,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'overdue')),
     notes TEXT,
     weight DECIMAL(4,3) NOT NULL DEFAULT 0.0,

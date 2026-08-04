@@ -5,63 +5,62 @@
  * Intégration des formulaires contextuels pour inspection et paiement
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { 
-  CheckSquare, 
-  ClipboardCheck, 
-  DollarSign, 
-  Target,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Eye,
-  CheckCircle,
-  Clock,
-  Calendar,
-  ExternalLink,
-  ArrowRight,
-  Layers,
-  GitBranch,
-  List,
-  ShieldCheck,
-  Package,
-  Flag,
-  PlusCircle
-} from 'lucide-react';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES, MilestoneProgressDTO } from '@/dtos/entities/MilestoneDTO';
-import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { getDefaultPhaseMilestones, getDefaultProjectMilestones } from '@/config/referentials/milestones.referential';
+import { getDefaultPhaseMilestones } from '@/config/referentials/milestones.referential';
+import { MILESTONE_TYPES, MilestoneSummaryDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 import { usePhaseMonitoringSummaryHex } from '@/hooks/hexagonal';
+import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+    AlertTriangle,
+    ArrowRight,
+    Calendar,
+    CheckCircle,
+    CheckSquare,
+    ClipboardCheck,
+    Clock,
+    DollarSign,
+    ExternalLink,
+    Eye,
+    Flag,
+    GitBranch,
+    Layers,
+    List,
+    Package,
+    PlusCircle,
+    ShieldCheck,
+    Target,
+    TrendingDown,
+    TrendingUp
+} from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Import existing components for detailed views
-import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhasePayments from '@/components/project/PhasePayments';
+import PhaseTasks from '@/components/project/PhaseTasks';
 
 // Import context-aware forms
 import { InspectionFormWithContext } from '@/components/project/inspection';
-import { PaymentFormWithContext } from '@/components/project/payment';
 import { MilestoneActionContext } from '@/components/project/milestones';
+import { PaymentFormWithContext } from '@/components/project/payment';
 
 interface UnifiedPhaseMonitoringProps {
   phaseId: string;
@@ -119,7 +118,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
         id: m.id, title: m.title, targetDate: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'normal',
         weight: m.weight || 0.2, phaseId: m.phaseId, phaseName: undefined,
-        completedDate: m.completedDate, isCritical: m.priority === 'critical',
+        completionDate: m.completionDate, isCritical: m.priority === 'critical',
         isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },

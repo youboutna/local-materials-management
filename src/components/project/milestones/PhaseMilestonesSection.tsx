@@ -1,51 +1,50 @@
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
+import {
+    MILESTONE_PRIORITIES,
+    MILESTONE_TYPES,
+    MilestoneDTO,
+    MilestonePriority,
+    MilestoneProgressDTO,
+    MilestoneType
+} from '@/dtos/entities/MilestoneDTO';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { getMilestoneService } from '@/application/services/MilestoneService';
-import {
-  MILESTONE_PRIORITIES,
-  MILESTONE_TYPES,
-  MilestoneDTO,
-  MilestonePriority,
-  MilestoneProgressDTO,
-  MilestoneType
-} from '@/dtos/entities/MilestoneDTO';
 import { format, isBefore, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
-  AlertTriangle,
-  CheckCircle,
-  CheckSquare,
-  Clock,
-  Edit,
-  Flag,
-  Package,
-  Plus,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Trash2
+    AlertTriangle,
+    CheckCircle,
+    CheckSquare,
+    Clock,
+    Edit,
+    Flag,
+    Package,
+    Plus,
+    ShieldCheck,
+    Sparkles,
+    Target,
+    Trash2
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -472,9 +471,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                           <span>
                             Cible: {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                           </span>
-                          {milestone.completedDate && (
+                          {milestone.completionDate && (
                             <span className="text-green-600">
-                              ✓ {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
+                              ✓ {format(parseISO(milestone.completionDate), 'd MMM', { locale: fr })}
                             </span>
                           )}
                           <Badge variant="outline" className="text-xs">

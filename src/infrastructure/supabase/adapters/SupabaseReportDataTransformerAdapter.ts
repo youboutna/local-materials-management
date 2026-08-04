@@ -4,23 +4,21 @@
  * Implements the IReportDataTransformerRepository using Supabase
  * Following hexagonal architecture: Adapter → Entity → Transformer → DTO
  */
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
-import { 
-  ProjectReportDTO,
-  EnhancedPhaseDTO,
-  ConstructionMilestoneDTO,
-  ProjectAnalyticsDTO,
-  FinancialMetricsDTO,
-  RiskAssessmentDTO
-} from '@/dtos/entities/ReportDTO';
-import { RiskDTO, RiskCategory, RiskStatus, RiskLevel } from '@/dtos/entities/RiskDTO';
-import { ReportCalculations } from '@/utils/reportCalculations';
-import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
-import { ProjectData, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { Database } from '@/integrations/supabase/types';
 import { Project } from '@/domain/entities/Project';
-import { ProjectTransformer } from '@/dtos/transforms';
+import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import {
+    ConstructionMilestoneDTO,
+    EnhancedPhaseDTO,
+    FinancialMetricsDTO,
+    ProjectAnalyticsDTO,
+    ProjectReportDTO,
+    RiskAssessmentDTO
+} from '@/dtos/entities/ReportDTO';
+import { RiskCategory, RiskDTO, RiskLevel, RiskStatus } from '@/dtos/entities/RiskDTO';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Database } from '@/integrations/supabase/types';
+import { ReportCalculations } from '@/utils/reportCalculations';
 
 // Types officiels Supabase pour les tables utilisées
 type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
@@ -212,7 +210,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
           title: milestone.title,
           description: milestone.description || '',
           targetDate: new Date(milestone.target_date || Date.now()),
-          completedDate: milestone.completed_date ? new Date(milestone.completed_date) : undefined,
+          completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
           status: this.mapMilestoneStatus(milestone.status || 'pending'),
           projectId: milestone.project_id,
           phaseId: milestone.phase_id || undefined,
@@ -239,7 +237,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
         title: milestone.title,
         description: milestone.description || '',
         targetDate: new Date(milestone.target_date || Date.now()),
-        completedDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
+        completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
         status: this.mapMilestoneStatus(milestone.status || 'pending'),
         projectId: milestone.project_id,
         phaseId: milestone.phase_id || undefined,

@@ -47,7 +47,7 @@ export interface ConstructionMilestoneDTO {
   title: string;
   description: string;
   targetDate: Date;
-  completedDate?: Date;
+  completionDate?: Date;
   status: 'pending' | 'in_progress' | 'completed' | 'overdue';
   projectId: string;
   phaseId?: string;

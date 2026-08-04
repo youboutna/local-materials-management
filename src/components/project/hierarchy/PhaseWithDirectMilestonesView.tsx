@@ -37,7 +37,7 @@ interface Milestone {
   type?: MilestoneType | string;
   status: string;
   due_date?: string;
-  completed_date?: string;
+  completion_date?: string;
   documents?: unknown[];
 }
 

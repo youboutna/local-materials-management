@@ -4,44 +4,43 @@
  * Intègre Timeline, GANTT et PERT en vue unifiée
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Target, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  Calendar,
-  BarChart3,
-  GitBranch,
-  List,
-  TrendingUp,
-  TrendingDown,
-  ChevronDown,
-  ChevronUp,
-  Diamond,
-  ShieldCheck,
-  Package,
-  Flag,
-  CheckSquare,
-  Plus
-} from 'lucide-react';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { 
-  MilestoneSummaryDTO, 
-  MilestoneProgressDTO,
-  MilestoneType,
-  MILESTONE_TYPES
+import { getDefaultPhaseMilestones, getDefaultProjectMilestones } from '@/config/referentials/milestones.referential';
+import {
+    MILESTONE_TYPES,
+    MilestoneProgressDTO,
+    MilestoneSummaryDTO,
+    MilestoneType
 } from '@/dtos/types/milestone-dto';
-import { getDefaultProjectMilestones, getDefaultPhaseMilestones } from '@/config/referentials/milestones.referential';
-import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+    AlertTriangle,
+    BarChart3,
+    Calendar,
+    CheckCircle,
+    CheckSquare,
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    Diamond,
+    Flag,
+    GitBranch,
+    List,
+    Package,
+    Plus,
+    ShieldCheck,
+    Target,
+    TrendingDown,
+    TrendingUp
+} from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 // View modes for the component
 type ViewMode = 'timeline' | 'list' | 'gantt';
@@ -83,7 +82,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
         id: m.id, title: m.title, target_date: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'medium',
         weight: m.weight || 0.2, phase_id: m.phaseId, phase_name: undefined,
-        completed_date: m.completedDate, is_critical: m.priority === 'critical',
+        completion_date: m.completionDate, is_critical: m.priority === 'critical',
         is_from_template: false,
       }));
       const progressData: MilestoneProgressDTO = {
@@ -486,10 +485,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                             <span>
                               {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
                             </span>
-                            {milestone.completed_date && (
+                            {milestone.completion_date && (
                               <>
                                 <span className="text-success">
-                                  ✓ {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
+                                  ✓ {format(parseISO(milestone.completion_date), 'd MMM', { locale: fr })}
                                 </span>
                               </>
                             )}

@@ -173,7 +173,7 @@ export class AutomaticDecompteCalculator {
           title: m.title,
           weight: m.weight,
           amount: m.amount,
-          verified_at: m.completedDate,
+          verified_at: m.completionDate,
         })),
         progress_at_decompte: Math.round(overallProgress * 100),
         calculated_at: now,
@@ -270,7 +270,7 @@ export class AutomaticDecompteCalculator {
             title: m.title,
             weight: m.weight || 0.1,
             amount: (phaseData.estimatedCost * (m.weight || 0.1)),
-            verified_at: m.completedDate || now,
+            verified_at: m.completionDate || now,
           })),
         progress_at_decompte: phaseData.progress,
         calculated_at: now,
@@ -386,7 +386,7 @@ export class AutomaticDecompteCalculator {
           id: m.id,
           title: m.title,
           weight: m.weight ?? 0.1,
-          completedDate: m.completedDate ?? new Date().toISOString(),
+          completionDate: m.completionDate ?? new Date().toISOString(),
           amount: (m.weight ?? 0.1) * 10000, // Approximate calculation
           phaseId: m.phaseId ?? '',
           phaseEstimatedCost: 0

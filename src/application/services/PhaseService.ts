@@ -365,4 +365,102 @@ export class PhaseService {
   private calculatePhaseDuration(startDate: string, endDate: string): number {
     return 30;
   }
+
+  // ============= Import/Upsert Methods =============
+
+  /**
+   * Récupère une phase par project_id et phase_code
+   * Utile pour l'import/upsert
+   */
+  async getPhaseByProjectAndCode(
+    projectId: string,
+    phaseCode: string
+  ): Promise<Phase | null> {
+    try {
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      if (!phaseCode) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase code is required');
+      }
+
+      // Récupérer toutes les phases du projet
+      const phases = await this.repository.findByProjectId(projectId);
+      
+      // Chercher par phase_code dans customPhaseData
+      return phases.find((phase) => {
+        const customData = phase.customPhaseData as { phaseCode?: string } | null;
+        return customData?.phaseCode === phaseCode;
+      }) ?? null;
+
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        `Failed to get phase by project and code: ${formatUnknownError(error)}`
+      );
+    }
+  }
+
+  /**
+   * Upsert phase - crée ou met à jour une phase
+   * Vérifie l'existence par (projectId, phaseCode) ou (projectId, name)
+   */
+  async upsertPhase(
+    phaseData: Partial<PhaseDTO> & { phaseCode?: string; name: string },
+    projectId: string
+  ): Promise<Phase> {
+    try {
+      if (!phaseData.name) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase name is required');
+      }
+
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      // 1. Chercher la phase existante par code
+      let existingPhase: Phase | null = null;
+      
+      if (phaseData.phaseCode) {
+        existingPhase = await this.getPhaseByProjectAndCode(projectId, phaseData.phaseCode);
+      }
+
+      // 2. Si non trouvée par code, chercher par nom
+      if (!existingPhase && phaseData.name) {
+        const phases = await this.repository.findByProjectId(projectId);
+        existingPhase = phases.find((phase) => phase.phaseName === phaseData.name) ?? null;
+      }
+
+      // 3. Générer un phase_code si absent
+      const phaseCode = phaseData.phaseCode || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+      const finalData: Partial<PhaseDTO> = {
+        ...phaseData,
+        phaseCode: phaseCode,
+        customPhaseData: {
+          ...(phaseData.customPhaseData as Record<string, unknown> || {}),
+          phaseCode: phaseCode
+        }
+      };
+
+      if (existingPhase) {
+        // Mise à jour
+        const updatedPhase = PhaseTransformer.updatePhase(existingPhase, finalData);
+        const savedPhase = await this.repository.update(existingPhase.id, updatedPhase);
+        return savedPhase;
+      } else {
+        // Création
+        return await this.createPhase({
+          ...finalData,
+          projectId,
+        } as PhaseDTO, projectId);
+      }
+
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to upsert phase: ${formatUnknownError(error)}`);
+    }
+  }
 }

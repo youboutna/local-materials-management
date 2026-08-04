@@ -6,12 +6,9 @@
  */
 
 import {
-  AutomaticDecompteDTO,
-  DecompteLineDTO,
-  DecompteStatus,
-  PaymentType,
+    AutomaticDecompteDTO,
+    MilestoneDTO
 } from '@/dtos/entities';
-import { MilestoneDTO } from '@/dtos/entities';
 
 // Local definition for business rules
 export interface MauritaniaBusinessRulesDTO {
@@ -45,7 +42,7 @@ export interface VerifiedMilestone {
   id: string;
   title: string;
   weight: number;
-  completedDate: string;
+  completionDate: string;
   phaseId: string;
   phaseEstimatedCost: number;
 }

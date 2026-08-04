@@ -23,7 +23,7 @@ import { TaskPriority, TaskService, TaskStatus } from '@/application/services/Ta
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
-import { PhasePriority, PhaseStatus, PhaseType, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhasePriority, PhaseStatus, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 import type {
@@ -441,7 +441,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return dto;
   }
 
-  /** Persiste les relations après la création du projet, en conservant l’ordre des clés étrangères. */
+  /** Persiste les relations après la création du projet, en conservant l'ordre des clés étrangères. */
   private async importRelations(
     projectId: string,
     row: ProjectImportRow,
@@ -451,27 +451,36 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
   ): Promise<void> {
     /** Résolution des identifiants locaux de phases (ex: "phase-1-dream") vers les UUID persistés. */
     const phaseIdMap = new Map<string, string>();
+    
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
         : undefined;
-      const phases = await this.phaseService.getPhasesByProject(projectId);
-      const existingPhase = phases.find((candidate) => {
-        const phaseRecord = candidate as unknown as PhaseDTO & { phaseCode?: string; phase_code?: string };
-        return phaseRecord.phaseCode === phase.code ||
-          phaseRecord.phase_code === phase.code ||
-          phaseRecord.name === phase.name;
-      });
-      const phaseData = {
+      
+      // Récupérer toutes les phases du projet
+      const existingPhases = await this.phaseService.getPhasesByProject(projectId);
+      
+      // Chercher par phase_code (dans customPhaseData) ou par nom
+      const existingPhase = existingPhases.find((candidate) => {
+        const customData = candidate.customPhaseData as { phaseCode?: string } | null;
+        return (phase.code && customData?.phaseCode === phase.code) ||
+               (phase.name && candidate.phaseName === phase.name);
+      }) ?? null;
+
+      // Générer un phase_code unique si absent
+      const phaseCode = phase.code || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+      // Normaliser le type de phase
+      const normalizedType = PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name);
+
+      const phaseData: Partial<PhaseDTO> = {
         id: existingPhase?.id ?? '',
         projectId,
         name: phase.name,
-        phaseCode: phase.code,
-        // phase_type normalisé (respecte les contraintes CHECK de project_phases)
-        phaseType: PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name),
+        phaseCode: phaseCode,
+        type: normalizedType as any,
         externalRef: phase.externalRef ?? (phase.code ? `${this.getExternalRef(row) ?? projectId}:${phase.code}` : undefined),
         description: phase.description,
-        type: PhaseType.STRUCTURAL,
         status: PhaseStatus.PENDING,
         priority: PhasePriority.MEDIUM,
         progress: phase.progress ?? 0,
@@ -479,43 +488,57 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         startDate: phase.startDate,
         endDate: phase.endDate,
         estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
-        customPhaseData: phaseConfig?.dqeMapping ? { dqeMapping: phaseConfig.dqeMapping } : undefined,
+        customPhaseData: phaseConfig?.dqeMapping 
+          ? { dqeMapping: phaseConfig.dqeMapping, phaseCode: phaseCode } 
+          : { phaseCode: phaseCode },
         createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      } as PhaseDTO & { phaseType: string };
+      };
 
-      const createdPhase = existingPhase
-        ? await this.phaseService.updatePhase(existingPhase.id, phaseData)
-        : await this.phaseService.createPhase(phaseData, projectId);
+      // Créer ou mettre à jour
+      let createdPhase;
+      if (existingPhase) {
+        createdPhase = await this.phaseService.updatePhase(existingPhase.id, phaseData);
+      } else {
+        createdPhase = await this.phaseService.createPhase(phaseData as PhaseDTO, projectId);
+      }
       details.phases += 1;
+      
       for (const key of [phase.id, phase.code, phase.name, phase.externalRef]) {
         if (key) phaseIdMap.set(key, createdPhase.id);
       }
 
-
+      // Milestones
       for (const milestone of phase.milestones ?? []) {
-        const milestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
-        const existingMilestone = milestones.find((candidate) => candidate.title === (milestone.title ?? milestone.name));
+        const existingMilestones = await this.milestoneService.getPhaseMilestones(projectId, createdPhase.id);
+        const existingMilestone = existingMilestones.find((candidate) => 
+          candidate.title === (milestone.title ?? milestone.name)
+        );
         const milestoneData = {
           project_id: projectId,
           phase_id: createdPhase.id,
           title: milestone.title ?? milestone.name ?? 'Jalon importé',
           description: milestone.description,
           target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
+          completion_date: milestone.completionDate,
           status: this.normalizeMilestoneStatus(milestone.status),
-          progress: milestone.progress ?? milestone.progressPercent,
+          progress_percentage: milestone.progress ?? milestone.progressPercent,
           external_ref: milestone.externalRef,
         };
-        if (existingMilestone) await this.milestoneService.updateMilestone(existingMilestone.id, milestoneData);
-        else await this.milestoneService.createMilestone(milestoneData);
+        if (existingMilestone) {
+          await this.milestoneService.updateMilestone(existingMilestone.id, milestoneData);
+        } else {
+          await this.milestoneService.createMilestone(milestoneData);
+        }
         details.milestones += 1;
       }
 
+      // Tâches de la phase
       for (const task of phase.tasks ?? []) {
         await this.upsertTask(projectId, createdPhase.id, task, details, suppliers);
       }
 
-
+      // DQE Lines de la phase
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
         btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
@@ -526,8 +549,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       await this.upsertDqeLines(projectId, createdPhase.id, dqeLines, details);
     }
 
-    // The fixture also carries a project-level DQE list. Reuse the phase
-    // association when possible; the external_ref/code makes this idempotent.
+    // DQE Lines au niveau projet
     for (const line of row.dqeLines ?? []) {
       const lineCode = this.getDqeCode(line);
       const phase = (row.phases ?? []).find((candidate) =>
@@ -549,12 +571,13 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
     }
 
-    // Tâches déclarées au niveau projet : rattachées à leur phase via l'id local.
+    // Tâches au niveau projet
     for (const task of row.tasks ?? []) {
       const phaseId = task.phaseId ? phaseIdMap.get(task.phaseId) : undefined;
       await this.upsertTask(projectId, phaseId, task, details, suppliers);
     }
 
+    // Stakeholders
     for (const stakeholder of row.stakeholders ?? []) {
       const organizationRef = stakeholder.organizationId;
       const supplierId = this.resolveReference(stakeholder.supplierId, suppliers);
@@ -576,8 +599,11 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
       };
-      if (existingStakeholder) await this.stakeholderService.updateProjectStakeholder(existingStakeholder.id, stakeholderData);
-      else await this.stakeholderService.addStakeholder(stakeholderData);
+      if (existingStakeholder) {
+        await this.stakeholderService.updateProjectStakeholder(existingStakeholder.id, stakeholderData);
+      } else {
+        await this.stakeholderService.addStakeholder(stakeholderData);
+      }
       details.stakeholders += 1;
     }
   }
@@ -660,27 +686,108 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       dueDate: task.due_date ?? task.dueDate ?? task.endDate,
       assignedTo: assignees.length > 0 ? assignees : undefined,
     };
-    if (existingTask) await this.taskService.updateTask(existingTask.id, taskData);
-    else await this.taskService.createTask(taskData);
+    if (existingTask) {
+      await this.taskService.updateTask(existingTask.id, taskData);
+    } else {
+      await this.taskService.createTask(taskData);
+    }
     details.tasks += 1;
   }
 
-  private async upsertDqeLines(
-    projectId: string,
-    phaseId: string,
-    dqeLines: Array<Record<string, unknown>>,
+ private async upsertDqeLines(
+  projectId: string,
+  phaseId: string,
+  dqeLines: Array<Record<string, unknown>>,
+  details: ProjectImportResult['details'],
+  count = true,
+): Promise<void> {
+  if (dqeLines.length === 0) return;
 
-    details: ProjectImportResult['details'],
-    count = true,
-  ): Promise<void> {
-    if (dqeLines.length === 0) return;
-    const existingLines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId });
-    for (const dqeLine of dqeLines) {
-      const existingLine = existingLines.find((line) => line.btpCode === dqeLine.btpCode);
-      if (existingLine) await boqRepository.update(existingLine.id as string, dqeLine as Partial<BoqLineDTO>);
-      else await boqRepository.create(dqeLine as unknown as BoqLineDTO);
+  const existingLines = await boqRepository.list({ 
+    source: 'dqe', 
+    contextId: projectId, 
+    projectId, 
+    phaseId 
+  });
+
+  for (const dqeLine of dqeLines) {
+    // Mapper le statut
+    const mappedStatus = this.mapDqeStatus(dqeLine.status as string);
+
+    // Construire les données avec mapping
+    const boqData = {
+      btpCode: dqeLine.btpCode || dqeLine.code,
+      designation: dqeLine.designation,
+      unit: dqeLine.unit,
+      quantity: dqeLine.quantity,
+      unit_price_ht: dqeLine.unitPrice,
+      total_price: dqeLine.totalPrice,
+      status: mappedStatus,
+      line_status: mappedStatus,
+      line_type: 'estimate',
+      phase_id: phaseId,
+      project_id: projectId,
+      category: dqeLine.category,
+      code: dqeLine.code,
+      metadata: {
+        category: dqeLine.category,
+        originalCode: dqeLine.code,
+        originalStatus: dqeLine.status
+      }
+    };
+
+    const existingLine = existingLines.find((line) => line.btpCode === boqData.btpCode);
+
+    if (existingLine) {
+      await boqRepository.update(existingLine.id as string, boqData as Partial<BoqLineDTO>);
+    } else {
+      await boqRepository.create(boqData as unknown as BoqLineDTO);
     }
-    if (count) details.dqeLines += dqeLines.length;
+  }
+
+  if (count) details.dqeLines += dqeLines.length;
+}
+
+  /**
+   * Mappe les statuts du JSON vers les valeurs acceptées par la base
+   */
+  private mapDqeStatus(status?: string): string {
+    const normalized = (status || '').toLowerCase().trim();
+    
+    const mapping: Record<string, string> = {
+      'termine': 'validated',
+      'terminé': 'validated',
+      'completed': 'validated',
+      'en_cours': 'submitted',
+      'in_progress': 'submitted',
+      'planifie': 'draft',
+      'planifié': 'draft',
+      'planned': 'draft',
+      'annule': 'rejected',
+      'annulé': 'rejected',
+      'cancelled': 'rejected',
+      'brouillon': 'draft',
+      'draft': 'draft',
+      'soumis': 'submitted',
+      'submitted': 'submitted',
+      'valide': 'validated',
+      'validé': 'validated',
+      'validated': 'validated',
+      'rejete': 'rejected',
+      'rejeté': 'rejected',
+      'rejected': 'rejected',
+      'facture': 'invoiced',
+      'facturé': 'invoiced',
+      'invoiced': 'invoiced',
+      'paye': 'paid',
+      'payé': 'paid',
+      'paid': 'paid',
+      'archive': 'archived',
+      'archivé': 'archived',
+      'archived': 'archived'
+    };
+    
+    return mapping[normalized] || 'draft';
   }
 
   private getDqeCode(line: BoqLineDTO): string | undefined {
@@ -688,17 +795,17 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return line.btpCode ?? candidate.code;
   }
 
-  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
+  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled' | undefined {
     if (!status) return undefined;
-    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
+    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'> = {
       planifie: 'pending',
       planned: 'pending',
       en_cours: 'in_progress',
       'en cours': 'in_progress',
       termine: 'completed',
       terminé: 'completed',
-      delayed: 'delayed',
-      en_retard: 'delayed',
+      overdue: 'overdue',
+      en_retard: 'overdue',
       annule: 'cancelled',
       annulé: 'cancelled',
     };

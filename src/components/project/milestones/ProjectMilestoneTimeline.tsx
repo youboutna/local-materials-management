@@ -1,34 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Target, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  ShieldCheck,
-  Package,
-  Flag,
-  CheckSquare,
-  TrendingUp,
-  TrendingDown
-} from 'lucide-react';
-import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { 
-  MilestoneSummaryDTO, 
-  MilestoneProgressDTO,
-  MilestoneType,
-  MILESTONE_TYPES,
-  MILESTONE_PRIORITIES
+import {
+    MILESTONE_TYPES,
+    MilestoneProgressDTO,
+    MilestoneSummaryDTO,
+    MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
-import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { differenceInDays, format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+    AlertTriangle,
+    Calendar,
+    CheckCircle,
+    CheckSquare,
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    Flag,
+    Package,
+    ShieldCheck,
+    Target,
+    TrendingDown,
+    TrendingUp
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface ProjectMilestoneTimelineProps {
   projectId: string;
@@ -63,7 +62,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         weight: m.weight || 0.2,
         phaseId: m.phaseId,
         phaseDame: undefined,
-        completedDate: m.completedDate,
+        completionDate: m.completionDate,
         isCritical: m.priority === 'critical',
       }));
       const progressData: MilestoneProgressDTO = {
@@ -307,11 +306,11 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                 <span>
                                   {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                                 </span>
-                                {milestone.completedDate && (
+                                {milestone.completionDate && (
                                   <>
                                     <span>•</span>
                                     <span className="text-green-600">
-                                      Terminé le {format(parseISO(milestone.completedDate), 'd MMM', { locale: fr })}
+                                      Terminé le {format(parseISO(milestone.completionDate), 'd MMM', { locale: fr })}
                                     </span>
                                   </>
                                 )}

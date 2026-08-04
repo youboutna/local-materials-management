@@ -104,7 +104,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
         id: m.id, title: m.title, targetDate: m.targetDate, status: m.status,
         type: m.type || 'checkpoint', priority: m.priority || 'normal',
         weight: m.weight || 0.2, phaseId: m.phaseId, phaseName: undefined,
-        completedDate: m.completedDate, isCritical: m.priority === 'critical',
+        completionDate: m.completionDate, isCritical: m.priority === 'critical',
         isFromTemplate: false,
       })) as MilestoneSummaryDTO[];
     },
