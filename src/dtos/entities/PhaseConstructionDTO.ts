@@ -78,6 +78,10 @@ export interface CreatePhaseDTO {
   estimatedCost?: number;
   estimatedDuration?: number;
   phaseMethodology?: string;
+  /** Type normalisé persisté (contrainte CHECK `project_phases.phase_type`). */
+  phaseType?: string;
+  /** Code métier source conservé (ETUDES, TRAVAUX…). */
+  phaseCode?: string;
 }
 
 export interface PhaseStageSummaryDTO {
@@ -97,4 +101,8 @@ export interface PhaseSummaryDTO extends Partial<BaseEntityDTO> {
   endDate?: string | null;
   budget?: number | null;
   stages?: PhaseStageSummaryDTO[];
+  phaseType?: string;
+  phaseCode?: string;
+  customPhaseData?: Record<string, unknown>;
 }
+
