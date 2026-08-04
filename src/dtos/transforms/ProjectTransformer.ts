@@ -378,13 +378,20 @@ export class ProjectTransformer {
       : locationPoint
       ? [locationPoint]
       : [];
-    const displayCenter = storedCollection.getBoundingCenter() ??
-      (locationPoint?.coordinates[0]
-        ? {
-            lat: locationPoint.coordinates[0].lat,
-            lng: locationPoint.coordinates[0].lng,
-          }
-        : undefined);
+    const zonesCenter = (() => {
+      const pts = displayZones.flatMap((z) => z.coordinates ?? []);
+      if (pts.length === 0) return undefined;
+      const lat = pts.reduce((a, p) => a + p.lat, 0) / pts.length;
+      const lng = pts.reduce((a, p) => a + p.lng, 0) / pts.length;
+      return ProjectTransformer.isUsableLatLng({ lat, lng }) ? { lat, lng } : undefined;
+    })();
+    const projectCoords = ProjectTransformer.isUsableLatLng({
+      lat: project.coordinates?.latitude,
+      lng: project.coordinates?.longitude,
+    })
+      ? { lat: project.coordinates!.latitude, lng: project.coordinates!.longitude }
+      : undefined;
+    const displayCenter = projectCoords ?? zonesCenter;
 
     return {
       id: project.id,
@@ -393,14 +400,12 @@ export class ProjectTransformer {
       status: project.status as ProjectStatus,
       progress: project.progress,
       location: project.location || '',
-      latitude: project.coordinates?.latitude ?? displayCenter?.lat,
-      longitude: project.coordinates?.longitude ?? displayCenter?.lng,
-      coordinates: project.coordinates || displayCenter
-        ? {
-            latitude: project.coordinates?.latitude ?? displayCenter?.lat ?? 0,
-            longitude: project.coordinates?.longitude ?? displayCenter?.lng ?? 0,
-          }
+      latitude: displayCenter?.lat,
+      longitude: displayCenter?.lng,
+      coordinates: displayCenter
+        ? { latitude: displayCenter.lat, longitude: displayCenter.lng }
         : undefined,
+
       interventionZones: displayZones.length > 0 ? displayZones : undefined,
       interventionZone: displayZones[0],
       startDate: project.startDate?.toISOString() || '',
