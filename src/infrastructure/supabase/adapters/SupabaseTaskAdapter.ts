@@ -47,10 +47,41 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
+  /**
+   * Écrit en élaguant les colonnes absentes du cache de schéma (PGRST204).
+   * Garantit la persistance même si l'environnement cible n'a pas encore reçu
+   * toutes les migrations (ex. `assigned_to`, `step_id`, `progress`).
+   */
+  private async writeWithSchemaFallback(
+    payload: Record<string, unknown>,
+    run: (data: Record<string, unknown>) => Promise<{ error: { code?: string; message?: string } | null }>,
+  ): Promise<void> {
+    const data = { ...payload };
+    const dropped: string[] = [];
+
+    for (let attempt = 0; attempt <= 10; attempt += 1) {
+      const { error } = await run(data);
+      if (!error) {
+        if (dropped.length > 0) {
+          console.warn('[SupabaseTaskAdapter] colonnes absentes ignorées:', dropped);
+        }
+        return;
+      }
+      const missing = error.code === 'PGRST204'
+        ? /'([^']+)' column/.exec(error.message ?? '')?.[1]
+        : undefined;
+      if (!missing || !(missing in data)) {
+        throw new Error(`Failed to save task: ${error.message}`);
+      }
+      delete data[missing];
+      dropped.push(missing);
+    }
+    throw new Error('SupabaseTaskAdapter: schéma incompatible après plusieurs tentatives');
+  }
+
   async save(task: Task): Promise<void> {
-    const { error } = await supabase
-      .from('task_assignments')
-      .insert({
+    await this.writeWithSchemaFallback(
+      {
         id: task.id,
         project_id: task.projectId || null,
         phase_id: task.phaseId || null,
@@ -65,10 +96,10 @@ export class SupabaseTaskAdapter implements ITaskRepository {
         start_date: task.startDate || null,
         end_date: task.endDate || null,
         progress: task.progress ?? 0,
-        notes: task.notes || null
-      });
-
-    if (error) throw new Error(`Failed to save task: ${error.message}`);
+        notes: task.notes || null,
+      },
+      (data) => supabase.from('task_assignments').insert(data),
+    );
   }
 
   async update(id: string, data: Partial<Task> & Record<string, any>): Promise<void> {
@@ -88,12 +119,9 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       updateData.assigned_to = list && list.length ? list[0] : null;
     }
 
-    const { error } = await supabase
-      .from('task_assignments')
-      .update(updateData)
-      .eq('id', id);
-
-    if (error) throw new Error(`Failed to update task: ${error.message}`);
+    await this.writeWithSchemaFallback(updateData, (payload) =>
+      supabase.from('task_assignments').update(payload).eq('id', id),
+    );
   }
 
   async delete(id: string): Promise<void> {

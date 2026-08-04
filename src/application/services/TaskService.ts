@@ -107,12 +107,91 @@ export class ValidationError extends TaskServiceError {
 export class TaskService {
   constructor(private taskRepository: ITaskRepository) {}
 
+  /**
+   * Statut service (`pending`, …) → statut canonique du domaine
+   * (`not_started`, `in_progress`, `completed`, `delayed`, `blocked`, `cancelled`).
+   * Tolérant aux libellés FR/accentués rencontrés à l'import.
+   */
+  private toDomainStatus(status?: string): string {
+    const key = String(status ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+    const map: Record<string, string> = {
+      '': 'not_started',
+      pending: 'not_started',
+      not_started: 'not_started',
+      planifie: 'not_started',
+      planifiee: 'not_started',
+      en_attente: 'not_started',
+      todo: 'not_started',
+      in_progress: 'in_progress',
+      en_cours: 'in_progress',
+      completed: 'completed',
+      done: 'completed',
+      termine: 'completed',
+      terminee: 'completed',
+      delayed: 'delayed',
+      en_retard: 'delayed',
+      blocked: 'blocked',
+      bloque: 'blocked',
+      bloquee: 'blocked',
+      cancelled: 'cancelled',
+      canceled: 'cancelled',
+      annule: 'cancelled',
+      annulee: 'cancelled',
+    };
+    return map[key] ?? 'not_started';
+  }
+
+  /** Statut canonique du domaine → statut exposé par le service. */
+  private fromDomainStatus(status?: string): TaskStatus {
+    switch (String(status ?? '')) {
+      case 'in_progress':
+        return TaskStatus.IN_PROGRESS;
+      case 'completed':
+        return TaskStatus.COMPLETED;
+      case 'cancelled':
+        return TaskStatus.CANCELLED;
+      default:
+        return TaskStatus.PENDING;
+    }
+  }
+
+  /** Priorité service/import → priorité canonique du domaine. */
+  private toDomainPriority(priority?: string): string {
+    const key = String(priority ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+    const map: Record<string, string> = {
+      '': 'medium',
+      low: 'low',
+      basse: 'low',
+      faible: 'low',
+      medium: 'medium',
+      moyenne: 'medium',
+      normale: 'medium',
+      high: 'high',
+      haute: 'high',
+      elevee: 'high',
+      urgent: 'urgent',
+      urgente: 'urgent',
+      critique: 'urgent',
+      critical: 'urgent',
+    };
+    return map[key] ?? 'medium';
+  }
+
   private toDTO(task: Task): TaskDTO {
     return {
       id: task.id,
       title: task.title,
       description: task.description,
-      status: (task.status as unknown as TaskStatus) || TaskStatus.PENDING,
+      status: this.fromDomainStatus(task.status as unknown as string),
       priority: (task.priority as unknown as TaskPriority) || TaskPriority.MEDIUM,
       projectId: task.projectId,
       phaseId: task.phaseId,
@@ -138,22 +217,14 @@ export class TaskService {
         throw new ValidationError('Task title is required', { title: ['Title is required'] });
       }
 
-      if (createDTO.status && !this.isTaskStatus(createDTO.status)) {
-        throw new ValidationError('Invalid task status', { status: ['Invalid status value'] });
-      }
-
-      if (createDTO.priority && !this.isTaskPriority(createDTO.priority)) {
-        throw new ValidationError('Invalid task priority', { priority: ['Invalid priority value'] });
-      }
-
       const task = Task.create({
         id: crypto.randomUUID(),
         projectId: createDTO.projectId || '',
         phaseId: createDTO.phaseId,
         title: createDTO.title,
         description: createDTO.description,
-        status: createDTO.status ? String(createDTO.status) as any : 'pending' as any,
-        priority: createDTO.priority ? String(createDTO.priority) as any : 'medium' as any,
+        status: this.toDomainStatus(createDTO.status as unknown as string) as any,
+        priority: this.toDomainPriority(createDTO.priority as unknown as string) as any,
         assignedTo: createDTO.assignedTo || [],
         dueDate: createDTO.dueDate
       });
@@ -181,8 +252,8 @@ export class TaskService {
       const patch: Record<string, unknown> = {};
       if (updateDTO.title !== undefined) patch.title = updateDTO.title;
       if (updateDTO.description !== undefined) patch.description = updateDTO.description;
-      if (updateDTO.status !== undefined) patch.status = String(updateDTO.status);
-      if (updateDTO.priority !== undefined) patch.priority = String(updateDTO.priority);
+      if (updateDTO.status !== undefined) patch.status = this.toDomainStatus(String(updateDTO.status));
+      if (updateDTO.priority !== undefined) patch.priority = this.toDomainPriority(String(updateDTO.priority));
       if (updateDTO.dueDate !== undefined) patch.dueDate = updateDTO.dueDate;
       if (updateDTO.phaseId !== undefined) patch.phaseId = updateDTO.phaseId;
       if ((updateDTO as any).assignedTo !== undefined) patch.assignedTo = (updateDTO as any).assignedTo;
