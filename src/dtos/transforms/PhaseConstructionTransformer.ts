@@ -165,7 +165,7 @@ export class PhaseConstructionTransformer {
    * Récupérer la liste complète des phase_type valides
    */
   static getValidPhaseTypes(): string[] {
-    const types = [...VALID_PHASE_TYPES];
+    const types: string[] = [...VALID_PHASE_TYPES];
     
     try {
       const referentials = getAllReferentials();

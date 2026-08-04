@@ -96,6 +96,8 @@ export interface ProjectImportMilestone {
   status?: string;
   progress?: number;
   progressPercent?: number;
+  completionDate?: string;
+  completion_date?: string;
 }
 
 export interface ProjectImportTask {
@@ -520,7 +522,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
           title: milestone.title ?? milestone.name ?? 'Jalon importé',
           description: milestone.description,
           target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
-          completion_date: milestone.completionDate,
+          completion_date: milestone.completionDate ?? milestone.completion_date,
           status: this.normalizeMilestoneStatus(milestone.status),
           progress_percentage: milestone.progress ?? milestone.progressPercent,
           external_ref: milestone.externalRef,
@@ -795,17 +797,18 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return line.btpCode ?? candidate.code;
   }
 
-  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled' | undefined {
+  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
     if (!status) return undefined;
-    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'> = {
+    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
       planifie: 'pending',
       planned: 'pending',
       en_cours: 'in_progress',
       'en cours': 'in_progress',
       termine: 'completed',
       terminé: 'completed',
-      overdue: 'overdue',
-      en_retard: 'overdue',
+      overdue: 'delayed',
+      delayed: 'delayed',
+      en_retard: 'delayed',
       annule: 'cancelled',
       annulé: 'cancelled',
     };
