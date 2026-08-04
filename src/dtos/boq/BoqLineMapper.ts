@@ -7,6 +7,7 @@
 
 import type { BoqLineDTO } from './BoqLineDTO';
 import type { BoqSource } from '@/domain/boq/BoqLine';
+import { getDQELineType, normalizeDQEType } from '@/utils/dqeTypeMapper';
 
 /** Raw DB row shape (super-set of both tables' columns). */
 export interface BoqDbRow {
@@ -48,6 +49,9 @@ export interface BoqDbRow {
   source?: string | null;
   source_type?: string | null;
   btp_code?: string | null;
+  code?: string | null;
+  dqe_type?: string | null;
+  line_status?: string | null;
   line_type?: string | null;
   status?: BoqLineDTO['status'] | null;
   document_id?: string | null;
@@ -99,6 +103,10 @@ export class BoqLineMapper {
       submittedBy: row.sender_id ?? row.submitted_by ?? null,
       sourceType: (row.source_type as BoqLineDTO['sourceType']) ?? undefined,
       btpCode: row.btp_code ?? null,
+      code: row.code ?? row.item_code ?? null,
+      category: row.category ?? null,
+      dqeType: row.dqe_type ?? null,
+      metadata: row.metadata ?? null,
       status: row.status ?? 'draft',
       documentId: row.document_id ?? null,
       title: (row.metadata as { title?: string } | null)?.title ?? null,
@@ -112,7 +120,7 @@ export class BoqLineMapper {
       tender_id: dto.source === 'tender_estimate' ? dto.contextId : null,
       submission_id: dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
       estimate_id: dto.source === 'tender_estimate' || dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
-      line_type: BOQ_LINE_TYPE_BY_SOURCE[dto.source],
+      line_type: dto.dqeType ? getDQELineType(dto.dqeType) : BOQ_LINE_TYPE_BY_SOURCE[dto.source],
       designation: dto.designation,
       element_type: dto.elementType ?? null,
       resource_id: dto.materialId ?? null,
@@ -131,11 +139,14 @@ export class BoqLineMapper {
       task_id: dto.taskId ?? null,
       note: dto.note ?? null,
       source_type: dto.source === 'dqe' ? 'dqe' : dto.sourceType ?? null,
-      btp_code: dto.btpCode ?? null,
+      btp_code: dto.btpCode ?? dto.code ?? null,
+      code: dto.code ?? dto.btpCode ?? null,
+      category: dto.category ?? null,
+      dqe_type: dto.dqeType ? normalizeDQEType(dto.dqeType) : null,
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
       document_id: dto.documentId ?? null,
-      metadata: dto.title ? { title: dto.title } : {},
+      metadata: { ...(dto.metadata ?? {}), ...(dto.title ? { title: dto.title } : {}) },
     };
   }
 
