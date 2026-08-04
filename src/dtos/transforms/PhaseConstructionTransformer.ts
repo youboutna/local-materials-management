@@ -7,7 +7,7 @@
  * 
  * Intégration avec ReferentialService pour la normalisation des phase_type
  */
-import { ReferentialService } from '@/application/services/ReferentialService';
+import { getAllReferentials } from '@/config/referentials';
 import type {
   CreatePhaseDTO,
   PhaseStageSummaryDTO,
@@ -92,8 +92,7 @@ export class PhaseConstructionTransformer {
     if (!VALID_PHASE_TYPES.includes(phaseType as any)) {
       // Essayer de normaliser via ReferentialService
       try {
-        const referentialService = ReferentialService.getInstance();
-        const referentials = referentialService.getAllReferentials();
+        const referentials = getAllReferentials();
         
         // Chercher le code dans les référentiels
         const found = referentials.some(ref => 
@@ -145,8 +144,7 @@ export class PhaseConstructionTransformer {
     
     // Vérifier via ReferentialService
     try {
-      const referentialService = ReferentialService.getInstance();
-      const referentials = referentialService.getAllReferentials();
+      const referentials = getAllReferentials();
       
       for (const ref of referentials) {
         for (const phase of ref.phases) {
@@ -167,11 +165,10 @@ export class PhaseConstructionTransformer {
    * Récupérer la liste complète des phase_type valides
    */
   static getValidPhaseTypes(): string[] {
-    const types = [...VALID_PHASE_TYPES];
+    const types: string[] = [...VALID_PHASE_TYPES];
     
     try {
-      const referentialService = ReferentialService.getInstance();
-      const referentials = referentialService.getAllReferentials();
+      const referentials = getAllReferentials();
       
       for (const ref of referentials) {
         for (const phase of ref.phases) {

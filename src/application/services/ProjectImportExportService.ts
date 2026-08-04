@@ -34,6 +34,9 @@ import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
+import { mapDqeStatus } from '@/utils/dqeStatusMapper';
+import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType' | 'tasks'>> {
@@ -96,6 +99,8 @@ export interface ProjectImportMilestone {
   status?: string;
   progress?: number;
   progressPercent?: number;
+  completionDate?: string;
+  completion_date?: string;
 }
 
 export interface ProjectImportTask {
@@ -520,7 +525,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
           title: milestone.title ?? milestone.name ?? 'Jalon importé',
           description: milestone.description,
           target_date: milestone.target_date ?? milestone.targetDate ?? row.endDate ?? row.startDate ?? new Date().toISOString(),
-          completion_date: milestone.completionDate,
+          completion_date: milestone.completionDate ?? milestone.completion_date,
           status: this.normalizeMilestoneStatus(milestone.status),
           progress_percentage: milestone.progress ?? milestone.progressPercent,
           external_ref: milestone.externalRef,
@@ -694,59 +699,84 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     details.tasks += 1;
   }
 
- private async upsertDqeLines(
-  projectId: string,
-  phaseId: string,
-  dqeLines: Array<Record<string, unknown>>,
-  details: ProjectImportResult['details'],
-  count = true,
-): Promise<void> {
-  if (dqeLines.length === 0) return;
+  /**
+   * Upsert des lignes DQE : normalisation du cycle de vie (previsionnel → devis →
+   * décompte → facture), du statut, et enrichissement via le référentiel DQE.
+   */
+  private async upsertDqeLines(
+    projectId: string,
+    phaseId: string,
+    dqeLines: Array<Record<string, unknown>>,
+    details: ProjectImportResult['details'],
+    count = true,
+  ): Promise<void> {
+    if (dqeLines.length === 0) return;
 
-  const existingLines = await boqRepository.list({ 
-    source: 'dqe', 
-    contextId: projectId, 
-    projectId, 
-    phaseId 
-  });
+    const existingLines = await boqRepository.list({
+      source: 'dqe',
+      contextId: projectId,
+      projectId,
+      phaseId,
+    });
 
-  for (const dqeLine of dqeLines) {
-    // Mapper le statut
-    const mappedStatus = this.mapDqeStatus(dqeLine.status as string);
+    for (const dqeLine of dqeLines) {
+      const categoryCode = (dqeLine.category ?? dqeLine.dqeCategory) as string | undefined;
+      const dqeCategory = categoryCode ? getDQECategory(categoryCode) : undefined;
+      const dqeType = normalizeDQEType(dqeLine.dqeType as string | undefined);
+      const mappedStatus = mapDqeStatus(dqeLine.status as string | undefined);
+      const code = (dqeLine.code ?? dqeLine.btpCode) as string | undefined;
+      const quantity = Number(dqeLine.quantity ?? 0);
+      const unitPrice =
+        dqeLine.unitPrice != null ? Number(dqeLine.unitPrice) : null;
 
-    // Construire les données avec mapping
-    const boqData = {
-      btpCode: dqeLine.btpCode || dqeLine.code,
-      designation: dqeLine.designation,
-      unit: dqeLine.unit,
-      quantity: dqeLine.quantity,
-      unit_price_ht: dqeLine.unitPrice,
-      total_price: dqeLine.totalPrice,
-      status: mappedStatus,
-      line_status: mappedStatus,
-      line_type: 'estimate',
-      phase_id: phaseId,
-      project_id: projectId,
-      category: dqeLine.category,
-      code: dqeLine.code,
-      metadata: {
-        category: dqeLine.category,
-        originalCode: dqeLine.code,
-        originalStatus: dqeLine.status
+      const boqData: BoqLineDTO = {
+        source: 'dqe',
+        contextId: projectId,
+        projectId,
+        phaseId,
+        designation: String(dqeLine.designation ?? code ?? 'Ligne DQE'),
+        unit: String(dqeLine.unit ?? dqeCategory?.unit ?? 'unité'),
+        quantity,
+        unitPrice,
+        totalHt:
+          dqeLine.totalPrice != null
+            ? Number(dqeLine.totalPrice)
+            : unitPrice != null
+              ? quantity * unitPrice
+              : null,
+        code: code ?? null,
+        btpCode: (dqeLine.btpCode as string | undefined) ?? code ?? null,
+        category: categoryCode ?? null,
+        dqeType,
+        status: mappedStatus,
+        sourceType: 'import',
+        metadata: {
+          dqeCategory: categoryCode ?? null,
+          dqeCategoryLabel: dqeCategory?.label?.fr ?? categoryCode ?? null,
+          originalCode: dqeLine.code ?? null,
+          originalStatus: dqeLine.status ?? null,
+          originalDQEType: dqeLine.dqeType ?? null,
+          dqeTypeLabel: getDQETypeLabel(dqeType, 'fr'),
+          targetMargin: dqeCategory?.targetMargin ?? null,
+        },
+      } as BoqLineDTO;
+
+      const existingLine = existingLines.find(
+        (line) =>
+          (boqData.btpCode && line.btpCode === boqData.btpCode) ||
+          (boqData.code && line.code === boqData.code),
+      );
+
+      if (existingLine?.id) {
+        await boqRepository.update(existingLine.id, boqData);
+      } else {
+        await boqRepository.create(boqData);
       }
-    };
-
-    const existingLine = existingLines.find((line) => line.btpCode === boqData.btpCode);
-
-    if (existingLine) {
-      await boqRepository.update(existingLine.id as string, boqData as Partial<BoqLineDTO>);
-    } else {
-      await boqRepository.create(boqData as unknown as BoqLineDTO);
     }
+
+    if (count) details.dqeLines += dqeLines.length;
   }
 
-  if (count) details.dqeLines += dqeLines.length;
-}
 
   /**
    * Mappe les statuts du JSON vers les valeurs acceptées par la base
@@ -795,17 +825,18 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     return line.btpCode ?? candidate.code;
   }
 
-  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled' | undefined {
+  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
     if (!status) return undefined;
-    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'> = {
+    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
       planifie: 'pending',
       planned: 'pending',
       en_cours: 'in_progress',
       'en cours': 'in_progress',
       termine: 'completed',
       terminé: 'completed',
-      overdue: 'overdue',
-      en_retard: 'overdue',
+      overdue: 'delayed',
+      delayed: 'delayed',
+      en_retard: 'delayed',
       annule: 'cancelled',
       annulé: 'cancelled',
     };
