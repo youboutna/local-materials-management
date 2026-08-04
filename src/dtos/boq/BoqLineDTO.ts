@@ -33,6 +33,15 @@ export interface BoqLineDTO {
   sourceType?: BoqSourceType;
   /** Code métier BTP réutilisable (nomenclature BTP standardisée). */
   btpCode?: string | null;
+  /** Code de ligne DQE tel que fourni par la source (colonne `code`). */
+  code?: string | null;
+  /** Catégorie DQE issue du référentiel `DQE_CATEGORIES` (colonne `category`). */
+  category?: string | null;
+  /** Étape du cycle de vie DQE : previsionnel | devis | decompte | facture. */
+  dqeType?: string | null;
+  /** Métadonnées libres (référentiel, valeurs d'origine, marge cible…). */
+  metadata?: Record<string, unknown> | null;
+
   /** Workflow unique v3.2 : brouillon DB puis finalisation métier. */
   status?: BoqStatus;
   /** Identifiant du document conteneur (regroupe N lignes en un DQE/Devis/Facture). */
