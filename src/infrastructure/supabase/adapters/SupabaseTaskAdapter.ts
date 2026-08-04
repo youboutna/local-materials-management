@@ -6,6 +6,7 @@ import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
 
 export class SupabaseTaskAdapter implements ITaskRepository {
   private mapToEntity(data: any): Task {
+    const assigneeId = data.assignee_id ?? data.assigned_to;
     return Task.create({
       id: data.id,
       projectId: data.project_id,
@@ -21,7 +22,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       dueDate: data.due_date || undefined,
       estimatedDuration: data.estimated_duration || undefined,
       notes: data.notes || undefined,
-      assignedTo: data.assigned_to ? [data.assigned_to] : [],
+      assignedTo: assigneeId ? [assigneeId] : [],
       assignedById: data.assigned_by || undefined
     });
   }
@@ -80,6 +81,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async save(task: Task): Promise<void> {
+    const assigneeId = task.assignedTo[0] || null;
     await this.writeWithSchemaFallback(
       {
         id: task.id,
@@ -90,7 +92,9 @@ export class SupabaseTaskAdapter implements ITaskRepository {
         description: task.description,
         status: task.status,
         priority: task.priority,
-        assigned_to: task.assignedTo[0] || null,
+        // Canonical assignment plus the transitional legacy mirror.
+        assignee_id: assigneeId,
+        assigned_to: assigneeId,
         assigned_by: task.assignedBy || null,
         due_date: task.dueDate || null,
         start_date: task.startDate || null,
@@ -116,7 +120,9 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if ((data as any).assignedTo !== undefined) {
       const list = (data as any).assignedTo as string[] | undefined;
-      updateData.assigned_to = list && list.length ? list[0] : null;
+      const assigneeId = list && list.length ? list[0] : null;
+      updateData.assignee_id = assigneeId;
+      updateData.assigned_to = assigneeId;
     }
 
     await this.writeWithSchemaFallback(updateData, (payload) =>
@@ -183,11 +189,21 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async findByAssignee(userId: string): Promise<Task[]> {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assigned_to', userId)
+      .eq('assignee_id', userId)
       .order('created_at', { ascending: false });
+
+    if (error?.code === 'PGRST204') {
+      const fallback = await supabase
+        .from('task_assignments')
+        .select('*')
+        .eq('assigned_to', userId)
+        .order('created_at', { ascending: false });
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));

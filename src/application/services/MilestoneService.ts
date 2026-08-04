@@ -1082,6 +1082,14 @@ export class MilestoneService {
     }
   }
 
+  /** Persistence-only lookup for idempotent imports; skips UI progress engines. */
+  async getPhaseMilestonesRaw(phaseId: string): Promise<MilestoneDTO[]> {
+    if (!phaseId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
+    }
+    return this.milestoneRepository.findByPhaseId(phaseId);
+  }
+
   /**
    * Toggle milestone completion
    */
