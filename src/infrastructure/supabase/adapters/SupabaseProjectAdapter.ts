@@ -102,6 +102,37 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     }
   }
 
+  /**
+   * Exécute une écriture PostgREST en tolérant les dérives de schéma :
+   * si une colonne n'existe pas côté DB (PGRST204), elle est élaguée du
+   * payload puis l'écriture est relancée. Évite qu'un champ optionnel
+   * (`forme`, `area_sqm`, …) bloque la sauvegarde d'une étape.
+   */
+  private async writeWithSchemaFallback(
+    payload: Record<string, unknown>,
+    run: (data: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string; message?: string } | null }>,
+  ): Promise<Record<string, unknown>> {
+    const data = { ...payload };
+    const dropped: string[] = [];
+
+    for (let attempt = 0; attempt <= 8; attempt += 1) {
+      const { data: row, error } = await run(data);
+      if (!error) {
+        if (dropped.length > 0) {
+          console.warn('[SupabaseProjectAdapter] colonnes absentes ignorées:', dropped);
+        }
+        return row as Record<string, unknown>;
+      }
+      const missing = error.code === 'PGRST204'
+        ? /'([^']+)' column/.exec(error.message ?? '')?.[1]
+        : undefined;
+      if (!missing || !(missing in data)) throw error;
+      delete data[missing];
+      dropped.push(missing);
+    }
+    throw new Error('SupabaseProjectAdapter: schéma incompatible après plusieurs tentatives');
+  }
+
   async create(projectData: Record<string, unknown>): Promise<Project> {
     const supabaseData = ProjectTransformer.toSupabase(projectData as Partial<Project>) as Record<string, unknown>;
     if ('status' in supabaseData) {
@@ -110,14 +141,10 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       else delete supabaseData.status;
     }
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert(supabaseData)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return ProjectTransformer.fromSupabase(data as Record<string, unknown>);
+    const row = await this.writeWithSchemaFallback(supabaseData, (data) =>
+      supabase.from('projects').insert(data).select().single(),
+    );
+    return ProjectTransformer.fromSupabase(row);
   }
 
   async update(id: string, updates: Partial<Project>): Promise<Project> {
@@ -132,16 +159,12 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       else delete entityData.status;
     }
 
-    const { data, error } = await supabase
-      .from('projects')
-      .update(entityData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return ProjectTransformer.fromSupabase(data as Record<string, unknown>);
+    const row = await this.writeWithSchemaFallback(entityData, (data) =>
+      supabase.from('projects').update(data).eq('id', id).select().single(),
+    );
+    return ProjectTransformer.fromSupabase(row);
   }
+
 
   async assignOrganizationToAll(organizationId: string): Promise<number> {
     const { data, error } = await supabase

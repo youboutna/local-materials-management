@@ -50,6 +50,46 @@ export class ProjectTransformer {
 
   // =================== DOMAIN HELPERS (Localisation v3) ===================
 
+  /** Un couple lat/lng est exploitable seulement s'il est fini, borné et non (0,0). */
+  static isUsableLatLng(p?: { lat?: number; lng?: number } | null): boolean {
+    if (!p) return false;
+    const { lat, lng } = p;
+    if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+    // (0,0) = golfe de Guinée : jamais une localisation métier valide ici.
+    return !(Math.abs(lat) < 1e-6 && Math.abs(lng) < 1e-6);
+  }
+
+  /**
+   * Nettoie une liste de zones : élague les sommets invalides et tente de
+   * re-résoudre une zone vidée depuis son adresse/label (référentiel Mauritanie).
+   */
+  static sanitizeZones(
+    zones: InterventionZoneDTO[],
+    fallbackLocation?: string | null,
+  ): InterventionZoneDTO[] {
+    return zones.flatMap((zone) => {
+      const coordinates = (zone.coordinates ?? []).filter((p) =>
+        ProjectTransformer.isUsableLatLng(p),
+      );
+      if (coordinates.length > 0) return [{ ...zone, coordinates }];
+
+      const resolved = getProjectLocationPoint({
+        location: zone.address || zone.label || fallbackLocation || undefined,
+      });
+      if (!resolved) return [];
+      return [
+        {
+          ...resolved,
+          label: zone.label ?? resolved.label,
+          address: zone.address ?? resolved.address,
+        },
+      ];
+    });
+  }
+
+
   /**
    * Build the canonical `localisation` jsonb v3 payload from a list of
    * `InterventionZoneDTO`. Single source of truth for UI→DB persistence of
@@ -62,13 +102,16 @@ export class ProjectTransformer {
     zones?: InterventionZoneDTO[] | null,
     fallbackSingle?: InterventionZoneDTO | null,
   ): { payload?: Record<string, unknown>; forme?: string } {
-    const src = zones && zones.length > 0
+    const raw = zones && zones.length > 0
       ? zones
       : fallbackSingle
         ? [fallbackSingle]
         : [];
+    // Ne jamais persister de sommets invalides / (0,0).
+    const src = ProjectTransformer.sanitizeZones(raw);
     if (src.length === 0) return {};
     const entities = src
+
       .map((z) => {
         try {
           return InterventionZone.create({
@@ -107,16 +150,27 @@ export class ProjectTransformer {
     // Hydrate the intervention zones from `localisation` jsonb when available,
     // and derive coordinates from the bounding centroid when explicit lat/lng are missing.
     const zoneCollection = InterventionZoneCollection.fromJSON(row.localisation);
-    const center = zoneCollection.getBoundingCenter();
-    const lat = row.coordinates_latitude != null
-      ? Number(row.coordinates_latitude)
-      : center?.lat;
-    const lng = row.coordinates_longitude != null
-      ? Number(row.coordinates_longitude)
-      : center?.lng;
-    const coordinates = lat != null && lng != null
-      ? new ProjectCoordinates(lat, lng)
+    const sanitizedZones = ProjectTransformer.sanitizeZones(
+      zoneCollection.zones.map((z) => z.toJSON() as InterventionZoneDTO),
+      (row.location as string | null) ?? undefined,
+    );
+    const zonePoints = sanitizedZones.flatMap((z) => z.coordinates ?? []);
+    const center = zonePoints.length > 0
+      ? {
+          lat: zonePoints.reduce((a, p) => a + p.lat, 0) / zonePoints.length,
+          lng: zonePoints.reduce((a, p) => a + p.lng, 0) / zonePoints.length,
+        }
       : undefined;
+    const rawLat = row.coordinates_latitude != null ? Number(row.coordinates_latitude) : undefined;
+    const rawLng = row.coordinates_longitude != null ? Number(row.coordinates_longitude) : undefined;
+    const explicit = ProjectTransformer.isUsableLatLng({ lat: rawLat, lng: rawLng })
+      ? { lat: rawLat as number, lng: rawLng as number }
+      : undefined;
+    const resolved = explicit ?? (ProjectTransformer.isUsableLatLng(center) ? center : undefined);
+    const coordinates = resolved
+      ? new ProjectCoordinates(resolved.lat, resolved.lng)
+      : undefined;
+
 
 
 
@@ -312,9 +366,11 @@ export class ProjectTransformer {
    */
   static toDTO(project: Project): ProjectDTO {
     const storedCollection = InterventionZoneCollection.fromJSON(project.localisation);
-    const storedZones = storedCollection.zones.map(
-      (zone) => zone.toJSON() as InterventionZoneDTO,
+    const storedZones = ProjectTransformer.sanitizeZones(
+      storedCollection.zones.map((zone) => zone.toJSON() as InterventionZoneDTO),
+      project.location,
     );
+
     const locationPoint = storedZones.length === 0
       ? getProjectLocationPoint({
           location: project.location,
@@ -333,13 +389,20 @@ export class ProjectTransformer {
       : locationPoint
       ? [locationPoint]
       : [];
-    const displayCenter = storedCollection.getBoundingCenter() ??
-      (locationPoint?.coordinates[0]
-        ? {
-            lat: locationPoint.coordinates[0].lat,
-            lng: locationPoint.coordinates[0].lng,
-          }
-        : undefined);
+    const zonesCenter = (() => {
+      const pts = displayZones.flatMap((z) => z.coordinates ?? []);
+      if (pts.length === 0) return undefined;
+      const lat = pts.reduce((a, p) => a + p.lat, 0) / pts.length;
+      const lng = pts.reduce((a, p) => a + p.lng, 0) / pts.length;
+      return ProjectTransformer.isUsableLatLng({ lat, lng }) ? { lat, lng } : undefined;
+    })();
+    const projectCoords = ProjectTransformer.isUsableLatLng({
+      lat: project.coordinates?.latitude,
+      lng: project.coordinates?.longitude,
+    })
+      ? { lat: project.coordinates!.latitude, lng: project.coordinates!.longitude }
+      : undefined;
+    const displayCenter = projectCoords ?? zonesCenter;
 
     return {
       id: project.id,
@@ -348,14 +411,12 @@ export class ProjectTransformer {
       status: project.status as ProjectStatus,
       progress: project.progress,
       location: project.location || '',
-      latitude: project.coordinates?.latitude ?? displayCenter?.lat,
-      longitude: project.coordinates?.longitude ?? displayCenter?.lng,
-      coordinates: project.coordinates || displayCenter
-        ? {
-            latitude: project.coordinates?.latitude ?? displayCenter?.lat ?? 0,
-            longitude: project.coordinates?.longitude ?? displayCenter?.lng ?? 0,
-          }
+      latitude: displayCenter?.lat,
+      longitude: displayCenter?.lng,
+      coordinates: displayCenter
+        ? { latitude: displayCenter.lat, longitude: displayCenter.lng }
         : undefined,
+
       interventionZones: displayZones.length > 0 ? displayZones : undefined,
       interventionZone: displayZones[0],
       startDate: project.startDate?.toISOString() || '',
