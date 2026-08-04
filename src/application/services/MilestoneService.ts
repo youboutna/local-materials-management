@@ -248,7 +248,7 @@ export class MilestoneService {
     try {
       // TODO: Implement proper deliverable tracking when repository supports it
       // For now, return default progress as deliverables are not linked to milestones
-       // console.log(`Deliverables progress for milestone ${milestoneId}: Not implemented, returning 0`);
+       // // console.log(`Deliverables progress for milestone ${milestoneId}: Not implemented, returning 0`);
       return 0;
     } catch (error) {
       console.error('MilestoneService.getDeliverablesProgress failed:', error);
@@ -263,7 +263,7 @@ export class MilestoneService {
     try {
       // TODO: Implement proper inspection tracking when repository supports it
       // For now, return default progress as inspections are not linked to milestones
-       // console.log(`Inspections progress for milestone ${milestoneId}: Not implemented, returning 0`);
+       // // console.log(`Inspections progress for milestone ${milestoneId}: Not implemented, returning 0`);
       return 0;
     } catch (error) {
       console.error('MilestoneService.getInspectionsProgress failed:', error);
