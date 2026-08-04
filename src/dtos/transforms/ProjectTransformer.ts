@@ -50,6 +50,46 @@ export class ProjectTransformer {
 
   // =================== DOMAIN HELPERS (Localisation v3) ===================
 
+  /** Un couple lat/lng est exploitable seulement s'il est fini, borné et non (0,0). */
+  static isUsableLatLng(p?: { lat?: number; lng?: number } | null): boolean {
+    if (!p) return false;
+    const { lat, lng } = p;
+    if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+    // (0,0) = golfe de Guinée : jamais une localisation métier valide ici.
+    return !(Math.abs(lat) < 1e-6 && Math.abs(lng) < 1e-6);
+  }
+
+  /**
+   * Nettoie une liste de zones : élague les sommets invalides et tente de
+   * re-résoudre une zone vidée depuis son adresse/label (référentiel Mauritanie).
+   */
+  static sanitizeZones(
+    zones: InterventionZoneDTO[],
+    fallbackLocation?: string | null,
+  ): InterventionZoneDTO[] {
+    return zones.flatMap((zone) => {
+      const coordinates = (zone.coordinates ?? []).filter((p) =>
+        ProjectTransformer.isUsableLatLng(p),
+      );
+      if (coordinates.length > 0) return [{ ...zone, coordinates }];
+
+      const resolved = getProjectLocationPoint({
+        location: zone.address || zone.label || fallbackLocation || undefined,
+      });
+      if (!resolved) return [];
+      return [
+        {
+          ...resolved,
+          label: zone.label ?? resolved.label,
+          address: zone.address ?? resolved.address,
+        },
+      ];
+    });
+  }
+
+
   /**
    * Build the canonical `localisation` jsonb v3 payload from a list of
    * `InterventionZoneDTO`. Single source of truth for UI→DB persistence of
