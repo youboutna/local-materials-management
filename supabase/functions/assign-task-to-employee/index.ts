@@ -23,7 +23,7 @@ interface TaskAssignmentRequest {
 
 interface TaskAssignment {
   id: string;
-  assignee_id: string;
+  assigned_to: string;
   assignee_name: string;
   title: string;
   description: string;
@@ -101,7 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Create task assignment record
     const taskAssignment: TaskAssignment = {
       id: `task-${Date.now()}`,
-      assignee_id: assigneeId,
+      assigned_to: assigneeId,
       assignee_name: assigneeName,
       title,
       description,

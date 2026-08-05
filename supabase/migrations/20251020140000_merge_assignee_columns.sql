@@ -8,7 +8,7 @@
 
 -- 1. Ajout des colonnes universelles pour les assignations
 ALTER TABLE btp.task_assignments 
-ADD COLUMN IF NOT EXISTS assignee_id UUID;
+ADD COLUMN IF NOT EXISTS assigned_to UUID;
 
 ALTER TABLE btp.task_assignments 
 ADD COLUMN IF NOT EXISTS assignee_type TEXT CHECK (assignee_type IN ('supplier', 'employee', 'user'));
@@ -30,7 +30,7 @@ DROP COLUMN IF EXISTS assigned_supplier_id,
 DROP COLUMN IF EXISTS assigned_profile_id;
 
 -- 4. Création des index pour les performances
-CREATE INDEX IF NOT EXISTS idx_task_assignments_assignee ON btp.task_assignments(assignee_id, assignee_type);
+CREATE INDEX IF NOT EXISTS idx_task_assignments_assignee ON btp.task_assignments(assigned_to, assignee_type);
 CREATE INDEX IF NOT EXISTS idx_task_assignments_assignee_type ON btp.task_assignments(assignee_type);
 
 
@@ -57,14 +57,14 @@ CREATE POLICY "Users can view tasks assigned to them"
 ON btp.task_assignments
 FOR SELECT
 TO authenticated
-USING (assignee_id = auth.uid());
+USING (assigned_to = auth.uid());
 
 CREATE POLICY "Users can update tasks assigned to them"
 ON btp.task_assignments
 FOR UPDATE
 TO authenticated
-USING (assignee_id = auth.uid())
-WITH CHECK (assignee_id = auth.uid());
+USING (assigned_to = auth.uid())
+WITH CHECK (assigned_to = auth.uid());
 
 CREATE POLICY "Users can view tasks they created"
 ON btp.task_assignments
@@ -76,7 +76,7 @@ USING (assigned_by = auth.uid());
 -- PARTIE 3 : DOCUMENTATION
 -- =============================================================================
 
-COMMENT ON COLUMN btp.task_assignments.assignee_id IS 'ID universel de l''assigné - peut référencer employees.id, suppliers.id ou profiles.id. Utiliser assignee_type pour déterminer la table.';
+COMMENT ON COLUMN btp.task_assignments.assigned_to IS 'ID universel de l''assigné - peut référencer employees.id, suppliers.id ou profiles.id. Utiliser assignee_type pour déterminer la table.';
 COMMENT ON COLUMN btp.task_assignments.assignee_type IS 'Type de l''assigné: supplier (fournisseur), employee (employé), ou user (utilisateur)';
 COMMENT ON COLUMN btp.task_assignments.assignee_name IS 'Nom stocké en direct pour éviter les JOINs complexes';
 COMMENT ON COLUMN btp.task_assignments.assignee_email IS 'Email stocké en direct pour les notifications';

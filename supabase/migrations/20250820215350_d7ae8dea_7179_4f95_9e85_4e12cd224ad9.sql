@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS btp.scheduled_calls (
 -- 2. Créer la table task_assignments
 CREATE TABLE IF NOT EXISTS btp.task_assignments (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    assignee_id UUID NOT NULL,
+    assigned_to UUID NOT NULL,
     assignee_name TEXT NOT NULL,
     assignee_email TEXT,
     title TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_calls_scheduled_for ON btp.scheduled_ca
 CREATE INDEX IF NOT EXISTS idx_scheduled_calls_priority ON btp.scheduled_calls(priority);
 
 -- 4. Créer les index pour task_assignments
-CREATE INDEX IF NOT EXISTS idx_task_assignments_assignee_id ON btp.task_assignments(assignee_id);
+CREATE INDEX IF NOT EXISTS idx_task_assignments_assigned_to ON btp.task_assignments(assigned_to);
 CREATE INDEX IF NOT EXISTS idx_task_assignments_project_id ON btp.task_assignments(project_id);
 CREATE INDEX IF NOT EXISTS idx_task_assignments_phase_id ON btp.task_assignments(phase_id);
 CREATE INDEX IF NOT EXISTS idx_task_assignments_status ON btp.task_assignments(status);
@@ -103,7 +103,7 @@ DROP POLICY IF EXISTS "Users can view their own task assignments" ON btp.task_as
 CREATE POLICY "Users can view their own task assignments" 
 ON btp.task_assignments 
 FOR SELECT 
-USING (assignee_id = auth.uid());
+USING (assigned_to = auth.uid());
 
 DROP POLICY IF EXISTS "Authenticated users can insert task assignments" ON btp.task_assignments;
 CREATE POLICY "Authenticated users can insert task assignments" 
@@ -115,13 +115,13 @@ DROP POLICY IF EXISTS "Users can update their own task assignments" ON btp.task_
 CREATE POLICY "Users can update their own task assignments" 
 ON btp.task_assignments 
 FOR UPDATE 
-USING (assignee_id = auth.uid());
+USING (assigned_to = auth.uid());
 
 DROP POLICY IF EXISTS "Users can delete their own task assignments" ON btp.task_assignments;
 CREATE POLICY "Users can delete their own task assignments" 
 ON btp.task_assignments 
 FOR DELETE 
-USING (assignee_id = auth.uid());
+USING (assigned_to = auth.uid());
 
 DROP POLICY IF EXISTS "Admins can manage all task assignments" ON btp.task_assignments;
 CREATE POLICY "Admins can manage all task assignments" 
@@ -172,7 +172,7 @@ COMMENT ON COLUMN btp.scheduled_calls.updated_at IS 'Date de dernière mise à j
 
 COMMENT ON TABLE btp.task_assignments IS 'Table des assignations de tâches';
 COMMENT ON COLUMN btp.task_assignments.id IS 'Identifiant unique de la tâche';
-COMMENT ON COLUMN btp.task_assignments.assignee_id IS 'ID de la personne assignée';
+COMMENT ON COLUMN btp.task_assignments.assigned_to IS 'ID de la personne assignée';
 COMMENT ON COLUMN btp.task_assignments.assignee_name IS 'Nom de la personne assignée';
 COMMENT ON COLUMN btp.task_assignments.assignee_email IS 'Email de la personne assignée';
 COMMENT ON COLUMN btp.task_assignments.title IS 'Titre de la tâche';

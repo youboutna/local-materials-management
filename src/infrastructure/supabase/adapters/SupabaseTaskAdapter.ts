@@ -1,8 +1,8 @@
 // @ts-nocheck
 // Supabase Adapter for Task Repository
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Task, TaskPriority, TaskStatus } from '@/domain/entities/Task';
 import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
-import { Task, TaskStatus, TaskPriority } from '@/domain/entities/Task';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class SupabaseTaskAdapter implements ITaskRepository {
   /** Legacy persistence enum → canonical domain enum. */
@@ -19,7 +19,10 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   private mapToEntity(data: any): Task {
-    const assigneeId = data.assignee_id ?? data.assigned_to;
+     const list = (data as any).assignedTo as string[] | undefined;
+    const assigneeId = list && list.length ? list  : [];
+    const assigneeName = (data as any).assigneeName || undefined;
+    const assigneeEmail = (data as any).assigneeEmail || undefined;
     return Task.create({
       id: data.id,
       projectId: data.project_id,
@@ -35,7 +38,9 @@ export class SupabaseTaskAdapter implements ITaskRepository {
       dueDate: data.due_date || undefined,
       estimatedDuration: data.estimated_duration || undefined,
       notes: data.notes || undefined,
-      assignedTo: assigneeId ? [assigneeId] : [],
+      assignedTo: assigneeId ,
+      assignedName :assigneeName,
+      assigneeEmail : assignedEmail,
       assignedById: data.assigned_by || undefined
     });
   }
@@ -94,7 +99,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
   }
 
   async save(task: Task): Promise<void> {
-    const assigneeId = task.assignedTo[0] || null;
+    const assigneeId = task.assignedTo?  task.assignedTo[0] : null;
     await this.writeWithSchemaFallback(
       {
         id: task.id,
@@ -106,7 +111,6 @@ export class SupabaseTaskAdapter implements ITaskRepository {
         status: this.toPersistenceStatus(task.status),
         priority: task.priority,
         // Canonical assignment plus the transitional legacy mirror.
-        assignee_id: assigneeId,
         assigned_to: assigneeId,
         assigned_by: task.assignedBy || null,
         due_date: task.dueDate || null,
@@ -134,7 +138,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     if ((data as any).assignedTo !== undefined) {
       const list = (data as any).assignedTo as string[] | undefined;
       const assigneeId = list && list.length ? list[0] : null;
-      updateData.assignee_id = assigneeId;
+      updateData.assigned_to = assigneeId;
       updateData.assigned_to = assigneeId;
     }
 
@@ -205,7 +209,7 @@ export class SupabaseTaskAdapter implements ITaskRepository {
     let { data, error } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assignee_id', userId)
+      .eq('assigned_to', userId)
       .order('created_at', { ascending: false });
 
     if (error?.code === 'PGRST204') {
