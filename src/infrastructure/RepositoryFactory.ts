@@ -599,6 +599,17 @@ export class RepositoryFactory {
     return registry.taskAssignment;
   }
 
+  /** Repository unifié (fusion Task + TaskAssignment) sur la table task_assignments. */
+  static getUnifiedTaskAssignmentRepository(): IUnifiedTaskAssignmentRepository {
+    const store = registry as Record<string, unknown>;
+    if (store.unifiedTaskAssignment) return store.unifiedTaskAssignment as IUnifiedTaskAssignmentRepository;
+    const instance = new UnifiedTaskAssignmentAdapter();
+    store.unifiedTaskAssignment = instance;
+    return instance;
+  }
+
+
+
   // ---------- WORKSPACE & LOCATION ----------
   static getWorkspaceRepository(): IWorkspaceRepository {
     if (registry.workspace) return registry.workspace;
