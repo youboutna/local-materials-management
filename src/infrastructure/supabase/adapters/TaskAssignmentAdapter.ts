@@ -6,8 +6,8 @@
 
 import { TaskAssignment } from '@/domain/entities/Workspace';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
   /**
@@ -15,27 +15,42 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
    */
   async create(taskAssignment: Omit<TaskAssignment, 'id' | 'createdAt' | 'updatedAt'>): Promise<TaskAssignment> {
     try {
+      // ✅ Formater assigned_to pour PostgreSQL (tableau)
+      let assignedToDb = null;
+      if (taskAssignment.assignedTo && Array.isArray(taskAssignment.assignedTo) && taskAssignment.assignedTo.length > 0) {
+        // Format PostgreSQL: {uuid1,uuid2}
+        assignedToDb = `{${taskAssignment.assignedTo.join(',')}}`;
+      }
+
       const { data, error } = await supabase
         .from('task_assignments')
         .insert({
           title: taskAssignment.title,
           description: taskAssignment.description,
           project_id: taskAssignment.projectId,
-          assigned_to: taskAssignment.assignedTo,
+          phase_id: (taskAssignment as any).phaseId || null,
+          assigned_to: assignedToDb,
           assigned_by: taskAssignment.assignedBy,
           assignee_type: taskAssignment.assigneeType,
-          assignee_email: taskAssignment.assigneeEmail,
-          status: taskAssignment.status,
-          priority: taskAssignment.priority,
+          assignee_name: (taskAssignment as any).assigneeName || null,
+          assignee_email: (taskAssignment as any).assigneeEmail || null,
+          status: taskAssignment.status || 'pending',
+          priority: taskAssignment.priority || 'medium',
+          progress: (taskAssignment as any).progress ?? 0,
+          start_date: (taskAssignment as any).startDate ? new Date((taskAssignment as any).startDate).toISOString() : null,
+          end_date: (taskAssignment as any).endDate ? new Date((taskAssignment as any).endDate).toISOString() : null,
           due_date: taskAssignment.dueDate?.toISOString(),
-          completion_date: taskAssignment.completedAt?.toISOString(),
+          completed_at: taskAssignment.completedAt?.toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[TaskAssignmentAdapter.create] Supabase error:', error);
+        throw new Error(`Failed to save task: ${error.message}`);
+      }
 
       return this.mapRowToEntity(data);
     } catch (error) {
@@ -91,8 +106,47 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
    */
   async update(id: string, updates: Partial<TaskAssignment>): Promise<TaskAssignment> {
     try {
-      const updateData = TaskAssignmentTransformer.toRepository(updates);
-      updateData.updated_at = new Date().toISOString();
+      // Formater assigned_to pour PostgreSQL si présent
+      let assignedToDb = undefined;
+      if (updates.assignedTo !== undefined) {
+        if (updates.assignedTo && Array.isArray(updates.assignedTo) && updates.assignedTo.length > 0) {
+          assignedToDb = `{${updates.assignedTo.join(',')}}`;
+        } else {
+          assignedToDb = null;
+        }
+      }
+
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Mapper les champs
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.projectId !== undefined) updateData.project_id = updates.projectId;
+      if ((updates as any).phaseId !== undefined) updateData.phase_id = (updates as any).phaseId;
+      if (updates.assignedBy !== undefined) updateData.assigned_by = updates.assignedBy;
+      if (updates.assigneeType !== undefined) updateData.assignee_type = updates.assigneeType;
+      if ((updates as any).assigneeName !== undefined) updateData.assignee_name = (updates as any).assigneeName;
+      if ((updates as any).assigneeEmail !== undefined) updateData.assignee_email = (updates as any).assigneeEmail;
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.priority !== undefined) updateData.priority = updates.priority;
+      if ((updates as any).progress !== undefined) updateData.progress = (updates as any).progress;
+      if ((updates as any).startDate !== undefined) {
+        updateData.start_date = (updates as any).startDate ? new Date((updates as any).startDate).toISOString() : null;
+      }
+      if ((updates as any).endDate !== undefined) {
+        updateData.end_date = (updates as any).endDate ? new Date((updates as any).endDate).toISOString() : null;
+      }
+      if (updates.dueDate !== undefined) {
+        updateData.due_date = updates.dueDate ? new Date(updates.dueDate).toISOString() : null;
+      }
+      if (updates.completedAt !== undefined) {
+        updateData.completed_at = updates.completedAt ? new Date(updates.completedAt).toISOString() : null;
+      }
+      if (updates.assignedTo !== undefined) {
+        updateData.assigned_to = assignedToDb;
+      }
 
       const { data, error } = await supabase
         .from('task_assignments')
@@ -155,7 +209,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
       const { data, error } = await supabase
         .from('task_assignments')
         .select('*')
-        .eq('assigned_to', assignedTo)
+        .contains('assigned_to', [assignedTo])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -248,6 +302,26 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
   }
 
   /**
+   * Get task assignments by phase ID
+   */
+  async findByPhaseId(phaseId: string): Promise<TaskAssignment[]> {
+    try {
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .select('*')
+        .eq('phase_id', phaseId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(row => this.mapRowToEntity(row));
+    } catch (error) {
+      console.error('TaskAssignmentAdapter.findByPhaseId failed:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Search task assignments by term
    */
   async searchByTerm(searchTerm: string): Promise<TaskAssignment[]> {
@@ -276,6 +350,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
     priority?: string;
     assignee?: string;
     project_id?: string;
+    phase_id?: string;
   }): Promise<TaskAssignment[]> {
     try {
       let query = supabase
@@ -293,10 +368,13 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
         query = query.eq('priority', filters.priority);
       }
       if (filters.assignee) {
-        query = query.eq('assigned_to', filters.assignee);
+        query = query.contains('assigned_to', [filters.assignee]);
       }
       if (filters.project_id) {
         query = query.eq('project_id', filters.project_id);
+      }
+      if (filters.phase_id) {
+        query = query.eq('phase_id', filters.phase_id);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -423,12 +501,17 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
       title: dto.title,
       description: dto.description,
       projectId: dto.projectId,
+      phaseId: dto.phaseId,
       assignedTo: dto.assignedTo,
       assignedBy: dto.assignedBy,
       assigneeType: dto.assigneeType as 'supplier' | 'employee' | 'user' | undefined,
+      assigneeName: dto.assigneeName,
       assigneeEmail: dto.assigneeEmail,
       status: dto.status as any,
       priority: dto.priority as any,
+      progress: dto.progress || 0,
+      startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       completedAt: dto.completedAt ? new Date(dto.completedAt) : undefined,
       createdAt: new Date(dto.createdAt),

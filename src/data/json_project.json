@@ -147,36 +147,128 @@
         ]
       }
     ],
+   
     "tasks": [
       {
         "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "title": "Audit organisationnel",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Réalisation de l'audit organisationnel des directions centrales",
+        "projectId": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
         "phaseId": "9028a9e5-0290-4bf8-ae56-cdb3fed8063a",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": ["4900b294-1f6d-471d-916c-493d91eab"],
+        "assigneeType": "supplier",
+        "assigneeName": "Groupement MKAC/EY",
+        "assigneeEmail": "contact@ey.mr",
         "startDate": "2024-01-01T00:00:00.000Z",
         "endDate": "2024-04-29T00:00:00.000Z",
-        "assignedTo": "4900b294-1f6d-471d-916c-493d91eab"
+        "dueDate": "2024-04-29T00:00:00.000Z",
+        "completedAt": "2024-04-29T00:00:00.000Z",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-04-29T00:00:00.000Z"
       },
       {
         "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
         "title": "Définition des KPI",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Définition des indicateurs de performance clés",
+        "projectId": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
         "phaseId": "8e33c4de-b445-4165-9932-3bd4ff330bfa",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": ["4900b294-1f6d-471d-916c-493d91eab"],
+        "assigneeType": "supplier",
+        "assigneeName": "Groupement MKAC/EY",
+        "assigneeEmail": "contact@ey.mr",
         "startDate": "2024-05-01T00:00:00.000Z",
         "endDate": "2024-08-28T00:00:00.000Z",
-        "assignedTo": "4900b294-1f6d-471d-916c-493d91eab"
+        "dueDate": "2024-08-28T00:00:00.000Z",
+        "completedAt": "2024-08-28T00:00:00.000Z",
+        "createdAt": "2024-05-01T00:00:00.000Z",
+        "updatedAt": "2024-08-28T00:00:00.000Z"
       },
       {
         "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
         "title": "Validation et adoption",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Validation et adoption du rapport final par le Ministre",
+        "projectId": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
         "phaseId": "a83f0f30-ef1f-4e7a-9deb-0f4a31bcffd3",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": ["4900b294-1f6d-471d-916c-493d91eab"],
+        "assigneeType": "supplier",
+        "assigneeName": "Groupement MKAC/EY",
+        "assigneeEmail": "contact@ey.mr",
         "startDate": "2024-09-01T00:00:00.000Z",
         "endDate": "2024-10-31T00:00:00.000Z",
-        "assignedTo": "4900b294-1f6d-471d-916c-493d91eab"
+        "dueDate": "2024-10-31T00:00:00.000Z",
+        "completedAt": "2024-10-31T00:00:00.000Z",
+        "createdAt": "2024-09-01T00:00:00.000Z",
+        "updatedAt": "2024-10-31T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "d4e5f6a7-b8c9-0123-def4-567890abcdef",
+        "projectId": "2e49c7f0-72de-4be3-a43d-49606315cd4a",
+        "title": "DREAM-1-2024 - Audit des indicateurs de performance",
+        "description": "Définition des indicateurs de performance des directions centrales du Ministère",
+        "tenderNumber": "DREAM-1-2024",
+        "status": "awarded",
+        "selectionMode": "AOO",
+        "marketType": "international",
+        "financingSource": "Banque Mondiale",
+        "projectReference": "DREAM-1-2024",
+        "publicationDate": "2023-10-01",
+        "deadlineDate": "2023-11-30",
+        "submissionDeadline": "2023-11-30",
+        "launchDate": "2023-10-01",
+        "attributionDate": "2023-12-15",
+        "budgetMin": 40000000,
+        "budgetMax": 45000000,
+        "estimatedValue": 45000000,
+        "contractDuration": 365,
+        "evaluationCriteria": [
+          { "criteria": "Qualité technique", "weight": 40 },
+          { "criteria": "Prix", "weight": 30 },
+          { "criteria": "Expérience", "weight": 30 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en audit organisationnel"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 5,
+        "currentStage": "contract_signed",
+        "tenderCategory": "services",
+        "procurementType": "standard",
+        "submissions": [
+          {
+            "id": "e5f6a7b8-c9d0-1234-ef56-7890abcdef01",
+            "supplierId": "4900b294-1f6d-471d-916c-493d91eab",
+            "status": "awarded",
+            "submittedAt": "2023-11-20T10:00:00.000Z"
+          }
+        ],
+        "documents": [
+          {
+            "id": "f6a7b8c9-d0e1-2345-f678-90abcdef0123",
+            "documentType": "lettre_soumission",
+            "fileName": "lettre_soumission_dream.pdf",
+            "filePath": "/documents/tenders/dream/lettre_soumission.pdf"
+          },
+          {
+            "id": "f7a8b9c0-d1e2-3456-f012-7890abcdef0124",
+            "documentType": "pv_evaluation_attribution",
+            "fileName": "pv_evaluation_dream.pdf",
+            "filePath": "/documents/tenders/dream/pv_evaluation.pdf"
+          }
+        ]
       }
     ],
     "inspections": [],
@@ -385,36 +477,126 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-0123-def4-567890abcdef",
         "title": "Études techniques",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Réalisation des études techniques pour la réhabilitation du réseau HT",
+        "projectId": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
         "phaseId": "4afbb1dd-ab0a-4d0b-968f-039b235fa185",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": ["127f8626-1b29-4a3b-9749-0d58221bc"],
+        "assigneeType": "supplier",
+        "assigneeName": "CTM Bâtiment",
+        "assigneeEmail": "contact@ctm.mr",
         "startDate": "2024-01-01T00:00:00.000Z",
         "endDate": "2024-03-01T00:00:00.000Z",
-        "assignedTo": "127f8626-1b29-4a3b-9749-0d58221bc"
+        "dueDate": "2024-03-01T00:00:00.000Z",
+        "completedAt": "2024-03-01T00:00:00.000Z",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-03-01T00:00:00.000Z"
       },
       {
         "id": "e5f6a7b8-c9d0-1234-ef56-7890abcdef01",
         "title": "Réhabilitation du réseau HT",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Réhabilitation et renforcement du réseau HT de Nouakchott",
+        "projectId": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
         "phaseId": "f3da1c71-4a84-4bb1-a14a-d56f15d653c2",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": ["127f8626-1b29-4a3b-9749-0d58221bc"],
+        "assigneeType": "supplier",
+        "assigneeName": "CTM Bâtiment",
+        "assigneeEmail": "contact@ctm.mr",
         "startDate": "2024-03-01T00:00:00.000Z",
         "endDate": "2024-10-26T00:00:00.000Z",
-        "assignedTo": "127f8626-1b29-4a3b-9749-0d58221bc"
+        "dueDate": "2024-10-26T00:00:00.000Z",
+        "completedAt": "2024-10-26T00:00:00.000Z",
+        "createdAt": "2024-03-01T00:00:00.000Z",
+        "updatedAt": "2024-10-26T00:00:00.000Z"
       },
       {
         "id": "f6a7b8c9-d0e1-2345-f678-90abcdef0123",
         "title": "Réception des travaux",
-        "status": "en_cours",
-        "progress": 50,
+        "description": "Réception provisoire et définitive des travaux de réhabilitation",
+        "projectId": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
         "phaseId": "7046ccaf-5def-44e2-bbe0-9ad78fe7a8d1",
+        "status": "in_progress",
+        "priority": "medium",
+        "progress": 50,
+        "assignedTo": ["127f8626-1b29-4a3b-9749-0d58221bc"],
+        "assigneeType": "supplier",
+        "assigneeName": "CTM Bâtiment",
+        "assigneeEmail": "contact@ctm.mr",
         "startDate": "2024-11-01T00:00:00.000Z",
         "endDate": "2025-06-30T00:00:00.000Z",
-        "assignedTo": "127f8626-1b29-4a3b-9749-0d58221bc"
+        "dueDate": "2025-06-30T00:00:00.000Z",
+        "createdAt": "2024-11-01T00:00:00.000Z",
+        "updatedAt": "2025-01-15T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f7a8b9c0-d1e2-3456-f012-7890abcdef01",
+        "projectId": "81782b92-5055-42fe-bedf-ac3fb9b402e9",
+        "title": "DAO N°11/CMI/2024 - Réhabilitation réseau HT Nouakchott",
+        "description": "Réhabilitation et renforcement du réseau de distribution Haute Tension à Nouakchott",
+        "tenderNumber": "11",
+        "status": "contracted",
+        "selectionMode": "DAO",
+        "marketType": "national",
+        "financingSource": "FADES",
+        "projectReference": "DAO N°11/CMI/2024",
+        "publicationDate": "2023-09-01",
+        "deadlineDate": "2023-10-31",
+        "submissionDeadline": "2023-10-31",
+        "launchDate": "2023-09-01",
+        "attributionDate": "2023-11-15",
+        "budgetMin": 85000000,
+        "budgetMax": 95000000,
+        "estimatedValue": 95000000,
+        "contractDuration": 545,
+        "evaluationCriteria": [
+          { "criteria": "Prix", "weight": 60 },
+          { "criteria": "Délai d'exécution", "weight": 20 },
+          { "criteria": "Expérience", "weight": 20 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 5,
+        "currentStage": "contract_signed",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [
+          {
+            "id": "f8a9b0c1-d2e3-4567-f123-8901abcdef01",
+            "supplierId": "127f8626-1b29-4a3b-9749-0d58221bc",
+            "status": "awarded",
+            "submittedAt": "2023-10-25T14:30:00.000Z"
+          }
+        ],
+        "documents": [
+          {
+            "id": "f9a0b1c2-d3e4-5678-f234-9012abcdef01",
+            "documentType": "pv_ouverture_plis",
+            "fileName": "pv_ouverture_dao11.pdf",
+            "filePath": "/documents/tenders/dao-ht/pv_ouverture.pdf"
+          },
+          {
+            "id": "f0a1b2c3-d4e5-6789-f345-0123abcdef01",
+            "documentType": "contrat",
+            "fileName": "contrat_dao11.pdf",
+            "filePath": "/documents/tenders/dao-ht/contrat.pdf"
+          }
+        ]
       }
     ],
     "inspections": [
@@ -681,45 +863,125 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "e1f2a3b4-c5d6-7890-abcd-ef1234567890",
         "title": "Études et conception",
-        "status": "terminé",
-        "progress": 100,
+        "description": "Études techniques et conception de l'interconnexion",
+        "projectId": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
         "phaseId": "adcfcc81-d567-4bb3-bbd2-541f7e48963b",
+        "status": "completed",
+        "priority": "high",
+        "progress": 100,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2025-03-01T00:00:00.000Z",
-        "endDate": "2025-05-29T00:00:00.000Z"
+        "endDate": "2025-05-29T00:00:00.000Z",
+        "dueDate": "2025-05-29T00:00:00.000Z",
+        "completedAt": "2025-05-29T00:00:00.000Z",
+        "createdAt": "2025-03-01T00:00:00.000Z",
+        "updatedAt": "2025-05-29T00:00:00.000Z"
       },
       {
         "id": "f2a3b4c5-d6e7-8901-abcd-ef2345678901",
         "title": "Construction ligne HT",
-        "status": "en_cours",
-        "progress": 70,
+        "description": "Construction de la ligne HT 225 kV",
+        "projectId": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
         "phaseId": "7d8eca76-fc98-4c78-9911-0168b8e23e95",
+        "status": "in_progress",
+        "priority": "high",
+        "progress": 70,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2025-06-01T00:00:00.000Z",
-        "endDate": "2026-11-23T00:00:00.000Z"
+        "endDate": "2026-11-23T00:00:00.000Z",
+        "dueDate": "2026-11-23T00:00:00.000Z",
+        "createdAt": "2025-06-01T00:00:00.000Z",
+        "updatedAt": "2026-07-01T00:00:00.000Z"
       },
       {
         "id": "f3a4b5c6-d7e8-9012-bcde-f34567890123",
         "title": "Tests et mise en service",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Tests et mise en service de l'interconnexion",
+        "projectId": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
         "phaseId": "136a0b3f-e54e-499a-9eb8-3987739013d4",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2026-12-01T00:00:00.000Z",
-        "endDate": "2027-03-01T00:00:00.000Z"
+        "endDate": "2027-03-01T00:00:00.000Z",
+        "dueDate": "2027-03-01T00:00:00.000Z",
+        "createdAt": "2026-12-01T00:00:00.000Z",
+        "updatedAt": "2026-12-01T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f4a5b6c7-d8e9-0123-cdef-456789012345",
+        "projectId": "1b6b5151-be11-4c36-a692-230c12e2e1c4",
+        "title": "OMVS-INTERCO-2025-001 - Interconnexion Mauritanie-Sénégal",
+        "description": "Renforcement de l'interconnexion électrique entre la Mauritanie et le Sénégal via l'OMVS",
+        "tenderNumber": "OMVS-INTERCO-2025-001",
+        "status": "open",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "FADES",
+        "projectReference": "OMVS-INTERCO-2025-001",
+        "publicationDate": "2024-10-01",
+        "deadlineDate": "2025-01-31",
+        "submissionDeadline": "2025-01-31",
+        "launchDate": "2024-10-01",
+        "attributionDate": "2025-02-28",
+        "budgetMin": 420000000,
+        "budgetMax": 450000000,
+        "estimatedValue": 450000000,
+        "contractDuration": 850,
+        "evaluationCriteria": [
+          { "criteria": "Qualité technique", "weight": 50 },
+          { "criteria": "Prix", "weight": 30 },
+          { "criteria": "Expérience", "weight": 20 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en interconnexion électrique"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 3,
+        "currentStage": "under_evaluation",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [],
+        "documents": [
+          {
+            "id": "f5a6b7c8-d9e0-1234-def0-567890123456",
+            "documentType": "ddqe",
+            "fileName": "ddqe_interco.pdf",
+            "filePath": "/documents/tenders/interco/ddqe.pdf"
+          },
+          {
+            "id": "f6a7b8c9-d0e1-2345-ef01-678901234567",
+            "documentType": "termes_reference",
+            "fileName": "tdr_interco.pdf",
+            "filePath": "/documents/tenders/interco/tdr.pdf"
+          }
+        ]
       }
     ],
     "inspections": [
       {
-        "id": "f4a5b6c7-d8e9-0123-cdef-456789012345",
+        "id": "f4a5b6c7-d8e9-0123-cdef-456789012346",
         "date": "2025-09-15T00:00:00.000Z",
         "inspector": "OMVS",
         "status": "terminé",
         "comments": "Avancement conforme"
       },
       {
-        "id": "f5a6b7c8-d9e0-1234-def0-567890123456",
+        "id": "f5a6b7c8-d9e0-1234-def0-567890123457",
         "date": "2026-06-10T00:00:00.000Z",
         "inspector": "OMVS",
         "status": "en_cours",
@@ -728,7 +990,7 @@
     ],
     "risks": [
       {
-        "id": "f6a7b8c9-d0e1-2345-ef01-678901234567",
+        "id": "f6a7b8c9-d0e1-2345-ef01-678901234568",
         "title": "Retard dû aux conditions climatiques",
         "description": "Les conditions climatiques peuvent ralentir les travaux",
         "probability": "moyen",
@@ -737,7 +999,7 @@
         "status": "actif"
       },
       {
-        "id": "f7a8b9c0-d1e2-3456-f012-789012345678",
+        "id": "f7a8b9c0-d1e2-3456-f012-789012345679",
         "title": "Coordination transfrontalière",
         "description": "Difficultés de coordination entre les deux pays",
         "probability": "faible",
@@ -982,33 +1244,106 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
         "title": "Études et planification",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Études et planification de l'électrification rurale",
+        "projectId": "8172615e-a66b-4fcc-888a-048f0a652ec2",
         "phaseId": "5f740a15-869d-45f1-8ac8-ad2e3ed82318",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2026-01-01T00:00:00.000Z",
-        "endDate": "2026-04-30T00:00:00.000Z"
+        "endDate": "2026-04-30T00:00:00.000Z",
+        "dueDate": "2026-04-30T00:00:00.000Z",
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2026-01-01T00:00:00.000Z"
       },
       {
         "id": "b2c3d4e5-f6a7-8901-bcde-f23456789013",
         "title": "Travaux d'électrification",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réalisation des travaux d'électrification rurale",
+        "projectId": "8172615e-a66b-4fcc-888a-048f0a652ec2",
         "phaseId": "f8ebf4b6-b5ad-41d8-a32c-2bbe77c33d26",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2026-05-01T00:00:00.000Z",
-        "endDate": "2027-04-26T00:00:00.000Z"
+        "endDate": "2027-04-26T00:00:00.000Z",
+        "dueDate": "2027-04-26T00:00:00.000Z",
+        "createdAt": "2026-05-01T00:00:00.000Z",
+        "updatedAt": "2026-05-01T00:00:00.000Z"
       },
       {
         "id": "c3d4e5f6-a7b8-9012-cdef-345678901235",
         "title": "Réception",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réception des travaux d'électrification",
+        "projectId": "8172615e-a66b-4fcc-888a-048f0a652ec2",
         "phaseId": "eddd29c9-3df7-4420-b8d6-eb26133c33bf",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-05-01T00:00:00.000Z",
-        "endDate": "2027-06-30T00:00:00.000Z"
+        "endDate": "2027-06-30T00:00:00.000Z",
+        "dueDate": "2027-06-30T00:00:00.000Z",
+        "createdAt": "2027-05-01T00:00:00.000Z",
+        "updatedAt": "2027-05-01T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "d3c4e5f6-a7b8-9012-cdef-345678901236",
+        "projectId": "8172615e-a66b-4fcc-888a-048f0a652ec2",
+        "title": "PNAGSB-ELEC-2026-001 - Électrification rurale",
+        "description": "Programme National d'Accès Généralisé aux Services de Base pour l'électrification rurale",
+        "tenderNumber": "PNAGSB-ELEC-2026-001",
+        "status": "published",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "Banque Mondiale",
+        "projectReference": "PNAGSB-ELEC-2026-001",
+        "publicationDate": "2025-11-01",
+        "deadlineDate": "2025-12-31",
+        "submissionDeadline": "2025-12-31",
+        "launchDate": "2025-11-01",
+        "attributionDate": "",
+        "budgetMin": 750000000,
+        "budgetMax": 800000000,
+        "estimatedValue": 800000000,
+        "contractDuration": 730,
+        "evaluationCriteria": [
+          { "criteria": "Qualité technique", "weight": 40 },
+          { "criteria": "Prix", "weight": 40 },
+          { "criteria": "Expérience", "weight": 20 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en électrification rurale"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 2,
+        "currentStage": "evaluation",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [],
+        "documents": [
+          {
+            "id": "e3d4e5f6-a7b8-9012-cdef-345678901237",
+            "documentType": "ddqe",
+            "fileName": "ddqe_pnagsb.pdf",
+            "filePath": "/documents/tenders/pnagsb/ddqe.pdf"
+          }
+        ]
       }
     ],
     "inspections": [],
@@ -1233,36 +1568,108 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-0123-def4-567890ab2345",
         "title": "Études techniques",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Études techniques pour la ligne 225 kV",
+        "projectId": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
         "phaseId": "d7249643-6a4e-4bee-acd4-7db9c3f066ab",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
+        "assigneeName": "Sidi Ould Cheikh",
+        "assigneeEmail": "sidi@control.mr",
         "startDate": "2027-03-08T00:00:00.000Z",
         "endDate": "2027-05-07T00:00:00.000Z",
-        "assignedName": "Sidi Ould Cheikh",
-        "AssignedEmail": "sidi@control.mr",
-        "assignedID": "bb01aec4-397d-4830-ab5c-7d5e0b21b704"
+        "dueDate": "2027-05-07T00:00:00.000Z",
+        "createdAt": "2027-03-08T00:00:00.000Z",
+        "updatedAt": "2027-03-08T00:00:00.000Z"
       },
       {
         "id": "e5f6a7b8-c9d0-1234-ef56-7890ab345678",
         "title": "Construction ligne",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Construction de la ligne 225 kV El Ghaira - Kiffa",
+        "projectId": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
         "phaseId": "bff3fd80-0fe0-4f5f-aff1-ea79562d0a5e",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-05-08T00:00:00.000Z",
-        "endDate": "2027-12-04T00:00:00.000Z"
+        "endDate": "2027-12-04T00:00:00.000Z",
+        "dueDate": "2027-12-04T00:00:00.000Z",
+        "createdAt": "2027-05-08T00:00:00.000Z",
+        "updatedAt": "2027-05-08T00:00:00.000Z"
       },
       {
         "id": "f6a7b8c9-d0e1-2345-f678-90ab45678901",
         "title": "Réception",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réception de la ligne 225 kV",
+        "projectId": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
         "phaseId": "75c6b5ad-b0c4-4438-ba01-d016fd619c96",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-12-05T00:00:00.000Z",
-        "endDate": "2028-02-08T00:00:00.000Z"
+        "endDate": "2028-02-08T00:00:00.000Z",
+        "dueDate": "2028-02-08T00:00:00.000Z",
+        "createdAt": "2027-12-05T00:00:00.000Z",
+        "updatedAt": "2027-12-05T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f7a8b9c0-d1e2-3456-f012-7890ab456789",
+        "projectId": "4e404c71-e33e-4b7d-a18f-6e053ff8e321",
+        "title": "PPM_SOMELEC_2026_5_4 - Ligne 225 kV El Ghaira - Kiffa",
+        "description": "Construction du tronçon de la ligne 225 kV El Ghaira - Kiffa",
+        "tenderNumber": "PPM_SOMELEC_2026_5_4",
+        "status": "published",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "Budget État",
+        "projectReference": "PPM_SOMELEC_2026_5_4",
+        "publicationDate": "2026-08-24",
+        "deadlineDate": "2026-12-31",
+        "submissionDeadline": "2026-12-31",
+        "launchDate": "2026-08-24",
+        "attributionDate": "2027-02-08",
+        "budgetMin": 330000000,
+        "budgetMax": 350000000,
+        "estimatedValue": 350000000,
+        "contractDuration": 337,
+        "evaluationCriteria": [
+          { "criteria": "Prix", "weight": 50 },
+          { "criteria": "Délai d'exécution", "weight": 25 },
+          { "criteria": "Expérience", "weight": 25 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en lignes HT"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 2,
+        "currentStage": "evaluation",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [],
+        "documents": [
+          {
+            "id": "f8a9b0c1-d2e3-4567-f123-90ab45678901",
+            "documentType": "ddqe",
+            "fileName": "ddqe_elghaira.pdf",
+            "filePath": "/documents/tenders/elghaira/ddqe.pdf"
+          }
+        ]
       }
     ],
     "inspections": [],
@@ -1476,33 +1883,106 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-0123-def4-567890ab4567",
         "title": "Études techniques",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Études techniques pour la ligne Nouakchott-Aleg",
+        "projectId": "1a91ada4-8325-4830-9cb4-540d14845995",
         "phaseId": "8f631db3-bb92-443b-9a9c-137104417a87",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2026-12-22T00:00:00.000Z",
-        "endDate": "2027-03-22T00:00:00.000Z"
+        "endDate": "2027-03-22T00:00:00.000Z",
+        "dueDate": "2027-03-22T00:00:00.000Z",
+        "createdAt": "2026-12-22T00:00:00.000Z",
+        "updatedAt": "2026-12-22T00:00:00.000Z"
       },
       {
         "id": "e5f6a7b8-c9d0-1234-ef56-7890ab567890",
         "title": "Construction poste et ligne",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Construction du poste 225/90/33 kV et de la ligne 18 km",
+        "projectId": "1a91ada4-8325-4830-9cb4-540d14845995",
         "phaseId": "3fef3431-ac22-4f3c-bdd4-b84a45282d18",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-03-23T00:00:00.000Z",
-        "endDate": "2028-05-17T00:00:00.000Z"
+        "endDate": "2028-05-17T00:00:00.000Z",
+        "dueDate": "2028-05-17T00:00:00.000Z",
+        "createdAt": "2027-03-23T00:00:00.000Z",
+        "updatedAt": "2027-03-23T00:00:00.000Z"
       },
       {
         "id": "f6a7b8c9-d0e1-2345-f678-90ab67890123",
         "title": "Réception",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réception des travaux",
+        "projectId": "1a91ada4-8325-4830-9cb4-540d14845995",
         "phaseId": "4d16455e-aca7-463b-a012-47ae2924a57b",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2028-05-18T00:00:00.000Z",
-        "endDate": "2028-07-17T00:00:00.000Z"
+        "endDate": "2028-07-17T00:00:00.000Z",
+        "dueDate": "2028-07-17T00:00:00.000Z",
+        "createdAt": "2028-05-18T00:00:00.000Z",
+        "updatedAt": "2028-05-18T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f7a8b9c0-d1e2-3456-f012-90ab67890123",
+        "projectId": "1a91ada4-8325-4830-9cb4-540d14845995",
+        "title": "PPM_SOMELEC_2026_5_3 - Poste Aleg 225/90/33 kV",
+        "description": "Construction du tronçon Nouakchott-Aleg, poste d'Aleg 225/90/33 kV et extension du poste 90 kV",
+        "tenderNumber": "PPM_SOMELEC_2026_5_3",
+        "status": "published",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "Budget État",
+        "projectReference": "PPM_SOMELEC_2026_5_3",
+        "publicationDate": "2026-07-20",
+        "deadlineDate": "2026-11-20",
+        "submissionDeadline": "2026-11-20",
+        "launchDate": "2026-07-20",
+        "attributionDate": "2026-11-23",
+        "budgetMin": 260000000,
+        "budgetMax": 280000000,
+        "estimatedValue": 280000000,
+        "contractDuration": 700,
+        "evaluationCriteria": [
+          { "criteria": "Prix", "weight": 50 },
+          { "criteria": "Délai d'exécution", "weight": 25 },
+          { "criteria": "Expérience", "weight": 25 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en construction de postes électriques"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 3,
+        "currentStage": "attribution",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [],
+        "documents": [
+          {
+            "id": "f8a9b0c1-d2e3-4567-f123-90ab67890123",
+            "documentType": "ddqe",
+            "fileName": "ddqe_aleg.pdf",
+            "filePath": "/documents/tenders/aleg/ddqe.pdf"
+          }
+        ]
       }
     ],
     "inspections": [],
@@ -1795,42 +2275,129 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-0123-def4-567890ab5678",
         "title": "Pré-faisabilité et études",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Études de pré-faisabilité et EIES pour la centrale solaire",
+        "projectId": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
         "phaseId": "9f9066f7-f7e6-4fdf-948d-3f56083f35f7",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-03-31T00:00:00.000Z",
-        "endDate": "2027-06-29T00:00:00.000Z"
+        "endDate": "2027-06-29T00:00:00.000Z",
+        "dueDate": "2027-06-29T00:00:00.000Z",
+        "createdAt": "2027-03-31T00:00:00.000Z",
+        "updatedAt": "2027-03-31T00:00:00.000Z"
       },
       {
         "id": "e5f6a7b8-c9d0-1234-ef56-7890ab678901",
         "title": "Conception et DAO",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Conception technique détaillée et DAO de la centrale",
+        "projectId": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
         "phaseId": "9caef869-bc87-47b3-a388-00e9bc2a75e1",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-06-30T00:00:00.000Z",
-        "endDate": "2027-10-28T00:00:00.000Z"
+        "endDate": "2027-10-28T00:00:00.000Z",
+        "dueDate": "2027-10-28T00:00:00.000Z",
+        "createdAt": "2027-06-30T00:00:00.000Z",
+        "updatedAt": "2027-06-30T00:00:00.000Z"
       },
       {
         "id": "f6a7b8c9-d0e1-2345-f678-90ab78901234",
         "title": "Exécution des travaux",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Exécution des travaux de la centrale solaire",
+        "projectId": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
         "phaseId": "7f64fd9b-f942-4402-a3f1-42b8a9fbcace",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2027-10-29T00:00:00.000Z",
-        "endDate": "2028-04-26T00:00:00.000Z"
+        "endDate": "2028-04-26T00:00:00.000Z",
+        "dueDate": "2028-04-26T00:00:00.000Z",
+        "createdAt": "2027-10-29T00:00:00.000Z",
+        "updatedAt": "2027-10-29T00:00:00.000Z"
       },
       {
         "id": "f7a8b9c0-d1e2-3456-f012-7890ab890123",
         "title": "Réception et garantie",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réception et garantie de la centrale solaire",
+        "projectId": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
         "phaseId": "382b8faf-7c07-437e-aa71-91142af2fcdd",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": [],
+        "assigneeType": "employee",
         "startDate": "2028-04-27T00:00:00.000Z",
-        "endDate": "2028-06-26T00:00:00.000Z"
+        "endDate": "2028-06-26T00:00:00.000Z",
+        "dueDate": "2028-06-26T00:00:00.000Z",
+        "createdAt": "2028-04-27T00:00:00.000Z",
+        "updatedAt": "2028-04-27T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f8a9b0c1-d2e3-4567-f123-8901ab012345",
+        "projectId": "5fdf1c4d-4bfa-48f5-848f-beff02984208",
+        "title": "PPM_SOMELEC_2026_5_12 - Centrale solaire 50 MWc",
+        "description": "Construction d'une centrale solaire de 50 MWc avec stockage 35MW/70 MWh",
+        "tenderNumber": "PPM_SOMELEC_2026_5_12",
+        "status": "published",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "Banque Mondiale",
+        "projectReference": "PPM_SOMELEC_2026_5_12",
+        "publicationDate": "2026-12-21",
+        "deadlineDate": "2027-03-15",
+        "submissionDeadline": "2027-03-15",
+        "launchDate": "2026-12-21",
+        "attributionDate": "2027-03-17",
+        "budgetMin": 1150000000,
+        "budgetMax": 1250000000,
+        "estimatedValue": 1250000000,
+        "contractDuration": 365,
+        "evaluationCriteria": [
+          { "criteria": "Qualité technique", "weight": 50 },
+          { "criteria": "Prix", "weight": 30 },
+          { "criteria": "Expérience", "weight": 20 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en centrales solaires"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 2,
+        "currentStage": "evaluation",
+        "tenderCategory": "works",
+        "procurementType": "standard",
+        "submissions": [],
+        "documents": [
+          {
+            "id": "f9a0b1c2-d3e4-5678-f234-9012ab012345",
+            "documentType": "ddqe",
+            "fileName": "ddqe_solaire.pdf",
+            "filePath": "/documents/tenders/solaire/ddqe.pdf"
+          },
+          {
+            "id": "f0a1b2c3-d4e5-6789-f345-0123ab012345",
+            "documentType": "termes_reference",
+            "fileName": "tdr_solaire.pdf",
+            "filePath": "/documents/tenders/solaire/tdr.pdf"
+          }
+        ]
       }
     ],
     "inspections": [],
@@ -2104,41 +2671,130 @@
         "dqeLines": []
       }
     ],
+   
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-0123-def4-567890ab6789",
         "title": "Fabrication et livraison",
-        "status": "en_cours",
-        "progress": 50,
+        "description": "Fabrication et livraison des transformateurs 90/33 kV",
+        "projectId": "39a522cc-591f-477d-9daf-c21bc0b80d17",
         "phaseId": "a200eb92-42c8-4033-b8f7-f93573dbbb12",
+        "status": "in_progress",
+        "priority": "high",
+        "progress": 50,
+        "assignedTo": ["1cff8c06-7976-4933-8df6-775ded72a"],
+        "assigneeType": "supplier",
+        "assigneeName": "TEK TRANSFORMATÖR",
+        "assigneeEmail": "info@tektransformer.com.tr",
         "startDate": "2026-07-20T00:00:00.000Z",
         "endDate": "2026-09-18T00:00:00.000Z",
-        "assignedTo": "1cff8c06-7976-4933-8df6-775ded72a"
+        "dueDate": "2026-09-18T00:00:00.000Z",
+        "createdAt": "2026-07-20T00:00:00.000Z",
+        "updatedAt": "2026-08-15T00:00:00.000Z"
       },
       {
         "id": "e5f6a7b8-c9d0-1234-ef56-7890ab789012",
         "title": "Installation et mise en service",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Installation et mise en service des transformateurs",
+        "projectId": "39a522cc-591f-477d-9daf-c21bc0b80d17",
         "phaseId": "02844046-11f3-4668-b27c-fb5eb2773c3c",
+        "status": "pending",
+        "priority": "high",
+        "progress": 0,
+        "assignedTo": ["1cff8c06-7976-4933-8df6-775ded72a"],
+        "assigneeType": "supplier",
+        "assigneeName": "TEK TRANSFORMATÖR",
+        "assigneeEmail": "info@tektransformer.com.tr",
         "startDate": "2026-10-01T00:00:00.000Z",
         "endDate": "2026-12-30T00:00:00.000Z",
-        "assignedTo": "1cff8c06-7976-4933-8df6-775ded72a"
+        "dueDate": "2026-12-30T00:00:00.000Z",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z"
       },
       {
         "id": "f6a7b8c9-d0e1-2345-f678-90ab89012345",
         "title": "Réception",
-        "status": "planifié",
-        "progress": 0,
+        "description": "Réception définitive des transformateurs",
+        "projectId": "39a522cc-591f-477d-9daf-c21bc0b80d17",
         "phaseId": "be51ef61-c9e6-40a6-bc4f-b99947e03e0d",
+        "status": "pending",
+        "priority": "medium",
+        "progress": 0,
+        "assignedTo": ["1cff8c06-7976-4933-8df6-775ded72a"],
+        "assigneeType": "supplier",
+        "assigneeName": "TEK TRANSFORMATÖR",
+        "assigneeEmail": "info@tektransformer.com.tr",
         "startDate": "2026-12-31T00:00:00.000Z",
         "endDate": "2027-01-25T00:00:00.000Z",
-        "assignedTo": "1cff8c06-7976-4933-8df6-775ded72a"
+        "dueDate": "2027-01-25T00:00:00.000Z",
+        "createdAt": "2026-12-31T00:00:00.000Z",
+        "updatedAt": "2026-12-31T00:00:00.000Z"
+      }
+    ],
+    "tenders": [
+      {
+        "id": "f7a8b9c0-d1e2-3456-f012-7890ab901234",
+        "projectId": "39a522cc-591f-477d-9daf-c21bc0b80d17",
+        "title": "PPM_SOMELEC_2026_5_1 - Transformateurs 90/33 kV",
+        "description": "Fourniture, installation et mise en service de deux transformateurs 90/33 kV - 15 MVA",
+        "tenderNumber": "PPM_SOMELEC_2026_5_1",
+        "status": "awarded",
+        "selectionMode": "AOOI",
+        "marketType": "international",
+        "financingSource": "Budget État",
+        "projectReference": "PPM_SOMELEC_2026_5_1",
+        "publicationDate": "2026-05-18",
+        "deadlineDate": "2026-06-15",
+        "submissionDeadline": "2026-06-15",
+        "launchDate": "2026-05-18",
+        "attributionDate": "2026-06-22",
+        "budgetMin": 78000000,
+        "budgetMax": 84000000,
+        "estimatedValue": 84000000,
+        "contractDuration": 189,
+        "evaluationCriteria": [
+          { "criteria": "Prix", "weight": 40 },
+          { "criteria": "Délai de livraison", "weight": 30 },
+          { "criteria": "Qualité", "weight": 30 }
+        ],
+        "eligibilityRequirements": [
+          "Attestation d'impôt à jour",
+          "Attestation CNSS",
+          "Certificat de non-faillite",
+          "Expérience en fabrication de transformateurs"
+        ],
+        "awardCriteria": "Offre économiquement la plus avantageuse",
+        "currentPhase": 4,
+        "currentStage": "contract_signed",
+        "tenderCategory": "goods",
+        "procurementType": "standard",
+        "submissions": [
+          {
+            "id": "f8a9b0c1-d2e3-4567-f123-8901ab901234",
+            "supplierId": "1cff8c06-7976-4933-8df6-775ded72a",
+            "status": "awarded",
+            "submittedAt": "2026-06-10T09:00:00.000Z"
+          }
+        ],
+        "documents": [
+          {
+            "id": "f9a0b1c2-d3e4-5678-f234-9012ab901234",
+            "documentType": "pv_ouverture_plis",
+            "fileName": "pv_ouverture_transfo.pdf",
+            "filePath": "/documents/tenders/transfo/pv_ouverture.pdf"
+          },
+          {
+            "id": "f0a1b2c3-d4e5-6789-f345-0123ab901234",
+            "documentType": "contrat",
+            "fileName": "contrat_transfo.pdf",
+            "filePath": "/documents/tenders/transfo/contrat.pdf"
+          }
+        ]
       }
     ],
     "inspections": [
       {
-        "id": "f7a8b9c0-d1e2-3456-f012-7890ab901234",
+        "id": "f7a8b9c0-d1e2-3456-f012-7890ab901235",
         "date": "2026-08-15T00:00:00.000Z",
         "inspector": "SOMELEC",
         "status": "terminé",
@@ -2225,7 +2881,7 @@
     ],
     "documents": [
       {
-        "id": "f9a0b1c2-d3e4-5678-f234-9012ab123456",
+        "id": "f9a0b1c2-d3e4-5678-f234-9012ab901234",
         "title": "PPM_SOMELEC_2026_5_1",
         "type": "tender",
         "url": "/documents/transfo.pdf"

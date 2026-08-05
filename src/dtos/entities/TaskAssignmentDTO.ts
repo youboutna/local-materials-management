@@ -39,7 +39,10 @@ export enum TaskAssignmentType {
   TEAM = 'team',
   REVIEWER = 'reviewer',
   APPROVER = 'approver',
-  CONSULTANT = 'consultant'
+  CONSULTANT = 'consultant',
+  SUPPLIER = 'supplier',
+  EMPLOYEE = 'employee',
+  USER = 'user'
 }
 
 /**
@@ -51,25 +54,30 @@ export interface TaskAssignmentDTO extends BaseEntityDTO {
   id: string;
   taskId: string;
   projectId: string;
+  phaseId?: string;                      // ← AJOUTÉ
   
   // Assignment details
-  assignedTo: string; // Employee ID only for DTO
-  assignedBy: string; // Employee ID only for DTO
-  assigneeType: TaskAssignmentType;
+  assignedTo: string | string[];         // ← MODIFIÉ: string ou string[]
+  assignedBy?: string;
+  assigneeType?: TaskAssignmentType | string;  // ← MODIFIÉ: accepte string
+  assigneeName?: string;                 // ← AJOUTÉ
+  assigneeEmail?: string;                // ← AJOUTÉ
   
   // Task information
   title: string;
   description?: string;
   
   // Status and priority
-  status: TaskAssignmentStatus;
-  priority: TaskAssignmentPriority;
+  status: TaskAssignmentStatus | string; // ← MODIFIÉ: accepte string
+  priority: TaskAssignmentPriority | string; // ← MODIFIÉ: accepte string
   
   // Timeline
   assignedAt: string;
   dueDate?: string;
   startedAt?: string;
   completedAt?: string;
+  startDate?: string;                    // ← AJOUTÉ
+  endDate?: string;                      // ← AJOUTÉ
   estimatedHours?: number;
   actualHours?: number;
   
@@ -81,6 +89,7 @@ export interface TaskAssignmentDTO extends BaseEntityDTO {
   assignmentNotes?: string;
   acceptanceNotes?: string;
   rejectionReason?: string;
+  notes?: string;                        // ← AJOUTÉ
   
   // Dependencies
   dependsOn?: string[]; // Task assignment IDs only for DTO
@@ -105,20 +114,28 @@ export interface TaskAssignmentDTO extends BaseEntityDTO {
  * Input for creating new task assignments
  */
 export interface CreateTaskAssignmentDTO {
-  taskId: string;
+  taskId?: string;
   projectId: string;
-  assignedTo: string; // Employee ID only for DTO
-  assignedBy: string; // Employee ID only for DTO
-  assigneeType: TaskAssignmentType;
+  phaseId?: string;
+  assignedTo?: string | string[];        // ← MODIFIÉ
+  assignedBy?: string;
+  assigneeType?: TaskAssignmentType | string;
+  assigneeName?: string;
+  assigneeEmail?: string;
   title: string;
   description?: string;
-  priority?: TaskAssignmentPriority;
+  status?: TaskAssignmentStatus | string;
+  priority?: TaskAssignmentPriority | string;
+  progress?: number;
   dueDate?: string;
+  startDate?: string;
+  endDate?: string;
   estimatedHours?: number;
   assignmentNotes?: string;
-  dependsOn?: string[]; // Task assignment IDs only for DTO
+  notes?: string;
+  dependsOn?: string[];
   requiredSkills?: string[];
-  providedResources?: string[]; // Resource IDs only for DTO
+  providedResources?: string[];
 }
 
 /**
@@ -126,19 +143,29 @@ export interface CreateTaskAssignmentDTO {
  * Input for updating existing task assignments
  */
 export interface UpdateTaskAssignmentDTO {
-  status?: TaskAssignmentStatus;
-  priority?: TaskAssignmentPriority;
-  dueDate?: string;
+  title?: string;
+  description?: string;
+  status?: TaskAssignmentStatus | string;
+  priority?: TaskAssignmentPriority | string;
   progress?: number;
+  dueDate?: string;
+  startDate?: string;
+  endDate?: string;
+  assignedTo?: string | string[];
+  assigneeType?: TaskAssignmentType | string;
+  assigneeName?: string;
+  assigneeEmail?: string;
+  assignedBy?: string;
   actualHours?: number;
   completionPercentage?: number;
   assignmentNotes?: string;
   acceptanceNotes?: string;
   rejectionReason?: string;
-  dependsOn?: string[]; // Task assignment IDs only for DTO
-  blocks?: string[]; // Task assignment IDs only for DTO
-  providedResources?: string[]; // Resource IDs only for DTO
+  dependsOn?: string[];
+  blocks?: string[];
+  providedResources?: string[];
   qualityRating?: number;
+  notes?: string;
   
   // Metadata
   updatedBy?: string;
@@ -153,11 +180,11 @@ export interface TaskAssignmentSummaryDTO extends BaseEntityDTO {
   id: string;
   taskId: string;
   projectId: string;
-  assignedTo: string; // Employee ID only for DTO
-  assignedBy: string; // Employee ID only for DTO
+  assignedTo: string | string[];
+  assignedBy?: string;
   title: string;
-  status: TaskAssignmentStatus;
-  priority: TaskAssignmentPriority;
+  status: TaskAssignmentStatus | string;
+  priority: TaskAssignmentPriority | string;
   progress: number;
   dueDate?: string;
   isOverdue?: boolean;
@@ -206,11 +233,12 @@ export interface TaskAssignmentWorkloadDTO {
  */
 export interface TaskAssignmentFiltersDTO {
   projectId?: string;
-  assignedTo?: string;
+  phaseId?: string;
+  assignedTo?: string | string[];
   assignedBy?: string;
-  status?: TaskAssignmentStatus;
-  priority?: TaskAssignmentPriority;
-  assigneeType?: TaskAssignmentType;
+  status?: TaskAssignmentStatus | string;
+  priority?: TaskAssignmentPriority | string;
+  assigneeType?: TaskAssignmentType | string;
   dueDateRange?: {
     startDate?: string;
     endDate?: string;
@@ -266,15 +294,15 @@ export interface SearchTaskAssignmentsRequestDTO {
 }
 
 export interface GetTaskAssignmentsByStatusRequestDTO {
-  status: TaskAssignmentStatus;
+  status: TaskAssignmentStatus | string;
 }
 
 export interface GetTaskAssignmentsByPriorityRequestDTO {
-  priority: TaskAssignmentPriority;
+  priority: TaskAssignmentPriority | string;
 }
 
 export interface GetTaskAssignmentsByAssigneeTypeRequestDTO {
-  assigneeType: TaskAssignmentType;
+  assigneeType: TaskAssignmentType | string;
 }
 
 /**
@@ -283,9 +311,9 @@ export interface GetTaskAssignmentsByAssigneeTypeRequestDTO {
  */
 export interface TaskAssignmentStatsDTO {
   total: number;
-  byStatus: Record<TaskAssignmentStatus, number>;
-  byPriority: Record<TaskAssignmentPriority, number>;
-  byAssigneeType: Record<TaskAssignmentType, number>;
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+  byAssigneeType: Record<string, number>;
   overdue: number;
   dueSoon: number;
 }

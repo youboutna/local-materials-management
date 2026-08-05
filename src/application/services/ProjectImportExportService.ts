@@ -13,6 +13,7 @@
  *   en incluant la zone d'intervention (interventionZone) lorsqu'elle existe.
  */
 
+import { AuthService } from '@/application/services/AuthService';
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { OrganizationService } from '@/application/services/OrganizationService';
 import { PhaseService } from '@/application/services/PhaseService';
@@ -26,6 +27,7 @@ import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
+import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
 import type {
   CreateProjectDTO,
   ProjectDTO,
@@ -34,10 +36,13 @@ import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+
+// =============================================================================
+// TYPES
+// =============================================================================
 
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType' | 'tasks'>> {
   id?: string;
@@ -118,8 +123,12 @@ export interface ProjectImportTask {
   /** Référence la phase locale (`phase.id` ou `phase.code`) quand la tâche est au niveau projet. */
   phaseId?: string;
   assignedTo?: string | string[];
+  assigneeName?: string;
+  assigneeEmail?: string;
+  AssignedEmail?: string;
+  assignedName?: string;
+  assignedID?: string;
 }
-
 
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
   organizationId?: string;
@@ -127,7 +136,6 @@ export interface ProjectImportStakeholder extends Partial<CreateProjectStakehold
   externalRef?: string;
   role?: string;
 }
-
 
 export interface ProjectImportResult {
   total: number;
@@ -179,7 +187,16 @@ export interface ProjectImportSupplier {
   bankInfo?: { bank?: string; account?: string; iban?: string };
 }
 
+// =============================================================================
+// SERVICE
+// =============================================================================
+
 export class ProjectImportExportService {
+  private authService: AuthService;
+  private currentUserId?: string;
+  private currentUserName?: string;
+  private currentUserEmail?: string;
+
   constructor(
     private readonly projectService: ProjectService,
     private readonly phaseService = new PhaseService(),
@@ -188,7 +205,10 @@ export class ProjectImportExportService {
     private readonly stakeholderService = new ProjectStakeholderService(),
     private readonly organizationService = new OrganizationService(),
     private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
-  ) {}
+    authService?: AuthService,
+  ) {
+    this.authService = authService || new AuthService(RepositoryFactory.getAuthRepository());
+  }
 
   static default(): ProjectImportExportService {
     return new ProjectImportExportService(
@@ -196,40 +216,57 @@ export class ProjectImportExportService {
     );
   }
 
-  // ============= IMPORT =============
- 
-
-validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string; message: string }> {
-  const errors: Array<{ row: number; title: string; message: string }> = [];
-  const keys = new Set<string>();
-  rows.forEach((row, index) => {
-    const title = row.title?.trim() || '(empty)';
-    const key = (row.externalRef || title).toLowerCase();
-    if (!row.title?.trim()) {
-      errors.push({ row: index + 1, title, message: 'Missing title' });
-    } else if (keys.has(key)) {
-      errors.push({ row: index + 1, title, message: `Duplicate import key: ${key}` });
-    } else {
-      keys.add(key);
-    }
-    // NOUVEAU: Vérifier location
-    if (!row.location?.trim() && !row.interventionZone?.address && !row.interventionZones?.length) {
-      errors.push({ row: index + 1, title, message: 'Missing location or intervention zone' });
-    }
-    (row.phases ?? []).forEach((phase, phaseIndex) => {
-      if (!phase.name?.trim()) {
-        errors.push({ row: index + 1, title, message: `Phase ${phaseIndex + 1} is missing a name` });
+  /**
+   * Récupère l'utilisateur courant via AuthService
+   */
+  private async loadCurrentUser(): Promise<void> {
+    try {
+      const user = await this.authService.getCurrentUser();
+      if (user) {
+        this.currentUserId = user.id;
+        this.currentUserName = user.fullName || user.email?.split('@')[0] || 'Utilisateur';
+        this.currentUserEmail = user.email || '';
       }
+    } catch (error) {
+      console.warn('[ProjectImportExportService] Cannot get current user:', error);
+    }
+  }
+
+  // ============= IMPORT =============
+
+  validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string; message: string }> {
+    const errors: Array<{ row: number; title: string; message: string }> = [];
+    const keys = new Set<string>();
+    rows.forEach((row, index) => {
+      const title = row.title?.trim() || '(empty)';
+      const key = (row.externalRef || title).toLowerCase();
+      if (!row.title?.trim()) {
+        errors.push({ row: index + 1, title, message: 'Missing title' });
+      } else if (keys.has(key)) {
+        errors.push({ row: index + 1, title, message: `Duplicate import key: ${key}` });
+      } else {
+        keys.add(key);
+      }
+      if (!row.location?.trim() && !row.interventionZone?.address && !row.interventionZones?.length) {
+        errors.push({ row: index + 1, title, message: 'Missing location or intervention zone' });
+      }
+      (row.phases ?? []).forEach((phase, phaseIndex) => {
+        if (!phase.name?.trim()) {
+          errors.push({ row: index + 1, title, message: `Phase ${phaseIndex + 1} is missing a name` });
+        }
+      });
     });
-  });
-  return errors;
-}
+    return errors;
+  }
 
   async importDataset(dataset: ProjectImportDataset): Promise<ProjectImportResult> {
     if (!dataset || !Array.isArray(dataset.projects)) {
       throw new Error('Invalid import dataset: projects must be an array');
     }
     try {
+      // Charger l'utilisateur courant une fois pour tout l'import
+      await this.loadCurrentUser();
+
       const references = {
         organizations: await this.importOrganizations(dataset.organizations ?? []),
         suppliers: await this.importSuppliers(dataset.suppliers ?? []),
@@ -269,7 +306,6 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     try {
       existingProjects = await this.projectService.getAllProjects();
     } catch (e) {
-      // non-blocking; we still attempt import. Errors will surface per-row if any.
       console.warn('[ProjectImportExportService] Cannot list existing projects:', e);
     }
 
@@ -284,12 +320,18 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       }
       try {
         const externalRef = this.getExternalRef(row);
-         const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
+        const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
         const dto = this.mapImportRowToCreateDTO(row, references.organizations);
         const project = existing
           ? await this.projectService.updateProject(existing.id, dto as never)
           : await this.projectService.createProject(dto);
-        await this.importRelations(project.id, row, result.details, references.suppliers, references.organizations);
+        await this.importRelations(
+          project.id,
+          row,
+          result.details,
+          references.suppliers,
+          references.organizations
+        );
         result.imported += 1;
         if (project?.id) result.createdIds.push(project.id);
         const existingIndex = existingProjects.findIndex((candidate) => candidate.id === project.id);
@@ -330,13 +372,12 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         isActive: row.isActive ?? true,
         externalRef: this.isUUID(row.id) ? undefined : row.id,
       };
-      // Upsert réel : évite les violations de contrainte unique (code / external_ref)
       const organization = current
         ? await this.organizationService.update(current.id, payload)
         : await this.organizationService.upsert({
-          ...payload,
-          id: this.isUUID(row.id) ? row.id : undefined,
-        });
+            ...payload,
+            id: this.isUUID(row.id) ? row.id : undefined,
+          });
 
       references.set(row.id, organization.id);
       const existingIndex = existing.findIndex((candidate) => candidate.id === organization.id);
@@ -366,17 +407,25 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       };
       const supplier = current
         ? await this.supplierService.updateSupplier(current.id, {
-          name: row.name.trim(), email: row.contactEmail, phone: row.contactPhone,
-          address: row.address, nif: row.nif, rating,
-          status: row.isActive === false ? 'inactive' : 'active',
-          externalRef: row.id,
-        })
+            name: row.name.trim(),
+            email: row.contactEmail,
+            phone: row.contactPhone,
+            address: row.address,
+            nif: row.nif,
+            rating,
+            status: row.isActive === false ? 'inactive' : 'active',
+            externalRef: row.id,
+          })
         : await this.supplierService.createSupplier({
-          name: row.name.trim(), email: row.contactEmail, phone: row.contactPhone,
-          address: row.address, nif: row.nif, rating,
-          status: row.isActive === false ? 'inactive' : 'active',
-          externalRef: row.id,
-        });
+            name: row.name.trim(),
+            email: row.contactEmail,
+            phone: row.contactPhone,
+            address: row.address,
+            nif: row.nif,
+            rating,
+            status: row.isActive === false ? 'inactive' : 'active',
+            externalRef: row.id,
+          });
       references.set(row.id, supplier.id);
       existing.push(supplier);
     }
@@ -456,26 +505,21 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
   ): Promise<void> {
     /** Résolution des identifiants locaux de phases (ex: "phase-1-dream") vers les UUID persistés. */
     const phaseIdMap = new Map<string, string>();
-    
+
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode)?.phases.find((candidate) => candidate.code === phase.code)
         : undefined;
-      
-      // Récupérer toutes les phases du projet
+
       const existingPhases = await this.phaseService.getPhasesByProject(projectId);
-      
-      // Chercher par phase_code (dans customPhaseData) ou par nom
+
       const existingPhase = existingPhases.find((candidate) => {
         const customData = candidate.customPhaseData as { phaseCode?: string } | null;
         return (phase.code && customData?.phaseCode === phase.code) ||
                (phase.name && candidate.phaseName === phase.name);
       }) ?? null;
 
-      // Générer un phase_code unique si absent
       const phaseCode = phase.code || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
-      // Normaliser le type de phase
       const normalizedType = PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name);
 
       const phaseData: Partial<PhaseDTO> = {
@@ -493,14 +537,13 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         startDate: phase.startDate,
         endDate: phase.endDate,
         estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
-        customPhaseData: phaseConfig?.dqeMapping 
-          ? { dqeMapping: phaseConfig.dqeMapping, phaseCode: phaseCode } 
+        customPhaseData: phaseConfig?.dqeMapping
+          ? { dqeMapping: phaseConfig.dqeMapping, phaseCode: phaseCode }
           : { phaseCode: phaseCode },
         createdAt: existingPhase?.createdAt ?? new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      // Créer ou mettre à jour
       let createdPhase;
       if (existingPhase) {
         createdPhase = await this.phaseService.updatePhase(existingPhase.id, phaseData);
@@ -508,7 +551,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         createdPhase = await this.phaseService.createPhase(phaseData as PhaseDTO, projectId);
       }
       details.phases += 1;
-      
+
       for (const key of [phase.id, phase.code, phase.name, phase.externalRef]) {
         if (key) phaseIdMap.set(key, createdPhase.id);
       }
@@ -516,7 +559,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       // Milestones
       const existingMilestones = await this.milestoneService.getPhaseMilestonesRaw(createdPhase.id);
       for (const milestone of phase.milestones ?? []) {
-        const existingMilestone = existingMilestones.find((candidate) => 
+        const existingMilestone = existingMilestones.find((candidate) =>
           candidate.title === (milestone.title ?? milestone.name)
         );
         const milestoneData = {
@@ -658,29 +701,75 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
   private normalizeTaskPriority(priority?: string): TaskPriority | undefined {
     const normalized = (priority ?? '').trim().toLowerCase();
     const map: Record<string, TaskPriority> = {
-      basse: TaskPriority.LOW, low: TaskPriority.LOW,
-      moyenne: TaskPriority.MEDIUM, moyen: TaskPriority.MEDIUM, medium: TaskPriority.MEDIUM,
-      haute: TaskPriority.HIGH, elevee: TaskPriority.HIGH, high: TaskPriority.HIGH,
+      basse: TaskPriority.LOW,
+      low: TaskPriority.LOW,
+      moyenne: TaskPriority.MEDIUM,
+      moyen: TaskPriority.MEDIUM,
+      medium: TaskPriority.MEDIUM,
+      haute: TaskPriority.HIGH,
+      elevee: TaskPriority.HIGH,
+      high: TaskPriority.HIGH,
     };
     return map[normalized];
   }
 
-  /** Upsert idempotent d'une tâche (par titre dans la phase / le projet). */
-  private async upsertTask(
-    projectId: string,
-    phaseId: string | undefined,
-    task: ProjectImportTask,
-    details: ProjectImportResult['details'],
-    suppliers?: Map<string, string>,
-  ): Promise<void> {
-    const title = task.title ?? task.name ?? 'Tâche importée';
-    const existingTasks = phaseId
-      ? await this.taskService.getTasksByPhase(phaseId)
-      : await this.taskService.getProjectTasks(projectId);
-    const existingTask = existingTasks.find((candidate) => candidate.title === title);
-    const assignees = (Array.isArray(task.assignedTo) ? task.assignedTo : task.assignedTo ? [task.assignedTo] : [])
-      .map((assignee) => this.resolveReference(assignee, suppliers))
-      .filter((assignee): assignee is string => !!assignee);
+  /**
+   * Upsert idempotent d'une tâche avec auto-assignation.
+   * Si assignedTo est vide, on assigne à l'utilisateur courant.
+   * assignedBy est automatiquement renseigné avec l'utilisateur courant.
+   */
+ /**
+ * Upsert idempotent d'une tâche avec auto-assignation.
+ * Si assignedTo est vide, on assigne à l'utilisateur courant.
+ * assignedBy est automatiquement renseigné avec l'utilisateur courant.
+ */
+private async upsertTask(
+  projectId: string,
+  phaseId: string | undefined,
+  task: ProjectImportTask,
+  details: ProjectImportResult['details'],
+  suppliers?: Map<string, string>,
+): Promise<void> {
+  const title = task.title ?? task.name ?? 'Tâche importée';
+  const existingTasks = phaseId
+    ? await this.taskService.getTasksByPhase(phaseId)
+    : await this.taskService.getProjectTasks(projectId);
+  const existingTask = existingTasks.find((candidate) => candidate.title === title);
+
+  // Résoudre les assignés depuis le JSON
+  let assignees: string[] = [];
+  
+  if (task.assignedTo) {
+    const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
+    assignees = raw
+      .map((a) => this.resolveReference(a, suppliers))
+      .filter((a): a is string => !!a);
+  }
+
+  // Si aucun assigné dans le JSON, utiliser l'utilisateur courant
+  if (assignees.length === 0 && this.currentUserId) {
+    assignees = [this.currentUserId];
+  }
+
+  // Récupérer les informations de l'assigné
+  let assigneeName = task.assigneeName || task.assignedName;
+  let assigneeEmail = task.assigneeEmail || task.AssignedEmail;
+
+  if (!assigneeName && this.currentUserName) {
+    assigneeName = this.currentUserName;
+  }
+  if (!assigneeEmail && this.currentUserEmail) {
+    assigneeEmail = this.currentUserEmail;
+  }
+
+  // Déterminer le type d'assigné
+  let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
+  if (assignees.length > 0) {
+    // Vérifier si l'assigné est un fournisseur
+    const isSupplier = assignees.some((id) => suppliers?.has(id));
+    assigneeType = isSupplier ? 'supplier' : 'user';
+  }
+
     const taskData = {
       projectId,
       phaseId,
@@ -690,7 +779,15 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       priority: this.normalizeTaskPriority(task.priority),
       dueDate: task.due_date ?? task.dueDate ?? task.endDate,
       assignedTo: assignees.length > 0 ? assignees : undefined,
+      assigneeType: assigneeType,
+      assigneeName: assigneeName,
+      assigneeEmail: assigneeEmail,
+      startDate: task.startDate,
+      endDate: task.endDate,
+      assignedBy: this.currentUserId,
+      progress: task.progress ?? 0,
     };
+
     if (existingTask) {
       await this.taskService.updateTask(existingTask.id, taskData);
     } else {
@@ -698,6 +795,10 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     }
     details.tasks += 1;
   }
+
+  // =============================================================================
+  // DQE IMPORT
+  // =============================================================================
 
   /**
    * Upsert des lignes DQE : normalisation du cycle de vie (previsionnel → devis →
@@ -777,13 +878,12 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
     if (count) details.dqeLines += dqeLines.length;
   }
 
-
   /**
    * Mappe les statuts du JSON vers les valeurs acceptées par la base
    */
   private mapDqeStatus(status?: string): string {
     const normalized = (status || '').toLowerCase().trim();
-    
+
     const mapping: Record<string, string> = {
       'termine': 'validated',
       'terminé': 'validated',
@@ -816,7 +916,7 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
       'archivé': 'archived',
       'archived': 'archived'
     };
-    
+
     return mapping[normalized] || 'draft';
   }
 
@@ -971,7 +1071,6 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
         (sum, z) => sum + (z.areaSqm ?? 0),
         0,
       );
-      // Encodage GeoJSON via codec bidirectionnel (round-trip fidèle).
       base.interventionZonesGeoJSON = GeoJsonZoneCodec.toFeatureCollection(zones);
     }
     return base;
@@ -979,7 +1078,6 @@ validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string
 
   private toCSV(rows: Record<string, unknown>[]): string {
     if (rows.length === 0) return '';
-    // Flatten any object/array cells to JSON-stringified scalars.
     const flat = rows.map((r) => {
       const o: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(r)) {
