@@ -147,6 +147,8 @@ import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import { IUnifiedTaskAssignmentRepository } from '@/domain/repositories/IUnifiedTaskAssignmentRepository';
+import { UnifiedTaskAssignmentAdapter } from '@/infrastructure/supabase/adapters/UnifiedTaskAssignmentAdapter';
 import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
@@ -598,6 +600,17 @@ export class RepositoryFactory {
     registry.taskAssignment = new TaskAssignmentAdapter();
     return registry.taskAssignment;
   }
+
+  /** Repository unifié (fusion Task + TaskAssignment) sur la table task_assignments. */
+  static getUnifiedTaskAssignmentRepository(): IUnifiedTaskAssignmentRepository {
+    const store = registry as Record<string, unknown>;
+    if (store.unifiedTaskAssignment) return store.unifiedTaskAssignment as IUnifiedTaskAssignmentRepository;
+    const instance = new UnifiedTaskAssignmentAdapter();
+    store.unifiedTaskAssignment = instance;
+    return instance;
+  }
+
+
 
   // ---------- WORKSPACE & LOCATION ----------
   static getWorkspaceRepository(): IWorkspaceRepository {

@@ -21,6 +21,8 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
+import { UnifiedTaskAssignmentService } from '@/application/services/UnifiedTaskAssignmentService';
+import { normalizeUnifiedPriority, normalizeUnifiedStatus } from '@/dtos/entities/UnifiedTaskAssignmentDTO';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
@@ -202,6 +204,7 @@ export class ProjectImportExportService {
     private readonly phaseService = new PhaseService(),
     private readonly milestoneService = new MilestoneService(),
     private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
+    private readonly unifiedTaskService = new UnifiedTaskAssignmentService(),
     private readonly stakeholderService = new ProjectStakeholderService(),
     private readonly organizationService = new OrganizationService(),
     private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
@@ -224,7 +227,7 @@ export class ProjectImportExportService {
       const user = await this.authService.getCurrentUser();
       if (user) {
         this.currentUserId = user.id;
-        this.currentUserName = user.fullName || user.email?.split('@')[0] || 'Utilisateur';
+        this.currentUserName = user.full_name || user.email?.split('@')[0] || 'Utilisateur';
         this.currentUserEmail = user.email || '';
       }
     } catch (error) {
@@ -732,13 +735,13 @@ private async upsertTask(
 ): Promise<void> {
   const title = task.title ?? task.name ?? 'Tâche importée';
   const existingTasks = phaseId
-    ? await this.taskService.getTasksByPhase(phaseId)
-    : await this.taskService.getProjectTasks(projectId);
+    ? await this.unifiedTaskService.getByPhase(phaseId)
+    : await this.unifiedTaskService.getByProject(projectId);
   const existingTask = existingTasks.find((candidate) => candidate.title === title);
 
   // Résoudre les assignés depuis le JSON
   let assignees: string[] = [];
-  
+
   if (task.assignedTo) {
     const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
     assignees = raw
@@ -765,7 +768,6 @@ private async upsertTask(
   // Déterminer le type d'assigné
   let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
   if (assignees.length > 0) {
-    // Vérifier si l'assigné est un fournisseur
     const isSupplier = assignees.some((id) => suppliers?.has(id));
     assigneeType = isSupplier ? 'supplier' : 'user';
   }
@@ -775,13 +777,13 @@ private async upsertTask(
       phaseId,
       title,
       description: task.description,
-      status: this.normalizeTaskStatus(task.status, task.progress),
-      priority: this.normalizeTaskPriority(task.priority),
+      status: normalizeUnifiedStatus(task.status, task.progress),
+      priority: normalizeUnifiedPriority(task.priority),
       dueDate: task.due_date ?? task.dueDate ?? task.endDate,
-      assignedTo: assignees.length > 0 ? assignees : undefined,
-      assigneeType: assigneeType,
-      assigneeName: assigneeName,
-      assigneeEmail: assigneeEmail,
+      assignedTo: assignees,
+      assigneeType,
+      assigneeName,
+      assigneeEmail,
       startDate: task.startDate,
       endDate: task.endDate,
       assignedBy: this.currentUserId,
@@ -789,12 +791,13 @@ private async upsertTask(
     };
 
     if (existingTask) {
-      await this.taskService.updateTask(existingTask.id, taskData);
+      await this.unifiedTaskService.update(existingTask.id, taskData);
     } else {
-      await this.taskService.createTask(taskData);
+      await this.unifiedTaskService.create(taskData);
     }
     details.tasks += 1;
   }
+
 
   // =============================================================================
   // DQE IMPORT
@@ -1025,7 +1028,7 @@ private async upsertTask(
     const phaseRows = await Promise.all(phases.map(async (phase) => ({
       ...phase,
       milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
-      tasks: await this.taskService.getTasksByPhase(phase.id),
+      tasks: await this.unifiedTaskService.getByPhase(phase.id),
       dqeLines: await boqRepository.list({ source: 'dqe', contextId: p.id, projectId: p.id, phaseId: phase.id }),
     })));
     const dqeLines = phaseRows.flatMap((phase) => phase.dqeLines as BoqLineDTO[]);
