@@ -202,6 +202,7 @@ export class ProjectImportExportService {
     private readonly phaseService = new PhaseService(),
     private readonly milestoneService = new MilestoneService(),
     private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
+    private readonly unifiedTaskService = new UnifiedTaskAssignmentService(),
     private readonly stakeholderService = new ProjectStakeholderService(),
     private readonly organizationService = new OrganizationService(),
     private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
