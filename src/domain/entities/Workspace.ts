@@ -90,7 +90,7 @@ export interface TaskAssignmentProps {
   title: string;
   description?: string;
   projectId?: string;
-  assignedTo?: string;
+  assignedTo?: string | string[];
   assignedBy?: string;
   assigneeType?: "supplier" | "employee" | "user";
   assigneeName?: string;
@@ -111,7 +111,7 @@ export class TaskAssignment implements ITaskAssignment {
     public title: string,
     public description?: string,
     public projectId?: string,
-    public assignedTo?: string,
+    public assignedTo?: string | string[],
     public assignedBy?: string,
     public assigneeType?: "supplier" | "employee" | "user",
     public assigneeName?: string,
