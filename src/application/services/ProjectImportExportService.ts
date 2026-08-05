@@ -1028,7 +1028,7 @@ private async upsertTask(
     const phaseRows = await Promise.all(phases.map(async (phase) => ({
       ...phase,
       milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
-      tasks: await this.taskService.getTasksByPhase(phase.id),
+      tasks: await this.unifiedTaskService.getByPhase(phase.id),
       dqeLines: await boqRepository.list({ source: 'dqe', contextId: p.id, projectId: p.id, phaseId: phase.id }),
     })));
     const dqeLines = phaseRows.flatMap((phase) => phase.dqeLines as BoqLineDTO[]);
