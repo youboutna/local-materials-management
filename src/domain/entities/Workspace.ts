@@ -70,7 +70,7 @@ export interface ITaskAssignment {
   title: string;
   description?: string;
   projectId?: string;
-  assignedTo?: string;
+  assignedTo?: string | string[];
   assignedBy?: string;
   assigneeType?: "supplier" | "employee" | "user";
   assigneeName?: string;
