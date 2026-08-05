@@ -14,7 +14,7 @@ export class TaskAssignmentDomainTransformer {
       title: entity.title,
       description: entity.description,
       project_id: entity.projectId,
-      assigned_to: entity.assignedTo,
+      assigned_to: Array.isArray(entity.assignedTo) ? entity.assignedTo.join(",") : entity.assignedTo,
       assigned_by: entity.assignedBy,
       assignee_type: entity.assigneeType,
       assignee_name: entity.assigneeName,

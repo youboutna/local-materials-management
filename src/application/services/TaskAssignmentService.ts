@@ -120,6 +120,7 @@ export class TaskAssignmentService {
         ...request.updates,
         status: (request.updates.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled',
         priority: request.updates.priority as 'low' | 'medium' | 'high' | 'urgent' | undefined,
+        assigneeType: request.updates.assigneeType as "supplier" | "employee" | "user" | undefined,
         dueDate: request.updates.dueDate ? new Date(request.updates.dueDate) : undefined,
         updatedAt: new Date()
       };
