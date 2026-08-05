@@ -732,13 +732,13 @@ private async upsertTask(
 ): Promise<void> {
   const title = task.title ?? task.name ?? 'Tâche importée';
   const existingTasks = phaseId
-    ? await this.taskService.getTasksByPhase(phaseId)
-    : await this.taskService.getProjectTasks(projectId);
+    ? await this.unifiedTaskService.getByPhase(phaseId)
+    : await this.unifiedTaskService.getByProject(projectId);
   const existingTask = existingTasks.find((candidate) => candidate.title === title);
 
   // Résoudre les assignés depuis le JSON
   let assignees: string[] = [];
-  
+
   if (task.assignedTo) {
     const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
     assignees = raw
@@ -765,7 +765,6 @@ private async upsertTask(
   // Déterminer le type d'assigné
   let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
   if (assignees.length > 0) {
-    // Vérifier si l'assigné est un fournisseur
     const isSupplier = assignees.some((id) => suppliers?.has(id));
     assigneeType = isSupplier ? 'supplier' : 'user';
   }
@@ -775,13 +774,13 @@ private async upsertTask(
       phaseId,
       title,
       description: task.description,
-      status: this.normalizeTaskStatus(task.status, task.progress),
-      priority: this.normalizeTaskPriority(task.priority),
+      status: normalizeUnifiedStatus(task.status, task.progress),
+      priority: normalizeUnifiedPriority(task.priority),
       dueDate: task.due_date ?? task.dueDate ?? task.endDate,
-      assignedTo: assignees.length > 0 ? assignees : undefined,
-      assigneeType: assigneeType,
-      assigneeName: assigneeName,
-      assigneeEmail: assigneeEmail,
+      assignedTo: assignees,
+      assigneeType,
+      assigneeName,
+      assigneeEmail,
       startDate: task.startDate,
       endDate: task.endDate,
       assignedBy: this.currentUserId,
@@ -789,12 +788,13 @@ private async upsertTask(
     };
 
     if (existingTask) {
-      await this.taskService.updateTask(existingTask.id, taskData);
+      await this.unifiedTaskService.update(existingTask.id, taskData);
     } else {
-      await this.taskService.createTask(taskData);
+      await this.unifiedTaskService.create(taskData);
     }
     details.tasks += 1;
   }
+
 
   // =============================================================================
   // DQE IMPORT
