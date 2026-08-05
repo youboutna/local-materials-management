@@ -21,6 +21,8 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
+import { UnifiedTaskAssignmentService } from '@/application/services/UnifiedTaskAssignmentService';
+import { normalizeUnifiedPriority, normalizeUnifiedStatus } from '@/dtos/entities/UnifiedTaskAssignmentDTO';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
