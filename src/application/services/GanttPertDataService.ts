@@ -3,15 +3,23 @@
  * Provides unified data for Gantt and PERT diagrams
  * 
  * Architecture: Follows clean architecture with DTO pattern
+ * - Utilise TaskAssignmentDTO pour les tâches (source unique)
+ * - Les types proviennent des DTOs, pas d'interfaces UI
+ * - Respecte les règles de l'architecture hexagonale
  */
 
 import { GanttChartData } from '@/domain/entities/index';
 import { PERTAnalysis } from '@/dtos/entities/ProjectAggregateDTO';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
+import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { PERTActivity } from '@/dtos/entities/ProjectAggregateDTO';
 
+/**
+ * Interface pour les données Gantt des phases
+ * Utilisée en interne, provient des DTOs PhaseDTO
+ */
 export interface GanttPhaseData {
   id: string;
   name: string;
@@ -21,6 +29,10 @@ export interface GanttPhaseData {
   status: 'planned' | 'in_progress' | 'completed';
 }
 
+/**
+ * Interface pour les données Gantt des jalons
+ * Utilisée en interne, provient des DTOs MilestoneDTO
+ */
 export interface GanttMilestoneData {
   id: string;
   name: string;
@@ -32,16 +44,32 @@ export interface GanttMilestoneData {
   priority: string;
 }
 
+/**
+ * Interface unifiée pour les données Gantt
+ * Utilisée en interne, agrège les DTOs
+ */
 export interface UnifiedGanttData {
   projectTitle: string;
   projectPeriod: { start: Date; end: Date };
   phases: GanttPhaseData[];
   milestones: GanttMilestoneData[];
-  tasks: Array<{ id: string; name: string; duration: number; dependencies: string[]; start_date: string; end_date?: string; progress: number }>;
+  tasks: Array<{ 
+    id: string; 
+    name: string; 
+    duration: number; 
+    dependencies: string[]; 
+    start_date: string; 
+    end_date?: string; 
+    progress: number 
+  }>;
   criticalPath: string[];
   spi: number;
 }
 
+/**
+ * Interface unifiée pour les données PERT
+ * Utilise PERTAnalysis des DTOs
+ */
 export interface UnifiedPERTData extends PERTAnalysis {
   activities: PERTActivity[];
   milestoneActivities: PERTActivity[];
@@ -52,6 +80,10 @@ export interface UnifiedPERTData extends PERTAnalysis {
   criticalPath: string[];
 }
 
+/**
+ * Service pour les données Gantt et PERT
+ * Utilise TaskAssignmentDTO pour les tâches
+ */
 export class GanttPertDataService {
   private milestoneService: MilestoneService;
 
@@ -61,6 +93,7 @@ export class GanttPertDataService {
 
   /**
    * Get unified Gantt data combining phases, milestones, and tasks
+   * Utilise TaskAssignmentDTO via ProjectDetailDTO
    */
   async getUnifiedGanttData(projectId: string, projectDetail: ProjectDetailDTO): Promise<UnifiedGanttData> {
     try {
@@ -74,21 +107,14 @@ export class GanttPertDataService {
       const milestoneProgress = await this.milestoneService.getMilestoneProgressWithMetrics(projectId);
       const criticalPath = await this.milestoneService.getCriticalPath(projectId);
 
-      // Map phases to Gantt format with proper error handling
+      // Map phases to Gantt format avec validation
       const phases: GanttPhaseData[] = (projectDetail.plannedPhases || []).map(phase => {
-        // Validate phase data
-        const phaseId = phase.id || '';
-        const phaseName = phase.name || 'Phase';
-        const startDate = this.parseDate(phase.startDate);
-        const endDate = this.parseDate(phase.endDate);
-        const progress = this.validateProgress(phase.progress);
-
         return {
-          id: phaseId,
-          name: phaseName,
-          startDate,
-          endDate,
-          progress,
+          id: phase.id || '',
+          name: phase.name || 'Phase',
+          startDate: this.parseDate(phase.startDate),
+          endDate: this.parseDate(phase.endDate),
+          progress: this.validateProgress(phase.progress),
           status: this.mapPhaseStatus(phase.status)
         };
       });
@@ -96,13 +122,11 @@ export class GanttPertDataService {
       // Map milestones with validation
       const milestones: GanttMilestoneData[] = ganttMilestones.map(m => {
         const targetDate = this.parseDate(m.targetDate);
-        const status = this.mapMilestoneStatus(m.status);
-
         return {
           id: m.id,
           name: m.title || 'Milestone',
           date: targetDate,
-          status,
+          status: this.mapMilestoneStatus(m.status),
           isKey: m.priority === 'critical',
           phaseId: m.phaseId,
           type: m.type || 'milestone',
@@ -110,7 +134,18 @@ export class GanttPertDataService {
         };
       });
 
-      // Determine project period with validation
+      // Transformer les tâches depuis TaskAssignmentDTO
+      const tasks = (projectDetail.tasks || []).map((task: TaskAssignmentDTO) => ({
+        id: task.id,
+        name: task.title || task.name || 'Tâche sans titre',
+        duration: this.estimateTaskDuration(task),
+        dependencies: task.dependencies || [],
+        start_date: task.startDate || '',
+        end_date: task.endDate || '',
+        progress: task.progress || 0
+      }));
+
+      // Déterminer la période du projet avec validation
       const allDates = [
         ...phases.flatMap(p => [p.startDate, p.endDate]),
         ...milestones.map(m => m.date)
@@ -124,7 +159,7 @@ export class GanttPertDataService {
         ? new Date(Math.max(...allDates.map(d => d.getTime())))
         : new Date();
 
-      // Calculate SPI (Schedule Performance Index)
+      // Calculer SPI (Schedule Performance Index)
       const spi = this.calculateSPI(phases, projectStart);
 
       return {
@@ -132,15 +167,7 @@ export class GanttPertDataService {
         projectPeriod: { start: projectStart, end: projectEnd },
         phases,
         milestones,
-        tasks: (projectDetail.tasks || []).map(task => ({
-          id: task.id,
-          name: task.title,
-          duration: this.estimateTaskDuration(task),
-          dependencies: task.dependsOn || [],
-          start_date: task.startDate || '',
-          end_date: task.endDate,
-          progress: task.progress || 0
-        })),
+        tasks,
         criticalPath: Array.isArray(criticalPath) ? criticalPath.map((cp: any) => cp.id || cp) : [],
         spi
       };
@@ -152,6 +179,7 @@ export class GanttPertDataService {
 
   /**
    * Get unified PERT analysis data
+   * Utilise TaskAssignmentDTO pour les tâches
    */
   async getUnifiedPERTData(projectId: string, projectDetail: ProjectDetailDTO): Promise<UnifiedPERTData> {
     try {
@@ -195,7 +223,7 @@ export class GanttPertDataService {
     }
   }
 
-  // Private helper methods with proper validation and error handling
+  // =================== PRIVATE HELPER METHODS ===================
 
   /**
    * Parse date with validation
@@ -226,10 +254,10 @@ export class GanttPertDataService {
     if (!status) return 'planned';
     
     const statusLower = status.toLowerCase();
-    if (['completed', 'terminé', 'termine'].includes(statusLower)) {
+    if (['completed', 'terminé', 'termine', 'COMPLETED'].includes(statusLower)) {
       return 'completed';
     }
-    if (['in_progress', 'en cours', 'encours'].includes(statusLower)) {
+    if (['in_progress', 'en cours', 'encours', 'IN_PROGRESS'].includes(statusLower)) {
       return 'in_progress';
     }
     
@@ -279,12 +307,13 @@ export class GanttPertDataService {
 
   /**
    * Calculate base PERT analysis
+   * Utilise TaskAssignmentDTO pour les tâches
    */
   private calculateBasePERTAnalysis(projectDetail: ProjectDetailDTO): PERTAnalysis {
-    const activities: PERTActivity[] = (projectDetail.tasks || []).map(task => {
+    const activities: PERTActivity[] = (projectDetail.tasks || []).map((task: TaskAssignmentDTO) => {
       const estimatedDuration = this.estimateTaskDuration(task);
       return {
-        name: task.title || 'Task',
+        name: task.title || task.name || 'Tâche',
         optimistic: estimatedDuration * 0.8,
         mostLikely: estimatedDuration,
         pessimistic: estimatedDuration * 1.2,
@@ -304,19 +333,35 @@ export class GanttPertDataService {
 
   /**
    * Estimate task duration based on available data
+   * Utilise les champs de TaskAssignmentDTO
    */
-  private estimateTaskDuration(task: TaskDTO): number {
+  private estimateTaskDuration(task: TaskAssignmentDTO): number {
+    // Utiliser estimatedDuration si disponible
     if (task.estimatedDuration) {
       return Number(task.estimatedDuration);
     }
     
+    // Calculer à partir des dates
     if (task.startDate && task.endDate) {
       const start = this.parseDate(task.startDate);
       const end = this.parseDate(task.endDate);
-      return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+      const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+      if (duration > 0) {
+        return duration;
+      }
     }
     
-    return 1; // Default duration
+    // Utiliser dueDate comme fallback
+    if (task.dueDate) {
+      const dueDate = this.parseDate(task.dueDate);
+      const now = new Date();
+      const duration = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (duration > 0) {
+        return Math.max(duration, 0.5);
+      }
+    }
+    
+    return 1; // Default duration (1 day)
   }
 
   /**
@@ -366,6 +411,29 @@ export class GanttPertDataService {
 
     const totalVariance = variances.reduce((sum, variance) => sum + variance, 0);
     return Math.sqrt(totalVariance / activities.length);
+  }
+
+  /**
+   * Convertit TaskAssignmentDTO en format pour les tâches Gantt
+   */
+  private taskToGanttTask(task: TaskAssignmentDTO): {
+    id: string;
+    name: string;
+    duration: number;
+    dependencies: string[];
+    start_date: string;
+    end_date?: string;
+    progress: number;
+  } {
+    return {
+      id: task.id,
+      name: task.title || task.name || 'Tâche sans titre',
+      duration: this.estimateTaskDuration(task),
+      dependencies: task.dependencies || [],
+      start_date: task.startDate || '',
+      end_date: task.endDate || task.dueDate || '',
+      progress: task.progress || 0
+    };
   }
 }
 

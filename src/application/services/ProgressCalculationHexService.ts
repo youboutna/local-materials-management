@@ -1,58 +1,52 @@
 /**
  * Progress Calculation Hexagonal Service - Architecture Hexagonale
  * Service centralisé pour les calculs de progression de projet
+ * 
+ * ✅ Utilise TaskAssignmentDTO (source unique)
+ * ✅ Utilise PhaseDTO et InspectionDTO des DTOs
+ * ✅ Plus de dépendance à l'ancien TaskDTO
+ * ✅ Respecte les règles de l'architecture hexagonale
  */
 
-export interface PhaseDTO {
-  id: string;
-  name: string;
-  phase_name: string;
-  description?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  progress: number;
-  start_date?: string;
-  end_date?: string;
-  estimated_cost?: number;
-  order?: number;
-  custom_phase_data?: Record<string, unknown>;
+import type { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { PhaseDTO, PhaseStatus } from '@/dtos/entities/PhaseDTO';
+import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
+
+// Types internes pour les calculs (pas des DTOs)
+interface ProgressStats {
+  total: number;
+  completed: number;
+  inProgress: number;
+  pending: number;
+  cancelled: number;
+  completionRate: number;
 }
 
-export interface TaskDTO {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  progress: number;
-  phase_id: string;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  estimated_hours?: number;
-  actual_hours?: number;
+interface ProgressByCategory {
+  phases: number;
+  tasks: number;
+  inspections: number;
 }
 
-export interface InspectionDTO {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  progress: number;
-  phase_id: string;
-  inspector?: string;
-  inspection_date?: string;
-  type: 'regular' | 'final' | 'special';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+interface ProgressByStatus {
+  completed: number;
+  inProgress: number;
+  pending: number;
+  cancelled: number;
 }
 
+/**
+ * Service hexagonal pour les calculs de progression
+ * Pure logique métier, sans dépendances externes
+ */
 export class ProgressCalculationHexService {
   /**
    * Calcule la progression globale d'un projet
-   * Formule : (Phases terminées * 100 + Phases en cours * 50 + Tâches terminées * 30 + Inspections terminées * 20) / Total
+   * Formule : (Phases * 0.5) + (Tâches * 0.3) + (Inspections * 0.2)
    */
   calculateProjectProgress(
-    phases: PhaseDTO[], 
-    tasks: TaskDTO[] = [], 
+    phases: PhaseDTO[] = [], 
+    tasks: TaskAssignmentDTO[] = [], 
     inspections: InspectionDTO[] = []
   ): number {
     try {
@@ -82,8 +76,8 @@ export class ProgressCalculationHexService {
     const totalPhases = phases.length;
     if (totalPhases === 0) return 0;
     
-    const completedPhases = phases.filter(p => p.status === 'completed').length;
-    const inProgressPhases = phases.filter(p => p.status === 'in_progress').length;
+    const completedPhases = phases.filter(p => p.status === PhaseStatus.COMPLETED).length;
+    const inProgressPhases = phases.filter(p => p.status === PhaseStatus.IN_PROGRESS).length;
     
     // Calcul pondéré : terminé = 100%, en cours = 50%, en attente = 0%
     const progressScore = (completedPhases * 100 + inProgressPhases * 50) / totalPhases;
@@ -92,13 +86,14 @@ export class ProgressCalculationHexService {
 
   /**
    * Calcule la progression des tâches
+   * Utilise TaskAssignmentDTO
    */
-  calculateTaskProgress(tasks: TaskDTO[]): number {
+  calculateTaskProgress(tasks: TaskAssignmentDTO[]): number {
     const totalTasks = tasks.length;
     if (totalTasks === 0) return 0;
     
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+    const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
+    const inProgressTasks = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
     
     // Calcul pondéré
     const progressScore = (completedTasks * 100 + inProgressTasks * 50) / totalTasks;
@@ -112,7 +107,7 @@ export class ProgressCalculationHexService {
     const totalInspections = inspections.length;
     if (totalInspections === 0) return 0;
     
-    const completedInspections = inspections.filter(i => i.status === 'completed').length;
+    const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'passed').length;
     const inProgressInspections = inspections.filter(i => i.status === 'in_progress').length;
     
     // Calcul pondéré
@@ -125,12 +120,12 @@ export class ProgressCalculationHexService {
    */
   calculatePhaseSpecificProgress(
     phaseId: string,
-    tasks: TaskDTO[],
+    tasks: TaskAssignmentDTO[],
     inspections: InspectionDTO[]
   ): number {
     // Filtrer les tâches et inspections pour cette phase
-    const phaseTasks = tasks.filter(t => t.phase_id === phaseId);
-    const phaseInspections = inspections.filter(i => i.phase_id === phaseId);
+    const phaseTasks = tasks.filter(t => t.phaseId === phaseId);
+    const phaseInspections = inspections.filter(i => i.phaseId === phaseId);
     
     const taskProgress = this.calculateTaskProgress(phaseTasks);
     const inspectionProgress = this.calculateInspectionProgress(phaseInspections);
@@ -141,18 +136,39 @@ export class ProgressCalculationHexService {
   }
 
   /**
+   * Calcule les statistiques de progression des tâches
+   */
+  calculateTaskStats(tasks: TaskAssignmentDTO[]): ProgressStats {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
+    const inProgress = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
+    const pending = tasks.filter(t => t.status === TaskStatus.PENDING).length;
+    const blocked = tasks.filter(t => t.status === TaskStatus.BLOCKED).length;
+    const cancelled = tasks.filter(t => t.status === TaskStatus.CANCELLED).length;
+
+    return {
+      total,
+      completed,
+      inProgress,
+      pending: pending + blocked,
+      cancelled,
+      completionRate: total > 0 ? (completed / total) * 100 : 0,
+    };
+  }
+
+  /**
    * Prédit la progression future basée sur les données historiques
    */
   predictFutureProgress(
     phases: PhaseDTO[],
-    tasks: TaskDTO[],
+    tasks: TaskAssignmentDTO[],
     inspections: InspectionDTO[],
     daysAhead: number = 30
   ): { predictedProgress: number; confidence: number } {
     const currentProgress = this.calculateProjectProgress(phases, tasks, inspections);
     
     // Calcul de la vélocité moyenne de progression
-    const completedTasks = tasks.filter(t => t.status === 'completed');
+    const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED);
     const avgCompletionTime = this.calculateAverageCompletionTime(completedTasks);
     
     if (avgCompletionTime === 0) {
@@ -160,13 +176,13 @@ export class ProgressCalculationHexService {
     }
     
     // Prédiction simple basée sur la vélocité actuelle
-    const tasksInProgress = tasks.filter(t => t.status === 'in_progress').length;
-    const totalTasks = tasks.length || 1; // Prevent division by zero
+    const tasksInProgress = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
+    const totalTasks = tasks.length || 1;
     const expectedCompletions = Math.min(tasksInProgress, daysAhead / avgCompletionTime);
-    const predictedIncrease = (expectedCompletions / totalTasks) * 100 * 0.3; // 30% poids pour les tâches
+    const predictedIncrease = (expectedCompletions / totalTasks) * 100 * 0.3;
     
     const predictedProgress = Math.min(100, currentProgress + predictedIncrease);
-    const confidence = Math.max(0, Math.min(100, 100 - (daysAhead / 365) * 50)); // Confidence diminue avec le temps
+    const confidence = Math.max(0, Math.min(100, 100 - (daysAhead / 365) * 50));
     
     return {
       predictedProgress: Math.round(predictedProgress),
@@ -179,34 +195,34 @@ export class ProgressCalculationHexService {
    */
   generateProgressReport(
     phases: PhaseDTO[],
-    tasks: TaskDTO[],
+    tasks: TaskAssignmentDTO[],
     inspections: InspectionDTO[]
   ): {
     overall: number;
-    byCategory: { phases: number; tasks: number; inspections: number };
-    byStatus: { completed: number; inProgress: number; pending: number; cancelled: number };
+    byCategory: ProgressByCategory;
+    byStatus: ProgressByStatus;
     recommendations: string[];
   } {
     const overall = this.calculateProjectProgress(phases, tasks, inspections);
     
-    const byCategory = {
+    const byCategory: ProgressByCategory = {
       phases: this.calculatePhaseProgress(phases),
       tasks: this.calculateTaskProgress(tasks),
       inspections: this.calculateInspectionProgress(inspections)
     };
     
-    const byStatus = {
-      completed: phases.filter(p => p.status === 'completed').length + 
-               tasks.filter(t => t.status === 'completed').length + 
-               inspections.filter(i => i.status === 'completed').length,
-      inProgress: phases.filter(p => p.status === 'in_progress').length + 
-                 tasks.filter(t => t.status === 'in_progress').length + 
+    const byStatus: ProgressByStatus = {
+      completed: phases.filter(p => p.status === PhaseStatus.COMPLETED).length + 
+               tasks.filter(t => t.status === TaskStatus.COMPLETED).length + 
+               inspections.filter(i => i.status === 'completed' || i.status === 'passed').length,
+      inProgress: phases.filter(p => p.status === PhaseStatus.IN_PROGRESS).length + 
+                 tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length + 
                  inspections.filter(i => i.status === 'in_progress').length,
-      pending: phases.filter(p => p.status === 'pending').length + 
-              tasks.filter(t => t.status === 'pending').length + 
-              inspections.filter(i => i.status === 'scheduled').length,
-      cancelled: phases.filter(p => p.status === 'cancelled').length + 
-                 tasks.filter(t => t.status === 'cancelled').length + 
+      pending: phases.filter(p => p.status === PhaseStatus.PENDING || p.status === PhaseStatus.NOT_STARTED).length + 
+              tasks.filter(t => t.status === TaskStatus.PENDING || t.status === TaskStatus.BLOCKED).length + 
+              inspections.filter(i => i.status === 'scheduled' || i.status === 'pending').length,
+      cancelled: phases.filter(p => p.status === PhaseStatus.CANCELLED).length + 
+                 tasks.filter(t => t.status === TaskStatus.CANCELLED).length + 
                  inspections.filter(i => i.status === 'cancelled').length
     };
     
@@ -220,17 +236,20 @@ export class ProgressCalculationHexService {
     };
   }
 
-  private calculateAverageCompletionTime(completedTasks: TaskDTO[]): number {
+  /**
+   * Calcule le temps moyen de complétion des tâches
+   */
+  private calculateAverageCompletionTime(completedTasks: TaskAssignmentDTO[]): number {
     if (completedTasks.length === 0) return 0;
     
     const completionTimes = completedTasks
-      .filter(t => t.start_date && t.end_date)
+      .filter(t => t.startDate && t.completedAt)
       .map(t => {
-        const start = new Date(t.start_date!).getTime();
-        const end = new Date(t.end_date!).getTime();
-        return (end - start) / (1000 * 60 * 60 * 24); // Convert to days
+        const start = new Date(t.startDate!).getTime();
+        const end = new Date(t.completedAt!).getTime();
+        return (end - start) / (1000 * 60 * 60 * 24); // Convertir en jours
       })
-      .filter(time => time > 0 && time < 365); // Filter reasonable times
+      .filter(time => time > 0 && time < 365);
     
     if (completionTimes.length === 0) return 0;
     
@@ -238,9 +257,12 @@ export class ProgressCalculationHexService {
     return Math.round(average);
   }
 
+  /**
+   * Génère des recommandations basées sur les métriques
+   */
   private generateRecommendations(
-    byCategory: { phases: number; tasks: number; inspections: number },
-    byStatus: { completed: number; inProgress: number; pending: number; cancelled: number }
+    byCategory: ProgressByCategory,
+    byStatus: ProgressByStatus
   ): string[] {
     const recommendations: string[] = [];
     
@@ -258,7 +280,7 @@ export class ProgressCalculationHexService {
     }
     
     // Recommandations basées sur les statuts
-    if (byStatus.pending > byStatus.inProgress) {
+    if (byStatus.pending > byStatus.inProgress * 1.5) {
       recommendations.push('Démarrer les tâches en attente pour améliorer la progression');
     }
     
@@ -270,6 +292,51 @@ export class ProgressCalculationHexService {
       recommendations.push('Mettre en place des points de contrôle réguliers pour terminer les tâches en cours');
     }
     
+    if (byStatus.completed === 0 && byStatus.inProgress > 0) {
+      recommendations.push('Prioriser la complétion des premières tâches pour générer de la dynamique');
+    }
+    
     return recommendations;
   }
+
+  /**
+   * Calcule le taux de complétion des tâches par priorité
+   */
+  calculateTaskCompletionByPriority(tasks: TaskAssignmentDTO[]): {
+    [priority: string]: { total: number; completed: number; rate: number };
+  } {
+    const priorities = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+    const result: { [key: string]: { total: number; completed: number; rate: number } } = {};
+    
+    priorities.forEach(priority => {
+      const filtered = tasks.filter(t => t.priority === priority);
+      const total = filtered.length;
+      const completed = filtered.filter(t => t.status === TaskStatus.COMPLETED).length;
+      result[priority] = {
+        total,
+        completed,
+        rate: total > 0 ? (completed / total) * 100 : 0,
+      };
+    });
+    
+    return result;
+  }
+
+  /**
+   * Calcule la distribution des statuts des tâches
+   */
+  calculateTaskStatusDistribution(tasks: TaskAssignmentDTO[]): {
+    [status: string]: number;
+  } {
+    const statuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED'];
+    const result: { [key: string]: number } = {};
+    
+    statuses.forEach(status => {
+      result[status] = tasks.filter(t => t.status === status).length;
+    });
+    
+    return result;
+  }
 }
+
+export default ProgressCalculationHexService;

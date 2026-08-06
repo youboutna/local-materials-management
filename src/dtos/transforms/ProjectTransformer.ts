@@ -6,6 +6,9 @@
  * Domain ↔ DTO (toDTO, fromDTO)  
  * UI ↔ DTO (formToCreateRequest, formToUpdateRequest, toUI)
  * Batch operations (manyFromSupabase, manyToDTO, manyToUI)
+ * 
+ * ✅ Utilise TaskAssignmentTransformer pour les tâches (source unique)
+ * ✅ Plus de dépendance à l'ancien Task/TaskDTO/TaskTransformer
  */
 
 import type { ReferentialType } from '@/config/referentials';
@@ -22,6 +25,7 @@ import {
   ProjectSummaryDTO,
   UpdateProjectDTO
 } from '@/dtos/entities/ProjectDTO';
+import { getProjectLocationPoint } from '@/utils/projectLocationBuckets';
 import { InspectionTransformer } from './InspectionTransformer';
 import { MaterialTransformer } from './MaterialTransformer';
 import { MilestoneTransformer } from './MilestoneTransformer';
@@ -29,15 +33,14 @@ import { PaymentTransformer } from './PaymentTransformer';
 import { PhaseTransformer } from './PhaseTransformer';
 import { RiskTransformer } from './RiskTransformer';
 import { StakeholderTransformer } from './StakeholderTransformer';
-import { TaskTransformer } from './TaskTransformer';
+import { TaskAssignmentTransformer } from './TaskAssignmentTransformer';
 import { TenderDomainTransformer } from './TenderDomainTransformer';
-import { getProjectLocationPoint } from '@/utils/projectLocationBuckets';
 
 
 // TYPE-SAFE INTERFACES FOR DTOs WITH RELATED COLLECTIONS
 interface ProjectDTOWithCollections extends ProjectDTO {
   phases?: import('@/dtos/entities/PhaseDTO').PhaseDTO[];
-  tasks?: import('@/dtos/entities/TaskDTO').TaskDTO[];
+  tasks?: import('@/dtos/entities/TaskAssignmentDTO').TaskAssignmentDTO[];
   risks?: import('@/dtos/entities/RiskDTO').RiskDTO[];
   inspections?: import('@/dtos/entities/InspectionDTO').InspectionDTO[];
   payments?: import('@/dtos/entities/PaymentDTO').PaymentDTO[];
@@ -170,9 +173,6 @@ export class ProjectTransformer {
     const coordinates = resolved
       ? new ProjectCoordinates(resolved.lat, resolved.lng)
       : undefined;
-
-
-
 
     return Project.create({
       id: row.id as string,
@@ -316,9 +316,6 @@ export class ProjectTransformer {
       terrain_type: project.terrainType,
 
       // === Symétrie DB → DTO → DB (Règle #1 : la flèche doit être bijective) ===
-      // Ces colonnes étaient hydratées par fromSupabase() mais jamais réécrites,
-      // ce qui cassait le round-trip UI → DB (type de marché, mode de sélection,
-      // méthodologie, priorité, zone géographique, permis, assurances…).
       market_type: project.marketType,
       selection_mode: project.selectionMode,
       methodology: project.methodology,
@@ -465,9 +462,9 @@ export class ProjectTransformer {
       hasUtilities: project.hasUtilities || undefined,
       areaSqm: project.areaSqm || undefined,
       siteDetails: project.siteDetails || undefined,
-     // workspaceId: undefined, // Not in entity
       createdBy: project.createdBy || undefined,
       taskCount: project.tasks?.length || 0,
+      // ✅ Utilisation de TaskAssignmentTransformer pour les tâches
       completedTasks: project.tasks?.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'done' || (t.status as string) === 'validated').length || 0,
       overdueTasks: project.tasks?.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length || 0,
       riskCount: project.risks?.length || 0,
@@ -484,11 +481,11 @@ export class ProjectTransformer {
       isOnTrack: project.isOnSchedule(),
       scheduleVariance: project.calculateScheduleVariance(),
       activeTeamMembers: project.teamSize || 0,
-      ganttChart: undefined, // Complex data, leave undefined for now
-      pertAnalysis: undefined, // Complex data, leave undefined for now
-      earnedValueManagement: undefined, // Complex data, leave undefined for now
-      projectAnalytics: undefined, // Complex data, leave undefined for now
-      performanceMetrics: undefined, // Complex data, leave undefined for now
+      ganttChart: undefined,
+      pertAnalysis: undefined,
+      earnedValueManagement: undefined,
+      projectAnalytics: undefined,
+      performanceMetrics: undefined,
 
       // NEW: Additional database fields in DTO
       attributionDate: project.attributionDate?.toISOString(),
@@ -496,7 +493,6 @@ export class ProjectTransformer {
       checkScheduleLastRun: project.checkScheduleLastRun as Record<string, unknown> | undefined,
       closureNotes: project.closureNotes,
       completionDate: project.completionDate?.toISOString(),
-      // coordinates already mapped via latitude/longitude above
       donorOrganization: project.donorOrganization,
       estimatedDays: project.estimatedDays,
       forme: project.forme,
@@ -560,7 +556,8 @@ export class ProjectTransformer {
       ? new ProjectCoordinates(zoneCenter.lat, zoneCenter.lng)
       : undefined;
 
-
+    // ✅ Utilisation de TaskAssignment pour les tâches (via TaskAssignmentTransformer)
+    // Les tâches sont gérées séparément, nous ne les incluons pas dans la création du projet
 
     return Project.create({
       id: dto.id,
@@ -576,11 +573,9 @@ export class ProjectTransformer {
       teamSize: dto.teamSize || 0,
       thumbnail: dto.thumbnail,
       currency: dto.currency || 'EUR',
-      // Additional fields that exist in domain entity
       financingSource: dto.financingSource,
       mainContractor: dto.mainContractor,
 
-      // NEW: Additional database fields from DTO
       attributionDate: dto.attributionDate ? new Date(dto.attributionDate) : undefined,
       bankGuaranteeAmount: dto.bankGuaranteeAmount,
       bankGuaranteePercentage: dto.bankGuaranteePercentage,
@@ -645,11 +640,9 @@ export class ProjectTransformer {
       teamSize: dto.teamSize || 0,
       thumbnail: dto.thumbnail,
       currency: dto.currency || 'EUR',
-      // Additional fields that exist in domain entity
       financingSource: dto.financingSource,
       mainContractor: dto.mainContractor,
 
-      // NEW: Additional database fields from DTO
       attributionDate: dto.attributionDate ? new Date(dto.attributionDate) : undefined,
       bankGuaranteeAmount: dto.bankGuaranteeAmount,
       bankGuaranteePercentage: dto.bankGuaranteePercentage,
@@ -885,8 +878,6 @@ export class ProjectTransformer {
     if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
 
     // === Zones d'intervention (multi-polygones) → localisation v3 ===
-    // Override any pre-supplied `localisation` so the domain zones remain the
-    // single source of truth, and mirror the primary shape into `forme`.
     const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
       dto.interventionZones,
       dto.interventionZone,
@@ -950,7 +941,6 @@ export class ProjectTransformer {
     if (dto.terrainType !== undefined) updates.terrainType = dto.terrainType;
 
     // === Zones d'intervention (multi-polygones) → localisation v3 ===
-    // Same rule as create: domain zones take precedence over the raw payload.
     const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
       dto.interventionZones,
       dto.interventionZone,
@@ -977,6 +967,7 @@ export class ProjectTransformer {
   /**
    * ProjectWorkflowData → ProjectDetailDTO
    * Converts multi-step workflow data to detailed project DTO for API operations
+   * ✅ Utilise TaskAssignmentTransformer
    */
   static workflowToDetailDTO(workflowData: any): ProjectDetailDTO {
     const projectData = workflowData.projectData;
@@ -984,8 +975,7 @@ export class ProjectTransformer {
 
     // Convert basic project data
     const projectDTO: ProjectDetailDTO = {
-      ...this.toDTO(this.fromDTO(projectData)), // Convert using existing logic
-      // Override with workflow-specific data
+      ...this.toDTO(this.fromDTO(projectData)),
       id: projectData.id || '',
       title: projectData.title,
       description: projectData.description || '',
@@ -1002,13 +992,11 @@ export class ProjectTransformer {
       thumbnail: projectData.thumbnail,
       createdAt: projectData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-
-      // Workflow step tracking stored as currentStage (ConstructionStage)
       currentStage: String(workflowData.currentStep) as any,
 
-      // Convert related data to domain collections
+      // ✅ Utilisation de TaskAssignmentTransformer
       phases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
-      tasks: relatedData?.tasks ? TaskTransformer.manyToDTO(relatedData.tasks) : [],
+      tasks: relatedData?.tasks ? TaskAssignmentTransformer.toDTOList(relatedData.tasks) : [],
       risks: relatedData?.risks ? RiskTransformer.manyToDTO(relatedData.risks) : [],
       milestones: relatedData?.milestones ? MilestoneTransformer.manyToDTO(relatedData.milestones) : [],
       payments: relatedData?.payments ? PaymentTransformer.manyToDTO(relatedData.payments) : [],
@@ -1016,12 +1004,9 @@ export class ProjectTransformer {
       stakeholders: relatedData?.stakeholders ? StakeholderTransformer.manyToDTO(relatedData.stakeholders) : [],
       inspections: relatedData?.inspections ? InspectionTransformer.manyToDTO(relatedData.inspections) : [],
 
-      // Required by ProjectDetailDTO
       alerts: [],
       constructionMilestones: relatedData?.milestones ? MilestoneTransformer.manyToDTO(relatedData.milestones) : [],
       tenders: [],
-
-      // Aliases for UI compatibility
       plannedPhases: relatedData?.phases ? PhaseTransformer.manyToDTO(relatedData.phases) : [],
       expenses: relatedData?.payments ? PaymentTransformer.manyToDTO(relatedData.payments) : [],
       resources: workflowData.resources,
@@ -1033,10 +1018,10 @@ export class ProjectTransformer {
   /**
    * ProjectDetailDTO → ProjectWorkflowData
    * Converts detailed project DTO back to workflow data for form editing
+   * ✅ Utilise TaskAssignmentTransformer
    */
   static detailDTOToWorkflow(dto: ProjectDetailDTO): any {
     return {
-      // Basic project data
       projectData: {
         id: dto.id,
         title: dto.title,
@@ -1054,7 +1039,6 @@ export class ProjectTransformer {
         thumbnail: dto.thumbnail,
         createdAt: dto.createdAt,
         updatedAt: dto.updatedAt,
-        // Include all other project fields...
         financingSource: dto.financingSource,
         mainContractor: dto.mainContractor,
         currency: dto.currency,
@@ -1076,21 +1060,16 @@ export class ProjectTransformer {
         areaSqm: dto.areaSqm,
         siteDetails: dto.siteDetails,
       },
-
-      // Workflow step tracking
       currentStep: dto.currentStage as any,
       completedSteps: dto.completedPhases,
-
-      // Step-specific collections mapped from available DTO fields
       stakeholders: dto.stakeholders,
       location: dto.location,
       phases: dto.phases,
       risks: dto.risks,
-
-      // Related domain collections
       relatedData: {
         phases: dto.phases ? PhaseTransformer.manyFromDTO(dto.phases) : [],
-        tasks: dto.tasks ? TaskTransformer.manyFromDTO(dto.tasks) : [],
+        // ✅ Utilisation de TaskAssignmentTransformer
+        tasks: dto.tasks ? TaskAssignmentTransformer.toEntityList(dto.tasks) : [],
         risks: dto.risks ? RiskTransformer.manyFromDTO(dto.risks) : [],
         milestones: dto.milestones ? MilestoneTransformer.manyFromDTO(dto.milestones) : [],
         payments: dto.payments ? PaymentTransformer.manyFromDTO(dto.payments) : [],
@@ -1098,8 +1077,6 @@ export class ProjectTransformer {
         stakeholders: dto.stakeholders ? StakeholderTransformer.manyFromDTO(dto.stakeholders) : [],
         inspections: dto.inspections ? InspectionTransformer.manyFromDTO(dto.inspections) : [],
       },
-
-      // Resources
       resources: dto.resources,
     };
   }
@@ -1107,11 +1084,11 @@ export class ProjectTransformer {
   /**
    * Workflow Form Update → Update Data Object
    * Handles incremental updates from workflow form steps
+   * ✅ Utilise TaskAssignmentTransformer
    */
   static workflowFormUpdateToEntity(updates: Partial<any>): Record<string, unknown> {
     const entityUpdates: Record<string, unknown> = {};
 
-    // Handle project data updates
     if (updates.projectData) {
       const projectUpdates = this.fromUpdateDTOToEntity({
         id: updates.projectData.id || '',
@@ -1120,13 +1097,13 @@ export class ProjectTransformer {
       Object.assign(entityUpdates, projectUpdates);
     }
 
-    // Handle related data updates (convert to entity format)
     if (updates.relatedData) {
       if (updates.relatedData.phases) {
         entityUpdates.phases = PhaseTransformer.manyFromDTO(updates.relatedData.phases);
       }
       if (updates.relatedData.tasks) {
-        entityUpdates.tasks = TaskTransformer.manyFromDTO(updates.relatedData.tasks);
+        // ✅ Utilisation de TaskAssignmentTransformer
+        entityUpdates.tasks = TaskAssignmentTransformer.toEntityList(updates.relatedData.tasks);
       }
       if (updates.relatedData.risks) {
         entityUpdates.risks = RiskTransformer.manyFromDTO(updates.relatedData.risks);
@@ -1134,7 +1111,6 @@ export class ProjectTransformer {
       if (updates.relatedData.stakeholders) {
         entityUpdates.stakeholders = StakeholderTransformer.manyFromDTO(updates.relatedData.stakeholders);
       }
-      // Add other related data conversions...
     }
 
     return entityUpdates;
@@ -1231,6 +1207,7 @@ export class ProjectTransformer {
   /**
    * Domain Entity → Detail DTO
    * Includes all related data for detail views
+   * ✅ Utilise TaskAssignmentTransformer
    */
   static toDetailDTO(project: Project): ProjectDetailDTO {
     const baseDTO = this.toDTO(project);
@@ -1239,47 +1216,30 @@ export class ProjectTransformer {
 
     return {
       ...baseDTO,
-      // Populate collections from Project entity
-      // Delegate phase transformation to PhaseTransformer (OOP principle: separation of concerns)
       phases: phases,
-      // Delegate task transformation to TaskTransformer (OOP principle: separation of concerns)
-      tasks: project.tasks?.map(task => TaskTransformer.toDTO(task)) || [],
-      // Delegate risk transformation to RiskTransformer (OOP principle: separation of concerns)
+      // ✅ Utilisation de TaskAssignmentTransformer
+      tasks: project.tasks?.map(task => TaskAssignmentTransformer.toDTO(task)) || [],
       risks: project.risks?.map(risk => RiskTransformer.toDTO(risk)) || [],
-      // Delegate milestone transformation to MilestoneTransformer (OOP principle: separation of concerns)
       milestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
-      // Delegate payment transformation to PaymentTransformer (OOP principle: separation of concerns)
       payments: payments,
-      // Delegate material transformation to MaterialTransformer (OOP principle: separation of concerns)
       materials: project.materials?.map(material => MaterialTransformer.toDTO(material)) || [],
-      // Delegate stakeholder transformation to StakeholderTransformer (OOP principle: separation of concerns)
       stakeholders: project.suppliers?.map(supplier => StakeholderTransformer.toDTO(supplier as any)) || [],
       inspections: project.inspections?.map(inspection => InspectionTransformer.toDTO(inspection)) || [],
-      alerts: [], // Project entity doesn't have alerts collection yet
+      alerts: [],
       constructionMilestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
       tenders: project.tenders?.map(tender => TenderDomainTransformer.toDTO(tender)) || [],
-      expenses: payments.filter(payment => payment.status === 'paid'), // Alias for payments
-
-      // ADDING MISSING PROPERTIES
-      plannedPhases: phases, // Alias for phases
-      resources: [], // Default empty array - can be populated from employees/materials if needed
-
-      // Insurance related collections (placeholder for now)
+      expenses: payments.filter(payment => payment.status === 'paid'),
+      plannedPhases: phases,
+      resources: [],
       insurancePolicies: [],
       insuranceCertificates: [],
-
-      // Performance data
       escalationThresholds: {
         alert: 10,
         notification: 20,
         guarantee: 30,
         legal: 40,
       },
-
-      // Team allocation
       teamAllocations: [],
-
-      // Documents
       documents: project.documents?.map(doc => ({
         id: doc.id,
         title: doc.title,

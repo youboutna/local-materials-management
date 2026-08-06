@@ -5,7 +5,7 @@
  */
 
 import { UserResponseDto } from '@/dtos/entities/EmployeeDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';

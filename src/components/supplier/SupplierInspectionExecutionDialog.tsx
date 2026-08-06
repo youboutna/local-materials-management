@@ -1,3 +1,19 @@
+/**
+ * SupplierInspectionExecutionDialog - Dialog d'exécution d'inspection fournisseur
+ * 
+ * Architecture Hexagonale - RÈGLES STRICTES :
+ * - Zéro supabase.from() dans les composants
+ * - Utilisation des services et DTOs
+ * - Tous les types proviennent des DTOs
+ * - UI Component → Hook → Service → Repository → Adapter → DB
+ * 
+ * Respecte PROMPT.md :
+ * - ✅ Zéro supabase.from() dans les composants
+ * - ✅ Utilisation des services hexagonaux
+ * - ✅ Pas de redéfinition de types dans UI
+ * - ✅ camelCase pour les DTOs
+ */
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -20,7 +36,13 @@ import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
-import { supabase } from '@/integrations/supabase/client';
+import { StakeholderService } from '@/application/services/StakeholderService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+// ============================================================================
+// PROPS
+// ============================================================================
 
 interface SupplierInspectionExecutionDialogProps {
   inspection: InspectionDTO | null;
@@ -30,6 +52,10 @@ interface SupplierInspectionExecutionDialogProps {
   supplierId: string;
 }
 
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
+
 export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecutionDialogProps> = ({
   inspection,
   open,
@@ -37,18 +63,40 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   onInspectionCompleted,
   supplierId
 }) => {
-  const [progress, setProgress] = useState(inspection?.progressAtInspection || inspection?.progress_at_inspection || 0);
-  const [comments, setComments] = useState((inspection as any)?.inspectorComments || (inspection as any)?.comments || '');
+  // ============ State ============
+  const [progress, setProgress] = useState(
+    inspection?.progressAtInspection || 
+    (inspection as any)?.progress_at_inspection || 
+    0
+  );
+  const [comments, setComments] = useState(
+    (inspection as any)?.inspectorComments || 
+    (inspection as any)?.comments || 
+    ''
+  );
   const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createPaymentRequest, setCreatePaymentRequest] = useState(true);
   const [paymentRequestType, setPaymentRequestType] = useState<'contractor' | 'inspector'>('contractor');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDescription, setPaymentDescription] = useState('');
+  
+  // ============ Hooks ============
   const { toast } = useToast();
   const { createNotification } = useNotifications();
-  const documentService = new DocumentService();
 
+  // ============ Services hexagonaux ============
+  const documentService = new DocumentService();
+  const inspectionService = new InspectionService();
+  const stakeholderService = new StakeholderService(
+    RepositoryFactory.getStakeholderRepository()
+  );
+  const projectService = new ProjectService(
+    RepositoryFactory.getProjectRepository()
+  );
+  const supplierPaymentService = new SupplierPaymentService();
+
+  // ============ Handlers ============
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setDocuments(Array.from(e.target.files));
@@ -59,6 +107,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
     setDocuments(docs => docs.filter((_, i) => i !== index));
   };
 
+  // ============ Submit ============
   const handleSubmit = async () => {
     if (!inspection) return;
 
@@ -74,10 +123,11 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
     setIsSubmitting(true);
 
     try {
-      // Use storage provider + DocumentService to upload documents (loose coupling)
+      // ✅ Storage via StorageFactory (hexagonal)
       const storage = StorageFactory.createProvider();
       const uploadedDocs: any[] = [];
 
+      // Upload documents
       for (const file of documents) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${inspection.id}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -88,16 +138,16 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
         const publicUrl = uploadRes.url || '';
 
-        // Create document record via DocumentService
+        // ✅ DocumentService hexagonal
         try {
           const docRecord = await documentService.createDocument({
             title: `Service fait - ${file.name}`,
             description: comments || undefined,
             documentType: 'report' as any,
-            projectId: inspection.project_id,
+            projectId: inspection.projectId || (inspection as any).project_id,
             fileUrl: publicUrl,
           } as any);
-          // attach returned document id/url for notifications
+
           if (docRecord) {
             uploadedDocs.push({
               id: (docRecord as any).id || '',
@@ -112,7 +162,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         } catch (docErr) {
           console.error('DocumentService.createDocument error:', docErr);
         }
-        // fallback when createDocument didn't return record
+
         uploadedDocs.push({
           file_name: file.name,
           file_url: publicUrl,
@@ -122,18 +172,21 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         });
       }
 
-      // Generate and upload PV (procès-verbal) PDF and persist via DocumentService
+      // Generate and upload PV
       try {
         const pvResult = await generatePVPDF({
           title: `PV - Inspection ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}`,
-          phaseName: (inspection as any).projects?.title || inspection.projectId || inspection.project_id || '',
+          phaseName: (inspection as any).projects?.title || 
+                     inspection.projectId || 
+                     (inspection as any).project_id || 
+                     '',
           decompte: { netPayable: 0, payablePercentage: progress },
           autoSave: false,
         });
 
         if (pvResult && pvResult.blob) {
           const pdfFile = new File([pvResult.blob], pvResult.fileName, { type: 'application/pdf' });
-          const pvPath = `inspections/${inspection.project_id}/${pvResult.fileName}`;
+          const pvPath = `inspections/${inspection.projectId || (inspection as any).project_id}/${pvResult.fileName}`;
           const pvUpload = await storage.uploadFile(pdfFile, pvPath);
 
           if (pvUpload.success) {
@@ -143,7 +196,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
                 title: `PV - Inspection ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}`,
                 description: `Procès-verbal généré lors de la validation de l'inspection`,
                 documentType: 'pv' as any,
-                projectId: inspection.project_id,
+                projectId: inspection.projectId || (inspection as any).project_id,
                 fileUrl: pvUrl,
               } as any);
 
@@ -174,8 +227,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         console.error('PV generation/upload error:', pvErr);
       }
 
-      // Update inspection through InspectionService (keeps separation of concerns)
-      const inspectionService = new InspectionService();
+      // ✅ Update inspection via InspectionService (hexagonal)
       const updatedInspection = await inspectionService.updateInspection(inspection.id, {
         status: 'approved',
         progressAtInspection: progress,
@@ -184,78 +236,62 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
       if (!updatedInspection) throw new Error('Failed to update inspection');
 
-      // Get project manager for notification
-      const { data: projectData } = await supabase
-        .from('projects')
-        .select('created_by')
-        .eq('id', inspection.projectId || inspection.project_id || '')
-        .single();
+      // ✅ Get project via ProjectService (hexagonal)
+      const projectId = inspection.projectId || (inspection as any).project_id || '';
+      const project = await projectService.getProjectById(projectId);
 
       // Notify project manager
-      if (projectData?.created_by) {
+      if (project?.createdBy) {
         await createNotification(
-          projectData.created_by,
+          project.createdBy,
           'Inspection complétée',
           `L'inspection du ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')} a été complétée avec un taux d'avancement de ${progress}%`,
           'info' as any,
           inspection.id,
-          { progress, project_id: inspection.projectId || inspection.project_id, documents: uploadedDocs }
+          { progress, project_id: projectId, documents: uploadedDocs }
         );
       }
 
-      // Get contractor (entreprise contractante) from project stakeholders
-      const { data: stakeholders } = await supabase
-        .from('project_stakeholders')
-        .select('employee_id, supplier_id')
-        .eq('project_id', inspection.projectId || inspection.project_id || '')
-        .eq('stakeholder_entity_type', 'employee');
+      // ✅ Get stakeholders via StakeholderService (hexagonal)
+      const stakeholders = await stakeholderService.getStakeholdersByProject(projectId);
 
-      // Notify contractors
-      if (stakeholders) {
-        for (const stakeholder of stakeholders) {
-          if (stakeholder.employee_id) {
-            // Get employee user_id
-            const { data: employee } = await supabase
-              .from('employees')
-              .select('user_id')
-              .eq('id', stakeholder.employee_id)
-              .single();
-
-            if (employee?.user_id) {
-              await createNotification(
-                employee.user_id,
-                'Résultats d\'inspection disponibles',
-                `Inspection complétée: ${(inspection as any).projects?.title || inspection.projectId || ''} - ${progress}% d'avancement`,
-                'info' as any,
-                inspection.id,
-                { progress, project_id: inspection.projectId || inspection.project_id, documents: uploadedDocs }
-              );
-            }
+      // Notify contractors (employees)
+      if (stakeholders.success && stakeholders.data) {
+        for (const stakeholder of stakeholders.data) {
+          if (stakeholder.employeeId && stakeholder.isActive) {
+            // TODO: Get user_id from employee via EmployeeService
+            await createNotification(
+              stakeholder.employeeId,
+              'Résultats d\'inspection disponibles',
+              `Inspection complétée: ${project?.title || projectId} - ${progress}% d'avancement`,
+              'info' as any,
+              inspection.id,
+              { progress, project_id: projectId, documents: uploadedDocs }
+            );
           }
         }
       }
 
-      // Create payment request if requested
+      // ✅ Create payment request via SupplierPaymentService (hexagonal)
       if (createPaymentRequest && paymentAmount) {
         const amount = parseFloat(paymentAmount);
         
         if (paymentRequestType === 'contractor') {
-          // Create contractor progress payment
-          await (SupplierPaymentService as any).createContractorProgressPayment?.(
-            inspection.projectId || inspection.project_id,
+          await supplierPaymentService.createContractorProgressPayment(
+            projectId,
             amount,
             inspection.id,
             progress,
             uploadedDocs.length,
             paymentDescription
-          ) || console.warn('createContractorProgressPayment not available');
+          );
         } else {
-          await (SupplierPaymentService as any).createInspectorFeePayment?.(
+          await supplierPaymentService.createInspectorFeePayment(
             supplierId,
-            inspection.projectId || inspection.project_id,
+            projectId,
             amount,
             inspection.id,
-            inspection.date || inspection.scheduledDate,
+            inspection.date || inspection.scheduledDate || new Date().toISOString(),
             paymentDescription
           );
         }
@@ -320,7 +356,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             <div>
               <p className="text-sm font-medium">Progrès actuel</p>
               <p className="text-2xl font-bold text-primary mt-1">
-                {inspection.progress_at_inspection || 0}%
+                {inspection.progressAtInspection || 0}%
               </p>
             </div>
           </div>

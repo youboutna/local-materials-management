@@ -20,13 +20,18 @@ import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { SupplierService } from '@/application/services/SupplierService';
-import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
-import { normalizeTaskPriority as normalizeUnifiedPriority, normalizeTaskStatus as normalizeUnifiedStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import {
+  CreateTaskAssignmentDTO,
+  TaskPriority,
+  TaskStatus,
+  normalizeTaskPriority,
+  normalizeTaskStatus
+} from '@/dtos/entities/TaskAssignmentDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
@@ -203,8 +208,7 @@ export class ProjectImportExportService {
     private readonly projectService: ProjectService,
     private readonly phaseService = new PhaseService(),
     private readonly milestoneService = new MilestoneService(),
-    private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
-    private readonly unifiedTaskService = new TaskAssignmentService(),
+    private readonly taskAssignmentService = new TaskAssignmentService(),
     private readonly stakeholderService = new ProjectStakeholderService(),
     private readonly organizationService = new OrganizationService(),
     private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
@@ -670,134 +674,98 @@ export class ProjectImportExportService {
     return this.isUUID(reference) ? reference : undefined;
   }
 
-  private normalizeTaskStatus(status?: string, progress?: number): TaskStatus | undefined {
-    const normalized = (status ?? '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase()
-      .replace(/[\s-]+/g, '_');
-    const map: Record<string, TaskStatus> = {
-      termine: TaskStatus.COMPLETED,
-      terminee: TaskStatus.COMPLETED,
-      completed: TaskStatus.COMPLETED,
-      done: TaskStatus.COMPLETED,
-      en_cours: TaskStatus.IN_PROGRESS,
-      in_progress: TaskStatus.IN_PROGRESS,
-      planifie: TaskStatus.PENDING,
-      planifiee: TaskStatus.PENDING,
-      en_attente: TaskStatus.PENDING,
-      pending: TaskStatus.PENDING,
-      annule: TaskStatus.CANCELLED,
-      annulee: TaskStatus.CANCELLED,
-      cancelled: TaskStatus.CANCELLED,
-    };
-    if (map[normalized]) return map[normalized];
-    if (progress != null) {
-      if (progress >= 100) return TaskStatus.COMPLETED;
-      if (progress > 0) return TaskStatus.IN_PROGRESS;
-      return TaskStatus.PENDING;
-    }
-    return undefined;
-  }
-
-  private normalizeTaskPriority(priority?: string): TaskPriority | undefined {
-    const normalized = (priority ?? '').trim().toLowerCase();
-    const map: Record<string, TaskPriority> = {
-      basse: TaskPriority.LOW,
-      low: TaskPriority.LOW,
-      moyenne: TaskPriority.MEDIUM,
-      moyen: TaskPriority.MEDIUM,
-      medium: TaskPriority.MEDIUM,
-      haute: TaskPriority.HIGH,
-      elevee: TaskPriority.HIGH,
-      high: TaskPriority.HIGH,
-    };
-    return map[normalized];
-  }
-
   /**
    * Upsert idempotent d'une tâche avec auto-assignation.
    * Si assignedTo est vide, on assigne à l'utilisateur courant.
    * assignedBy est automatiquement renseigné avec l'utilisateur courant.
    */
- /**
- * Upsert idempotent d'une tâche avec auto-assignation.
- * Si assignedTo est vide, on assigne à l'utilisateur courant.
- * assignedBy est automatiquement renseigné avec l'utilisateur courant.
- */
-private async upsertTask(
-  projectId: string,
-  phaseId: string | undefined,
-  task: ProjectImportTask,
-  details: ProjectImportResult['details'],
-  suppliers?: Map<string, string>,
-): Promise<void> {
-  const title = task.title ?? task.name ?? 'Tâche importée';
-  const existingTasks = phaseId
-    ? await this.unifiedTaskService.getByPhase(phaseId)
-    : await this.unifiedTaskService.getByProject(projectId);
-  const existingTask = existingTasks.find((candidate) => candidate.title === title);
+  private async upsertTask(
+    projectId: string,
+    phaseId: string | undefined,
+    task: ProjectImportTask,
+    details: ProjectImportResult['details'],
+    suppliers?: Map<string, string>,
+  ): Promise<void> {
+    const name = task.title ?? task.name ?? 'Tâche importée';
+    const existingTasks = phaseId
+      ? await this.taskAssignmentService.getByPhase(phaseId)
+      : await this.taskAssignmentService.getByProject(projectId);
+    const existingTask = existingTasks.find((candidate) => candidate.name === name);
 
-  // Résoudre les assignés depuis le JSON
-  let assignees: string[] = [];
+    // Résoudre les assignés depuis le JSON
+    let assignees: string[] = [];
 
-  if (task.assignedTo) {
-    const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
-    assignees = raw
-      .map((a) => this.resolveReference(a, suppliers))
-      .filter((a): a is string => !!a);
-  }
+    if (task.assignedTo) {
+      const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
+      assignees = raw
+        .map((a) => this.resolveReference(a, suppliers))
+        .filter((a): a is string => !!a);
+    }
 
-  // Si aucun assigné dans le JSON, utiliser l'utilisateur courant
-  if (assignees.length === 0 && this.currentUserId) {
-    assignees = [this.currentUserId];
-  }
+    // Si aucun assigné dans le JSON, utiliser l'utilisateur courant
+    if (assignees.length === 0 && this.currentUserId) {
+      assignees = [this.currentUserId];
+    }
 
-  // Récupérer les informations de l'assigné
-  let assigneeName = task.assigneeName || task.assignedName;
-  let assigneeEmail = task.assigneeEmail || task.AssignedEmail;
+    // Récupérer les informations de l'assigné
+    let assigneeName = task.assigneeName || task.assignedName;
+    let assigneeEmail = task.assigneeEmail || task.AssignedEmail;
 
-  if (!assigneeName && this.currentUserName) {
-    assigneeName = this.currentUserName;
-  }
-  if (!assigneeEmail && this.currentUserEmail) {
-    assigneeEmail = this.currentUserEmail;
-  }
+    if (!assigneeName && this.currentUserName) {
+      assigneeName = this.currentUserName;
+    }
+    if (!assigneeEmail && this.currentUserEmail) {
+      assigneeEmail = this.currentUserEmail;
+    }
 
-  // Déterminer le type d'assigné
-  let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
-  if (assignees.length > 0) {
-    const isSupplier = assignees.some((id) => suppliers?.has(id));
-    assigneeType = isSupplier ? 'supplier' : 'user';
-  }
+    // Déterminer le type d'assigné
+    let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
+    if (assignees.length > 0) {
+      const isSupplier = assignees.some((id) => suppliers?.has(id));
+      assigneeType = isSupplier ? 'supplier' : 'user';
+    }
 
-    const taskData = {
+    // Normaliser le statut
+    let normalizedStatus = normalizeTaskStatus(task.status);
+    // Si progress est fourni, ajuster le statut en conséquence
+    if (task.progress !== undefined) {
+      if (task.progress >= 100) {
+        normalizedStatus = TaskStatus.COMPLETED;
+      } else if (task.progress > 0 && normalizedStatus !== TaskStatus.COMPLETED) {
+        normalizedStatus = TaskStatus.IN_PROGRESS;
+      }
+    }
+
+    const taskData: Partial<CreateTaskAssignmentDTO> = {
       projectId,
-      phaseId,
-      title,
+      phaseId: phaseId || undefined,
+      name,
       description: task.description,
-      status: normalizeUnifiedStatus(task.status, task.progress),
-      priority: normalizeUnifiedPriority(task.priority),
+      status: normalizedStatus || TaskStatus.PENDING,
+      priority: normalizeTaskPriority(task.priority) || TaskPriority.MEDIUM,
       dueDate: task.due_date ?? task.dueDate ?? task.endDate,
-      assignedTo: assignees,
-      assigneeType,
+      assigneeId: assignees.length > 0 ? assignees[0] : undefined,
       assigneeName,
       assigneeEmail,
       startDate: task.startDate,
-      endDate: task.endDate,
-      assignedBy: this.currentUserId,
-      progress: task.progress ?? 0,
+      completedDate: task.endDate,
+      estimatedHours: task.progress !== undefined ? Math.round(task.progress / 10) : undefined,
+      metadata: {
+        assignedBy: this.currentUserId,
+        assignedTo: assignees,
+        assigneeType,
+        importProgress: task.progress,
+        importId: task.id,
+      },
     };
 
     if (existingTask) {
-      await this.unifiedTaskService.update(existingTask.id, taskData);
+      await this.taskAssignmentService.update(existingTask.id, taskData);
     } else {
-      await this.unifiedTaskService.create(taskData);
+      await this.taskAssignmentService.create(taskData as CreateTaskAssignmentDTO);
     }
     details.tasks += 1;
   }
-
 
   // =============================================================================
   // DQE IMPORT
@@ -1028,7 +996,7 @@ private async upsertTask(
     const phaseRows = await Promise.all(phases.map(async (phase) => ({
       ...phase,
       milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
-      tasks: await this.unifiedTaskService.getByPhase(phase.id),
+      tasks: await this.taskAssignmentService.getByPhase(phase.id),
       dqeLines: await boqRepository.list({ source: 'dqe', contextId: p.id, projectId: p.id, phaseId: phase.id }),
     })));
     const dqeLines = phaseRows.flatMap((phase) => phase.dqeLines as BoqLineDTO[]);

@@ -32,7 +32,7 @@ import { ProjectDTO, ProjectStatus, ConstructionStage } from '@/dtos/entities/Pr
 import { PhaseDTO, PhaseStatus, PhaseType, PhasePriority } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RiskDTO, RiskCategory, RiskStatus } from '@/dtos/entities/RiskDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
@@ -228,7 +228,8 @@ export class ProjectWorkflowTransforms {
       } as ProjectDTO,
       relatedData: {
         risks: processedRisks,
-        phases: processedPhases
+        phases: processedPhases,
+        tasks: [] // Les tâches sont chargées séparément via TaskAssignmentService
       },
       metadata: {
         lastSavedAt: entity.last_saved_at || new Date().toISOString(),
@@ -433,7 +434,6 @@ export class ProjectWorkflowTransforms {
       selectionMode: formData.selection_mode as string,
       projectReference: formData.project_reference as string,
       mainContractor: formData.main_contractor as string,
-      // engineeringConsultant removed - not in UpdateProjectDTO
       allowsInitialPayment: formData.allows_initial_payment as boolean,
       initialPaymentPercentage: formData.initial_payment_percentage as number,
       currentPhase: formData.current_phase as string,
@@ -609,7 +609,6 @@ export class ProjectWorkflowTransforms {
   // =================== WORKFLOW METRICS CALCULATIONS ===================
 
   private static calculateAverageTimePerStep(entity: ProjectWorkflowEntity): number {
-    // Default calculation based on project duration and steps
     if (!entity.start_date || !entity.end_date) return 0;
     const start = new Date(entity.start_date);
     const end = new Date(entity.end_date);
@@ -626,7 +625,6 @@ export class ProjectWorkflowTransforms {
   }
 
   private static calculateValidationErrors(entity: ProjectWorkflowEntity): number {
-    // Simple validation error count based on required fields
     let errors = 0;
     if (!entity.project_title) errors++;
     if (!entity.start_date) errors++;
@@ -636,31 +634,28 @@ export class ProjectWorkflowTransforms {
   }
 
   private static calculateSaveOperations(entity: ProjectWorkflowEntity): number {
-    // Estimate save operations based on workflow steps and modifications
     const baseSaves = entity.completed_steps || 0;
     const modificationSaves = entity.last_saved_at ? 1 : 0;
     return baseSaves + modificationSaves;
   }
 
   private static calculateUserInteractions(entity: ProjectWorkflowEntity): number {
-    // Estimate user interactions based on complexity
-    let interactions = 10; // Base interactions
+    let interactions = 10;
     if (entity.risks && entity.risks.length > 0) interactions += entity.risks.length * 2;
     if (entity.phases && entity.phases.length > 0) interactions += entity.phases.length * 3;
     return interactions;
   }
 
   private static calculateAbandonmentRate(entity: ProjectWorkflowEntity): number | undefined {
-    // Calculate abandonment rate based on progress and time
     if (!entity.start_date || !entity.end_date) return undefined;
     const progress = entity.progress_percentage || 0;
     const now = new Date();
     const end = new Date(entity.end_date);
     
-    if (progress < 10 && now > end) return 100; // Abandoned
-    if (progress < 50 && now > end) return 75; // High risk
-    if (progress < 80 && now > end) return 25; // Low risk
-    return 0; // On track
+    if (progress < 10 && now > end) return 100;
+    if (progress < 50 && now > end) return 75;
+    if (progress < 80 && now > end) return 25;
+    return 0;
   }
 
   // =================== SUMMARY TRANSFORMATIONS ===================

@@ -7,24 +7,24 @@ import { Progress } from '@/components/ui/progress';
 import { Plus, Calendar, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
-
-import { TaskStatus } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
+import { TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 
 interface TaskListProps {
-  tasks: TaskDTO[];
+  tasks: TaskAssignmentDTO[];
   projectId: string;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<'all' | 'completed' | 'in_progress' | 'not_started'>('all');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'in_progress' | 'pending' | 'blocked'>('all');
 
   // Memoized task counts to avoid repeated filtering
   const taskCounts = useMemo(() => {
     let inProgress = 0;
     let completed = 0;
-    let notStarted = 0;
+    let pending = 0;
+    let blocked = 0;
 
     tasks.forEach(task => {
       switch (task.status) {
@@ -34,9 +34,14 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
         case TaskStatus.COMPLETED:
           completed++;
           break;
-        case TaskStatus.NOT_STARTED:
-          notStarted++;
+        case TaskStatus.PENDING:
+          pending++;
           break;
+        case TaskStatus.BLOCKED:
+          blocked++;
+          break;
+        default:
+          pending++;
       }
     });
 
@@ -44,7 +49,8 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
       total: tasks.length,
       inProgress,
       completed,
-      notStarted
+      pending,
+      blocked
     };
   }, [tasks]);
 
@@ -55,10 +61,22 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'delayed': return 'bg-red-100 text-red-800 border-red-200';
+      case TaskStatus.COMPLETED: return 'bg-green-100 text-green-800 border-green-200';
+      case TaskStatus.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case TaskStatus.BLOCKED: return 'bg-red-100 text-red-800 border-red-200';
+      case TaskStatus.PENDING: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case TaskStatus.COMPLETED: return 'Terminée';
+      case TaskStatus.IN_PROGRESS: return 'En cours';
+      case TaskStatus.BLOCKED: return 'Bloquée';
+      case TaskStatus.PENDING: return 'En attente';
+      case TaskStatus.CANCELLED: return 'Annulée';
+      default: return status;
     }
   };
 
@@ -73,7 +91,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
       </div>
 
       {/* Filter buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button 
           variant={filter === 'all' ? 'default' : 'outline'} 
           size="sm"
@@ -82,25 +100,32 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
           Toutes ({taskCounts.total})
         </Button>
         <Button 
-          variant={filter === 'in_progress' ? 'default' : 'outline'} 
+          variant={filter === TaskStatus.IN_PROGRESS ? 'default' : 'outline'} 
           size="sm"
-          onClick={() => setFilter('in_progress')}
+          onClick={() => setFilter(TaskStatus.IN_PROGRESS)}
         >
           En cours ({taskCounts.inProgress})
         </Button>
         <Button 
-          variant={filter === 'completed' ? 'default' : 'outline'} 
+          variant={filter === TaskStatus.COMPLETED ? 'default' : 'outline'} 
           size="sm"
-          onClick={() => setFilter('completed')}
+          onClick={() => setFilter(TaskStatus.COMPLETED)}
         >
           Terminées ({taskCounts.completed})
         </Button>
         <Button 
-          variant={filter === 'not_started' ? 'default' : 'outline'} 
+          variant={filter === TaskStatus.PENDING ? 'default' : 'outline'} 
           size="sm"
-          onClick={() => setFilter('not_started')}
+          onClick={() => setFilter(TaskStatus.PENDING)}
         >
-          Non débutées ({taskCounts.notStarted})
+          En attente ({taskCounts.pending})
+        </Button>
+        <Button 
+          variant={filter === TaskStatus.BLOCKED ? 'default' : 'outline'} 
+          size="sm"
+          onClick={() => setFilter(TaskStatus.BLOCKED)}
+        >
+          Bloquées ({taskCounts.blocked})
         </Button>
       </div>
 
@@ -109,41 +134,55 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
           <Card key={index}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{task.title}</span>
+                <span>{task.title || task.name}</span>
                 <Badge className={getStatusColor(task.status)}>
-                  {task.status === 'completed' ? 'Terminée' : 
-                   task.status === 'in_progress' ? 'En cours' : 
-                   task.status === 'delayed' ? 'En retard' : 'Non débutée'}
+                  {getStatusLabel(task.status)}
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <p className="text-sm">{task.description}</p>
+                <p className="text-sm">{task.description || 'Aucune description'}</p>
                 
                 <Progress value={task.progress || 0} className="h-2" />
                 
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{task.startDate} → {task.endDate}</span>
+                    <span>
+                      {task.startDate ? `${task.startDate} → ` : ''}
+                      {task.dueDate || task.endDate || 'Date non définie'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    <span>{task.assignedTo?.length || 0} assigné(s)</span>
+                    <span>{task.assigneeName || task.assigneeId || 'Non assigné(e)'}</span>
                   </div>
                 </div>
 
-                {task.dependsOn && Array.isArray(task.dependsOn) && task.dependsOn.length > 0 && (
+                {task.dependencies && Array.isArray(task.dependencies) && task.dependencies.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium mb-1">Dépendances:</h4>
                     <div className="flex gap-1 flex-wrap">
-                      {task.dependsOn.map((depId: string, depIndex: number) => (
+                      {task.dependencies.map((depId: string, depIndex: number) => (
                         <Badge key={depIndex} variant="outline" className="text-xs">
                           Tâche #{typeof depId === 'string' ? depId.slice(-4) : depIndex}
                         </Badge>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {task.priority && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Priorité:</span>
+                    <Badge variant={
+                      task.priority === 'CRITICAL' ? 'destructive' :
+                      task.priority === 'HIGH' ? 'default' :
+                      task.priority === 'MEDIUM' ? 'secondary' : 'outline'
+                    }>
+                      {task.priority}
+                    </Badge>
                   </div>
                 )}
               </div>
@@ -158,7 +197,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
             <p className="text-muted-foreground text-center mb-4">
               {filter === 'all' 
                 ? 'Aucune tâche créée pour ce projet' 
-                : `Aucune tâche avec le statut "${filter}"`}
+                : `Aucune tâche avec le statut "${getStatusLabel(filter)}"`}
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}/tasks/new`)}>
               <Plus className="h-4 w-4 mr-2" />

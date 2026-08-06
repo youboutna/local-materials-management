@@ -1,29 +1,61 @@
-import React, { useState } from 'react';
+/**
+ * TaskAssigneeSelector - Sélecteur d'assigné pour les tâches
+ * 
+ * Architecture Hexagonale - RÈGLES STRICTES :
+ * - Zéro supabase.from() dans les composants
+ * - Utilisation des services et DTOs
+ * - Tous les types proviennent des DTOs
+ * - UI Component → Hook → Service → Repository → Adapter → DB
+ * 
+ * Respecte PROMPT.md :
+ * - ✅ Zéro supabase.from() dans les composants
+ * - ✅ Utilisation de useStakeholdersHex
+ * - ✅ Pas de redéfinition de types dans UI
+ * - ✅ camelCase pour les DTOs
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, User, Building2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useStakeholdersHex } from '@/hooks/hexagonal/useStakeholdersHex';
+import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
+import { StakeholderResponseDTO } from '@/dtos/entities/StakeholderDTO';
 
-interface Assignee {
+// ============================================================================
+// TYPES - ALIAS VERS LES DTOS
+// ============================================================================
+
+export interface AssigneeOption {
   id: string;
   name: string;
   email?: string;
-  type: 'employee' | 'supplier';
+  type: 'employee' | 'supplier' | 'external';
   role?: string;
   department?: string;
 }
 
+// ============================================================================
+// PROPS
+// ============================================================================
+
 interface TaskAssigneeSelectorProps {
   projectId: string;
   value?: string;
-  onChange: (assigneeId: string, assigneeName: string, assigneeEmail: string, assigneeType: 'employee' | 'supplier') => void;
+  onChange: (assigneeId: string, assigneeName: string, assigneeEmail: string, assigneeType: 'employee' | 'supplier' | 'external') => void;
   label?: string;
   disabled?: boolean;
   required?: boolean;
   placeholder?: string;
 }
+
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
 
 const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
   projectId,
@@ -36,87 +68,104 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: assignees, isLoading } = useQuery({
-    queryKey: ['task-assignees', projectId, searchTerm],
-    queryFn: async (): Promise<Assignee[]> => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const assigneeList: Assignee[] = [];
+  // ✅ Utilisation du hook hexagonal
+  const { stakeholders, isLoading: isLoadingStakeholders } = useStakeholdersHex(projectId);
 
-      // Fetch employees
-      let employeeQuery = supabase
-        .from('employees')
-        .select('id, full_name, email, position, department')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true });
-
-      if (searchTerm) {
-        employeeQuery = employeeQuery.or(`full_name.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%`);
-      }
-
-      const { data: employees } = await employeeQuery.limit(25);
+  // ✅ Récupération des employés via un autre hook ou service
+  const { data: employees, isLoading: isLoadingEmployees } = useQuery({
+    queryKey: ['employees-active', searchTerm],
+    queryFn: async (): Promise<EmployeeDTO[]> => {
+      const { EmployeeService } = await import('@/application/services/EmployeeService');
+      const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
+      const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+      const allEmployees = await employeeService.getAllEmployees();
       
-      if (employees) {
-        assigneeList.push(...employees.filter(emp => emp.id && emp.full_name).map(emp => ({
-          id: emp.id!,
-          name: emp.full_name!,
-          email: emp.email || '',
-          type: 'employee' as const,
-          role: emp.position || undefined,
-          department: emp.department || undefined,
-        })));
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        return allEmployees.filter(emp => 
+          emp.fullName?.toLowerCase().includes(term) ||
+          emp.position?.toLowerCase().includes(term) ||
+          emp.department?.toLowerCase().includes(term)
+        );
       }
-
-      // Fetch project stakeholders (suppliers/contractors)
-      let stakeholderQuery = supabase
-        .from('project_stakeholders')
-        .select(`
-          supplier_id,
-          suppliers (
-            id,
-            name,
-            email,
-            contact_person
-          )
-        `)
-        .eq('project_id', projectId)
-        .not('supplier_id', 'is', null);
-
-      const { data: stakeholders } = await stakeholderQuery;
-
-      if (stakeholders) {
-        stakeholders.forEach(sh => {
-          if (sh.suppliers) {
-            const supplier = sh.suppliers as any;
-            const supplierName = supplier.contact_person || supplier.name;
-            
-            if (!searchTerm || supplierName.toLowerCase().includes(searchTerm.toLowerCase())) {
-              assigneeList.push({
-                id: supplier.id,
-                name: supplierName,
-                email: supplier.email || '',
-                type: 'supplier',
-                role: supplier.name,
-              });
-            }
-          }
-        });
-      }
-
-      return assigneeList;
+      return allEmployees;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
-  const selectedAssignee = assignees?.find(assignee => assignee.id === value);
+  // ✅ Construction de la liste des assignés à partir des DTOs
+  const assignees = useMemo((): AssigneeOption[] => {
+    const list: AssigneeOption[] = [];
+
+    // Ajouter les employés depuis EmployeeDTO
+    if (employees) {
+      employees.forEach(emp => {
+        if (emp.id && emp.fullName) {
+          list.push({
+            id: emp.id,
+            name: emp.fullName,
+            email: emp.email || '',
+            type: 'employee',
+            role: emp.position || undefined,
+            department: emp.department || undefined,
+          });
+        }
+      });
+    }
+
+    // Ajouter les parties prenantes externes depuis StakeholderResponseDTO
+    if (stakeholders) {
+      stakeholders.forEach(stakeholder => {
+        // Fournisseurs
+        if (stakeholder.supplierId) {
+          const name = stakeholder.externalName || stakeholder.name || 'Fournisseur';
+          if (!searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase())) {
+            list.push({
+              id: stakeholder.supplierId,
+              name: name,
+              email: stakeholder.externalEmail || stakeholder.email || '',
+              type: 'supplier',
+              role: stakeholder.roleDescription || stakeholder.role || 'Fournisseur',
+            });
+          }
+        }
+        // Externes (sans supplierId ni employeeId)
+        else if (!stakeholder.employeeId && stakeholder.stakeholderEntityType === 'external') {
+          const name = stakeholder.externalName || stakeholder.name || 'Externe';
+          if (!searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase())) {
+            list.push({
+              id: stakeholder.id,
+              name: name,
+              email: stakeholder.externalEmail || stakeholder.email || '',
+              type: 'external',
+              role: stakeholder.roleDescription || stakeholder.role || 'Externe',
+            });
+          }
+        }
+      });
+    }
+
+    return list;
+  }, [employees, stakeholders, searchTerm]);
+
+  const isLoading = isLoadingStakeholders || isLoadingEmployees;
+
+  const selectedAssignee = assignees.find(assignee => assignee.id === value);
 
   const handleSelect = (assigneeId: string) => {
-    const assignee = assignees?.find(a => a.id === assigneeId);
+    const assignee = assignees.find(a => a.id === assigneeId);
     if (assignee) {
-      onChange(assignee.id, assignee.name, assignee.email || '', assignee.type);
+      onChange(
+        assignee.id,
+        assignee.name,
+        assignee.email || '',
+        assignee.type
+      );
     }
   };
 
-  const employees = assignees?.filter(a => a.type === 'employee') || [];
-  const suppliers = assignees?.filter(a => a.type === 'supplier') || [];
+  const employeesList = assignees.filter(a => a.type === 'employee');
+  const suppliersList = assignees.filter(a => a.type === 'supplier' || a.type === 'external');
 
   return (
     <div className="space-y-2">
@@ -155,20 +204,21 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                     )}
                     <span>{selectedAssignee.name}</span>
                     <Badge variant="outline" className="text-xs">
-                      {selectedAssignee.type === 'employee' ? 'Employé' : 'Externe'}
+                      {selectedAssignee.type === 'employee' ? 'Employé' : 
+                       selectedAssignee.type === 'supplier' ? 'Fournisseur' : 'Externe'}
                     </Badge>
                   </div>
                 )}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {employees.length > 0 && (
+              {employeesList.length > 0 && (
                 <SelectGroup>
                   <SelectLabel className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Employés
                   </SelectLabel>
-                  {employees.map((assignee) => (
+                  {employeesList.map((assignee) => (
                     <SelectItem key={assignee.id} value={assignee.id}>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
@@ -177,6 +227,9 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                           {assignee.role && (
                             <div className="text-xs text-muted-foreground">{assignee.role}</div>
                           )}
+                          {assignee.department && (
+                            <div className="text-xs text-muted-foreground">{assignee.department}</div>
+                          )}
                         </div>
                       </div>
                     </SelectItem>
@@ -184,13 +237,13 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                 </SelectGroup>
               )}
 
-              {suppliers.length > 0 && (
+              {suppliersList.length > 0 && (
                 <SelectGroup>
                   <SelectLabel className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     Parties prenantes externes
                   </SelectLabel>
-                  {suppliers.map((assignee) => (
+                  {suppliersList.map((assignee) => (
                     <SelectItem key={assignee.id} value={assignee.id}>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4" />
@@ -206,7 +259,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                 </SelectGroup>
               )}
 
-              {(!assignees || assignees.length === 0) && (
+              {assignees.length === 0 && (
                 <SelectItem value="no-assignees" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />

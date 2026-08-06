@@ -1,10 +1,19 @@
+/**
+ * ProjectDetailByDTO - Détail du projet à partir des DTOs
+ * 
+ * Architecture Hexagonale :
+ * - Utilise ProjectDetailDTO, PhaseDTO, InspectionDTO, etc.
+ * - GeoZoneEditor utilise InterventionZoneDTO
+ * - Pas de types UI redéfinis
+ * - Toutes les données proviennent des services
+ */
 
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
-import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
+import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import { CriticalPathView, GanttChart, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
@@ -35,6 +44,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
+import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -70,11 +80,16 @@ import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import { ProjectHeader } from "./hierarchy";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
+// ============================================================================
+// INTERFACES (uniquement pour les props du composant)
+// ============================================================================
+
 interface ProjectDetailByDTOProps {
   projectId?: string;
   onEdit?: () => void;
   onClose?: () => void;
 }
+
 interface PhaseToSave {
   project_id: string;
   phase_name: string;
@@ -89,21 +104,36 @@ interface PhaseToSave {
   construction_phase: string;
   custom_phase_data: Record<string, unknown>;
 }
+
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
+
 const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   projectId: propProjectId,
   onEdit,
   onClose,
 }) => {
+  // ============ Hooks et état ============
   const { projectId: routeProjectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const projectId = propProjectId || routeProjectId;
-  const [selectedReferential, setSelectedReferential] =
-    useState<ReferentialType | null>(null);
+  const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
   const [showPhaseManager, setShowPhaseManager] = useState(false);
   const [phases, setPhases] = useState<PhaseDTO[]>([]);
   const [referentialOptions, setReferentialOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const queryClient = useQueryClient();
   
+  // ============ Services ============
+  const projectService = useMemo(
+    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    [],
+  );
 
   // Load referential options
   useEffect(() => {
@@ -120,17 +150,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     loadReferentialOptions();
   }, []);
 
-  const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "overview";
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  const queryClient = useQueryClient();
-  const projectService = useMemo(
-    () => new ProjectService(RepositoryFactory.getProjectRepository()),
-    [],
-  );
-
-  // Fetch project data using ProjectService
+  // ============ Queries ============
+  
+  // Fetch project summary
   const {
     data: project,
     isLoading: projectLoading,
@@ -152,7 +174,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch detailed project data (includes plannedPhases, tasks, risks, inspections, etc.)
+  // Fetch detailed project data
   const { data: projectDetail, isLoading: detailLoading } =
     useQuery<ProjectDetailDTO | null>({
       queryKey: ["project-detail", projectId],
@@ -163,6 +185,37 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       enabled: !!projectId,
       staleTime: 30_000,
     });
+
+  // ============ Extraction des zones d'intervention ============
+  const interventionZones = useMemo<InterventionZoneDTO[]>(() => {
+    // Extraire les zones depuis projectDetail ou project
+    const zones = (projectDetail as any)?.interventionZones || 
+                  (project as any)?.interventionZones || [];
+    
+    // Si c'est un tableau, le retourner directement (c'est déjà des DTOs)
+    if (Array.isArray(zones)) {
+      return zones as InterventionZoneDTO[];
+    }
+    
+    return [];
+  }, [projectDetail, project]);
+
+  // ============ Calcul des coordonnées pour la carte ============
+  const mapCenter = useMemo<[number, number] | undefined>(() => {
+    const lat = projectDetail?.latitude || 
+                (projectDetail as any)?.coordinates?.latitude ||
+                project?.latitude ||
+                (project as any)?.coordinates?.latitude;
+    const lng = projectDetail?.longitude || 
+                (projectDetail as any)?.coordinates?.longitude ||
+                project?.longitude ||
+                (project as any)?.coordinates?.longitude;
+    
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      return [lat, lng];
+    }
+    return undefined;
+  }, [projectDetail, project]);
 
   const projectTabsDef = useMemo(
     () => getProjectTabs((projectDetail as any)?.entityCode),
@@ -175,9 +228,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryFn: async () => {
       if (!projectId) return null;
       const analyticsService = new ProjectAnalyticsService();
-      return await analyticsService.getProjectAnalytics(
-        projectId
-      );
+      return await analyticsService.getProjectAnalytics(projectId);
     },
     enabled: !!projectId,
     staleTime: 30_000,
@@ -189,7 +240,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryFn: async () => {
       if (!projectId || !projectDetail) return null;
       
-      // Get both analytics and metrics
       const analyticsService = new ProjectAnalyticsService();
       const [analytics, metrics, costAnalysis] = await Promise.all([
         analyticsService.getProjectAnalytics(projectDetail.id),
@@ -197,55 +247,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         analyticsService.getProjectCostAnalysis(projectDetail.id)
       ]);
 
-       // Type the responses safely
-       const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
-       const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
-       const typedCostAnalysis = (costAnalysis || {}) as unknown as Record<string, number>;
-       
-       // Combine all data into the expected format (camelCase only)
-       return {
-         // Core progress metrics
-         completedTasks: typedMetrics.completedMilestones || 0,
-         delayedTasks: typedMetrics.overdueTasks || 0,
-         totalTasks: typedMetrics.totalMilestones || 0,
-         pendingTasks: 0,
-         totalMilestones: typedMetrics.totalMilestones || 0,
-         completedMilestones: typedMetrics.completedMilestones || 0,
-         totalRisks: 0,
-         highRisks: 0,
-         mediumRisks: 0,
-         lowRisks: 0,
-         totalIssues: 0,
-         openIssues: 0,
-         resolvedIssues: 0,
-         criticalIssues: 0,
-         // Cost analysis (camelCase)
-         budgetUtilization: (typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 1) * 100,
-         remainingBudget: typedCostAnalysis.remainingBudget || typedCostAnalysis.remaining_budget || 0,
-         actualCost: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-         totalBudget: typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 0,
-         cpi: typedCostAnalysis.costPerformanceIndex || typedCostAnalysis.cost_performance_index || 0,
-         earnedValue: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-         costVariance: typedCostAnalysis.costVariance || typedCostAnalysis.cost_variance || 0,
-         // Performance metrics (camelCase with dual-casing fallback)
-         progressPercentage: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-         milestoneCompletion: typedAnalytics.milestoneCompletion || typedAnalytics.milestone_completion || 0,
-         schedulePerformance: typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0,
-         costEfficiency: typedAnalytics.costEfficiency || typedAnalytics.cost_efficiency || 0,
-         qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-         riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
-         spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
-         inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-         healthScore: Math.round(
-           ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
-            (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
-            (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
-         ),
-         remainingDays: Math.max(0, 30),
-         elapsedDays: 45,
-         overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-         scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
-       };
+      const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
+      const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
+      const typedCostAnalysis = (costAnalysis || {}) as unknown as Record<string, number>;
+      
+      return {
+        completedTasks: typedMetrics.completedMilestones || 0,
+        delayedTasks: typedMetrics.overdueTasks || 0,
+        totalTasks: typedMetrics.totalMilestones || 0,
+        pendingTasks: 0,
+        totalMilestones: typedMetrics.totalMilestones || 0,
+        completedMilestones: typedMetrics.completedMilestones || 0,
+        totalRisks: 0,
+        highRisks: 0,
+        mediumRisks: 0,
+        lowRisks: 0,
+        totalIssues: 0,
+        openIssues: 0,
+        resolvedIssues: 0,
+        criticalIssues: 0,
+        budgetUtilization: (typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 1) * 100,
+        remainingBudget: typedCostAnalysis.remainingBudget || typedCostAnalysis.remaining_budget || 0,
+        actualCost: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
+        totalBudget: typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 0,
+        cpi: typedCostAnalysis.costPerformanceIndex || typedCostAnalysis.cost_performance_index || 0,
+        earnedValue: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
+        costVariance: typedCostAnalysis.costVariance || typedCostAnalysis.cost_variance || 0,
+        progressPercentage: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
+        milestoneCompletion: typedAnalytics.milestoneCompletion || typedAnalytics.milestone_completion || 0,
+        schedulePerformance: typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0,
+        costEfficiency: typedAnalytics.costEfficiency || typedAnalytics.cost_efficiency || 0,
+        qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
+        riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
+        spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
+        inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
+        healthScore: Math.round(
+          ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
+           (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
+           (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
+        ),
+        remainingDays: Math.max(0, 30),
+        elapsedDays: 45,
+        overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
+        scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
+      };
     },
     enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
@@ -291,7 +336,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Milestone count for dashboard - use instance method
+  // Milestone progress
   const milestoneServiceInstance = useMemo(() => new MilestoneService(), []);
   const progressServiceInstance = useMemo(() => new ProgressCalculationHexService(), []);
   const { data: milestoneProgress } = useQuery({
@@ -304,7 +349,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Use data from ProjectDetailDTO (hydrated camelCase from service)
+  // Use data from ProjectDetailDTO
   const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);
   const tasksSource = useMemo(() => projectDetail?.tasks || [], [projectDetail]);
   const risksSource = useMemo(() => projectDetail?.risks || [], [projectDetail]);
@@ -314,8 +359,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   );
   const paymentsSource = useMemo(() => projectDetail?.expenses || [], [projectDetail]);
 
-  // Calculate current phase and stage dynamically from phases
-  // Uses normalized PhaseDTO fields (phase_name) and falls back across aliases.
+  // ============ Calcul de la phase actuelle ============
   const currentPhaseInfo = useMemo(() => {
     const source = (phasesSource || []) as any[];
     if (source.length === 0) {
@@ -345,8 +389,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return { currentPhase: getName(last), currentStage: getStage(last) };
   }, [phasesSource]);
 
-
-  // Calculate project methodology
+  // ============ Calcul de la méthodologie ============
   const projectMethodology = useMemo(() => {
     if (projectDetail?.methodology) {
       return projectDetail.methodology === "waterfall"
@@ -360,7 +403,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return "Standard";
   }, [projectDetail?.methodology]);
 
-  // Compute derived data from DTO
+  // ============ Ressources ============
   const [resources, setResources] = useState<Array<{id: string, name: string, type: string, cost?: number}>>([]);
   const [tasks, setTasks] = useState<Array<{id: string, name: string, status: string, progress?: number}>>([]);
   const [risks, setRisks] = useState<Array<{id: string, title: string, description: string, probability: number, impact: number}>>([]);
@@ -369,10 +412,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     const computeResources = () => {
       if (!projectDetail) return;
       
-      // Hydrate les ressources réelles depuis le DTO projet (plus de mock).
       const realResources = Array.isArray(projectDetail.resources) ? projectDetail.resources : [];
       
-      // Transform real resources to the expected format
       const allResources = realResources.map((resource: any) => ({
         id: resource.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `resource-${Date.now()}`),
         name: resource.name || resource.title || "Ressource sans nom",
@@ -385,7 +426,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         department: resource.department || "Non spécifié"
       }));
       
-      // Add project manager if exists and not already included
       const contactsArray = Array.isArray((projectDetail as any).contacts) ? (projectDetail as any).contacts : [];
       if (projectDetail.projectManagerId && !allResources.find((r) => r.id.includes('manager'))) {
         const managerContact = contactsArray.find((c: any) => 
@@ -405,7 +445,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         });
       }
       
-      // Add main contractor if exists and not already included
       if (projectDetail.mainContractor && !allResources.find((r) => r.id.includes('contractor'))) {
         const contractorContact = contactsArray.find((c: any) => 
           c.role === 'contractor' || c.role === 'contractant principal'
@@ -428,7 +467,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     };
     if (projectDetail) {
       computeResources();
-      // Transform tasks to expected format
       const transformedTasks = tasksSource.map((t: any) => ({
         id: t.id,
         name: t.title || t.name || 'Task',
@@ -436,7 +474,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         progress: t.progress
       }));
       setTasks(transformedTasks);
-      // Transform risks to expected format
       const transformedRisks = risksSource.map((r: any) => ({
         id: r.id,
         title: r.title || r.name || 'Risk',
@@ -448,14 +485,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   }, [projectDetail, risksSource, tasksSource, t]);
 
-  // Calculate realistic progress from hydrated collections (phases + tasks + inspections)
-  // via ProgressCalculationHexService — pure-TS service piloté par référentiel de poids.
+  // ============ Calcul de la progression ============
   const calculatedProgress = useMemo<number>(() => {
     const phases = (phasesSource || []) as any[];
     const tasks = (tasksSource || []) as any[];
     const inspections = (inspectionsSource || []) as any[];
 
-    // Aucune collection hydratée → on retombe sur la valeur persistée.
     if (phases.length === 0 && tasks.length === 0 && inspections.length === 0) {
       return projectDetail?.progress ?? 0;
     }
@@ -499,11 +534,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     );
   }, [phasesSource, tasksSource, inspectionsSource, projectDetail?.progress]);
 
-  // Convert project data for compact report generator
+  // ============ Données pour le rapport ============
   const projectDataForReport = useMemo(() => {
     if (!project || !projectDetail) return null;
     
-    // Type guard to ensure project has all required properties
     const typedProject = project as ProjectSummaryDTO;
     
     return {
@@ -524,12 +558,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       projectResponsableId: projectDetail?.projectResponsableId || undefined,
       allowsInitialPayment: typedProject.allowsInitialPayment || undefined,
       initialPaymentPercentage: typedProject.initialPaymentPercentage || undefined,
-      // Add additional fields from projectDetail
       resources: resources,
       tasks: tasksSource,
-      phases: phasesSource, // Ajouter les phases du projet
-      inspections: inspectionsSource, // Ajouter les inspections
-      expenses: paymentsSource, // Ajouter les dépenses/payments
+      phases: phasesSource,
+      inspections: inspectionsSource,
+      expenses: paymentsSource,
       risks: risksSource.map((r: any) => ({
         id: r.id || `risk-${Date.now()}`,
         title: r.title || r.description || 'Risque sans titre',
@@ -540,7 +573,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         status: r.status || "identified",
         relatedTasks: r.relatedTasks || [],
       })),
-      // Contacts réels (btp.project_contacts) — fallback sur l'entreprise titulaire.
       contacts: (projectDetail?.contacts?.length
         ? projectDetail.contacts
         : projectDetail?.mainContractor
@@ -554,7 +586,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             },
           ]
         : undefined) as any,
-      // Parties prenantes réelles (btp.project_stakeholders) — fallback bailleur.
       stakeholders: (projectDetail?.stakeholders?.length
         ? (projectDetail.stakeholders as any[]).map((s: any) => ({
             id: s.id,
@@ -578,7 +609,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             },
           ]
         : undefined) as any,
-
       methodology: projectDetail?.methodology || undefined,
     };
   }, [
@@ -593,8 +623,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     paymentsSource,
   ]);
 
-  // Use data from DTO for all tabs
-  const payments = paymentsSource;
+  // ============ Documents et garanties ============
   const documentsData = useMemo(() => {
     return ((projectDetail as any)?.documents || []).map((doc: any) => ({
       id: doc.id,
@@ -633,6 +662,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }));
   }, [projectDetail]);
 
+  // ============ Génération des phases ============
   const handleGeneratePhasesFromReferential = async () => {
     if (!selectedReferential || !projectId) {
       toast({
@@ -644,8 +674,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
 
     try {
-      const referentialPhases =
-        await referentialService.getPhasesForReferential(selectedReferential);
+      const referentialPhases = await referentialService.getPhasesForReferential(selectedReferential);
 
       if (referentialPhases.length === 0) {
         toast({
@@ -656,12 +685,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         return;
       }
 
-      // Create typed array of phases to save
       const phasesToSave: PhaseToSave[] = [];
       let cumulativeStartDays = 0;
 
       for (const refPhase of referentialPhases) {
-        // Calculate duration
         let phaseDuration = 0;
 
         for (const step of refPhase.steps || []) {
@@ -675,13 +702,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         if (phaseDuration === 0) phaseDuration = 30;
 
-        // Calculate dates
         const startDate = new Date();
         startDate.setDate(startDate.getDate() + cumulativeStartDays);
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + phaseDuration);
 
-        // Create custom phase data
         const customStages = (refPhase.steps || []).map((step, stepIdx) => ({
           id: `step-${Date.now()}-${stepIdx}`,
           name: step.label,
@@ -705,13 +730,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           end_date: endDate.toISOString().split("T")[0],
           estimated_duration: phaseDuration,
           estimated_cost: Math.floor(
-          (project?.budget || 0) / (referentialPhases.length || 1)
+            (project?.budget || 0) / (referentialPhases.length || 1)
           ),
           status: "not_started",
           progress: 0,
           phase_type: "custom",
-          construction_phase:
-            refPhase.code || refPhase.label.toLowerCase().replace(/ /g, "_"),
+          construction_phase: refPhase.code || refPhase.label.toLowerCase().replace(/ /g, "_"),
           custom_phase_data: {
             id: `custom-${Date.now()}-${phasesToSave.length}`,
             name: refPhase.label,
@@ -732,7 +756,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         cumulativeStartDays += phaseDuration;
       }
 
-      // Save all phases using hexagonal hook
       await createPhases(phasesToSave);
 
       toast({
@@ -749,7 +772,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   };
 
-  // Use hexagonal hook for phases
+  // ============ Hook hexagonal pour les phases ============
   const { 
     phases: projectPhases, 
     refetch: refetchPhases, 
@@ -757,20 +780,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     isLoading: phasesLoading 
   } = useProjectPhasesHex(projectId);
 
-  // Normalized phases for UI
+  // ============ Phases normalisées pour l'UI ============
   const computedPhases = useMemo(() => {
-    // Use directly fetched phases first, then fallback to plannedPhases
     const phasesSource = projectPhases || projectDetail?.plannedPhases || [];
 
     const normalize = (p: any) => {
       return {
         id: p.id,
-        phase:
-          p.phase_name ||
-          p.phase ||
-          p.name ||
-          p.constructionStage ||
-          t("project.phase_label"),
+        phase: p.phase_name || p.phase || p.name || p.constructionStage || t("project.phase_label"),
         phase_name: p.phase_name || p.phase || p.name,
         status: p.status || "planned",
         progress: p.progress || 0,
@@ -795,43 +812,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [projectPhases, projectDetail?.plannedPhases, t]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "delayed":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "on_hold":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "planned":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4" />;
-      case "in_progress":
-        return <Clock className="h-4 w-4" />;
-      case "delayed":
-        return <AlertTriangle className="h-4 w-4" />;
-      case "on_hold":
-        return <Clock className="h-4 w-4" />;
-      case "planned":
-        return <Target className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
-
-  // Calculate phases stats for header - MUST be before any early returns
-  // Any non-terminal/non-pending phase status is considered "in progress" to
-  // reflect dynamic workflow (inspection, validation, payment_request, etc.).
+  // ============ Statistiques des phases ============
   const TERMINAL_PHASE_STATUSES = new Set(["completed", "closed", "cancelled", "archived"]);
   const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
   const phasesStats = useMemo(() => {
@@ -848,13 +829,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return { total, completed, inProgress };
   }, [computedPhases, project?.phasesCount, project?.status, project?.progress]);
 
-
+  // ============ Suppression ============
   const handleDelete = async (projectIdToDelete: string) => {
-    if (
-      !confirm(
-        `Êtes-vous sûr de vouloir supprimer cette projet  ? Cette action est irréversible.`
-      )
-    ) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.`)) {
       return;
     }
 
@@ -877,6 +854,61 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   };
 
+  // ============ Fonctions UI ============
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "bg-green-100 text-green-800 border-green-200";
+      case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "delayed": return "bg-red-100 text-red-800 border-red-200";
+      case "on_hold": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "planned": return "bg-gray-100 text-gray-800 border-gray-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed": return <CheckCircle className="h-4 w-4" />;
+      case "in_progress": return <Clock className="h-4 w-4" />;
+      case "delayed": return <AlertTriangle className="h-4 w-4" />;
+      case "on_hold": return <Clock className="h-4 w-4" />;
+      case "planned": return <Target className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  // ============ Rendu de la carte (hexagonal) ============
+  const renderMapTab = () => {
+    const hasZones = interventionZones.length > 0;
+    const hasCenter = !!mapCenter;
+    const address = projectDetail?.location || (project as any)?.location || '';
+
+    return (
+      <GeoZoneEditor
+        readOnly
+        showAddressBar={false}
+        value={interventionZones}
+        title={hasZones ? "Zones d'intervention" : 'Localisation du projet'}
+        hint={
+          hasZones
+            ? address 
+              ? `Adresse : ${address}` 
+              : 'Vue lecture seule — éditez via le workflow projet.'
+            : hasCenter
+            ? address
+              ? `Coordonnées uniquement — ${address}`
+              : 'Marqueur généré depuis les coordonnées du projet.'
+            : "Aucune coordonnée ni zone tracée — définissez-en via l'édition du projet."
+        }
+        defaultCenter={mapCenter}
+        fallbackLabel={project?.title}
+        fallbackAddress={address}
+        height={520}
+      />
+    );
+  };
+
+  // ============ Chargement ============
   if (projectLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -897,8 +929,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             ID du projet: {projectId || "Non défini"}
           </p>
           <p className="text-sm text-muted-foreground mb-4">
-            Vérifiez que l'ID du projet est correct ou que vous avez les
-            permissions nécessaires.
+            Vérifiez que l'ID du projet est correct ou que vous avez les permissions nécessaires.
           </p>
           <div className="flex gap-2 justify-center">
             <Button
@@ -919,10 +950,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     );
   }
 
+  // ============ Rendu principal ============
   return (
     <div className="container mx-auto py-4 space-y-4">
 
-      {/* New Hierarchical Header with KPIs */}
+      {/* Header */}
       <ProjectHeader
         project={{
           id: project.id,
@@ -960,22 +992,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </DialogHeader>
             <div className="overflow-y-auto pr-1 max-h-[75vh]">
               {projectDataForReport && (
-                <CompactProjectReportGenerator
-                  project={projectDataForReport as any}
-                />
-
+                <CompactProjectReportGenerator project={projectDataForReport as any} />
               )}
             </div>
           </DialogContent>
         </Dialog>
-        {/* Rapport complet — alimenté avec les collections déjà hydratées (phases / tasks / inspections / payments) pour rester aligné avec le rapport compact. */}
         <ReportManager
           data={{ project: (projectDataForReport ?? project) as any }}
           reportType="project"
         />
       </div>
 
-      {/* Main Content Tabs */}
+      {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
@@ -989,8 +1017,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           ))}
         </TabsList>
 
-
-
+        {/* ===== OVERVIEW ===== */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -1052,9 +1079,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </CardContent>
             </Card>
 
-
-
-
             <Card>
               <CardHeader>
                 <CardTitle>Statut du projet</CardTitle>
@@ -1062,21 +1086,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Phase actuelle</span>
-                  <Badge
-                    variant={
-                      currentPhaseInfo.currentPhase ? "default" : "outline"
-                    }
-                  >
+                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"}>
                     {currentPhaseInfo.currentPhase || "Aucune phase définie"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Étape actuelle</span>
-                  <Badge
-                    variant={
-                      currentPhaseInfo.currentStage ? "secondary" : "outline"
-                    }
-                  >
+                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"}>
                     {currentPhaseInfo.currentStage || "N/A"}
                   </Badge>
                 </div>
@@ -1089,22 +1105,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   Progression globale calculée: {calculatedProgress}%
                 </p>
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  Basée sur: {computedPhases.length} phases,{" "}
-                  {tasksSource.length} tâches, {inspectionsSource.length}{" "}
-                  inspections
+                  Basée sur: {computedPhases.length} phases, {tasksSource.length} tâches, {inspectionsSource.length} inspections
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Checkpoint & Décompte Dashboard */}
           <ProjectCheckpointsDashboard
             projectId={projectId!}
             compact
             onPhaseClick={(phaseId) => navigate(`/projects/${projectId}/phases/${phaseId}`)}
           />
 
-          {/* Actionable Project Milestones */}
           <ActionableProjectMilestones
             projectId={projectId!}
             maxItems={6}
@@ -1118,7 +1130,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             }}
           />
 
-          {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
@@ -1128,10 +1139,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <p className="text-sm font-medium">Matériaux</p>
                     <p className="text-lg font-bold">
                       {computedPhases.reduce((total: number, phase) => {
-                        // Phase doesn't have milestones or materials properties, using 0 for now
-                        const milestoneCount = 0; // Would need additional data structure
-                        const materialCount = 0; // Would need additional data structure
-                        return total + milestoneCount + materialCount;
+                        return total + 0;
                       }, 0) || 0}
                     </p>
                   </div>
@@ -1168,6 +1176,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </TabsContent>
 
+        {/* ===== FINANCIAL ===== */}
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview
             budget={project.budget || 0}
@@ -1175,9 +1184,91 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             phases={phasesSource || []}
             financialMetrics={{}}
           />
+
+          {/* Échéancier de paiements */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Échéancier de paiements
+                </span>
+                <PaymentDialog
+                  project={{
+                    ...(project as any),
+                    payments: (paymentsSource || []).map((p: any) => ({
+                      id: p.id,
+                      amount: Number(p.amount ?? 0),
+                      paymentDate: p.paymentDate ?? p.payment_date ?? '',
+                      progressAtPayment: p.progressAtPayment ?? p.progress_at_payment ?? 0,
+                      status: p.status ?? 'pending',
+                      description: p.description ?? '',
+                    })),
+                  } as any}
+                  onPaymentComplete={() => {
+                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+                    queryClient.invalidateQueries({ queryKey: ["project-summary", projectId] });
+                  }}
+                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {(project as ProjectSummaryDTO).allowsInitialPayment && (
+                  <div className="p-4 border rounded-lg bg-green-50">
+                    <h4 className="font-medium">Avance initiale autorisée</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {(project as ProjectSummaryDTO).initialPaymentPercentage}% du montant total
+                    </p>
+                    <p className="font-semibold text-green-700">
+                      {(
+                        (((project as ProjectSummaryDTO).budget || 0) *
+                          ((project as ProjectSummaryDTO).initialPaymentPercentage || 0)) /
+                        100
+                      ).toLocaleString()} MRU
+                    </p>
+                  </div>
+                )}
+                {paymentsSource.length > 0 ? (
+                  <div className="grid gap-4">
+                    {paymentsSource.map((payment) => (
+                      <div key={payment.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">
+                              {(payment as any).description || "Paiement"}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Date: {new Date(payment.paymentDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Progression: {payment.progressAtPayment}%
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">
+                              {(payment.amount || 0).toLocaleString()} MRU
+                            </p>
+                            <Badge
+                              variant={payment.status === "approved" ? "default" : "secondary"}
+                              className={payment.status === "approved" ? "bg-green-100 text-green-800" : ""}
+                            >
+                              {payment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">Aucun paiement enregistré</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Planification — WBS, planning (Gantt/PERT/Kanban) et jalons regroupés */}
+        {/* ===== PHASES ===== */}
         <TabsContent value="phases" className="mt-6">
           <Tabs defaultValue="wbs" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
@@ -1187,260 +1278,222 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </TabsList>
 
             <TabsContent value="wbs" className="mt-6">
-          <div className="space-y-4">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Génération des phases</span>
+                      <Button onClick={() => setShowPhaseManager(true)} variant="outline">
+                        Gestion avancée des phases
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label>Référentiel</Label>
+                        <Select
+                          value={selectedReferential || ""}
+                          onValueChange={(value) => setSelectedReferential(value as ReferentialType)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un référentiel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {referentialOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="pt-8">
+                        <Button onClick={handleGeneratePhasesFromReferential} disabled={!selectedReferential}>
+                          Générer les phases
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>• Sélectionnez un référentiel pour générer automatiquement les phases du projet</p>
+                      <p>• Les phases incluront les étapes et tâches définies dans le référentiel</p>
+                      <p>• Vous pouvez également utiliser la gestion avancée des phases pour un contrôle manuel</p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Phase generation controls */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Génération des phases</span>
-                  <Button
-                    onClick={() => setShowPhaseManager(true)}
-                    variant="outline"
-                  >
-                    Gestion avancée des phases
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <Label>Référentiel</Label>
-                    <Select
-                      value={selectedReferential || ""}
-                      onValueChange={(value) =>
-                        setSelectedReferential(value as ReferentialType)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un référentiel" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {referentialOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="pt-8">
-                    <Button
-                      onClick={handleGeneratePhasesFromReferential}
-                      disabled={!selectedReferential}
-                    >
-                      Générer les phases
-                    </Button>
-                  </div>
-                </div>
+                <PhaseList
+                  phases={computedPhases}
+                  projectId={projectId!}
+                  onPhaseUpdate={() => {
+                    refetchPhases();
+                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+                  }}
+                />
+              </div>
 
-                <div className="text-sm text-muted-foreground">
-                  <p>
-                    • Sélectionnez un référentiel pour générer automatiquement
-                    les phases du projet
-                  </p>
-                  <p>
-                    • Les phases incluront les étapes et tâches définies dans le
-                    référentiel
-                  </p>
-                  <p>
-                    • Vous pouvez également utiliser la gestion avancée des
-                    phases pour un contrôle manuel
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            {/* Display existing phases */}
-            <PhaseList
-              phases={computedPhases}
-              projectId={projectId!}
-              onPhaseUpdate={() => {
-                refetchPhases();
-                queryClient.invalidateQueries({
-                  queryKey: ["project-detail", projectId],
-                });
-              }}
-            />{" "}
-          </div>
-
-          {/* Enhanced Phase Manager Dialog */}
-          <DialogUI open={showPhaseManager} onOpenChange={setShowPhaseManager}>
-            <DialogContentUI className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeaderUI>
-                <DialogTitleUI>Gestion avancée des phases</DialogTitleUI>
-              </DialogHeaderUI>
-              <ConstructionPhaseManager
-                phases={phases}
-                workflowData={null}
-                onStepComplete={(stepData) => setPhases(stepData.phases)}
-                projectBudget={project?.budget || 0}
-                projectId={projectId}
-              />
-            </DialogContentUI>
-          </DialogUI>
+              <DialogUI open={showPhaseManager} onOpenChange={setShowPhaseManager}>
+                <DialogContentUI className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeaderUI>
+                    <DialogTitleUI>Gestion avancée des phases</DialogTitleUI>
+                  </DialogHeaderUI>
+                  <ConstructionPhaseManager
+                    phases={phases}
+                    workflowData={null}
+                    onStepComplete={(stepData) => setPhases(stepData.phases)}
+                    projectBudget={project?.budget || 0}
+                    projectId={projectId}
+                  />
+                </DialogContentUI>
+              </DialogUI>
             </TabsContent>
 
             <TabsContent value="planning" className="mt-6">
+              <ProjectBudgetTracking projectId={projectId!} />
+              <div className="mt-4">
+                <PlanningVarianceView projectId={projectId!} />
+              </div>
+              <Tabs defaultValue="gantt" className="space-y-4 mt-4">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+                  <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
+                  <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
+                  <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
+                  <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
+                  <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
+                </TabsList>
 
-          <ProjectBudgetTracking projectId={projectId!} />
-          <div className="mt-4">
-            <PlanningVarianceView projectId={projectId!} />
-          </div>
-          <Tabs defaultValue="gantt" className="space-y-4 mt-4">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
-              <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
-              <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
-              <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
-              <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
-              <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
-            </TabsList>
+                <TabsContent value="gantt">
+                  <GanttChart projectId={projectId!} />
+                </TabsContent>
 
-            <TabsContent value="gantt">
-              <GanttChart projectId={projectId!} />
+                <TabsContent value="pert">
+                  <PERTDiagram projectId={projectId!} />
+                </TabsContent>
+
+                <TabsContent value="kanban">
+                  <KanbanBoard projectId={projectId!} />
+                </TabsContent>
+
+                <TabsContent value="critical">
+                  <CriticalPathView projectId={projectId!} />
+                </TabsContent>
+
+                <TabsContent value="timeline">
+                  <ProjectTimeline projectId={projectId!} />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
 
-            <TabsContent value="pert">
-              <PERTDiagram projectId={projectId!} />
-            </TabsContent>
+            <TabsContent value="milestones" className="mt-6">
+              <Tabs defaultValue="timeline" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
+                  <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
+                  <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="kanban">
-              <KanbanBoard projectId={projectId!} />
-            </TabsContent>
+                <TabsContent value="timeline">
+                  <UnifiedMilestoneManager 
+                    projectId={projectId!}
+                    defaultView="timeline"
+                    onMilestoneClick={(milestoneId, phaseId) => {
+                      if (phaseId) {
+                        navigate(`/projects/${projectId}/phases/${phaseId}`);
+                      }
+                    }}
+                  />
+                </TabsContent>
 
-            <TabsContent value="critical">
-              <CriticalPathView projectId={projectId!} />
-            </TabsContent>
+                <TabsContent value="gantt">
+                  {projectDetail ? (
+                    <UnifiedGanttChart
+                      projectId={projectId!}
+                      projectDetail={projectDetail}
+                      onMilestoneClick={(milestoneId, phaseId) => {
+                        if (phaseId) {
+                          navigate(`/projects/${projectId}/phases/${phaseId}`);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <ProjectGantt
+                      project={project as any}
+                      phases={(computedPhases || []).map((p) => ({
+                        id: p.id,
+                        name: p.phase,
+                        startDate: new Date(p.startDate || new Date()),
+                        endDate: new Date(p.endDate || new Date()),
+                        progress: p.progress || 0,
+                        status: p.status || "planned",
+                      }))}
+                    />
+                  )}
+                </TabsContent>
 
-            <TabsContent value="timeline">
-              <ProjectTimeline projectId={projectId!} />
+                <TabsContent value="pert">
+                  {projectDetail ? (
+                    <UnifiedPERTAnalysis
+                      projectId={projectId!}
+                      projectDetail={projectDetail}
+                    />
+                  ) : (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Analyse PERT</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {pertAnalysis ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Durée attendue totale</p>
+                                <p className="text-xl font-semibold">
+                                  {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Écart-type total</p>
+                                <p className="text-xl font-semibold">
+                                  {pertAnalysis.variances
+                                    ? Math.sqrt(
+                                        (Object.values(pertAnalysis.variances) as number[]).reduce(
+                                          (sum: number, variance: number) => sum + (variance || 0),
+                                          0
+                                        )
+                                      ).toFixed(1)
+                                    : "0.0"} jours
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
+                                <p className="text-xl font-semibold">
+                                  {pertAnalysis.criticalPath?.length || 0}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">Chargement de l'analyse PERT...</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           </Tabs>
         </TabsContent>
 
-        {/* Unified Milestones Tab with Gantt & PERT */}
-        <TabsContent value="milestones" className="mt-6">
-          <Tabs defaultValue="timeline" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
-              <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
-              <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="timeline">
-              <UnifiedMilestoneManager 
-                projectId={projectId!}
-                defaultView="timeline"
-                onMilestoneClick={(milestoneId, phaseId) => {
-                  if (phaseId) {
-                    navigate(`/projects/${projectId}/phases/${phaseId}`);
-                  }
-                }}
-              />
-            </TabsContent>
-
-            <TabsContent value="gantt">
-              {projectDetail ? (
-                <UnifiedGanttChart
-                  projectId={projectId!}
-                  projectDetail={projectDetail}
-                  onMilestoneClick={(milestoneId, phaseId) => {
-                    if (phaseId) {
-                      navigate(`/projects/${projectId}/phases/${phaseId}`);
-                    }
-                  }}
-                />
-              ) : (
-                <ProjectGantt
-                  project={project as any}
-                  phases={(computedPhases || []).map((p) => ({
-                    id: p.id,
-                    name: p.phase,
-                    startDate: new Date(p.startDate || new Date()),
-                    endDate: new Date(p.endDate || new Date()),
-                    progress: p.progress || 0,
-                    status: p.status || "planned",
-                  }))}
-                />
-              )}
-            </TabsContent>
-
-            <TabsContent value="pert">
-              {projectDetail ? (
-                <UnifiedPERTAnalysis
-                  projectId={projectId!}
-                  projectDetail={projectDetail}
-                />
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Analyse PERT</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {pertAnalysis ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Durée attendue totale
-                            </p>
-                            <p className="text-xl font-semibold">
-                              {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Écart-type total
-                            </p>
-                            <p className="text-xl font-semibold">
-                              {pertAnalysis.variances
-                                ? Math.sqrt(
-                                    (Object.values(pertAnalysis.variances) as number[]).reduce(
-                                      (sum: number, variance: number) =>
-                                        sum + (variance || 0),
-                                      0
-                                    )
-                                  ).toFixed(1)
-                                : "0.0"}{" "}
-                              jours
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Tâches sur chemin critique
-                            </p>
-                            <p className="text-xl font-semibold">
-                              {pertAnalysis.criticalPath?.length || 0}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        Chargement de l'analyse PERT...
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        {/* DQE global — Plan v3 : composable BOQ à l'échelle projet */}
+        {/* ===== DQE ===== */}
         <TabsContent value="dqe" className="mt-6">
           <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
         </TabsContent>
 
+        {/* ===== TASKS ===== */}
         <TabsContent value="tasks" className="mt-6">
           {(() => {
-            // Default execution sub-tab driven by project status
             const status = String((project as any)?.status || '').toLowerCase();
-            const defaultExecTab =
-              status.includes('inspection') ? 'inspections'
-              : status.includes('payment') ? 'payments-exec'
-              : 'tasks-exec';
+            const defaultExecTab = status.includes('inspection') ? 'inspections' : 'tasks-exec';
             return (
               <Tabs defaultValue={defaultExecTab} className="space-y-4">
                 <TabsList>
@@ -1481,11 +1534,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {payments.filter(p => p.status !== 'paid' && p.status !== 'cancelled').length === 0 ? (
+                      {paymentsSource.filter(p => p.status !== 'paid' && p.status !== 'cancelled').length === 0 ? (
                         <p className="text-muted-foreground">Aucun paiement en cours pour ce projet.</p>
                       ) : (
                         <div className="grid gap-3">
-                          {payments
+                          {paymentsSource
                             .filter(p => p.status !== 'paid' && p.status !== 'cancelled')
                             .map((p) => (
                               <a
@@ -1515,141 +1568,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           })()}
         </TabsContent>
 
-
-        {/* Risques — rattachés au Suivi & Évaluation */}
+        {/* ===== MONITORING ===== */}
         <TabsContent value="monitoring" className="mt-6">
-          <EnhancedRiskManager
-            projectId={projectId!}
-            phases={computedPhases}
-          />
-        </TabsContent>
-
-        {/* Conteneur sémantique « Ressources » (humaines / matériaux / équipements) */}
-        <TabsContent value="tasks" className="mt-6">
-          <ProjectResourcesContainer
-            projectId={projectId!}
-            phases={computedPhases as any}
-            boqLines={(projectDetail as any)?.dqeLines ?? []}
-            executedResources={(projectDetail as any)?.resources ?? []}
-            executedMaterials={(projectDetail as any)?.materials ?? []}
-            resources={resources}
-            setResources={setResources}
-          />
-        </TabsContent>
-
-
-        {/* Échéancier de paiements — rattaché au Financier */}
-        <TabsContent value="financial" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Échéancier de paiements
-                </span>
-                <PaymentDialog
-                  project={{
-                    ...(project as any),
-                    payments: (payments || []).map((p: any) => ({
-                      id: p.id,
-                      amount: Number(p.amount ?? 0),
-                      paymentDate: p.paymentDate ?? p.payment_date ?? '',
-                      progressAtPayment: p.progressAtPayment ?? p.progress_at_payment ?? 0,
-                      status: p.status ?? 'pending',
-                      description: p.description ?? '',
-                    })),
-                  } as any}
-                  onPaymentComplete={() => {
-                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
-                    queryClient.invalidateQueries({ queryKey: ["project-summary", projectId] });
-                  }}
-                />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {(project as ProjectSummaryDTO).allowsInitialPayment && (
-                  <div className="p-4 border rounded-lg bg-green-50">
-                    <h4 className="font-medium">Avance initiale autorisée</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {(project as ProjectSummaryDTO).initialPaymentPercentage}% du montant total
-                    </p>
-                    <p className="font-semibold text-green-700">
-                      {(
-                        (((project as ProjectSummaryDTO).budget || 0) *
-                          ((project as ProjectSummaryDTO).initialPaymentPercentage || 0)) /
-                        100
-                      ).toLocaleString()}{" "}
-                      MRU
-                    </p>
-                  </div>
-                )}
-                {payments.length > 0 ? (
-                  <div className="grid gap-4">
-                    {payments.map((payment) => (
-                      <div key={payment.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">
-                              {(payment as any).description || "Paiement"}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              Date:{" "}
-                              {new Date(
-                                payment.paymentDate
-                              ).toLocaleDateString()}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Progression: {payment.progressAtPayment}%
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold">
-                              {(payment.amount || 0).toLocaleString()} MRU
-                            </p>
-                            <Badge
-                              variant={
-                                payment.status === "approved"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className={
-                                payment.status === "approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : ""
-                              }
-                            >
-                              {payment.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">
-                    Aucun paiement enregistré
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* KPI — rattaché à l'onglet Suivi & Évaluation (pas d'onglet dédié) */}
-        <TabsContent value="monitoring" className="mt-6">
-
+          <EnhancedRiskManager projectId={projectId!} phases={computedPhases} />
+          
+          {/* KPIs */}
           {kpiMetrics ? (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Progress KPIs */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Progression
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Progression</p>
                         <p className="text-xl font-semibold">
                           {kpiMetrics.progressPercentage}% ({kpiMetrics.milestoneCompletion}% jalons)
                         </p>
@@ -1657,20 +1588,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       <TrendingUp className="h-8 w-8 text-primary" />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.completedTasks} tâches terminées /{" "}
-                      {kpiMetrics.delayedTasks} en retard
+                      {kpiMetrics.completedTasks} tâches terminées / {kpiMetrics.delayedTasks} en retard
                     </p>
                   </CardContent>
                 </Card>
 
-                {/* Budget KPIs */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Utilisation Budget
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Utilisation Budget</p>
                         <p className="text-xl font-semibold">
                           {((kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100).toFixed(1)}%
                         </p>
@@ -1683,151 +1610,87 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </CardContent>
                 </Card>
 
-                {/* EVM - CPI */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          CPI (Coût)
-                        </p>
-                        <p className="text-xl font-semibold">
-                          {kpiMetrics.costEfficiency.toFixed(2)}
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">CPI (Coût)</p>
+                        <p className="text-xl font-semibold">{kpiMetrics.costEfficiency.toFixed(2)}</p>
                       </div>
-                      <TrendingUp
-                        className={`h-8 w-8 ${
-                          kpiMetrics.costEfficiency >= 1
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      />
+                      <TrendingUp className={`h-8 w-8 ${kpiMetrics.costEfficiency >= 1 ? "text-green-600" : "text-red-600"}`} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.costEfficiency >= 1
-                        ? "En dessous du budget"
-                        : "Au-dessus du budget"}
+                      {kpiMetrics.costEfficiency >= 1 ? "En dessous du budget" : "Au-dessus du budget"}
                     </p>
                   </CardContent>
                 </Card>
 
-                {/* EVM - SPI */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          SPI (Planning)
-                        </p>
-                        <p className="text-xl font-semibold">
-                          {kpiMetrics.schedulePerformance.toFixed(2)}
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">SPI (Planning)</p>
+                        <p className="text-xl font-semibold">{kpiMetrics.schedulePerformance.toFixed(2)}</p>
                       </div>
-                      <Calendar
-                        className={`h-8 w-8 ${
-                          kpiMetrics.schedulePerformance >= 1
-                            ? "text-green-600"
-                            : "text-orange-600"
-                        }`}
-                      />
+                      <Calendar className={`h-8 w-8 ${kpiMetrics.schedulePerformance >= 1 ? "text-green-600" : "text-orange-600"}`} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       {kpiMetrics.schedulePerformance >= 1 ? "En avance" : "En retard"}
                     </p>
                   </CardContent>
                 </Card>
+              </div>
 
-                {/* Quality */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Qualité
-                        </p>
-                        <p className="text-xl font-semibold">
-                          {kpiMetrics.qualityScore.toFixed(0)}%
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Qualité</p>
+                        <p className="text-xl font-semibold">{kpiMetrics.qualityScore.toFixed(0)}%</p>
                       </div>
                       <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.riskScore} incidents critiques
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">{kpiMetrics.riskScore} incidents critiques</p>
                   </CardContent>
                 </Card>
 
-                {/* Risks */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Risques
-                        </p>
-                        <p className="text-xl font-semibold">
-                          {kpiMetrics.riskScore}
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Risques</p>
+                        <p className="text-xl font-semibold">{kpiMetrics.riskScore}</p>
                       </div>
                       <AlertTriangle className="h-8 w-8 text-red-600" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {Math.round(kpiMetrics.riskScore * 0.3)} risques élevés
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">{Math.round(kpiMetrics.riskScore * 0.3)} risques élevés</p>
                   </CardContent>
                 </Card>
 
-                {/* Health Score */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Santé Globale
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Santé Globale</p>
                         <p className="text-xl font-semibold">
                           {Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3)}
                         </p>
                       </div>
-                      <Target
-                        className={`h-8 w-8 ${
-                          Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 80
-                            ? "text-green-600"
-                            : Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 60
-                            ? "text-orange-600"
-                            : "text-red-600"
-                        }`}
-                      />
+                      <Target className={`h-8 w-8 ${
+                        Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 80
+                          ? "text-green-600"
+                          : Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 60
+                          ? "text-orange-600"
+                          : "text-red-600"
+                      }`} />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Score sur 100
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Timeline */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Délai
-                        </p>
-                        <p className="text-xl font-semibold">
-                          {Math.round(kpiMetrics.schedulePerformance * 3)}j
-                        </p>
-                      </div>
-                      <Clock className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {Math.round((100 - kpiMetrics.schedulePerformance) * 2)}j écoulés
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">Score sur 100</p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Detailed KPI Metrics */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Performance Budget</CardTitle>
@@ -1836,26 +1699,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <div className="space-y-4">
                       <div className="flex justify-between">
                         <span className="text-sm">Valeur acquise</span>
-                        <span className="font-semibold">
-                          {kpiMetrics.actualCost.toLocaleString()} MRU
-                        </span>
+                        <span className="font-semibold">{kpiMetrics.actualCost.toLocaleString()} MRU</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">Variance coût</span>
-                        <span
-                          className={`font-semibold ${
-                            kpiMetrics.costVariance >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
+                        <span className={`font-semibold ${kpiMetrics.costVariance >= 0 ? "text-green-600" : "text-red-600"}`}>
                           {kpiMetrics.costVariance.toLocaleString()} MRU
                         </span>
                       </div>
-                      <Progress
-                        value={(kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100}
-                        className="mt-2"
-                      />
+                      <Progress value={(kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100} className="mt-2" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1868,26 +1720,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <div className="space-y-4">
                       <div className="flex justify-between">
                         <span className="text-sm">Variance planning</span>
-                        <span
-                          className={`font-semibold ${
-                            kpiMetrics.scheduleVariance >= 0
-                              ? "text-green-600"
-                              : "text-orange-600"
-                          }`}
-                        >
+                        <span className={`font-semibold ${kpiMetrics.scheduleVariance >= 0 ? "text-green-600" : "text-orange-600"}`}>
                           {Math.abs(kpiMetrics.scheduleVariance).toFixed(1)} jours
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">Tâches en retard</span>
-                        <span className="font-semibold text-red-600">
-                          {Math.round(kpiMetrics.riskScore * 0.2)}
-                        </span>
+                        <span className="font-semibold text-red-600">{Math.round(kpiMetrics.riskScore * 0.2)}</span>
                       </div>
-                      <Progress
-                        value={kpiMetrics.progressPercentage}
-                        className="mt-2"
-                      />
+                      <Progress value={kpiMetrics.progressPercentage} className="mt-2" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1896,234 +1737,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           ) : (
             <p className="text-muted-foreground">Chargement des KPIs...</p>
           )}
-        </TabsContent>
 
-        <TabsContent value="compliance" className="mt-6">
-          <div className="space-y-4">
-            {/* Bank Guarantees */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Garanties bancaires
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bankGuaranteesData.length > 0 ? (
-                  <div className="space-y-4">
-                    {bankGuaranteesData.map((guarantee) => (
-                      <div key={guarantee.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">
-                              {guarantee.guarantee_type}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              Banque: {guarantee.bank_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Montant:{" "}
-                              {guarantee.guarantee_amount?.toLocaleString()} MRU
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Émission:{" "}
-                              {new Date(
-                                guarantee.issue_date
-                              ).toLocaleDateString()}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Échéance:{" "}
-                              {new Date(
-                                guarantee.expiry_date
-                              ).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge
-                            className={
-                              guarantee.status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }
-                          >
-                            {guarantee.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Aucune garantie bancaire enregistrée
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Insurance Certificates */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Assurances
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {insuranceCertificatesData.length > 0 ? (
-                  <div className="space-y-4">
-                    {insuranceCertificatesData.map((cert) => (
-                      <div key={cert.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">
-                              {cert.coverage_type}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              Assureur: {cert.insurance_company}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Police: {cert.policy_number}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Couverture:{" "}
-                              {cert.coverage_amount?.toLocaleString()} MRU
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Validité:{" "}
-                              {new Date(cert.valid_from).toLocaleDateString()} -{" "}
-                              {new Date(cert.valid_until).toLocaleDateString()}
-                            </p>
-                            {cert.notes && (
-                              <p className="text-sm text-muted-foreground mt-2">
-                                Notes: {cert.notes}
-                              </p>
-                            )}
-                          </div>
-                          <Badge
-                            className={
-                              (cert as any).status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }
-                          >
-                            {(cert as any).status || 'N/A'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Aucune assurance enregistrée
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Compliance Documents */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Documents de conformité
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {documentsData.filter((doc) =>
-                  ["contract", "project_report", "tender"].includes(
-                    doc.document_type
-                  )
-                ).length > 0 ? (
-                  <div className="space-y-4">
-                    {documentsData
-                      .filter((doc) =>
-                        ["contract", "project_report", "tender"].includes(
-                          doc.document_type
-                        )
-                      )
-                      .map((doc) => (
-                        <div key={doc.id} className="p-4 border rounded-lg">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium">{doc.title}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Type: {doc.document_type}
-                              </p>
-                              {doc.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {doc.description}
-                                </p>
-                              )}
-                              <p className="text-sm text-muted-foreground">
-                                Créé le:{" "}
-                                {new Date(doc.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Badge
-                              className={
-                                doc.status === "approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : doc.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }
-                            >
-                              {doc.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Aucun document de conformité
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Résumé de conformité
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg text-center">
-                    <p className="text-xl font-semibold">
-                      {bankGuaranteesData.length}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Garanties bancaires
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg text-center">
-                    <p className="text-xl font-semibold">
-                      {insuranceCertificatesData.length}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Assurances</p>
-                  </div>
-                  <div className="p-4 border rounded-lg text-center">
-                    <p className="text-xl font-semibold">
-                      {
-                        documentsData.filter((d: {id: string, title: string, type: string, document_type: string, description?: string, created_at: string, status: string}) =>
-                          ["contract", "project_report", "tender"].includes(
-                            d.document_type
-                          )
-                        ).length
-                      }
-                    </p>
-                    <p className="text-sm text-muted-foreground">Documents</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="monitoring" className="mt-6">
           <MonitoringEvaluationPanel
             scope="project"
             project={projectDetail as any}
@@ -2140,60 +1754,156 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="map" className="mt-6 space-y-4">
-          {(() => {
-            const rawZones =
-              (projectDetail as unknown as { interventionZones?: unknown[] } | null)?.interventionZones ??
-              (project as unknown as { interventionZones?: unknown[] }).interventionZones ??
-              [];
-            const zoneList = Array.isArray(rawZones)
-              ? (rawZones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
-              : [];
-            const lat =
-              projectDetail?.coordinates?.latitude ??
-              (projectDetail as any)?.latitude ??
-              project?.coordinates?.latitude ??
-              (project as any)?.latitude;
-            const lng =
-              projectDetail?.coordinates?.longitude ??
-              (projectDetail as any)?.longitude ??
-              project?.coordinates?.longitude ??
-              (project as any)?.longitude;
-            const address =
-              (projectDetail as any)?.location ||
-              (projectDetail as any)?.address ||
-              (project as any)?.location ||
-              (project as any)?.address;
-            const hasCenter = typeof lat === 'number' && typeof lng === 'number';
-            const willSynthesize = zoneList.length === 0 && hasCenter;
+        {/* ===== COMPLIANCE ===== */}
+        <TabsContent value="compliance" className="mt-6">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Garanties bancaires
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {bankGuaranteesData.length > 0 ? (
+                  <div className="space-y-4">
+                    {bankGuaranteesData.map((guarantee) => (
+                      <div key={guarantee.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{guarantee.guarantee_type}</h4>
+                            <p className="text-sm text-muted-foreground">Banque: {guarantee.bank_name}</p>
+                            <p className="text-sm text-muted-foreground">Montant: {guarantee.guarantee_amount?.toLocaleString()} MRU</p>
+                            <p className="text-sm text-muted-foreground">Émission: {new Date(guarantee.issue_date).toLocaleDateString()}</p>
+                            <p className="text-sm text-muted-foreground">Échéance: {new Date(guarantee.expiry_date).toLocaleDateString()}</p>
+                          </div>
+                          <Badge className={guarantee.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                            {guarantee.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">Aucune garantie bancaire enregistrée</p>
+                )}
+              </CardContent>
+            </Card>
 
-            return (
-              <GeoZoneEditor
-                readOnly
-                showAddressBar={false}
-                value={zoneList}
-                title={zoneList.length > 0 ? "Zones d'intervention" : 'Localisation du projet'}
-                hint={
-                  zoneList.length > 0
-                    ? address
-                      ? `Adresse : ${address}`
-                      : 'Vue lecture seule — éditez via le workflow projet.'
-                    : willSynthesize
-                    ? address
-                      ? `Coordonnées uniquement — ${address}`
-                      : 'Marqueur généré depuis les coordonnées du projet.'
-                    : "Aucune coordonnée ni zone tracée — définissez-en via l'édition du projet."
-                }
-                defaultCenter={hasCenter ? [lat, lng] : undefined}
-                fallbackLabel={project?.title}
-                fallbackAddress={address}
-                height={520}
-              />
-            );
-          })()}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Assurances
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {insuranceCertificatesData.length > 0 ? (
+                  <div className="space-y-4">
+                    {insuranceCertificatesData.map((cert) => (
+                      <div key={cert.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{cert.coverage_type}</h4>
+                            <p className="text-sm text-muted-foreground">Assureur: {cert.insurance_company}</p>
+                            <p className="text-sm text-muted-foreground">Police: {cert.policy_number}</p>
+                            <p className="text-sm text-muted-foreground">Couverture: {cert.coverage_amount?.toLocaleString()} MRU</p>
+                            <p className="text-sm text-muted-foreground">Validité: {new Date(cert.valid_from).toLocaleDateString()} - {new Date(cert.valid_until).toLocaleDateString()}</p>
+                            {cert.notes && <p className="text-sm text-muted-foreground mt-2">Notes: {cert.notes}</p>}
+                          </div>
+                          <Badge className={(cert as any).status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                            {(cert as any).status || 'N/A'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">Aucune assurance enregistrée</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Documents de conformité
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {documentsData.filter((doc) => ["contract", "project_report", "tender"].includes(doc.document_type)).length > 0 ? (
+                  <div className="space-y-4">
+                    {documentsData.filter((doc) => ["contract", "project_report", "tender"].includes(doc.document_type)).map((doc) => (
+                      <div key={doc.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{doc.title}</h4>
+                            <p className="text-sm text-muted-foreground">Type: {doc.document_type}</p>
+                            {doc.description && <p className="text-sm text-muted-foreground">{doc.description}</p>}
+                            <p className="text-sm text-muted-foreground">Créé le: {new Date(doc.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <Badge className={doc.status === "approved" ? "bg-green-100 text-green-800" : doc.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}>
+                            {doc.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">Aucun document de conformité</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Résumé de conformité
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-xl font-semibold">{bankGuaranteesData.length}</p>
+                    <p className="text-sm text-muted-foreground">Garanties bancaires</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-xl font-semibold">{insuranceCertificatesData.length}</p>
+                    <p className="text-sm text-muted-foreground">Assurances</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-xl font-semibold">
+                      {documentsData.filter((d) => ["contract", "project_report", "tender"].includes(d.document_type)).length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Documents</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        {/* Rapports — génère un rapport complet (métré désormais intégré au DQE global) */}
+        {/* ===== RESSOURCES ===== */}
+        <TabsContent value="resources" className="mt-6">
+          <ProjectResourcesContainer
+            projectId={projectId!}
+            phases={computedPhases as any}
+            boqLines={(projectDetail as any)?.dqeLines ?? []}
+            executedResources={(projectDetail as any)?.resources ?? []}
+            executedMaterials={(projectDetail as any)?.materials ?? []}
+            resources={resources}
+            setResources={setResources}
+          />
+        </TabsContent>
+
+        {/* ===== MAP (avec GeoZoneEditor hexagonal) ===== */}
+        <TabsContent value="map" className="mt-6 space-y-4">
+          {renderMapTab()}
+        </TabsContent>
+
+        {/* ===== RAPPORTS ===== */}
         <TabsContent value="rapports" className="mt-6 space-y-6">
           <CompactProjectReportGenerator project={projectDetail as any} />
         </TabsContent>

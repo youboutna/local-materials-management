@@ -1,6 +1,16 @@
-import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
+/**
+ * MaterialDetail - Détail d'un matériau
+ * 
+ * Architecture Hexagonale :
+ * - Utilise les DTOs pour les données
+ * - GeoZoneEditor pour les zones d'intervention
+ * - Pas de types UI redéfinis
+ * - Communication via services et DTOs
+ * - useMaterialHex pour les données
+ */
 
-import GeoZoneEditorLazy from "@/components/gis/GeoZoneEditor";
+import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
+import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,10 +26,15 @@ import {
   Package,
   Warehouse,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
+import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 
+/**
+ * Composant de détail d'un matériau
+ * Affiche les informations, la localisation et les zones de couverture
+ */
 const MaterialDetail = () => {
   const { t } = useLanguage();
   const { id } = useParams();
@@ -28,7 +43,19 @@ const MaterialDetail = () => {
     { x: number; y: number }[]
   >([]);
 
-  // Parse warehouse shape when material loads
+  // ============ Extraction des zones d'intervention ============
+  const interventionZones = useMemo<InterventionZoneDTO[]>(() => {
+    // Extraire les zones depuis material (coverageZones ou interventionZones)
+    const zones = (material as any)?.coverageZones || 
+                  (material as any)?.interventionZones || [];
+    
+    if (Array.isArray(zones)) {
+      return zones as InterventionZoneDTO[];
+    }
+    return [];
+  }, [material]);
+
+  // ============ Parsing de la forme de l'entrepôt ============
   useEffect(() => {
     if (material?.forme) {
       try {
@@ -42,6 +69,7 @@ const MaterialDetail = () => {
     }
   }, [material]);
 
+  // ============ Redirections et chargement ============
   if (!id) {
     return <Navigate to="/materials" replace />;
   }
@@ -80,7 +108,7 @@ const MaterialDetail = () => {
     );
   }
 
-  // Transform material data for components that expect snake_case
+  // ============ Transformation des données ============
   const materialData = {
     id: material.id,
     name: material.name,
@@ -98,6 +126,49 @@ const MaterialDetail = () => {
     localisation: material.localisation,
   };
 
+  // ============ Rendu de la carte ============
+  const renderMap = () => {
+    const hasZones = interventionZones.length > 0;
+    
+    if (hasZones) {
+      return (
+        <GeoZoneEditor
+          readOnly
+          showAddressBar={false}
+          value={interventionZones}
+          title="Zones de couverture"
+          hint="Zones géographiques couvertes par ce matériau"
+          height={400}
+          defaultCenter={
+            material.coordinatesLatitude && material.coordinatesLongitude
+              ? [material.coordinatesLatitude, material.coordinatesLongitude]
+              : [18.0735, -15.9582]
+          }
+        />
+      );
+    }
+
+    // Fallback: carte sans zones
+    return (
+      <GeoZoneEditor
+        readOnly
+        showAddressBar={false}
+        value={[]}
+        title="Localisation"
+        hint={material.adresse || "Aucune zone de couverture tracée pour ce matériau."}
+        height={400}
+        defaultCenter={
+          material.coordinatesLatitude && material.coordinatesLongitude
+            ? [material.coordinatesLatitude, material.coordinatesLongitude]
+            : [18.0735, -15.9582]
+        }
+        fallbackLabel={material.name}
+        fallbackAddress={material.adresse as string | undefined}
+      />
+    );
+  };
+
+  // ============ Rendu ============
   return (
     <AppLayout
       pageTitle={material.name}
@@ -119,7 +190,7 @@ const MaterialDetail = () => {
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Material Information */}
+        {/* Colonne de gauche - Informations */}
         <div className="space-y-6">
           {/* Basic Info Card */}
           <Card>
@@ -150,6 +221,13 @@ const MaterialDetail = () => {
                   <p className="font-medium">{material.unit}</p>
                 </div>
               </div>
+
+              {material.category && (
+                <div>
+                  <p className="text-sm text-gray-600">Catégorie</p>
+                  <Badge variant="secondary">{material.category}</Badge>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -210,6 +288,24 @@ const MaterialDetail = () => {
                   </div>
                 </div>
               )}
+
+              {/* Zones d'intervention */}
+              {interventionZones.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-600">Zones de couverture</p>
+                  <p className="text-sm text-gray-700">
+                    {interventionZones.length} zone(s) définie(s)
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {interventionZones.map((zone, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {zone.label || `Zone ${index + 1}`}
+                        {zone.areaSqm && ` (${Math.round(zone.areaSqm)} m²)`}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -233,39 +329,10 @@ const MaterialDetail = () => {
           )}
         </div>
 
-        {/* Map and Image */}
+        {/* Colonne de droite - Carte et Image */}
         <div className="space-y-6">
-          {/* Map — unified GeoZoneEditor (zones if present, fallback to single-point map) */}
-          {(() => {
-            const zones = (materialData as unknown as { interventionZones?: unknown[]; coverageZones?: unknown[] })
-              .coverageZones ?? (materialData as unknown as { interventionZones?: unknown[] }).interventionZones;
-            const zoneList = Array.isArray(zones)
-              ? (zones as import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO[])
-              : [];
-            console.info('[MaterialsMap] rendered', zoneList.length, 'coverage zones');
-            if (zoneList.length > 0) {
-              return (
-                <GeoZoneEditorLazy
-                  readOnly
-                  showAddressBar={false}
-                  value={zoneList}
-                  title="Zones de couverture"
-                  height={400}
-                />
-              );
-            }
-            // Fallback strict : pas de zones → GeoZoneEditor readonly vide centré sur adresse workspace.
-            return (
-              <GeoZoneEditorLazy
-                readOnly
-                showAddressBar={false}
-                value={[]}
-                title="Localisation"
-                hint="Aucune zone de couverture tracée pour ce matériau."
-                height={400}
-              />
-            );
-          })()}
+          {/* Carte avec GeoZoneEditor hexagonal */}
+          {renderMap()}
 
           {/* Material Image */}
           <Card>

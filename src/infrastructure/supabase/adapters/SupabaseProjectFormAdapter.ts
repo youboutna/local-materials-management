@@ -1,9 +1,9 @@
-// @ts-nocheck
 /**
  * Supabase Adapter for Project Form Repository
  * Implements the IProjectFormRepository using Supabase
  * Following hexagonal architecture principles
  */
+
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 
@@ -28,43 +28,96 @@ import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 import { Project } from '@/domain/entities';
 import { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
+import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { ProjectService } from '@/application/services/ProjectService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+// Interface pour les données de formulaire
+interface ProjectFormData {
+  title?: string;
+  description?: string;
+  location?: string;
+  status?: string;
+  budget?: string | number;
+  startDate?: string;
+  endDate?: string;
+  start_date?: string;
+  end_date?: string;
+  team_size?: number;
+  financing_source?: string;
+  market_type?: string;
+  selection_mode?: string;
+  project_responsable_id?: string;
+  main_contractor?: string;
+  engineering_consultant?: string;
+  project_reference?: string;
+  allows_initial_payment?: boolean;
+  initial_payment_percentage?: number;
+  current_phase?: string;
+  current_stage?: string;
+  facilitiesLocation?: {
+    center?: { lat: number; lng: number };
+    polygon?: any[];
+    warehouseShape?: any[];
+    address?: string;
+    shapeType?: string;
+  };
+  geographic_zone?: string;
+  terrain_type?: string;
+  environmental_constraints?: string;
+  has_utilities?: boolean;
+  requires_permits?: boolean;
+  stakeholders?: any[];
+  phases?: any[];
+  materials?: any[];
+  risks?: any[];
+  bankGuarantees?: any[];
+  insuranceCertificates?: any[];
+  documents?: any[];
+  employees?: any[];
+  suppliers?: any[];
+  teamMembers?: any[];
+  compliance?: any[];
+}
 
 export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   private projectAdapter: SupabaseProjectAdapter;
+  private projectService: ProjectService;
 
   constructor() {
     this.projectAdapter = new SupabaseProjectAdapter();
+    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
   }
 
   /**
    * Convert workflow data to project entity format
    */
   private workflowDataToProjectEntity(workflowData: ProjectWorkflowData, step: number): unknown {
-    const entity: unknown = {};
+    const entity: Record<string, unknown> = {};
     
     // Map based on step
     switch (step) {
       case 1:
-        (entity as any).title = workflowData.projectData.title;
-        (entity as any).description = workflowData.projectData.description;
-        (entity as any).location = workflowData.projectData.location;
-        (entity as any).status = 'draft';
+        entity.title = workflowData.projectData.title;
+        entity.description = workflowData.projectData.description;
+        entity.location = workflowData.projectData.location;
+        entity.status = 'draft';
         break;
       case 2:
-        (entity as any).budget = workflowData.projectData.budget;
-        (entity as any).start_date = workflowData.projectData.startDate;
-        (entity as any).end_date = workflowData.projectData.endDate;
+        entity.budget = workflowData.projectData.budget;
+        entity.start_date = workflowData.projectData.startDate;
+        entity.end_date = workflowData.projectData.endDate;
         break;
       case 3:
-        (entity as any).team_size = workflowData.projectData.teamSize;
-        (entity as any).main_contractor = workflowData.projectData.mainContractor;
+        entity.team_size = workflowData.projectData.teamSize;
+        entity.main_contractor = workflowData.projectData.mainContractor;
         break;
       default:
         // Map all available fields
@@ -90,7 +143,8 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         }
         break;
       case 2:
-        if (!formData.budget || (typeof formData.budget === 'string' ? parseFloat(formData.budget) : formData.budget) <= 0) {
+        const budget = typeof formData.budget === 'string' ? parseFloat(formData.budget) : formData.budget;
+        if (!budget || budget <= 0) {
           errors.push('Budget must be greater than 0');
         }
         break;
@@ -101,6 +155,66 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       errors
     };
   }
+
+  /**
+   * Convert form data to project entity
+   */
+  private formDataToProjectEntity(formData: ProjectFormData, step: number): Record<string, unknown> {
+    const entity: Record<string, unknown> = {};
+    
+    // Common fields
+    if (formData.title) entity.title = formData.title;
+    if (formData.description) entity.description = formData.description;
+    if (formData.location) entity.location = formData.location;
+    if (formData.status) entity.status = formData.status;
+    
+    const budget = typeof formData.budget === 'string' ? parseFloat(formData.budget) : formData.budget;
+    if (budget && budget > 0) entity.budget = budget;
+    
+    if (formData.startDate || formData.start_date) {
+      entity.start_date = formData.startDate || formData.start_date;
+    }
+    if (formData.endDate || formData.end_date) {
+      entity.end_date = formData.endDate || formData.end_date;
+    }
+    if (formData.team_size) entity.team_size = formData.team_size;
+    if (formData.financing_source) entity.financing_source = formData.financing_source;
+    if (formData.market_type) entity.market_type = formData.market_type;
+    if (formData.selection_mode) entity.selection_mode = formData.selection_mode;
+    if (formData.project_responsable_id) entity.project_responsable_id = formData.project_responsable_id;
+    if (formData.main_contractor) entity.main_contractor = formData.main_contractor;
+    if (formData.engineering_consultant) entity.engineering_consultant = formData.engineering_consultant;
+    if (formData.project_reference) entity.project_reference = formData.project_reference;
+    
+    // Localisation
+    if (formData.facilitiesLocation) {
+      entity.location_data = formData.facilitiesLocation;
+      entity.latitude = formData.facilitiesLocation.center?.lat;
+      entity.longitude = formData.facilitiesLocation.center?.lng;
+      entity.address = formData.facilitiesLocation.address;
+      entity.shape_type = formData.facilitiesLocation.shapeType;
+      entity.polygon_data = formData.facilitiesLocation.polygon;
+      entity.warehouse_shape = formData.facilitiesLocation.warehouseShape;
+    }
+    
+    // Geographic fields
+    if (formData.geographic_zone) entity.geographic_zone = formData.geographic_zone;
+    if (formData.terrain_type) entity.terrain_type = formData.terrain_type;
+    if (formData.environmental_constraints) entity.environmental_constraints = formData.environmental_constraints;
+    if (formData.has_utilities !== undefined) entity.has_utilities = formData.has_utilities;
+    if (formData.requires_permits !== undefined) entity.requires_permits = formData.requires_permits;
+    
+    // Payment fields
+    if (formData.allows_initial_payment !== undefined) entity.allows_initial_payment = formData.allows_initial_payment;
+    if (formData.initial_payment_percentage !== undefined) entity.initial_payment_percentage = formData.initial_payment_percentage;
+    
+    // Current phase/stage
+    if (formData.current_phase) entity.current_phase = formData.current_phase;
+    if (formData.current_stage) entity.current_stage = formData.current_stage;
+    
+    return entity;
+  }
+
   async saveStepData(
     projectId: string | null,
     formData: ProjectFormData,
@@ -135,9 +249,10 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         if (error) throw error;
         return { success: true, projectId: data.id };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving step data:', error);
-      return { success: false, projectId, error: error.message };
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, projectId, error: message };
     }
   }
 
@@ -227,9 +342,10 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       }
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving related data:', error);
-      return { success: false, error: error.message };
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, error: message };
     }
   }
 
@@ -238,7 +354,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
    */
   async loadProjectData(projectId: string): Promise<ProjectFormData | null> {
     try {
-      const projectData = await this.projectService.getProjectDetail(projectId);
+      const projectData = await this.projectService.getProjectById(projectId);
       if (!projectData) return null;
 
       return {
@@ -255,10 +371,9 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         financing_source: projectData.financingSource || "",
         market_type: projectData.marketType || "",
         selection_mode: projectData.selectionMode || "",
-        project_responsable_id: projectData.projectResponsableId || undefined,
+        project_responsable_id: projectData.projectManagerId || undefined,
         main_contractor: projectData.mainContractor || undefined,
-        engineering_consultant:
-          (projectData as any).engineeringConsultant || undefined,
+        engineering_consultant: (projectData as any).engineeringConsultant || undefined,
         project_reference: projectData.projectReference || "",
         allows_initial_payment: projectData.allowsInitialPayment || false,
         initial_payment_percentage: projectData.initialPaymentPercentage || 0,
@@ -267,19 +382,18 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         facilitiesLocation: projectData.coordinates
           ? {
               center: {
-                lat: projectData.coordinates.latitude,
-                lng: projectData.coordinates.longitude,
+                lat: projectData.latitude || 0,
+                lng: projectData.longitude || 0,
               },
               polygon: (projectData as any).localisation || [],
               warehouseShape: (projectData as any).localisation || [],
-              address: (projectData as any).adresse,
-              shapeType: (projectData as any).forme,
+              address: projectData.location || '',
+              shapeType: (projectData as any).forme || '',
             }
           : undefined,
-        // Location-specific fields
         geographic_zone: projectData.geographicZone || "",
         terrain_type: projectData.terrainType || "",
-        environmental_constraints: projectData.environmentalConstraints || "",
+        environmental_constraints: (projectData as any).environmentalConstraints || "",
         has_utilities: projectData.hasUtilities || false,
         requires_permits: projectData.requiresPermits || false,
       };
@@ -295,8 +409,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   async loadRelatedData(projectId: string): Promise<Partial<ProjectFormData>> {
     try {
       // Load stakeholders
-      const stakeholders =
-        await ProjectStakeholderService.getProjectStakeholders(projectId);
+      const stakeholders = await ProjectStakeholderService.getProjectStakeholders(projectId);
 
       // Load phases
       const { data: phasesData } = await supabase
@@ -323,15 +436,14 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         humanResources: phase.human_resources || [],
         suppliers: phase.suppliers || [],
         actualCost: phase.actual_cost || 0,
-        // Load custom phase data with steps and tasks
         customPhase: phase.custom_phase_data ? (() => {
-          const customData = phase.custom_phase_data as Record<string, any>;
+          const customData = phase.custom_phase_data as Record<string, unknown>;
           return {
-            id: customData.id,
-            name: customData.name,
-            number: customData.number,
-            description: customData.description || '',
-            customStages: customData.customStages || []
+            id: customData.id as string,
+            name: customData.name as string,
+            number: customData.number as number,
+            description: (customData.description as string) || '',
+            customStages: (customData.customStages as any[]) || []
           };
         })() : undefined
       })) || [];
@@ -342,11 +454,10 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         .select("material_id, quantity")
         .eq("project_id", projectId);
 
-      const materials =
-        materialsData?.map((item) => ({
-          materialId: item.material_id,
-          quantity: item.quantity,
-        })) || [];
+      const materials = materialsData?.map((item) => ({
+        materialId: item.material_id,
+        quantity: item.quantity,
+      })) || [];
 
       // Load risks
       const { data: risksData } = await supabase
@@ -355,21 +466,20 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
         .eq("project_id", projectId)
         .order("created_at");
 
-      const risks =
-        risksData?.map((risk) => ({
-          id: risk.id,
-          category: risk.risk_level || "technical",
-          description: risk.risk_description || "",
-          probability: risk.probability || "medium",
-          impact: risk.impact || "medium",
-          riskScore: this.calculateRiskScore(
-            risk.probability || "medium",
-            risk.impact || "medium"
-          ),
-          mitigationPlan: risk.mitigation_strategy || "",
-          owner: risk.owner_id || "",
-          status: risk.status || "active",
-        })) || [];
+      const risks = risksData?.map((risk) => ({
+        id: risk.id,
+        category: risk.risk_level || "technical",
+        description: risk.risk_description || "",
+        probability: risk.probability || "medium",
+        impact: risk.impact || "medium",
+        riskScore: this.calculateRiskScore(
+          risk.probability || "medium",
+          risk.impact || "medium"
+        ),
+        mitigationPlan: risk.mitigation_strategy || "",
+        owner: risk.owner_id || "",
+        status: risk.status || "active",
+      })) || [];
 
       // Load bank guarantees
       const { data: bankGuaranteesData } = await supabase
@@ -426,7 +536,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   /**
    * Load base data for dropdowns and selectors
    */
-  async loadBaseData(): Promise<any> {
+  async loadBaseData(): Promise<unknown> {
     try {
       const [
         { data: employeesData },
@@ -496,27 +606,30 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
     }
   }
 
-  // Helper methods
-  private formatDateForInput = (dateString: any): string => {
+  // =================== HELPER METHODS ===================
+
+  private formatDateForInput = (dateString: unknown): string => {
     if (!dateString) return "";
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      if (date instanceof Date && !isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+      return '';
     } catch {
       return '';
     }
   };
 
   private calculateRiskScore(probability: string, impact: string): number {
-    const probabilityValues = {
+    const probabilityValues: Record<string, number> = {
       very_low: 1,
       low: 2,
       medium: 3,
       high: 4,
       very_high: 5,
     };
-    const impactValues = {
+    const impactValues: Record<string, number> = {
       very_low: 1,
       low: 2,
       medium: 3,
@@ -524,9 +637,8 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       very_high: 5,
     };
 
-    const probValue =
-      probabilityValues[probability as keyof typeof probabilityValues] || 3;
-    const impactValue = impactValues[impact as keyof typeof impactValues] || 3;
+    const probValue = probabilityValues[probability] || 3;
+    const impactValue = impactValues[impact] || 3;
 
     return probValue * impactValue;
   }

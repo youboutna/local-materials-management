@@ -3,7 +3,6 @@
  * Centralized and standardized for hexagonal architecture
  */
 
-
 import { BaseEntityDTO, BaseFormDTO, BaseUIState, StandardPriority, StandardStatus } from '../shared';
 import { PerformanceMetricsDTO } from '../transforms';
 
@@ -23,7 +22,7 @@ import { PhaseDTO } from './PhaseDTO';
 import { ProjectAnalyticsDTO } from './ProjectAnalyticsDTO';
 import { RiskDTO } from './RiskDTO';
 import { StakeholderDTO } from './StakeholderDTO';
-import { TaskDTO } from './TaskDTO';
+import { TaskAssignmentDTO } from './TaskAssignmentDTO';
 import { TenderDTO } from './TenderDTO';
 
 // Project Location Data Interface - Enhanced location handling
@@ -280,17 +279,17 @@ export interface TeamAllocationDTO {
   endDate?: string;
 }
 
-// Gantt Chart Data
+// Gantt Chart Data - Utilise TaskAssignmentDTO
 export interface ProjectGanttChartData {
   phases: PhaseDTO[];
   milestones: MilestoneDTO[];
-  tasks: TaskDTO[];
+  tasks: TaskAssignmentDTO[];
   criticalPath: string[];
 }
 
-// PERT Analysis
+// PERT Analysis - Utilise TaskAssignmentDTO
 export interface ProjectPertAnalysis {
-  activities?: TaskDTO[];
+  activities?: TaskAssignmentDTO[];
   criticalPath?: string[];
   expectedDuration: number;
   variance: number;
@@ -317,7 +316,7 @@ export interface ProjectEvmData {
   varianceAtCompletion?: number;
 }
 
-// Main Project DTO
+// Main Project DTO - Utilise TaskAssignmentDTO
 export interface ProjectDTO extends BaseEntityDTO {
   // Core identification
   id: string;
@@ -470,7 +469,7 @@ export interface ProjectDTO extends BaseEntityDTO {
   scheduleVariance?: number;
   activeTeamMembers?: number;
   
-  // Analytics
+  // Analytics - Utilise TaskAssignmentDTO
   ganttChart?: ProjectGanttChartData;
   pertAnalysis?: ProjectPertAnalysis;
   earnedValueManagement?: ProjectEvmData;
@@ -478,7 +477,7 @@ export interface ProjectDTO extends BaseEntityDTO {
   performanceMetrics?: PerformanceMetricsDTO;
 }
 
-// Project Summary for lists
+// Project Summary for lists - Utilise TaskAssignmentDTO
 export interface ProjectSummaryDTO extends ProjectDTO {
   // Summary-specific counts
   tasksCount: number;
@@ -496,11 +495,11 @@ export interface ProjectSummaryDTO extends ProjectDTO {
   latestUpdate?: string;
 }
 
-// Detailed Project view with all relationships
+// Detailed Project view with all relationships - Utilise TaskAssignmentDTO
 export interface ProjectDetailDTO extends ProjectDTO {
   // Detailed relationships
   phases: PhaseDTO[];
-  tasks: TaskDTO[];
+  tasks: TaskAssignmentDTO[];
   risks: RiskDTO[];
   milestones: MilestoneDTO[];
   payments: PaymentDTO[];
@@ -535,7 +534,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
   // Financial details
   expenses: PaymentDTO[]; // Alias for payments to match UI expectations
   
-  // Resource allocation - ADDING MISSING PROPERTY
+  // Resource allocation
   resources?: ProjectResource[];
 
   /** Contacts projet (btp.project_contacts) */
@@ -689,7 +688,7 @@ export interface ProjectUIState {
   risks?: RiskDTO[];
   materials?: MaterialDTO[];
   stakeholders?: StakeholderDTO[];
-  tasks?: TaskDTO[];
+  tasks?: TaskAssignmentDTO[];
   inspections?: InspectionDTO[];
   documents?: DocumentDTO[];
   
@@ -701,7 +700,7 @@ export interface ProjectUIState {
   };
 }
 
-// Create Project DTO
+// Create Project DTO - Utilise TaskAssignmentDTO
 export interface CreateProjectDTO {
   title: string;
   description: string;
@@ -770,7 +769,7 @@ export interface CreateProjectDTO {
   /** Données relationnelles importées avec le projet. */
   phases?: PhaseDTO[];
   milestones?: MilestoneDTO[];
-  tasks?: TaskDTO[];
+  tasks?: TaskAssignmentDTO[];
   dqeLines?: import('@/dtos/boq/BoqLineDTO').BoqLineDTO[];
   stakeholders?: import('./ProjectStakeholderDTO').CreateProjectStakeholderDTO[];
   budgetSources?: Array<Record<string, unknown>>;
@@ -834,7 +833,8 @@ export interface ProjectUIState extends BaseUIState<ProjectDTO> {
   };
   
 }
-// Interface for create project request
+
+// Interface for create project request - Utilise TaskAssignmentDTO
 export interface CreateProjectRequestDTO {
   title: string;
   description?: string;
@@ -907,7 +907,7 @@ export interface CreateProjectRequestDTO {
   };
   // Domain collections - using proper DTO types following hexagonal architecture
   phases?: PhaseDTO[];
-  tasks?: TaskDTO[];
+  tasks?: TaskAssignmentDTO[];
   risks?: RiskDTO[];
   milestones?: MilestoneDTO[];
   payments?: PaymentDTO[];

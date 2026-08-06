@@ -10,8 +10,9 @@
 
 export { Project, type ProjectStatus, type ProjectCoordinates, type ProjectStakeholder } from './Project';
 export { Phase, type PhaseStatus, type PhaseStep, type PhaseTask, type PhaseResources } from './Phase';
-export { Task } from './Task';
-export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
+// SUPPRIMÉ: export { Task } from './Task';
+// Les tâches sont maintenant gérées via TaskAssignment
+// SUPPRIMÉ: export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
 export { Milestone, type MaterialUsage, type MilestoneDependency, type MilestoneDeliverable, type MilestoneConfiguration } from './Milestone';
 
 // ============================================================================

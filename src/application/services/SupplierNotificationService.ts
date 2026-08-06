@@ -5,7 +5,9 @@
 
 import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
-import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
+import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -48,12 +50,14 @@ export interface SupplierNotificationResult {
  */
 export class SupplierNotificationService {
   private notificationRepository: INotificationRepository;
-  private taskRepository: ITaskRepository;
+  private taskAssignmentService: TaskAssignmentService;
   private authRepository: IAuthRepository;
 
   constructor() {
     this.notificationRepository = RepositoryFactory.getNotificationRepository();
-    this.taskRepository = RepositoryFactory.getTaskRepository();
+    this.taskAssignmentService = new TaskAssignmentService(
+      RepositoryFactory.getTaskAssignmentRepository()
+    );
     this.authRepository = RepositoryFactory.getAuthRepository();
   }
 
@@ -141,10 +145,12 @@ export class SupplierNotificationService {
 
   /**
    * Send task assignment notification
+   * Utilise TaskAssignmentService au lieu de ITaskRepository
    */
   async sendTaskAssignmentNotification(taskId: string, supplierId: string): Promise<SupplierNotificationResult> {
     try {
-      const task = await this.taskRepository.findById(taskId);
+      // Utiliser TaskAssignmentService pour récupérer la tâche
+      const task = await this.taskAssignmentService.getById(taskId);
       if (!task) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Task not found');
       }
@@ -219,8 +225,18 @@ export class SupplierNotificationService {
     }
   }
 
+  /**
+   * Generate task completion URL
+   * Utilise TaskAssignmentService au lieu de ITaskRepository
+   */
   private async generateTaskCompletionUrl(taskId: string): Promise<string> {
     try {
+      // Récupérer la tâche pour vérifier qu'elle existe
+      const task = await this.taskAssignmentService.getById(taskId);
+      if (!task) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Task not found');
+      }
+
       const tokenData = {
         taskId,
         timestamp: Date.now(),
@@ -230,10 +246,15 @@ export class SupplierNotificationService {
       const token = btoa(JSON.stringify(tokenData));
       const completionUrl = `${window.location.origin}/supplier-portal?task=${token}`;
 
-      // Update task with camelCase properties
-      await this.taskRepository.update(taskId, {
-        completionDate: new Date(tokenData.expiresAt).toISOString()
-      } as any);
+      // Mettre à jour la tâche avec la date de complétion prévue
+      await this.taskAssignmentService.update(taskId, {
+        completedAt: new Date(tokenData.expiresAt).toISOString(),
+        metadata: {
+          ...task.metadata,
+          completionToken: token,
+          completionUrl: completionUrl,
+        }
+      });
 
       return completionUrl;
     } catch (error) {
@@ -246,11 +267,24 @@ export class SupplierNotificationService {
     }
   }
 
-  private determineTaskPriority(task: any): 'low' | 'medium' | 'high' | 'urgent' {
-    if (task.priority === 'urgent') return 'urgent';
-    if (task.priority === 'high') return 'high';
-    if (task.priority === 'low') return 'low';
+  /**
+   * Determine task priority based on task data
+   * Utilise les enums de TaskAssignmentDTO
+   */
+  private determineTaskPriority(task: TaskAssignmentDTO): 'low' | 'medium' | 'high' | 'urgent' {
+    // Utiliser la priorité de la tâche
+    const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'urgent'> = {
+      'LOW': 'low',
+      'MEDIUM': 'medium',
+      'HIGH': 'high',
+      'CRITICAL': 'urgent',
+    };
+
+    if (task.priority && priorityMap[task.priority]) {
+      return priorityMap[task.priority];
+    }
     
+    // Si la tâche a une date d'échéance, calculer l'urgence
     if (task.dueDate) {
       const dueDate = new Date(task.dueDate);
       const now = new Date();

@@ -16,10 +16,11 @@ import {
 } from '@/dtos/entities/MonitoringDTOs';
 
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { MonitoringTransformer } from '@/dtos/transforms/MonitoringTransformer';
 
 // =================== ERROR CLASSES ===================
@@ -45,12 +46,18 @@ export class ValidationError extends Error {
 // =================== MONITORING DASHBOARD SERVICE ===================
 
 export class MonitoringDashboardService {
+  private taskAssignmentService: TaskAssignmentService;
+
   constructor(
     private monitoringRepository: IMonitoringRepository,
     private projectRepository: IProjectRepository,
-    private taskRepository: ITaskRepository,
     private paymentRepository: IPaymentRepository
-  ) {}
+  ) {
+    // Initialisation de TaskAssignmentService
+    this.taskAssignmentService = new TaskAssignmentService(
+      RepositoryFactory.getTaskAssignmentRepository()
+    );
+  }
 
   // =================== DASHBOARD OPERATIONS ===================
 
@@ -183,7 +190,7 @@ export class MonitoringDashboardService {
         throw new ValidationError('User ID is required');
       }
 
-      // Get user's projects via findAll (findByUserId not available on IProjectRepository)
+      // Get user's projects via findAll
       const allProjects = await this.projectRepository.findAll();
       const projects = allProjects.map(p => ({
         id: p.id,
@@ -200,9 +207,37 @@ export class MonitoringDashboardService {
         updatedAt: p.updatedAt?.toISOString() || '',
       })) as ProjectDTO[];
 
-      const overview = this.calculateMonitoringOverview(projects, filters);
+      // Récupérer les statistiques des tâches via TaskAssignmentService
+      let openTasks = 0;
+      let overdueTasks = 0;
+      
+      try {
+        // Récupérer toutes les tâches (ou filtrer par projet si nécessaire)
+        const allTasks = await this.taskAssignmentService.getAll();
+        
+        // Compter les tâches ouvertes (non terminées)
+        openTasks = allTasks.filter(t => 
+          t.status !== TaskStatus.COMPLETED && 
+          t.status !== TaskStatus.CANCELLED
+        ).length;
+        
+        // Compter les tâches en retard
+        const now = new Date();
+        overdueTasks = allTasks.filter(t => {
+          if (!t.dueDate) return false;
+          if (t.status === TaskStatus.COMPLETED || t.status === TaskStatus.CANCELLED) return false;
+          return new Date(t.dueDate) < now;
+        }).length;
+      } catch (error) {
+        console.warn('Failed to fetch task statistics:', error);
+        // Continuer avec des valeurs par défaut
+      }
 
-      const projectMonitoring = projects.slice(0, 10).map(project => this.createProjectMonitoring(project));
+      const overview = this.calculateMonitoringOverview(projects, filters, openTasks, overdueTasks);
+
+      const projectMonitoring = projects.slice(0, 10).map(project => 
+        this.createProjectMonitoring(project)
+      );
 
       const alerts: MonitoringAlertDTO[] = [];
 
@@ -226,6 +261,74 @@ export class MonitoringDashboardService {
         `Failed to get comprehensive monitoring: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'GET_COMPREHENSIVE_MONITORING_FAILED'
       );
+    }
+  }
+
+  /**
+   * Récupère les statistiques des tâches pour un projet spécifique
+   */
+  async getProjectTaskStats(projectId: string): Promise<{
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+    blocked: number;
+    overdue: number;
+    completionRate: number;
+  }> {
+    try {
+      const tasks = await this.taskAssignmentService.getByProject(projectId);
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
+      const inProgress = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
+      const pending = tasks.filter(t => t.status === TaskStatus.PENDING).length;
+      const blocked = tasks.filter(t => t.status === TaskStatus.BLOCKED).length;
+      
+      const now = new Date();
+      const overdue = tasks.filter(t => {
+        if (!t.dueDate) return false;
+        if (t.status === TaskStatus.COMPLETED || t.status === TaskStatus.CANCELLED) return false;
+        return new Date(t.dueDate) < now;
+      }).length;
+      
+      return {
+        total,
+        completed,
+        inProgress,
+        pending,
+        blocked,
+        overdue,
+        completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+      };
+    } catch (error) {
+      console.error(`Failed to get task stats for project ${projectId}:`, error);
+      return {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+        blocked: 0,
+        overdue: 0,
+        completionRate: 0,
+      };
+    }
+  }
+
+  /**
+   * Récupère les tâches en retard pour un projet
+   */
+  async getOverdueTasksForProject(projectId: string): Promise<TaskAssignmentDTO[]> {
+    try {
+      const tasks = await this.taskAssignmentService.getByProject(projectId);
+      const now = new Date();
+      return tasks.filter(t => {
+        if (!t.dueDate) return false;
+        if (t.status === TaskStatus.COMPLETED || t.status === TaskStatus.CANCELLED) return false;
+        return new Date(t.dueDate) < now;
+      });
+    } catch (error) {
+      console.error(`Failed to get overdue tasks for project ${projectId}:`, error);
+      return [];
     }
   }
 
@@ -272,7 +375,12 @@ export class MonitoringDashboardService {
     });
   }
 
-  private calculateMonitoringOverview(projects: ProjectDTO[], filters?: MonitoringFiltersDTO): MonitoringOverviewDTO {
+  private calculateMonitoringOverview(
+    projects: ProjectDTO[], 
+    filters?: MonitoringFiltersDTO,
+    openTasks: number = 0,
+    overdueTasks: number = 0
+  ): MonitoringOverviewDTO {
     if (!projects || projects.length === 0) {
       return {
         totalProjects: 0,
@@ -331,8 +439,8 @@ export class MonitoringDashboardService {
       healthScore,
       riskLevel,
       teamSize,
-      openTasks: 0,
-      overdueTasks: 0
+      openTasks,
+      overdueTasks
     };
   }
 
@@ -390,3 +498,6 @@ export class MonitoringDashboardService {
     return deadlines;
   }
 }
+
+// Import pour le RepositoryFactory
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

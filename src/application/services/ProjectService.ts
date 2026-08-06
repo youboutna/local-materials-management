@@ -31,7 +31,7 @@ import {
 // Import ProjectTransformer for transformations
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
-import { TaskTransformer } from '@/dtos/transforms/TaskTransformer';
+import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 
@@ -260,8 +260,6 @@ export class ProjectService {
     }
   }
 
-
-
   async updateProjectStatus(id: string, newStatus: string, reason?: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);
@@ -457,6 +455,7 @@ export class ProjectService {
 
   /**
    * Get project with all related data
+   * Utilise TaskAssignmentTransformer pour les tâches
    */
   async getProjectWithDetails(id: string): Promise<ProjectDetailDTO | null> {
     try {
@@ -464,9 +463,17 @@ export class ProjectService {
       if (!data.project) return null;
 
       const detailDTO = ProjectTransformer.toDetailDTO(data.project);
+      
+      // Transformation des phases
       const phases = PhaseTransformer.manyToDTO(data.phases || []);
-      const tasks = TaskTransformer.manyToDTO(data.tasks || []);
+      
+      // Transformation des tâches avec TaskAssignmentTransformer
+      const tasks = TaskAssignmentTransformer.toDTOList(data.tasks || []);
+      
+      // Transformation des risques
       const risks = RiskTransformer.manyToDTO(data.risks || []);
+      
+      // Transformation des paiements
       const payments = PaymentTransformer.manyToDTO(data.payments || []);
       
       return {
@@ -481,7 +488,7 @@ export class ProjectService {
         documents: data.documents || [],
         bankGuarantees: data.bankGuarantees || [],
         insuranceCertificates: data.insuranceCertificates || [],
-        // Sous-objets hydratés depuis le repository (jalons, parties prenantes, ressources…)
+        // Sous-objets hydratés depuis le repository
         milestones: (data.milestones || []) as ProjectDetailDTO['milestones'],
         stakeholders: (data.stakeholders || []) as unknown as StakeholderDTO[],
         resources: (data.resources || []) as ProjectDetailDTO['resources'],

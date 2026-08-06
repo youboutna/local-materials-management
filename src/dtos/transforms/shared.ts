@@ -1325,27 +1325,6 @@ export interface UpdateTenderEstimateItemRequestDto {
   item_type?: string;
 }
 
-// Task DTOs
-export interface TaskDTO extends BaseEntityDTO {
-  title: string;
-  description?: string;
-  project_id?: string;
-  assigned_to?: string[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
-  progress: number;
-  due_date?: string;
-  start_date?: string;
-  end_date?: string;
-  estimated_duration?: number;
-  actual_duration?: number;
-  weight?: number;
-  dependencies?: string[];
-  tags?: string[];
-  created_by?: string;
-  updated_by?: string;
-}
-
 export interface CreateTaskRequestDto {
   title: string;
   description?: string;

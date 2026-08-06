@@ -4,7 +4,7 @@
 
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '../entities/TenderDocument';
 
-export interface ITenderDocumentRepository {
+export interface ITenderDocumentRepository extends IDocumentRepository{
   // CRUD operations
   findById(id: string): Promise<TenderDocument | null>;
   findAll(): Promise<TenderDocument[]>;

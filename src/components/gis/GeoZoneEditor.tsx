@@ -1,21 +1,20 @@
 /**
- * GeoZoneEditor — composant GIS unifié.
+ * GeoZoneEditor — composant GIS unifié pour la gestion des zones d'intervention.
  *
- * Un seul composant pour tous les écrans qui manipulent des zones géo :
- *   - projet : création / édition / détail (readonly)
- *   - matériau : formulaire / détail
+ * Architecture Hexagonale :
+ * - Utilise InterventionZoneDTO pour les données (pas de types UI)
+ * - Zéro dépendance cyclique avec les entités
+ * - Communication via props value/onChange (DTOs)
  *
  * Fonctionnalités :
- *   - Barre de recherche adresse (autocomplete DB + géocodage) qui centre
- *     la carte et propose "ajouter comme point".
- *   - Dessin multi-formes : polygone, rectangle, cercle, point.
- *   - Import GeoJSON (Feature / FeatureCollection) et export .geojson.
- *   - Reverse-geocoding auto via GeocodingServiceFactory (regionCode / cityCode).
- *   - Mode `readOnly` (aucune barre d'outils, aucun clic).
- *
- * IO : `value: InterventionZoneDTO[]` <-> `onChange(zones)`.
- * L'`InterventionZonesPicker` est un alias qui délègue à ce composant.
+ * - Barre de recherche adresse (autocomplete DB + géocodage)
+ * - Dessin multi-formes : polygone, rectangle, cercle, point
+ * - Import/Export GeoJSON
+ * - Reverse-geocoding auto via GeocodingServiceFactory
+ * - Mode readOnly (affichage uniquement)
+ * - Édition des zones via ZoneLocationEditor
  */
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   MapContainer,
@@ -71,11 +70,15 @@ const markerIcon = L.icon({
 });
 
 // -----------------------------------------------------------------------------
-// Géométrie
+// Utilitaires Géométrie (calculs purs, pas de dépendances externes)
 // -----------------------------------------------------------------------------
 const EARTH_R = 6_371_000;
 const toRad = (d: number) => (d * Math.PI) / 180;
 
+/**
+ * Calcule la surface d'un polygone en m²
+ * Utilise la formule de l'aire sur une sphère
+ */
 function polygonAreaSqm(coords: InterventionZoneLatLng[]): number {
   if (coords.length < 3) return 0;
   let total = 0;
@@ -88,8 +91,15 @@ function polygonAreaSqm(coords: InterventionZoneLatLng[]): number {
   }
   return Math.abs((total * EARTH_R * EARTH_R) / 2);
 }
+
+/**
+ * Calcule la surface d'un cercle en m²
+ */
 const circleAreaSqm = (r: number) => Math.PI * r * r;
 
+/**
+ * Formate une surface en m² pour l'affichage
+ */
 const formatArea = (sqm: number) =>
   sqm >= 1_000_000
     ? `${(sqm / 1_000_000).toFixed(2)} km²`
@@ -98,7 +108,7 @@ const formatArea = (sqm: number) =>
     : `${Math.round(sqm)} m²`;
 
 // -----------------------------------------------------------------------------
-// GeoJSON I/O
+// GeoJSON I/O (purement fonctionnel)
 // -----------------------------------------------------------------------------
 type GJPos = [number, number] | number[];
 type GJGeometry =
@@ -108,6 +118,9 @@ type GJGeometry =
 type GJFeature = { type: 'Feature'; geometry: GJGeometry; properties?: Record<string, unknown> };
 type GJRoot = GJFeature | { type: 'FeatureCollection'; features: GJFeature[] } | GJGeometry;
 
+/**
+ * Convertit un objet GeoJSON en zones d'intervention
+ */
 function geojsonToZones(root: GJRoot): InterventionZoneDTO[] {
   const out: InterventionZoneDTO[] = [];
   const features: GJFeature[] =
@@ -121,6 +134,7 @@ function geojsonToZones(root: GJRoot): InterventionZoneDTO[] {
     const label = (f.properties?.label as string) || (f.properties?.name as string) || `Zone ${idx + 1}`;
     const g = f.geometry;
     if (!g) return;
+    
     if (g.type === 'Point') {
       const [lng, lat] = g.coordinates as [number, number];
       out.push({ type: 'point', coordinates: [{ lat, lng }], label });
@@ -164,6 +178,9 @@ function geojsonToZones(root: GJRoot): InterventionZoneDTO[] {
   return out;
 }
 
+/**
+ * Convertit des zones d'intervention en objet GeoJSON
+ */
 function zonesToGeojson(zones: InterventionZoneDTO[]): {
   type: 'FeatureCollection';
   features: GJFeature[];
@@ -208,8 +225,12 @@ function zonesToGeojson(zones: InterventionZoneDTO[]): {
 }
 
 // -----------------------------------------------------------------------------
-// Helpers Leaflet
+// Composants Leaflet (purement UI)
 // -----------------------------------------------------------------------------
+
+/**
+ * Capture les clics sur la carte
+ */
 const ClickCapture: React.FC<{
   onClick: (latlng: InterventionZoneLatLng) => void;
   onDoubleClick?: () => void;
@@ -221,6 +242,9 @@ const ClickCapture: React.FC<{
   return null;
 };
 
+/**
+ * Déplace la carte vers une cible
+ */
 const FlyTo: React.FC<{ target: [number, number] | null; zoom?: number }> = ({
   target,
   zoom = 12,
@@ -233,36 +257,37 @@ const FlyTo: React.FC<{ target: [number, number] | null; zoom?: number }> = ({
 };
 
 // -----------------------------------------------------------------------------
-// Props
+// Props du composant
 // -----------------------------------------------------------------------------
 export interface GeoZoneEditorProps {
+  /** Zones d'intervention (DTO) */
   value?: InterventionZoneDTO[];
+  /** Callback lorsque les zones changent */
   onChange?: (zones: InterventionZoneDTO[]) => void;
+  /** Centre par défaut de la carte */
   defaultCenter?: [number, number];
+  /** Zoom par défaut */
   defaultZoom?: number;
+  /** Hauteur de la carte */
   height?: number | string;
-  /** Sans barre d'outils ni interaction — mode affichage. */
+  /** Mode lecture seule (pas d'interaction) */
   readOnly?: boolean;
-  /** Cache la barre de recherche d'adresse en haut. */
+  /** Afficher la barre de recherche d'adresse */
   showAddressBar?: boolean;
-  /** Titre affiché. */
+  /** Titre affiché */
   title?: string;
-  /** Sous-titre / hint. */
+  /** Sous-titre / hint */
   hint?: string;
-  /**
-   * En mode `readOnly`, si aucune zone n'est fournie mais qu'un `defaultCenter`
-   * l'est, on synthétise automatiquement une zone "point" (marqueur unique)
-   * pour éviter une carte vide quand seules des coordonnées existent.
-   * `fallbackLabel` / `fallbackAddress` alimentent le libellé du marqueur.
-   */
+  /** Libellé par défaut pour le fallback */
   fallbackLabel?: string;
+  /** Adresse par défaut pour le fallback */
   fallbackAddress?: string;
 }
 
 type DraftMode = 'idle' | 'polygon' | 'rectangle' | 'circle' | 'point';
 
 // -----------------------------------------------------------------------------
-// Composant
+// Composant Principal
 // -----------------------------------------------------------------------------
 const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   value,
@@ -277,6 +302,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   fallbackLabel,
   fallbackAddress,
 }) => {
+  // ============ State ============
   const zones = useMemo(() => {
     const provided = value ?? [];
     if (provided.length > 0) return provided;
@@ -298,6 +324,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     }
     return provided;
   }, [value, readOnly, defaultCenter, fallbackLabel, fallbackAddress]);
+
   const zonesRef = useRef<InterventionZoneDTO[]>(zones);
   useEffect(() => {
     zonesRef.current = zones;
@@ -328,14 +355,13 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     ? [zones[0].coordinates[0].lat, zones[0].coordinates[0].lng]
     : defaultCenter;
 
-  // ---------------------------------------------------------------------------
-  // Persistance zone + reverse-geocode
-  // ---------------------------------------------------------------------------
+  // ============ Persistance ============
   const emit = (next: InterventionZoneDTO[]) => {
     zonesRef.current = next;
     onChange?.(next);
   };
 
+  // ============ Reverse Geocoding ============
   const enrichWithReverseGeocode = async (
     zone: InterventionZoneDTO,
   ): Promise<InterventionZoneDTO> => {
@@ -372,16 +398,10 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     }
   };
 
+  // ============ Commit Zone ============
   const commitZone = async (zone: InterventionZoneDTO) => {
     const provisional = [...zonesRef.current, zone];
     const insertedIndex = provisional.length - 1;
-    console.info('[GeoZoneEditor] commit zone', {
-      index: insertedIndex,
-      type: zone.type,
-      vertices: zone.coordinates.length,
-      radiusMeters: zone.radiusMeters,
-      areaSqm: zone.areaSqm,
-    });
     emit(provisional);
 
     const enriched = await enrichWithReverseGeocode(zone);
@@ -389,18 +409,10 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     const next = zonesRef.current.slice();
     if (next[insertedIndex]) next[insertedIndex] = enriched;
     else next.push(enriched);
-    console.info('[GeoZoneEditor] zone enriched (reverse-geocode)', {
-      index: insertedIndex,
-      address: enriched.address,
-      regionCode: enriched.regionCode,
-      cityCode: enriched.cityCode,
-    });
     emit(next);
   };
 
-  // ---------------------------------------------------------------------------
-  // Interactions carte
-  // ---------------------------------------------------------------------------
+  // ============ Interactions Carte ============
   const handleMapClick = (latlng: InterventionZoneLatLng) => {
     if (readOnly) return;
     if (mode === 'polygon') {
@@ -421,6 +433,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     }
   };
 
+  // ============ Finitions des formes ============
   const finishPolygon = () => {
     if (draftCoords.length < 3) return;
     void commitZone({
@@ -478,18 +491,12 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
 
   const removeZone = (idx: number) => emit(zones.filter((_, i) => i !== idx));
 
-  // ---------------------------------------------------------------------------
-  // GeoJSON import / export
-  // ---------------------------------------------------------------------------
+  // ============ Import / Export GeoJSON ============
   const importGeoJSON = async (file: File) => {
     try {
       const text = await file.text();
       const root = JSON.parse(text) as GJRoot;
       const parsed = geojsonToZones(root);
-      console.info('[GeoZoneEditor] geojson import', {
-        file: file.name,
-        parsedZones: parsed.length,
-      });
       if (parsed.length === 0) {
         toast.error('GeoJSON invalide — aucune zone importée.');
         return;
@@ -520,12 +527,9 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     a.download = `zones-${new Date().toISOString().slice(0, 10)}.geojson`;
     a.click();
     URL.revokeObjectURL(url);
-    console.info('[GeoZoneEditor] geojson export', { zones: zones.length });
   };
 
-  // ---------------------------------------------------------------------------
-  // Rendu
-  // ---------------------------------------------------------------------------
+  // ============ Rendu ============
   const shapeIcon = (s: InterventionZoneShape) => {
     if (s === 'circle') return <CircleIcon className="h-3 w-3" />;
     if (s === 'point') return <MapPin className="h-3 w-3" />;
@@ -554,20 +558,19 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Barre adresse (recherche + centrage) */}
+        {/* Barre adresse */}
         {!readOnly && showAddressBar && (
           <div className="flex flex-wrap items-end gap-2 rounded-md border bg-muted/30 p-2">
             <div className="flex-1 min-w-[240px]">
               <Label className="text-xs flex items-center gap-1 mb-1">
                 <Search className="h-3 w-3" />
-                Rechercher une adresse (base Mauritanie + Nominatim) — édition libre disponible
+                Rechercher une adresse
               </Label>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <AddressSearchBox
                     placeholder="Ville, wilaya, rue, adresse…"
                     onSelect={(sel) => {
-                      console.info('[GeoZoneEditor] address selected', sel);
                       setFlyTarget([sel.lat, sel.lng]);
                       setDraftLabel((prev) => prev || sel.label);
                       setPendingAddress({
@@ -607,7 +610,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
           </div>
         )}
 
-        {/* Toolbar dessin + import/export */}
+        {/* Toolbar */}
         {!readOnly && (
           <div className="flex flex-wrap items-center gap-2">
             {mode === 'idle' ? (
@@ -755,6 +758,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             )}
             <FlyTo target={flyTarget} zoom={12} />
 
+            {/* Zones existantes */}
             {zones.map((z, idx) => {
               if (z.type === 'circle' && z.coordinates[0]) {
                 return (
@@ -870,7 +874,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
           </MapContainer>
         </div>
 
-        {/* Liste */}
+        {/* Liste des zones */}
         {zones.length === 0 ? (
           <p className="text-xs text-muted-foreground italic">
             {readOnly
@@ -936,6 +940,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
           </ul>
         )}
 
+        {/* Éditeur de localisation */}
         <ZoneLocationEditor
           open={editingIndex !== null}
           zone={editingIndex !== null ? zones[editingIndex] ?? null : null}
@@ -945,7 +950,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             const arr = zonesRef.current.slice();
             arr[idx] = next;
             emit(arr);
-            // Re-enrich with reverse-geocode in background (address/region/city).
+            // Re-enrich with reverse-geocode in background
             void enrichWithReverseGeocode(next).then((enriched) => {
               if (enriched === next) return;
               const cur = zonesRef.current.slice();

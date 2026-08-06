@@ -19,7 +19,7 @@ import { PhaseService } from '@/application/services/PhaseService';
 import { ReceptionService } from '@/application/services/ReceptionService';
 import { ReferentialService } from '@/application/services/ReferentialService';
 import { SupplierService } from '@/application/services/SupplierService';
-import { TaskService } from '@/application/services/TaskService';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { ReferentialType, getPhasesForReferential, getReferential } from '@/config/referentials';
 import { Phase } from '@/domain/entities/Phase';
 import { Project } from '@/domain/entities/Project';
@@ -36,7 +36,8 @@ import type { IProjectStakeholderRepository } from '@/domain/repositories/IProje
 import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
-import type { ITaskRepository } from '@/domain/repositories/ITaskRepository';
+import type { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
@@ -46,7 +47,6 @@ import { PhaseDTO, PhasePriority, PhaseStatus, PhaseType } from '@/dtos/entities
 import { CreateProjectDTO, ProjectDTO, ProjectStatus, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { ProjectWorkflowData, SaveResult, StepRelatedDataDTO, ValidationResult, WorkflowStep, WorkflowTransition } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
@@ -161,7 +161,7 @@ export class ProjectWorkflowService {
   // Additional services for comprehensive project management (optional)
   private phaseService: PhaseService;
   private milestoneService?: MilestoneService;
-  private taskService?: TaskService;
+  private taskAssignmentService?: TaskAssignmentService;
   private materialService?: MaterialService;
   private inspectionService?: InspectionService;
   private documentService?: DocumentService;
@@ -178,7 +178,7 @@ export class ProjectWorkflowService {
     private riskRepository: IRiskRepository,
     private stakeholderRepository: IProjectStakeholderRepository,
     private milestoneRepository?: IMilestoneRepository,
-    private taskRepository?: ITaskRepository,
+    private taskAssignmentRepository?: ITaskAssignmentRepository,
     private materialRepository?: IMaterialRepository,
     private inspectionRepository?: IInspectionRepository,
     private documentRepository?: IDocumentRepository,
@@ -192,7 +192,7 @@ export class ProjectWorkflowService {
     // Initialize additional services
     this.phaseService = new PhaseService(phaseRepository);
     this.milestoneService = milestoneRepository ? new MilestoneService(milestoneRepository) : undefined;
-    this.taskService = taskRepository ? new TaskService(taskRepository) : undefined;
+    this.taskAssignmentService = taskAssignmentRepository ? new TaskAssignmentService(taskAssignmentRepository) : undefined;
     this.materialService = materialRepository ? new MaterialService(materialRepository) : undefined;
     this.inspectionService = inspectionRepository ? new InspectionService(inspectionRepository) : undefined;
     this.documentService = documentRepository ? new DocumentService(documentRepository) : undefined;
@@ -211,7 +211,7 @@ export class ProjectWorkflowService {
       RepositoryFactory.getRiskRepository(),
       RepositoryFactory.getProjectStakeholderRepository(),
       RepositoryFactory.getMilestoneRepository(),
-      RepositoryFactory.getTaskRepository(),
+      RepositoryFactory.getTaskAssignmentRepository(),
       RepositoryFactory.getMaterialRepository(),
       RepositoryFactory.getInspectionRepository(),
       RepositoryFactory.getDocumentRepository(),
@@ -271,9 +271,8 @@ export class ProjectWorkflowService {
         this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
         this.milestoneService?.getProjectMilestonesDTO(projectId).catch(() => []) || Promise.resolve([]),
-        this.taskService?.getProjectTasks(projectId).catch(() => []) || Promise.resolve([]),
+        this.taskAssignmentService?.getByProject(projectId).catch(() => []) || Promise.resolve([]),
       ]);
-
 
       // Build complete workflow data
       const phaseData = await Promise.all((phases || []).map(async (phase: any) => ({
@@ -295,8 +294,8 @@ export class ProjectWorkflowService {
         milestones: this.milestoneService
           ? await this.milestoneService.getPhaseMilestones(projectId, phase.id).catch(() => [])
           : [],
-        tasks: this.taskService
-          ? await this.taskService.getTasksByPhase(phase.id).catch(() => [])
+        tasks: this.taskAssignmentService
+          ? await this.taskAssignmentService.getByPhase(phase.id).catch(() => [])
           : [],
         dqeLines: await boqRepository.list({
           source: 'dqe',
@@ -701,23 +700,29 @@ export class ProjectWorkflowService {
         else await this.milestoneService.createMilestone(payload);
       }
 
-      if (this.taskService) {
-        const existingTasks = await this.taskService.getTasksByPhase(persisted.id).catch(() => []);
+      if (this.taskAssignmentService) {
+        const existingTasks = await this.taskAssignmentService.getByPhase(persisted.id).catch(() => []);
         for (const task of phase.tasks ?? []) {
           const taskName = task.title ?? task.name ?? 'Tâche importée';
-          const existingTask = existingTasks.find((candidate) => candidate.title === taskName);
-          const payload = {
+          const existingTask = existingTasks.find((candidate) => candidate.name === taskName);
+          
+          // Create task assignment data
+          const taskData = {
             projectId,
             phaseId: persisted.id,
-            title: taskName,
+            name: taskName,
             description: task.description as string | undefined,
-            status: task.status as string | undefined,
-            priority: task.priority as string | undefined,
+            status: task.status as any || 'PENDING',
+            priority: task.priority as any || 'MEDIUM',
             dueDate: (task.dueDate ?? task.due_date) as string | undefined,
-            assignedTo: task.assignedTo as string | undefined,
-          } as Parameters<typeof this.taskService.createTask>[0];
-          if (existingTask) await this.taskService.updateTask(existingTask.id, payload);
-          else await this.taskService.createTask(payload);
+            assigneeId: task.assignedTo as string | undefined,
+          };
+          
+          if (existingTask) {
+            await this.taskAssignmentService.update(existingTask.id, taskData);
+          } else {
+            await this.taskAssignmentService.create(taskData);
+          }
         }
       }
 
@@ -1068,9 +1073,9 @@ export class ProjectWorkflowService {
     }
 
     // Save tasks if provided
-    if (!options.skipRelations && relatedData.tasks && relatedData.tasks.length > 0 && this.taskService) {
+    if (!options.skipRelations && relatedData.tasks && relatedData.tasks.length > 0 && this.taskAssignmentService) {
       for (const task of relatedData.tasks) {
-        await this.taskService.createTask({
+        await this.taskAssignmentService.create({
           ...task,
           projectId
         } as any);
@@ -1454,7 +1459,7 @@ export class ProjectWorkflowService {
         const createdPhase = await this.phaseRepository.create(phaseEntity as any);
         
         // Save steps and tasks for this phase
-        if (this.taskService) {
+        if (this.taskAssignmentService) {
           for (const stepData of phaseData.steps) {
             // Create step entity
             const stepEntity = {
@@ -1467,7 +1472,7 @@ export class ProjectWorkflowService {
               progress: 0
             };
             
-            const createdStep = await this.taskRepository?.save(stepEntity as any).then(() => stepEntity) as any;
+            const createdStep = await this.taskAssignmentRepository?.save(stepEntity as any).then(() => stepEntity) as any;
             
             // Save tasks for this step
             for (const taskData of stepData.tasks) {
@@ -1477,15 +1482,18 @@ export class ProjectWorkflowService {
                 stepId: createdStep?.id,
                 name: taskData.name,
                 description: taskData.description,
-                orderIndex: 0, // Will be set based on array index
-                status: 'pending' as any,
-                progress: 0,
-                estimatedDuration: taskData.estimatedDurationDays,
-                requiresInspection: taskData.requiresInspection,
-                requiresEngineerApproval: taskData.requiresEngineerApproval
+                status: 'PENDING',
+                priority: 'MEDIUM',
+                estimatedHours: taskData.estimatedDurationDays,
+                // Note: requiresInspection and requiresEngineerApproval are stored in metadata
+                metadata: {
+                  requiresInspection: taskData.requiresInspection,
+                  requiresEngineerApproval: taskData.requiresEngineerApproval,
+                  taskCode: taskData.taskCode,
+                }
               };
               
-              await this.taskRepository?.save(taskEntity as any);
+              await this.taskAssignmentRepository?.save(taskEntity as any);
             }
           }
         }
@@ -1663,7 +1671,7 @@ export function createProjectWorkflowService(
   riskRepo: IRiskRepository,
   stakeholderRepo: IProjectStakeholderRepository,
   milestoneRepo: IMilestoneRepository = RepositoryFactory.getMilestoneRepository(),
-  taskRepo: ITaskRepository = RepositoryFactory.getTaskRepository(),
+  taskAssignmentRepo: ITaskAssignmentRepository = RepositoryFactory.getTaskAssignmentRepository(),
   materialRepo: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
   inspectionRepo: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
   documentRepo: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
@@ -1678,7 +1686,7 @@ export function createProjectWorkflowService(
     riskRepo, 
     stakeholderRepo,
     milestoneRepo,
-    taskRepo,
+    taskAssignmentRepo,
     materialRepo,
     inspectionRepo,
     documentRepo,

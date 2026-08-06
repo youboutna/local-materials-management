@@ -58,7 +58,6 @@ import {
   SupabaseRiskAdapter,
   SupabaseStakeholderAdapter,
   SupabaseSupplierAdapter,
-  SupabaseTaskAdapter,
   SupabaseTenderAdapter,
   SupabaseTenderDocumentAdapter,
   SupabaseTenderSharingAdapter,
@@ -66,7 +65,15 @@ import {
   SupabaseWorkspaceAdapter,
 } from '@/infrastructure/supabase/adapters';
 
-import { BankGuaranteeAdapter, InspectionSchedulingAdapter, LocationRepository, PaymentBlockingAdapter, PVGeneratorAdapter, TaskAssignmentAdapter, TenderEstimateAdapter } from '@/infrastructure/supabase/adapters';
+import { 
+  BankGuaranteeAdapter, 
+  InspectionSchedulingAdapter, 
+  LocationRepository, 
+  PaymentBlockingAdapter, 
+  PVGeneratorAdapter, 
+  TaskAssignmentAdapter, 
+  TenderEstimateAdapter 
+} from '@/infrastructure/supabase/adapters';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/SupabaseStorageAdapter';
 
@@ -147,8 +154,6 @@ import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
-import { ITaskRepository } from '@/domain/repositories/ITaskRepository';
-import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRepository';
@@ -157,7 +162,8 @@ import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository
 import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
 import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-
+import { IDocumentRepository} from '@/domain/repositories/IDocumentRepository';
+import { ITenderDocumentRepository} from '@/domain/repositories/ITenderDocumentRepository';
 // ================================================================
 // 8. RESOLVE FUNCTIONS
 // ================================================================
@@ -189,7 +195,6 @@ interface RepositoryRegistry {
   oauthProvider?: IOAuthProviderRepository;
   project?: IProjectRepository;
   phase?: IPhaseRepository;
-  task?: ITaskRepository;
   material?: IMaterialRepository;
   document?: IDocumentRepository;
   inspection?: IInspectionRepository;
@@ -215,7 +220,7 @@ interface RepositoryRegistry {
   projectForm?: IProjectFormRepository;
   parsedInvoice?: IParsedInvoiceRepository;
   inspectionPermission?: IInspectionPermissionRepository;
-  tenderDocument?: ITenderDocumentRepository;
+  tenderDocument?: IDocumentRepository;
   milestone?: IMilestoneRepository;
   tenderEstimate?: ITenderEstimateRepository;
   contactMessage?: IContactMessageRepository;
@@ -307,7 +312,6 @@ export class RepositoryFactory {
     return registry.storageRepository;
   }
 
-
   // ---------- NOTIFICATIONS ----------
   static getNotificationRepository(): INotificationRepository {
     if (registry.notifications) return registry.notifications;
@@ -358,19 +362,25 @@ export class RepositoryFactory {
     return this.postgrestClient;
   }
 
-  // ---------- CORE REPOSITORIES ----------
+  // ================================================================
+  // CORE REPOSITORIES (Hexagonal Architecture)
+  // ================================================================
+
+  // ---------- PROJECT ----------
   static getProjectRepository(): IProjectRepository {
     if (registry.project) return registry.project;
     registry.project = new SupabaseProjectAdapter();
     return registry.project;
   }
 
+  // ---------- PHASE ----------
   static getPhaseRepository(): IPhaseRepository {
     if (registry.phase) return registry.phase;
     registry.phase = new SupabasePhaseAdapter();
     return registry.phase;
   }
 
+  // ---------- ORGANIZATION ----------
   static getOrganizationRepository(): IOrganizationRepository {
     if (registry.organization) return registry.organization;
     registry.organization = new SupabaseOrganizationAdapter();
@@ -383,73 +393,99 @@ export class RepositoryFactory {
     return registry.organizationHierarchy;
   }
 
-  static getTaskRepository(): ITaskRepository {
-    if (registry.task) return registry.task;
-    registry.task = new SupabaseTaskAdapter();
-    return registry.task;
+  // ---------- TASK ASSIGNMENT (SOURCE UNIQUE) ----------
+  /**
+   * Récupère le repository pour les assignations de tâches.
+   * La table `task_assignments` est la source unique pour toutes les tâches.
+   */
+  static getTaskAssignmentRepository(): ITaskAssignmentRepository {
+    if (registry.taskAssignment) return registry.taskAssignment;
+    registry.taskAssignment = new TaskAssignmentAdapter();
+    return registry.taskAssignment;
   }
 
+  /**
+   * Alias pour getTaskAssignmentRepository() - maintient la compatibilité
+   * avec le nommage hexagonal standard.
+   */
+  static getUnifiedTaskAssignmentRepository(): ITaskAssignmentRepository {
+    return RepositoryFactory.getTaskAssignmentRepository();
+  }
+
+  // ---------- MATERIAL ----------
   static getMaterialRepository(): IMaterialRepository {
     if (registry.material) return registry.material;
     registry.material = new SupabaseMaterialAdapter();
     return registry.material;
   }
 
+  // ---------- DOCUMENT ----------
   static getDocumentRepository(): IDocumentRepository {
     if (registry.document) return registry.document;
     registry.document = new SupabaseDocumentAdapter();
     return registry.document;
   }
 
+  // ---------- INSPECTION ----------
   static getInspectionRepository(): IInspectionRepository {
     if (registry.inspection) return registry.inspection;
     registry.inspection = new SupabaseInspectionAdapter();
     return registry.inspection;
   }
 
+  // ---------- PAYMENT ----------
   static getPaymentRepository(): IPaymentRepository {
     if (registry.payment) return registry.payment;
     registry.payment = new SupabasePaymentAdapter();
     return registry.payment;
   }
 
+  // ---------- TENDER ----------
   static getTenderRepository(): ITenderRepository {
     if (registry.tender) return registry.tender;
     registry.tender = new SupabaseTenderAdapter();
     return registry.tender;
   }
 
+  // ---------- USER ----------
   static getUserRepository(): IUserRepository {
     if (registry.user) return registry.user;
     registry.user = new SupabaseUserAdapter();
     return registry.user;
   }
 
+  // ---------- EMPLOYEE ----------
   static getEmployeeRepository(): IEmployeeRepository {
     if (registry.employee) return registry.employee;
     registry.employee = new SupabaseEmployeeAdapter();
     return registry.employee;
   }
 
+  // ---------- RISK ----------
   static getRiskRepository(): IRiskRepository {
     if (registry.risk) return registry.risk;
     registry.risk = new SupabaseRiskAdapter();
     return registry.risk;
   }
 
+  // ---------- SUPPLIER ----------
   static getSupplierRepository(): ISupplierRepository {
     if (registry.supplier) return registry.supplier;
     registry.supplier = new SupabaseSupplierAdapter();
     return registry.supplier;
   }
 
+  // ---------- HIERARCHY ----------
   static getHierarchyRepository(): IHierarchyRepository {
     if (registry.hierarchy) return registry.hierarchy;
     registry.hierarchy = new SupabaseHierarchyAdapter();
     return registry.hierarchy;
   }
 
-  // ---------- INSPECTION & QUALITY ----------
+  // ================================================================
+  // INSPECTION & QUALITY
+  // ================================================================
+
   static getInspectionSchedulingRepository(): IInspectionSchedulingRepository {
     if (registry.inspectionScheduling) return registry.inspectionScheduling;
     registry.inspectionScheduling = new InspectionSchedulingAdapter();
@@ -474,7 +510,10 @@ export class RepositoryFactory {
     return registry.inspectionPermission;
   }
 
-  // ---------- TENDER & PROCUREMENT ----------
+  // ================================================================
+  // TENDER & PROCUREMENT
+  // ================================================================
+
   static getTenderEstimateRepository(): ITenderEstimateRepository {
     if (registry.tenderEstimate) return registry.tenderEstimate;
     registry.tenderEstimate = new TenderEstimateAdapter();
@@ -493,7 +532,10 @@ export class RepositoryFactory {
     return registry.tenderSharing;
   }
 
-  // ---------- FINANCIAL ----------
+  // ================================================================
+  // FINANCIAL
+  // ================================================================
+
   static getPaymentBlockingRepository(): IPaymentBlockingRepository {
     if (registry.paymentBlocking) return registry.paymentBlocking;
     registry.paymentBlocking = new PaymentBlockingAdapter();
@@ -524,7 +566,10 @@ export class RepositoryFactory {
     return registry.parsedInvoice;
   }
 
-  // ---------- REPORTS & ANALYTICS ----------
+  // ================================================================
+  // REPORTS & ANALYTICS
+  // ================================================================
+
   static getReportingRepository(): IReportingRepository {
     if (registry.reporting) return registry.reporting;
     registry.reporting = new SupabaseReportingAdapter();
@@ -555,7 +600,10 @@ export class RepositoryFactory {
     return registry.quantityTakeoff;
   }
 
-  // ---------- HR & STAKEHOLDERS ----------
+  // ================================================================
+  // HR & STAKEHOLDERS
+  // ================================================================
+
   static getProjectStakeholderRepository(): IProjectStakeholderRepository {
     if (registry.projectStakeholder) return registry.projectStakeholder;
     registry.projectStakeholder = new SupabaseProjectStakeholderAdapter();
@@ -574,7 +622,10 @@ export class RepositoryFactory {
     return registry.missionExpense;
   }
 
-  // ---------- ALERTS & COMPLIANCE ----------
+  // ================================================================
+  // ALERTS & COMPLIANCE
+  // ================================================================
+
   static getAlertRepository(): IAlertRepository {
     if (registry.alert) return registry.alert;
     registry.alert = new SupabaseAlertAdapter();
@@ -593,21 +644,10 @@ export class RepositoryFactory {
     return registry.milestone;
   }
 
-  static getTaskAssignmentRepository(): ITaskAssignmentRepository {
-    if (registry.taskAssignment) return registry.taskAssignment;
-    registry.taskAssignment = new TaskAssignmentAdapter();
-    return registry.taskAssignment;
-  }
+  // ================================================================
+  // WORKSPACE & LOCATION
+  // ================================================================
 
-  /** Alias historique — la table task_assignments est désormais la source unique. */
-  static getUnifiedTaskAssignmentRepository(): ITaskAssignmentRepository {
-    return RepositoryFactory.getTaskAssignmentRepository();
-  }
-
-
-
-
-  // ---------- WORKSPACE & LOCATION ----------
   static getWorkspaceRepository(): IWorkspaceRepository {
     if (registry.workspace) return registry.workspace;
     registry.workspace = new SupabaseWorkspaceAdapter();
@@ -626,7 +666,10 @@ export class RepositoryFactory {
     return registry.contactMessage;
   }
 
-  // ---------- STRATEGY & BUDGET LINKS ----------
+  // ================================================================
+  // STRATEGY & BUDGET LINKS
+  // ================================================================
+
   static getProjectStrategyLinkRepository(): IProjectStrategyLinkRepository {
     if (registry.projectStrategyLink) return registry.projectStrategyLink;
     registry.projectStrategyLink = new SupabaseProjectStrategyLinkAdapter();
@@ -639,14 +682,20 @@ export class RepositoryFactory {
     return registry.projectBudgetLink;
   }
 
-  // ---------- MONITORING ----------
+  // ================================================================
+  // MONITORING
+  // ================================================================
+
   static getMonitoringRepository(): IMonitoringRepository {
     if (registry.monitoring) return registry.monitoring;
     registry.monitoring = new SupabaseMonitoringAdapter();
     return registry.monitoring;
   }
 
-  // ---------- UTILITAIRES ----------
+  // ================================================================
+  // UTILITAIRES
+  // ================================================================
+
   static reset(): void {
     Object.keys(registry).forEach((key) => {
       delete registry[key as keyof RepositoryRegistry];

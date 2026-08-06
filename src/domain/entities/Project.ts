@@ -2,22 +2,27 @@
  * Project Domain Entity
  * Simplified class based on actual form and repository implementation
  * Following hexagonal architecture principles
+ * 
+ * ✅ Les tâches sont gérées via TaskAssignment (source unique)
+ * ✅ Aucune référence directe à Task ou TaskDTO
+ * ✅ Les tâches sont stockées dans taskAssignments
  */
 
-import { User } from './User';
-import { Payment } from './Payment';
 import { Inspection } from './Inspection';
-import { Task } from './Task';
-import { Document } from './Document';
-import { Material } from './Material';
-import { Supplier } from './Supplier';
-import { Employee } from './Employee';
-import { Phase } from './Phase';
-import { Milestone } from './Milestone';
-import { Tender } from './Tender';
-import { Risk } from './Risk';
-import { GeographicUnit } from '@/utils/mauritania';
+import { Payment } from './Payment';
+import { User } from './User';
+// SUPPRIMÉ: import { Task } from './Task';
+// Les tâches sont maintenant gérées via TaskAssignment
 import type { ReferentialType } from '@/config/referentials';
+import { Document } from './Document';
+import { Employee } from './Employee';
+import { Material } from './Material';
+import { Milestone } from './Milestone';
+import { Phase } from './Phase';
+import { Risk } from './Risk';
+import { Supplier } from './Supplier';
+import { TaskAssignment } from './TaskAssignment';
+import { Tender } from './Tender';
 
 // Interface for project resources
 export interface ProjectResource {
@@ -31,7 +36,6 @@ export interface ProjectResource {
 }
 
 // Re-export ProjectStatus from DTO for type alignment
-import { ProjectStatus as DTOProjectStatus } from '@/dtos/entities/ProjectDTO';
 export type ProjectStatus = string; // Change to string instead of enum
 // Removed conflicting export
 
@@ -180,7 +184,9 @@ export class Project {
   // Collections (direct entity relationships)
   private _payments?: Payment[];
   private _inspections?: Inspection[];
-  private _tasks?: Task[];
+  // SUPPRIMÉ: private _tasks?: Task[];
+  // Les tâches sont maintenant gérées via TaskAssignment
+  private _taskAssignments?: TaskAssignment[];
   private _documents?: Document[];
   private _materials?: Material[];
   private _phases?: Phase[];
@@ -203,7 +209,7 @@ export class Project {
   private _progressInvoices?: { id: string; date: Date }[];
   private _paymentBlocks?: { id: string; amount: number }[];
   private _supplierPaymentRequests?: { id: string; date: Date }[];
-  private _taskAssignments?: { id: string; taskId: string }[];
+  private _taskAssignmentRefs?: { id: string; taskAssignmentId: string }[];
   private _projectResources?: { id: string; resourceId: string }[];
   private _referentialCode?: ReferentialType;
 
@@ -234,7 +240,8 @@ export class Project {
     currency?: string,
     payments: Payment[] = [],
     inspections: Inspection[] = [],
-    tasks: Task[] = [],
+    // SUPPRIMÉ: tasks: Task[] = [],
+    taskAssignments: TaskAssignment[] = [],
     documents: Document[] = [],
     materials: Material[] = [],
     phases: Phase[] = [],
@@ -264,7 +271,8 @@ export class Project {
     this._currency = currency;
     this._payments = payments;
     this._inspections = inspections;
-    this._tasks = tasks;
+    // SUPPRIMÉ: this._tasks = tasks;
+    this._taskAssignments = taskAssignments;
     this._documents = documents;
     this._materials = materials;
     this._phases = phases;
@@ -303,7 +311,7 @@ export class Project {
   get insuranceRequired(): boolean | undefined { return this._insuranceRequired; }
   get materialsBudget(): number | undefined { return this._materialsBudget; }
   get procurementLeadTime(): number | undefined { return this._procurementLeadTime; }
-  get resourceAssignment(): string | undefined { return this._resourceAssignment; } // Changed from ProjectResource[] to string
+  get resourceAssignment(): string | undefined { return this._resourceAssignment; }
   get receptionStatus(): string | undefined { return this._receptionStatus; }
   get closureNotes(): string | undefined { return this._closureNotes; }
   get clientOrganization(): string | undefined { return this._clientOrganization; }
@@ -348,7 +356,9 @@ export class Project {
   // Collections
   get payments(): Payment[] | undefined { return this._payments; }
   get inspections(): Inspection[] | undefined { return this._inspections; }
-  get tasks(): Task[] | undefined { return this._tasks; }
+  // SUPPRIMÉ: get tasks(): Task[] | undefined { return this._tasks; }
+  // ✅ Nouveau: get taskAssignments()
+  get taskAssignments(): TaskAssignment[] | undefined { return this._taskAssignments; }
   get documents(): Document[] | undefined { return this._documents; }
   get materials(): Material[] | undefined { return this._materials; }
   get phases(): Phase[] | undefined { return this._phases; }
@@ -364,14 +374,14 @@ export class Project {
   get referentialCode(): ReferentialType | undefined { return this._referentialCode; }
 
   // Additional properties for UI DTO compatibility
-  get address(): string | undefined { return this._location; } // Alias for location
-  get category(): string | undefined { return this._sector; } // Alias for sector
-  get subCategory(): string | undefined { return this._projectType; } // Alias for projectType
+  get address(): string | undefined { return this._location; }
+  get category(): string | undefined { return this._sector; }
+  get subCategory(): string | undefined { return this._projectType; }
   get marketType(): string | undefined { return this._marketType; }
   get selectionMode(): string | undefined { return this._selectionMode; }
   get methodology(): string | undefined { return this._methodology; }
   get allowsInitialPayment(): boolean | undefined { return this._allowsInitialPayment; }
-  get projectManagerId(): string | undefined { return this._projectResponsableId; } // Alias for projectResponsableId
+  get projectManagerId(): string | undefined { return this._projectResponsableId; }
   get technicalManagerId(): string | undefined { return this._technicalManager?.id; }
 
   // Additional computed properties for UI
@@ -384,7 +394,6 @@ export class Project {
 
   // Computed properties
   getRiskScore(): number {
-    // Simple risk calculation - can be enhanced
     return this._risks ? this._risks.length * 10 : 0;
   }
 
@@ -399,11 +408,10 @@ export class Project {
   }
 
   isCompleted(): boolean {
-    return this._status === 'terminé';
+    return this._status === 'terminé' || this._status === 'completed' || this._status === 'COMPLETED';
   }
 
   calculateScheduleVariance(): number {
-    // Placeholder implementation
     return 0;
   }
 
@@ -416,6 +424,7 @@ export class Project {
   /**
    * Static factory method to create Project from database/transformer data
    * Used by ProjectTransformer.fromSupabase()
+   * ✅ Utilise TaskAssignment au lieu de Task
    */
   static create(data: {
     id: string;
@@ -491,6 +500,8 @@ export class Project {
     organizationId?: string;
     referentialCode?: ReferentialType;
     allowsInitialPayment?: boolean;
+    // ✅ TaskAssignments
+    taskAssignments?: TaskAssignment[];
   }): Project {
     const project = new Project(
       data.id,
@@ -513,7 +524,8 @@ export class Project {
       data.currency,
       [], // payments
       [], // inspections
-      [], // tasks
+      // SUPPRIMÉ: [], // tasks
+      data.taskAssignments || [], // taskAssignments
       [], // documents
       [], // materials
       [], // phases
@@ -615,7 +627,8 @@ export class Project {
       priority: this.priority,
       payments: this.payments?.map(p => ({ ...p })) || [],
       inspections: this.inspections?.map(i => ({ ...i })) || [],
-      tasks: this.tasks?.map(t => ({ ...t })) || [],
+      // SUPPRIMÉ: tasks: this.tasks?.map(t => ({ ...t })) || [],
+      taskAssignments: this.taskAssignments?.map(t => ({ ...t })) || [],
       documents: this.documents?.map(d => ({ ...d })) || [],
       materials: this.materials?.map(m => ({ ...m })) || [],
       geographicZone: this.geographicZone,
@@ -665,14 +678,15 @@ export class Project {
       this.thumbnail || '',
       this.createdBy || '',
       this.createdAt || new Date(),
-      new Date(), // updatedAt
+      new Date(),
       this.coordinates,
       this.financingSource,
       this.mainContractor,
       this.currency,
       this.payments,
       this.inspections,
-      this.tasks,
+      // SUPPRIMÉ: this.tasks,
+      this.taskAssignments,
       this.documents,
       this.materials,
       this.phases || [],
@@ -699,14 +713,15 @@ export class Project {
       this.thumbnail || '',
       this.createdBy || '',
       this.createdAt || new Date(),
-      new Date(), // updatedAt
+      new Date(),
       this.coordinates,
       this.financingSource,
       this.mainContractor,
       this.currency,
       this.payments,
       this.inspections,
-      this.tasks,
+      // SUPPRIMÉ: this.tasks,
+      this.taskAssignments,
       this.documents,
       this.materials,
       this.phases || [],
@@ -735,14 +750,15 @@ export class Project {
       this._thumbnail,
       this._createdBy,
       this._createdAt,
-      new Date(), // Always update updatedAt for copy
+      new Date(),
       this._coordinates,
       this._financingSource,
       this._mainContractor,
       this._currency,
       this.payments,
       this.inspections,
-      this.tasks,
+      // SUPPRIMÉ: this.tasks,
+      this.taskAssignments,
       this.documents,
       this.materials,
       this.phases,

@@ -10,12 +10,12 @@ import { InspectionService } from '@/application/services/InspectionService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { TaskService } from '@/application/services/TaskService';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import {
     CreateEnhancedActionRequestDTO,
     EnhancedActionDTO
 } from '@/dtos/entities/ActionDTO';
-import { TaskStatus } from '@/dtos/entities/TaskDTO';
+import { TaskStatus, TaskPriority } from '@/dtos/entities/TaskAssignmentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -63,7 +63,7 @@ export class EnhancedActionService {
   private notificationService: NotificationService;
   private inspectionService: InspectionService;
   private projectService: ProjectService;
-  private taskService: TaskService;
+  private taskAssignmentService: TaskAssignmentService;
   private paymentService: PaymentService;
   
   // Event-driven in-memory storage for actions (like Action system)
@@ -73,7 +73,7 @@ export class EnhancedActionService {
     this.notificationService = new NotificationService();
     this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
     this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.taskService = new TaskService(RepositoryFactory.getTaskRepository());
+    this.taskAssignmentService = new TaskAssignmentService(RepositoryFactory.getTaskAssignmentRepository());
     this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
   }
 
@@ -253,17 +253,24 @@ export class EnhancedActionService {
 
   /**
    * Handle "Assigner une tâche" action
+   * Utilise TaskAssignmentService pour la gestion des tâches
    */
   private async handleAssignTask(actionEvent: ActionEvent): Promise<void> {
     console.log(`📋 Assigning task: ${actionEvent.title}`);
     
     if (actionEvent.projectId && actionEvent.assigneeId && actionEvent.entityId) {
       try {
-        await this.taskService.updateTask(actionEvent.entityId, {
-          assignedTo: [actionEvent.assigneeId],
-          status: TaskStatus.IN_PROGRESS
-        } as any);
+        // Mettre à jour la tâche avec TaskAssignmentService
+        await this.taskAssignmentService.update(actionEvent.entityId, {
+          assigneeId: actionEvent.assigneeId,
+          status: TaskStatus.IN_PROGRESS,
+          priority: actionEvent.priority === 'urgent' ? TaskPriority.HIGH : TaskPriority.MEDIUM,
+          name: actionEvent.title,
+          description: actionEvent.description,
+          projectId: actionEvent.projectId,
+        });
 
+        // Envoyer une notification à l'assigné
         await this.notificationService.createNotification({
           recipient_id: actionEvent.assigneeId || '',
           title: 'Nouvelle tâche assignée',

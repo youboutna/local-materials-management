@@ -1,27 +1,55 @@
-// @ts-nocheck
+/**
+ * Report Calculations - Utilitaires pour les rapports et analyses
+ * 
+ * Architecture Hexagonale :
+ * - Utilise les DTOs pour les types
+ * - Pas d'interfaces UI
+ * - Méthodes statiques pour les calculs
+ * 
+ * Respecte PROMPT.md :
+ * - ✅ Utilisation de TaskAssignmentDTO
+ * - ✅ Types provenant des DTOs
+ * - ✅ Pas de redéfinition de types dans UI
+ */
+
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { TaskDTO } from '@/dtos/entities/TaskDTO';
+import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 
+/**
+ * Interface pour les activités PERT
+ * Utilisée en interne pour les calculs
+ */
 interface PERTActivity {
   name: string;
   optimistic: number;
   mostLikely: number;
   pessimistic: number;
+  pertEstimate?: number;
+  standardDeviation?: number;
 }
 
+/**
+ * Interface pour les paiements financiers
+ */
 interface FinancialPayment {
   amount: number;
   date?: string;
   category?: string;
 }
 
+/**
+ * Interface pour les dépenses financières
+ */
 interface FinancialExpense {
   amount: number;
   date?: string;
   category?: string;
 }
 
+/**
+ * Interface pour la timeline des phases
+ */
 interface PhaseTimeline {
   id: string;
   name: string;
@@ -32,7 +60,8 @@ interface PhaseTimeline {
 }
 
 /**
- * Calculate Earned Value Management (EVM) metrics with real project data
+ * Classe utilitaire pour les calculs de rapports
+ * Toutes les méthodes sont statiques
  */
 export class ReportCalculations {
   
@@ -50,7 +79,7 @@ export class ReportCalculations {
     
     const totalDuration = projectEnd.getTime() - projectStart.getTime();
     const elapsedTime = Math.max(0, today.getTime() - projectStart.getTime());
-    const timeProgress = Math.min(1, elapsedTime / totalDuration);
+    const timeProgress = totalDuration > 0 ? Math.min(1, elapsedTime / totalDuration) : 1;
     
     // Calculate planned value based on schedule
     const plannedValue = budget * timeProgress;
@@ -90,25 +119,32 @@ export class ReportCalculations {
 
   /**
    * Calculate PERT analysis for project phases with realistic estimates
+   * Utilise TaskAssignmentDTO pour les tâches
    */
-  static calculatePERTAnalysis(phases?: PhaseDTO[], tasks?: TaskDTO[]): PERTAnalysis {
+  static calculatePERTAnalysis(phases?: PhaseDTO[], tasks?: TaskAssignmentDTO[]): PERTAnalysis {
     let activities: PERTActivity[] = [];
 
     // Use tasks if available, otherwise use phases
     if (tasks && tasks.length > 0) {
-      activities = tasks.map(task => ({
-        name: task.name || 'Tâche inconnue',
-        optimistic: task.optimisticEstimate || Math.max(1, (task.estimatedDuration || 7) * 0.7),
+      activities = tasks.map((task: TaskAssignmentDTO) => ({
+        name: task.title || task.name || 'Tâche inconnue',
+        optimistic: Math.max(1, (task.estimatedDuration || 7) * 0.7),
         mostLikely: task.estimatedDuration || 7,
-        pessimistic: task.pessimisticEstimate || (task.estimatedDuration || 7) * 1.5
+        pessimistic: (task.estimatedDuration || 7) * 1.5
       }));
     } else if (phases && phases.length > 0) {
-      activities = phases.map(phase => ({
-        name: phase.name || phase.phase_name || 'Phase inconnue',
-        optimistic: Math.max(1, this.calculateDurationFromDates(phase.start_date, phase.end_date) * 0.7),
-        mostLikely: this.calculateDurationFromDates(phase.start_date, phase.end_date) || 14,
-        pessimistic: this.calculateDurationFromDates(phase.start_date, phase.end_date) * 1.4
-      }));
+      activities = phases.map(phase => {
+        const duration = ReportCalculations.calculateDurationFromDates(
+          phase.startDate, 
+          phase.endDate
+        );
+        return {
+          name: phase.name || phase.phaseName || 'Phase inconnue',
+          optimistic: Math.max(1, duration * 0.7),
+          mostLikely: duration || 14,
+          pessimistic: duration * 1.4 || 21
+        };
+      });
     } else {
       // Realistic default activities based on typical construction projects
       activities = [
@@ -123,8 +159,15 @@ export class ReportCalculations {
     }
 
     const processedActivities = activities.map(activity => {
-      const pertEstimate = this.calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic);
-      const variance = this.calculatePERTVariance(activity.optimistic, activity.pessimistic);
+      const pertEstimate = ReportCalculations.calculatePERTEstimate(
+        activity.optimistic, 
+        activity.mostLikely, 
+        activity.pessimistic
+      );
+      const variance = ReportCalculations.calculatePERTVariance(
+        activity.optimistic, 
+        activity.pessimistic
+      );
       const standardDeviation = Math.sqrt(variance);
 
       return {
@@ -138,11 +181,14 @@ export class ReportCalculations {
     const taskVariances: { [taskId: string]: number } = {};
     
     processedActivities.forEach(activity => {
-      taskDurations[activity.name] = activity.pertEstimate;
-      taskVariances[activity.name] = Math.pow(activity.standardDeviation, 2);
+      taskDurations[activity.name] = activity.pertEstimate || 0;
+      taskVariances[activity.name] = Math.pow(activity.standardDeviation || 0, 2);
     });
 
-    const totalDuration = processedActivities.reduce((sum, activity) => sum + activity.pertEstimate, 0);
+    const totalDuration = processedActivities.reduce(
+      (sum, activity) => sum + (activity.pertEstimate || 0), 
+      0
+    );
 
     return {
       activities: processedActivities,
@@ -156,10 +202,14 @@ export class ReportCalculations {
   /**
    * Calculate duration between two dates in days
    */
-  private static calculateDurationFromDates(startDate: string, endDate: string): number {
+  private static calculateDurationFromDates(startDate?: string | Date, endDate?: string | Date): number {
     if (!startDate || !endDate) return 14; // Default 2 weeks
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    
+    const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+    const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 14;
+    
     return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
   }
 
@@ -388,27 +438,28 @@ export class ReportCalculations {
     
     if (phases && phases.length > 0) {
       return phases.map((phase, index) => {
-        const phaseStart = new Date(projectStart);
-        phaseStart.setDate(projectStart.getDate() + (index * 60)); // 2 months per phase
-        const phaseEnd = new Date(phaseStart);
-        phaseEnd.setDate(phaseStart.getDate() + 60);
+        const phaseStart = phase.startDate 
+          ? new Date(phase.startDate) 
+          : new Date(projectStart.getTime() + (index * 60 * 24 * 60 * 60 * 1000));
         
-        const phaseProgress = phase.progress || Math.min(100, Math.max(0, project.progress - (index * 25)));
+        const phaseEnd = phase.endDate 
+          ? new Date(phase.endDate) 
+          : new Date(phaseStart.getTime() + (60 * 24 * 60 * 60 * 1000));
+        
+        const phaseProgress = phase.progress || Math.min(100, Math.max(0, (project.progress || 0) - (index * 25)));
         
         return {
           id: phase.id || `phase-${index + 1}`,
-          name: phase.name || phase.title || `Phase ${index + 1}`,
+          name: phase.name || phase.phaseName || `Phase ${index + 1}`,
           startDate: phaseStart,
           endDate: phaseEnd,
-          progress: phaseProgress,
+          progress: Math.min(100, Math.max(0, phaseProgress)),
           status: phaseProgress >= 100 ? 'completed' : phaseProgress > 0 ? 'in_progress' : 'planned'
         };
       });
     }
 
     // Default phases
-    const phases1: PhaseTimeline[] = [];
-
     const phaseNames = [
       'Préparation et études',
       'Fouilles et fondations',
@@ -417,7 +468,7 @@ export class ReportCalculations {
       'Finitions et livraison'
     ];
 
-    phaseNames.forEach((name, index) => {
+    return phaseNames.map((name, index) => {
       const phaseStart = new Date(projectStart);
       phaseStart.setDate(projectStart.getDate() + (index * 60));
       const phaseEnd = new Date(phaseStart);
@@ -429,21 +480,113 @@ export class ReportCalculations {
       } else if (index === 1) {
         phaseProgress = 100; // Second phase completed
       } else if (index === 2) {
-        phaseProgress = Math.max(0, project.progress - 50); // Current phase
+        phaseProgress = Math.max(0, (project.progress || 0) - 50); // Current phase
       } else {
         phaseProgress = 0; // Future phases
       }
 
-      phases1.push({
+      return {
         id: `phase-${index + 1}`,
         name,
         startDate: phaseStart,
         endDate: phaseEnd,
-        progress: Math.min(100, phaseProgress),
+        progress: Math.min(100, Math.max(0, phaseProgress)),
         status: phaseProgress >= 100 ? 'completed' : phaseProgress > 0 ? 'in_progress' : 'planned'
-      });
+      };
     });
+  }
 
-    return phases1;
+  /**
+   * Calcule le taux de complétion des tâches
+   */
+  static calculateTaskCompletionRate(tasks: TaskAssignmentDTO[]): {
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+    blocked: number;
+    cancelled: number;
+    completionRate: number;
+  } {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'COMPLETED').length;
+    const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+    const pending = tasks.filter(t => t.status === 'PENDING').length;
+    const blocked = tasks.filter(t => t.status === 'BLOCKED').length;
+    const cancelled = tasks.filter(t => t.status === 'CANCELLED').length;
+    
+    return {
+      total,
+      completed,
+      inProgress,
+      pending,
+      blocked,
+      cancelled,
+      completionRate: total > 0 ? (completed / total) * 100 : 0
+    };
+  }
+
+  /**
+   * Calcule les statistiques des tâches par priorité
+   */
+  static calculateTaskStatsByPriority(tasks: TaskAssignmentDTO[]): {
+    [priority: string]: {
+      total: number;
+      completed: number;
+      completionRate: number;
+    };
+  } {
+    const priorities = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+    const result: { [key: string]: { total: number; completed: number; completionRate: number } } = {};
+    
+    priorities.forEach(priority => {
+      const filtered = tasks.filter(t => t.priority === priority);
+      const total = filtered.length;
+      const completed = filtered.filter(t => t.status === 'COMPLETED').length;
+      result[priority] = {
+        total,
+        completed,
+        completionRate: total > 0 ? (completed / total) * 100 : 0
+      };
+    });
+    
+    return result;
+  }
+
+  /**
+   * Calcule les statistiques des tâches par statut
+   */
+  static calculateTaskStatsByStatus(tasks: TaskAssignmentDTO[]): {
+    [status: string]: number;
+  } {
+    const statuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED'];
+    const result: { [key: string]: number } = {};
+    
+    statuses.forEach(status => {
+      result[status] = tasks.filter(t => t.status === status).length;
+    });
+    
+    return result;
+  }
+
+  /**
+   * Calcule le temps moyen de complétion des tâches
+   */
+  static calculateAverageCompletionTime(tasks: TaskAssignmentDTO[]): number {
+    const completedTasks = tasks.filter(t => 
+      t.status === 'COMPLETED' && 
+      t.startDate && 
+      t.completedAt
+    );
+    
+    if (completedTasks.length === 0) return 0;
+    
+    const totalDays = completedTasks.reduce((sum, task) => {
+      const start = new Date(task.startDate!);
+      const end = new Date(task.completedAt!);
+      return sum + (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    }, 0);
+    
+    return totalDays / completedTasks.length;
   }
 }

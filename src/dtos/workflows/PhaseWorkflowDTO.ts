@@ -2,12 +2,15 @@
  * Phase Workflow Data Transfer Objects
  * Centralized workflow-specific DTOs for hexagonal architecture
  * Following clean code principles: camelCase only, no business logic
+ * 
+ * ✅ Évite les dépendances cycliques en utilisant TaskAssignmentDTO
+ * ✅ Utilise les DTOs de l'architecture hexagonale
+ * ✅ Pas d'imports croisés entre DTOs
  */
 
 import { BaseEntityDTO } from '../shared';
-import { ProjectDTO } from '../entities/ProjectDTO';
-import { TaskDTO } from '../entities/TaskDTO';
 import { PhaseDTO } from '../entities/PhaseDTO';
+import { TaskAssignmentDTO } from '../entities/TaskAssignmentDTO';
 
 /**
  * Phase step enumeration
@@ -65,10 +68,17 @@ export interface PhaseResourcesDTO {
 /**
  * Phase workflow interface
  * Complete workflow state for phase operations
+ * Utilise TaskAssignmentDTO pour les tâches
  */
 export interface PhaseWorkflowDTO extends BaseEntityDTO {
   // Form data integration
-  formData?: ProjectDTO;
+  formData?: {
+    id: string;
+    title: string;
+    description?: string;
+    status?: string;
+    projectId?: string;
+  };
   phaseId: string;
   workflowType: string;
   
@@ -92,10 +102,10 @@ export interface PhaseWorkflowDTO extends BaseEntityDTO {
   // Resources
   resources: PhaseResourcesDTO;
   
-  // Tasks
-  tasks: TaskDTO[];
+  // Tasks - Utilise TaskAssignmentDTO
+  tasks: TaskAssignmentDTO[];
   
-  // Dependencies
+  // Dependencies - IDs des tâches
   dependencies?: string[]; // Task IDs only for DTO
   materials?: string[]; // Material IDs only for DTO
   documents?: string[]; // Document IDs only for DTO
@@ -124,6 +134,7 @@ export interface PhaseWorkflowDTO extends BaseEntityDTO {
 /**
  * Phase creation request interface
  * Input for creating new phases
+ * Utilise TaskAssignmentDTO pour les tâches
  */
 export interface CreatePhaseRequestDTO {
   name: string;
@@ -142,12 +153,14 @@ export interface CreatePhaseRequestDTO {
     skills?: string[];
   };
   
-  // Tasks
+  // Tasks - Utilise TaskAssignmentDTO
   tasks?: {
     name: string;
     description?: string;
     estimatedDuration?: number;
     dependencies?: string[];
+    priority?: string;
+    assigneeId?: string;
   }[];
   
   // Metadata
@@ -157,6 +170,7 @@ export interface CreatePhaseRequestDTO {
 /**
  * Phase update request interface
  * Input for updating existing phases
+ * Utilise TaskAssignmentDTO pour les tâches
  */
 export interface UpdatePhaseRequestDTO {
   name?: string;
@@ -173,12 +187,15 @@ export interface UpdatePhaseRequestDTO {
     skills?: string[];
   };
   
-  // Tasks
+  // Tasks - Utilise TaskAssignmentDTO
   tasks?: {
+    id?: string;
     name?: string;
     description?: string;
     status?: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
     progress?: number;
+    assigneeId?: string;
+    priority?: string;
   }[];
   
   // Metadata
@@ -198,6 +215,12 @@ export interface PhaseStatisticsDTO {
   averageCompletionTime?: number;
   successRate: number;
   lastUpdated?: string;
+  
+  // Statistiques des tâches
+  totalTasks?: number;
+  completedTasks?: number;
+  tasksCompletionRate?: number;
+  overdueTasks?: number;
 }
 
 /**
@@ -213,4 +236,58 @@ export interface PhaseNotificationDTO extends BaseEntityDTO {
   actionRequired?: boolean;
   actionUrl?: string;
   scheduledFor?: string;
+  
+  // Tâche associée
+  taskId?: string;
+}
+
+/**
+ * Phase task statistics interface
+ * Statistiques des tâches par phase
+ */
+export interface PhaseTaskStatsDTO {
+  phaseId: string;
+  phaseName: string;
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  pendingTasks: number;
+  blockedTasks: number;
+  overdueTasks: number;
+  completionRate: number;
+  averageProgress: number;
+}
+
+/**
+ * Phase progress DTO
+ * Suivi de l'avancement d'une phase
+ */
+export interface PhaseProgressDTO {
+  phaseId: string;
+  phaseName: string;
+  progress: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed' | 'blocked';
+  startDate?: string;
+  endDate?: string;
+  remainingDays?: number;
+  totalTasks: number;
+  completedTasks: number;
+  tasksCompletionRate: number;
+  lastUpdated: string;
+}
+
+/**
+ * Phase timeline event DTO
+ * Événements de la timeline d'une phase
+ */
+export interface PhaseTimelineEventDTO {
+  id: string;
+  phaseId: string;
+  eventType: 'task_created' | 'task_completed' | 'task_blocked' | 'phase_started' | 'phase_completed' | 'milestone_reached';
+  title: string;
+  description?: string;
+  date: string;
+  userId?: string;
+  userName?: string;
+  metadata?: Record<string, unknown>;
 }

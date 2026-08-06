@@ -145,21 +145,6 @@ export interface ProjectFormDTO {
   resources?: any[];
 }
 
-export interface TaskDTO {
-  id: string;
-  name: string;
-  description: string;
-  assignedTo: string[];
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  progress: number;
-  startDate: string;
-  endDate: string;
-  estimatedDuration: number;
-  actualDuration?: number;
-  costEstimate: number;
-  actualCost?: number;
-}
-
 export interface InspectionDTO {
   id: string;
   project_id: string;

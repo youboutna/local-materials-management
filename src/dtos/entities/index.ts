@@ -28,7 +28,7 @@ export * from './PaymentDTO';
 
 export * from './DocumentDTO';
 
-export * from './TaskDTO';
+export * from './TaskAssignmentDTO';
 
 export * from './PhaseDTO';
 

@@ -21,7 +21,6 @@ export { SupabaseReportDataTransformerAdapter } from './SupabaseReportDataTransf
 export { SupabaseReportingAdapter } from './SupabaseReportingAdapter';
 export { SupabaseRiskAdapter } from './SupabaseRiskAdapter';
 export { SupabaseSupplierAdapter } from './SupabaseSupplierAdapter';
-export { SupabaseTaskAdapter } from './SupabaseTaskAdapter';
 export { SupabaseTenderAdapter } from './SupabaseTenderAdapter';
 
 // New adapters for hexagonal architecture

@@ -4,11 +4,12 @@
  * Following clean code principles: camelCase only, no business logic
  * All entity DTOs imported from entity files - no duplication
  */
+
 import { ProjectDTO } from '../entities/ProjectDTO';
 import { PhaseDTO } from '../entities/PhaseDTO';
 import { MaterialDTO } from '../entities/MaterialDTO';
 import { RiskDTO } from '../entities/RiskDTO';
-import { TaskDTO } from '../entities/TaskDTO';
+import { TaskAssignmentDTO } from '../entities/TaskAssignmentDTO';
 import { EmployeeDTO } from '../entities/EmployeeDTO';
 import { InspectionDTO } from '../entities/InspectionDTO';
 import { DocumentDTO } from '../entities/DocumentDTO';
@@ -47,7 +48,7 @@ export interface StepRelatedDataDTO {
   materials?: MaterialDTO[];
   stakeholders?: ProjectStakeholderDTO[];
   compliance?: ComplianceDataDTO;
-  tasks?: TaskDTO[];
+  tasks?: TaskAssignmentDTO[]; // Utilise TaskAssignmentDTO
   inspections?: InspectionDTO[];
   strategyLinks?: ProjectStrategyLinkDTO[];
   budgetLinks?: ProjectBudgetLinkDTO[];

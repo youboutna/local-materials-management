@@ -7,7 +7,7 @@
 
 /**
  * Task within a workflow step (from referential)
- * Distinct from TaskDTO which represents assigned tasks (task_assignments table)
+ *Distinct from TaskAssignmentDTO which represents assigned tasks (task_assignments table)
  */
 export interface PhaseTaskDTO {
   id: string;
