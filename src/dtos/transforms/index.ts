@@ -31,7 +31,6 @@ export { CheckpointDomainTransformer } from './CheckpointDomainTransformer';
 export { DecompteDomainTransformer } from './DecompteDomainTransformer';
 export { PerformanceMonitoringDomainTransformer } from './PerformanceMonitoringDomainTransformer';
 export { PhaseTransformer } from './PhaseTransformer';
-export { TaskAssignmentDomainTransformer } from './TaskAssignmentDomainTransformer';
 export { WorkspaceDomainTransformer } from './WorkspaceDomainTransformer';
 export { HierarchyMappingTransformer } from './HierarchyMappingTransformer';
 export { NotificationTransformer } from './NotificationTransformer';
