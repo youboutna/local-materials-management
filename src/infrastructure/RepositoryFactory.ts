@@ -601,14 +601,11 @@ export class RepositoryFactory {
     return registry.taskAssignment;
   }
 
-  /** Repository unifié (fusion Task + TaskAssignment) sur la table task_assignments. */
-  static getUnifiedTaskAssignmentRepository(): IUnifiedTaskAssignmentRepository {
-    const store = registry as Record<string, unknown>;
-    if (store.unifiedTaskAssignment) return store.unifiedTaskAssignment as IUnifiedTaskAssignmentRepository;
-    const instance = new UnifiedTaskAssignmentAdapter();
-    store.unifiedTaskAssignment = instance;
-    return instance;
+  /** Alias historique — la table task_assignments est désormais la source unique. */
+  static getUnifiedTaskAssignmentRepository(): ITaskAssignmentRepository {
+    return RepositoryFactory.getTaskAssignmentRepository();
   }
+
 
 
 
