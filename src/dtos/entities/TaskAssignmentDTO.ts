@@ -207,3 +207,38 @@ export function normalizeTaskPriority(priority?: string | null): TaskPriority {
   };
   return map[key] ?? TaskPriority.MEDIUM;
 }
+
+// ============= Request DTOs (façade service) =============
+
+/** Champs tolérés en entrée UI (compat héritée). */
+export interface TaskAssignmentInputDTO extends CreateTaskAssignmentDTO {
+  taskId?: string;
+  assignmentNotes?: string;
+}
+
+export interface CreateTaskAssignmentRequestDTO {
+  taskData: TaskAssignmentInputDTO;
+  assignedBy?: string;
+}
+
+export interface UpdateTaskAssignmentRequestDTO {
+  id: string;
+  updates: UpdateTaskAssignmentDTO & { assignmentNotes?: string };
+}
+
+export interface DeleteTaskAssignmentRequestDTO {
+  id: string;
+}
+
+export interface GetTaskAssignmentByIdRequestDTO {
+  id: string;
+}
+
+export interface GetTaskAssignmentsRequestDTO {
+  filters?: TaskAssignmentFiltersDTO;
+}
+
+export interface TaskAssignmentValidationResultDTO {
+  isValid: boolean;
+  errors: string[];
+}
