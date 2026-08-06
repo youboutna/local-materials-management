@@ -21,8 +21,8 @@ import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { TaskPriority, TaskService, TaskStatus } from '@/application/services/TaskService';
-import { UnifiedTaskAssignmentService } from '@/application/services/UnifiedTaskAssignmentService';
-import { normalizeUnifiedPriority, normalizeUnifiedStatus } from '@/dtos/entities/UnifiedTaskAssignmentDTO';
+import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { normalizeTaskPriority as normalizeUnifiedPriority, normalizeTaskStatus as normalizeUnifiedStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
@@ -204,7 +204,7 @@ export class ProjectImportExportService {
     private readonly phaseService = new PhaseService(),
     private readonly milestoneService = new MilestoneService(),
     private readonly taskService = new TaskService(RepositoryFactory.getTaskRepository()),
-    private readonly unifiedTaskService = new UnifiedTaskAssignmentService(),
+    private readonly unifiedTaskService = new TaskAssignmentService(),
     private readonly stakeholderService = new ProjectStakeholderService(),
     private readonly organizationService = new OrganizationService(),
     private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),

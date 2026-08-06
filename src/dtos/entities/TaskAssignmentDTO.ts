@@ -1,329 +1,244 @@
 /**
- * Task Assignment Data Transfer Objects
- * Centralized and standardized for hexagonal architecture
- * Following clean code principles: camelCase only, no business logic
+ * TaskAssignment Data Transfer Objects — SOURCE UNIQUE
+ * Fusion définitive Task + TaskAssignment sur la table `task_assignments`.
+ * `assignedTo` est TOUJOURS un tableau d'UUID côté DTO/entité.
+ * camelCase uniquement, aucune logique métier (hors normalisation de vocabulaire).
  */
 
-import { BaseEntityDTO } from '../shared';
-
-/**
- * Task assignment status enumeration
- * Current state of task assignment
- */
-export enum TaskAssignmentStatus {
-  ASSIGNED = 'assigned',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
+export enum TaskStatus {
+  PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
-/**
- * Task assignment priority enumeration
- * Priority levels for task assignments
- */
-export enum TaskAssignmentPriority {
+export enum TaskPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
-/**
- * Task assignment type enumeration
- * Type of assignment relationship
- */
-export enum TaskAssignmentType {
-  INDIVIDUAL = 'individual',
-  TEAM = 'team',
-  REVIEWER = 'reviewer',
-  APPROVER = 'approver',
-  CONSULTANT = 'consultant',
-  SUPPLIER = 'supplier',
-  EMPLOYEE = 'employee',
-  USER = 'user'
+export type AssigneeType = 'supplier' | 'employee' | 'user';
+
+/** Type de tâche (classification métier facultative). */
+export enum TaskType {
+  GENERAL = 'general',
+  INSPECTION = 'inspection',
+  DOCUMENT = 'document',
+  PAYMENT = 'payment',
+  MATERIAL = 'material',
+  STUDY = 'study',
+  EXECUTION = 'execution',
 }
 
-/**
- * Main Task Assignment DTO
- * Core task assignment data structure
- */
-export interface TaskAssignmentDTO extends BaseEntityDTO {
-  // Core identification
+export interface TaskAssignmentDTO {
   id: string;
-  taskId: string;
-  projectId: string;
-  phaseId?: string;                      // ← AJOUTÉ
-  
-  // Assignment details
-  assignedTo: string | string[];         // ← MODIFIÉ: string ou string[]
-  assignedBy?: string;
-  assigneeType?: TaskAssignmentType | string;  // ← MODIFIÉ: accepte string
-  assigneeName?: string;                 // ← AJOUTÉ
-  assigneeEmail?: string;                // ← AJOUTÉ
-  
-  // Task information
   title: string;
   description?: string;
-  
-  // Status and priority
-  status: TaskAssignmentStatus | string; // ← MODIFIÉ: accepte string
-  priority: TaskAssignmentPriority | string; // ← MODIFIÉ: accepte string
-  
-  // Timeline
-  assignedAt: string;
+  projectId?: string;
+  phaseId?: string;
+  stepId?: string;
+  assignedTo: string[];
+  assignedBy?: string;
+  assigneeType?: AssigneeType;
+  assigneeName?: string;
+  assigneeEmail?: string;
+  status: TaskStatus | string;
+  priority: TaskPriority | string;
+  progress: number;
+  type?: TaskType | string;
+  startDate?: string;
+  endDate?: string;
   dueDate?: string;
-  startedAt?: string;
   completedAt?: string;
-  startDate?: string;                    // ← AJOUTÉ
-  endDate?: string;                      // ← AJOUTÉ
-  estimatedHours?: number;
-  actualHours?: number;
-  
-  // Progress tracking
-  progress: number; // 0-100
-  completionPercentage?: number;
-  
-  // Assignment metadata
-  assignmentNotes?: string;
-  acceptanceNotes?: string;
-  rejectionReason?: string;
-  notes?: string;                        // ← AJOUTÉ
-  
-  // Dependencies
-  dependsOn?: string[]; // Task assignment IDs only for DTO
-  blocks?: string[]; // Task assignment IDs only for DTO
-  
-  // Resources
-  requiredSkills?: string[];
-  providedResources?: string[]; // Resource IDs only for DTO
-  
-  // Quality and approval
-  qualityRating?: number; // 1-5
-  approvedBy?: string; // Employee ID only for DTO
-  approvedAt?: string;
-  
-  // Metadata
+  estimatedDuration?: number;
+  actualDuration?: number;
+  dependencies?: string[];
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-/**
- * Task assignment creation request interface
- * Input for creating new task assignments
- */
 export interface CreateTaskAssignmentDTO {
-  taskId?: string;
-  projectId: string;
-  phaseId?: string;
-  assignedTo?: string | string[];        // ← MODIFIÉ
-  assignedBy?: string;
-  assigneeType?: TaskAssignmentType | string;
-  assigneeName?: string;
-  assigneeEmail?: string;
+  id?: string;
   title: string;
   description?: string;
-  status?: TaskAssignmentStatus | string;
-  priority?: TaskAssignmentPriority | string;
+  projectId?: string;
+  phaseId?: string;
+  stepId?: string;
+  assignedTo?: string | string[];
+  assignedBy?: string;
+  assigneeType?: AssigneeType;
+  assigneeName?: string;
+  assigneeEmail?: string;
+  status?: TaskStatus | string;
+  priority?: TaskPriority | string;
   progress?: number;
-  dueDate?: string;
+  type?: TaskType | string;
   startDate?: string;
   endDate?: string;
-  estimatedHours?: number;
-  assignmentNotes?: string;
+  dueDate?: string;
+  estimatedDuration?: number;
+  dependencies?: string[];
   notes?: string;
-  dependsOn?: string[];
-  requiredSkills?: string[];
-  providedResources?: string[];
 }
 
-/**
- * Task assignment update request interface
- * Input for updating existing task assignments
- */
 export interface UpdateTaskAssignmentDTO {
   title?: string;
   description?: string;
-  status?: TaskAssignmentStatus | string;
-  priority?: TaskAssignmentPriority | string;
-  progress?: number;
-  dueDate?: string;
-  startDate?: string;
-  endDate?: string;
-  assignedTo?: string | string[];
-  assigneeType?: TaskAssignmentType | string;
-  assigneeName?: string;
-  assigneeEmail?: string;
-  assignedBy?: string;
-  actualHours?: number;
-  completionPercentage?: number;
-  assignmentNotes?: string;
-  acceptanceNotes?: string;
-  rejectionReason?: string;
-  dependsOn?: string[];
-  blocks?: string[];
-  providedResources?: string[];
-  qualityRating?: number;
-  notes?: string;
-  
-  // Metadata
-  updatedBy?: string;
-  changeReason?: string;
-}
-
-/**
- * Task assignment summary interface
- * Lightweight task assignment representation for lists
- */
-export interface TaskAssignmentSummaryDTO extends BaseEntityDTO {
-  id: string;
-  taskId: string;
-  projectId: string;
-  assignedTo: string | string[];
-  assignedBy?: string;
-  title: string;
-  status: TaskAssignmentStatus | string;
-  priority: TaskAssignmentPriority | string;
-  progress: number;
-  dueDate?: string;
-  isOverdue?: boolean;
-  assigneeName?: string;
-  projectName?: string;
-  taskTitle?: string;
-}
-
-/**
- * Task assignment statistics interface
- * Performance metrics for task assignments
- */
-export interface TaskAssignmentStatisticsDTO {
-  totalAssignments: number;
-  activeAssignments: number;
-  completedAssignments: number;
-  overdueAssignments: number;
-  averageCompletionTime?: number;
-  averageQualityRating?: number;
-  completionRate: number;
-  overdueRate: number;
-  lastUpdated?: string;
-}
-
-/**
- * Task assignment workload interface
- * Workload distribution data
- */
-export interface TaskAssignmentWorkloadDTO {
-  employeeId: string;
-  employeeName?: string;
-  totalAssignments: number;
-  activeAssignments: number;
-  totalEstimatedHours: number;
-  totalActualHours: number;
-  workloadPercentage: number;
-  averageProgress: number;
-  overdueCount: number;
-  upcomingDeadlines: number;
-  skillsUtilization?: Record<string, number>;
-}
-
-/**
- * Task assignment filters interface
- * Filter criteria for task assignment queries
- */
-export interface TaskAssignmentFiltersDTO {
   projectId?: string;
   phaseId?: string;
+  stepId?: string;
+  status?: TaskStatus | string;
+  priority?: TaskPriority | string;
+  progress?: number;
+  type?: TaskType | string;
+  startDate?: string;
+  endDate?: string;
+  dueDate?: string;
   assignedTo?: string | string[];
   assignedBy?: string;
-  status?: TaskAssignmentStatus | string;
-  priority?: TaskAssignmentPriority | string;
-  assigneeType?: TaskAssignmentType | string;
-  dueDateRange?: {
-    startDate?: string;
-    endDate?: string;
-  };
-  skills?: string[];
-  isOverdue?: boolean;
+  assigneeType?: AssigneeType;
+  assigneeName?: string;
+  assigneeEmail?: string;
+  estimatedDuration?: number;
+  actualDuration?: number;
+  dependencies?: string[];
+  notes?: string;
 }
 
-/**
- * Task assignment request interfaces
- * Input interfaces for various operations
- */
-export interface CreateTaskAssignmentWithAssignerRequestDTO {
-  taskData: CreateTaskAssignmentDTO;
+/** Filtres de recherche. */
+export interface TaskAssignmentFiltersDTO {
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+  assignee?: string;
+  projectId?: string;
+  phaseId?: string;
+}
+
+/** Statistiques agrégées. */
+export interface TaskAssignmentStatsDTO {
+  total: number;
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+  overdue: number;
+  dueSoon: number;
+  completionRate: number;
+}
+
+/** Normalise toute forme d'assignation vers un tableau d'UUID. */
+export function normalizeAssignedTo(assignedTo?: string | string[] | null): string[] {
+  if (!assignedTo) return [];
+  if (Array.isArray(assignedTo)) return assignedTo.filter((a) => !!a);
+  if (typeof assignedTo === 'string' && assignedTo.startsWith('{')) {
+    return assignedTo.slice(1, -1).split(',').filter((s) => s.length > 0);
+  }
+  return [assignedTo];
+}
+
+/** Normalise un statut (FR/EN, accentué) vers le statut DB autorisé. */
+export function normalizeTaskStatus(status?: string | null, progress?: number): TaskStatus {
+  const key = (status ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  const map: Record<string, TaskStatus> = {
+    termine: TaskStatus.COMPLETED,
+    terminee: TaskStatus.COMPLETED,
+    completed: TaskStatus.COMPLETED,
+    done: TaskStatus.COMPLETED,
+    en_cours: TaskStatus.IN_PROGRESS,
+    in_progress: TaskStatus.IN_PROGRESS,
+    started: TaskStatus.IN_PROGRESS,
+    en_attente: TaskStatus.PENDING,
+    planifie: TaskStatus.PENDING,
+    planifiee: TaskStatus.PENDING,
+    pending: TaskStatus.PENDING,
+    not_started: TaskStatus.PENDING,
+    todo: TaskStatus.PENDING,
+    assigned: TaskStatus.PENDING,
+    accepted: TaskStatus.IN_PROGRESS,
+    delayed: TaskStatus.IN_PROGRESS,
+    en_retard: TaskStatus.IN_PROGRESS,
+    bloque: TaskStatus.IN_PROGRESS,
+    bloquee: TaskStatus.IN_PROGRESS,
+    blocked: TaskStatus.IN_PROGRESS,
+    annule: TaskStatus.CANCELLED,
+    annulee: TaskStatus.CANCELLED,
+    cancelled: TaskStatus.CANCELLED,
+    canceled: TaskStatus.CANCELLED,
+    rejected: TaskStatus.CANCELLED,
+  };
+  if (map[key]) return map[key];
+  if (progress != null) {
+    if (progress >= 100) return TaskStatus.COMPLETED;
+    if (progress > 0) return TaskStatus.IN_PROGRESS;
+  }
+  return TaskStatus.PENDING;
+}
+
+/** Normalise une priorité (FR/EN) vers la priorité DB autorisée. */
+export function normalizeTaskPriority(priority?: string | null): TaskPriority {
+  const key = (priority ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+  const map: Record<string, TaskPriority> = {
+    basse: TaskPriority.LOW,
+    faible: TaskPriority.LOW,
+    low: TaskPriority.LOW,
+    moyen: TaskPriority.MEDIUM,
+    moyenne: TaskPriority.MEDIUM,
+    normale: TaskPriority.MEDIUM,
+    medium: TaskPriority.MEDIUM,
+    normal: TaskPriority.MEDIUM,
+    haute: TaskPriority.HIGH,
+    elevee: TaskPriority.HIGH,
+    high: TaskPriority.HIGH,
+    urgente: TaskPriority.URGENT,
+    urgent: TaskPriority.URGENT,
+    critique: TaskPriority.URGENT,
+    critical: TaskPriority.URGENT,
+  };
+  return map[key] ?? TaskPriority.MEDIUM;
+}
+
+// ============= Request DTOs (façade service) =============
+
+/** Champs tolérés en entrée UI (compat héritée). */
+export interface TaskAssignmentInputDTO extends CreateTaskAssignmentDTO {
+  taskId?: string;
+  assignmentNotes?: string;
+}
+
+export interface CreateTaskAssignmentRequestDTO {
+  taskData: TaskAssignmentInputDTO;
   assignedBy?: string;
 }
 
-export interface GetTaskAssignmentByIdRequestDTO {
+export interface UpdateTaskAssignmentRequestDTO {
   id: string;
-}
-
-export interface UpdateTaskAssignmentWithIdRequestDTO {
-  id: string;
-  updates: UpdateTaskAssignmentDTO;
+  updates: UpdateTaskAssignmentDTO & { assignmentNotes?: string };
 }
 
 export interface DeleteTaskAssignmentRequestDTO {
   id: string;
 }
 
-export interface GetTaskAssignmentsWithFiltersRequestDTO {
+export interface GetTaskAssignmentByIdRequestDTO {
+  id: string;
+}
+
+export interface GetTaskAssignmentsRequestDTO {
   filters?: TaskAssignmentFiltersDTO;
 }
 
-export interface GetTaskAssignmentsByProjectRequestDTO {
-  projectId: string;
-}
-
-export interface GetTaskAssignmentsAssignedToRequestDTO {
-  userId: string;
-}
-
-export interface GetTaskAssignmentsAssignedByRequestDTO {
-  userId: string;
-}
-
-export interface GetTaskAssignmentsDueSoonRequestDTO {
-  days?: number;
-}
-
-export interface SearchTaskAssignmentsRequestDTO {
-  searchTerm: string;
-}
-
-export interface GetTaskAssignmentsByStatusRequestDTO {
-  status: TaskAssignmentStatus | string;
-}
-
-export interface GetTaskAssignmentsByPriorityRequestDTO {
-  priority: TaskAssignmentPriority | string;
-}
-
-export interface GetTaskAssignmentsByAssigneeTypeRequestDTO {
-  assigneeType: TaskAssignmentType | string;
-}
-
-/**
- * Task assignment statistics interface
- * Aggregated statistics for task assignments
- */
-export interface TaskAssignmentStatsDTO {
-  total: number;
-  byStatus: Record<string, number>;
-  byPriority: Record<string, number>;
-  byAssigneeType: Record<string, number>;
-  overdue: number;
-  dueSoon: number;
-}
-
-/**
- * Task assignment validation result interface
- * Validation results for task assignments
- */
 export interface TaskAssignmentValidationResultDTO {
   isValid: boolean;
   errors: string[];
-  warnings?: string[];
 }

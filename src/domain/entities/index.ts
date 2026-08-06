@@ -136,7 +136,9 @@ export { SubmissionSecret } from './SubmissionSecret';
 // ============================================================================
 
 export type { DatabaseMetrics, PerformanceMetrics } from './PerformanceMonitoring';
-export type { Workspace, ProjectAlert, Action, ITaskAssignment } from './Workspace';
+export type { Workspace, ProjectAlert, Action } from './Workspace';
+export { TaskAssignment } from './TaskAssignment';
+export type { TaskAssignmentProps } from './TaskAssignment';
 
 // ============================================================================
 // LEGACY COMPATIBILITY EXPORTS
