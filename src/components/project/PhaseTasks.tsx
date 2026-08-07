@@ -231,7 +231,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                           assignedTo: id,
                           assigneeName: name,
                           assigneeEmail: email,
-                          assignee_type: type
+                          assigneeType: type
                         })
                       }
                       label="Assigné à"
