@@ -664,7 +664,7 @@ export function useProjectPhasesForTasks(projectId: string) {
   return useQuery({
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
-      return await phaseService.getPhasesByProject(projectId);
+      return (await phaseService.getPhasesByProject(projectId)) as unknown as PhaseDTO[];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId

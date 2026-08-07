@@ -655,7 +655,7 @@ export function useProjectPhasesForTasks(projectId: string) {
       const phaseService = new PhaseService(
         RepositoryFactory.getPhaseRepository()
       );
-      return await phaseService.getPhasesByProject(projectId);
+      return (await phaseService.getPhasesByProject(projectId)) as unknown as PhaseDTO[];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId

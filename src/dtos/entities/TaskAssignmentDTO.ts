@@ -23,7 +23,7 @@ export enum TaskPriority {
   CRITICAL = 'urgent',
 }
 
-export type AssigneeType = 'supplier' | 'employee' | 'user';
+export type AssigneeType = 'supplier' | 'employee' | 'user' | 'external';
 
 /** Type de tâche (classification métier facultative). */
 export enum TaskType {
