@@ -161,6 +161,9 @@ export interface RiskDTO extends BaseEntityDTO {
   assignedTo?: string; // Employee ID only for DTO
   reviewer?: string; // Employee ID only for DTO - legacy
   owner?: string; // Employee ID only for DTO - primary risk owner
+  ownerId?: string; // Employee ID (alias UI de `owner`)
+  identifiedBy?: string; // Employee/user ID
+  dueDate?: string; // Échéance de traitement du risque
   
   // Documentation
   documents?: string[]; // Document IDs only for DTO

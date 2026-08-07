@@ -54,7 +54,7 @@ export function useTaskListHex(projectId: string) {
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
-      return phases;
+      return phases as unknown as PhaseDTO[];
     },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
@@ -330,7 +330,7 @@ export function useTaskListHex(projectId: string) {
     if (!phaseId) return 'Sans phase';
     const phases = phasesQuery.data || [];
     const phase = phases.find(p => p.id === phaseId);
-    return phase?.phaseName || phase?.name || 'Phase inconnue';
+    return phase?.name || 'Phase inconnue';
   };
 
   /**
@@ -482,7 +482,7 @@ export function useProjectPhasesForTasks(projectId: string) {
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
-      return phases;
+      return phases as unknown as PhaseDTO[];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId

@@ -25,7 +25,7 @@ import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import type { PhaseData } from '@/dtos/entities/PhaseDTO';
 import type { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
-import { ProjectPhases } from '@/components/project/ProjectPhases';
+import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -181,7 +181,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         const employeesData = await employeeService.getAllEmployees();
         setEmployees(employeesData.map(e => ({
           id: e.id,
-          fullName: e.fullName || e.full_name || 'Employé',
+          fullName: e.fullName || e.fullName || 'Employé',
           position: e.position || e.role || null,
           department: e.department || null
         })));

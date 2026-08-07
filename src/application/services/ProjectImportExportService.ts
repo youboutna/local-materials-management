@@ -748,8 +748,6 @@ export class ProjectImportExportService {
       assigneeName,
       assigneeEmail,
       startDate: task.startDate,
-      completedDate: task.endDate,
-      estimatedHours: task.progress !== undefined ? Math.round(task.progress / 10) : undefined,
       metadata: {
         assignedBy: this.currentUserId,
         assignedTo: assignees,

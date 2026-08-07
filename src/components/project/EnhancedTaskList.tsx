@@ -35,9 +35,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   const [formData, setFormData] = useState<ProjectTaskFormData>({
     title: '',
     description: '',
-    phase_id: '',
-    assigned_to: '',
-    due_date: '',
+    phaseId: '',
+    assignedTo: '',
+    dueDate: '',
     priority: 'medium',
     status: 'pending',
     notes: '',
@@ -52,7 +52,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
 
   // Filter tasks based on selected phase and status
   const filteredTasks = tasks?.filter(task => {
-    const phaseMatch = selectedPhase === 'all' || task.phase_id === selectedPhase;
+    const phaseMatch = selectedPhase === 'all' || task.phaseId === selectedPhase;
     const statusMatch = selectedStatus === 'all' || task.status === selectedStatus;
     return phaseMatch && statusMatch;
   }) || [];
@@ -61,9 +61,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     setFormData({
       title: '',
       description: '',
-      phase_id: '',
-      assigned_to: '',
-      due_date: '',
+      phaseId: '',
+      assignedTo: '',
+      dueDate: '',
       priority: 'medium',
       status: 'pending',
       notes: '',
@@ -92,9 +92,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     setFormData({
       title: task.title || '',
       description: task.description || '',
-      phase_id: task.phase_id || '',
-      assigned_to: task.assigned_to || '',
-      due_date: task.due_date || '',
+      phaseId: task.phaseId || '',
+      assignedTo: task.assignedTo || '',
+      dueDate: task.dueDate || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
       notes: task.notes || '',
@@ -154,7 +154,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                 <SelectItem value="all">Toutes les phases</SelectItem>
                 {phases?.map((phase) => (
                   <SelectItem key={phase.id} value={phase.id}>
-                    {phase.phase_name}
+                    {phase.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -211,8 +211,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                     <div>
                       <Label htmlFor="phase_id">Phase</Label>
                       <Select
-                        value={formData.phase_id}
-                        onValueChange={(value) => setFormData({ ...formData, phase_id: value })}
+                        value={formData.phaseId}
+                        onValueChange={(value) => setFormData({ ...formData, phaseId: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner une phase" />
@@ -221,7 +221,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           <SelectItem value="no_phase">Aucune phase</SelectItem>
                           {phases?.map((phase) => (
                             <SelectItem key={phase.id} value={phase.id}>
-                              {phase.phase_name}
+                              {phase.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -231,8 +231,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       <Label htmlFor="assigned_to">Assigné à</Label>
                       <Input
                         id="assigned_to"
-                        value={formData.assigned_to}
-                        onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                        value={formData.assignedTo}
+                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                         placeholder="Email ou nom d'utilisateur"
                       />
                     </div>
@@ -278,8 +278,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       <Input
                         id="due_date"
                         type="date"
-                        value={formData.due_date}
-                        onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                        value={formData.dueDate}
+                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                       />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
         {filteredTasks && filteredTasks.length > 0 ? (
           <div className="space-y-4">
             {filteredTasks.map((task) => {
-              const taskPhase = phases?.find(p => p.id === task.phase_id);
+              const taskPhase = phases?.find(p => p.id === task.phaseId);
               return (
                 <div key={task.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-3">
@@ -320,7 +320,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                         <h3 className="font-semibold text-lg">{task.title}</h3>
                         {taskPhase && (
                           <Badge variant="secondary" className="text-xs">
-                            {taskPhase.phase_name}
+                            {taskPhase.name}
                           </Badge>
                         )}
                       </div>
@@ -344,17 +344,17 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                            task.status === 'cancelled' ? 'Annulée' : 'En attente'}
                         </Badge>
                         
-                        {task.due_date && (
+                        {task.dueDate && (
                           <Badge variant="outline" className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {new Date(task.due_date).toLocaleDateString()}
+                            {new Date(task.dueDate).toLocaleDateString()}
                           </Badge>
                         )}
                       </div>
                       
-                      {task.assigned_to && (
+                      {task.assignedTo && (
                         <p className="text-xs text-muted-foreground">
-                          Assigné à: {task.assigned_to}
+                          Assigné à: {task.assignedTo}
                         </p>
                       )}
                       

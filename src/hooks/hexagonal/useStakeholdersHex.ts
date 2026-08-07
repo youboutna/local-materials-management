@@ -375,9 +375,9 @@ export function useStakeholdersHex(projectId?: string) {
   // ✅ Filtres avec typage correct
   const getEmployees = () => stakeholders.filter(s => s.employeeId !== undefined && s.employeeId !== null);
   const getExternalStakeholders = () => stakeholders.filter(s => !s.isInternal);
-  const getSuppliers = () => stakeholders.filter(s => s.stakeholderType === 'supplier' || s.stakeholderType === 'vendor');
-  const getInspectors = () => stakeholders.filter(s => s.role === 'inspector' || s.stakeholderType === 'inspector');
-  const getManagers = () => stakeholders.filter(s => s.role === 'project_manager' || s.role === 'manager');
+  const getSuppliers = () => stakeholders.filter(s => String(s.stakeholderType) === 'supplier' || String(s.stakeholderType) === 'vendor');
+  const getInspectors = () => stakeholders.filter(s => String(s.role) === 'inspector' || String(s.stakeholderType) === 'inspector');
+  const getManagers = () => stakeholders.filter(s => String(s.role) === 'project_manager' || String(s.role) === 'manager');
   const getActiveStakeholders = () => stakeholders.filter(s => s.isActive);
   const getPrimaryStakeholders = () => stakeholders.filter(s => s.isPrimary);
 

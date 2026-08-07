@@ -48,6 +48,19 @@ export interface INotificationRepository {
   createNotification(notification: Omit<NotificationData, 'id' | 'created_at' | 'updated_at'>): Promise<{ notification: NotificationData | null; error: Error | null }>;
 
   /**
+   * Get a single notification by id
+   */
+  getNotificationById(notificationId: string): Promise<{ notification: NotificationData | null; error: Error | null }>;
+
+  /**
+   * Partially update a notification and return the persisted row
+   */
+  updateNotification(
+    notificationId: string,
+    patch: Partial<Omit<NotificationData, 'id' | 'created_at'>>
+  ): Promise<{ notification: NotificationData | null; error: Error | null }>;
+
+  /**
    * Get user notifications
    */
   getUserNotifications(userId: string, limit?: number): Promise<{ notifications: NotificationData[]; error: Error | null }>;
@@ -56,6 +69,16 @@ export interface INotificationRepository {
    * Mark notification as read
    */
   markAsRead(notificationId: string): Promise<{ error: Error | null }>;
+
+  /**
+   * Mark notification as unread
+   */
+  markAsUnread(notificationId: string): Promise<{ error: Error | null }>;
+
+  /**
+   * Mark every notification of a recipient as read
+   */
+  markAllAsRead(userId: string): Promise<{ error: Error | null }>;
 
   /**
    * Delete notification

@@ -117,28 +117,28 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
     if (stakeholders) {
       stakeholders.forEach(stakeholder => {
         // Fournisseurs
-        if (stakeholder.supplierId) {
-          const name = stakeholder.externalName || stakeholder.name || 'Fournisseur';
+        if (stakeholder.supplierDetails?.id) {
+          const name = stakeholder.supplierDetails?.name || stakeholder.name || 'Fournisseur';
           if (!searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase())) {
             list.push({
-              id: stakeholder.supplierId,
+              id: stakeholder.supplierDetails.id,
               name: name,
-              email: stakeholder.externalEmail || stakeholder.email || '',
+              email: stakeholder.email || '',
               type: 'supplier',
-              role: stakeholder.roleDescription || stakeholder.role || 'Fournisseur',
+              role: String(stakeholder.role || 'Fournisseur'),
             });
           }
         }
         // Externes (sans supplierId ni employeeId)
-        else if (!stakeholder.employeeId && stakeholder.stakeholderEntityType === 'external') {
-          const name = stakeholder.externalName || stakeholder.name || 'Externe';
+        else if (!stakeholder.employeeId && String(stakeholder.stakeholderType) === 'external') {
+          const name = stakeholder.name || 'Externe';
           if (!searchTerm || name.toLowerCase().includes(searchTerm.toLowerCase())) {
             list.push({
               id: stakeholder.id,
               name: name,
-              email: stakeholder.externalEmail || stakeholder.email || '',
+              email: stakeholder.email || '',
               type: 'external',
-              role: stakeholder.roleDescription || stakeholder.role || 'Externe',
+              role: String(stakeholder.role || 'Externe'),
             });
           }
         }

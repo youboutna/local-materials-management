@@ -162,7 +162,6 @@ import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository
 import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
 import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { IDocumentRepository} from '@/domain/repositories/IDocumentRepository';
 import { ITenderDocumentRepository} from '@/domain/repositories/ITenderDocumentRepository';
 // ================================================================
 // 8. RESOLVE FUNCTIONS
@@ -220,7 +219,7 @@ interface RepositoryRegistry {
   projectForm?: IProjectFormRepository;
   parsedInvoice?: IParsedInvoiceRepository;
   inspectionPermission?: IInspectionPermissionRepository;
-  tenderDocument?: IDocumentRepository;
+  tenderDocument?: ITenderDocumentRepository;
   milestone?: IMilestoneRepository;
   tenderEstimate?: ITenderEstimateRepository;
   contactMessage?: IContactMessageRepository;
@@ -412,6 +411,13 @@ export class RepositoryFactory {
     return RepositoryFactory.getTaskAssignmentRepository();
   }
 
+  /**
+   * Alias historique `getTaskRepository()` — Task et TaskAssignment sont fusionnés.
+   */
+  static getTaskRepository(): ITaskAssignmentRepository {
+    return RepositoryFactory.getTaskAssignmentRepository();
+  }
+
   // ---------- MATERIAL ----------
   static getMaterialRepository(): IMaterialRepository {
     if (registry.material) return registry.material;
@@ -584,7 +590,7 @@ export class RepositoryFactory {
 
   static getProjectFormRepository(): IProjectFormRepository {
     if (registry.projectForm) return registry.projectForm;
-    registry.projectForm = new SupabaseProjectFormAdapter();
+    registry.projectForm = new SupabaseProjectFormAdapter() as unknown as IProjectFormRepository;
     return registry.projectForm;
   }
 

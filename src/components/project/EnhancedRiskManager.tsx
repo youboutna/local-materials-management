@@ -37,17 +37,17 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
   const [formData, setFormData] = useState<RiskFormData>({
-    risk_title: '',
-    risk_description: '',
-    probability_numeric: '',
-    impact_numeric: '',
-    mitigation_plan: '',
-    status_new: 'identified',
-    owner_id: '',
-    due_date: '',
-    related_tasks: [],
-    phase_id: '',
-    construction_phase: '',
+    title: '',
+    description: '',
+    probability: '',
+    impact: '',
+    mitigationPlan: '',
+    status: 'identified',
+    ownerId: '',
+    dueDate: '',
+    relatedTasks: [],
+    phaseId: '',
+    constructionPhase: '',
     applyToAllPhases: false,
     selectedPhases: [],
   });
@@ -98,27 +98,27 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     e.preventDefault();
     
     try {
-      const probability = parseInt(formData.probability_numeric);
-      const impact = parseInt(formData.impact_numeric);
+      const probability = parseInt(String(formData.probability), 10) || 0;
+      const impact = parseInt(String(formData.impact), 10) || 0;
       const riskScore = calculateRiskScore(probability, impact);
       const riskLevel = getRiskLevel(riskScore);
 
       const riskData = {
-        risk_title: formData.risk_title,
-        risk_description: formData.risk_description,
-        probability_numeric: probability,
-        impact_numeric: impact,
-        risk_score: riskScore,
-        risk_level: riskLevel,
-        mitigation_plan: formData.mitigation_plan,
-        status_new: formData.status_new,
-        owner_id: formData.owner_id,
-        due_date: formData.due_date,
-        phase_id: formData.phase_id,
-        project_id: projectId,
-        identified_by: 'current_user', // This should come from auth context
-        identified_date: new Date().toISOString(),
-      };
+        title: formData.title,
+        description: formData.description,
+        probability: probability,
+        impact: impact,
+        riskScore: riskScore,
+        riskLevel: riskLevel,
+        mitigationPlan: formData.mitigationPlan,
+        status: formData.status,
+        ownerId: formData.ownerId,
+        dueDate: formData.dueDate,
+        phaseId: formData.phaseId,
+        projectId: projectId,
+        identifiedBy: 'current_user',
+        identifiedDate: new Date().toISOString(),
+      } as any;
 
       if (editingId) {
         await updateRiskMutation.mutateAsync({ id: editingId, data: riskData });
@@ -129,17 +129,17 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
 
       // Reset form
       setFormData({
-        risk_title: '',
-        risk_description: '',
-        probability_numeric: '',
-        impact_numeric: '',
-        mitigation_plan: '',
-        status_new: 'identified',
-        owner_id: '',
-        due_date: '',
-        related_tasks: [],
-        phase_id: '',
-        construction_phase: '',
+        title: '',
+        description: '',
+        probability: '',
+        impact: '',
+        mitigationPlan: '',
+        status: 'identified',
+        ownerId: '',
+        dueDate: '',
+        relatedTasks: [],
+        phaseId: '',
+        constructionPhase: '',
         applyToAllPhases: false,
         selectedPhases: [],
       });
@@ -152,17 +152,17 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   // Handle edit
   const handleEdit = (risk: ProjectRisk) => {
     setFormData({
-      risk_title: risk.risk_title,
-      risk_description: risk.risk_description || '',
-      probability_numeric: risk.probability_numeric?.toString() || '',
-      impact_numeric: risk.impact_numeric?.toString() || '',
-      mitigation_plan: risk.mitigation_plan || '',
-      status_new: risk.status_new || 'identified',
-      owner_id: risk.owner_id || '',
-      due_date: risk.due_date || '',
-      related_tasks: [],
-      phase_id: risk.phase_id || '',
-      construction_phase: '',
+      title: risk.title,
+      description: risk.description || '',
+      probability: risk.probability?.toString() ?? '',
+      impact: risk.impact?.toString() ?? '',
+      mitigationPlan: risk.mitigationPlan || '',
+      status: risk.status || 'identified',
+      ownerId: risk.ownerId ?? risk.owner ?? '',
+      dueDate: risk.dueDate ?? '',
+      relatedTasks: [],
+      phaseId: risk.phaseId || '',
+      constructionPhase: '',
       applyToAllPhases: false,
       selectedPhases: [],
     });
@@ -184,7 +184,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   // Filter risks by level
   const filteredRisks = risks.filter(risk => {
     if (selectedRiskLevel === 'all') return true;
-    return getRiskLevel(risk.risk_score || 0) === selectedRiskLevel;
+    return getRiskLevel(risk.riskScore || 0) === selectedRiskLevel;
   });
 
   if (error) {
@@ -239,17 +239,17 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">{risk.risk_title}</h3>
-                  <p className="text-muted-foreground mb-3">{risk.risk_description}</p>
+                  <h3 className="text-lg font-semibold mb-2">{risk.title}</h3>
+                  <p className="text-muted-foreground mb-3">{risk.description}</p>
                   <div className="flex gap-2 mb-3">
-                    <Badge className={getRiskLevelColor(getRiskLevel(risk.risk_score || 0))}>
-                      {getRiskLevel(risk.risk_score || 0).toUpperCase()}
+                    <Badge className={getRiskLevelColor(getRiskLevel(risk.riskScore || 0))}>
+                      {getRiskLevel(risk.riskScore || 0).toUpperCase()}
                     </Badge>
                     <Badge variant="outline">
-                      Score: {risk.risk_score || 0}
+                      Score: {risk.riskScore || 0}
                     </Badge>
                     <Badge variant="outline">
-                      {risk.status_new || 'Identifié'}
+                      {risk.status || 'Identifié'}
                     </Badge>
                   </div>
                 </div>
@@ -266,28 +266,28 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Probabilité:</span>
-                  <span className="ml-2">{risk.probability_numeric}/5</span>
+                  <span className="ml-2">{risk.probability}/5</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Impact:</span>
-                  <span className="ml-2">{risk.impact_numeric}/5</span>
+                  <span className="ml-2">{risk.impact}/5</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Responsable:</span>
                   <span className="ml-2">
-                    {employees.find(emp => emp.id === risk.owner_id)?.full_name || 'Non assigné'}
+                    {employees.find(emp => emp.id === risk.ownerId)?.fullName || 'Non assigné'}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Date limite:</span>
-                  <span className="ml-2">{risk.due_date || 'Non définie'}</span>
+                  <span className="ml-2">{risk.dueDate || 'Non définie'}</span>
                 </div>
               </div>
 
-              {risk.mitigation_plan && (
+              {risk.mitigationPlan && (
                 <div className="mt-4">
                   <h4 className="font-medium mb-2">Plan de mitigation:</h4>
-                  <p className="text-sm text-muted-foreground">{risk.mitigation_plan}</p>
+                  <p className="text-sm text-muted-foreground">{risk.mitigationPlan}</p>
                 </div>
               )}
             </CardContent>
@@ -306,26 +306,26 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label htmlFor="risk_title">Titre du risque</Label>
+                <Label htmlFor="title">Titre du risque</Label>
                 <Input
-                  id="risk_title"
-                  value={formData.risk_title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, risk_title: e.target.value }))}
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   required
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="risk_description">Description</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
-                  id="risk_description"
-                  value={formData.risk_description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, risk_description: e.target.value }))}
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
                 />
               </div>
               <div>
-                <Label htmlFor="probability_numeric">Probabilité (1-5)</Label>
-                <Select value={formData.probability_numeric} onValueChange={(value) => setFormData(prev => ({ ...prev, probability_numeric: value }))}>
+                <Label htmlFor="probability">Probabilité (1-5)</Label>
+                <Select value={String(formData.probability)} onValueChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -339,8 +339,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="impact_numeric">Impact (1-5)</Label>
-                <Select value={formData.impact_numeric} onValueChange={(value) => setFormData(prev => ({ ...prev, impact_numeric: value }))}>
+                <Label htmlFor="impact">Impact (1-5)</Label>
+                <Select value={String(formData.impact)} onValueChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -354,47 +354,47 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="owner_id">Responsable</Label>
-                <Select value={formData.owner_id} onValueChange={(value) => setFormData(prev => ({ ...prev, owner_id: value }))}>
+                <Label htmlFor="ownerId">Responsable</Label>
+                <Select value={formData.ownerId} onValueChange={(value) => setFormData(prev => ({ ...prev, ownerId: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((employee) => (
                       <SelectItem key={employee.id} value={employee.id}>
-                        {employee.full_name} ({employee.position})
+                        {employee.fullName} ({employee.position})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="due_date">Date limite</Label>
+                <Label htmlFor="dueDate">Date limite</Label>
                 <Input
-                  id="due_date"
+                  id="dueDate"
                   type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
                 />
               </div>
               <div>
-                <Label htmlFor="phase_id">Phase</Label>
-                <Select value={formData.phase_id} onValueChange={(value) => setFormData(prev => ({ ...prev, phase_id: value }))}>
+                <Label htmlFor="phaseId">Phase</Label>
+                <Select value={formData.phaseId} onValueChange={(value) => setFormData(prev => ({ ...prev, phaseId: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {phases.map((phase) => (
                       <SelectItem key={phase.id} value={phase.id}>
-                        {phase.phase_name}
+                        {phase.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="status_new">Statut</Label>
-                <Select value={formData.status_new} onValueChange={(value) => setFormData(prev => ({ ...prev, status_new: value }))}>
+                <Label htmlFor="status">Statut</Label>
+                <Select value={String(formData.status)} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -407,11 +407,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label htmlFor="mitigation_plan">Plan de mitigation</Label>
+                <Label htmlFor="mitigationPlan">Plan de mitigation</Label>
                 <Textarea
-                  id="mitigation_plan"
-                  value={formData.mitigation_plan}
-                  onChange={(e) => setFormData(prev => ({ ...prev, mitigation_plan: e.target.value }))}
+                  id="mitigationPlan"
+                  value={formData.mitigationPlan}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mitigationPlan: e.target.value }))}
                   rows={4}
                 />
               </div>

@@ -14,7 +14,6 @@ import { AuthResponse } from '@/dtos/entities/AuthDTO';
 import { StakeholderResponseDTO as SupplierResponseDto } from '@/dtos/entities/StakeholderDTO';
 
 // Re-export aliased types for backward compatibility
-type TaskAssignmentDTO = TaskDTO;
 type DocumentResponseDto = DocumentResponseDTO;
 type ProjectResponseDto = ProjectDTO;
 type MaterialResponseDto = MaterialDTO;

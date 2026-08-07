@@ -9,6 +9,14 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Accès faiblement typé réservé à `supplier_payment_requests`,
+ * table absente des types générés (schéma applicatif dédié).
+ */
+const paymentsDb = supabase as unknown as {
+  from: (table: string) => any;
+};
 import { ISupplierPaymentRepository } from '@/domain/repositories/ISupplierPaymentRepository';
 import { 
   SupplierPaymentRequestDTO, 
@@ -96,7 +104,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
   /**
    * Map DTO to database row format
    */
-  private mapToRow(dto: Partial<SupplierPaymentRequestDTO | CreateSupplierPaymentRequestDTO | UpdateSupplierPaymentRequestDTO>): Partial<SupplierPaymentRequestRow> {
+  private mapToRow(dto: Partial<SupplierPaymentRequestDTO> & Partial<CreateSupplierPaymentRequestDTO> & Partial<UpdateSupplierPaymentRequestDTO>): Partial<SupplierPaymentRequestRow> {
     const row: Partial<SupplierPaymentRequestRow> = {};
     
     if (dto.inspectionId !== undefined) row.inspection_id = dto.inspectionId;
@@ -136,7 +144,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async findById(id: string): Promise<SupplierPaymentRequestDTO | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -162,7 +170,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async findByInspectionId(inspectionId: string): Promise<SupplierPaymentRequestDTO | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .eq('inspection_id', inspectionId)
@@ -189,7 +197,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async findBySupplierId(supplierId: string): Promise<SupplierPaymentRequestDTO[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .eq('supplier_id', supplierId)
@@ -213,7 +221,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
   async findByProjectId(projectId: string): Promise<SupplierPaymentRequestDTO[]> {
     try {
       // Recherche directe par project_id
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .eq('project_id', projectId)
@@ -236,7 +244,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
       const inspectionIds = inspections?.map(i => i.id) || [];
       if (inspectionIds.length === 0) return [];
 
-      const { data: paymentData, error: paymentError } = await supabase
+      const { data: paymentData, error: paymentError } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .in('inspection_id', inspectionIds)
@@ -266,7 +274,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async findByStatus(status: SupplierPaymentStatus): Promise<SupplierPaymentRequestDTO[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .eq('status', status)
@@ -290,7 +298,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
   async findAll(page: number = 1, limit: number = 20): Promise<SupplierPaymentRequestListDTO> {
     try {
       // Compter le total
-      const { count, error: countError } = await supabase
+      const { count, error: countError } = await paymentsDb
         .from(this.tableName)
         .select('*', { count: 'exact', head: true });
 
@@ -300,7 +308,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .select('*')
         .order('requested_at', { ascending: false })
@@ -337,7 +345,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async getStats(supplierId?: string): Promise<SupplierPaymentStatsDTO> {
     try {
-      let query = supabase
+      let query = paymentsDb
         .from(this.tableName)
         .select('*');
 
@@ -430,7 +438,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
         updated_at: now,
       };
 
-      const { data: result, error } = await supabase
+      const { data: result, error } = await paymentsDb
         .from(this.tableName)
         .insert(rowData)
         .select()
@@ -476,7 +484,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
         updateData.rejection_reason = comments;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await paymentsDb
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -503,7 +511,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
       const rowData = this.mapToRow(data);
       rowData.updated_at = new Date().toISOString();
 
-      const { data: result, error } = await supabase
+      const { data: result, error } = await paymentsDb
         .from(this.tableName)
         .update(rowData)
         .eq('id', id)
@@ -527,7 +535,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
    */
   async delete(id: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await paymentsDb
         .from(this.tableName)
         .delete()
         .eq('id', id);

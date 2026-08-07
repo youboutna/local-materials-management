@@ -107,8 +107,8 @@ export class ProgressCalculationHexService {
     const totalInspections = inspections.length;
     if (totalInspections === 0) return 0;
     
-    const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'passed').length;
-    const inProgressInspections = inspections.filter(i => i.status === 'in_progress').length;
+    const completedInspections = inspections.filter(i => ['completed', 'passed', 'approved'].includes(String(i.status))).length;
+    const inProgressInspections = inspections.filter(i => String(i.status) === 'in_progress').length;
     
     // Calcul pondéré
     const progressScore = (completedInspections * 100 + inProgressInspections * 50) / totalInspections;
@@ -214,13 +214,13 @@ export class ProgressCalculationHexService {
     const byStatus: ProgressByStatus = {
       completed: phases.filter(p => p.status === PhaseStatus.COMPLETED).length + 
                tasks.filter(t => t.status === TaskStatus.COMPLETED).length + 
-               inspections.filter(i => i.status === 'completed' || i.status === 'passed').length,
+               inspections.filter(i => ['completed', 'passed', 'approved'].includes(String(i.status))).length,
       inProgress: phases.filter(p => p.status === PhaseStatus.IN_PROGRESS).length + 
                  tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length + 
-                 inspections.filter(i => i.status === 'in_progress').length,
-      pending: phases.filter(p => p.status === PhaseStatus.PENDING || p.status === PhaseStatus.NOT_STARTED).length + 
+                 inspections.filter(i => String(i.status) === 'in_progress').length,
+      pending: phases.filter(p => p.status === PhaseStatus.PENDING || String(p.status) === 'not_started').length + 
               tasks.filter(t => t.status === TaskStatus.PENDING || t.status === TaskStatus.BLOCKED).length + 
-              inspections.filter(i => i.status === 'scheduled' || i.status === 'pending').length,
+              inspections.filter(i => ['scheduled', 'pending', 'planned'].includes(String(i.status))).length,
       cancelled: phases.filter(p => p.status === PhaseStatus.CANCELLED).length + 
                  tasks.filter(t => t.status === TaskStatus.CANCELLED).length + 
                  inspections.filter(i => i.status === 'cancelled').length

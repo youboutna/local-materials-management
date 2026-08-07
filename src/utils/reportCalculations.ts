@@ -139,7 +139,7 @@ export class ReportCalculations {
           phase.endDate
         );
         return {
-          name: phase.name || phase.phaseName || 'Phase inconnue',
+          name: phase.name || phase.name || 'Phase inconnue',
           optimistic: Math.max(1, duration * 0.7),
           mostLikely: duration || 14,
           pessimistic: duration * 1.4 || 21
@@ -450,7 +450,7 @@ export class ReportCalculations {
         
         return {
           id: phase.id || `phase-${index + 1}`,
-          name: phase.name || phase.phaseName || `Phase ${index + 1}`,
+          name: phase.name || phase.name || `Phase ${index + 1}`,
           startDate: phaseStart,
           endDate: phaseEnd,
           progress: Math.min(100, Math.max(0, phaseProgress)),
@@ -460,7 +460,7 @@ export class ReportCalculations {
     }
 
     // Default phases
-    const phaseNames = [
+    const names = [
       'Préparation et études',
       'Fouilles et fondations',
       'Structure et gros œuvre',
@@ -468,7 +468,7 @@ export class ReportCalculations {
       'Finitions et livraison'
     ];
 
-    return phaseNames.map((name, index) => {
+    return names.map((name, index) => {
       const phaseStart = new Date(projectStart);
       phaseStart.setDate(projectStart.getDate() + (index * 60));
       const phaseEnd = new Date(phaseStart);

@@ -46,13 +46,13 @@ export const useEnhancedTaskAssignment = () => {
     id: task.id,
     title: task.title || '',
     description: task.description || '',
-    assignedTo: task.assignedTo || task.assigned_to || '',
+    assignedTo: task.assignedTo || task.assignedTo || '',
     priority: task.priority || 'medium',
     status: task.status || 'pending',
-    dueDate: task.dueDate || task.due_date || '',
-    projectId: task.projectId || task.project_id || '',
+    dueDate: task.dueDate || task.dueDate || '',
+    projectId: task.projectId || task.projectId || '',
     notes: task.notes || ''
-  }));
+  })) as unknown as TaskAssignment[];
 
   // Create assignment wrapper for legacy interface
   const createAssignment = {
@@ -91,27 +91,27 @@ export const useEnhancedTaskAssignment = () => {
       const newAssignment = {
         title: updates.title || '',
         description: updates.description || '',
-        assigned_to: updates.assignedTo || '',
+        assignedTo: updates.assignedTo || '',
         priority: updates.priority || 'medium',
         status: updates.status || 'pending',
-        due_date: updates.dueDate || '',
-        project_id: updates.projectId || '',
+        dueDate: updates.dueDate || '',
+        projectId: updates.projectId || '',
         notes: updates.notes || ''
       };
-      return updateTask({ id, ...newAssignment });
+      return updateTask({ id, data: newAssignment as any });
     },
     mutateAsync: async ({ id, updates }: { id: string; updates: TaskUpdate }): Promise<any> => {
       const newAssignment = {
         title: updates.title || '',
         description: updates.description || '',
-        assigned_to: updates.assignedTo || '',
+        assignedTo: updates.assignedTo || '',
         priority: updates.priority || 'medium',
         status: updates.status || 'pending',
-        due_date: updates.dueDate || '',
-        project_id: updates.projectId || '',
+        dueDate: updates.dueDate || '',
+        projectId: updates.projectId || '',
         notes: updates.notes || ''
       };
-      return updateTask({ id, ...newAssignment });
+      return updateTask({ id, data: newAssignment as any });
     },
     isPending: isUpdating
   };

@@ -277,23 +277,21 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         const amount = parseFloat(paymentAmount);
         
         if (paymentRequestType === 'contractor') {
-          await supplierPaymentService.createContractorProgressPayment(
-            projectId,
-            amount,
-            inspection.id,
-            progress,
-            uploadedDocs.length,
-            paymentDescription
-          );
-        } else {
-          await supplierPaymentService.createInspectorFeePayment(
+          await supplierPaymentService.createPaymentRequest({
+            inspectionId: inspection.id,
             supplierId,
-            projectId,
             amount,
-            inspection.id,
-            inspection.date || inspection.scheduledDate || new Date().toISOString(),
-            paymentDescription
-          );
+            paymentType: 'contractor_progress',
+            description: paymentDescription,
+          });
+        } else {
+          await supplierPaymentService.createPaymentRequest({
+            inspectionId: inspection.id,
+            supplierId,
+            amount,
+            paymentType: 'inspector_fee',
+            description: paymentDescription,
+          });
         }
 
         toast({

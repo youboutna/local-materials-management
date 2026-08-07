@@ -4,7 +4,7 @@
  */
 
 import { Phase, PhaseStatus } from '@/domain/entities';
-import { PhaseMetrics } from '@/domain/repositories';
+import type { PhaseMetrics } from '@/domain/repositories/IPhaseRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 

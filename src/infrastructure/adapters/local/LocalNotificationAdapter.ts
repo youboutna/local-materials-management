@@ -64,14 +64,42 @@ export class LocalNotificationAdapter implements INotificationRepository {
     return { notifications: list, error: null };
   }
 
-  async markAsRead(notificationId: string) {
+  async getNotificationById(notificationId: string) {
+    const found = load().find((n) => n.id === notificationId) ?? null;
+    return { notification: found, error: null };
+  }
+
+  async updateNotification(
+    notificationId: string,
+    patch: Partial<Omit<NotificationData, 'id' | 'created_at'>>
+  ) {
     const list = load();
     const idx = list.findIndex((n) => n.id === notificationId);
-    if (idx >= 0) {
-      list[idx].read = true;
-      list[idx].updated_at = new Date().toISOString();
-      save(list);
-    }
+    if (idx < 0) return { notification: null, error: new Error('Notification not found') };
+    list[idx] = { ...list[idx], ...patch, updated_at: new Date().toISOString() };
+    save(list);
+    return { notification: list[idx], error: null };
+  }
+
+  async markAsRead(notificationId: string) {
+    return (await this.updateNotification(notificationId, { read: true })).error
+      ? { error: new Error('Notification not found') }
+      : { error: null };
+  }
+
+  async markAsUnread(notificationId: string) {
+    return (await this.updateNotification(notificationId, { read: false })).error
+      ? { error: new Error('Notification not found') }
+      : { error: null };
+  }
+
+  async markAllAsRead(userId: string) {
+    const now = new Date().toISOString();
+    save(
+      load().map((n) =>
+        n.recipient_id === userId && !n.read ? { ...n, read: true, updated_at: now } : n
+      )
+    );
     return { error: null };
   }
 
