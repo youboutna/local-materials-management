@@ -19,8 +19,17 @@
     "clean-migrations": "./scripts/clean-migrations.sh",
     "supabase:link": "npx supabase link --project-ref $VITE_SUPABASE_PROJECT_ID",
     "supabase:push": "npx supabase db push",
-    "supabase:types": "npx supabase gen types typescript --linked > src/integrations/supabase/types.gen.ts"
-  },
+    "supabase:types": "npx supabase gen types typescript --linked > src/integrations/supabase/types.gen.ts",
+    "lint:hexagonal": "node scripts/check-hexagonal-violations.js",
+    "lint:hexagonal:fix": "node scripts/check-hexagonal-violations.js --fix",
+    "lint:hexagonal:json": "node scripts/check-hexagonal-violations.js --json > violations.json",
+   "fix:hexagonal": "node scripts/fix-hexagonal-violations.js",
+    "fix:hexagonal:dry": "node scripts/fix-hexagonal-violations.js --dry-run",
+    "fix:hexagonal:all": "node scripts/fix-hexagonal-violations.js --all",
+    "fix:hexagonal:verbose": "node scripts/fix-hexagonal-violations.js --verbose",
+    "fix:hexagonal:analyze": "node scripts/fix-hexagonal-violations.js --analyze",
+    "fix:hexagonal:file": "node scripts/fix-hexagonal-violations.js --file"
+    },
 
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
