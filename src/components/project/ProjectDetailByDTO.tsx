@@ -1570,7 +1570,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== MONITORING ===== */}
         <TabsContent value="monitoring" className="mt-6">
-          <EnhancedRiskManager projectId={projectId!} phases={computedPhases} />
+          <EnhancedRiskManager projectId={projectId!} phases={computedPhases as any} />
           
           {/* KPIs */}
           {kpiMetrics ? (

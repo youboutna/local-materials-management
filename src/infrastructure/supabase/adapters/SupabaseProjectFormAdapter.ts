@@ -273,7 +273,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       switch (step) {
         case 2: // Stakeholders
           if (data.stakeholders?.length) {
-            await ProjectStakeholderService.updateProjectStakeholders(projectId, data.stakeholders, {});
+            await new ProjectStakeholderService().createProjectStakeholders(projectId, data.stakeholders as any);
           }
           break;
 
@@ -409,7 +409,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   async loadRelatedData(projectId: string): Promise<Partial<ProjectFormData>> {
     try {
       // Load stakeholders
-      const stakeholders = await ProjectStakeholderService.getProjectStakeholders(projectId);
+      const stakeholders = await new ProjectStakeholderService().getProjectStakeholders(projectId);
 
       // Load phases
       const { data: phasesData } = await supabase

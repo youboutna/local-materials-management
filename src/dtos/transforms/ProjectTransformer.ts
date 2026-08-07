@@ -463,10 +463,10 @@ export class ProjectTransformer {
       areaSqm: project.areaSqm || undefined,
       siteDetails: project.siteDetails || undefined,
       createdBy: project.createdBy || undefined,
-      taskCount: project.tasks?.length || 0,
+      taskCount: project.taskAssignments?.length || 0,
       // ✅ Utilisation de TaskAssignmentTransformer pour les tâches
-      completedTasks: project.tasks?.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'done' || (t.status as string) === 'validated').length || 0,
-      overdueTasks: project.tasks?.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length || 0,
+      completedTasks: project.taskAssignments?.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'done' || (t.status as string) === 'validated').length || 0,
+      overdueTasks: project.taskAssignments?.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length || 0,
       riskCount: project.risks?.length || 0,
       highRiskCount: project.risks?.filter(r => r.probability * r.impact > 0.7).length || 0,
       inspectionCount: project.inspections?.length || 0,
@@ -1218,7 +1218,7 @@ export class ProjectTransformer {
       ...baseDTO,
       phases: phases,
       // ✅ Utilisation de TaskAssignmentTransformer
-      tasks: project.tasks?.map(task => TaskAssignmentTransformer.toDTO(task)) || [],
+      tasks: project.taskAssignments?.map(task => TaskAssignmentTransformer.toDTO(task)) || [],
       risks: project.risks?.map(risk => RiskTransformer.toDTO(risk)) || [],
       milestones: project.milestones?.map(milestone => MilestoneTransformer.toDTO(milestone)) || [],
       payments: payments,

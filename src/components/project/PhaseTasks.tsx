@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
 import TaskAssigneeSelector from '@/components/selectors/TaskAssigneeSelector';
-import { usePhaseTasksHex, type TaskFormData, type PhaseTask } from '@/hooks/hexagonal/usePhaseTasksHex';
+import { usePhaseTasksHex } from '@/hooks/hexagonal/usePhaseTasksHex';
+import type { TaskAssignmentDTO as PhaseTask, CreateTaskAssignmentDTO as TaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 

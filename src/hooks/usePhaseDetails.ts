@@ -96,7 +96,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       if (!phaseId) throw new Error('Phase ID is required');
       const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) throw new Error('Phase not found');
-      return phase;
+      return phase as unknown as PhaseDTO;
     },
     enabled: !!phaseId,
     staleTime: 2 * 60 * 1000,

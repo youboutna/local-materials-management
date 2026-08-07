@@ -118,7 +118,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
         projectId: projectId,
         identifiedBy: 'current_user',
         identifiedDate: new Date().toISOString(),
-      };
+      } as Partial<RiskDTO>;
 
       if (editingId) {
         await updateRiskMutation.mutateAsync({ id: editingId, data: riskData });

@@ -164,7 +164,7 @@ export class SupplierPaymentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot change status from paid');
       }
       
-      const updatedRequest = await this.repository.updateStatus(request.id, request.status, request.comments);
+      const updatedRequest = await this.repository.updateStatus(request.id, request.status as any, request.comments);
       
       console.log(`[SupplierPaymentService] Payment request ${request.id} updated successfully to status: ${request.status}`);
       return updatedRequest;

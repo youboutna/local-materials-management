@@ -198,7 +198,7 @@ export const useEnhancedRiskManagerHex = (
       await riskRepo.save({
         ...data,
         projectId: data.projectId || projectId,
-      } as RiskDTO);
+      } as unknown as import('@/domain/entities/Risk').Risk);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });
@@ -212,7 +212,7 @@ export const useEnhancedRiskManagerHex = (
   // Mettre à jour un risque
   const updateRiskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<RiskDTO> }) => {
-      return await riskRepo.update(id, data as RiskDTO);
+      return await riskRepo.update(id, data as unknown as import('@/domain/entities/Risk').Risk);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks', projectId] });

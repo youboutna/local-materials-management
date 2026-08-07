@@ -711,6 +711,7 @@ export class ProjectWorkflowService {
             projectId,
             phaseId: persisted.id,
             name: taskName,
+            title: (task.title ?? task.name ?? name) as string,
             description: task.description as string | undefined,
             status: task.status as any || 'PENDING',
             priority: task.priority as any || 'MEDIUM',
@@ -745,7 +746,7 @@ export class ProjectWorkflowService {
     const existing = await this.riskRepository.findByProjectId(projectId).catch(() => [] as any[]);
     const existingIds = new Set(existing.map((r: any) => r.id));
     for (const risk of risks) {
-      const payload = { ...risk, projectId, status: risk.status || RiskStatus.IDENTIFIED } as Risk;
+      const payload = { ...risk, projectId, status: risk.status || RiskStatus.IDENTIFIED } as unknown as Risk;
       if (risk.id && existingIds.has(risk.id)) {
         await this.riskRepository.update(risk.id, payload);
       } else {
