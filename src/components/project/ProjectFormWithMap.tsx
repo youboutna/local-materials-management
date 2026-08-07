@@ -181,7 +181,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         const employeesData = await employeeService.getAllEmployees();
         setEmployees(employeesData.map(e => ({
           id: e.id,
-          fullName: e.fullName || e.full_name || 'Employé',
+          fullName: e.fullName || e.fullName || 'Employé',
           position: e.position || e.role || null,
           department: e.department || null
         })));

@@ -52,22 +52,22 @@ interface TaskAssignmentExtended {
   id: string;
   title: string | null;
   description: string | null;
-  project_id: string | null;
-  phase_id: string | null;
-  assigned_to: string | null;
+  projectId: string | null;
+  phaseId: string | null;
+  assignedTo: string | null;
   assigned_by: string | null;
-  due_date: string | null;
+  dueDate: string | null;
   priority: string | null;
   status: string | null;
   completion_date: string | null;
   notes: string | null;
-  created_at: string | null;
-  updated_at: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
   // Enhanced fields
   estimated_duration: number | null;
   actual_duration: number | null;
-  start_date: string | null;
-  end_date: string | null;
+  startDate: string | null;
+  endDate: string | null;
   progress: number | null;
   weight: number | null;
   cost_estimate: number | null;
@@ -88,7 +88,7 @@ interface TaskDependency {
 
 interface ProjectPhase {
   id: string;
-  phase_name: string;
+  name: string;
   phaseName?: string;
   status: string;
   construction_phase?: string;
@@ -104,22 +104,22 @@ interface Supplier {
 
 interface Employee {
   id: string;
-  full_name: string;
+  fullName: string;
   position?: string | null;
 }
 
 interface TaskFormData {
   title: string;
   description: string;
-  phase_id: string;
-  assigned_to: string;
-  due_date: string;
+  phaseId: string;
+  assignedTo: string;
+  dueDate: string;
   priority: string;
   status: string;
   notes: string;
   estimated_duration: string;
-  start_date: string;
-  end_date: string;
+  startDate: string;
+  endDate: string;
   weight: string;
   cost_estimate: string;
   optimistic_estimate: string;
@@ -145,15 +145,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     description: '',
-    phase_id: '',
-    assigned_to: '',
-    due_date: '',
+    phaseId: '',
+    assignedTo: '',
+    dueDate: '',
     priority: 'medium',
     status: 'pending',
     notes: '',
     estimated_duration: '',
-    start_date: '',
-    end_date: '',
+    startDate: '',
+    endDate: '',
     weight: '1',
     cost_estimate: '',
     optimistic_estimate: '',
@@ -202,11 +202,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('employees')
-        .select('id, full_name, position')
+        .select('id, fullName, position')
         .eq('is_active', true);
       
       if (error) throw error;
-      return (data || []).filter(d => d.id && d.full_name).map(d => ({ id: d.id!, full_name: d.full_name!, position: d.position || '' }));
+      return (data || []).filter(d => d.id && d.fullName).map(d => ({ id: d.id!, fullName: d.fullName!, position: d.position || '' }));
     },
   });
 
@@ -343,15 +343,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     setFormData({
       title: '',
       description: '',
-      phase_id: '',
-      assigned_to: '',
-      due_date: '',
+      phaseId: '',
+      assignedTo: '',
+      dueDate: '',
       priority: 'medium',
       status: 'pending',
       notes: '',
       estimated_duration: '',
-      start_date: '',
-      end_date: '',
+      startDate: '',
+      endDate: '',
       weight: '1',
       cost_estimate: '',
       optimistic_estimate: '',
@@ -365,7 +365,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   // Get context-aware assignment options based on phase
   const getAssignmentOptions = () => {
-    const selectedPhaseData = phases.find(p => p.id === formData.phase_id);
+    const selectedPhaseData = phases.find(p => p.id === formData.phaseId);
     const constructionPhase = (selectedPhaseData as any)?.constructionPhase || (selectedPhaseData as any)?.construction_phase;
     const isConstructionPhase = constructionPhase && 
       ['foundation', 'structure', 'finishing', 'utilities'].includes(constructionPhase);
@@ -373,7 +373,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     const options = [
       { category: 'Employés internes', items: employees.map(emp => ({ 
         id: emp.id, 
-        name: emp.full_name, 
+        name: emp.fullName, 
         subtitle: emp.position,
         type: 'employee'
       })) },
@@ -411,7 +411,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     if (emp) {
       return {
         assignee_type: 'employee' as const,
-        assignee_name: emp.full_name,
+        assignee_name: emp.fullName,
         assignee_email: null,
       };
     }
@@ -445,7 +445,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       return;
     }
 
-    if (!formData.applyToAllPhases && !formData.phase_id) {
+    if (!formData.applyToAllPhases && !formData.phaseId) {
       toast({
         title: "Erreur", 
         description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
@@ -460,22 +460,22 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       if (formData.applyToAllPhases) {
         // Create task for each phase
         currentPhases.forEach(phase => {
-          const assigneeInfo = getAssigneeInfo(formData.assigned_to || null);
+          const assigneeInfo = getAssigneeInfo(formData.assignedTo || null);
           tasksToCreate.push({
-            title: `${formData.title} - ${phase.phase_name}`,
+            title: `${formData.title} - ${phase.name}`,
             description: formData.description || null,
-            project_id: projectId,
-            phase_id: phase.id,
-            assigned_to: formData.assigned_to || null,
+            projectId: projectId,
+            phaseId: phase.id,
+            assignedTo: formData.assignedTo || null,
             assigned_by: null,
             ...assigneeInfo,
-            due_date: formData.due_date || null,
+            dueDate: formData.dueDate || null,
             priority: formData.priority,
             status: formData.status,
             notes: formData.notes || null,
             estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
-            start_date: formData.start_date || null,
-            end_date: formData.end_date || null,
+            startDate: formData.startDate || null,
+            endDate: formData.endDate || null,
             weight: formData.weight ? parseFloat(formData.weight) : 1,
             cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
             optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
@@ -486,22 +486,22 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         });
       } else {
         // Create single task for selected phase
-        const assigneeInfo = getAssigneeInfo(formData.assigned_to || null);
+        const assigneeInfo = getAssigneeInfo(formData.assignedTo || null);
         tasksToCreate.push({
           title: formData.title,
           description: formData.description || null,
-          project_id: projectId,
-          phase_id: formData.phase_id,
-          assigned_to: formData.assigned_to || null,
+          projectId: projectId,
+          phaseId: formData.phaseId,
+          assignedTo: formData.assignedTo || null,
           assigned_by: null,
           ...assigneeInfo,
-          due_date: formData.due_date || null,
+          dueDate: formData.dueDate || null,
           priority: formData.priority,
           status: formData.status,
           notes: formData.notes || null,
           estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
-          start_date: formData.start_date || null,
-          end_date: formData.end_date || null,
+          startDate: formData.startDate || null,
+          endDate: formData.endDate || null,
           weight: formData.weight ? parseFloat(formData.weight) : 1,
           cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
           optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
@@ -544,15 +544,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     setFormData({
       title: task.title || '',
       description: task.description || '',
-      phase_id: task.phase_id || '',
-      assigned_to: task.assigned_to || '',
-      due_date: task.due_date || '',
+      phaseId: task.phaseId || '',
+      assignedTo: task.assignedTo || '',
+      dueDate: task.dueDate || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
       notes: task.notes || '',
       estimated_duration: task.estimated_duration?.toString() || '',
-      start_date: task.start_date || '',
-      end_date: task.end_date || '',
+      startDate: task.startDate || '',
+      endDate: task.endDate || '',
       weight: task.weight?.toString() || '1',
       cost_estimate: task.cost_estimate?.toString() || '',
       optimistic_estimate: task.optimistic_estimate?.toString() || '',
@@ -566,7 +566,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   };
 
   const filteredTasks = currentTasks?.filter(task => {
-    const phaseMatch = selectedPhase === 'all' || task.phase_id === selectedPhase;
+    const phaseMatch = selectedPhase === 'all' || task.phaseId === selectedPhase;
     const statusMatch = selectedStatus === 'all' || task.status === selectedStatus;
     return phaseMatch && statusMatch;
   }) || [];
@@ -593,7 +593,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   const getAssigneeName = (assignedTo: string) => {
     const employee = employees.find(emp => emp.id === assignedTo);
-    if (employee) return employee.full_name;
+    if (employee) return employee.fullName;
     
     const supplier = suppliers.find(sup => sup.id === assignedTo);
     if (supplier) return supplier.name;
@@ -603,7 +603,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   const getPhaseName = (phaseId: string) => {
     const phase = phases.find(p => p.id === phaseId);
-    return phase?.phase_name || 'Phase inconnue';
+    return phase?.name || 'Phase inconnue';
   };
 
   if (isLoading) {
@@ -650,7 +650,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectItem value="all">Toutes les phases</SelectItem>
               {currentPhases.map((phase) => (
                 <SelectItem key={phase.id} value={phase.id}>
-                  {phase.phase_name}
+                  {phase.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -753,13 +753,13 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                       setFormData({
                                         ...formData,
                                         selectedPhases: [...selectedPhases, phase.id],
-                                        phase_id: phase.id // Keep single selection for backward compatibility
+                                        phaseId: phase.id // Keep single selection for backward compatibility
                                       });
                                     } else {
                                       setFormData({
                                         ...formData,
                                         selectedPhases: selectedPhases.filter(id => id !== phase.id),
-                                        phase_id: selectedPhases.filter(id => id !== phase.id)[0] || ''
+                                        phaseId: selectedPhases.filter(id => id !== phase.id)[0] || ''
                                       });
                                     }
                                   }}
@@ -767,7 +767,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                 />
                                 <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
                                   <span className="text-gray-900 dark:text-gray-100">
-                                    {phase.phase_name || `Phase ${phase.id}`}
+                                    {phase.name || `Phase ${phase.id}`}
                                   </span>
                                   {phase.construction_phase && (
                                     <span className="text-xs text-muted-foreground ml-2 block">
@@ -796,7 +796,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
                 <div>
                   <Label htmlFor="assignedTo">Assigné </Label>
-                  <Select value={formData.assigned_to} onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}>
+                  <Select value={formData.assignedTo} onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
@@ -805,7 +805,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                         <SelectLabel>Employés (Internes)</SelectLabel>
                         {employees.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
-                            {emp.full_name} {emp.position ? `(${emp.position})` : ''}
+                            {emp.fullName} {emp.position ? `(${emp.position})` : ''}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -835,8 +835,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     <Input
                       id="due_date"
                       type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      value={formData.dueDate}
+                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                     />
                   </div>
                   
@@ -892,16 +892,16 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Layers className="h-3 w-3" />
-                      {getPhaseName(task.phase_id || '')}
+                      {getPhaseName(task.phaseId || '')}
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {getAssigneeName(task.assigned_to || '')}
+                      {getAssigneeName(task.assignedTo || '')}
                     </span>
-                    {task.due_date && (
+                    {task.dueDate && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(task.due_date).toLocaleDateString()}
+                        {new Date(task.dueDate).toLocaleDateString()}
                       </span>
                     )}
                   </div>

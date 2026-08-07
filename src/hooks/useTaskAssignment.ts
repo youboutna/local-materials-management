@@ -89,7 +89,7 @@ export const useTaskAssignment = () => {
           assigneeType = 'supplier';
         } else {
           // Utilisateur par défaut
-          assigneeName = user.user_metadata?.full_name || user.email || 'Utilisateur';
+          assigneeName = user.user_metadata?.fullName || user.email || 'Utilisateur';
           assigneeType = 'user';
         }
       }
@@ -113,7 +113,7 @@ export const useTaskAssignment = () => {
           priority,
           dueDate: dueDate || undefined,
           assigneeName,
-          assignerName: user.user_metadata?.full_name || user.email || 'Directeur',
+          assignerName: user.user_metadata?.fullName || user.email || 'Directeur',
           relatedId: relatedId || undefined,
           relatedType: relatedId ? taskType : undefined,
           createdAt: new Date().toISOString(),
@@ -128,9 +128,9 @@ export const useTaskAssignment = () => {
       const notificationMetadata: Record<string, unknown> = {
         task_type: taskType,
         priority,
-        due_date: dueDate,
+        dueDate: dueDate,
         assignee_name: assigneeName,
-        assigner_name: user.user_metadata?.full_name || user.email || 'Directeur',
+        assigner_name: user.user_metadata?.fullName || user.email || 'Directeur',
         task_id: createdTask.id,
       };
 

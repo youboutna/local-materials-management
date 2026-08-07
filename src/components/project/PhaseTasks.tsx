@@ -26,7 +26,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     description: '',
     priority: 'medium',
     status: 'pending',
-    due_date: '',
+    dueDate: '',
   });
   
   const { 
@@ -49,7 +49,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
       description: '',
       priority: 'medium',
       status: 'pending',
-      due_date: '',
+      dueDate: '',
     });
   };
 
@@ -151,15 +151,15 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
   const startEdit = (task: PhaseTask) => {
     // Support both camelCase and snake_case
-    const dueDate = (task as any).dueDate || (task as any).due_date || '';
-    const assignedTo = (task as any).assignedTo || (task as any).assigned_to;
+    const dueDate = (task as any).dueDate || (task as any).dueDate || '';
+    const assignedTo = (task as any).assignedTo || (task as any).assignedTo;
     setFormData({
       title: task.title || '',
       description: task.description || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
-      due_date: dueDate,
-      assigned_to: assignedTo,
+      dueDate: dueDate,
+      assignedTo: assignedTo,
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -223,11 +223,11 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                   <div>
                     <TaskAssigneeSelector
                       projectId={projectId}
-                      value={formData.assigned_to}
+                      value={formData.assignedTo}
                       onChange={(id, name, email, type) => 
                         setFormData({ 
                           ...formData, 
-                          assigned_to: id,
+                          assignedTo: id,
                           assignee_name: name,
                           assignee_email: email,
                           assignee_type: type
@@ -286,8 +286,8 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     <Input
                       id="due_date"
                       type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      value={formData.dueDate}
+                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                     />
                   </div>
                 </div>
@@ -352,17 +352,17 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     {task.status === 'completed' ? 'Terminée' : 
                      task.status === 'in_progress' ? 'En cours' : 'En attente'}
                   </Badge>
-                  {((task as any).dueDate || (task as any).due_date) && (
+                  {((task as any).dueDate || (task as any).dueDate) && (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date((task as any).dueDate || (task as any).due_date).toLocaleDateString()}
+                      {new Date((task as any).dueDate || (task as any).dueDate).toLocaleDateString()}
                     </Badge>
                   )}
                 </div>
 
-                {((task as any).assignedTo || (task as any).assigned_to) && (
+                {((task as any).assignedTo || (task as any).assignedTo) && (
                   <p className="text-xs text-muted-foreground">
-                    Assigné à: {(task as any).assignedTo || (task as any).assigned_to}
+                    Assigné à: {(task as any).assignedTo || (task as any).assignedTo}
                   </p>
                 )}
                 
