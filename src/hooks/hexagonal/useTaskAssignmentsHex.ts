@@ -1,3 +1,4 @@
+import { PhaseService } from '@/application/services/PhaseService';
 /**
  * useTaskAssignmentsHex - Hook hexagonal pour la gestion des assignations de tâches
  * 

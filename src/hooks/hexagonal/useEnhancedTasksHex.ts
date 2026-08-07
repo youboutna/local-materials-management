@@ -1,3 +1,4 @@
+import { PhaseService } from '@/application/services/PhaseService';
 /**
  * useEnhancedTasksHex - Hook hexagonal pour les tâches avancées
  * 
