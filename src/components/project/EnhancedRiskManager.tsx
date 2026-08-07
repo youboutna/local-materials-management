@@ -98,8 +98,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     e.preventDefault();
     
     try {
-      const probability = parseInt(formData.probability);
-      const impact = parseInt(formData.impact);
+      const probability = parseInt(String(formData.probability), 10) || 0;
+      const impact = parseInt(String(formData.impact), 10) || 0;
       const riskScore = calculateRiskScore(probability, impact);
       const riskLevel = getRiskLevel(riskScore);
 
@@ -116,7 +116,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
         dueDate: formData.dueDate,
         phaseId: formData.phaseId,
         projectId: projectId,
-        identified_by: 'current_user', // This should come from auth context
+        identifiedBy: 'current_user',
         identifiedDate: new Date().toISOString(),
       };
 
@@ -154,12 +154,12 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     setFormData({
       title: risk.title,
       description: risk.description || '',
-      probability: risk.probability?.toString() || '',
-      impact: risk.impact?.toString() || '',
+      probability: risk.probability?.toString() ?? '',
+      impact: risk.impact?.toString() ?? '',
       mitigationPlan: risk.mitigationPlan || '',
       status: risk.status || 'identified',
-      ownerId: risk.ownerId || '',
-      dueDate: risk.dueDate || '',
+      ownerId: risk.ownerId ?? risk.owner ?? '',
+      dueDate: risk.dueDate ?? '',
       relatedTasks: [],
       phaseId: risk.phaseId || '',
       constructionPhase: '',
@@ -325,7 +325,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               </div>
               <div>
                 <Label htmlFor="probability">Probabilité (1-5)</Label>
-                <Select value={formData.probability} onValueChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}>
+                <Select value={String(formData.probability)} onValueChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -340,7 +340,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               </div>
               <div>
                 <Label htmlFor="impact">Impact (1-5)</Label>
-                <Select value={formData.impact} onValueChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}>
+                <Select value={String(formData.impact)} onValueChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -394,7 +394,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               </div>
               <div>
                 <Label htmlFor="status">Statut</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                <Select value={String(formData.status)} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

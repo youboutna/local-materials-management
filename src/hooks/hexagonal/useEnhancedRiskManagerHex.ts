@@ -79,10 +79,11 @@ export interface RiskTaskRelation {
 export interface RiskFormData {
   title: string;
   description: string;
-  probability: number;
-  impact: number;
+  /** Valeur de formulaire (chaîne issue des Select) convertie en number avant DTO. */
+  probability: number | string;
+  impact: number | string;
   mitigationPlan: string;
-  status: RiskStatus;
+  status: RiskStatus | string;
   ownerId: string;
   dueDate: string;
   relatedTasks: string[];
