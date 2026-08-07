@@ -285,14 +285,13 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             description: paymentDescription,
           });
         } else {
-          await supplierPaymentService.createInspectorFeePayment(
+          await supplierPaymentService.createPaymentRequest({
+            inspectionId: inspection.id,
             supplierId,
-            projectId,
             amount,
-            inspection.id,
-            inspection.date || inspection.scheduledDate || new Date().toISOString(),
-            paymentDescription
-          );
+            paymentType: 'inspector_fee',
+            description: paymentDescription,
+          });
         }
 
         toast({
