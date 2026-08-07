@@ -202,11 +202,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('employees')
-        .select('id, fullName, position')
+        .select('id, full_name, position')
         .eq('is_active', true);
       
       if (error) throw error;
-      return (data || []).filter(d => d.id && d.fullName).map(d => ({ id: d.id!, fullName: d.fullName!, position: d.position || '' }));
+      return (data || []).filter(d => d.id && d.full_name).map(d => ({ id: d.id!, fullName: d.full_name!, position: d.position || '' }));
     },
   });
 

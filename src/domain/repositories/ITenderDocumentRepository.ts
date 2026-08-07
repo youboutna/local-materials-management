@@ -3,6 +3,7 @@
  */
 
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '../entities/TenderDocument';
+import { IDocumentRepository } from './IDocumentRepository';
 
 export interface ITenderDocumentRepository extends IDocumentRepository{
   // CRUD operations

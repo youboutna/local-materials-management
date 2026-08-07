@@ -396,7 +396,7 @@ export function useTaskDependenciesHex(taskId: string) {
         toast({
           title: 'Tâche bloquée',
           description: `${result.blockedBy.length} dépendance(s) non terminée(s).`,
-          variant: 'warning',
+          variant: 'destructive',
         });
       }
     },

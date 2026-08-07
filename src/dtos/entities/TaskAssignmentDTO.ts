@@ -19,6 +19,8 @@ export enum TaskPriority {
   MEDIUM = 'medium',
   HIGH = 'high',
   URGENT = 'urgent',
+  /** Alias de vocabulaire UI — équivalent à URGENT. */
+  CRITICAL = 'urgent',
 }
 
 export type AssigneeType = 'supplier' | 'employee' | 'user';

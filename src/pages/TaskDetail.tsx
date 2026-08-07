@@ -159,13 +159,13 @@ const TaskDetail = () => {
                 </div>
               </div>
             )}
-            {task.completionDate && (
+            {task.completedAt && (
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-medium">Date de completion</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(task.completionDate).toLocaleDateString('fr-FR')}
+                    {new Date(task.completedAt).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               </div>

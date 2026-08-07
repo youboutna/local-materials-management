@@ -394,7 +394,7 @@ export type { UserProfile as AdminUserProfile } from './useUsersAdminHex';
 export type { MaterialDTO as MaterialOption } from '@/dtos/entities';
 
 // Missing types for components
-export type { EmployeeDTO as Employee, PhaseDTO as ProjectPhase, TaskDTO as ProjectTask } from '@/dtos/entities';
+export type { EmployeeDTO as Employee, PhaseDTO as ProjectPhase, TaskAssignmentDTO as ProjectTask } from '@/dtos/entities';
 export type { InspectionDTO as InspectionData } from '@/dtos/entities/InspectionDTO';
 
 // Selector option types for components

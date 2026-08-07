@@ -113,7 +113,7 @@ export class TaskAssignmentTransformer {
     };
 
     // Utiliser TaskAssignment.create() pour obtenir une instance complète
-    return TaskAssignment.create(createData);
+    return TaskAssignment.create(createData as Parameters<typeof TaskAssignment.create>[0]);
   }
 
   /**
@@ -221,8 +221,8 @@ export class TaskAssignmentTransformer {
       assigneeEmail: (row.assignee_email as string) ?? undefined,
       
       // Statut et priorité
-      status: (row.status as string) ?? 'pending',
-      priority: (row.priority as string) ?? 'medium',
+      status: normalizeTaskStatus(row.status as string | undefined, row.progress as number | undefined),
+      priority: normalizeTaskPriority(row.priority as string | undefined),
       progress: (row.progress as number) ?? 0,
       
       // Dates
@@ -244,7 +244,7 @@ export class TaskAssignmentTransformer {
     };
 
     // Utiliser TaskAssignment.create() pour obtenir une instance complète
-    return TaskAssignment.create(createData);
+    return TaskAssignment.create(createData as Parameters<typeof TaskAssignment.create>[0]);
   }
 
   /**
@@ -360,25 +360,16 @@ export class TaskAssignmentTransformer {
    */
   static normalizeForPersistence(entity: TaskAssignment): TaskAssignment {
     // Normalisation des champs
-    const normalized = { ...entity };
-    
-    // S'assurer que les champs obligatoires sont présents
-    if (!normalized.title) {
+    if (!entity.title) {
       throw new Error('Task title is required');
     }
-    
-    // Normaliser le statut
-    normalized.status = normalizeTaskStatus(entity.status);
-    
-    // Normaliser la priorité
-    normalized.priority = normalizeTaskPriority(entity.priority);
-    
-    // Normaliser les assignés
-    if (normalized.assignedTo) {
-      normalized.assignedTo = normalizeAssignedTo(normalized.assignedTo);
-    }
-    
-    return normalized;
+
+    return TaskAssignment.create({
+      ...entity,
+      status: normalizeTaskStatus(entity.status),
+      priority: normalizeTaskPriority(entity.priority),
+      assignedTo: normalizeAssignedTo(entity.assignedTo),
+    } as Parameters<typeof TaskAssignment.create>[0]);
   }
 
   /**
