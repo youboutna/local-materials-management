@@ -97,6 +97,47 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
   }
 
   /**
+   * Get a single notification by id
+   */
+  async getNotificationById(notificationId: string): Promise<{ notification: NotificationData | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', notificationId)
+        .maybeSingle();
+
+      if (error) return { notification: null, error };
+      return { notification: data ? this.mapRow(data) : null, error: null };
+    } catch (error) {
+      return { notification: null, error: error as Error };
+    }
+  }
+
+  /**
+   * Partially update a notification and return the persisted row
+   */
+  async updateNotification(
+    notificationId: string,
+    patch: Partial<Omit<NotificationData, 'id' | 'created_at'>>
+  ): Promise<{ notification: NotificationData | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .update({ ...patch, updated_at: new Date().toISOString() })
+        .eq('id', notificationId)
+        .select()
+        .maybeSingle();
+
+      if (error) return { notification: null, error };
+      if (!data) return { notification: null, error: new Error('Notification not found') };
+      return { notification: this.mapRow(data), error: null };
+    } catch (error) {
+      return { notification: null, error: error as Error };
+    }
+  }
+
+  /**
    * Mark notification as read
    */
   async markAsRead(notificationId: string): Promise<{ error: Error | null }> {
@@ -110,6 +151,59 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
     } catch (error) {
       return { error: error as Error };
     }
+  }
+
+  /**
+   * Mark notification as unread
+   */
+  async markAsUnread(notificationId: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: false, updated_at: new Date().toISOString() })
+        .eq('id', notificationId);
+
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }
+
+  /**
+   * Mark all notifications of a recipient as read
+   */
+  async markAllAsRead(userId: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('recipient_id', userId)
+        .eq('read', false);
+
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }
+
+  /**
+   * Map a raw notifications row to the domain shape
+   */
+  private mapRow(row: Record<string, any>): NotificationData {
+    return {
+      id: row.id,
+      recipient_id: row.recipient_id,
+      title: row.title,
+      message: row.message,
+      type: row.type as NotificationData['type'],
+      read: row.read,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      metadata:
+        row.metadata && typeof row.metadata === 'object'
+          ? (row.metadata as Record<string, any>)
+          : null,
+    };
   }
 
   /**
