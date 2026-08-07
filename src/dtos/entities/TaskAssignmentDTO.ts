@@ -73,11 +73,15 @@ export interface TaskAssignmentDTO {
 export interface CreateTaskAssignmentDTO {
   id?: string;
   title: string;
+  /** Alias de compatibilité de `title`. */
+  name?: string;
   description?: string;
   projectId?: string;
   phaseId?: string;
   stepId?: string;
   assignedTo?: string | string[];
+  /** Alias de compatibilité : assigné unique. */
+  assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
   assigneeName?: string;
@@ -90,12 +94,16 @@ export interface CreateTaskAssignmentDTO {
   endDate?: string;
   dueDate?: string;
   estimatedDuration?: number;
+  estimatedCost?: number;
   dependencies?: string[];
   notes?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateTaskAssignmentDTO {
   title?: string;
+  /** Alias de compatibilité de `title`. */
+  name?: string;
   description?: string;
   projectId?: string;
   phaseId?: string;
@@ -107,15 +115,21 @@ export interface UpdateTaskAssignmentDTO {
   startDate?: string;
   endDate?: string;
   dueDate?: string;
+  completedAt?: string;
   assignedTo?: string | string[];
+  /** Alias de compatibilité : assigné unique. */
+  assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
   assigneeName?: string;
   assigneeEmail?: string;
   estimatedDuration?: number;
   actualDuration?: number;
+  estimatedCost?: number;
+  actualCost?: number;
   dependencies?: string[];
   notes?: string;
+  metadata?: Record<string, unknown>;
 }
 
 /** Filtres de recherche. */
