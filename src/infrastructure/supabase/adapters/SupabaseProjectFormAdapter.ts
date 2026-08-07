@@ -273,7 +273,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       switch (step) {
         case 2: // Stakeholders
           if (data.stakeholders?.length) {
-            await new ProjectStakeholderService().createProjectStakeholders(projectId, data.stakeholders as any);
+            await new ProjectStakeholderService().createProjectStakeholders(projectId, data.stakeholders as any, {} as any);
           }
           break;
 
@@ -352,7 +352,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   /**
    * Load project data
    */
-  async loadProjectData(projectId: string): Promise<ProjectFormData | null> {
+  async loadProjectData(projectId: string): Promise<any | null> {
     try {
       const projectData = await this.projectService.getProjectById(projectId);
       if (!projectData) return null;
@@ -406,7 +406,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   /**
    * Load related data (stakeholders, phases, materials)
    */
-  async loadRelatedData(projectId: string): Promise<Partial<ProjectFormData>> {
+  async loadRelatedData(projectId: string): Promise<any> {
     try {
       // Load stakeholders
       const stakeholders = await new ProjectStakeholderService().getProjectStakeholders(projectId);

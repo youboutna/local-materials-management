@@ -52,7 +52,7 @@ export const useEnhancedTaskAssignment = () => {
     dueDate: task.dueDate || task.dueDate || '',
     projectId: task.projectId || task.projectId || '',
     notes: task.notes || ''
-  }));
+  })) as unknown as TaskAssignment[];
 
   // Create assignment wrapper for legacy interface
   const createAssignment = {
@@ -98,7 +98,7 @@ export const useEnhancedTaskAssignment = () => {
         projectId: updates.projectId || '',
         notes: updates.notes || ''
       };
-      return updateTask({ id, ...newAssignment });
+      return updateTask({ id, data: newAssignment as any });
     },
     mutateAsync: async ({ id, updates }: { id: string; updates: TaskUpdate }): Promise<any> => {
       const newAssignment = {
@@ -111,7 +111,7 @@ export const useEnhancedTaskAssignment = () => {
         projectId: updates.projectId || '',
         notes: updates.notes || ''
       };
-      return updateTask({ id, ...newAssignment });
+      return updateTask({ id, data: newAssignment as any });
     },
     isPending: isUpdating
   };

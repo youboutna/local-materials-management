@@ -1059,7 +1059,7 @@ export class ProjectWorkflowService {
           projectId,
           status: risk.status || RiskStatus.IDENTIFIED
         };
-        await this.riskRepository.save(riskEntity as Risk);
+        await this.riskRepository.save(riskEntity as unknown as Risk);
       }
     }
 

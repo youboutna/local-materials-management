@@ -224,12 +224,12 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                   <div>
                     <TaskAssigneeSelector
                       projectId={projectId}
-                      value={formData.assignedTo}
+                      value={Array.isArray(formData.assignedTo) ? formData.assignedTo[0] : formData.assignedTo}
                       onChange={(id, name, email, type) => 
                         setFormData({ 
                           ...formData, 
                           assignedTo: id,
-                          assignee_name: name,
+                          assigneeName: name,
                           assignee_email: email,
                           assignee_type: type
                         })
