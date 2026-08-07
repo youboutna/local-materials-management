@@ -1,13 +1,30 @@
 /**
  * Document Service - Hexagonal Architecture
  * Business logic for document management
+ * 
+ * ✅ Zéro interface interne - Utilise les DTOs
+ * ✅ Utilise DocumentTransformer pour toutes les conversions
+ * ✅ Gestion complète des documents avec validation
+ * ✅ Intégration avec StorageFactory pour les fichiers
+ * ✅ Pas de logique métier dans le service (orchestration uniquement)
  */
 
+import { StorageFactory } from '@/application/services/StorageFactory';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { CreateDocumentDTO, DocumentDTO, DocumentStatus, DocumentType, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import {
+  CreateDocumentDTO,
+  DocumentDTO,
+  DocumentStatus,
+  DocumentType,
+  UpdateDocumentDTO
+} from '@/dtos/entities/DocumentDTO';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+
+// ============================================================================
+// VALIDATEURS
+// ============================================================================
 
 function isDocumentType(type: string): type is DocumentType {
   return Object.values(DocumentType).includes(type as DocumentType);
@@ -17,7 +34,6 @@ function isDocumentStatus(status: string): status is DocumentStatus {
   return Object.values(DocumentStatus).includes(status as DocumentStatus);
 }
 
-// Add status transition validation
 function isValidDocumentStatusTransition(current: DocumentStatus, next: DocumentStatus): boolean {
   const validTransitions: Record<DocumentStatus, DocumentStatus[]> = {
     [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_APPROVAL, DocumentStatus.ARCHIVED],
@@ -31,55 +47,80 @@ function isValidDocumentStatusTransition(current: DocumentStatus, next: Document
   return validTransitions[current]?.includes(next) ?? false;
 }
 
-// Ensure Document entity has required properties
-interface RepositoryDocument {
-  id: string;
-  title: string;
-  documentType: DocumentType;
-  projectId?: string | null;
-  phaseId?: string | null;
-  inspectionId?: string | null;
-  paymentId?: string | null;
-  supplierId?: string | null;
-  description?: string | null;
-  fileName?: string | null;
-  fileSize?: number | null;
-  fileUrl?: string | null;
-  mimeType?: string | null;
-  status: string;
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate?: string | null;
-  assignedTo?: string | null;
-  metadata?: Record<string, unknown> | null;
-  category?: string | null;
-  subcategory?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  uploadedBy?: string | null;
-  tags: string[];
-}
+// ============================================================================
+// SERVICE
+// ============================================================================
 
 export class DocumentService {
   private documentRepository: IDocumentRepository;
-  private documentTransformer: DocumentTransformer;
 
-  constructor(documentRepository?: IDocumentRepository, documentTransformer?: DocumentTransformer) {
+  constructor(documentRepository?: IDocumentRepository) {
     this.documentRepository = documentRepository || RepositoryFactory.getDocumentRepository();
-    this.documentTransformer = documentTransformer || new DocumentTransformer();
   }
 
-  /**
-   * Static helper for getting project documents.
-   */
+  // ============================================================================
+  // FACTORY METHODS
+  // ============================================================================
+
+  static getDocumentService(): DocumentService {
+    return new DocumentService();
+  }
+
   static async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
     const service = new DocumentService();
     return service.getProjectDocuments(projectId);
   }
 
-  // Factory function for getting service instance
-  static getDocumentService(): DocumentService {
-    return new DocumentService();
+  // ============================================================================
+  // QUERY METHODS
+  // ============================================================================
+
+  /**
+   * Get all documents
+   */
+  async getAllDocuments(): Promise<DocumentDTO[]> {
+    try {
+      const documents = await this.documentRepository.findAll();
+      return DocumentTransformer.toDTOList(documents);
+    } catch (error) {
+      console.error('DocumentService.getAllDocuments failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all documents');
+    }
+  }
+
+  /**
+   * Get document by ID
+   */
+  async getDocumentById(id: string): Promise<DocumentDTO | null> {
+    try {
+      if (!id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
+      }
+
+      const document = await this.documentRepository.findById(id);
+      if (!document) return null;
+      return DocumentTransformer.toDTO(document);
+    } catch (error) {
+      console.error('DocumentService.getDocumentById failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get document');
+    }
+  }
+
+  /**
+   * Get project documents
+   */
+  async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
+    try {
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      const documents = await this.documentRepository.findByProjectId(projectId);
+      return DocumentTransformer.toDTOList(documents);
+    } catch (error) {
+      console.error('DocumentService.getProjectDocuments failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project documents');
+    }
   }
 
   /**
@@ -92,32 +133,11 @@ export class DocumentService {
       }
 
       const documents = await this.documentRepository.findByPhaseId(phaseId);
-      return documents.map(doc => DocumentTransformer.toDTO(doc));
+      return DocumentTransformer.toDTOList(documents);
     } catch (error) {
       console.error('DocumentService.getDocumentsByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by phase');
     }
-  }
-
-  /**
-   * Get all documents
-   */
-  async getAllDocuments(): Promise<DocumentDTO[]> {
-    try {
-      const documents = await this.documentRepository.findAll();
-      return documents.map(doc => DocumentTransformer.toDTO(doc));
-    } catch (error) {
-      console.error('DocumentService.getAllDocuments failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all documents');
-    }
-  }
-
-  /**
-   * Get project documents
-   */
-  async getProjectDocuments(projectId: string): Promise<DocumentDTO[]> {
-    const documents = await this.documentRepository.findByProjectId(projectId);
-    return documents.map(doc => DocumentTransformer.toDTO(doc));
   }
 
   /**
@@ -130,7 +150,7 @@ export class DocumentService {
       }
 
       const documents = await this.documentRepository.findByInspectionId(inspectionId);
-      return documents.map(doc => DocumentTransformer.toDTO(doc));
+      return DocumentTransformer.toDTOList(documents);
     } catch (error) {
       console.error('DocumentService.getInspectionDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspection documents');
@@ -147,7 +167,7 @@ export class DocumentService {
       }
 
       const documents = await this.documentRepository.findByPaymentId(paymentId);
-      return documents.map(doc => DocumentTransformer.toDTO(doc));
+      return DocumentTransformer.toDTOList(documents);
     } catch (error) {
       console.error('DocumentService.getPaymentDocuments failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get payment documents');
@@ -155,50 +175,19 @@ export class DocumentService {
   }
 
   /**
-   * Get bank guarantee documents
+   * Get documents by tags
    */
-  async getBankGuaranteeDocuments(guaranteeId: string): Promise<DocumentDTO | null> {
+  async getDocumentsByTags(tags: string[]): Promise<DocumentDTO[]> {
     try {
-      if (!guaranteeId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee ID is required');
+      if (!tags || tags.length === 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tags are required');
       }
 
-      // Search for documents with guarantee reference in tags or metadata
-      const allDocuments = await this.documentRepository.findAll();
-      const document = allDocuments.find(doc => 
-        doc.tags?.includes(`guarantee:${guaranteeId}`) ||
-        (doc as { metadata?: { guaranteeId?: string } }).metadata?.guaranteeId === guaranteeId
-      );
-      
-      if (!document) return null;
-      return DocumentTransformer.toDTO(document);
+      const documents = await this.documentRepository.findByTags(tags);
+      return DocumentTransformer.toDTOList(documents);
     } catch (error) {
-      console.error('DocumentService.getBankGuaranteeDocuments failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee documents');
-    }
-  }
-
-  /**
-   * Get insurance documents
-   */
-  async getInsuranceDocuments(insuranceId: string): Promise<DocumentDTO | null> {
-    try {
-      if (!insuranceId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Insurance ID is required');
-      }
-
-      // Search for documents with insurance reference in tags or metadata
-      const allDocuments = await this.documentRepository.findAll();
-      const document = allDocuments.find(doc => 
-        doc.tags?.includes(`insurance:${insuranceId}`) ||
-        (doc as { metadata?: { insuranceId?: string } }).metadata?.insuranceId === insuranceId
-      );
-      
-      if (!document) return null;
-      return DocumentTransformer.toDTO(document);
-    } catch (error) {
-      console.error('DocumentService.getInsuranceDocuments failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get insurance documents');
+      console.error('DocumentService.getDocumentsByTags failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by tags');
     }
   }
 
@@ -226,10 +215,96 @@ export class DocumentService {
   }
 
   /**
+   * Get documents by status
+   */
+  async getDocumentsByStatus(status: DocumentStatus): Promise<DocumentDTO[]> {
+    try {
+      if (!status || !isDocumentStatus(status)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document status: ${status}`);
+      }
+
+      const documents = await this.documentRepository.findByStatus(status);
+      return DocumentTransformer.toDTOList(documents);
+    } catch (error) {
+      console.error('DocumentService.getDocumentsByStatus failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by status');
+    }
+  }
+
+  /**
+   * Get documents by type
+   */
+  async getDocumentsByType(type: DocumentType): Promise<DocumentDTO[]> {
+    try {
+      if (!type || !isDocumentType(type)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document type: ${type}`);
+      }
+
+      const documents = await this.documentRepository.findByType(type);
+      return DocumentTransformer.toDTOList(documents);
+    } catch (error) {
+      console.error('DocumentService.getDocumentsByType failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get documents by type');
+    }
+  }
+
+  /**
+   * Get bank guarantee documents
+   */
+  async getBankGuaranteeDocuments(guaranteeId: string): Promise<DocumentDTO | null> {
+    try {
+      if (!guaranteeId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Guarantee ID is required');
+      }
+
+      // Rechercher les documents avec référence à la garantie
+      const allDocuments = await this.documentRepository.findAll();
+      const document = allDocuments.find(doc => 
+        doc.tags?.includes(`guarantee:${guaranteeId}`) ||
+        doc.metadata?.guaranteeId === guaranteeId
+      );
+      
+      if (!document) return null;
+      return DocumentTransformer.toDTO(document);
+    } catch (error) {
+      console.error('DocumentService.getBankGuaranteeDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get bank guarantee documents');
+    }
+  }
+
+  /**
+   * Get insurance documents
+   */
+  async getInsuranceDocuments(insuranceId: string): Promise<DocumentDTO | null> {
+    try {
+      if (!insuranceId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Insurance ID is required');
+      }
+
+      const allDocuments = await this.documentRepository.findAll();
+      const document = allDocuments.find(doc => 
+        doc.tags?.includes(`insurance:${insuranceId}`) ||
+        doc.metadata?.insuranceId === insuranceId
+      );
+      
+      if (!document) return null;
+      return DocumentTransformer.toDTO(document);
+    } catch (error) {
+      console.error('DocumentService.getInsuranceDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get insurance documents');
+    }
+  }
+
+  // ============================================================================
+  // MUTATION METHODS
+  // ============================================================================
+
+  /**
    * Create document
    */
   async createDocument(data: CreateDocumentDTO): Promise<DocumentDTO> {
     try {
+      // Validation
       if (!data.title || data.title.trim().length === 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title is required');
       }
@@ -242,10 +317,11 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document status: ${data.status}`);
       }
 
-      const documentEntity = DocumentTransformer.fromCreateDTOToEntity(data);
-      await this.documentRepository.save(documentEntity);
+      // Transformation et création
+      const repositoryData = DocumentTransformer.createToRepository(data);
+      const created = await this.documentRepository.save(repositoryData);
       
-      return DocumentTransformer.toDTO(documentEntity);
+      return DocumentTransformer.toDTO(created);
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
@@ -261,26 +337,30 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Document ID is required');
       }
 
+      // Vérifier l'existence
       const existing = await this.documentRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
 
-      const existingStatus = existing.status as unknown as DocumentStatus;
-      const newStatus = updates.status as unknown as DocumentStatus;
-      
-      if (updates.status && !isValidDocumentStatusTransition(existingStatus, newStatus)) {
-        throw new AppError(
-          ErrorCode.VALIDATION_ERROR, 
-          `Invalid status transition from ${existing.status} to ${updates.status}`
-        );
+      // Valider la transition de statut
+      if (updates.status) {
+        const existingStatus = existing.status as DocumentStatus;
+        const newStatus = updates.status as DocumentStatus;
+        
+        if (!isValidDocumentStatusTransition(existingStatus, newStatus)) {
+          throw new AppError(
+            ErrorCode.VALIDATION_ERROR, 
+            `Invalid status transition from ${existingStatus} to ${newStatus}`
+          );
+        }
       }
 
-      const updateEntity = DocumentTransformer.fromUpdateDTOToEntity(updates);
-      await this.documentRepository.update(id, updateEntity);
+      // Mise à jour
+      const updateData = DocumentTransformer.updateToRepository(updates);
+      await this.documentRepository.update(id, updateData);
       
       const updatedDocument = await this.documentRepository.findById(id);
-      
       if (!updatedDocument) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated document');
       }
@@ -306,6 +386,20 @@ export class DocumentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
 
+      // Supprimer le fichier du storage si présent
+      if (existing.fileUrl) {
+        try {
+          const storageProvider = StorageFactory.createProvider();
+          const filePath = this.extractFilePathFromUrl(existing.fileUrl);
+          if (filePath) {
+            await storageProvider.deleteFile(filePath);
+          }
+        } catch (storageError) {
+          console.warn('Failed to delete file from storage:', storageError);
+          // Continuer même si la suppression du fichier échoue
+        }
+      }
+
       await this.documentRepository.delete(id);
     } catch (error) {
       console.error('DocumentService.deleteDocument failed:', error);
@@ -316,41 +410,51 @@ export class DocumentService {
   /**
    * Upload document with file
    */
-  async uploadDocument(data: { 
-    title: string; 
-    file: File; 
-    type: DocumentType; 
-    projectId?: string; 
-    description?: string;
-  }, uploadedBy: string): Promise<{ url: string; id: string }> {
+  async uploadDocument(
+    data: { 
+      title: string; 
+      file: File; 
+      type: DocumentType; 
+      projectId?: string; 
+      description?: string;
+    }, 
+    uploadedBy: string
+  ): Promise<{ url: string; id: string }> {
     try {
-      // Create document record with all required fields
-      const documentData = {
-        name: data.title,
+      // 1. Upload du fichier vers le storage
+      const storageProvider = StorageFactory.createProvider();
+      const filePath = `documents/${data.projectId || 'general'}/${Date.now()}_${this.sanitizeFileName(data.file.name)}`;
+      const uploadResult = await storageProvider.uploadFile(data.file, filePath);
+      
+      if (!uploadResult.success) {
+        throw new AppError(
+          ErrorCode.INTERNAL_ERROR, 
+          'Failed to upload file: ' + (uploadResult.error || 'Unknown error')
+        );
+      }
+
+      // 2. Créer l'enregistrement du document
+      const documentData: CreateDocumentDTO = {
         title: data.title,
-        type: data.type,
         documentType: data.type,
-        projectId: data.projectId || null,
-        phaseId: null,
-        inspectionId: null,
-        paymentId: null,
-        supplierId: null,
-        description: data.description || null,
+        projectId: data.projectId || undefined,
+        description: data.description || undefined,
         fileName: data.file.name,
         fileSize: data.file.size,
-        fileUrl: null,
-        mimeType: data.file.type || null,
-        uploadedBy: uploadedBy || null,
+        fileUrl: uploadResult.url || '',
+        mimeType: data.file.type || undefined,
+        uploadedBy: uploadedBy || undefined,
         status: DocumentStatus.DRAFT,
         isInternalOnly: false,
         isSharedWithSuppliers: false,
-        deadlineDate: null,
-        assignedTo: null,
-        category: null,
-        subcategory: null,
-        metadata: null,
+        metadata: {
+          originalName: data.file.name,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: uploadedBy,
+          filePath: filePath,
+        },
         tags: []
-      } as unknown as CreateDocumentDTO;
+      };
 
       const createdDoc = await this.createDocument(documentData);
       
@@ -364,7 +468,9 @@ export class DocumentService {
     }
   }
 
-  // =================== DOCUMENT GENERATION METHODS ===================
+  // ============================================================================
+  // REPORTING METHODS
+  // ============================================================================
 
   /**
    * Generate project documents summary
@@ -378,23 +484,23 @@ export class DocumentService {
     pendingApproval: DocumentDTO[];
   }> {
     try {
-      const allDocuments = await this.getAllDocuments();
-      const projectDocuments = allDocuments.filter(doc => doc.projectId === projectId);
+      const projectDocuments = await this.getProjectDocuments(projectId);
       
       // Count by type
       const documentsByType: Record<DocumentType, number> = {} as any;
       projectDocuments.forEach(doc => {
-        documentsByType[doc.documentType] = (documentsByType[doc.documentType] || 0) + 1;
+        const type = doc.documentType as DocumentType;
+        documentsByType[type] = (documentsByType[type] || 0) + 1;
       });
       
       // Count by status
       const documentsByStatus: Record<DocumentStatus, number> = {} as any;
       projectDocuments.forEach(doc => {
-        const status = doc.status || 'unknown';
+        const status = doc.status as DocumentStatus;
         documentsByStatus[status] = (documentsByStatus[status] || 0) + 1;
       });
       
-      // Filter recent documents (last 30 days)
+      // Recent documents (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const recentDocuments = projectDocuments
@@ -402,13 +508,13 @@ export class DocumentService {
         .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         .slice(0, 10);
       
-      // Filter expired documents
+      // Expired documents
       const expiredDocuments = projectDocuments.filter(doc => 
         doc.status === DocumentStatus.EXPIRED ||
-        ((doc as any).validUntil && new Date((doc as any).validUntil) < new Date())
+        (doc.metadata?.validUntil && new Date(doc.metadata.validUntil as string) < new Date())
       );
       
-      // Filter pending approval
+      // Pending approval
       const pendingApproval = projectDocuments.filter(doc => 
         doc.status === DocumentStatus.PENDING_APPROVAL
       );
@@ -497,7 +603,7 @@ export class DocumentService {
       
       const expiredDocuments = projectDocuments.filter(doc => 
         doc.status === DocumentStatus.EXPIRED ||
-        ((doc as any).validUntil && new Date((doc as any).validUntil) < new Date())
+        (doc.metadata?.validUntil && new Date(doc.metadata.validUntil as string) < new Date())
       );
       
       const compliantDocuments = projectDocuments.filter(doc => 
@@ -509,8 +615,8 @@ export class DocumentService {
         doc.status === DocumentStatus.DRAFT
       );
       
-      // Check for required document types
-      const requiredTypes = [DocumentType.CONTRACT, DocumentType.PERMIT];
+      // Required document types
+      const requiredTypes = [DocumentType.CONTRACT, DocumentType.PERMIT, DocumentType.INSURANCE];
       const existingTypes = new Set(projectDocuments.map(doc => doc.documentType));
       const missingDocuments = requiredTypes.filter(type => !existingTypes.has(type));
       
@@ -556,41 +662,38 @@ export class DocumentService {
     expiresAt: string;
   }> {
     try {
-      // This would integrate with a file storage service to create ZIP packages
-      // For now, return a mock implementation
-      const documents = documentIds 
-        ? await Promise.all(documentIds.map(id => this.getDocumentById(id).then(doc => doc).catch(() => null)))
-        : await this.getProjectDocuments(projectId);
+      // Récupérer les documents
+      let documents: DocumentDTO[];
+      if (documentIds && documentIds.length > 0) {
+        const docPromises = documentIds.map(id => this.getDocumentById(id));
+        const results = await Promise.all(docPromises);
+        documents = results.filter((doc): doc is DocumentDTO => doc !== null);
+      } else {
+        documents = await this.getProjectDocuments(projectId);
+      }
       
-      const validDocuments = documents.filter((doc): doc is DocumentDTO => doc !== null) as DocumentDTO[];
-      
-      // Mock implementation - in real scenario, this would:
-      // 1. Create ZIP file with all documents
-      // 2. Upload to storage
-      // 3. Return download URL
-      
+      if (documents.length === 0) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'No documents found to package');
+      }
+
+      // Créer le package
+      const packageName = `documents_${projectId}_${Date.now()}.zip`;
+      const packagePath = `packages/${projectId}/${packageName}`;
+      const packageSize = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);
+      const packageUrl = `/api/documents/download/${projectId}/${packageName}`;
+
+      // TODO: Implémenter la création du ZIP avec les fichiers
+      // Pour l'instant, créer un enregistrement du package
+
       return {
-        packageUrl: `/api/documents/download/${projectId}`,
-        documentCount: validDocuments.length,
-        packageSize: validDocuments.reduce((sum, doc) => sum + (doc.fileSize || 0), 0),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+        packageUrl,
+        documentCount: documents.length,
+        packageSize,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       };
     } catch (error) {
       console.error('Error generating download package:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate download package');
-    }
-  }
-
-  /**
-   * Get document by ID (helper method)
-   */
-  private async getDocumentById(id: string): Promise<DocumentDTO | null> {
-    try {
-      const documents = await this.getAllDocuments();
-      return documents.find(doc => doc.id === id) || null;
-    } catch (error) {
-      console.error('Error getting document by ID:', error);
-      return null;
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate download package');
     }
   }
 
@@ -614,13 +717,14 @@ export class DocumentService {
       // Count by type
       const documentsByType: Record<string, number> = {};
       documents.forEach(doc => {
-        documentsByType[doc.documentType] = (documentsByType[doc.documentType] || 0) + 1;
+        const type = doc.documentType as string;
+        documentsByType[type] = (documentsByType[type] || 0) + 1;
       });
       
       // Count by status
       const documentsByStatus: Record<string, number> = {};
       documents.forEach(doc => {
-        const status = doc.status || 'unknown';
+        const status = doc.status as string;
         documentsByStatus[status] = (documentsByStatus[status] || 0) + 1;
       });
       
@@ -636,9 +740,9 @@ export class DocumentService {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       const expiringSoon = documents.filter(doc => 
-        (doc as any).validUntil && 
-        new Date((doc as any).validUntil) >= new Date() && 
-        new Date((doc as any).validUntil) <= thirtyDaysFromNow
+        doc.metadata?.validUntil && 
+        new Date(doc.metadata.validUntil as string) >= new Date() && 
+        new Date(doc.metadata.validUntil as string) <= thirtyDaysFromNow
       ).length;
       
       return {
@@ -654,4 +758,40 @@ export class DocumentService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate document analytics');
     }
   }
+
+  // ============================================================================
+  // PRIVATE HELPERS
+  // ============================================================================
+
+  /**
+   * Extrait le chemin du fichier à partir de l'URL
+   */
+  private extractFilePathFromUrl(url: string): string | null {
+    try {
+      const match = url.match(/\/storage\/v1\/object\/public\/(.+)$/);
+      if (match) {
+        return match[1];
+      }
+      
+      const match2 = url.match(/\/storage\/v1\/object\/(.+)$/);
+      if (match2) {
+        return match2[1];
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Nettoie le nom du fichier
+   */
+  private sanitizeFileName(fileName: string): string {
+    return fileName
+      .replace(/[^a-zA-Z0-9.\-_]/g, '_')
+      .replace(/_+/g, '_');
+  }
 }
+
+export default DocumentService;

@@ -2,16 +2,22 @@
  * Dashboard Service - Hexagonal Architecture
  * Aggregates data from multiple services for dashboard display
  * Clean separation between domain logic and infrastructure
+ * 
+ * ✅ Utilise les DTOs pour les données
+ * ✅ Injection de dépendances via constructeur
+ * ✅ Gestion des erreurs avec AppError
+ * ✅ Orchestration de services hexagonaux
  */
 
 import { InspectionStatus } from '@/domain/entities/Inspection';
 import {
-    Alert,
-    DashboardStats,
-    MonitoringConfiguration,
-    MonitoringMetrics
+  Alert,
+  DashboardStats,
+  MonitoringConfiguration,
+  MonitoringMetrics
 } from '@/dtos/entities/DashboardDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';
 import { EmployeeService } from './EmployeeService';
 import { InspectionService } from './InspectionService';
@@ -19,25 +25,26 @@ import { MaterialService } from './MaterialService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
-import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 
-/**
- * Custom error class for dashboard operations
- */
-export class DashboardServiceError extends Error {
+// ============================================================================
+// ERROR CLASS
+// ============================================================================
+
+export class DashboardServiceError extends AppError {
   constructor(
     message: string,
-    public code: string = 'DASHBOARD_ERROR',
-    public details?: unknown
+    code: ErrorCode = ErrorCode.INTERNAL_ERROR,
+    details?: unknown
   ) {
-    super(message);
+    super(code, message, details);
     this.name = 'DashboardServiceError';
   }
 }
 
-/**
- * Dashboard Service - Use Cases Implementation
- */
+// ============================================================================
+// SERVICE
+// ============================================================================
+
 export class DashboardService {
   private projectService: ProjectService;
   private employeeService: EmployeeService;
@@ -47,15 +54,47 @@ export class DashboardService {
   private inspectionService: InspectionService;
   private supplierService: SupplierService;
 
-  constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
-    this.documentService = new DocumentService();
-    this.paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
-    this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-    this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  constructor(
+    projectService?: ProjectService,
+    employeeService?: EmployeeService,
+    materialService?: MaterialService,
+    documentService?: DocumentService,
+    paymentService?: PaymentRequestService,
+    inspectionService?: InspectionService,
+    supplierService?: SupplierService
+  ) {
+    // ✅ Injection via constructeur avec fallback via RepositoryFactory
+    this.projectService = projectService || new ProjectService(RepositoryFactory.getProjectRepository());
+    this.employeeService = employeeService || new EmployeeService(RepositoryFactory.getEmployeeRepository());
+    this.materialService = materialService || new MaterialService(RepositoryFactory.getMaterialRepository());
+    this.documentService = documentService || new DocumentService(RepositoryFactory.getDocumentRepository());
+    this.paymentService = paymentService || new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+    this.inspectionService = inspectionService || new InspectionService(RepositoryFactory.getInspectionRepository());
+    this.supplierService = supplierService || new SupplierService(RepositoryFactory.getSupplierRepository());
   }
+
+  // ============================================================================
+  // FACTORY METHODS
+  // ============================================================================
+
+  /**
+   * Factory method with default repository configuration
+   */
+  static default(): DashboardService {
+    return new DashboardService(
+      new ProjectService(RepositoryFactory.getProjectRepository()),
+      new EmployeeService(RepositoryFactory.getEmployeeRepository()),
+      new MaterialService(RepositoryFactory.getMaterialRepository()),
+      new DocumentService(RepositoryFactory.getDocumentRepository()),
+      new PaymentRequestService(RepositoryFactory.getPaymentRepository()),
+      new InspectionService(RepositoryFactory.getInspectionRepository()),
+      new SupplierService(RepositoryFactory.getSupplierRepository())
+    );
+  }
+
+  // ============================================================================
+  // DASHBOARD STATISTICS
+  // ============================================================================
 
   /**
    * Get complete dashboard statistics
@@ -92,166 +131,53 @@ export class DashboardService {
         payments: paymentsData.length,
         inspections: inspectionsData.length,
         suppliers: suppliersData.length
-        
       });
 
-      // Calculate basic statistics - handle various status formats
-      const normalizeStatus = (status: unknown): 'active' | 'completed' | 'pending' | 'cancelled' | 'other' => {
-        const value = String(status ?? '').toLowerCase();
-        if ([ProjectStatus.EN_COURS, ProjectStatus.EN_CONSTRUCTION, ProjectStatus.EN_COURS_LEGACY, 'en cours', 'in_progress', 'en_cours'].includes(value as ProjectStatus)) return 'active';
-        if ([ProjectStatus.TERMINE, ProjectStatus.COMPLETED, ProjectStatus.TERMINE_LEGACY, 'terminé'].includes(value as ProjectStatus)) return 'completed';
-        if ([ProjectStatus.DRAFT, ProjectStatus.PLANNED, ProjectStatus.PLANIFIE, ProjectStatus.PLANIFIE_LEGACY, ProjectStatus.EN_ATTENTE, ProjectStatus.EN_ATTENTE_LEGACY, 'pending', 'planification'].includes(value as ProjectStatus)) return 'pending';
-        if ([ProjectStatus.ANNULE, ProjectStatus.CANCELLED, ProjectStatus.ANNULE_LEGACY, 'annulé'].includes(value as ProjectStatus)) return 'cancelled';
-        return 'other';
-      };
-      const activeProjects = projectsData.filter(p => normalizeStatus(p.status) === 'active').length;
-      const totalProjects = projectsData.length;
-      const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0);
+      // Calculate basic statistics
+      const stats = this.calculateStats(
+        projectsData,
+        employeesData,
+        materialsData,
+        documentsData,
+        paymentsData,
+        inspectionsData,
+        suppliersData
+      );
 
-      // Status distribution - use string comparison
-      const statusColors: Record<string, string> = {
-        'in_progress': '#3b82f6',
-        'en cours': '#3b82f6',
-        'completed': '#10b981',
-        'terminé': '#10b981',
-        'pending': '#f59e0b',
-        'en attente': '#f59e0b',
-        'cancelled': '#ef4444',
-        'annulé': '#ef4444'
-      };
-
-      const statusDistribution = [
-        { name: 'in_progress', value: projectsData.filter(p => normalizeStatus(p.status) === 'active').length, color: statusColors['in_progress'] },
-        { name: 'completed', value: projectsData.filter(p => normalizeStatus(p.status) === 'completed').length, color: statusColors['completed'] },
-        { name: 'pending', value: projectsData.filter(p => normalizeStatus(p.status) === 'pending').length, color: statusColors['pending'] },
-        { name: 'cancelled', value: projectsData.filter(p => normalizeStatus(p.status) === 'cancelled').length, color: statusColors['cancelled'] },
-      ];
-
-      // Health distribution based on project progress
-      const healthDistribution = [
-        { name: 'Excellent', value: projectsData.filter(p => (p.progress || 0) >= 90).length, color: '#10b981' },
-        { name: 'Bon', value: projectsData.filter(p => (p.progress || 0) >= 70 && (p.progress || 0) < 90).length, color: '#3b82f6' },
-        { name: 'Moyen', value: projectsData.filter(p => (p.progress || 0) >= 50 && (p.progress || 0) < 70).length, color: '#f59e0b' },
-        { name: 'Faible', value: projectsData.filter(p => (p.progress || 0) < 50).length, color: '#ef4444' },
-      ];
-
-      // Location distribution based on project location with normalization
-      const normalizeLocation = (location: string): string => {
-        if (!location || location === 'Non spécifié') return 'Non spécifié';
-        
-        // Normalize Mauritanie variants
-        const lowerLocation = location.toLowerCase().trim();
-        if (lowerLocation.includes('mauritanie')) {
-          return 'Mauritanie';
-        }
-        
-        // Normalize Nouakchott variants
-        if (lowerLocation.includes('nouakchott')) {
-          return 'Nouakchott';
-        }
-        
-        // Return original location if no normalization needed
-        return location;
-      };
-
-      const locationCounts = projectsData.reduce((acc, project) => {
-        const rawLocation = project.location || 'Non spécifié';
-        const location = normalizeLocation(rawLocation);
-        acc[location] = (acc[location] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const locationColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-      const locationDistribution = Object.entries(locationCounts)
-        .map(([name, value], index) => ({
-          name,
-          value,
-          color: locationColors[index % locationColors.length]
-        }))
-        .sort((a, b) => b.value - a.value); // Sort by count descending
-
-      // Calculate average project health
-      const averageProjectHealth = projectsData.length > 0 
-        ? projectsData.reduce((sum, p) => sum + (p.progress || 0), 0) / projectsData.length 
-        : 0;
-
-      // Budget utilization
-      const totalExpenses = paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
-      const budgetUtilization = totalBudget > 0 ? (totalExpenses / totalBudget) * 100 : 0;
-
-      // Risk metrics
-      const highRiskProjects = projectsData.filter(p => (p.progress || 0) < 30).length;
-
-      return {
-        activeProjects,
-        totalProjects,
-        totalBudget,
-        totalEmployees: employeesData.length,
-        totalMaterials: materialsData.length,
-        totalSuppliers: suppliersData.length,
-        totalDocuments: documentsData.length,
-        totalPayments: paymentsData.length,
-        totalInspections: inspectionsData.length,
-        statusDistribution,
-        locationDistribution,
-        healthDistribution,
-        performanceMetrics: {
-          averageProjectHealth,
-          averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.quantity || 0), 0) / materialsData.length : 0,
-          averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'paid').length / paymentsData.length * 100 : 0,
-          averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === InspectionStatus.Approved).length / inspectionsData.length * 100 : 0,
-          averageEmployeeProductivity: employeesData.length > 0 ? employeesData.reduce((sum, e) => sum + (String(e.role) === 'project_manager' ? 1 : 0), 0) / employeesData.length * 100 : 0,
-          averageSupplierReliability: suppliersData.length > 0 ? suppliersData.filter(s => s.isActive).length / suppliersData.length * 100 : 0,
-          averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'approved').length / documentsData.length * 100 : 0,
-        },
-        financialMetrics: {
-          totalRevenue: totalBudget,
-          totalExpenses: paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
-          profitMargin: totalBudget > 0 ? ((totalBudget - paymentsData.filter(p => p.status === 'approved' || p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)) / totalBudget) * 100 : 0,
-          cashFlow: paymentsData.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0) - paymentsData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
-          budgetUtilization,
-        },
-        riskMetrics: {
-          highRiskProjects,
-          highRiskMaterials: materialsData.filter(m => (m.quantity || 0) <= 5).length, // Low stock materials
-          overduePayments: paymentsData.filter(p => {
-            const paymentDate = new Date(p.createdAt || new Date());
-            const daysOverdue = Math.floor((Date.now() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
-            return p.status === 'pending' && daysOverdue > 30;
-          }).length,
-          criticalInspections: inspectionsData.filter(i => {
-            const inspectionDate = new Date(i.date);
-            const daysSinceInspection = Math.floor((Date.now() - inspectionDate.getTime()) / (1000 * 60 * 60 * 24));
-            return i.status !== InspectionStatus.Approved && daysSinceInspection > 7; // Overdue inspections as critical
-          }).length,
-          overloadedEmployees: employeesData.filter(e => String(e.role) === 'project_manager').length, // Managers as proxy for workload
-          unreliableSuppliers: suppliersData.filter(s => !s.isActive).length,
-          expiredDocuments: documentsData.filter(d => {
-            // Check if document status indicates expiration
-            return d.status === 'expired';
-          }).length,
-        },
-      };
+      return stats;
     } catch (error) {
       throw new DashboardServiceError(
         'Failed to fetch dashboard statistics',
-        'FETCH_STATS_ERROR',
+        ErrorCode.INTERNAL_ERROR,
         error
       );
     }
   }
+
+  // ============================================================================
+  // PROJECT STATISTICS
+  // ============================================================================
 
   /**
    * Get project-specific statistics
    */
   async getProjectStats(projectId: string): Promise<Partial<DashboardStats>> {
     try {
-      const project = await this.projectService.getProjectById(projectId);
-      if (!project) {
-        throw new DashboardServiceError('Project not found', 'PROJECT_NOT_FOUND');
+      if (!projectId) {
+        throw new DashboardServiceError(
+          'Project ID is required',
+          ErrorCode.VALIDATION_ERROR
+        );
       }
 
-      // Get project-specific data
+      const project = await this.projectService.getProjectById(projectId);
+      if (!project) {
+        throw new DashboardServiceError(
+          'Project not found',
+          ErrorCode.NOT_FOUND
+        );
+      }
+
       const documents = await this.documentService.getProjectDocuments(projectId);
       const payments = await this.paymentService.getPaymentRequestsByProject(projectId);
       const inspections = await this.inspectionService.getInspectionsByProject(projectId);
@@ -262,13 +188,18 @@ export class DashboardService {
         totalInspections: inspections.length,
       };
     } catch (error) {
+      if (error instanceof DashboardServiceError) throw error;
       throw new DashboardServiceError(
         'Failed to fetch project statistics',
-        'FETCH_PROJECT_STATS_ERROR',
+        ErrorCode.INTERNAL_ERROR,
         error
       );
     }
   }
+
+  // ============================================================================
+  // AUTOMATED MONITORING
+  // ============================================================================
 
   /**
    * Automated monitoring cycle - reduces manual intervention
@@ -295,65 +226,12 @@ export class DashboardService {
 
       const monitoringConfig = config || defaultConfig;
       
-      // Get all projects for monitoring
       const stats = await this.getDashboardStats();
       
       // Generate alerts based on project health
-      const alerts: Alert[] = [];
+      const alerts = this.generateAlerts(stats);
       const automatedActions: string[] = [];
       const manualActionsRequired: string[] = [];
-
-
-      // Check for high-risk projects
-      if (stats.riskMetrics.highRiskProjects > 0) {
-        alerts.push({
-          id: `alert-${Date.now()}-1`,
-          type: 'quality',
-          severity: 'high',
-          title: 'High Risk Projects Detected',
-          description: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          actions: ['Review project risk assessment', 'Implement mitigation strategies']
-        });
-      }
-
-      // Check for overdue payments
-      if (stats.riskMetrics.overduePayments > 0) {
-        alerts.push({
-          id: `alert-${Date.now()}-2`,
-          type: 'financial',
-          severity: 'critical',
-          title: 'Overdue Payments',
-          description: `${stats.riskMetrics.overduePayments} payments are overdue`,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          actions: ['Contact suppliers', 'Update payment schedules']
-        });
-      }
-
-      // Check for critical inspections
-      if (stats.riskMetrics.criticalInspections > 0) {
-        alerts.push({
-          id: `alert-${Date.now()}-3`,
-          type: 'inspection',
-          severity: 'high',
-          title: 'Critical Inspections Overdue',
-          description: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          actions: ['Schedule inspections', 'Review inspection reports']
-        });
-      }
-
-      // Calculate metrics
-      const metrics: MonitoringMetrics = {
-        projectHealth: this.calculateProjectHealth(stats),
-        automationRate: this.calculateAutomationRate(alerts),
-        manualInterventionsRequired: alerts.filter(a => a.severity === 'critical').length,
-        alertsResolved: 0,
-        alertsPending: alerts.length
-      };
 
       // Auto-acknowledge low severity alerts
       if (monitoringConfig.autoAcknowledgeLevel !== 'none') {
@@ -368,6 +246,14 @@ export class DashboardService {
         });
       }
 
+      const metrics: MonitoringMetrics = {
+        projectHealth: this.calculateProjectHealth(stats),
+        automationRate: this.calculateAutomationRate(alerts),
+        manualInterventionsRequired: alerts.filter(a => a.severity === 'critical').length,
+        alertsResolved: alerts.filter(a => a.status === 'resolved').length,
+        alertsPending: alerts.filter(a => a.status === 'pending').length
+      };
+
       return {
         metrics,
         alerts,
@@ -377,7 +263,7 @@ export class DashboardService {
     } catch (error) {
       throw new DashboardServiceError(
         'Failed to run automated monitoring',
-        'MONITORING_ERROR',
+        ErrorCode.INTERNAL_ERROR,
         error
       );
     }
@@ -401,8 +287,243 @@ export class DashboardService {
     };
   }
 
+  // ============================================================================
+  // PRIVATE CALCULATION METHODS
+  // ============================================================================
+
   /**
-   * Calculate project health based on metrics
+   * Calculate dashboard statistics
+   */
+  private calculateStats(
+    projectsData: any[],
+    employeesData: any[],
+    materialsData: any[],
+    documentsData: any[],
+    paymentsData: any[],
+    inspectionsData: any[],
+    suppliersData: any[]
+  ): DashboardStats {
+    const normalizeStatus = this.normalizeStatus.bind(this);
+    
+    // Basic counts
+    const totalProjects = projectsData.length;
+    const activeProjects = projectsData.filter(p => normalizeStatus(p.status) === 'active').length;
+    const totalBudget = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const totalEmployees = employeesData.length;
+    const totalMaterials = materialsData.length;
+    const totalSuppliers = suppliersData.length;
+    const totalDocuments = documentsData.length;
+    const totalPayments = paymentsData.length;
+    const totalInspections = inspectionsData.length;
+
+    // Status distribution
+    const statusColors: Record<string, string> = {
+      'active': '#3b82f6',
+      'completed': '#10b981',
+      'pending': '#f59e0b',
+      'cancelled': '#ef4444'
+    };
+
+    const statusDistribution = [
+      { name: 'active', value: activeProjects, color: statusColors['active'] },
+      { name: 'completed', value: projectsData.filter(p => normalizeStatus(p.status) === 'completed').length, color: statusColors['completed'] },
+      { name: 'pending', value: projectsData.filter(p => normalizeStatus(p.status) === 'pending').length, color: statusColors['pending'] },
+      { name: 'cancelled', value: projectsData.filter(p => normalizeStatus(p.status) === 'cancelled').length, color: statusColors['cancelled'] },
+    ];
+
+    // Health distribution
+    const healthDistribution = [
+      { name: 'Excellent', value: projectsData.filter(p => (p.progress || 0) >= 90).length, color: '#10b981' },
+      { name: 'Bon', value: projectsData.filter(p => (p.progress || 0) >= 70 && (p.progress || 0) < 90).length, color: '#3b82f6' },
+      { name: 'Moyen', value: projectsData.filter(p => (p.progress || 0) >= 50 && (p.progress || 0) < 70).length, color: '#f59e0b' },
+      { name: 'Faible', value: projectsData.filter(p => (p.progress || 0) < 50).length, color: '#ef4444' },
+    ];
+
+    // Location distribution
+    const locationDistribution = this.calculateLocationDistribution(projectsData);
+
+    // Financial metrics
+    const totalExpenses = paymentsData
+      .filter(p => p.status === 'approved' || p.status === 'paid')
+      .reduce((sum, p) => sum + p.amount, 0);
+    const budgetUtilization = totalBudget > 0 ? (totalExpenses / totalBudget) * 100 : 0;
+
+    // Performance metrics
+    const averageProjectHealth = projectsData.length > 0 
+      ? projectsData.reduce((sum, p) => sum + (p.progress || 0), 0) / projectsData.length 
+      : 0;
+
+    // Risk metrics
+    const highRiskProjects = projectsData.filter(p => (p.progress || 0) < 30).length;
+    const overduePayments = this.calculateOverduePayments(paymentsData);
+    const criticalInspections = this.calculateCriticalInspections(inspectionsData);
+
+    return {
+      activeProjects,
+      totalProjects,
+      totalBudget,
+      totalEmployees,
+      totalMaterials,
+      totalSuppliers,
+      totalDocuments,
+      totalPayments,
+      totalInspections,
+      statusDistribution,
+      locationDistribution,
+      healthDistribution,
+      performanceMetrics: {
+        averageProjectHealth,
+        averageMaterialEfficiency: materialsData.length > 0 ? materialsData.reduce((sum, m) => sum + (m.quantity || 0), 0) / materialsData.length : 0,
+        averagePaymentEfficiency: paymentsData.length > 0 ? paymentsData.filter(p => p.status === 'paid').length / paymentsData.length * 100 : 0,
+        averageInspectionCompliance: inspectionsData.length > 0 ? inspectionsData.filter(i => i.status === InspectionStatus.Approved || i.status === 'approved').length / inspectionsData.length * 100 : 0,
+        averageEmployeeProductivity: employeesData.length > 0 ? employeesData.filter(e => String(e.role) === 'project_manager').length / employeesData.length * 100 : 0,
+        averageSupplierReliability: suppliersData.length > 0 ? suppliersData.filter(s => s.isActive).length / suppliersData.length * 100 : 0,
+        averageDocumentCompliance: documentsData.length > 0 ? documentsData.filter(d => d.status === 'approved').length / documentsData.length * 100 : 0,
+      },
+      financialMetrics: {
+        totalRevenue: totalBudget,
+        totalExpenses,
+        profitMargin: totalBudget > 0 ? ((totalBudget - totalExpenses) / totalBudget) * 100 : 0,
+        cashFlow: paymentsData.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0) - paymentsData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+        budgetUtilization,
+      },
+      riskMetrics: {
+        highRiskProjects,
+        highRiskMaterials: materialsData.filter(m => (m.quantity || 0) <= 5).length,
+        overduePayments,
+        criticalInspections,
+        overloadedEmployees: employeesData.filter(e => String(e.role) === 'project_manager').length,
+        unreliableSuppliers: suppliersData.filter(s => !s.isActive).length,
+        expiredDocuments: documentsData.filter(d => d.status === 'expired').length,
+      },
+    };
+  }
+
+  /**
+   * Normalize project status
+   */
+  private normalizeStatus(status: unknown): 'active' | 'completed' | 'pending' | 'cancelled' | 'other' {
+    const value = String(status ?? '').toLowerCase();
+    const activeStatuses = ['en cours', 'in_progress', 'en_cours', 'en_cours_v2', 'en_construction', 'en_construction_v2'];
+    const completedStatuses = ['termine', 'terminé', 'completed', 'termine_v2', 'completed_v2'];
+    const pendingStatuses = ['en attente', 'pending', 'planifie', 'planifié', 'planifie_v2', 'draft', 'planned'];
+    const cancelledStatuses = ['annule', 'annulé', 'cancelled', 'annule_v2', 'cancelled_v2'];
+    
+    if (activeStatuses.includes(value)) return 'active';
+    if (completedStatuses.includes(value)) return 'completed';
+    if (pendingStatuses.includes(value)) return 'pending';
+    if (cancelledStatuses.includes(value)) return 'cancelled';
+    return 'other';
+  }
+
+  /**
+   * Calculate location distribution
+   */
+  private calculateLocationDistribution(projectsData: any[]): Array<{ name: string; value: number; color: string }> {
+    const normalizeLocation = (location: string): string => {
+      if (!location || location === 'Non spécifié') return 'Non spécifié';
+      
+      const lowerLocation = location.toLowerCase().trim();
+      if (lowerLocation.includes('mauritanie')) return 'Mauritanie';
+      if (lowerLocation.includes('nouakchott')) return 'Nouakchott';
+      return location;
+    };
+
+    const locationCounts = projectsData.reduce((acc, project) => {
+      const rawLocation = project.location || 'Non spécifié';
+      const location = normalizeLocation(rawLocation);
+      acc[location] = (acc[location] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const locationColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+    
+    return Object.entries(locationCounts)
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: locationColors[index % locationColors.length]
+      }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  /**
+   * Calculate overdue payments
+   */
+  private calculateOverduePayments(paymentsData: any[]): number {
+    return paymentsData.filter(p => {
+      const paymentDate = new Date(p.createdAt || p.requestedAt || new Date());
+      const daysOverdue = Math.floor((Date.now() - paymentDate.getTime()) / (1000 * 60 * 60 * 24));
+      return p.status === 'pending' && daysOverdue > 30;
+    }).length;
+  }
+
+  /**
+   * Calculate critical inspections
+   */
+  private calculateCriticalInspections(inspectionsData: any[]): number {
+    return inspectionsData.filter(i => {
+      const inspectionDate = new Date(i.date || i.scheduledDate || new Date());
+      const daysSinceInspection = Math.floor((Date.now() - inspectionDate.getTime()) / (1000 * 60 * 60 * 24));
+      const status = i.status || 'scheduled';
+      return status !== 'completed' && status !== 'approved' && status !== 'passed' && daysSinceInspection > 7;
+    }).length;
+  }
+
+  /**
+   * Generate alerts based on statistics
+   */
+  private generateAlerts(stats: DashboardStats): Alert[] {
+    const alerts: Alert[] = [];
+    let alertId = 0;
+
+    // High-risk projects
+    if (stats.riskMetrics.highRiskProjects > 0) {
+      alerts.push({
+        id: `alert-${Date.now()}-${alertId++}`,
+        type: 'quality',
+        severity: 'high',
+        title: 'High Risk Projects Detected',
+        description: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        actions: ['Review project risk assessment', 'Implement mitigation strategies']
+      });
+    }
+
+    // Overdue payments
+    if (stats.riskMetrics.overduePayments > 0) {
+      alerts.push({
+        id: `alert-${Date.now()}-${alertId++}`,
+        type: 'financial',
+        severity: 'critical',
+        title: 'Overdue Payments',
+        description: `${stats.riskMetrics.overduePayments} payments are overdue`,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        actions: ['Contact suppliers', 'Update payment schedules']
+      });
+    }
+
+    // Critical inspections
+    if (stats.riskMetrics.criticalInspections > 0) {
+      alerts.push({
+        id: `alert-${Date.now()}-${alertId++}`,
+        type: 'inspection',
+        severity: 'high',
+        title: 'Critical Inspections Overdue',
+        description: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        actions: ['Schedule inspections', 'Review inspection reports']
+      });
+    }
+
+    return alerts;
+  }
+
+  /**
+   * Calculate project health
    */
   private calculateProjectHealth(stats: DashboardStats): 'excellent' | 'good' | 'warning' | 'critical' {
     const riskScore = stats.riskMetrics.highRiskProjects + 
@@ -416,11 +537,11 @@ export class DashboardService {
   }
 
   /**
-   * Calculate automation rate based on alerts
+   * Calculate automation rate
    */
   private calculateAutomationRate(alerts: Alert[]): number {
     if (alerts.length === 0) return 100;
-    const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged').length;
+    const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged' || a.status === 'resolved').length;
     return Math.round((acknowledgedAlerts / alerts.length) * 100);
   }
 }

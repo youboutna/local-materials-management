@@ -5,7 +5,7 @@
  * Aligned with EnhancedMaterialForm requirements
  */
 
-import { BaseEntityDTO, LocationDTO } from '../shared';
+import { BaseEntityDTO } from '../shared';
 
 /**
  * Material category enumeration
@@ -171,7 +171,9 @@ export interface MaterialFormDataDTO {
     name: string;
     contact: string;
     leadTime: number;
+    supplierId?: string;
   };
+  supplierId?: string;
 }
 
 /**

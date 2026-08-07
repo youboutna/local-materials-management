@@ -2,34 +2,58 @@
  * Material Service - Hexagonal Architecture
  * Business logic for material management with geocoding integration
  * Rule #1: Form → DTO → Service → Domain → Adapter → DB
+ * 
+ * ✅ Utilise les DTOs pour les données
+ * ✅ Injection de dépendances via constructeur
+ * ✅ Gestion des erreurs avec AppError
+ * ✅ Pas de supabase direct
+ * ✅ Séparation des responsabilités
+ * ✅ Gestion complète des relations projet-matériaux
+ * ✅ Typage correct pour les retours de ProjectMaterial
  */
 
-import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
-import { Material } from '@/domain/entities/Material';
-import {
-  MaterialDTO,
-  CreateMaterialDTO,
-  UpdateMaterialDTO,
-  MaterialFilterDTO,
-  MaterialCategory,
-  MaterialFormDataDTO
-} from '@/dtos/entities/MaterialDTO';
-import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
-import { GeocodingService } from './GeocodingService';
-import { getGeocodingService } from './GeocodingServiceFactory';
 import { SupplierService } from '@/application/services/SupplierService';
-import { WorkspaceService } from './WorkspaceService';
-import { DocumentService } from './DocumentService';
+import { Material } from '@/domain/entities/Material';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
-import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import {
+  CreateMaterialDTO,
+  MaterialCategory,
+  MaterialDTO,
+  MaterialFilterDTO,
+  MaterialFormDataDTO,
+  ProjectMaterialDTO,
+  UpdateMaterialDTO,
+} from '@/dtos/entities/MaterialDTO';
+import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { DocumentService } from './DocumentService';
+import { GeocodingService } from './GeocodingService';
+import { getGeocodingService } from './GeocodingServiceFactory';
+import { WorkspaceService } from './WorkspaceService';
+
+// ============================================================================
+// INTERFACE POUR LES RÉSULTATS AVEC FOURNISSEURS
+// ============================================================================
+
+export interface MaterialWithSupplierResult {
+  material: MaterialDTO;
+  projectMaterial: ProjectMaterialDTO;
+  supplier?: any;
+}
+
+// ============================================================================
+// SERVICE
+// ============================================================================
 
 export class MaterialService {
   private geocodingService: GeocodingService;
-  private supplierService!: SupplierService;
-  private workspaceService!: WorkspaceService;
-  private documentService!: DocumentService;
+  private supplierService: SupplierService;
+  private workspaceService: WorkspaceService;
+  private documentService: DocumentService;
 
   constructor(
     private materialRepository: IMaterialRepository,
@@ -37,28 +61,37 @@ export class MaterialService {
     workspaceRepository?: IWorkspaceRepository,
     documentRepository?: IDocumentRepository
   ) {
-    // Singleton geocoding service (factory) — no per-instance Nominatim config.
     this.geocodingService = getGeocodingService();
-
-    // Initialize related services following hexagonal architecture
-    if (supplierRepository) {
-      this.supplierService = new SupplierService(supplierRepository);
-    }
-    if (workspaceRepository) {
-      this.workspaceService = new WorkspaceService();
-    }
-    // DocumentService uses RepositoryFactory internally
-    this.documentService = {} as DocumentService; // Lazy init - will use RepositoryFactory
+    this.supplierService = new SupplierService(
+      supplierRepository || RepositoryFactory.getSupplierRepository()
+    );
+    this.workspaceService = new WorkspaceService(
+      workspaceRepository || RepositoryFactory.getWorkspaceRepository()
+    );
+    this.documentService = new DocumentService(
+      documentRepository || RepositoryFactory.getDocumentRepository()
+    );
   }
 
-  // =================== CRUD Operations ===================
+  // ============================================================================
+  // FACTORY METHODS
+  // ============================================================================
+
+  static default(): MaterialService {
+    return new MaterialService(
+      RepositoryFactory.getMaterialRepository()
+    );
+  }
+
+  // ============================================================================
+  // CRUD OPERATIONS
+  // ============================================================================
 
   async getAllMaterials(filter?: MaterialFilterDTO): Promise<MaterialDTO[]> {
     try {
       const materials = await this.materialRepository.findAll();
       let dtos = materials.map(m => MaterialTransformer.toDTO(m));
 
-      // Apply filters if provided
       if (filter) {
         dtos = this.applyFilters(dtos, filter);
       }
@@ -70,13 +103,7 @@ export class MaterialService {
     }
   }
 
-  /**
-   * Get materials formatted for UI usage
-   * Returns MaterialDTO[] instead of MaterialDTO[] for UI-specific formatting
-   */
   async getMaterialsForUI(filter?: MaterialFilterDTO): Promise<MaterialDTO[]> {
-    // For now, return the same as getAllMaterials
-    // TODO: Add UI-specific formatting if needed
     return this.getAllMaterials(filter);
   }
 
@@ -92,22 +119,14 @@ export class MaterialService {
 
   async createMaterial(dto: CreateMaterialDTO): Promise<MaterialDTO> {
     try {
-      // Validate input data
       this.validateCreateMaterialData(dto);
-
-      // Hexagonal Architecture: Validate related entities exist
       await this.validateRelatedEntities(dto);
 
-      // Create entity from DTO
       const entity = MaterialTransformer.createEntityFromCreateDTO(dto);
-
-      // Additional business logic - geocode address if provided
       const enrichedEntity = dto.adresse ? await this.enrichWithGeocoding(entity) : entity;
 
-      // Save via repository (returns void)
       await this.materialRepository.save(enrichedEntity);
 
-      // Retrieve the saved material to get the generated ID
       const savedMaterial = await this.materialRepository.findById(enrichedEntity.id);
       if (!savedMaterial) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve saved material');
@@ -127,16 +146,10 @@ export class MaterialService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Material not found');
       }
 
-      // Validate update data
       this.validateUpdateMaterialData(dto);
-
-      // Apply updates to entity
       const updatedEntity = this.applyUpdatesToEntity(existing, dto);
-
-      // Additional business logic - geocode address if changed
       const enrichedEntity = dto.adresse ? await this.enrichWithGeocoding(updatedEntity) : updatedEntity;
 
-      // Save via repository
       await this.materialRepository.update(id, enrichedEntity);
 
       const updated = await this.materialRepository.findById(id);
@@ -164,7 +177,9 @@ export class MaterialService {
     }
   }
 
-  // =================== Query Operations ===================
+  // ============================================================================
+  // QUERY OPERATIONS
+  // ============================================================================
 
   async getMaterialsByCategory(category: string): Promise<MaterialDTO[]> {
     try {
@@ -207,15 +222,17 @@ export class MaterialService {
     }
   }
 
+  // ============================================================================
+  // PROJECT MATERIAL RELATIONSHIPS
+  // ============================================================================
+
   /**
-   * Get materials for a specific project
-   * TODO: Implement project-material relationships when available
+   * Récupère tous les matériaux associés à un projet
    */
-  async getProjectMaterials(projectId: string): Promise<MaterialDTO[]> {
+  async getProjectMaterials(projectId: string): Promise<ProjectMaterialDTO[]> {
     try {
-      // For now, return all materials
-      // TODO: Filter by project when project-material relationship is implemented
-      return this.getAllMaterials();
+      const projectMaterials = await this.materialRepository.getProjectMaterials(projectId);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
     } catch (error) {
       console.error('MaterialService.getProjectMaterials failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project materials');
@@ -223,68 +240,281 @@ export class MaterialService {
   }
 
   /**
-   * Add a material to a project
-   * TODO: Implement project-material relationship management
+   * Récupère les matériaux d'un projet avec leurs détails complets
    */
-  async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<void> {
+  async getProjectMaterialsWithDetails(projectId: string): Promise<MaterialDTO[]> {
     try {
-      // TODO: Implement project-material relationship
-      // For now, this is a placeholder
-      console.log(`Adding material ${materialId} to project ${projectId} with quantity ${quantity}`);
+      const projectMaterials = await this.materialRepository.getProjectMaterials(projectId);
+      const materialIds = projectMaterials.map(pm => pm.materialId);
+      
+      if (materialIds.length === 0) return [];
+      
+      const materials = await this.materialRepository.findByIds(materialIds);
+      return materials.map(m => MaterialTransformer.toDTO(m));
     } catch (error) {
-      console.error('MaterialService.addMaterialToProject failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add material to project');
+      console.error('MaterialService.getProjectMaterialsWithDetails failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project materials with details');
     }
   }
 
   /**
-   * Remove a material from a project
-   * Placeholder until a dedicated project_materials junction table exists.
-   * Currently removes the related quantity_takeoffs row(s) so the UI stays in sync.
+   * Ajoute un matériau à un projet
+   */
+  async addMaterialToProject(projectId: string, materialId: string, quantity: number): Promise<ProjectMaterialDTO> {
+    try {
+      const material = await this.materialRepository.findById(materialId);
+      if (!material) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Material with ID ${materialId} not found`);
+      }
+
+      const existing = await this.materialRepository.findProjectMaterial(projectId, materialId);
+      if (existing) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Material already associated with project ${projectId}`);
+      }
+
+      const projectMaterial = await this.materialRepository.addToProject(projectId, materialId, quantity);
+      return this.toProjectMaterialDTO(projectMaterial);
+    } catch (error) {
+      console.error('MaterialService.addMaterialToProject failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add material to project');
+    }
+  }
+
+  /**
+   * Met à jour la quantité d'un matériau dans un projet
+   */
+  async updateProjectMaterialQuantity(projectId: string, materialId: string, quantity: number): Promise<ProjectMaterialDTO> {
+    try {
+      if (quantity < 0) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Quantity must be positive');
+      }
+
+      const existing = await this.materialRepository.findProjectMaterial(projectId, materialId);
+      if (!existing) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Material not found in project ${projectId}`);
+      }
+
+      const updated = await this.materialRepository.updateProjectMaterial(projectId, materialId, quantity);
+      return this.toProjectMaterialDTO(updated);
+    } catch (error) {
+      console.error('MaterialService.updateProjectMaterialQuantity failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update project material quantity');
+    }
+  }
+
+  /**
+   * Supprime un matériau d'un projet
    */
   async removeMaterialFromProject(projectId: string, materialId: string): Promise<void> {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('quantity_takeoffs')
-        .delete()
-        .eq('project_id', projectId)
-        .eq('material_id', materialId);
-      if (error) throw error;
+      const existing = await this.materialRepository.findProjectMaterial(projectId, materialId);
+      if (!existing) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Material not found in project ${projectId}`);
+      }
+
+      await this.materialRepository.removeFromProject(projectId, materialId);
     } catch (error) {
       console.error('MaterialService.removeMaterialFromProject failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to remove material from project');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to remove material from project');
     }
   }
 
-  // =================== Geocoding Integration ===================
+  /**
+   * Récupère les matériaux d'un projet par catégorie
+   */
+  async getProjectMaterialsByCategory(projectId: string, category: MaterialCategory): Promise<ProjectMaterialDTO[]> {
+    try {
+      const projectMaterials = await this.materialRepository.getProjectMaterialsByCategory(projectId, category);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
+    } catch (error) {
+      console.error('MaterialService.getProjectMaterialsByCategory failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project materials by category');
+    }
+  }
 
   /**
-   * Enrich material with geocoding data for MAP geolocalizations
-   * Returns updated material with geocoding data instead of modifying in place
+   * Récupère les matériaux d'un projet avec stock faible
+   */
+  async getProjectLowStockMaterials(projectId: string, threshold: number = 10): Promise<ProjectMaterialDTO[]> {
+    try {
+      const projectMaterials = await this.materialRepository.getProjectLowStockMaterials(projectId, threshold);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
+    } catch (error) {
+      console.error('MaterialService.getProjectLowStockMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project low stock materials');
+    }
+  }
+
+  /**
+   * Récupère les matériaux d'un projet avec leurs fournisseurs
+   */
+  async getProjectMaterialsWithSuppliers(projectId: string): Promise<MaterialWithSupplierResult[]> {
+    try {
+      const projectMaterials = await this.materialRepository.getProjectMaterials(projectId);
+      const result: MaterialWithSupplierResult[] = [];
+
+      for (const pm of projectMaterials) {
+        const material = await this.materialRepository.findById(pm.materialId);
+        if (!material) continue;
+
+        let supplier = undefined;
+        if (material.supplierId) {
+          const supplierData = await this.supplierService.getSupplierById(material.supplierId);
+          if (supplierData) {
+            supplier = supplierData;
+          }
+        }
+
+        result.push({
+          material: MaterialTransformer.toDTO(material),
+          projectMaterial: this.toProjectMaterialDTO(pm),
+          supplier: supplier,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('MaterialService.getProjectMaterialsWithSuppliers failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project materials with suppliers');
+    }
+  }
+
+  /**
+   * Récupère les matériaux d'un projet par fournisseur
+   */
+  async getProjectMaterialsBySupplier(projectId: string, supplierId: string): Promise<ProjectMaterialDTO[]> {
+    try {
+      const projectMaterials = await this.materialRepository.getProjectMaterialsBySupplier(projectId, supplierId);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
+    } catch (error) {
+      console.error('MaterialService.getProjectMaterialsBySupplier failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch project materials by supplier');
+    }
+  }
+
+  /**
+   * Récupère la quantité totale d'un matériau dans un projet
+   */
+  async getTotalProjectMaterialQuantity(projectId: string, materialId: string): Promise<number> {
+    try {
+      const projectMaterial = await this.materialRepository.findProjectMaterial(projectId, materialId);
+      return projectMaterial?.quantity || 0;
+    } catch (error) {
+      console.error('MaterialService.getTotalProjectMaterialQuantity failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get total project material quantity');
+    }
+  }
+
+  /**
+   * Récupère les matériaux d'un projet avec filtres avancés
+   */
+  async searchProjectMaterials(
+    projectId: string,
+    searchTerm: string,
+    category?: MaterialCategory
+  ): Promise<ProjectMaterialDTO[]> {
+    try {
+      const projectMaterials = await this.materialRepository.searchProjectMaterials(projectId, searchTerm, category);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
+    } catch (error) {
+      console.error('MaterialService.searchProjectMaterials failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to search project materials');
+    }
+  }
+
+  /**
+   * Vérifie si un matériau est associé à un projet
+   */
+  async isMaterialInProject(projectId: string, materialId: string): Promise<boolean> {
+    try {
+      const projectMaterial = await this.materialRepository.findProjectMaterial(projectId, materialId);
+      return !!projectMaterial;
+    } catch (error) {
+      console.error('MaterialService.isMaterialInProject failed:', error);
+      return false;
+    }
+  }
+
+  // ============================================================================
+  // BULK OPERATIONS
+  // ============================================================================
+
+  /**
+   * Ajoute plusieurs matériaux à un projet
+   */
+  async addMultipleMaterialsToProject(
+    projectId: string,
+    materials: { materialId: string; quantity: number }[]
+  ): Promise<ProjectMaterialDTO[]> {
+    try {
+      const projectMaterials = await this.materialRepository.bulkAddToProject(projectId, materials);
+      return projectMaterials.map(pm => this.toProjectMaterialDTO(pm));
+    } catch (error) {
+      console.error('MaterialService.addMultipleMaterialsToProject failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add multiple materials to project');
+    }
+  }
+
+  /**
+   * Supprime plusieurs matériaux d'un projet
+   */
+  async removeMultipleMaterialsFromProject(
+    projectId: string,
+    materialIds: string[]
+  ): Promise<void> {
+    try {
+      await this.materialRepository.bulkRemoveFromProject(projectId, materialIds);
+    } catch (error) {
+      console.error('MaterialService.removeMultipleMaterialsFromProject failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to remove multiple materials from project');
+    }
+  }
+
+  // ============================================================================
+  // PRIVATE HELPERS
+  // ============================================================================
+
+  /**
+   * Convertit un ProjectMaterial en ProjectMaterialDTO
+   */
+  private toProjectMaterialDTO(pm: any): ProjectMaterialDTO {
+    return {
+      id: pm.id,
+      projectId: pm.projectId,
+      materialId: pm.materialId,
+      quantity: pm.quantity,
+      unit: pm.unit || 'unit',
+      unitPrice: pm.unitPrice || 0,
+      totalPrice: pm.totalPrice || 0,
+      status: pm.status || 'planned',
+      notes: pm.notes || null,
+      createdAt: pm.createdAt || new Date().toISOString(),
+      updatedAt: pm.updatedAt || new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Enrichit un matériau avec les données de géocodage
    */
   private async enrichWithGeocoding(material: Material): Promise<Material> {
     try {
       if (!material.adresse) return material;
 
-      // Use geocoding service to get coordinates from address
       const results = await this.geocodingService.geocode(material.adresse);
 
       if (results.length > 0) {
         const bestResult = results[0];
 
-        // Create updated material with geocoding results using immutable methods
         let updatedMaterial = material.withCoordinates(
           bestResult.coordinates.lat,
           bestResult.coordinates.lng
         );
 
-        // Update localisation array with geocoding data
         updatedMaterial = updatedMaterial.withLocalisation([{
           lat: bestResult.coordinates.lat,
           lng: bestResult.coordinates.lng,
           address: bestResult.address,
-          type: 'point' as const, // Map geocoding type to valid forme type
+          type: 'point' as const,
           confidence: bestResult.confidence
         }]);
 
@@ -294,13 +524,12 @@ export class MaterialService {
       return material;
     } catch (error) {
       console.warn('Geocoding enrichment failed:', error);
-      // Don't fail the operation if geocoding fails, return original material
       return material;
     }
   }
 
   /**
-   * Reverse geocode coordinates to get address information
+   * Reverse géocode des coordonnées
    */
   async reverseGeocode(latitude: number, longitude: number): Promise<{ address: string; coordinates: { lat: number; lng: number }; confidence: number; type: string } | null> {
     try {
@@ -312,46 +541,9 @@ export class MaterialService {
     }
   }
 
-  // =================== Related Entity Validation ===================
-
-  /**
-   * Validate that related entities (supplier, workspace) exist
-   * Following hexagonal architecture - service orchestration
-   */
-  private async validateRelatedEntities(dto: CreateMaterialDTO): Promise<void> {
-    const errors: string[] = [];
-
-    // Validate workspace exists if provided
-    if (dto.workspaceId && this.workspaceService) {
-      try {
-        const workspace = await this.workspaceService.getWorkspaceById(dto.workspaceId);
-        if (!workspace) {
-          errors.push(`Workspace with ID ${dto.workspaceId} does not exist`);
-        }
-      } catch (error) {
-        errors.push(`Failed to validate workspace: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    // Validate supplier exists if provided
-    if (dto.supplierId && this.supplierService) {
-      try {
-        const supplier = await this.supplierService.getSupplierById(dto.supplierId);
-        if (!supplier) {
-          errors.push(`Supplier with ID ${dto.supplierId} does not exist`);
-        }
-      } catch (error) {
-        errors.push(`Failed to validate supplier: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    // Note: Document validation is handled separately after material creation
-    // The DocumentUpload component collects documents but association happens post-creation
-
-    if (errors.length > 0) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, `Related entity validation failed: ${errors.join(', ')}`);
-    }
-  }
+  // ============================================================================
+  // VALIDATION
+  // ============================================================================
 
   private validateCreateMaterialData(data: CreateMaterialDTO): void {
     const errors: string[] = [];
@@ -360,11 +552,11 @@ export class MaterialService {
       errors.push('Material name is required');
     }
 
-    if (data.pricePerUnit < 0) {
+    if (data.pricePerUnit !== undefined && data.pricePerUnit < 0) {
       errors.push('Price per unit must be positive');
     }
 
-    if (data.availableQuantity < 0) {
+    if (data.availableQuantity !== undefined && data.availableQuantity < 0) {
       errors.push('Available quantity must be positive');
     }
 
@@ -393,8 +585,53 @@ export class MaterialService {
     }
   }
 
+  private async validateRelatedEntities(dto: CreateMaterialDTO): Promise<void> {
+    const errors: string[] = [];
+
+    if (dto.workspaceId) {
+      try {
+        const workspace = await this.workspaceService.getWorkspaceById(dto.workspaceId);
+        if (!workspace) {
+          errors.push(`Workspace with ID ${dto.workspaceId} does not exist`);
+        }
+      } catch (error) {
+        errors.push(`Failed to validate workspace: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    if (dto.supplierId) {
+      try {
+        const supplier = await this.supplierService.getSupplierById(dto.supplierId);
+        if (!supplier) {
+          errors.push(`Supplier with ID ${dto.supplierId} does not exist`);
+        }
+      } catch (error) {
+        errors.push(`Failed to validate supplier: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Related entity validation failed: ${errors.join(', ')}`);
+    }
+  }
+
+  // ============================================================================
+  // HELPERS
+  // ============================================================================
+
+  private applyFilters(materials: MaterialDTO[], filter: MaterialFilterDTO): MaterialDTO[] {
+    return materials.filter(material => {
+      if (filter.category && material.category !== filter.category) return false;
+      if (filter.subcategory && material.subcategory !== filter.subcategory) return false;
+      if (filter.workspaceId && material.workspaceId !== filter.workspaceId) return false;
+      if (filter.search && !material.name.toLowerCase().includes(filter.search.toLowerCase())) return false;
+      if (filter.inStockOnly && material.availableQuantity <= 0) return false;
+      if (filter.lowStockOnly && material.availableQuantity > 10) return false;
+      return true;
+    });
+  }
+
   private applyUpdatesToEntity(existing: Material, updates: UpdateMaterialDTO): Material {
-    // Create updated entity with new values using the new constructor
     return new Material(
       existing.id,
       updates.name ?? existing.name,
@@ -402,11 +639,11 @@ export class MaterialService {
       updates.unit ?? existing.unit,
       updates.category ?? existing.category,
       updates.workspaceId ?? existing.workspaceId,
-      existing.location, // Keep existing location
+      existing.location,
       {
         description: updates.description ?? existing.description,
         minQuantity: updates.minQuantity ?? existing.minQuantity,
-        timeline: existing.timeline, // Keep existing timeline
+        timeline: existing.timeline,
         lastRestock: existing.lastRestock,
         supplier: updates.supplier ?? existing.supplier,
         images: existing.images,
@@ -418,7 +655,7 @@ export class MaterialService {
         forme: updates.forme ?? existing.forme,
         adresse: updates.adresse ?? existing.adresse,
         createdAt: existing.createdAt,
-        updatedAt: new Date(), // Update timestamp
+        updatedAt: new Date(),
         gtin: updates.gtin ?? existing.gtin,
         sku: updates.sku ?? existing.sku,
         ean: updates.ean ?? existing.ean,
@@ -431,20 +668,9 @@ export class MaterialService {
     );
   }
 
-  private applyFilters(materials: MaterialDTO[], filter: MaterialFilterDTO): MaterialDTO[] {
-    return materials.filter(material => {
-      if (filter.category && material.category !== filter.category) return false;
-      if (filter.subcategory && material.subcategory !== filter.subcategory) return false;
-      if (filter.workspaceId && material.workspaceId !== filter.workspaceId) return false;
-      if (filter.search && !material.name.toLowerCase().includes(filter.search.toLowerCase())) return false;
-      if (filter.inStockOnly && material.availableQuantity <= 0) return false;
-      if (filter.lowStockOnly && material.availableQuantity > 10) return false; // Assuming 10 is low stock threshold
-
-      return true;
-    });
-  }
-
-  // =================== Form Integration Methods ===================
+  // ============================================================================
+  // FORM INTEGRATION
+  // ============================================================================
 
   async createMaterialFromForm(formData: MaterialFormDataDTO): Promise<MaterialDTO> {
     const dto: CreateMaterialDTO = {
@@ -469,8 +695,13 @@ export class MaterialService {
       ean: formData.ean,
       asin: formData.asin,
       multilangLabels: formData.multilangLabels,
-      timeline: formData.timeline,
-      supplier: formData.supplier
+      timeline: formData.timeline ? {
+        start: formData.timeline.start,
+        end: formData.timeline.end,
+        estimatedDuration: formData.timeline.estimatedDuration || 0
+      } : undefined,
+      supplier: formData.supplier,
+      supplierId: formData.supplierId
     };
     return this.createMaterial(dto);
   }
@@ -497,8 +728,13 @@ export class MaterialService {
       ean: formData.ean,
       asin: formData.asin,
       multilangLabels: formData.multilangLabels,
-      timeline: formData.timeline,
-      supplier: formData.supplier
+      timeline: formData.timeline ? {
+        start: formData.timeline.start,
+        end: formData.timeline.end,
+        estimatedDuration: formData.timeline.estimatedDuration || 0
+      } : undefined,
+      supplier: formData.supplier,
+      supplierId: formData.supplierId
     };
     return this.updateMaterial(id, dto);
   }
@@ -534,7 +770,10 @@ export class MaterialService {
         end: dto.timeline.end,
         estimatedDuration: dto.timeline.estimatedDuration || 7
       } : undefined,
-      supplier: dto.supplier
+      supplier: dto.supplier,
+      supplierId: dto.supplierId
     };
   }
 }
+
+export default MaterialService;

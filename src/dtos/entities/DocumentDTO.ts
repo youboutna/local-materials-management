@@ -2,12 +2,23 @@
  * Document Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
  * Following clean code principles: camelCase only, no business logic
+ * 
+ * ✅ Les DTOs sont dans la couche de transfert
+ * ✅ Pas de dépendance vers le domaine
+ * ✅ Utilisés par le Transformer pour la conversion Domain ↔ DTO
+ * ✅ RepositoryDocument pour la couche infrastructure (snake_case)
+ * ✅ Types corrects pour status et documentType (string, pas null)
  */
 
 import { BaseEntityDTO } from '../shared';
 
+// ============================================================================
+// ENUMS (transfert uniquement)
+// ============================================================================
+
 /**
  * Document type enumeration
+ * Correspond aux valeurs stockées en base
  */
 export enum DocumentType {
   CONTRACT = 'contract',
@@ -34,6 +45,8 @@ export enum DocumentType {
   TENDER_DOCUMENT = 'tender_document',
   SUPPORTING_DOCUMENT = 'supporting_document',
   CORRESPONDENCE = 'correspondence',
+  INSURANCE = 'insurance',
+  BANK_GUARANTEE = 'bank_guarantee',
   OTHER = 'other'
 }
 
@@ -60,72 +73,158 @@ export enum DocumentPriority {
   URGENT = 'urgent'
 }
 
-// Type alias for string union usage
+// ============================================================================
+// TYPE ALIASES
+// ============================================================================
+
 export type DocumentTypeUnion = `${DocumentType}`;
+export type DocumentStatusUnion = `${DocumentStatus}`;
+export type DocumentPriorityUnion = `${DocumentPriority}`;
+
+// ============================================================================
+// MAIN DTO (camelCase pour l'API)
+// ============================================================================
 
 /**
  * Main Document DTO - matches DB row in camelCase
  */
 export interface DocumentDTO extends BaseEntityDTO {
   id: string;
-  assignedTo: string | null;
-  createdAt: string;
-  deadlineDate: string | null;
-  description: string | null;
-  documentType: string;
-  fileName: string | null;
-  fileSize: number | null;
-  fileUrl: string | null;
-  inspectionId: string | null;
-  isInternalOnly: boolean | null;
-  isSharedWithSuppliers: boolean | null;
-  metadata: Record<string, unknown> | null;
-  mimeType: string | null;
-  paymentId: string | null;
-  phaseId: string | null;
   projectId: string | null;
-  sharedDate: string | null;
-  status: string | null;
+  phaseId: string | null;
+  inspectionId: string | null;
+  paymentId: string | null;
   supplierId: string | null;
-  tags: string[] | null;
   title: string;
-  updatedAt: string;
+  description: string | null;
+  documentType: DocumentTypeUnion;  // ✅ Type string, pas null
+  status: DocumentStatusUnion;      // ✅ Type string, pas null
+  priority?: DocumentPriorityUnion; // ✅ Optionnel
+  fileName: string | null;
+  fileUrl: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  tags: string[];
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate: string | null;
+  assignedTo: string | null;
   uploadedBy: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
 }
+
+// ============================================================================
+// REPOSITORY DOCUMENT (snake_case pour la DB)
+// ============================================================================
+
+/**
+ * Repository document interface for internal use
+ * ⚠️ Ceci est une interface interne pour le transformer, pas un DTO exposé
+ * ✅ Correspond à la structure de la base de données (snake_case)
+ * ✅ Utilisé par le DocumentTransformer pour la conversion
+ */
+export interface RepositoryDocument {
+  id: string;
+  project_id: string | null;
+  phase_id: string | null;
+  inspection_id: string | null;
+  payment_id: string | null;
+  supplier_id: string | null;
+  title: string;
+  description: string | null;
+  document_type: DocumentTypeUnion;    // ✅ Type string, pas null
+  status: DocumentStatusUnion;         // ✅ Type string, pas null
+  priority?: DocumentPriorityUnion;    // ✅ Optionnel
+  file_name: string | null;
+  file_url: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+  tags: string[];
+  is_internal_only: boolean;
+  is_shared_with_suppliers: boolean;
+  deadline_date: string | null;
+  assigned_to: string | null;
+  uploaded_by: string | null;
+  metadata: Record<string, unknown> | null;
+  category: string | null;
+  subcategory: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================================
+// CREATE DTO
+// ============================================================================
 
 /**
  * Create document request
  */
 export interface CreateDocumentDTO {
-  assignedTo?: string | null;
-  deadlineDate?: string | null;
+  title: string;
   description?: string | null;
-  documentType: string;
-  fileName?: string | null;
-  fileSize?: number | null;
-  fileUrl?: string | null;
+  documentType: DocumentTypeUnion;     // ✅ Requis, pas null
+  status?: DocumentStatusUnion;        // ✅ Optionnel, défaut DRAFT
+  priority?: DocumentPriorityUnion;    // ✅ Optionnel
+  projectId?: string | null;
+  phaseId?: string | null;
   inspectionId?: string | null;
+  paymentId?: string | null;
+  supplierId?: string | null;
+  fileName?: string | null;
+  fileUrl?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  tags?: string[];
   isInternalOnly?: boolean;
   isSharedWithSuppliers?: boolean;
-  metadata?: Record<string, unknown> | null;
-  mimeType?: string | null;
-  paymentId?: string | null;
-  phaseId?: string | null;
-  projectId?: string | null;
-  sharedDate?: string | null;
-  status?: string | null;
-  supplierId?: string | null;
-  tags?: string[] | null;
-  title: string;
+  deadlineDate?: string | null;
+  assignedTo?: string | null;
   uploadedBy?: string | null;
+  metadata?: Record<string, unknown> | null;
   category?: string | null;
   subcategory?: string | null;
 }
 
+// ============================================================================
+// UPDATE DTO
+// ============================================================================
+
 /**
  * Update document request
+ * ✅ Tous les champs sont optionnels
+ * ✅ Pour mettre à jour status ou documentType, fournir la nouvelle valeur
  */
-export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
+export interface UpdateDocumentDTO {
+  title?: string;
+  description?: string | null;
+  documentType?: DocumentTypeUnion;     // ✅ Optionnel
+  status?: DocumentStatusUnion;         // ✅ Optionnel
+  priority?: DocumentPriorityUnion;     // ✅ Optionnel
+  projectId?: string | null;
+  phaseId?: string | null;
+  inspectionId?: string | null;
+  paymentId?: string | null;
+  supplierId?: string | null;
+  fileName?: string | null;
+  fileUrl?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  tags?: string[];
+  isInternalOnly?: boolean;
+  isSharedWithSuppliers?: boolean;
+  deadlineDate?: string | null;
+  assignedTo?: string | null;
+  uploadedBy?: string | null;
+  metadata?: Record<string, unknown> | null;
+  category?: string | null;
+  subcategory?: string | null;
+}
+
+// ============================================================================
+// SUMMARY DTO
+// ============================================================================
 
 /**
  * Document summary for lists
@@ -133,108 +232,24 @@ export type UpdateDocumentDTO = Partial<CreateDocumentDTO>;
 export interface DocumentSummaryDTO {
   id: string;
   title: string;
-  documentType: DocumentType;
-  status: DocumentStatus;
+  documentType: DocumentTypeUnion;
+  status: DocumentStatusUnion;
+  priority?: DocumentPriorityUnion;
   createdAt: string;
   fileSize?: number | null;
+  projectId?: string | null;
+  phaseId?: string | null;
+  phaseName?: string | null;
+  projectTitle?: string | null;
+  tags?: string[];
   isOverdue?: boolean;
   needsReview?: boolean;
-  projectTitle?: string;
-  name?: string;
-  type?: DocumentType;
-  priority?: DocumentPriority;
-  category?: string;
-  url?: string;
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  isRequired?: boolean;
-  tags?: string[];
-  phaseName?: string;
+  category?: string | null;
 }
 
-/**
- * Document statistics
- */
-export interface DocumentStatisticsDTO {
-  totalDocuments: number;
-  activeDocuments: number;
-  archivedDocuments: number;
-  expiredDocuments: number;
-  totalSize?: number;
-  averageFileSize?: number;
-  byType: Record<string, number>;
-  byStatus: Record<string, number>;
-  byPriority: Record<string, number>;
-  byCategory: Record<string, number>;
-  lastUpdated?: string;
-}
-
-/**
- * Document version tracking
- */
-export interface DocumentVersionDTO {
-  id: string;
-  documentId: string;
-  version: number;
-  title: string;
-  description?: string;
-  changes?: string;
-  createdById?: string;
-  createdAt: string;
-  isLatest?: boolean;
-  downloadCount?: number;
-  notes?: string;
-}
-
-/**
- * Document access log
- */
-export interface DocumentAccessLogDTO {
-  id: string;
-  documentId: string;
-  userId: string;
-  action: 'viewed' | 'downloaded' | 'uploaded' | 'updated' | 'deleted' | 'shared' | 'approved' | 'rejected';
-  timestamp: string;
-  ipAddress?: string;
-  userAgent?: string;
-  notes?: string;
-  duration?: number;
-}
-
-/**
- * Document filter criteria
- */
-export interface DocumentFilterDTO {
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  inspectionId?: string;
-  type?: DocumentType;
-  documentType?: DocumentType;
-  status?: DocumentStatus;
-  priority?: DocumentPriority;
-  category?: string;
-  subcategory?: string;
-  searchQuery?: string;
-  tags?: string[];
-  isRequired?: boolean;
-  isOverdue?: boolean;
-  needsReview?: boolean;
-  uploadedBy?: string;
-  assignedTo?: string;
-  accessLevel?: 'public' | 'internal' | 'confidential' | 'restricted';
-  dateRange?: {
-    start?: string;
-    end?: string;
-    startDate?: string;
-    endDate?: string;
-  };
-  fileSizeRange?: {
-    min?: number;
-    max?: number;
-  };
-}
+// ============================================================================
+// DETAILS DTO
+// ============================================================================
 
 /**
  * Document details with relations
@@ -255,6 +270,16 @@ export interface DocumentDetailsDTO extends DocumentDTO {
     date: string;
     status: string;
   };
+  paymentDetails?: {
+    id: string;
+    amount: number;
+    status: string;
+  };
+  supplierDetails?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   uploadedByDetails?: {
     id: string;
     name: string;
@@ -267,60 +292,126 @@ export interface DocumentDetailsDTO extends DocumentDTO {
   };
   relatedDocuments?: DocumentDTO[];
   versions?: DocumentDTO[];
-  accessHistory?: Array<{
-    accessedAt: string;
-    accessedBy: string;
-    action: string;
-  }>;
   comments?: Array<{
     id: string;
     content: string;
     author: string;
     createdAt: string;
   }>;
+  accessHistory?: Array<{
+    accessedAt: string;
+    accessedBy: string;
+    action: string;
+  }>;
 }
 
+// ============================================================================
+// STATISTICS DTO
+// ============================================================================
+
 /**
- * Repository document interface for internal use
+ * Document statistics
  */
-export interface RepositoryDocument {
-  id: string;
-  title: string;
-  documentType: DocumentType;
+export interface DocumentStatisticsDTO {
+  totalDocuments: number;
+  activeDocuments: number;
+  archivedDocuments: number;
+  expiredDocuments: number;
+  totalSize: number;
+  averageFileSize: number;
+  byType: Record<DocumentTypeUnion, number>;
+  byStatus: Record<DocumentStatusUnion, number>;
+  byPriority: Record<DocumentPriorityUnion, number>;
+  byCategory: Record<string, number>;
+  recentUploads: number;
+  pendingApproval: number;
+  lastUpdated: string;
+}
+
+// ============================================================================
+// FILTER DTO
+// ============================================================================
+
+/**
+ * Document filter criteria
+ */
+export interface DocumentFilterDTO {
   projectId?: string;
   phaseId?: string;
   inspectionId?: string;
   paymentId?: string;
   supplierId?: string;
-  description?: string;
-  fileName?: string;
-  fileSize?: number;
-  fileUrl: string;
-  mimeType?: string;
-  status: string;
-  isInternalOnly: boolean;
-  isSharedWithSuppliers: boolean;
-  deadlineDate?: string;
-  assignedTo?: string;
-  metadata: Record<string, unknown>;
+  documentType?: DocumentTypeUnion;
+  status?: DocumentStatusUnion;
+  priority?: DocumentPriorityUnion;
   category?: string;
   subcategory?: string;
-  createdAt: string;
-  updatedAt: string;
+  searchQuery?: string;
+  tags?: string[];
+  assignedTo?: string;
   uploadedBy?: string;
-  tags: string[];
+  isInternalOnly?: boolean;
+  isSharedWithSuppliers?: boolean;
+  isOverdue?: boolean;
+  needsReview?: boolean;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  fileSizeRange?: {
+    min?: number;
+    max?: number;
+  };
+  sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'fileSize' | 'deadlineDate';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
 }
 
+// ============================================================================
+// VERSION DTO
+// ============================================================================
+
 /**
- * Document search criteria
+ * Document version tracking
  */
-export interface DocumentSearchDto {
-  query: string;
-  projectId?: string;
-  tags?: string[];
-  documentType?: DocumentType;
-  status?: string;
+export interface DocumentVersionDTO {
+  id: string;
+  documentId: string;
+  version: number;
+  title: string;
+  description?: string;
+  changes?: string;
+  createdById?: string;
+  createdAt: string;
+  isLatest?: boolean;
+  downloadCount?: number;
+  fileUrl?: string;
+  fileSize?: number;
 }
+
+// ============================================================================
+// ACCESS LOG DTO
+// ============================================================================
+
+/**
+ * Document access log
+ */
+export interface DocumentAccessLogDTO {
+  id: string;
+  documentId: string;
+  userId: string;
+  action: 'viewed' | 'downloaded' | 'uploaded' | 'updated' | 'deleted' | 'shared' | 'approved' | 'rejected' | 'archived';
+  timestamp: string;
+  ipAddress?: string;
+  userAgent?: string;
+  notes?: string;
+  duration?: number;
+}
+
+// ============================================================================
+// UPLOAD DTO
+// ============================================================================
 
 /**
  * Document upload request
@@ -328,7 +419,8 @@ export interface DocumentSearchDto {
 export interface DocumentUploadDTO {
   title: string;
   description?: string;
-  documentType: DocumentType;
+  documentType: DocumentTypeUnion;
+  priority?: DocumentPriorityUnion;
   projectId?: string;
   phaseId?: string;
   inspectionId?: string;
@@ -341,6 +433,10 @@ export interface DocumentUploadDTO {
   subcategory?: string;
   metadata?: Record<string, unknown>;
 }
+
+// ============================================================================
+// SHARE DTO
+// ============================================================================
 
 /**
  * Document share request
@@ -357,14 +453,198 @@ export interface DocumentShareDTO {
   message?: string;
 }
 
+// ============================================================================
+// SEARCH DTO
+// ============================================================================
+
 /**
- * Simple document response
+ * Document search criteria
+ */
+export interface DocumentSearchDTO {
+  query: string;
+  projectId?: string;
+  phaseId?: string;
+  tags?: string[];
+  documentType?: DocumentTypeUnion;
+  status?: DocumentStatusUnion;
+  limit?: number;
+  offset?: number;
+}
+
+// ============================================================================
+// RESPONSE DTO
+// ============================================================================
+
+/**
+ * Simple document response for file operations
  */
 export interface DocumentResponseDTO {
   id: string;
   fileName: string;
   fileSize: number;
   fileUrl: string;
-  documentType: string;
+  documentType: DocumentTypeUnion;
   createdAt: string;
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Vérifie si une valeur est un DocumentType valide
+ */
+export function isValidDocumentType(value: string): value is DocumentTypeUnion {
+  return Object.values(DocumentType).includes(value as DocumentType);
+}
+
+/**
+ * Vérifie si une valeur est un DocumentStatus valide
+ */
+export function isValidDocumentStatus(value: string): value is DocumentStatusUnion {
+  return Object.values(DocumentStatus).includes(value as DocumentStatus);
+}
+
+/**
+ * Vérifie si une valeur est un DocumentPriority valide
+ */
+export function isValidDocumentPriority(value: string): value is DocumentPriorityUnion {
+  return Object.values(DocumentPriority).includes(value as DocumentPriority);
+}
+
+/**
+ * Normalise un type de document
+ */
+export function normalizeDocumentType(value: string): DocumentTypeUnion {
+  const normalized = value?.toLowerCase().trim() || 'other';
+  if (isValidDocumentType(normalized)) {
+    return normalized as DocumentTypeUnion;
+  }
+  return DocumentType.OTHER;
+}
+
+/**
+ * Normalise un statut de document
+ */
+export function normalizeDocumentStatus(value: string): DocumentStatusUnion {
+  const normalized = value?.toLowerCase().trim() || 'draft';
+  if (isValidDocumentStatus(normalized)) {
+    return normalized as DocumentStatusUnion;
+  }
+  return DocumentStatus.DRAFT;
+}
+
+/**
+ * Normalise une priorité de document
+ */
+export function normalizeDocumentPriority(value: string): DocumentPriorityUnion {
+  const normalized = value?.toLowerCase().trim() || 'medium';
+  if (isValidDocumentPriority(normalized)) {
+    return normalized as DocumentPriorityUnion;
+  }
+  return DocumentPriority.MEDIUM;
+}
+
+/**
+ * Obtient le libellé d'un type de document
+ */
+export function getDocumentTypeLabel(type: DocumentTypeUnion): string {
+  const labels: Record<DocumentTypeUnion, string> = {
+    [DocumentType.CONTRACT]: 'Contrat',
+    [DocumentType.PLAN]: 'Plan',
+    [DocumentType.SPECIFICATION]: 'Spécification',
+    [DocumentType.REPORT]: 'Rapport',
+    [DocumentType.CERTIFICATE]: 'Certificat',
+    [DocumentType.PERMIT]: 'Permis',
+    [DocumentType.INVOICE]: 'Facture',
+    [DocumentType.RECEIPT]: 'Reçu',
+    [DocumentType.MANUAL]: 'Manuel',
+    [DocumentType.POLICY]: 'Politique',
+    [DocumentType.PROCEDURE]: 'Procédure',
+    [DocumentType.DRAWING]: 'Dessin',
+    [DocumentType.PHOTO]: 'Photo',
+    [DocumentType.VIDEO]: 'Vidéo',
+    [DocumentType.BLUEPRINT]: 'Plan d\'exécution',
+    [DocumentType.SCHEMA]: 'Schéma',
+    [DocumentType.CHECKLIST]: 'Checklist',
+    [DocumentType.FORM]: 'Formulaire',
+    [DocumentType.TEMPLATE]: 'Modèle',
+    [DocumentType.PV]: 'Procès-verbal',
+    [DocumentType.SERVICE_REPORT]: 'Rapport de service',
+    [DocumentType.TENDER_DOCUMENT]: 'Document d\'appel d\'offres',
+    [DocumentType.SUPPORTING_DOCUMENT]: 'Document justificatif',
+    [DocumentType.CORRESPONDENCE]: 'Correspondance',
+    [DocumentType.INSURANCE]: 'Assurance',
+    [DocumentType.BANK_GUARANTEE]: 'Garantie bancaire',
+    [DocumentType.OTHER]: 'Autre',
+  };
+  return labels[type] || type;
+}
+
+/**
+ * Obtient le libellé d'un statut de document
+ */
+export function getDocumentStatusLabel(status: DocumentStatusUnion): string {
+  const labels: Record<DocumentStatusUnion, string> = {
+    [DocumentStatus.DRAFT]: 'Brouillon',
+    [DocumentStatus.PENDING_APPROVAL]: 'En attente de validation',
+    [DocumentStatus.APPROVED]: 'Approuvé',
+    [DocumentStatus.REJECTED]: 'Rejeté',
+    [DocumentStatus.ARCHIVED]: 'Archivé',
+    [DocumentStatus.EXPIRED]: 'Expiré',
+    [DocumentStatus.DEPRECATED]: 'Déprécié',
+  };
+  return labels[status] || status;
+}
+
+/**
+ * Obtient la couleur d'un statut de document
+ */
+export function getDocumentStatusColor(status: DocumentStatusUnion): string {
+  const colors: Record<DocumentStatusUnion, string> = {
+    [DocumentStatus.DRAFT]: 'bg-gray-100 text-gray-800 border-gray-200',
+    [DocumentStatus.PENDING_APPROVAL]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    [DocumentStatus.APPROVED]: 'bg-green-100 text-green-800 border-green-200',
+    [DocumentStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200',
+    [DocumentStatus.ARCHIVED]: 'bg-gray-200 text-gray-600 border-gray-300',
+    [DocumentStatus.EXPIRED]: 'bg-orange-100 text-orange-800 border-orange-200',
+    [DocumentStatus.DEPRECATED]: 'bg-gray-300 text-gray-500 border-gray-400',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+}
+
+/**
+ * Obtient l'icône d'un type de document
+ */
+export function getDocumentTypeIcon(type: DocumentTypeUnion): string {
+  const icons: Record<DocumentTypeUnion, string> = {
+    [DocumentType.CONTRACT]: 'FileText',
+    [DocumentType.PLAN]: 'Clipboard',
+    [DocumentType.SPECIFICATION]: 'FileText',
+    [DocumentType.REPORT]: 'FileText',
+    [DocumentType.CERTIFICATE]: 'Award',
+    [DocumentType.PERMIT]: 'FileCheck',
+    [DocumentType.INVOICE]: 'FileText',
+    [DocumentType.RECEIPT]: 'Receipt',
+    [DocumentType.MANUAL]: 'BookOpen',
+    [DocumentType.POLICY]: 'FileText',
+    [DocumentType.PROCEDURE]: 'List',
+    [DocumentType.DRAWING]: 'PenTool',
+    [DocumentType.PHOTO]: 'Image',
+    [DocumentType.VIDEO]: 'Video',
+    [DocumentType.BLUEPRINT]: 'Ruler',
+    [DocumentType.SCHEMA]: 'GitBranch',
+    [DocumentType.CHECKLIST]: 'CheckSquare',
+    [DocumentType.FORM]: 'File',
+    [DocumentType.TEMPLATE]: 'File',
+    [DocumentType.PV]: 'FileText',
+    [DocumentType.SERVICE_REPORT]: 'FileText',
+    [DocumentType.TENDER_DOCUMENT]: 'FileText',
+    [DocumentType.SUPPORTING_DOCUMENT]: 'File',
+    [DocumentType.CORRESPONDENCE]: 'Mail',
+    [DocumentType.INSURANCE]: 'Shield',
+    [DocumentType.BANK_GUARANTEE]: 'Shield',
+    [DocumentType.OTHER]: 'File',
+  };
+  return icons[type] || 'File';
 }

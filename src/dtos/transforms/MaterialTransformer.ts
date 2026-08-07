@@ -4,41 +4,59 @@
  * Following clean architecture principles with proper separation of concerns
  * Includes BTP calculations and business logic from MaterialDomainTransformer
  * Updated to handle EnhancedMaterialForm requirements
+ * ✅ Gestion complète des relations projet-matériaux
+ * ✅ Utilisation correcte des méthodes statiques
  */
 
 import { Material } from '@/domain/entities/Material';
 import {
+  CreateMaterialDTO,
+  CreateProjectMaterialDTO,
+  MaterialCategory,
   MaterialDTO,
   MaterialFormDataDTO,
-  CreateMaterialDTO,
-  UpdateMaterialDTO,
-  MaterialCategory,
+  MaterialStatus,
   MaterialUnit,
-  MaterialStatus
+  ProjectMaterialDTO,
+  UpdateMaterialDTO
 } from '@/dtos/entities/MaterialDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 export class MaterialTransformer implements EntityToDTOMapper<Material, MaterialDTO> {
+  // ============================================================================
+  // BATCH TRANSFORMATIONS
+  // ============================================================================
+
   /**
    * Batch: Domain Entities → DTOs
    */
   static manyToDTO(materials: Material[]): MaterialDTO[] {
-    return materials.map(material => this.toDTO(material));
+    return materials.map(material => MaterialTransformer.toDTO(material));
   }
 
   /**
-   * Transform Material entity to MaterialDTO (Domain → DTO)
-   * Converts domain entity to data transfer object for UI/API
-  */
+   * Batch: DTOs → Domain Entities
+   */
+  static manyFromDTO(dtos: MaterialDTO[]): Material[] {
+    return dtos.map(dto => MaterialTransformer.fromDTO(dto));
+  }
+
+  // ============================================================================
+  // DATABASE ↔ DOMAIN
+  // ============================================================================
+
   /**
    * Supabase Row (snake_case) → Domain Entity
-   * Moved from Material.fromDatabase() to respect hexagonal boundaries
    */
   static fromSupabase(row: Record<string, unknown>): Material {
     let timeline: { start: Date; end: Date; estimatedDuration?: number } | undefined;
     if (row.timeline) {
       const t = row.timeline as { start?: string; end?: string; estimatedDuration?: number };
-      timeline = { start: new Date(t.start as string), end: new Date(t.end as string), estimatedDuration: t.estimatedDuration ?? 7 };
+      timeline = { 
+        start: new Date(t.start as string), 
+        end: new Date(t.end as string), 
+        estimatedDuration: t.estimatedDuration ?? 7 
+      };
     }
 
     return Material.create({
@@ -58,7 +76,6 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
 
   /**
    * Domain Entity → Supabase Insert/Update Object (snake_case)
-   * Moved from Material.toDatabase() to respect hexagonal boundaries
    */
   static toSupabase(entity: Material): Record<string, unknown> {
     return {
@@ -93,6 +110,76 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     };
   }
 
+  // ============================================================================
+  // PROJECT MATERIAL RELATIONSHIPS
+  // ============================================================================
+
+  /**
+   * Transform ProjectMaterial (DB) → ProjectMaterialDTO
+   */
+  static toProjectMaterialDTO(row: Record<string, unknown>): ProjectMaterialDTO {
+    return {
+      id: row.id as string,
+      projectId: row.project_id as string,
+      materialId: row.material_id as string,
+      quantity: row.quantity as number,
+      unit: row.unit as string || 'unit',
+      unitPrice: row.unit_price as number || 0,
+      totalPrice: row.total_price as number || 0,
+      status: row.status as 'planned' | 'ordered' | 'received' | 'used' || 'planned',
+      notes: row.notes as string,
+      createdAt: row.created_at as string || new Date().toISOString(),
+      updatedAt: row.updated_at as string || new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Transform ProjectMaterialDTO → DB (snake_case)
+   */
+  static toProjectMaterialSupabase(dto: CreateProjectMaterialDTO): Record<string, unknown> {
+    const totalPrice = dto.unitPrice ? dto.quantity * dto.unitPrice : 0;
+    return {
+      project_id: dto.projectId,
+      material_id: dto.materialId,
+      quantity: dto.quantity,
+      unit: dto.unit || 'unit',
+      unit_price: dto.unitPrice || 0,
+      total_price: totalPrice,
+      status: dto.status || 'planned',
+      notes: dto.notes || null,
+    };
+  }
+
+  /**
+   * Transform ProjectMaterialDTO → DTO for API
+   */
+  static toProjectMaterialApi(dto: ProjectMaterialDTO): ProjectMaterialDTO {
+    return {
+      id: dto.id,
+      projectId: dto.projectId,
+      materialId: dto.materialId,
+      quantity: dto.quantity,
+      unit: dto.unit,
+      unitPrice: dto.unitPrice,
+      totalPrice: dto.totalPrice,
+      status: dto.status,
+      notes: dto.notes,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+    };
+  }
+
+  /**
+   * Batch: ProjectMaterial Rows → DTOs
+   */
+  static toProjectMaterialDTOList(rows: Record<string, unknown>[]): ProjectMaterialDTO[] {
+    return rows.map(row => MaterialTransformer.toProjectMaterialDTO(row));
+  }
+
+  // ============================================================================
+  // DOMAIN → DTO
+  // ============================================================================
+
   /**
    * Domain Entity → DTO (for UI)
    */
@@ -103,7 +190,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       description: entity.description,
       category: entity.category,
       subcategory: entity.subcategory,
-      status: MaterialStatus.AVAILABLE, // Default status, can be enhanced with business logic
+      status: MaterialStatus.AVAILABLE,
       unit: entity.unit as MaterialUnit,
       quantity: entity.quantity,
       pricePerUnit: entity.pricePerUnit,
@@ -125,12 +212,16 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       timeline: entity.timeline,
       supplier: entity.supplier,
       image: entity.image,
-      tags: [], // Can be enhanced with additional logic
-      notes: undefined, // Can be enhanced with additional logic
+      tags: [],
+      notes: undefined,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString()
     };
   }
+
+  // ============================================================================
+  // DTO → DOMAIN
+  // ============================================================================
 
   /**
    * DTO → Domain Entity
@@ -143,7 +234,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       dto.unit,
       dto.category,
       dto.workspaceId,
-      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 }, // Default location
+      { code: 'default', name: 'Default', nameAr: 'افتراضي', lat: 0, lng: 0 },
       {
         description: dto.description || '',
         minQuantity: dto.minQuantity,
@@ -175,7 +266,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
    */
   static createEntityFromCreateDTO(dto: CreateMaterialDTO): Material {
     return new Material(
-      crypto.randomUUID(), // Generate new ID
+      crypto.randomUUID(),
       dto.name,
       dto.quantity,
       dto.unit,
@@ -206,9 +297,12 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     );
   }
 
+  // ============================================================================
+  // FORM ↔ DTO
+  // ============================================================================
+
   /**
    * Convert MaterialFormDataDTO to CreateMaterialDTO
-   * Form data → Create request for service layer
    */
   static formToCreateRequest(formData: MaterialFormDataDTO): CreateMaterialDTO {
     return {
@@ -238,13 +332,13 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         end: formData.timeline.end,
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
-      supplier: formData.supplier
+      supplier: formData.supplier,
+      supplierId: formData.supplierId
     };
   }
 
   /**
    * Convert MaterialFormDataDTO to UpdateMaterialDTO
-   * Form data → Update request for service layer
    */
   static formToUpdateRequest(formData: MaterialFormDataDTO): UpdateMaterialDTO {
     return {
@@ -273,42 +367,19 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         end: formData.timeline.end,
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
-      supplier: formData.supplier
+      supplier: formData.supplier,
+      supplierId: formData.supplierId
     };
   }
 
-  // EntityToDTOMapper interface implementation
-  toDTO(entity: Material): MaterialDTO {
-    return MaterialTransformer.toDTO(entity);
-  }
+  // ============================================================================
+  // VALIDATION
+  // ============================================================================
 
-  fromDTO(dto: MaterialDTO): Material {
-    return MaterialTransformer.fromDTO(dto);
-  }
-
-  fromEntityToDTO(entity: Material): MaterialDTO {
-    return MaterialTransformer.toDTO(entity);
-  }
-
-  toResponseDto(entity: Material): MaterialDTO {
-    return MaterialTransformer.toDTO(entity);
-  }
-
-  toRequestDto(dto: MaterialDTO): MaterialDTO {
-    return dto; // For this implementation, request and response are the same
-  }
-
-  toUpdateDto(dto: MaterialDTO): Partial<MaterialDTO> {
-    const { id, status, createdAt, updatedAt, ...updateFields } = dto;
-    return updateFields;
-  }
-
-  fromDtosToAdapter(dtos: MaterialDTO[]): MaterialDTO[] | Record<string, unknown>[] {
-    return dtos; // Return DTOs as-is for adapter
-  }
-
+  /**
+   * Validate DTO
+   */
   validate(dto: MaterialDTO): ValidationResult {
-    // Basic validation - can be enhanced with more business rules
     const errors: string[] = [];
 
     if (!dto.name?.trim()) {
@@ -330,166 +401,7 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
   }
 
   /**
-   * Batch: DTOs → Domain Entities
-   */
-  static manyFromDTO(dtos: MaterialDTO[]): Material[] {
-    return dtos.map(dto => this.fromDTO(dto));
-  }
-
-  /**
-   * Category Hierarchy Mapping
-   * Maps category/subcategory combinations for UI display
-   */
-  static getCategoryHierarchy(): Record<MaterialCategory, { label: string; subcategories: string[] }> {
-    return {
-      construction: {
-        label: 'Construction',
-        subcategories: ['béton', 'acier', 'bois', 'maçonnerie', 'étanchéité', 'isolation']
-      },
-      building: {
-        label: 'Bâtiment',
-        subcategories: ['plomberie', 'électricité', 'menuiserie', 'peinture', 'carrelage']
-      },
-      pierre: {
-        label: 'Pierre',
-        subcategories: ['marbre', 'granit', 'calcaire', 'ardoise', 'sable', 'gravier']
-      },
-      electrical: {
-        label: 'Électrique',
-        subcategories: ['câbles', 'prises', 'interrupteurs', 'éclairage', 'sécurité']
-      },
-      plumbing: {
-        label: 'Plomberie',
-        subcategories: ['tuyaux', 'robinetterie', 'chauffe-eau', 'canalisations']
-      },
-      finishing: {
-        label: 'Finitions',
-        subcategories: ['peintures', 'revêtements', 'quincaillerie', 'décoration']
-      },
-      equipment: {
-        label: 'Équipement',
-        subcategories: ['outillage', 'machinerie', 'sécurité', 'levage']
-      },
-      safety: {
-        label: 'Sécurité',
-        subcategories: ['casques', 'gilets', 'chaussures', 'lunettes', 'gants']
-      },
-      tools: {
-        label: 'Outils',
-        subcategories: ['manuels', 'électriques', 'mesure', 'soudure']
-      },
-      other: {
-        label: 'Autre',
-        subcategories: ['divers']
-      }
-    };
-  }
-
-  /**
-   * Multi-Language Label Processing
-   * Processes and validates multi-language labels for materials
-   */
-  static processMultiLanguageLabels(labels: Record<string, string> | undefined): Record<string, string> {
-    const defaultLabels: Record<string, string> = {};
-
-    if (!labels) return defaultLabels;
-
-    // Supported languages: French (fr), Arabic (ar), English (en), Spanish (es)
-    const supportedLanguages = ['fr', 'ar', 'en', 'es'];
-
-    supportedLanguages.forEach(lang => {
-      if (labels[lang] && labels[lang].trim()) {
-        defaultLabels[lang] = labels[lang].trim();
-      }
-    });
-
-    return defaultLabels;
-  }
-
-  /**
-   * Supplier Relationship Enhancement
-   * Enhances supplier data with additional business logic
-   */
-  static enhanceSupplierData(supplier: MaterialDTO['supplier']): MaterialDTO['supplier'] & { rating?: number; reliability?: string } {
-    if (!supplier) return supplier as any;
-
-    // Add supplier rating calculation (mock for now)
-    const rating = supplier.leadTime <= 7 ? 5 : supplier.leadTime <= 14 ? 4 : 3;
-    const reliability = rating >= 4 ? 'high' : rating >= 3 ? 'medium' : 'low';
-
-    return {
-      ...supplier,
-      rating,
-      reliability
-    };
-  }
-
-  /**
-   * Location/Geocoding Integration
-   * Processes location data with geocoding enhancements
-   */
-  static processLocationData(dto: Partial<MaterialDTO>): {
-    coordinates: { lat: number; lng: number } | null;
-    address: string;
-    region?: string;
-    city?: string;
-    country?: string;
-  } {
-    const coordinates = dto.coordinatesLatitude && dto.coordinatesLongitude
-      ? { lat: dto.coordinatesLatitude, lng: dto.coordinatesLongitude }
-      : null;
-
-    // Extract region/city from localisation data if available
-    let region: string | undefined;
-    let city: string | undefined;
-    const country = 'Mauritania'; // Default for BTP context
-
-    if (dto.localisation && dto.localisation.length > 0) {
-      const firstLocation = dto.localisation[0];
-      if (firstLocation.address) {
-        // Parse address for region/city info (simplified)
-        const addressParts = firstLocation.address.split(',');
-        if (addressParts.length >= 2) {
-          city = addressParts[0].trim();
-          region = addressParts[1].trim();
-        }
-      }
-    }
-
-    return {
-      coordinates,
-      address: dto.adresse || '',
-      region,
-      city,
-      country
-    };
-  }
-
-  /**
-   * Document Attachment Management
-   * Processes document attachments for materials
-   */
-  static processDocumentAttachments(documents: string[] | undefined): Array<{
-    id: string;
-    type: 'certificate' | 'manual' | 'specification' | 'safety' | 'other';
-    url: string;
-    uploadedAt: string;
-    size?: number;
-  }> {
-    if (!documents || documents.length === 0) return [];
-
-    return documents.map(docId => ({
-      id: docId,
-      type: 'other' as const, // Could be enhanced with document type detection
-      url: `/api/documents/${docId}`,
-      uploadedAt: new Date().toISOString(),
-      size: undefined // Would need to be fetched from document service
-    }));
-  }
-
-  /**
    * Enhanced Form Data Validation
-   * Validates multi-tab form data with business rules
    */
   static validateFormData(formData: MaterialFormDataDTO): { isValid: boolean; errors: string[]; warnings: string[] } {
     const errors: string[] = [];
@@ -556,12 +468,14 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
     };
   }
 
+  // ============================================================================
+  // ENHANCED MATERIAL CREATION
+  // ============================================================================
+
   /**
    * Enhanced Material Creation with Business Logic
-   * Creates material with enhanced validation and business rules
    */
   static createEnhancedMaterial(dto: CreateMaterialDTO): { material: Material; validation: ReturnType<typeof MaterialTransformer.validateFormData> } {
-    // Convert to form data for validation
     const formData: MaterialFormDataDTO = {
       name: dto.name,
       description: dto.description,
@@ -588,19 +502,22 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         ...dto.timeline,
         estimatedDuration: dto.timeline.estimatedDuration ?? 0
       } : undefined,
-      supplier: dto.supplier
+      supplier: dto.supplier,
+      supplierId: dto.supplierId
     };
 
     const validation = MaterialTransformer.validateFormData(formData);
-
     const material = MaterialTransformer.createEntityFromCreateDTO(dto);
 
     return { material, validation };
   }
 
+  // ============================================================================
+  // BULK PROCESSING
+  // ============================================================================
+
   /**
    * Batch Material Processing for Bulk Operations
-   * Processes multiple materials with enhanced validation
    */
   static processBulkMaterials(dtos: CreateMaterialDTO[]): {
     materials: Material[];
@@ -631,4 +548,103 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
 
     return { materials, results };
   }
+
+  // ============================================================================
+  // CATEGORY HIERARCHY
+  // ============================================================================
+
+  /**
+   * Category Hierarchy Mapping
+   */
+  static getCategoryHierarchy(): Record<MaterialCategory, { label: string; subcategories: string[] }> {
+    return {
+      construction: {
+        label: 'Construction',
+        subcategories: ['béton', 'acier', 'bois', 'maçonnerie', 'étanchéité', 'isolation']
+      },
+      building: {
+        label: 'Bâtiment',
+        subcategories: ['plomberie', 'électricité', 'menuiserie', 'peinture', 'carrelage']
+      },
+      pierre: {
+        label: 'Pierre',
+        subcategories: ['marbre', 'granit', 'calcaire', 'ardoise', 'sable', 'gravier']
+      },
+      electrical: {
+        label: 'Électrique',
+        subcategories: ['câbles', 'prises', 'interrupteurs', 'éclairage', 'sécurité']
+      },
+      plumbing: {
+        label: 'Plomberie',
+        subcategories: ['tuyaux', 'robinetterie', 'chauffe-eau', 'canalisations']
+      },
+      finishing: {
+        label: 'Finitions',
+        subcategories: ['peintures', 'revêtements', 'quincaillerie', 'décoration']
+      },
+      equipment: {
+        label: 'Équipement',
+        subcategories: ['outillage', 'machinerie', 'sécurité', 'levage']
+      },
+      safety: {
+        label: 'Sécurité',
+        subcategories: ['casques', 'gilets', 'chaussures', 'lunettes', 'gants']
+      },
+      tools: {
+        label: 'Outils',
+        subcategories: ['manuels', 'électriques', 'mesure', 'soudure']
+      },
+      other: {
+        label: 'Autre',
+        subcategories: ['divers']
+      }
+    };
+  }
+
+  // ============================================================================
+  // ENTITY TO DTO MAPPER INTERFACE
+  // ============================================================================
+
+  toDTO(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  fromDTO(dto: MaterialDTO): Material {
+    return MaterialTransformer.fromDTO(dto);
+  }
+
+  fromEntityToDTO(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  toResponseDto(entity: Material): MaterialDTO {
+    return MaterialTransformer.toDTO(entity);
+  }
+
+  toRequestDto(dto: MaterialDTO): MaterialDTO {
+    return dto;
+  }
+
+  toUpdateDto(dto: MaterialDTO): Partial<MaterialDTO> {
+    const { id, status, createdAt, updatedAt, ...updateFields } = dto;
+    return updateFields;
+  }
+
+  fromDtosToAdapter(dtos: MaterialDTO[]): MaterialDTO[] | Record<string, unknown>[] {
+    return dtos;
+  }
+
+  toDTOs(entities: Material[]): MaterialDTO[] {
+    return entities.map(entity => this.toDTO(entity));
+  }
+
+  toEntities(dtos: MaterialDTO[]): Material[] {
+    return dtos.map(dto => this.fromDTO(dto));
+  }
+
+  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Material[] {
+    return rows.map(row => MaterialTransformer.fromSupabase(row));
+  }
 }
+
+export default MaterialTransformer;

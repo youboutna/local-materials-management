@@ -5,13 +5,13 @@
  * Rule #9: DB → Transformer → Entity → Repository → Service
  * Adapter NEVER calls `new Entity()` — always uses Transformer
  */
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Department, Employee, EmployeeRole } from '@/domain/entities';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
-import { Employee, EmployeeRole, Department } from '@/domain/entities';
 import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Database } from '@/integrations/supabase/types';
 
-type EmployeeRow = Database['public']['Tables']['employees']['Row'];
+type EmployeeRow = Database['btp']['Tables']['employees']['Row'];
 
 export class SupabaseEmployeeAdapter implements IEmployeeRepository {
   private mapToEntity(data: EmployeeRow): Employee {
@@ -44,7 +44,7 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
   async save(employee: Employee): Promise<void> {
     const dbData = EmployeeTransformer.toSupabase(employee);
-    const { error } = await supabase.from('employees').insert([dbData as Database['public']['Tables']['employees']['Insert']]);
+    const { error } = await supabase.from('employees').insert([dbData as Database['btp']['Tables']['employees']['Insert']]);
     if (error) throw new Error(`Failed to save employee: ${error.message}`);
   }
 
@@ -64,7 +64,7 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
     const { error } = await supabase
       .from('employees')
-      .update(updateData as Database['public']['Tables']['employees']['Update'])
+      .update(updateData as Database['btp']['Tables']['employees']['Update'])
       .eq('id', id);
     if (error) throw new Error(`Failed to update employee: ${error.message}`);
   }

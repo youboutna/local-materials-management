@@ -8,12 +8,12 @@ import { Project } from '@/domain/entities/Project';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import {
-    ConstructionMilestoneDTO,
-    EnhancedPhaseDTO,
-    FinancialMetricsDTO,
-    ProjectAnalyticsDTO,
-    ProjectReportDTO,
-    RiskAssessmentDTO
+  ConstructionMilestoneDTO,
+  EnhancedPhaseDTO,
+  FinancialMetricsDTO,
+  ProjectAnalyticsDTO,
+  ProjectReportDTO,
+  RiskAssessmentDTO
 } from '@/dtos/entities/ReportDTO';
 import { RiskCategory, RiskDTO, RiskLevel, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
@@ -21,11 +21,11 @@ import { Database } from '@/integrations/supabase/types';
 import { ReportCalculations } from '@/utils/reportCalculations';
 
 // Types officiels Supabase pour les tables utilisées
-type ProjectPhaseRow = Database['public']['Tables']['project_phases']['Row'];
-type ProjectMilestoneRow = Database['public']['Tables']['project_milestones']['Row'];
-type ProjectMaterialRow = Database['public']['Tables']['project_materials']['Row'];
-type InspectionRow = Database['public']['Tables']['inspections']['Row'];
-type PaymentRow = Database['public']['Tables']['payments']['Row'];
+type ProjectPhaseRow = Database['btp']['Tables']['project_phases']['Row'];
+type ProjectMilestoneRow = Database['btp']['Tables']['project_milestones']['Row'];
+type ProjectMaterialRow = Database['btp']['Tables']['project_materials']['Row'];
+type InspectionRow = Database['btp']['Tables']['inspections']['Row'];
+type PaymentRow = Database['btp']['Tables']['payments']['Row'];
 
 export class SupabaseReportDataTransformerAdapter implements IReportDataTransformerRepository {
 
