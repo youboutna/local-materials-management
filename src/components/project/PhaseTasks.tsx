@@ -230,7 +230,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                           ...formData, 
                           assignedTo: id,
                           assigneeName: name,
-                          assignee_email: email,
+                          assigneeEmail: email,
                           assignee_type: type
                         })
                       }
