@@ -8,6 +8,8 @@
 export enum TaskStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
+  /** Statut d'affichage uniquement — normalisé en `in_progress` avant persistance. */
+  BLOCKED = 'blocked',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
@@ -35,11 +37,15 @@ export enum TaskType {
 export interface TaskAssignmentDTO {
   id: string;
   title: string;
+  /** Alias de compatibilité de `title` (lecture seule côté UI/rapports). */
+  name?: string;
   description?: string;
   projectId?: string;
   phaseId?: string;
   stepId?: string;
   assignedTo: string[];
+  /** Alias de compatibilité : premier assigné. */
+  assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
   assigneeName?: string;
@@ -54,11 +60,15 @@ export interface TaskAssignmentDTO {
   completedAt?: string;
   estimatedDuration?: number;
   actualDuration?: number;
+  estimatedCost?: number;
+  actualCost?: number;
   dependencies?: string[];
   notes?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
+
 
 export interface CreateTaskAssignmentDTO {
   id?: string;
