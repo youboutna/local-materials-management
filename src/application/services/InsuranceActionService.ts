@@ -75,7 +75,7 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour assurance ${action.insuranceId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'insurance',
@@ -84,7 +84,7 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
         priority: action.priority,
         executedAt: action.createdAt
       },
-      related_id: action.insuranceId
+      relatedId: action.insuranceId
     });
 
     return action;
@@ -151,11 +151,11 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
       console.error('Error assigning insurance task:', error);
       // Fallback to notification only
       await NotificationService.createNotification({
-        recipient_id: action.assigneeId,
+        recipientId: action.assigneeId,
         title: `Tâche assurance: ${action.title}`,
         message: action.message,
         type: 'task_assigned' as any,
-        related_id: action.insuranceId,
+        relatedId: action.insuranceId,
         metadata: {
           actionId: action.id,
           insuranceId: action.insuranceId,
@@ -171,11 +171,11 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
       await NotificationService.createNotification({
-        recipient_id: recipientId,
+        recipientId: recipientId,
         title: `Nouvelle tâche d'assurance assignée`,
         message: `Une tâche d'assurance a été assignée: ${action.title}`,
         type: 'insurance_expiry' as any,
-        related_id: action.insuranceId,
+        relatedId: action.insuranceId,
         metadata: {
           actionId: action.id,
           assigneeId: action.assigneeId,
@@ -208,11 +208,11 @@ const executeInsuranceHierarchyNotification = async (action: InsuranceControlAct
 
     for (const target of escalationTargets) {
       await NotificationService.createNotification({
-        recipient_id: target.employee_id,
+        recipientId: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: `${action.message}\n\nAssurance: ${action.insuranceId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
         type: 'insurance_expiry' as any,
-        related_id: action.insuranceId,
+        relatedId: action.insuranceId,
         metadata: {
           actionId: action.id,
           escalationLevel: action.escalationLevel,
@@ -288,11 +288,11 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
 
       // Still send notification for tracking
       await NotificationService.createNotification({
-        recipient_id: employee.id ?? "",
+        recipientId: employee.id ?? "",
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'insurance_update' as any,
-        related_id: action.insuranceId,
+        relatedId: action.insuranceId,
         metadata: {
           actionId: action.id,
           communicationType: action.actionType,

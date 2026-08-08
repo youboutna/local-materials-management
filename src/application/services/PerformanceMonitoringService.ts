@@ -516,7 +516,7 @@ export class PerformanceMonitoringService {
   private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: 'system', // TODO: Get actual recipient based on project
+        recipientId: 'system', // TODO: Get actual recipient based on project
         title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,
         message: alert.message,
         type: 'system',

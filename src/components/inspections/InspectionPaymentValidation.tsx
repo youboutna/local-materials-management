@@ -197,7 +197,7 @@ const InspectionPaymentValidation: React.FC = () => {
         const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
         
         await notificationService.createNotification({
-          recipient_id: beneficiaryUserId,
+          recipientId: beneficiaryUserId,
           title: 'Validation de paiement',
           message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${
             data.payment_status === 'approved' ? 'approuvée' : 'rejetée'

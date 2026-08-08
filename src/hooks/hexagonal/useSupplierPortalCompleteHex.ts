@@ -323,7 +323,7 @@ export function useMarkTaskCompletedHex() {
 
       const notifService = getNotificationService();
       await notifService.createNotification({
-        recipient_id: projectManagerId,
+        recipientId: projectManagerId,
         title: "Tâche complétée",
         message: `La tâche "${(task as any)?.title}" a été marquée comme complétée par le fournisseur.`,
         type: 'info',

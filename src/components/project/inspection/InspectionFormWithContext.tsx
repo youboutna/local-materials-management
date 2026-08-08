@@ -160,11 +160,11 @@ export function InspectionFormWithContext({
       if (notifyHierarchy && inspection) {
         try {
           await NotificationService.createNotification({
-            recipient_id: inspectorId,
+            recipientId: inspectorId,
             title: 'Nouvelle inspection créée',
             message: `Inspection ${inspectionTypeLabel} programmée pour le ${format(date, 'dd/MM/yyyy')} - Projet: ${context?.project.title || projectId}`,
             type: 'info',
-            related_id: inspection.id || undefined,
+            relatedId: inspection.id || undefined,
             metadata: {
               project_id: projectId,
               inspection_type: inspectionType,

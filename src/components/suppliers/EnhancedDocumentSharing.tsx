@@ -253,7 +253,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       // Create notification using NotificationService
       const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
       await notificationService.createNotification({
-        recipient_id: supplier.id,
+        recipientId: supplier.id,
         type: 'info',
         title: 'Nouveau document partagé',
         message: `Le document "${documentTitle}" a été partagé avec vous.`,

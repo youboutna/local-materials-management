@@ -76,7 +76,7 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'inspection',
@@ -85,7 +85,7 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
         priority: action.priority,
         executedAt: action.createdAt
       },
-      related_id: action.inspectionId
+      relatedId: action.inspectionId
     });
 
     return action;
@@ -152,11 +152,11 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
       console.error('Error assigning inspection task:', error);
       // Fallback to notification only
       await NotificationService.createNotification({
-        recipient_id: action.assigneeId,
+        recipientId: action.assigneeId,
         title: `Tâche inspection: ${action.title}`,
         message: action.message,
         type: 'task_assigned' as any,
-        related_id: action.inspectionId,
+        relatedId: action.inspectionId,
         metadata: {
           actionId: action.id,
           inspectionId: action.inspectionId,
@@ -172,11 +172,11 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
       await NotificationService.createNotification({
-        recipient_id: recipientId,
+        recipientId: recipientId,
         title: `Nouvelle tâche d'inspection assignée`,
         message: `Une tâche d'inspection a été assignée: ${action.title}`,
         type: 'inspection_required' as any,
-        related_id: action.inspectionId,
+        relatedId: action.inspectionId,
         metadata: {
           actionId: action.id,
           assigneeId: action.assigneeId,
@@ -209,11 +209,11 @@ const executeInspectionHierarchyNotification = async (action: InspectionControlA
 
     for (const target of escalationTargets) {
       await NotificationService.createNotification({
-        recipient_id: target.employee_id,
+        recipientId: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: `${action.message}\n\nInspection: ${action.inspectionId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
         type: 'inspection_overdue' as any,
-        related_id: action.inspectionId,
+        relatedId: action.inspectionId,
         metadata: {
           actionId: action.id,
           escalationLevel: action.escalationLevel,
@@ -289,11 +289,11 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
 
       // Still send notification for tracking
       await NotificationService.createNotification({
-        recipient_id: employee.id ?? "",
+        recipientId: employee.id ?? "",
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'inspection_required' as any,
-        related_id: action.inspectionId,
+        relatedId: action.inspectionId,
         metadata: {
           actionId: action.id,
           communicationType: action.actionType,

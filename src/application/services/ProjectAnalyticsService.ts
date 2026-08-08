@@ -191,17 +191,17 @@ export class ProjectAnalyticsService {
         totalMilestones,
         completedMilestones,
         overdueTasks,
-        total_items: totalTasks,
-        total_amount: projectData.project?.budget || 0,
-        average_item_price: 0,
-        median_item_price: 0,
-        category_breakdown: [],
-        price_distribution: {
+        totalItems: totalTasks,
+        totalAmount: projectData.project?.budget || 0,
+        averageItemPrice: 0,
+        medianItemPrice: 0,
+        categoryBreakdown: [],
+        priceDistribution: {
           ranges: [],
-          standard_deviation: 0,
+          standardDeviation: 0,
           variance: 0
         },
-        complexity_score: totalTasks > 10 ? 80 : totalTasks > 5 ? 50 : 20
+        complexityScore: totalTasks > 10 ? 80 : totalTasks > 5 ? 50 : 20
       } as ProjectMetricsDTO;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectMetrics failed:', error);

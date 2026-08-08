@@ -5,7 +5,29 @@
 
 // Add imports
 import { ProjectData } from './ProjectDTO';
-import { RiskDTO } from './RiskDTO';
+
+// =================== CANONICAL SHARED TYPES (re-exported) ===================
+export type {
+  EnhancedPhaseDTO,
+  ConstructionMilestoneDTO,
+  ProjectAnalyticsDTO,
+  FinancialMetricsDTO,
+  PaymentMilestoneDTO,
+  BankGuaranteeDTO,
+  InsuranceCoverageDTO,
+  RiskItemDTO,
+  RiskAssessmentDTO,
+  MitigationStrategyDTO,
+  CostCalculation,
+} from '@/dtos/reports/reportBaseDTOs';
+
+import type {
+  EnhancedPhaseDTO,
+  ConstructionMilestoneDTO,
+  ProjectAnalyticsDTO,
+  FinancialMetricsDTO,
+  RiskAssessmentDTO,
+} from '@/dtos/reports/reportBaseDTOs';
 
 // =================== BASE REPORT TYPES ===================
 
@@ -42,25 +64,6 @@ export interface ProjectReportDTO {
 }
 
 // =================== ANALYTICS DTOs ===================
-
-export interface ProjectAnalyticsDTO {
-  // EVM Metrics from Waterfall tab
-  schedulePerformanceIndex: number;
-  costPerformanceIndex: number;
-  earnedValue: number;
-  plannedValue: number;
-  actualCost: number;
-  budgetAtCompletion: number;
-  estimateAtCompletion: number;
-  estimateToComplete: number;
-  varianceAtCompletion: number;
-
-  // Performance indicators
-  onTimePerformance: number;
-  budgetVariance: number;
-  qualityScore: number;
-  teamEfficiency: number;
-}
 
 export interface ProgressMetricsDTO {
   completionRate: number;
@@ -105,16 +108,6 @@ export interface QualityMetricsDTO {
 
 // =================== FINANCIAL DTOs ===================
 
-export interface FinancialMetricsDTO {
-  totalBudget: number;
-  spentAmount: number;
-  remainingBudget: number;
-  costOverrun: number;
-  paymentMilestones: PaymentMilestoneDTO[];
-  bankGuarantees: BankGuaranteeDTO[];
-  insuranceCoverage: InsuranceCoverageDTO[];
-}
-
 export interface VarianceAnalysisDTO {
   budgetVariance: number;
   scheduleVariance: number;
@@ -144,22 +137,6 @@ export interface CashFlowDataDTO {
 
 // =================== RISK DTOs ===================
 
-export interface RiskAssessmentDTO {
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
-  risks: RiskDTO[];
-  mitigationStrategies: MitigationStrategyDTO[];
-}
-
-export interface RiskItemDTO {
-  id: string;
-  category: 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule';
-  description: string;
-  probability: number; // 0-100
-  impact: number; // 0-100
-  riskScore: number; // probability * impact
-  status: 'identified' | 'assessed' | 'mitigated' | 'closed';
-}
-
 export interface IdentifiedRiskDTO {
   id: string;
   title: string;
@@ -171,7 +148,7 @@ export interface IdentifiedRiskDTO {
   riskScore: number;
   status: 'identified' | 'mitigated' | 'accepted' | 'monitoring';
   identifiedDate: string;
-  mitigation?: MitigationStrategyDTO;
+  mitigation?: import('@/dtos/reports/reportBaseDTOs').MitigationStrategyDTO;
 }
 
 export interface RiskMatrixDTO {
@@ -180,19 +157,6 @@ export interface RiskMatrixDTO {
   high: string[];
   critical: string[];
   overallStrategy: string;
-}
-
-export interface MitigationStrategyDTO {
-  id: string;
-  riskId: string;
-  strategy: string;
-  description: string;
-  estimatedCost: number;
-  timeline: string;
-  owner: string;
-  status: 'planned' | 'in_progress' | 'completed';
-  effectiveness?: number;
-  implementationDate: Date;
 }
 
 // =================== COMPLIANCE DTOs ===================
@@ -300,27 +264,7 @@ export interface ProjectHealthScoreDTO {
   trend: 'improving' | 'stable' | 'declining';
 }
 
-// =================== ENHANCED PHASE DTOs ===================
-
-export interface EnhancedPhaseDTO {
-  id: string;
-  name: string;
-  plannedProgress: number;
-  actualProgress: number;
-  budget: number;
-  actualCost: number;
-  startDate: Date;
-  endDate: Date;
-  status: 'planned' | 'in_progress' | 'completed' | 'delayed';
-  procurementStep: string;
-  projectId: string;
-
-  // Enhanced data
-  milestone?: ConstructionMilestoneDTO;
-  riskLevel: 'low' | 'medium' | 'high';
-  dependencies: string[];
-  assignedTeam: string[];
-}
+// =================== PHASE STEP/TASK/MILESTONE DTOs ===================
 
 export interface PhaseStepDTO {
   id: string;
@@ -370,26 +314,6 @@ export interface PhaseMilestoneDTO {
   dependencies?: string[];
 }
 
-// =================== CONSTRUCTION MILESTONE DTOs ===================
-
-export interface ConstructionMilestoneDTO {
-  id: string;
-  title: string;
-  description: string;
-  targetDate: Date;
-  completionDate?: Date;
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
-  projectId: string;
-  phaseId?: string;
-
-  // Enhanced milestone data
-  stage: 'conception' | 'preparation' | 'execution' | 'validation' | 'livraison';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  completionPercentage: number;
-  blockers: string[];
-  dependencies: string[];
-}
-
 // =================== UTILITY DTOs ===================
 
 export interface VarianceCauseDTO {
@@ -416,47 +340,4 @@ export interface ComparisonDataDTO {
   variancePercentage: number;
   percentile: number;
   comparison: 'above_average' | 'average' | 'below_average';
-}
-
-export interface PaymentMilestoneDTO {
-  id: string;
-  amount: number;
-  dueDate: Date;
-  paidDate?: Date;
-  status: 'pending' | 'paid' | 'overdue';
-  description: string;
-}
-
-export interface BankGuaranteeDTO {
-  id: string;
-  type: string;
-  amount: number;
-  issueDate: Date;
-  expiryDate: Date;
-  bankName: string;
-  status: 'active' | 'expired' | 'claimed';
-}
-
-export interface InsuranceCoverageDTO {
-  id: string;
-  type: string;
-  coverage: number;
-  provider: string;
-  validFrom: Date;
-  validUntil: Date;
-  status: 'active' | 'expired';
-}
-
-// =================== COST CALCULATION DTOs ===================
-
-export interface CostCalculation {
-  totalBudget: number;
-  spentAmount: number;
-  remainingBudget: number;
-  costVariance: number;
-  estimatedCost: number;
-  actualCost: number;
-  efficiency: number;
-  projectedCompletion: string;
-  projectedOverrun: number;
 }

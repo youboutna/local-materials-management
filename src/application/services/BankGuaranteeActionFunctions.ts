@@ -76,7 +76,7 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour garantie bancaire ${action.bankGuaranteeId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'bank_guarantee',
@@ -85,7 +85,7 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
         priority: action.priority,
         executedAt: action.createdAt
       },
-      related_id: action.projectId
+      relatedId: action.projectId
     });
 
     return action;
@@ -152,11 +152,11 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
       console.error('Error assigning bank guarantee task:', error);
       // Fallback to notification only
       await NotificationService.createNotification({
-        recipient_id: action.assigneeId,
+        recipientId: action.assigneeId,
         title: `Tâche garantie bancaire: ${action.title}`,
         message: action.message,
         type: 'task_assigned' as any,
-        related_id: action.projectId,
+        relatedId: action.projectId,
         metadata: {
           actionId: action.id,
           bankGuaranteeId: action.bankGuaranteeId,
@@ -172,11 +172,11 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
       await NotificationService.createNotification({
-        recipient_id: recipientId,
+        recipientId: recipientId,
         title: `Nouvelle tâche garantie bancaire assignée`,
         message: `Une tâche a été assignée pour gérer la garantie bancaire: ${action.title}`,
         type: 'bank_guarantee_trigger' as any,
-        related_id: action.projectId,
+        relatedId: action.projectId,
         metadata: {
           actionId: action.id,
           assigneeId: action.assigneeId,
@@ -229,11 +229,11 @@ CONTEXTE PROJET:
       `;
 
       await NotificationService.createNotification({
-        recipient_id: target.employee_id,
+        recipientId: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
         type: 'bank_guarantee_trigger' as any,
-        related_id: action.projectId,
+        relatedId: action.projectId,
         metadata: {
           actionId: action.id,
           escalationLevel: action.escalationLevel,
@@ -255,11 +255,11 @@ CONTEXTE PROJET:
     // Fallback to original recipients if hierarchy fails
     for (const recipientId of action.recipientIds) {
       await NotificationService.createNotification({
-        recipient_id: recipientId,
+        recipientId: recipientId,
         title: `Escalade Garantie Bancaire - ${action.title}`,
         message: action.message,
         type: 'bank_guarantee_trigger' as any,
-        related_id: action.projectId,
+        relatedId: action.projectId,
         metadata: {
           actionId: action.id,
           escalationLevel: action.escalationLevel,
@@ -400,11 +400,11 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
 
       // Send tracking notification
       await NotificationService.createNotification({
-        recipient_id: target.id,
+        recipientId: target.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'bank_guarantee_trigger' as any,
-        related_id: action.projectId,
+        relatedId: action.projectId,
         metadata: {
           actionId: action.id,
           communicationType: action.actionType,

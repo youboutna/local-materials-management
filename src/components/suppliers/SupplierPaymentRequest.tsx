@@ -215,7 +215,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
       // Create notification for managers using NotificationService
       const notificationData = {
-        recipient_id: supplierId,
+        recipientId: supplierId,
         title: 'Demande de paiement créée',
         message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
         type: 'info' as const,

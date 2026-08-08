@@ -435,7 +435,7 @@ export class InspectionWorkflowService {
   ): Promise<void> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: 'system',
+        recipientId: 'system',
         title,
         message,
         type: type as any,

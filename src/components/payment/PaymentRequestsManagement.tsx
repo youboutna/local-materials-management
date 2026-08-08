@@ -105,7 +105,7 @@ export const PaymentRequestsManagement: React.FC = () => {
     if (!checkBankingInfo(request)) {
       // Send notification to supplier to complete banking info
       await notificationService.createNotification({
-        recipient_id: request.supplier_id,
+        recipientId: request.supplier_id,
         title: 'Informations bancaires requises',
         message: 'Veuillez compléter vos informations bancaires pour recevoir le paiement.',
         type: 'warning',
@@ -129,7 +129,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       
       // Notify supplier
       await notificationService.createNotification({
-        recipient_id: request.supplier_id,
+        recipientId: request.supplier_id,
         title: 'Demande de paiement approuvée',
         message: `Votre demande de paiement de ${request.amount}€ a été approuvée.`,
         type: 'success',
@@ -162,7 +162,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       
       // Notify supplier
       await notificationService.createNotification({
-        recipient_id: request.supplier_id,
+        recipientId: request.supplier_id,
         title: 'Demande de paiement rejetée',
         message: `Votre demande de paiement a été rejetée. Raison: ${reason}`,
         type: 'error',

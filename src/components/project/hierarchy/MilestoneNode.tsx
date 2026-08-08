@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type MilestoneType = "validation" | "inspection" | "payment" | "paiement" | "delivery" | "livraison" | "other";
+export type { MilestoneType } from "@/dtos/entities/MilestoneNodeDTO";
 
 interface MilestoneNodeProps {
   milestone: {

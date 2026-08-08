@@ -78,7 +78,7 @@ export class InspectionMonitoringService {
   async createDigitalInspection(data: Omit<InspectionData, 'id' | 'status' | 'findings'>): Promise<InspectionData> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: data.inspectorId,
+        recipientId: data.inspectorId,
         title: 'New Inspection Scheduled',
         message: `Inspection scheduled for ${data.scheduledDate}`,
         type: 'info'

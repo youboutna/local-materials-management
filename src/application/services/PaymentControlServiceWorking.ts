@@ -295,7 +295,7 @@ export class PaymentControlService {
     // Create notification for contractor
     const contractorNotification: NotificationDTO = {
       id: crypto.randomUUID(),
-      recipient_id: payment.contractorId,
+      recipientId: payment.contractorId,
       title: 'Payment Blocked',
       message: `Your payment of ${payment.amount} EUR has been blocked. Reason: ${reason}`,
       type: 'error',
@@ -314,7 +314,7 @@ export class PaymentControlService {
     // Create notification for contractor
     const notification: NotificationDTO = {
       id: crypto.randomUUID(),
-      recipient_id: payment.contractorId,
+      recipientId: payment.contractorId,
       title: 'Payment Approved',
       message: `Your payment of ${payment.amount} EUR has been approved${notes ? `. Notes: ${notes}` : ''}`,
       type: 'success',

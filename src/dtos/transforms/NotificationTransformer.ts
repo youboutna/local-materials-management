@@ -17,16 +17,16 @@ export class NotificationTransformer {
   static toResponseDto(entity: NotificationData): NotificationDTO {
     return {
       id: entity.id,
-      recipient_id: entity.recipient_id,
+      recipientId: entity.recipient_id,
       title: entity.title,
       message: entity.message,
       type: entity.type as 'info' | 'success' | 'warning' | 'error' | 'system',
       read: entity.read || false,
-      created_at: entity.created_at || new Date().toISOString(),
-      updated_at: entity.updated_at,
+      createdAt: entity.created_at || new Date().toISOString(),
+      updatedAt: entity.updated_at,
       priority: entity.priority as 'low' | 'medium' | 'high' || undefined,
-      expires_at: entity.expires_at || undefined,
-      action_url: entity.action_url || undefined,
+      expiresAt: entity.expires_at || undefined,
+      actionUrl: entity.action_url || undefined,
       metadata: entity.metadata || undefined,
     };
   }
@@ -36,14 +36,14 @@ export class NotificationTransformer {
    */
   static fromCreateDtoToDomain(dto: CreateNotificationRequestDTO): Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> {
     return {
-      recipient_id: dto.recipient_id,
+      recipient_id: dto.recipientId,
       title: dto.title,
       message: dto.message,
       type: dto.type,
       read: false,
       priority: dto.priority || 'medium',
-      expires_at: dto.expires_at || null,
-      action_url: dto.action_url || null,
+      expires_at: dto.expiresAt || null,
+      action_url: dto.actionUrl || null,
       metadata: dto.metadata || null,
     };
   }
@@ -61,8 +61,8 @@ export class NotificationTransformer {
     if (dto.type !== undefined) updateData.type = dto.type;
     if (dto.read !== undefined) updateData.read = dto.read;
     if (dto.priority !== undefined) updateData.priority = dto.priority;
-    if (dto.expires_at !== undefined) updateData.expires_at = dto.expires_at;
-    if (dto.action_url !== undefined) updateData.action_url = dto.action_url;
+    if (dto.expiresAt !== undefined) updateData.expires_at = dto.expiresAt;
+    if (dto.actionUrl !== undefined) updateData.action_url = dto.actionUrl;
     if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
 
     return updateData;
@@ -81,7 +81,7 @@ export class NotificationTransformer {
   static validateNotificationData(data: CreateNotificationRequestDTO): string[] {
     const errors: string[] = [];
 
-    if (!data.recipient_id || data.recipient_id.trim().length === 0) {
+    if (!data.recipientId || data.recipientId.trim().length === 0) {
       errors.push('Recipient ID is required');
     }
 
@@ -111,7 +111,7 @@ export class NotificationTransformer {
       errors.push('Invalid priority level');
     }
 
-    if (data.expires_at && new Date(data.expires_at) <= new Date()) {
+    if (data.expiresAt && new Date(data.expiresAt) <= new Date()) {
       errors.push('Expiration date must be in the future');
     }
 
@@ -126,7 +126,7 @@ export class NotificationTransformer {
       ...data,
       title: data.title?.trim() || '',
       message: data.message?.trim() || '',
-      recipient_id: data.recipient_id?.trim() || '',
+      recipientId: data.recipientId?.trim() || '',
       type: data.type || 'info',
       priority: data.priority || 'medium',
     };

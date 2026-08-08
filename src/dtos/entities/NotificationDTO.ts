@@ -5,31 +5,31 @@
 
 export interface NotificationDTO {
   id: string;
-  recipient_id: string;
+  recipientId: string;
   title: string;
-  
+
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
   priority?: 'low' | 'medium' | 'high';
-  expires_at?: string;
-  action_url?: string;
+  expiresAt?: string;
+  actionUrl?: string;
   metadata?: Record<string, any>;
 }
 
 export interface CreateNotificationRequestDTO {
-  recipient_id: string;
+  recipientId: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   priority?: 'low' | 'medium' | 'high';
-  expires_at?: string;
-  action_url?: string;
+  expiresAt?: string;
+  actionUrl?: string;
   metadata?: Record<string, any>;
   // Legacy fields for backward compatibility
-  related_id?: string;
+  relatedId?: string;
   read?: boolean;
 }
 
@@ -39,23 +39,23 @@ export interface UpdateNotificationRequestDTO {
   type?: 'info' | 'success' | 'warning' | 'error' | 'system';
   read?: boolean;
   priority?: 'low' | 'medium' | 'high';
-  expires_at?: string;
-  action_url?: string;
+  expiresAt?: string;
+  actionUrl?: string;
   metadata?: Record<string, any>;
 }
 
 export interface NotificationListDTO {
   notifications: NotificationDTO[];
   total: number;
-  unread_count: number;
+  unreadCount: number;
   page?: number;
   limit?: number;
 }
 
 export interface NotificationStatsDTO {
-  total_notifications: number;
-  unread_notifications: number;
-  by_type: Record<string, number>;
-  by_priority: Record<string, number>;
-  recent_notifications: NotificationDTO[];
+  totalNotifications: number;
+  unreadNotifications: number;
+  byType: Record<string, number>;
+  byPriority: Record<string, number>;
+  recentNotifications: NotificationDTO[];
 }
