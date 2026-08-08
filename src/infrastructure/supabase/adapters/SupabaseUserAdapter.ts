@@ -6,7 +6,7 @@
 
 import { User } from '@/domain/entities/User';
 import { IUserRepository, SearchUsersOptions, SearchUsersResult } from '@/domain/repositories/IUserRepository';
-import { UserTransformer } from '@/infrastructure/transformers/UserTransformer';
+import { UserTransformer } from '@/dtos/transforms/UserTransformer';
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 

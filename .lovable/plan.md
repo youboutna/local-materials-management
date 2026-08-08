@@ -1,52 +1,57 @@
-# Plan v3.3 — Alignement strict sur les 4 exigences
+# Plan de mise en conformité hexagonale (rapport-audit.json)
 
-Objectif : corriger définitivement les écarts identifiés sur v3 / v3.1. Aucun nouveau périmètre, uniquement mise en conformité.
+## Ce que dit le rapport
+979 fichiers scannés, 7 192 erreurs / 15 689 avertissements. Le volume est trompeant : 2 règles (R004 snake_case, R017 "possible mock") produisent 90 % du bruit et sont majoritairement des faux positifs (accès légitimes aux lignes DB dans les adapters/transformers, gros objets de config lus comme "mock"). Les violations réellement bloquantes sont peu nombreuses et parfaitement délimitées.
 
-## Lot 1 — Saisie en bloc (batch, transaction unique)
+| Règle | Nature | Volume | Fichiers |
+|---|---|---|---|
+| R003 / R008 | Appel Supabase direct hors adapter (UI/services) | 23 | 17 |
+| R009 | Instanciation `new XService()` au lieu de factory | 204 | 94 |
+| R014 | Types dupliqués | 299 | 86 |
+| R016 | Types définis hors `domain`/`dtos` | 440 | 172 |
+| R007 | snake_case dans les DTO | 154 | 44 |
+| R005 | `any` explicite | 636 | 199 |
+| R010 | Transformers incomplets | 21 | 21 |
+| R011/R012/R013/R015 | Mocks, TODO non implémentés, mapping mal placé | 34 | 23 |
+| R004 / R017 | Bruit (faux positifs à filtrer) | 20 955 | — |
 
-**Cible :** `BoqWorkspace` + `BoqLineTable` + `SupabaseBoqRepository` + `useBoqDocument`.
+## Organisation : 6 lots exécutés en parallèle
 
-- Supprimer le dialog « Ajouter une ligne » qui persiste immédiatement.
-- Rendre le tableau `BoqLineTable` éditable inline avec les **mêmes colonnes que le parseur d'import** : Désignation · Phase · Jalon · Tâche · Type ouvrage · Unité · L · l · h · Quantité · PU · TVA · RAS · Frais généraux · Total HT.
-- Ajouter une ligne = insertion locale dans un tampon (state), pas d'appel réseau.
-- Import CSV/Excel/PDF alimente le même tampon (déjà éditable après import — cf. capture 115).
-- Un unique bouton **« Enregistrer le DQE »** déclenche `boqRepository.bulkCreate(lines)` en transaction, avec statut `submitted` d'emblée (fini le brouillon DB par ligne).
-- API repository : garder `bulkCreate` existant, supprimer les appels itératifs à `createLine` côté UI.
+### Lot A — Supabase hors adapter (bloquant, priorité 1)
+Déplacer chaque accès direct vers un adapter + service :
+- `documentsTableAdapter.tsx` (select/insert/delete documents) → `DocumentService` / `SupabaseDocumentAdapter`
+- `pages/Documents.tsx`, `pages/UnifiedSupplierPortal.tsx`, `BoqWorkspace.tsx`, `BoqDevisDialog.tsx`, `SecretCodeAccessGate.tsx`, `SupplierSecureAccessPortal.tsx`, `TaskAssigneeSelector.tsx`, `SupplierInspectionExecutionDialog.tsx`, `WorkflowInspection.tsx` → hooks hexagonaux existants
+- `functions.invoke` (email, notification soumission) → un `NotificationGatewayAdapter` unique appelé par `SupplierNotificationService`, `DocumentService`, `TenderSubmissionNotificationService`
+- `AwardedTenderToProjectService` (`phase_employees.insert`) → `SupabasePhaseAdapter`
 
-## Lot 2 — Métrés optionnels via `btpCalculations`
+### Lot B — Factories & services (R009)
+Remplacer les `new XService(...)` par `getXService()` / `RepositoryFactory` dans les 94 fichiers, en commençant par les plus denses : `useProjectPayments`, `useMaterialsHex`, `usePhaseDetails`, `useInvoicesHex`, `useDocumentsHex`, `PaymentBlockingInterface`, `ProjectDetailByDTO`, `projectDataCalculations`.
 
-**Cible :** `BoqLineTable` (edition inline) + `src/utils/btpCalculations.ts`.
+### Lot C — Unification des types (R014 + R016)
+- Supprimer les doublons : `ProjectAnalyticsDTO`, `RiskAssessmentDTO`, `CostCalculation` (garder `ProjectReportDTO`), `PhaseStepDTO`/`PhaseTaskDTO` (garder `dtos/transforms/shared.ts`), `ProjectStatus`, `MilestoneType`, `ConstructionPhase/Stage`, `ProjectData`, `TaskAssignment`, `Document`.
+- Rapatrier les types de `src/utils/types.ts`, `src/utils/mauritania.ts`, `src/components/documents/hub/types.ts`, `usePhaseWorkflow`, `phaseHelpers`, services d'import/export vers `src/dtos/**` ; ne laisser dans les composants que des `Props`.
+- Exceptions à conserver : `src/integrations/supabase/types.ts` (généré), `src/config/**` (référentiels), `hooks/hexagonal/index.ts` (ré-exports).
 
-- Sur chaque ligne, si `elementType` + dimensions renseignés → appel `calculateAdvancedQuantities` (fichier existant) pour **pré-remplir** la colonne Quantité.
-- La quantité reste éditable manuellement (pas de verrou).
-- Zéro duplication : import direct depuis `src/utils/btpCalculations.ts`. Suppression de toute logique de calcul copiée ailleurs (audit `AdvancedQuantityCalculator`, `BoqCalculatorService`).
+### Lot D — DTO camelCase (R007) + transformers (R010, R015)
+- Convertir les 44 DTO snake_case (gros morceau : `AdvancedTenderEstimateDTO`, `PhaseDTO`, `milestone-dto`, `phase-dto`, `ReportDTO`, `NotificationDTO`) et adapter les transformers, jamais l'UI directement.
+- Compléter les 21 transformers manquant `toDTO`/`fromDTO`/`toSupabase`/`fromSupabase`.
+- Déplacer `toRow`/`fromRow` de `SupabaseOrganizationAdapter`, `SupabaseOrganizationHierarchyAdapter`, `TenderLotService` vers `src/dtos/transforms/`.
 
-## Lot 3 — Actions documentaires sur l'agrégat
+### Lot E — Mocks et implémentations manquantes (R011, R012, R013)
+- `KeycloakAuthContext` : `mockProfile` → lecture réelle du profil via `UserService`.
+- TODO à finir : `SystemHealthOverview`, `PaymentBlockingInterface`, `MilestoneService` (3), `BankGuaranteeService`, `InspectionWorkflowService`, `ProjectCalculationService`, `useMaterialsHex` (2 stubs), `useProjectMaterialsHex`, `usePhaseEmployeesHex`, `useTenderDocumentsHex`, `EnhancedRiskAnalysisStep`, `EnhancedValidationStep`, `InspectionDetailsStep`, `Users.tsx`, `PhaseStepResourceDialog`.
+- `useProjectManager` : supprimer le fallback silencieux, exiger le provider.
 
-**Cible :** `BoqActionsBar` + `DocumentService` + `DqeWorkspace`.
+### Lot F — Fiabilisation du script d'audit
+Le script reste utile mais doit cesser de noyer les vrais problèmes :
+- R004 : ne signaler le snake_case que hors `infrastructure/**`, `dtos/transforms/**`, `integrations/supabase/types.ts` et hors chaînes de requête.
+- R017 : ne déclencher que sur des identifiants `mock|fake|dummy|sample`, pas sur tout bloc littéral ; exclure `src/config/referentials/**`.
+- R014 : dédupliquer le comptage (299 occurrences pour ~60 types réels) et ignorer les ré-exports.
+- R016 : whitelister types générés, `Props`, et `src/config/**`.
+- Ajouter un `--fail-on=error` exploitable en CI et un mode `--rule R003,R008` pour cibler un lot.
+- Corriger `movedTypes` (529 annoncés, 0 listés) et `typesMoved` en dry-run.
 
-- `BoqActionsBar` déplacé **dans** la carte DQE (pas dans un header orphelin — cf. capture 113) et rendu conditionnel : visible seulement quand `doc.lines.length > 0` ET `status ∈ {submitted, validated, signed}`.
-- Chaque action (`generatePdf`, `email`, `sign`, `download`, `distribute`) recharge systématiquement les lignes via `boqRepository.list({ source, contextId, projectId })` — pas de dépendance à une sélection.
-- `BoqPdfRenderer` : vérifier entête + pied de page paginé + totaux HT/TVA/RAS/TTC + bloc signature (déjà en place, à valider).
-
-## Lot 4 — `DqeWorkspace` unique dans les 4 contextes
-
-**Cible :** `UnifiedSupplierPortal` (onglets Devis + Factures) + `ProjectDqeTab` + `TenderEstimator`.
-
-- **Projet** : `<DqeWorkspace routeContext="project-dqe" projectId=... />` (déjà en place).
-- **Tender estimate** : idem `routeContext="tender-estimate" tenderId=...`.
-- **Portail fournisseur / Devis** : `routeContext="supplier-bid" tenderId submissionId senderId`. Si pas de `submissionId`, création automatique de la soumission liée à l'AO au premier enregistrement.
-- **Portail fournisseur / Factures** : `routeContext="supplier-invoice"` avec **association projet OU AO obligatoire** (champ requis avant `bulkCreate`).
-- CTA « Créer un devis depuis un AO » : navigation onglet Devis + hydratation `tenderId` (déjà câblé), à valider end-to-end.
-- Correction bug capture 116 « Profil fournisseur requis » : afficher le `DqeWorkspace` en mode invité si `senderId` disponible (code secret), sans exiger un profil complet.
-
-## Contraintes techniques (résumé)
-
-- `IBoqRepository.bulkCreate(lines)` : ligne atomique, retourne le lot inséré. Pas de shadow-write `quantity_takeoffs`.
-- `BoqLineDTO.status` : supprimer `draft` du flow saisie (reste dispo pour import parseur si besoin de revalidation).
-- Aucun composant hors `src/utils/btpCalculations.ts` ne recalcule L·l·h.
-- Aucun `createLine` unitaire depuis l'UI (grep pour purger).
-
-## Livrable
-
-Une seule PR interne, 4 lots exécutés en parallèle. Typecheck vert. Test manuel des 4 contextes.
+## Détails techniques
+- Ordre imposé par l'architecture : DB (snake_case) → Adapter → Transformer → Entity → Service → DTO (camelCase) → UI ; aucun `supabase` importé dans `src/components` ou `src/pages` (seules exceptions : `useAuth`, URLs publiques de storage).
+- Chaque lot se termine par un typecheck ; les lots C et D touchent les mêmes fichiers de DTO, ils seront donc séquencés entre eux (C puis D) mais parallèles à A, B, E, F.
+- Après chaque lot, relance de `npm run fix:hexagonal -- --dry-run --json` pour mesurer la baisse d'erreurs, avec `R005` (`any`) traité en dernier, fichier par fichier, sans changement de comportement.
