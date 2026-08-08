@@ -11,7 +11,6 @@ import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, ReactNode, useCallback, useContext, useEffect } from 'react';
