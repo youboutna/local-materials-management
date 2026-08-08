@@ -99,7 +99,11 @@ const RULES = {
     pattern: /(?:^|\n)\s*export\s+(interface|type)\s+([A-Z]\w*)/gm,
     message: '❌ [R016] Type definition outside domain/dtos.',
     isAutoFixable: false,
-    checkFile: fp => !fp.replace(/\\/g, '/').includes('/domain/') && !fp.replace(/\\/g, '/').includes('/dtos/')
+    exclude: ['src/config/', 'src/integrations/supabase/types.ts'],
+    checkFile: fp => {
+      const n = fp.replace(/\\/g, '/');
+      return !n.includes('/domain/') && !n.includes('/dtos/');
+    }
   },
   TRANSFORM_FUNCTION_LOCATION: {
     id: 'R015', priority: 1, severity: 'ERROR',
