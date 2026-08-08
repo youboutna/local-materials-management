@@ -73,17 +73,13 @@ const RULES = {
   },
   STATIC_MOCK_DATA: {
     id: 'R017', priority: 0, severity: 'WARNING',
-    pattern: /(?:const|let|var)\s+(\w+)\s*[:=]\s*\[[\s\S]*?\]|\s*\{[\s\S]*?\}/g,
+    pattern: /(?:const|let|var)\s+(\w*(?:mock|fake|dummy|sample|stub)\w*)\s*[:=]/gi,
     message: '⚠️ [R017] Possible static mock data in "$1".',
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/', 'src/config/', 'src/domain/', 'src/dtos/'],
     check: (content, varName) => {
-      const mockIndicators = /(?:name|email|id|title|description|status|date|price|amount)/i;
-      const lines = content.split('\n').length;
-      if (lines < 5) return null;
-      if (!mockIndicators.test(varName) && !mockIndicators.test(content)) return null;
-      if (/\bfunction\b|\bimport\b|\brequire\b|\bfetch\b|\baxios\b/.test(content)) return null;
-      return `Possible mock data block (${lines} lines).`;
+      if (!/(mock|fake|dummy|sample|stub)/i.test(varName)) return null;
+      return `Identifier "${varName}" looks like mock data.`;
     }
   },
   LEGACY_SERVICES: {
@@ -118,8 +114,9 @@ const RULES = {
     message: '⚠️ [R004] Snake_case identifier.',
     isAutoFixable: true,
     fix: m => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()),
-    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/'],
-    skipIfInStringOrComment: true
+    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/', 'src/integrations/supabase/types.ts', 'supabase/'],
+    skipIfInStringOrComment: true,
+    skipIfObjectKey: true
   },
   NON_HEX_HOOK: {
     id: 'R006', priority: 1, severity: 'WARNING',

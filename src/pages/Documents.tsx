@@ -10,8 +10,7 @@ import {
   ProjectDocumentsPanel,
   SupplierDocumentsPanel,
 } from '@/components/documents/panels';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSuppliersList } from '@/hooks/hexagonal/useSuppliersCrudHex';
 import { FolderKanban, Gavel, Truck, ShieldCheck } from 'lucide-react';
 
 type Scope = 'project' | 'tender' | 'supplier';
@@ -23,13 +22,16 @@ const SCOPES: { id: Scope; label: string; icon: any; description: string }[] = [
 ];
 
 function useSuppliers() {
-  return useQuery({
-    queryKey: ['documents-page', 'suppliers-lite'],
-    queryFn: async () => {
-      const { data } = await supabase.from('suppliers' as any).select('id, name').order('name').limit(500);
-      return ((data ?? []) as unknown) as { id: string; name: string }[];
-    },
-  });
+  const { data: suppliers = [], ...rest } = useSuppliersList();
+  const data = useMemo(
+    () =>
+      [...suppliers]
+        .map((s: any) => ({ id: s.id, name: s.name }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(0, 500),
+    [suppliers]
+  );
+  return { ...rest, data };
 }
 
 export default function Documents() {
