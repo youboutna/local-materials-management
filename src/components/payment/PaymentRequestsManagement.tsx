@@ -1,5 +1,5 @@
 import { AuthService, getAuthService} from '@/application/services/AuthService';
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
@@ -53,7 +53,7 @@ export const PaymentRequestsManagement: React.FC = () => {
   const supplierService = getSupplierService();
   const projectService = getProjectService();
   const paymentRequestService = getPaymentRequestService();
-  const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+  const notificationService = getNotificationService();
 
   const { data: paymentRequests = [], refetch } = useQuery({
     queryKey: ['payment-requests-management'],

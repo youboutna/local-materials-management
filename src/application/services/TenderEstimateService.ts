@@ -120,10 +120,7 @@ export class TenderEstimateService {
 
 
 
-      // 3. Business Logic - Calculate business rules
-
-      // TODO: Implement business rules calculation when needed
-
+      // 3. Business Logic - Totals are computed once items are persisted (step 5).
 
 
       // 4. Repository Layer - Create entity
@@ -220,7 +217,31 @@ export class TenderEstimateService {
 
 
 
-      // 6. Transformer Layer - Convert to DTO
+      // 6. Business Logic - Recompute real totals from persisted items
+
+      if (request.items && request.items.length > 0) {
+
+        const totals = await this.calculateEstimateTotals({ estimate_id: createdEstimate.id });
+
+        const updatedEstimate = await this.tenderEstimateRepository.update(createdEstimate.id, {
+
+          subtotal: totals.subtotal,
+
+          taxAmount: totals.taxAmount,
+
+          totalWithTax: totals.totalWithTax,
+
+          finalTotal: totals.finalTotal
+
+        } as Partial<TenderEstimate>);
+
+        return this.transformEntityToDTO(updatedEstimate);
+
+      }
+
+
+
+      // 7. Transformer Layer - Convert to DTO
 
       return this.transformEntityToDTO(createdEstimate);
 

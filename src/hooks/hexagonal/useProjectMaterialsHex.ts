@@ -3,10 +3,9 @@
  * Utilise MaterialService au lieu des appels Supabase directs
  */
 
-import { MaterialService, getMaterialService} from "@/application/services/MaterialService";
+import { getMaterialService } from "@/application/services/MaterialService";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 import { toast } from "@/hooks/use-toast";
-import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ProjectMaterial {
@@ -111,7 +110,7 @@ export const useProjectMaterialsHex = (projectId?: string) => {
 
   const removeMaterialMutation = useMutation({
     mutationFn: async (_materialId: string) => {
-      const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+      const materialService = getMaterialService();
       await materialService.removeMaterialFromProject(projectId!, _materialId);
     },
     onSuccess: () => {

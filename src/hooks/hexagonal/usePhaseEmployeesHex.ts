@@ -1,9 +1,8 @@
 // hooks/hexagonal/usePhaseEmployeesHex.ts - Hexagonal hook for phase employees management
 // Uses EmployeeService instead of non-existent phase repo methods
 
-import { EmployeeService } from '@/application/services/EmployeeService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface PhaseEmployee {
@@ -29,7 +28,7 @@ export interface EmployeeFormData {
 
 export const usePhaseEmployeesHex = (phaseId: string) => {
   const queryClient = useQueryClient();
-  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+  const employeeService = getEmployeeService();
 
   const {
     data: employees = [],

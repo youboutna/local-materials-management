@@ -1,6 +1,6 @@
 import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { getPaymentRequestService } from '@/application/services/PaymentRequestService';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { Badge } from '@/components/ui/badge';
@@ -87,8 +87,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const [notes, setNotes] = useState('');
 
   // Services - initialized with proper repositories
-  const paymentRepository = RepositoryFactory.getPaymentRepository();
-  const paymentRequestService = new PaymentRequestService(paymentRepository);
+  const paymentRequestService = getPaymentRequestService();
   const documentService = getDocumentService();
 
   // Handle prefill data from payment initiation

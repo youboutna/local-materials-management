@@ -1,4 +1,4 @@
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -251,7 +251,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       }
 
       // Create notification using NotificationService
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationService = getNotificationService();
       await notificationService.createNotification({
         recipientId: supplier.id,
         type: 'info',
