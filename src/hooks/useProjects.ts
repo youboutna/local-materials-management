@@ -70,7 +70,7 @@ export const useProjects = () => {
         updatedAt: new Date().toISOString(),
       };
 
-      const createdDTO = await projectService.createProject(formDTO);
+      const createdDTO = await projectService.createProject(formDTO as unknown as CreateProjectDTO);
       const newProject = createdDTO as unknown as ProjectDTO;
 
       setProjects(prev => [newProject, ...prev]);
