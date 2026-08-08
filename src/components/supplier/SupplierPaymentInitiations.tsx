@@ -129,10 +129,10 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
   };
 
   const pendingInitiations = initiations.filter(i => 
-    i.status === 'supplier_notified' || i.status === 'ready_for_supplier'
+    i.status === 'ready_for_supplier'
   );
   const completedInitiations = initiations.filter(i => 
-    i.status !== 'supplier_notified' && i.status !== 'ready_for_supplier'
+    i.status !== 'ready_for_supplier'
   );
 
   if (loading) {

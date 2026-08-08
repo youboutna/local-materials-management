@@ -78,7 +78,7 @@ const DocumentUpload = ({ embedded = false }: { embedded?: boolean }) => {
       const documentData = {
         title: uploadData.title,
         description: uploadData.description,
-        documentType: uploadData.document_type,
+        documentType: uploadData.document_type as CreateDocumentDTO['documentType'],
         projectId: uploadData.project_id || null,
         status: uploadData.status,
         fileUrl: fileUrl,

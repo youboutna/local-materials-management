@@ -203,7 +203,7 @@ export class InspectionWorkflowService {
         phaseId: request.phaseId,
         title: `Inspection - ${request.inspectionType}`,
         description: request.notes || '',
-        inspectorId: request.requestedBy,
+        inspector: request.requestedBy,
         date: request.requestedDate,
         status: InspectionStatus.PENDING,
         priority: request.priority as InspectionPriority || InspectionPriority.MEDIUM,
