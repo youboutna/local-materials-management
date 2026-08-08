@@ -851,7 +851,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, importPath);
       if (!fileMap.has(dtoFile)) fileMap.set(dtoFile, []);
       fileMap.get(dtoFile).push(t);
-      this.report.movedTypes.push({ type: t.typeName, from: t.filePath, to: dtoFile });
+      if (!this.options.dryRun) this.report.movedTypes.push({ type: t.typeName, from: t.filePath, to: dtoFile });
     }
 
     // Écriture / ajout dans les DTO
@@ -1015,7 +1015,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, `@/dtos/entities/${path.basename(targetFile, '.ts')}`);
       if (!fileMap.has(targetFile)) fileMap.set(targetFile, []);
       fileMap.get(targetFile).push(t);
-      this.report.movedTypes.push({ type: t.typeName, from: t.sourceFile, to: targetFile });
+      if (!this.options.dryRun) this.report.movedTypes.push({ type: t.typeName, from: t.sourceFile, to: targetFile });
     }
 
     const sourceFileModifications = new Map();
@@ -1202,10 +1202,16 @@ class SmartHexAnalyzer {
 
     if (this.options.tsCheck) this.runTypeScriptCheck();
 
+    this.finalizeDuplicateReport();
+    this.report.stats.typesMoved = this.report.movedTypes.length;
+
     if (this.options.json && !this.options.output) console.log(JSON.stringify(this.report, null, 2));
     else console.log(this.generateTextReport());
 
     this.saveReportIfNeeded();
+
+    if (this.options.failOn === 'error' && this.report.stats.errors > 0) process.exitCode = 1;
+    else if (this.options.failOn === 'warning' && (this.report.stats.errors > 0 || this.report.stats.warnings > 0)) process.exitCode = 1;
   }
 }
 
