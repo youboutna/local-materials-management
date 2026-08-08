@@ -39,7 +39,7 @@ function mapRowToRecord(row: PaymentControlActionRow): PaymentControlActionRecor
 
 export class SupabasePaymentControlActionAdapter implements IPaymentControlActionRepository {
   async create(data: CreatePaymentControlActionRecord): Promise<PaymentControlActionRecord> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: row, error } = await supabase
       .from('payment_control_actions')
       .insert({
@@ -59,7 +59,7 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
   }
 
   async findByBlockId(blockId: string): Promise<PaymentControlActionRecord[]> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: rows, error } = await supabase
       .from('payment_control_actions')
       .select('*')
@@ -71,7 +71,7 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
   }
 
   async complete(id: string): Promise<PaymentControlActionRecord> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: row, error } = await supabase
       .from('payment_control_actions')
       .update({

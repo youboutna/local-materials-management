@@ -38,7 +38,7 @@ function mapRowToRecord(row: PaymentBlockRow): PaymentBlockRecord {
 
 export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   async create(data: CreatePaymentBlockRecord): Promise<PaymentBlockRecord> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: row, error } = await supabase
       .from('payment_blocks')
       .insert({
@@ -57,7 +57,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async findById(id: string): Promise<PaymentBlockRecord | null> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: row, error } = await supabase
       .from('payment_blocks')
       .select('*')
@@ -69,7 +69,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async findActiveByProjectAndContractor(projectId: string, contractorId: string): Promise<PaymentBlockRecord[]> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: rows, error } = await supabase
       .from('payment_blocks')
       .select('*')
@@ -83,7 +83,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async resolve(id: string, resolvedBy: string): Promise<PaymentBlockRecord> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data: row, error } = await supabase
       .from('payment_blocks')
       .update({

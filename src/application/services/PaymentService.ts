@@ -1,4 +1,6 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
+import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 /**
  * Payment Service
  * Handles payment operations with hexagonal architecture
@@ -73,7 +75,11 @@ function isValidPaymentStatusTransition(
 }
 
 export class PaymentService {
-  constructor(private paymentRepository: IPaymentRepository) {}
+  constructor(
+    private paymentRepository: IPaymentRepository,
+    private paymentBlockRepository: IPaymentBlockRepository = RepositoryFactory.getPaymentBlockRepository(),
+    private paymentControlActionRepository: IPaymentControlActionRepository = RepositoryFactory.getPaymentControlActionRepository()
+  ) {}
 
   /**
    * Get payments by phase ID
@@ -173,7 +179,8 @@ export class PaymentService {
         checkNumber: data.checkNumber,
         mobileNumber: data.mobileNumber,
         mobileOperator: data.mobileOperator,
-        receiverName: data.receiverName
+        receiverName: data.receiverName,
+        ...(data.status ? { status: data.status } : {})
       } as Partial<Payment>;
       
       // Update entity
