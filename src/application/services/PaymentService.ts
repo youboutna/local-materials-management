@@ -267,22 +267,29 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // TODO: Implémenter avec PaymentBlockingRepository quand disponible
-      // Pour l'instant, simuler la création du blocage
+      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+      const record = await this.paymentBlockRepository.create({
+        projectId: payment.projectId,
+        contractorId,
+        amount: request.blocked_amount,
+        blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
+        blockedBy: request.created_by,
+        notes: `payment_id:${request.payment_id}`
+      });
+
       const block: PaymentBlockDTO = {
-        id: crypto.randomUUID(),
+        id: record.id,
         payment_id: request.payment_id,
         block_reason: request.block_reason,
         block_type: request.block_type,
-        blocked_amount: request.blocked_amount,
+        blocked_amount: record.amount,
         status: 'active',
         created_by: request.created_by,
-        created_at: new Date().toISOString()
+        created_at: record.blockedAt
       };
 
       // Mettre à jour le statut du paiement
-      await this.updatePayment(request.payment_id, {} as UpdatePaymentDTO);
-      // TODO: Ajouter le statut 'blocked' quand UpdatePaymentRequestDto le supportera
+      await this.updatePayment(request.payment_id, { status: 'blocked' });
 
       console.log(`Payment ${request.payment_id} blocked: ${request.block_reason}`);
       return block;
