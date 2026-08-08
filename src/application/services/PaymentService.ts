@@ -311,15 +311,39 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // TODO: Implémenter avec PaymentControlRepository quand disponible
-      // Pour l'instant, simuler la création de l'action
+      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+      let blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectId, contractorId);
+      let blockId: string;
+      if (blocks.length > 0) {
+        blockId = blocks[0].id;
+      } else {
+        // Ancrer l'action de contrôle sur un bloc de suivi (contrainte FK payment_control_actions -> payment_blocks)
+        const anchorBlock = await this.paymentBlockRepository.create({
+          projectId: payment.projectId,
+          contractorId,
+          amount: payment.amount,
+          blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
+          blockedBy: action.performed_by,
+          notes: `payment_id:${paymentId}`
+        });
+        blockId = anchorBlock.id;
+      }
+
+      const actionRecord = await this.paymentControlActionRepository.create({
+        paymentBlockId: blockId,
+        actionType: action.action_type,
+        description: action.description,
+        createdBy: action.performed_by,
+        status: action.result === 'success' ? 'completed' : 'pending'
+      });
+
       const controlAction: PaymentControlActionDTO = {
-        id: crypto.randomUUID(),
+        id: actionRecord.id,
         payment_id: paymentId,
         action_type: action.action_type,
         description: action.description,
         performed_by: action.performed_by,
-        performed_at: new Date().toISOString(),
+        performed_at: actionRecord.createdAt,
         result: action.result,
         notes: action.notes
       };
