@@ -47,6 +47,8 @@ import {
     SupabaseNotificationAdapter,
     SupabaseParsedInvoiceAdapter,
     SupabasePaymentAdapter,
+    SupabasePaymentBlockAdapter,
+    SupabasePaymentControlActionAdapter,
     SupabasePhaseAdapter,
     SupabaseProjectAdapter,
     SupabaseProjectBudgetLinkAdapter,
@@ -140,6 +142,8 @@ import { IOrganizationHierarchyRepository } from '@/domain/repositories/IOrganiz
 import { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
+import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
+import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
@@ -241,6 +245,8 @@ interface RepositoryRegistry {
   projectStrategyLink?: IProjectStrategyLinkRepository;
   projectBudgetLink?: IProjectBudgetLinkRepository;
   paymentBlocking?: IPaymentBlockingRepository;
+  paymentBlock?: IPaymentBlockRepository;
+  paymentControlAction?: IPaymentControlActionRepository;
   taskAssignment?: ITaskAssignmentRepository;
   realtime?: IRealtimeRepository;
 }
@@ -565,6 +571,18 @@ export class RepositoryFactory {
     if (registry.paymentBlocking) return registry.paymentBlocking;
     registry.paymentBlocking = new PaymentBlockingAdapter();
     return registry.paymentBlocking;
+  }
+
+  static getPaymentBlockRepository(): IPaymentBlockRepository {
+    if (registry.paymentBlock) return registry.paymentBlock;
+    registry.paymentBlock = new SupabasePaymentBlockAdapter();
+    return registry.paymentBlock;
+  }
+
+  static getPaymentControlActionRepository(): IPaymentControlActionRepository {
+    if (registry.paymentControlAction) return registry.paymentControlAction;
+    registry.paymentControlAction = new SupabasePaymentControlActionAdapter();
+    return registry.paymentControlAction;
   }
 
   static getBankGuaranteeRepository(): IBankGuaranteeRepository {
