@@ -1,4 +1,4 @@
-export type InitiatorRole = 'inspector' | 'manager' | 'director' | 'supervisor';
+export type InitiatorRole = 'inspector' | 'manager' | 'director' | 'supervisor' | 'project_manager';
 
 export interface ApprovalChainStep {
   level: number;
@@ -78,8 +78,17 @@ export interface PaymentInitiationNotificationDTO {
   updatedAt: string;
 }
 
+export const ROLE_LABELS: Record<InitiatorRole, string> = {
+  inspector: 'Inspecteur',
+  manager: 'Responsable',
+  project_manager: 'Chef de Projet',
+  supervisor: 'Superviseur',
+  director: 'Directeur'
+};
+
 export const ROLE_PAYMENT_LIMITS: Record<InitiatorRole, number> = {
   inspector: 500000,
+  project_manager: 2000000,
   manager: 2000000,
   supervisor: 5000000,
   director: 20000000
@@ -87,6 +96,7 @@ export const ROLE_PAYMENT_LIMITS: Record<InitiatorRole, number> = {
 
 export const ROLE_APPROVAL_CHAIN: Record<InitiatorRole, InitiatorRole[]> = {
   inspector: ['manager', 'supervisor', 'director'],
+  project_manager: ['supervisor', 'director'],
   manager: ['supervisor', 'director'],
   supervisor: ['director'],
   director: []

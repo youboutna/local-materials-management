@@ -441,7 +441,7 @@ export class DashboardService {
     return Object.entries(locationCounts)
       .map(([name, value], index) => ({
         name,
-        value,
+        value: Number(value),
         color: locationColors[index % locationColors.length]
       }))
       .sort((a, b) => b.value - a.value);

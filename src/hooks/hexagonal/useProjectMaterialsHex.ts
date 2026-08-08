@@ -29,7 +29,7 @@ export interface SelectedMaterial {
 async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial[]> {
   try {
     const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
-    const materials = await materialService.getProjectMaterials(projectId);
+    const materials = await materialService.getProjectMaterialsWithDetails(projectId);
     return materials.map((item: MaterialDTO) => ({
       id: item.id,
       project_id: projectId,

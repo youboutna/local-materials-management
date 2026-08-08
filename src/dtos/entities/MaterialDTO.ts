@@ -369,3 +369,33 @@ export interface MaterialFilterDTO {
   page?: number;
   limit?: number;
 }
+
+// ============================================================================
+// PROJECT ↔ MATERIAL RELATION DTOs
+// ============================================================================
+
+export type ProjectMaterialStatus = 'planned' | 'ordered' | 'received' | 'used';
+
+export interface ProjectMaterialDTO {
+  id: string;
+  projectId: string;
+  materialId: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+  status: ProjectMaterialStatus;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectMaterialDTO {
+  projectId: string;
+  materialId: string;
+  quantity: number;
+  unit?: string;
+  unitPrice?: number;
+  status?: ProjectMaterialStatus;
+  notes?: string | null;
+}

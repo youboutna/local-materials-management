@@ -5,7 +5,7 @@ import {
     PaymentInitiationNotificationDTO,
     SupplierCompletionDTO,
     SupplierInfoDTO
-} from '@/dtos/workflows/paymentInitiationDTO';
+} from '@/dtos/entities/PaymentInitiationDTO';
 
 export interface IPaymentInitiationRepository {
   findById(id: string): Promise<PaymentInitiationNotificationDTO | null>;
