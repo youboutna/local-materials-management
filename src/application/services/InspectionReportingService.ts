@@ -220,3 +220,11 @@ export class InspectionReportingService {
     };
   }
 }
+
+let InspectionReportingServiceInstance: InspectionReportingService | null = null;
+export function getInspectionReportingService(): InspectionReportingService {
+  if (!InspectionReportingServiceInstance) {
+    InspectionReportingServiceInstance = new InspectionReportingService();
+  }
+  return InspectionReportingServiceInstance;
+}

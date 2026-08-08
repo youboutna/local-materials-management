@@ -158,7 +158,7 @@ const UnifiedSupplierPortal = () => {
   const markTaskCompletedMutation = useMarkTaskCompletedHex();
 
   // Fetch parsed invoices using hexagonal hook
-  // This replaces the direct supabase.from("parsed_invoices") call
+  // This replaces the direct Supabase "parsed_invoices" table call
   const { invoices: parsedInvoices = [], isLoading: invoicesLoading, refetch: refetchInvoices } = useParsedInvoicesHex(supplierProfile?.id || "");
   const { createInvoice, isCreating: isParsingInvoice } = useInvoiceMutationsHex();
   const [invoiceParsing, setInvoiceParsing] = useState(false);

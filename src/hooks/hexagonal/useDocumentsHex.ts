@@ -3,9 +3,8 @@
  * Real data from DocumentService via RepositoryFactory
  */
 
-import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { getDocumentService } from '@/application/services/DocumentService';
 import { CreateDocumentDTO, DocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -122,9 +121,7 @@ export function useDocumentsHex(filters?: DocumentFilters): UseDocumentsHexResul
 // Export individual hooks for specific operations
 export const useDocumentCreate = () => {
   const queryClient = useQueryClient();
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   const mutation = useMutation({
     mutationFn: async (documentData: CreateDocumentDTO) => {
@@ -153,9 +150,7 @@ export const useDocumentCreate = () => {
 
 export const useDocumentUpdate = () => {
   const queryClient = useQueryClient();
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateDocumentDTO }) => {
@@ -174,9 +169,7 @@ export const useDocumentUpdate = () => {
 
 export const useDocumentDelete = () => {
   const queryClient = useQueryClient();
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -194,9 +187,7 @@ export const useDocumentDelete = () => {
 };
 
 export const useDocumentsList = (filters?: DocumentFilters) => {
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['documents', filters],
@@ -213,9 +204,7 @@ export const useDocumentsList = (filters?: DocumentFilters) => {
 };
 
 export const useDocumentsByProject = (projectId: string) => {
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['project-documents', projectId],
@@ -234,9 +223,7 @@ export const useDocumentsByProject = (projectId: string) => {
 };
 
 export const useDocumentById = (id: string) => {
-  const documentService = new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['document', id],

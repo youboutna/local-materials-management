@@ -340,3 +340,10 @@ export class ProgressCalculationHexService {
 }
 
 export default ProgressCalculationHexService;
+let ProgressCalculationHexServiceInstance: ProgressCalculationHexService | null = null;
+export function getProgressCalculationHexService(): ProgressCalculationHexService {
+  if (!ProgressCalculationHexServiceInstance) {
+    ProgressCalculationHexServiceInstance = new ProgressCalculationHexService();
+  }
+  return ProgressCalculationHexServiceInstance;
+}

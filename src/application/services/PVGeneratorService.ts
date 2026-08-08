@@ -355,3 +355,11 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
   }
 }
 
+
+let PVGeneratorServiceInstance: PVGeneratorService | null = null;
+export function getPVGeneratorService(): PVGeneratorService {
+  if (!PVGeneratorServiceInstance) {
+    PVGeneratorServiceInstance = new PVGeneratorService();
+  }
+  return PVGeneratorServiceInstance;
+}

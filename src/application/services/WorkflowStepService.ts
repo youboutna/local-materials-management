@@ -177,3 +177,19 @@ export class WorkflowStepService {
     }
   }
 }
+
+let WorkflowStepServiceInstance: WorkflowStepService | null = null;
+export function getWorkflowStepService(): WorkflowStepService {
+  if (!WorkflowStepServiceInstance) {
+    WorkflowStepServiceInstance = new WorkflowStepService();
+  }
+  return WorkflowStepServiceInstance;
+}
+
+let workflowStepServiceInstance: WorkflowStepService | null = null;
+export function getWorkflowStepService(): WorkflowStepService {
+  if (!workflowStepServiceInstance) {
+    workflowStepServiceInstance = new WorkflowStepService();
+  }
+  return workflowStepServiceInstance;
+}
