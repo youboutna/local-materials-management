@@ -3,7 +3,7 @@
  * Follows hexagonal architecture: UI → Hook → Service → Repository
  */
 
-import { InvoiceService } from '@/application/services/InvoiceService';
+import { InvoiceService, getInvoiceService} from '@/application/services/InvoiceService';
 import { CreateInvoiceDTO, InvoiceStatisticsDTO, ParsedInvoiceDTO, UpdateInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

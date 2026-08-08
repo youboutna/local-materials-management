@@ -6,8 +6,8 @@
  *   UI Component → Transformer → DTO (camelCase) → Service → Adapter → DB
  */
 
-import { InspectionService } from '@/application/services/InspectionService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import type {
     CreateInspectionDTO,
     UpdateProjectStatusDTO,

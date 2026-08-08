@@ -10,6 +10,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import { getSupplierService } from '@/application/services/SupplierService';
 
 interface PhaseEmployeesProps {
   phaseId: string;

@@ -6,7 +6,7 @@
  * TODO: Replace direct Supabase calls with RepositoryFactory pattern
  */
 
-import { NotificationService } from '@/application/services/NotificationService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
 import {
     DatabaseMetricsDTO,
     PerformanceAlertDTO,

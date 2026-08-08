@@ -2,8 +2,8 @@
  * Hexagonal hook for User Management Dialog
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { UserService } from '@/application/services/UserService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { UserService, getUserService} from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

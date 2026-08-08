@@ -22,10 +22,11 @@ import {
 
 // Import services (application layer)
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
-import { LocationService } from '@/application/services/LocationService';
+import { LocationService, getLocationService} from '@/application/services/LocationService';
 
 // Import repository factory for dependency injection
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // Interface for geocoding search results
 interface GeocodingSearchResult {

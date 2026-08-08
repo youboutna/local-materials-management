@@ -13,6 +13,7 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { BankGuaranteeService } from './BankGuaranteeService';
+import { getBankGuaranteeService } from '@/application/services/BankGuaranteeService';
 
 export interface InspectionApprovalContext {
   inspectionId: string;

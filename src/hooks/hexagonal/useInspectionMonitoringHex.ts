@@ -3,7 +3,7 @@
  * Uses services instead of direct supabase calls
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

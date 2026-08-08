@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Contact Message Application Service
  * Orchestrates contact message business logic and repository interactions

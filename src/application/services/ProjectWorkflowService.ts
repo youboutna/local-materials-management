@@ -52,6 +52,8 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
+import { getProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
+import { getProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
 
 export enum WorkflowMode {
   CREATE = 'create',

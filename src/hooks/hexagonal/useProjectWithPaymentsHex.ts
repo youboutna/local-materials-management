@@ -9,9 +9,9 @@
  *
  * Aucun `supabase.from(...)` ici, aucun import legacy.
  */
-import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import type {
     InspectionStatus,
     InspectionSummaryDTO,

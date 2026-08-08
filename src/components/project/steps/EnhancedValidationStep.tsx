@@ -227,10 +227,15 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
   // Handle validation
   const handleValidation = async (fieldId: string) => {
     try {
-      // Mock validation - in real implementation, this would call validation services
+      // No dedicated field-validation service/table exists for these
+      // project-closure checklist items; validation here is derived from
+      // the already-fetched formData (receptions/risks/compliance) rather
+      // than an external call, since there is nothing further to check.
+      const field = validationFields.find(f => f.id === fieldId);
+      const isValid = field ? field.status !== 'failed' : true;
       const validationResult: any = {
-        isValid: true,
-        errors: [],
+        isValid,
+        errors: isValid ? [] : ['Ce champ nécessite une action complémentaire'],
         warnings: [],
         recommendations: []
       };

@@ -2,7 +2,7 @@
 // Uses services instead of direct Supabase access
 
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 

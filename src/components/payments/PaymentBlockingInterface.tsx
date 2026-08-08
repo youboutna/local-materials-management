@@ -2,10 +2,9 @@ import { DocumentService } from '@/application/services/DocumentService';
 import { InsuranceService } from '@/application/services/InsuranceService';
 import {
     PaymentBlockingService,
-    PaymentEligibilityValidationDto
-} from '@/application/services/PaymentBlockingService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+    PaymentEligibilityValidationDto, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

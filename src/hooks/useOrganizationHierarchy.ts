@@ -1,4 +1,4 @@
-import { OrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
+import { OrganizationHierarchyService, getOrganizationHierarchyService} from '@/application/services/OrganizationHierarchyService';
 import type { CreateOrganizationHierarchyDTO, UpdateOrganizationHierarchyDTO } from '@/dtos/entities/OrganizationHierarchyDTO';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 

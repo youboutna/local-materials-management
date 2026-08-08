@@ -1,5 +1,5 @@
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';

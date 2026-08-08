@@ -35,8 +35,8 @@ import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 import { Project } from '@/domain/entities';
 import { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Interface pour les données de formulaire

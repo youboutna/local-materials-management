@@ -152,8 +152,11 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
 
   const submitService = async () => {
     if (!supplierId) return;
-    // Encodé pour rappel — pas de hook dédié `usePhaseStakeholdersHex` côté étape.
-    // Réutilise le takeoff comme support neutre pour traçabilité financière.
+    // There is no dedicated step-level "service/prestation" table in the
+    // schema (only project-level quantity takeoffs exist), so this reuses
+    // the quantity-takeoff table as a neutral, real, persisted record for
+    // financial traceability, tagging it via `note` until a dedicated
+    // table/hook exists.
     try {
       await createTakeoff.mutateAsync({
         material_id: supplierId, // référence libre — sera supplanté par hook dédié

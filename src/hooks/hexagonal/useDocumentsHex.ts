@@ -3,7 +3,7 @@
  * Real data from DocumentService via RepositoryFactory
  */
 
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { CreateDocumentDTO, DocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

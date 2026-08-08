@@ -2,7 +2,7 @@
  * Hexagonal hooks for Tender Quantitative Estimate
  */
 
-import { MaterialService } from '@/application/services/MaterialService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
 import { EstimateItem } from '@/dtos/transforms/shared';

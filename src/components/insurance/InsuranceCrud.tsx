@@ -14,7 +14,7 @@ import { useInsuranceCertificatesHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {

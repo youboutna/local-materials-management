@@ -30,7 +30,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)

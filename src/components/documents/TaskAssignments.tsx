@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService } from '@/application/services/NotificationService';
-import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { TaskAssignmentService, getTaskAssignmentService} from '@/application/services/TaskAssignmentService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

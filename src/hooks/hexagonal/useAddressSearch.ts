@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import type { GeocodingResult } from '@/application/services/GeocodingService';
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 export interface AddressSuggestion {
   id: string;

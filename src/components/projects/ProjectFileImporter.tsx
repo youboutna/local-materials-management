@@ -1,4 +1,4 @@
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { ProjectImportExportService } from '@/application/services/ProjectImportExportService';
 import {
   projectImportTemplateService,

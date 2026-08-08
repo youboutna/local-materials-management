@@ -4,7 +4,7 @@
  */
 
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { PhaseService } from '@/application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { StepItem } from '@/dtos/types/unified-workflow';

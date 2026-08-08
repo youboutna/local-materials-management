@@ -3,7 +3,7 @@
  * Uses MaterialService with domain entities
  */
 
-import { MaterialService } from '@/application/services/MaterialService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { CreateMaterialDTO, UpdateMaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -3,10 +3,10 @@
  * Simplified to avoid service method mismatches
  */
 import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { DocumentService } from '@/application/services/DocumentService';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { StorageService } from '@/application/services/StorageService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';

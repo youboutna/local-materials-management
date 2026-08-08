@@ -7,9 +7,9 @@
  */
 
 import { InspectionService } from '@/application/services/InspectionService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import {
     CreateEnhancedActionRequestDTO,

@@ -3,8 +3,8 @@
  * Uses QuantityTakeoffService/adapter instead of direct Supabase access
  */
 
-import { MaterialService } from '@/application/services/MaterialService';
-import { QuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
+import { QuantityTakeoffService, getQuantityTakeoffService} from '@/application/services/QuantityTakeoffService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 

@@ -1,6 +1,6 @@
 // hooks/hexagonal/usePhaseMaterialsHex.ts - Hexagonal hook for phase materials management
 
-import { MaterialService } from '@/application/services/MaterialService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';

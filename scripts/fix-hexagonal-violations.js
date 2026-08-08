@@ -1147,6 +1147,12 @@ class SmartHexAnalyzer {
       out += '\n🚚 TYPES DÉPLACÉS :\n';
       for (const mt of this.report.movedTypes) out += `- ${mt.type} : ${path.relative(this.projectRoot, mt.from)} → ${path.relative(this.projectRoot, mt.to)}\n`;
     }
+    if (this.report.duplicates && this.report.duplicates.length) {
+      out += '\n🧬 TYPES DUPLIQUÉS :\n';
+      for (const d of this.report.duplicates) {
+        out += `- ${d.typeName} (${d.locations.length} occurrences): ${d.locations.map(l => `${l.file}:${l.line}`).join(', ')}\n`;
+      }
+    }
     return out;
   }
 

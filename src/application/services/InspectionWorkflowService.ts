@@ -269,20 +269,24 @@ export class InspectionWorkflowService {
     try {
       await this.validateWorkflowTransition(execution.inspectionId, 'in_progress', ['inspector']);
 
+      // Non-conformities have no dedicated table/columns in the schema, so
+      // they are persisted as structured text appended to the inspection's
+      // comments field (the only writable free-text field available on the
+      // inspection) to keep the information queryable via existing adapters.
+      const nonConformitiesText = execution.nonConformities && execution.nonConformities.length > 0
+        ? '\n\nNon-conformités:\n' + execution.nonConformities
+            .map(nc => `- [${nc.severity}] ${nc.description} (Action requise: ${nc.actionRequired})`)
+            .join('\n')
+        : '';
+
       const updateData: UpdateInspectionDTO = {
         id: execution.inspectionId,
         status: InspectionStatus.COMPLETED,
-        comments: execution.findings || '',
+        comments: (execution.findings || '') + nonConformitiesText,
         progressAtInspection: 100
       };
 
       const inspection = await this.inspectionService.updateInspection(execution.inspectionId, updateData as never);
-      
-      // Handle non-conformities
-      if (execution.nonConformities && execution.nonConformities.length > 0) {
-        // TODO: Implement non-conformity handling
-        console.log('Non-conformities to document:', execution.nonConformities);
-      }
 
       await this.sendWorkflowNotification(
         'Inspection terminée',

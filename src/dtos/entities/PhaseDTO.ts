@@ -5,6 +5,8 @@
  * Rule #4: No DTOs in entities, proper type separation
  */
 
+import type { BaseEntityDTO } from './BaseEntityDTO';
+
 /**
  * Task within a workflow step (from referential)
  *Distinct from TaskAssignmentDTO which represents assigned tasks (task_assignments table)
@@ -173,13 +175,6 @@ export interface PhaseDTO extends BaseEntityDTO {
   customPhaseData?: Record<string, unknown>;                // custom_phase_data (Json)
   humanResources?: Record<string, unknown>;                 // human_resources (Json)
   weight?: number;                      // weight
-}
-
-// Base entity interface for DTO extensions
-export interface BaseEntityDTO {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 // Phase form data DTO for UI

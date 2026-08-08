@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Compliance Service
  * Orchestrates compliance business logic using hexagonal architecture

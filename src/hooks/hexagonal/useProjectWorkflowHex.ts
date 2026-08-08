@@ -21,6 +21,7 @@ import {
 
 // Import entity DTOs
 import { CreateProjectDTO, ProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { getWorkflowService } from '@/application/services/WorkflowService';
 
 // Workflow save result type
 interface WorkflowSaveResult {

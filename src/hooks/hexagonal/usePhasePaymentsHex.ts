@@ -2,8 +2,8 @@
  * Hexagonal hooks for Phase Payments management
  */
 
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

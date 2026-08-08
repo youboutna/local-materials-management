@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
-import { TenderService } from '@/application/services/TenderService';
+import { TenderService, getTenderService} from '@/application/services/TenderService';
 import { TenderTransformer } from '@/dtos/transforms/TenderTransformer';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle, Download, FileText, Lock } from 'lucide-react';

@@ -15,6 +15,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/use-auth';
 
 interface InspectionDetailsStepProps {
   projectId: string;
@@ -61,17 +62,17 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
   const [alternateDate1, setAlternateDate1] = useState('');
   const [alternateDate2, setAlternateDate2] = useState('');
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Fetch assignable inspectors
   const { data: inspectors = [] } = useQuery({
-    queryKey: ['assignable-inspectors', projectId, phaseId],
+    queryKey: ['assignable-inspectors', projectId, phaseId, user?.id],
     queryFn: async () => {
       const repository = RepositoryFactory.getInspectionPermissionRepository();
       const service = new InspectionPermissionService(repository);
-      
-      // Mock user context - should come from auth context
-      const userId = 'current-user-id'; // Replace with actual user ID from auth
-      
+
+      const userId = user?.id || '';
+
       return service.getAssignableInspectors({ 
         context: {
           userId,
@@ -81,7 +82,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
         }
       });
     },
-    enabled: mode === 'schedule',
+    enabled: mode === 'schedule' && !!user?.id,
   });
 
   // Auto-select default inspector

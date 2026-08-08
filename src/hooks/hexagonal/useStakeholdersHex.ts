@@ -16,7 +16,7 @@
  * - ✅ Tous les hooks commencent par "use"
  */
 
-import { StakeholderService } from '@/application/services/StakeholderService';
+import { StakeholderService, getStakeholderService} from '@/application/services/StakeholderService';
 import { 
   CreateStakeholderRequestDTO, 
   StakeholderListResult, 

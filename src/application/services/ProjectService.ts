@@ -44,6 +44,7 @@ import type { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 import { getGeocodingService } from './GeocodingServiceFactory';
 import type { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
 import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // Location metadata interface
 interface LocationMetadata extends Record<string, unknown> {

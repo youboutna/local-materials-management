@@ -3,9 +3,9 @@
  * Uses DocumentService + StorageService instead of direct Supabase access
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { DocumentService } from '@/application/services/DocumentService';
-import { StorageService } from '@/application/services/StorageService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

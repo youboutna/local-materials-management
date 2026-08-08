@@ -3,11 +3,11 @@
  * Centralizes all supplier portal operations via services
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { StorageService } from '@/application/services/StorageService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

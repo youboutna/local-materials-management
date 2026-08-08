@@ -1,8 +1,8 @@
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

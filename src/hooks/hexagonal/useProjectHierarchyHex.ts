@@ -2,7 +2,7 @@
  * Hexagonal hook for project hierarchy operations
  */
 
-import { HierarchyService } from '@/application/services/HierarchyService';
+import { HierarchyService, getHierarchyService} from '@/application/services/HierarchyService';
 import { CreateHierarchyNodeDTO, HierarchyNode, HierarchyStatisticsDTO, UpdateHierarchyNodeDTO } from '@/dtos/entities/HierarchyDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

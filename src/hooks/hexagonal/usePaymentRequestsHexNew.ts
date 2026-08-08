@@ -3,7 +3,7 @@
  * Uses PaymentRequestService instead of direct Supabase calls
  */
 
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { CreatePaymentRequestDTO, UpdatePaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

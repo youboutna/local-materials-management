@@ -5,6 +5,7 @@
 import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
+import { getPaymentControlService } from '@/application/services/PaymentControlService';
 
 export interface PaymentStats {
   blockedPayments: number;

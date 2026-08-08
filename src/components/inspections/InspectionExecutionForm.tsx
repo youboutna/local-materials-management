@@ -12,8 +12,7 @@ import {
   InspectionApprovalSyncService, 
   InspectionApprovalContext,
   SyncResult,
-  SYNC_THRESHOLDS 
-} from '@/application/services/InspectionApprovalSyncService';
+  SYNC_THRESHOLDS, getInspectionApprovalSyncService} from '@/application/services/InspectionApprovalSyncService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInspectionExecutionHex } from '@/hooks/hexagonal';
 

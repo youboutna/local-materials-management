@@ -4,8 +4,8 @@
  * — Exposes sharing secret hooks aligned with SupabaseTenderSharingAdapter
  */
 
-import { ProjectService } from '@/application/services/ProjectService';
-import { TenderService } from '@/application/services/TenderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { TenderService, getTenderService} from '@/application/services/TenderService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

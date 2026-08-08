@@ -2,7 +2,7 @@
  * Hexagonal hooks for contact_messages (messagerie réception)
  * UI -> ContactMessageService -> SupabaseContactMessageAdapter
  */
-import { ContactMessageService } from '@/application/services/ContactMessageService';
+import { ContactMessageService, getContactMessageService} from '@/application/services/ContactMessageService';
 import type {
     ContactMessageFilters,
     CreateContactMessageData,

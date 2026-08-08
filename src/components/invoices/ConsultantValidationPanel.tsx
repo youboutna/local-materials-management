@@ -1,4 +1,4 @@
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { StorageService } from '@/application/services/StorageService';
 import { Alert, AlertDescription } from '@/components/ui/alert';

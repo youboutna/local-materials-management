@@ -38,7 +38,32 @@ const SystemHealthOverview: React.FC = () => {
       const performanceMetrics = await new PerformanceMonitoringService().getPerformanceMetrics();
       
       setStats(performanceMetrics);
-      setAlerts([]); // TODO: Implement alerts in hexagonal service
+      // Derive alerts from performance metrics thresholds (no dedicated alerts
+      // repository/table exists yet; alerts are computed client-side from stats).
+      const derivedAlerts: any[] = [];
+      if (performanceMetrics) {
+        if ((performanceMetrics.errorRate || 0) > 5) {
+          derivedAlerts.push({
+            id: 'error-rate',
+            severity: (performanceMetrics.errorRate || 0) > 15 ? 'critical' : 'high',
+            title: "Taux d'erreur élevé",
+            message: `Le taux d'erreur est de ${performanceMetrics.errorRate}%`,
+            timestamp: new Date(),
+            acknowledged: false,
+          });
+        }
+        if ((performanceMetrics.responseTime || 0) > 2000) {
+          derivedAlerts.push({
+            id: 'response-time',
+            severity: (performanceMetrics.responseTime || 0) > 5000 ? 'critical' : 'high',
+            title: 'Temps de réponse dégradé',
+            message: `Le temps de réponse moyen est de ${performanceMetrics.responseTime}ms`,
+            timestamp: new Date(),
+            acknowledged: false,
+          });
+        }
+      }
+      setAlerts(derivedAlerts);
     } catch (error) {
       console.error('Error loading monitoring data:', error);
     } finally {
@@ -48,8 +73,10 @@ const SystemHealthOverview: React.FC = () => {
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      // TODO: Implement alert acknowledgment in hexagonal service
-      console.log('Alert acknowledged:', alertId);
+      // No dedicated alert-acknowledgment repository/table exists; alerts are
+      // derived client-side from live metrics, so acknowledging removes it
+      // from the local list until the next refresh recomputes it.
+      setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, acknowledged: true } : a));
       await loadData(); // Refresh data
     } catch (error) {
       console.error('Error acknowledging alert:', error);

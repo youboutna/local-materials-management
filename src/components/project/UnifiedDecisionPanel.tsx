@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DocumentService } from '@/application/services/DocumentService';
-import { MilestoneService } from '@/application/services/MilestoneService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
 import type { DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { useAuth } from '@/contexts/use-auth';
 

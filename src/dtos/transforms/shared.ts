@@ -6,11 +6,8 @@
 
 import { CoordinatePoint } from '../entities/MaterialDTO';
 
-export interface BaseEntityDTO {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { BaseEntityDTO } from '../entities/BaseEntityDTO';
+export type { BaseEntityDTO };
 
 export interface ValidationResult {
   isValid: boolean;

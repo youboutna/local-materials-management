@@ -2,7 +2,7 @@
  * Hexagonal Hook for Payment Workflows
  */
 
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useState } from 'react';

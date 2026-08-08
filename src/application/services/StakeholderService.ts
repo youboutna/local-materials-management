@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Service: StakeholderService
  * Gère les parties prenantes avec architecture hexagonale

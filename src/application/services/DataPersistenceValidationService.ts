@@ -10,6 +10,9 @@ import { MaterialService } from './MaterialService';
 import { PhaseService } from './PhaseService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
+import { getProjectService } from '@/application/services/ProjectService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getMaterialService } from '@/application/services/MaterialService';
 
 // Local type definitions
 export interface DataValidationIssueDTO {

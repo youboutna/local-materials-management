@@ -11,6 +11,7 @@ import {
     GetBankGuaranteesOptionsDTO
 } from '@/dtos/entities/BankGuaranteeDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { differenceInCalendarDays } from 'date-fns';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 /**
@@ -441,14 +442,48 @@ export class BankGuaranteeService {
   }
 
   /**
-   * Detect projects with delays
-   * TODO: Implement actual delay detection logic
+   * Detect projects with delays by comparing elapsed schedule time to actual
+   * progress for active projects with a defined end date.
    */
   async detectProjectDelays(): Promise<ProjectDelay[]> {
     try {
-      // For now, return empty array as placeholder
-      // TODO: Implement delay detection using ProjectService and progress calculations
-      return [];
+      const projectRepository = RepositoryFactory.getProjectRepository();
+      const projects = await projectRepository.findAll();
+      const today = new Date();
+
+      const delays: ProjectDelay[] = [];
+
+      for (const project of projects) {
+        if (!project.endDate || !project.startDate) continue;
+        if (project.status === 'completed' || project.status === 'cancelled') continue;
+
+        const startDate = project.startDate;
+        const endDate = project.endDate;
+        const totalDurationDays = differenceInCalendarDays(endDate, startDate);
+        if (totalDurationDays <= 0) continue;
+
+        const elapsedDays = differenceInCalendarDays(today, startDate);
+        const expectedProgress = Math.min(100, Math.max(0, (elapsedDays / totalDurationDays) * 100));
+        const actualProgress = project.progress || 0;
+
+        if (elapsedDays > 0 && expectedProgress - actualProgress > 10) {
+          const delayPercentage = Math.round(expectedProgress - actualProgress);
+          const delayDays = Math.round((delayPercentage / 100) * totalDurationDays);
+          const currentEndDate = new Date(endDate);
+          currentEndDate.setDate(currentEndDate.getDate() + delayDays);
+
+          delays.push({
+            projectId: project.id,
+            projectName: project.title,
+            delayPercentage,
+            delayDays,
+            originalEndDate: endDate.toISOString().split('T')[0],
+            currentEndDate: currentEndDate.toISOString().split('T')[0]
+          });
+        }
+      }
+
+      return delays;
     } catch (error) {
       throw this.normalizeError(error, 'Failed to detect project delays');
     }

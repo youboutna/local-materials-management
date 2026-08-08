@@ -1,11 +1,11 @@
 /**
  * Hexagonal hook for supplier dashboard data
  */
-import { AuthService } from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
-import { SupplierPortalService } from '@/application/services/SupplierPortalService';
+import { SupplierPaymentService, getSupplierPaymentService} from '@/application/services/SupplierPaymentService';
+import { SupplierPortalService, getSupplierPortalService} from '@/application/services/SupplierPortalService';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';

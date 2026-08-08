@@ -1,5 +1,5 @@
-import { PhaseService } from '@/application/services/PhaseService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
 import MonitoringEvaluationPanel from '@/components/project/monitoring/MonitoringEvaluationPanel';
 import PhaseCompliance from '@/components/project/PhaseCompliance';

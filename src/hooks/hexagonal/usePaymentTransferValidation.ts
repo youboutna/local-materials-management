@@ -4,7 +4,7 @@
  * Follows Rule #5: UI Layer Separation
  */
 
-import { PaymentValidationService } from '@/application/services/PaymentValidationService';
+import { PaymentValidationService, getPaymentValidationService} from '@/application/services/PaymentValidationService';
 import { useCallback, useState } from 'react';
 
 export interface PaymentTransferValidationResult {

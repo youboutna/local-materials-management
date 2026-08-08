@@ -3,7 +3,7 @@
  * Following Rule #1: Arrow Flow - UI → Service → Domain ← Adapter → DB
  */
 
-import { ComplianceService } from '@/application/services/ComplianceService';
+import { ComplianceService, getComplianceService} from '@/application/services/ComplianceService';
 import {
     ComplianceItemDTO,
     CreateComplianceRequestDTO as CreateComplianceItemDTO,

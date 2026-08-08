@@ -1,6 +1,6 @@
-import { OrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
-import { OrganizationService } from '@/application/services/OrganizationService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { OrganizationHierarchyService, getOrganizationHierarchyService} from '@/application/services/OrganizationHierarchyService';
+import { OrganizationService, getOrganizationService} from '@/application/services/OrganizationService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

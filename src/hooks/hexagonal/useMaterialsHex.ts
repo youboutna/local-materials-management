@@ -4,7 +4,7 @@
  */
 
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
-import { MaterialService } from "@/application/services/MaterialService";
+import { MaterialService, getMaterialService} from "@/application/services/MaterialService";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreateMaterialDTO, MaterialCategory, MaterialDTO, MaterialFormDataDTO, MaterialStatus, MaterialUnit, UpdateMaterialDTO } from '@/dtos/entities';
 import { CreateMaterialRequestDto, MaterialUIDTO, UpdateMaterialRequestDto } from '@/dtos/transforms';
@@ -13,6 +13,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // Types for advanced UI features
 interface WorkspaceData {
@@ -389,8 +390,14 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       return material.pricePerUnit * material.availableQuantity;
     },
     getMaterialQualityScore: (material: MaterialUIDTO) => {
-      // Stub implementation - could be enhanced with actual quality metrics
-      return 8.5;
+      // No dedicated quality-metrics table/columns exist for materials.
+      // Derive a proxy score from real, available fields: stock availability
+      // and presence of descriptive data, instead of a fixed constant.
+      let score = 5;
+      if (material.availableQuantity > 0) score += 2;
+      if (material.description) score += 1.5;
+      if (material.originLocation) score += 1;
+      return Math.min(10, score);
     },
     getMaterialReorderLevel: (material: MaterialUIDTO) => {
       return material.minimumQuantity || 10;
@@ -410,11 +417,19 @@ export function useMaterialsHex(): UseMaterialsHexResult {
       supplierBreakdown: {} // Could be enhanced with actual supplier data
     }),
     validateMaterialWithReferential: async (material: MaterialUIDTO, referentialType: string): Promise<ValidationResult> => {
-      // Stub implementation - could be enhanced with actual referential validation
+      // No external referential/catalog repository exists to validate
+      // against; perform real validation using the material's own required
+      // fields instead of always returning a fixed "valid" stub.
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      if (!material.name) errors.push('Le nom du matériau est requis');
+      if (!material.unit) errors.push("L'unité est requise");
+      if (material.pricePerUnit <= 0) warnings.push('Le prix unitaire semble invalide');
+      if (material.availableQuantity < 0) errors.push('La quantité disponible ne peut pas être négative');
       return {
-        isValid: true,
-        errors: [],
-        warnings: []
+        isValid: errors.length === 0,
+        errors,
+        warnings
       };
     },
     generateMaterialReport: (material: MaterialUIDTO): MaterialReport => {

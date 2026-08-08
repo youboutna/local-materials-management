@@ -17,7 +17,7 @@ import { PhaseService } from '@/application/services/PhaseService';
  * - ✅ Gestion des assignations avec filtres
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { 
   TaskAssignmentDTO,

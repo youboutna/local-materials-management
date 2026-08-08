@@ -3,15 +3,9 @@
  * Reusable DTOs across different domains
  */
 
-// Base entity interface
-export interface BaseEntityDTO {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
-  version?: number;
-}
+// Base entity interface (canonical definition lives in entities/BaseEntityDTO.ts)
+import type { BaseEntityDTO } from './entities/BaseEntityDTO';
+export type { BaseEntityDTO };
 
 // Base form interface for UI state management
 export interface BaseFormDTO<T> {

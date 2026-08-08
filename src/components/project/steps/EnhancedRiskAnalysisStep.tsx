@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../ui/textarea';
 
 // Import DTOs and services for hexagonal architecture
-import { RiskService } from "@/application/services/RiskService";
+import { RiskService, getRiskService} from "@/application/services/RiskService";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
@@ -117,19 +117,12 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
   const loadEmployees = async () => {
     try {
-      // In a real implementation, this would use the EmployeeService
-      // const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-      // const employeesData = await employeeService.getAllEmployees();
-      // setEmployees(employeesData);
-      
-      // Mock data for now
-      setEmployees([
-        { id: '1', name: 'John Doe', role: 'Project Manager' },
-        { id: '2', name: 'Jane Smith', role: 'Engineer' },
-        { id: '3', name: 'Bob Johnson', role: 'Safety Officer' }
-      ]);
+      const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+      const employeesData = await employeeService.getAllEmployees();
+      setEmployees(employeesData.map(e => ({ id: e.id, name: e.name, role: e.position || e.role || '' })));
     } catch (error) {
       console.error('Failed to load employees:', error);
+      setEmployees([]);
     }
   };
 

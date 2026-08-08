@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DocumentService } from "@/application/services/DocumentService";
+import { DocumentService, getDocumentService} from "@/application/services/DocumentService";
 
 interface ProjectDocument {
   id: string;

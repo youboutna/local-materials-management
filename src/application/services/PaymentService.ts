@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Payment Service
  * Handles payment operations with hexagonal architecture

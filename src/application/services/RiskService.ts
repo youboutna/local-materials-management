@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * RiskService - Service hexagonal pour la gestion des risques
  * Respecte l'architecture hexagonale : Service → Repository → Adapter → Supabase

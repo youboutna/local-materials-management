@@ -1,4 +1,4 @@
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { toast } from '@/hooks/use-toast';
 
 export const checkAndSendInsuranceAlerts = async () => {

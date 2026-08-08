@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { PaymentControlActionsService } from '@/application/services/PaymentControlActionsService';
+import { PaymentControlActionsService, getPaymentControlActionsService} from '@/application/services/PaymentControlActionsService';
 import type { ActionFormData, ActionMetadata } from '@/application/services/PaymentControlActionsService';
 
 export const actionFormSchema = z.object({

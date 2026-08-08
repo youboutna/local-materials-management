@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectStrategyLinkService - Application layer
  * Orchestrates project-strategy linkage operations

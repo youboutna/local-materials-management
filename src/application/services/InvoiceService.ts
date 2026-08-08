@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * InvoiceService - Hexagonal service for invoice operations
  * Handles supplier invoice data through proper architecture layers

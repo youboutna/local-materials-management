@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { InsuranceService } from '@/application/services/InsuranceService';
-import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
+import { BankGuaranteeService, getBankGuaranteeService} from '@/application/services/BankGuaranteeService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { PaymentBlockingService, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
 
 export interface PaymentValidationResult {
   canProceed: boolean;

@@ -28,10 +28,10 @@ export function useTenderDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
-      // Placeholder - tender document listing via TenderDocumentRepository
       const tenderDocRepo = RepositoryFactory.getTenderDocumentRepository();
       const docs = await tenderDocRepo.findAll();
-      return (docs || []) as unknown as TenderDocumentWithDetails[];
+      const filtered = (docs || []).filter((d: any) => d.tenderId === tenderId || d.tender_id === tenderId);
+      return filtered as unknown as TenderDocumentWithDetails[];
     },
     enabled: !!tenderId
   });
@@ -42,7 +42,10 @@ export function useWorkflowStepDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['workflow-step-documents', tenderId],
     queryFn: async (): Promise<TenderDocumentWithDetails[]> => {
-      // Placeholder - would need workflow step document repository
+      // Workflow-step-level document association has no dedicated
+      // repository/table in the schema (documents are only linked to the
+      // tender as a whole), so there is no real per-step data to source
+      // here. Return a typed empty result until that linkage exists.
       return [];
     },
     enabled: !!tenderId

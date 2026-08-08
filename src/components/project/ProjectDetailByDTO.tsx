@@ -8,10 +8,10 @@
  * - Toutes les données proviennent des services
  */
 
-import { MilestoneService } from '@/application/services/MilestoneService';
+import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
 import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import { CriticalPathView, GanttChart, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";

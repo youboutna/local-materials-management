@@ -6,10 +6,10 @@
 
 import { EmployeeService } from '@/application/services/EmployeeService';
 import { InspectorService } from '@/application/services/InspectorServiceSimple';
-import { MaterialService } from '@/application/services/MaterialService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { TenderService } from '@/application/services/TenderService';
-import { UserService } from '@/application/services/UserService';
+import { UserService, getUserService} from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 

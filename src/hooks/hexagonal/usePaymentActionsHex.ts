@@ -3,7 +3,7 @@
  * Replaces direct supabase calls in PaymentControlActions.tsx
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

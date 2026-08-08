@@ -41,7 +41,7 @@ import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import EmployeeSelector from '@/components/selectors/EmployeeSelector';
 
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
 import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { QuantityTakeoffService, QuantityTakeoffWithDetails } from '@/application/services/QuantityTakeoffService';
+import { QuantityTakeoffService, QuantityTakeoffWithDetails, getQuantityTakeoffService} from '@/application/services/QuantityTakeoffService';
 
 export function useQuantityTakeoffsHex(projectId: string) {
   const queryClient = useQueryClient();

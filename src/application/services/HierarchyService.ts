@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * HierarchyService - Hexagonal service for project hierarchy operations
  * Handles RPC calls through proper architecture layers

@@ -5,7 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ReportService, type GenerateProjectReportRequestDto, type GenerateProjectAnalyticsRequestDto, type GenerateFinancialMetricsRequestDto, type GenerateRiskAssessmentRequestDto, type GenerateComplianceReportRequestDto, type ProjectReportResultDto } from '@/application/services/ReportService';
+import { ReportService, type GenerateProjectReportRequestDto, type GenerateProjectAnalyticsRequestDto, type GenerateFinancialMetricsRequestDto, type GenerateRiskAssessmentRequestDto, type GenerateComplianceReportRequestDto, type ProjectReportResultDto, getReportService} from '@/application/services/ReportService';
 
 // =================== HOOK INTERFACES ===================
 

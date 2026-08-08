@@ -56,6 +56,7 @@ import { getGeocodingService } from '@/application/services/GeocodingServiceFact
 import AddressSearchBox from '@/components/gis/AddressSearchBox';
 import ZoneLocationEditor from '@/components/gis/ZoneLocationEditor';
 import { toast } from 'sonner';
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // -----------------------------------------------------------------------------
 // Marqueur Leaflet

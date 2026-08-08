@@ -9,8 +9,7 @@ import {
 import {
     INSPECTION_TYPES,
     InspectionScheduleData,
-    InspectionSchedulingService
-} from '@/application/services/InspectionSchedulingService';
+    InspectionSchedulingService, getInspectionSchedulingService} from '@/application/services/InspectionSchedulingService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

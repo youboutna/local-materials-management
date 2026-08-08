@@ -1,6 +1,6 @@
-import { InspectionService } from '@/application/services/InspectionService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
+import { SupplierPaymentService, getSupplierPaymentService} from '@/application/services/SupplierPaymentService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

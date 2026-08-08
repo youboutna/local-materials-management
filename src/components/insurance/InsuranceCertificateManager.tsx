@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Shield, AlertTriangle, CheckCircle, Calendar, FileText, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { 
   InsuranceType,
   InsuranceStatus,

@@ -5,7 +5,7 @@
  */
 
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';
 import type { CreatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { toast } from '@/hooks/use-toast';

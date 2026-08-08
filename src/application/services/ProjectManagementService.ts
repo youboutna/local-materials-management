@@ -2,11 +2,11 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Import all project-related services
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
+import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import { ProjectManagerService } from '@/application/services/ProjectManagerService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 
 // Import DTOs

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 // Import DTOs and services for hexagonal architecture
 import { BankGuaranteeService } from "@/application/services/BankGuaranteeService";
-import { ComplianceService } from "@/application/services/ComplianceService";
+import { ComplianceService, getComplianceService} from "@/application/services/ComplianceService";
 import { DocumentService } from "@/application/services/DocumentService";
 import { InsuranceService } from "@/application/services/InsuranceService";
 import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";

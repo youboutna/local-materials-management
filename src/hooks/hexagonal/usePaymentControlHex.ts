@@ -9,6 +9,7 @@ import {
 } from '@/dtos/entities/MonitoringDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getPaymentControlService } from '@/application/services/PaymentControlService';
 
 export interface UsePaymentControlHexResult {
   dashboard: PaymentControlDashboardDTO | null;

@@ -4,6 +4,7 @@ import { ProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { getPhaseService } from '@/application/services/PhaseService';
 
 interface PhaseCostData {
   id: string;

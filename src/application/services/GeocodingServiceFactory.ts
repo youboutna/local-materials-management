@@ -6,7 +6,7 @@
  * via `getGeocodingService()` instead of calling `new GeocodingService(...)`
  * directly, so we keep a single Nominatim user-agent and rate-limit budget.
  */
-import { GeocodingService } from '@/application/services/GeocodingService';
+import { GeocodingService, getGeocodingService} from '@/application/services/GeocodingService';
 
 let instance: GeocodingService | null = null;
 

@@ -1,4 +1,4 @@
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';

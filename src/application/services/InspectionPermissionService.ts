@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Inspection Permission Service - Hexagonal Architecture
  * Business logic for inspection permission management

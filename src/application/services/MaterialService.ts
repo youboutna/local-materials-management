@@ -34,6 +34,7 @@ import { DocumentService } from './DocumentService';
 import { GeocodingService } from './GeocodingService';
 import { getGeocodingService } from './GeocodingServiceFactory';
 import { WorkspaceService } from './WorkspaceService';
+import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // ============================================================================
 // INTERFACE POUR LES RÉSULTATS AVEC FOURNISSEURS

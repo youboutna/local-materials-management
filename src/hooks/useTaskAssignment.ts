@@ -16,7 +16,7 @@
  */
 
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { 
   CreateTaskAssignmentDTO,

@@ -25,6 +25,10 @@ import { MaterialService } from './MaterialService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
+import { getPaymentRequestService } from '@/application/services/PaymentRequestService';
+import { getProjectService } from '@/application/services/ProjectService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getMaterialService } from '@/application/services/MaterialService';
 
 // ============================================================================
 // ERROR CLASS

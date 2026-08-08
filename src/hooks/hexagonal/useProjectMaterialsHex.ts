@@ -3,7 +3,7 @@
  * Utilise MaterialService au lieu des appels Supabase directs
  */
 
-import { MaterialService } from "@/application/services/MaterialService";
+import { MaterialService, getMaterialService} from "@/application/services/MaterialService";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
 import { toast } from "@/hooks/use-toast";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
@@ -111,8 +111,8 @@ export const useProjectMaterialsHex = (projectId?: string) => {
 
   const removeMaterialMutation = useMutation({
     mutationFn: async (_materialId: string) => {
-      // TODO: Implement when removeMaterialFromProject is available
-      console.log('Remove material from project:', projectId, _materialId);
+      const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+      await materialService.removeMaterialFromProject(projectId!, _materialId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-materials", projectId] });

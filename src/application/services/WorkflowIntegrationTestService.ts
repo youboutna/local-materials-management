@@ -7,6 +7,7 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { PhaseService } from './PhaseService';
 import { ProjectService } from './ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
 
 export interface IntegrationTestResult {
   testName: string;

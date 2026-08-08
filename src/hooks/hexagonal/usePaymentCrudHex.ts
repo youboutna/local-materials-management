@@ -2,7 +2,7 @@
  * Hexagonal hooks for Payment CRUD operations
  */
 
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { StorageService } from '@/application/services/StorageService';
 import { CreatePaymentDTO, PaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

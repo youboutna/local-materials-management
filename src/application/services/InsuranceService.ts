@@ -3,7 +3,7 @@
  * Business logic for insurance certificate management
  */
 
-import { NotificationService } from '@/application/services/NotificationService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';

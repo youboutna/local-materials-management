@@ -4,8 +4,8 @@
  */
 
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
-import { InsuranceService } from '@/application/services/InsuranceService';
-import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
+import { PaymentBlockingService, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 

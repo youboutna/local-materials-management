@@ -1,4 +1,4 @@
-import { StorageService } from '@/application/services/StorageService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

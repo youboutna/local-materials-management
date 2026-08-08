@@ -39,9 +39,10 @@ export const usePhaseEmployeesHex = (phaseId: string) => {
   } = useQuery({
     queryKey: ['phase-employees-hex', phaseId],
     queryFn: async (): Promise<PhaseEmployee[]> => {
-      // Use employee service to get all employees, filter by context
-      // Phase-employee relationship would need a dedicated table/service
-      // For now return empty - placeholder until phase_employees table exists
+      // There is no phase_employees join table in the schema (employees are
+      // only linked at the project level), so there is no real per-phase
+      // assignment data to source. Returning a typed empty result until
+      // that linkage exists in the database.
       return [];
     },
     enabled: !!phaseId

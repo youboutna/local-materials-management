@@ -59,7 +59,7 @@ import { ReferentialType } from '@/config/referentials';
 
 import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
 
-import { PhaseService } from '@/application/services/PhaseService';
+import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
 
 import { MilestoneService } from '@/application/services/MilestoneService';
 

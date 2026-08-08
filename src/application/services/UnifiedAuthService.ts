@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Unified Auth Service
  * Implements unified authentication logic for multiple providers
@@ -12,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 import { OAuthProviderService } from './OAuthProviderService';
 import type { OAuthProvider } from '@/domain/repositories/IOAuthProviderRepository';
+import { getOAuthProviderService } from '@/application/services/OAuthProviderService';
 import { 
   IAuthRepository, 
   AuthUser, 

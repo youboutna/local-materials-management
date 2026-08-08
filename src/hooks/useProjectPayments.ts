@@ -1,6 +1,6 @@
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { toast } from '@/hooks/use-toast';

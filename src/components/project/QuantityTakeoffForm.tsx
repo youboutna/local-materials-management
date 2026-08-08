@@ -18,6 +18,7 @@ import { BOQ_UNITS, BoqUnit } from '@/config/referentials/boq/units.referential'
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { BoqValidatorService, BoqFieldError } from '@/application/services/boq/BoqValidatorService';
 import { WBS_REFERENTIAL, getPhase } from '@/config/referentials/wbs/wbs.referential';
+import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 
 interface QuantityTakeoffFormProps {
   projectId: string;

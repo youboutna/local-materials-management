@@ -1,4 +1,4 @@
-import { OrganizationService } from '@/application/services/OrganizationService';
+import { OrganizationService, getOrganizationService} from '@/application/services/OrganizationService';
 import type { CreateOrganizationDTO, UpdateOrganizationDTO } from '@/dtos/entities/OrganizationDTO';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
