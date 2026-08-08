@@ -597,13 +597,84 @@ export class GeocodingService {
 
       return data.map((item: OpenStreetMapResponse) => this.formatOpenStreetMapResult(item));
     } catch (error) {
-      if (error instanceof NetworkError) throw error;
       console.error('OpenStreetMap geocoding failed:', error);
-     // TODO: Fallback localdata
+      // Fallback: résolution via le référentiel local Mauritanie
+      const localResults = this.geocodeFromLocalReferential(address);
+      if (localResults.length > 0) return localResults;
+      if (error instanceof NetworkError) throw error;
       throw new NetworkError('OpenStreetMap geocoding failed');
-      return [];
     }
   }
+
+  /**
+   * Fallback local: recherche l'adresse dans le référentiel Mauritanie
+   * (villes puis wilayas), sans appel réseau.
+   */
+  private geocodeFromLocalReferential(address: string): GeocodingResult[] {
+    const query = (address || '').trim().toLowerCase();
+    if (!query) return [];
+
+    const normalize = (value: string) => value.trim().toLowerCase();
+    const matches = (candidate: string) =>
+      normalize(candidate).includes(query) || query.includes(normalize(candidate));
+
+    const cityResults: GeocodingResult[] = MAURITANIA_CITIES.filter((city) =>
+      matches(city.name) ||
+      matches(city.nameAr) ||
+      (city.searchTerms || []).some((term) => matches(term))
+    ).map((city) => {
+      const wilaya = getWilayaByCode(city.parentCode);
+      return {
+        address: wilaya ? `${city.name}, ${wilaya.name}, Mauritanie` : `${city.name}, Mauritanie`,
+        coordinates: { lat: city.lat, lng: city.lng },
+        confidence: normalize(city.name) === query ? 0.9 : 0.6,
+        type: 'city' as const,
+        components: {
+          city: city.name,
+          region: wilaya?.name,
+          country: 'Mauritanie',
+          countryCode: 'MR',
+          isoCode: 'MR'
+        },
+        metadata: {
+          code: city.code,
+          isCapital: city.isCapital,
+          economicImportance: city.economicImportance,
+          population: city.population,
+          hasAirport: city.hasAirport,
+          hasPort: city.hasPort,
+          hasUniversity: city.hasUniversity,
+          marketDays: city.marketDays,
+          parentCode: city.parentCode
+        }
+      };
+    });
+
+    const regionResults: GeocodingResult[] = MAURITANIA_REGIONS.filter(
+      (region) => matches(region.name) || matches(region.nameAr)
+    ).map((region) => ({
+      address: `${region.name}, Mauritanie`,
+      coordinates: { lat: region.lat, lng: region.lng },
+      confidence: normalize(region.name) === query ? 0.85 : 0.55,
+      type: 'region' as const,
+      components: {
+        region: region.name,
+        country: 'Mauritanie',
+        countryCode: 'MR',
+        isoCode: 'MR'
+      },
+      metadata: {
+        code: region.code,
+        economicImportance: region.economicImportance,
+        population: region.population
+      }
+    }));
+
+    return [...cityResults, ...regionResults]
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 10);
+  }
+
 
   private async reverseGeocodeOpenStreetMap(lat: number, lng: number): Promise<ReverseGeocodingResult[]> {
     try {
