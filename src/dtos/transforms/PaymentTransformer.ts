@@ -167,6 +167,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       mobileNumber: dto.mobileNumber,
       receiverName: dto.receiverName,
       mobileOperator: dto.mobileOperator,
+      status: dto.status as PaymentStatus | undefined,
       updatedAt: new Date().toISOString()
     };
   }

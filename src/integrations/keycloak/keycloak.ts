@@ -46,9 +46,9 @@ export const refreshToken = async () => {
   }
 };
 
-export const login = () => {
+export const login = (options?: { idpHint?: string }) => {
   try {
-    return keycloakInstance.login();
+    return keycloakInstance.login(options ? { idpHint: options.idpHint } : undefined);
   } catch (error) {
     console.error('Login error:', error);
     throw error;

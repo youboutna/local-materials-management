@@ -22,6 +22,57 @@ export class WorkflowStepService {
 
 
 
+  async createWorkflowStep(data: {
+    tender_id: string;
+    title: string;
+    description?: string;
+    step_number: number;
+    procurement_phase?: string;
+    procurement_stage?: string;
+    required_documents?: string[];
+    status?: string;
+  }): Promise<WorkflowStepDTO> {
+    try {
+      if (!data.tender_id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+      if (!data.title || !data.title.trim()) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title is required');
+      }
+
+      console.warn('WorkflowStepService.createWorkflowStep: IWorkflowStepRepository not yet registered in RepositoryFactory - returning in-memory step');
+
+      const now = new Date().toISOString();
+      const newStep: WorkflowStepDTO = {
+        id: crypto.randomUUID?.() || Date.now().toString(),
+        tender_id: data.tender_id,
+        step_number: data.step_number,
+        title: data.title,
+        description: data.description,
+        status: (data.status as WorkflowStepDTO['status']) || 'pending',
+        procurement_phase: data.procurement_phase,
+        procurement_stage: data.procurement_stage,
+        required_documents: data.required_documents || [],
+        can_upload_documents: true,
+        tasks_completed: 0,
+        tasks_total: 0,
+        created_at: now,
+        updated_at: now,
+      };
+
+      return newStep;
+    } catch (error) {
+      console.error('Error creating workflow step:', error);
+      throw error instanceof AppError
+        ? error
+        : new AppError(
+            ErrorCode.INTERNAL_ERROR,
+            'Failed to create workflow step',
+            error instanceof Error ? error : new Error(String(error))
+          );
+    }
+  }
+
   async getTenderWorkflowSteps(tenderId: string): Promise<WorkflowStepDTO[]> {
     try {
       if (!tenderId) {

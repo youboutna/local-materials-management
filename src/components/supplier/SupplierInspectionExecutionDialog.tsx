@@ -39,6 +39,7 @@ import { SupplierPaymentService, getSupplierPaymentService} from '@/application/
 import { StakeholderService, getStakeholderService} from '@/application/services/StakeholderService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 
 // ============================================================================
 // PROPS
@@ -91,6 +92,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const stakeholderService = getStakeholderService();
   const projectService = getProjectService();
   const supplierPaymentService = getSupplierPaymentService();
+  const employeeService = getEmployeeService();
 
   // ============ Handlers ============
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,9 +257,12 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       if (stakeholders.success && stakeholders.data) {
         for (const stakeholder of stakeholders.data) {
           if (stakeholder.employeeId && stakeholder.isActive) {
-            // TODO: Get user_id from employee via EmployeeService
+            // ✅ Get user_id from employee via EmployeeService (hexagonal)
+            const employee = await employeeService.getEmployeeById(stakeholder.employeeId);
+            const notifiedUserId = employee?.userId || stakeholder.employeeId;
+
             await createNotification(
-              stakeholder.employeeId,
+              notifiedUserId,
               'Résultats d\'inspection disponibles',
               `Inspection complétée: ${project?.title || projectId} - ${progress}% d'avancement`,
               'info' as any,

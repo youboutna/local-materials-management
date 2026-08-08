@@ -1,4 +1,6 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
+import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 /**
  * Payment Service
  * Handles payment operations with hexagonal architecture
@@ -73,7 +75,11 @@ function isValidPaymentStatusTransition(
 }
 
 export class PaymentService {
-  constructor(private paymentRepository: IPaymentRepository) {}
+  constructor(
+    private paymentRepository: IPaymentRepository,
+    private paymentBlockRepository: IPaymentBlockRepository = RepositoryFactory.getPaymentBlockRepository(),
+    private paymentControlActionRepository: IPaymentControlActionRepository = RepositoryFactory.getPaymentControlActionRepository()
+  ) {}
 
   /**
    * Get payments by phase ID
@@ -173,7 +179,8 @@ export class PaymentService {
         checkNumber: data.checkNumber,
         mobileNumber: data.mobileNumber,
         mobileOperator: data.mobileOperator,
-        receiverName: data.receiverName
+        receiverName: data.receiverName,
+        ...(data.status ? { status: data.status } : {})
       } as Partial<Payment>;
       
       // Update entity
@@ -260,22 +267,29 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // TODO: Implémenter avec PaymentBlockingRepository quand disponible
-      // Pour l'instant, simuler la création du blocage
+      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+      const record = await this.paymentBlockRepository.create({
+        projectId: payment.projectId,
+        contractorId,
+        amount: request.blocked_amount,
+        blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
+        blockedBy: request.created_by,
+        notes: `payment_id:${request.payment_id}`
+      });
+
       const block: PaymentBlockDTO = {
-        id: crypto.randomUUID(),
+        id: record.id,
         payment_id: request.payment_id,
         block_reason: request.block_reason,
         block_type: request.block_type,
-        blocked_amount: request.blocked_amount,
+        blocked_amount: record.amount,
         status: 'active',
         created_by: request.created_by,
-        created_at: new Date().toISOString()
+        created_at: record.blockedAt
       };
 
       // Mettre à jour le statut du paiement
-      await this.updatePayment(request.payment_id, {} as UpdatePaymentDTO);
-      // TODO: Ajouter le statut 'blocked' quand UpdatePaymentRequestDto le supportera
+      await this.updatePayment(request.payment_id, { status: 'blocked' });
 
       console.log(`Payment ${request.payment_id} blocked: ${request.block_reason}`);
       return block;
@@ -297,15 +311,39 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
 
-      // TODO: Implémenter avec PaymentControlRepository quand disponible
-      // Pour l'instant, simuler la création de l'action
+      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+      let blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectId, contractorId);
+      let blockId: string;
+      if (blocks.length > 0) {
+        blockId = blocks[0].id;
+      } else {
+        // Ancrer l'action de contrôle sur un bloc de suivi (contrainte FK payment_control_actions -> payment_blocks)
+        const anchorBlock = await this.paymentBlockRepository.create({
+          projectId: payment.projectId,
+          contractorId,
+          amount: payment.amount,
+          blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
+          blockedBy: action.performed_by,
+          notes: `payment_id:${paymentId}`
+        });
+        blockId = anchorBlock.id;
+      }
+
+      const actionRecord = await this.paymentControlActionRepository.create({
+        paymentBlockId: blockId,
+        actionType: action.action_type,
+        description: action.description,
+        createdBy: action.performed_by,
+        status: action.result === 'success' ? 'completed' : 'pending'
+      });
+
       const controlAction: PaymentControlActionDTO = {
-        id: crypto.randomUUID(),
+        id: actionRecord.id,
         payment_id: paymentId,
         action_type: action.action_type,
         description: action.description,
         performed_by: action.performed_by,
-        performed_at: new Date().toISOString(),
+        performed_at: actionRecord.createdAt,
         result: action.result,
         notes: action.notes
       };
@@ -327,7 +365,8 @@ export class PaymentService {
       // Ajouter le supplierId aux données du paiement
       const supplierPaymentRequest: CreatePaymentDTO = {
         ...request,
-        // TODO: Ajouter supplierId quand le DTO le supportera
+        supplierId,
+        contractorId: request.contractorId || supplierId
       };
 
       // Créer le paiement
@@ -355,8 +394,7 @@ export class PaymentService {
       });
 
       // 2. Approuver le paiement
-      await this.updatePayment(paymentId, {} as UpdatePaymentDTO);
-      // TODO: Ajouter le statut 'approved' quand UpdatePaymentRequestDto le supportera
+      await this.updatePayment(paymentId, { status: 'approved' });
       
       // Récupérer le paiement mis à jour
       const updatedPayment = await this.getPaymentById(paymentId);

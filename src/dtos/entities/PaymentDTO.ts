@@ -85,9 +85,13 @@ export interface CreatePaymentDTO {
   mobileNumber?: string;
   mobileOperator?: string;
   receiverName?: string;
+  supplierId?: string;
 }
 
-export type UpdatePaymentDTO = Partial<CreatePaymentDTO>;
+export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
+  status?: 'pending' | 'approved' | 'blocked' | 'processed' | 'completed' | 'failed' | 'rejected' | 'cancelled';
+  supplierId?: string;
+}
 
 export interface PaymentValidationDTO {
   isValid: boolean;

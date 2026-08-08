@@ -11,7 +11,7 @@ import {
     ConformityStatus,
     GeneratedPV,
     PVType,
-} from '@/dtos/types/inspection-execution';
+} from '@/dtos/workflows/InspectionExecutionDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { format } from 'date-fns';

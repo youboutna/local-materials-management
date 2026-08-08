@@ -7,7 +7,7 @@ import { getInspectionService } from '@/application/services/InspectionService';
 import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { getPhaseService } from '@/application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { StepItem } from '@/dtos/types/unified-workflow';
+import { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';

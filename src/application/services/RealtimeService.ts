@@ -8,16 +8,8 @@ import {
     RealtimeSubscription
 } from '@/domain/repositories/IRealtimeRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-// For now, using any repository as placeholder since realtime repository doesn't exist
-
-// Placeholder interface for realtime repository methods
-interface IRealtimeRepositoryPlaceholder {
-  subscribe(subscription: RealtimeSubscription): Promise<string>;
-  unsubscribe(subscriptionId: string): Promise<void>;
-  unsubscribeAll(): Promise<void>;
-  getActiveSubscriptionsCount(): number;
-}
+import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Service DTOs for data exchange
 export interface SubscribeToSubmissionUpdatesRequestDto {
@@ -44,7 +36,7 @@ export interface SubmissionStatusChangeResultDto {
 
 export class RealtimeService {
   constructor(
-    private realtimeRepository: IRealtimeRepositoryPlaceholder = {} as IRealtimeRepositoryPlaceholder // Using placeholder
+    private realtimeRepository: IRealtimeRepository = RepositoryFactory.getRealtimeRepository()
   ) {}
 
   /**
@@ -159,9 +151,7 @@ export class RealtimeService {
    */
   async unsubscribeAll(): Promise<void> {
     try {
-      // For now, simulate unsubscribe all as realtime repository is not available
-      // TODO: Implement proper unsubscribe all when repository is available
-      console.warn('RealtimeService.unsubscribeAll: Realtime repository not available');
+      await this.realtimeRepository.unsubscribeAll();
       console.log('Unsubscribed from all subscriptions');
     } catch (error) {
       console.error('RealtimeService.unsubscribeAll failed:', error);
@@ -173,10 +163,7 @@ export class RealtimeService {
    * Get active subscriptions count
    */
   getActiveSubscriptionsCount(): number {
-    // For now, return mock count as realtime repository is not available
-    // TODO: Implement proper count retrieval when repository is available
-    console.warn('RealtimeService.getActiveSubscriptionsCount: Realtime repository not available');
-    return 0;
+    return this.realtimeRepository.getActiveSubscriptionsCount();
   }
 
   /**

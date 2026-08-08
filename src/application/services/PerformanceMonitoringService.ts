@@ -411,9 +411,30 @@ export class PerformanceMonitoringService {
         dataSources.push('inspections');
       }
 
-      // Calculate resource utilization (placeholder for now)
-      resourceUtilization = 85; // Default value
-      dataSources.push('resource_calculation');
+      // Calculate resource utilization from project resources and their assignments
+      const { data: projectResources } = await supabase
+        .from('project_resources')
+        .select('id')
+        .eq('project_id', projectId);
+
+      if (projectResources && projectResources.length > 0) {
+        const resourceIds = projectResources.map(r => r.id);
+        const { data: resourceAssignments } = await supabase
+          .from('resource_assignments')
+          .select('allocation_percentage')
+          .in('resource_id', resourceIds);
+
+        if (resourceAssignments && resourceAssignments.length > 0) {
+          const totalAllocation = resourceAssignments.reduce(
+            (sum, ra) => sum + (ra.allocation_percentage || 0),
+            0
+          );
+          resourceUtilization = Math.min(100, totalAllocation / resourceAssignments.length);
+        } else {
+          resourceUtilization = 0;
+        }
+        dataSources.push('project_resources', 'resource_assignments');
+      }
 
       // Calculate overall score (weighted average)
       const weights = {
@@ -513,10 +534,35 @@ export class PerformanceMonitoringService {
   /**
    * Send event-driven performance alert notification
    */
+  /**
+   * Get the actual recipient (project manager / responsible) for a project
+   */
+  private async getProjectResponsibleId(projectId: string): Promise<string> {
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('project_responsable_id, technical_manager_id, supervisor_id, created_by')
+        .eq('id', projectId)
+        .single();
+
+      return (
+        project?.project_responsable_id ||
+        project?.technical_manager_id ||
+        project?.supervisor_id ||
+        project?.created_by ||
+        'system'
+      );
+    } catch (error) {
+      console.error('Failed to resolve project responsible for notification:', error);
+      return 'system';
+    }
+  }
+
   private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
     try {
+      const recipientId = await this.getProjectResponsibleId(alert.projectId);
       await this.notificationService.createNotification({
-        recipientId: 'system', // TODO: Get actual recipient based on project
+        recipientId,
         title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,
         message: alert.message,
         type: 'system',

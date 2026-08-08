@@ -175,13 +175,27 @@ export class InspectionExecutionService {
       const inspection = await this.inspectionRepository.findById(request.inspectionId);
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
-      // Add measurement to inspection execution data
-      // For now, measurements are stored in the execution data but not persisted
-      // TODO: Add measurements field to inspection entity if needed
+      // Les mesures sont persistées comme observations typées 'measurement'
+      const m = request.measurement;
+      const now = new Date().toISOString();
+      const observation = {
+        id: (globalThis.crypto?.randomUUID?.() ?? `measurement-${Date.now()}`),
+        inspectionId: request.inspectionId,
+        type: 'measurement',
+        description: `${m.type}: ${m.value} ${m.unit}${m.notes ? ` — ${m.notes}` : ''}`,
+        severity: 'low' as const,
+        status: 'recorded',
+        createdAt: m.measuredAt || now,
+        updatedAt: now,
+        createdBy: m.measuredBy,
+      };
 
-      console.warn('addMeasurement: Measurements storage not yet implemented in inspection entity');
+      await this.inspectionRepository.update(request.inspectionId, {
+        observations: [...(inspection.observations || []), observation],
+      } as any);
 
       return { success: true };
+
     } catch (error) {
       console.error('InspectionExecutionService.addMeasurement failed:', error);
       if (error instanceof AppError) return { success: false, error: error.message };

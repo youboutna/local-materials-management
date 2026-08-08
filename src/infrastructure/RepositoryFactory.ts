@@ -47,6 +47,8 @@ import {
     SupabaseNotificationAdapter,
     SupabaseParsedInvoiceAdapter,
     SupabasePaymentAdapter,
+    SupabasePaymentBlockAdapter,
+    SupabasePaymentControlActionAdapter,
     SupabasePhaseAdapter,
     SupabaseProjectAdapter,
     SupabaseProjectBudgetLinkAdapter,
@@ -57,6 +59,7 @@ import {
     SupabaseReportDataTransformerAdapter,
     SupabaseReportingAdapter,
     SupabaseRiskAdapter,
+    SupabaseRiskTaskRelationAdapter,
     SupabaseStakeholderAdapter,
     SupabaseSupplierAdapter,
     SupabaseTenderAdapter,
@@ -76,6 +79,7 @@ import {
     TenderEstimateAdapter
 } from '@/infrastructure/supabase/adapters';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter';
+import { SupabaseRealtimeAdapter } from '@/infrastructure/supabase/adapters/SupabaseRealtimeAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/SupabaseStorageAdapter';
 
 // ================================================================
@@ -138,6 +142,8 @@ import { IOrganizationHierarchyRepository } from '@/domain/repositories/IOrganiz
 import { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
+import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
+import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
@@ -146,10 +152,12 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
+import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
+import { IRiskTaskRelationRepository } from '@/domain/repositories/IRiskTaskRelationRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
@@ -203,6 +211,7 @@ interface RepositoryRegistry {
   user?: IUserRepository;
   employee?: IEmployeeRepository;
   risk?: IRiskRepository;
+  riskTaskRelation?: IRiskTaskRelationRepository;
   supplier?: ISupplierRepository;
   hierarchy?: IHierarchyRepository;
   organization?: IOrganizationRepository;
@@ -236,7 +245,10 @@ interface RepositoryRegistry {
   projectStrategyLink?: IProjectStrategyLinkRepository;
   projectBudgetLink?: IProjectBudgetLinkRepository;
   paymentBlocking?: IPaymentBlockingRepository;
+  paymentBlock?: IPaymentBlockRepository;
+  paymentControlAction?: IPaymentControlActionRepository;
   taskAssignment?: ITaskAssignmentRepository;
+  realtime?: IRealtimeRepository;
 }
 
 const registry: RepositoryRegistry = {};
@@ -480,6 +492,13 @@ export class RepositoryFactory {
     return registry.risk;
   }
 
+  static getRiskTaskRelationRepository(): IRiskTaskRelationRepository {
+    if (!registry.riskTaskRelation) {
+      registry.riskTaskRelation = new SupabaseRiskTaskRelationAdapter();
+    }
+    return registry.riskTaskRelation;
+  }
+
   // ---------- SUPPLIER ----------
   static getSupplierRepository(): ISupplierRepository {
     if (registry.supplier) return registry.supplier;
@@ -552,6 +571,18 @@ export class RepositoryFactory {
     if (registry.paymentBlocking) return registry.paymentBlocking;
     registry.paymentBlocking = new PaymentBlockingAdapter();
     return registry.paymentBlocking;
+  }
+
+  static getPaymentBlockRepository(): IPaymentBlockRepository {
+    if (registry.paymentBlock) return registry.paymentBlock;
+    registry.paymentBlock = new SupabasePaymentBlockAdapter();
+    return registry.paymentBlock;
+  }
+
+  static getPaymentControlActionRepository(): IPaymentControlActionRepository {
+    if (registry.paymentControlAction) return registry.paymentControlAction;
+    registry.paymentControlAction = new SupabasePaymentControlActionAdapter();
+    return registry.paymentControlAction;
   }
 
   static getBankGuaranteeRepository(): IBankGuaranteeRepository {
@@ -713,6 +744,13 @@ export class RepositoryFactory {
       delete registry[key as keyof RepositoryRegistry];
     });
     this.postgrestClient = undefined;
+  }
+
+  // ---------- REALTIME ----------
+  static getRealtimeRepository(): IRealtimeRepository {
+    if (registry.realtime) return registry.realtime;
+    registry.realtime = new SupabaseRealtimeAdapter();
+    return registry.realtime;
   }
 
   static getDataKind(): DataProviderKind {

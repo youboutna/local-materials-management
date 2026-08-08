@@ -26,7 +26,8 @@ export type PaymentStatus =
   | 'completed'
   | 'failed'
   | 'refunded'
-  | 'manual';
+  | 'manual'
+  | 'blocked';
 
 export interface PaymentDocument {
   id: string;
@@ -336,7 +337,7 @@ export class Payment {
   private validateStatus(status: PaymentStatus): PaymentStatus {
     const validStatuses: PaymentStatus[] = [
       'requested', 'pending_validation', 'validated', 'approved', 'rejected', 'paid', 'cancelled',
-      'pending', 'processing', 'completed', 'failed', 'refunded', 'manual'
+      'pending', 'processing', 'completed', 'failed', 'refunded', 'manual', 'blocked'
     ];
     
     if (!validStatuses.includes(status)) {
