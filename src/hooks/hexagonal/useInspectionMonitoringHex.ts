@@ -104,7 +104,7 @@ export function useInspectionMonitoringHex(options?: {
   const userQuery = useQuery({
     queryKey: ['current-user-inspector'],
     queryFn: async () => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const user = await authService.getCurrentUser();
       if (!user) return null;
       return { type: 'user', name: user.full_name || user.email || '' };

@@ -46,7 +46,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
   const { toast } = useToast();
   const { t } = useLanguage();
   const projectService = useMemo(
-    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    () => getProjectService(),
     [],
   );
 

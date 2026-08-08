@@ -43,7 +43,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const fetchProjectMaterials = async () => {
     try {
-      const projectMaterials = await new MaterialService(RepositoryFactory.getMaterialRepository()).getProjectMaterialsWithDetails(projectId);
+      const projectMaterials = await getMaterialService().getProjectMaterialsWithDetails(projectId);
       
       // Transform the data to match our interface
        const transformedMaterials: ProjectMaterial[] = projectMaterials.map(item => ({

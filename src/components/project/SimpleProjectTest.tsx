@@ -11,7 +11,7 @@ const SimpleProjectTest = () => {
     queryKey: ['simple-project', projectId],
     queryFn: async () => {
       if (!projectId) throw new Error('No project ID');
-      const service = new ProjectService(RepositoryFactory.getProjectRepository());
+      const service = getProjectService();
       return await service.getProjectById(projectId);
     },
     enabled: !!projectId,

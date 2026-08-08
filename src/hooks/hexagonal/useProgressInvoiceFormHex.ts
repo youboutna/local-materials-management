@@ -95,7 +95,7 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
-      const storageService = new StorageService();
+      const storageService = getStorageService();
       const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
       return result.publicUrl;
     },

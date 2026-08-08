@@ -89,7 +89,7 @@ interface UseLocationHexResult {
 export function useLocationHex(): UseLocationHexResult {
   // Memoize services to prevent recreation on every render
   const locationService = useMemo(() => 
-    new LocationService(RepositoryFactory.getLocationRepository()), 
+    getLocationService(), 
     []
   );
 

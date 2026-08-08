@@ -142,7 +142,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         // 2) Charge le référentiel projet (métadonnée) si pas déjà fourni
         if (!defaultReferentialCode) {
-          const service = new ProjectService(RepositoryFactory.getProjectRepository());
+          const service = getProjectService();
           const project = await service.getProjectById(resolvedProjectId);
           if (!cancelled) {
             if (project?.referentialCode) {

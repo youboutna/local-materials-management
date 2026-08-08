@@ -12,9 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export function usePaymentRequests() {
   const queryClient = useQueryClient();
   
-  const paymentRequestService = new PaymentRequestService(
-    RepositoryFactory.getPaymentRepository()
-  );
+  const paymentRequestService = getPaymentRequestService();
 
   const {
     data: paymentRequests = [],
@@ -102,9 +100,7 @@ export function usePaymentRequests() {
 }
 
 export function usePaymentRequestsBySupplier(supplierId: string) {
-  const paymentRequestService = new PaymentRequestService(
-    RepositoryFactory.getPaymentRepository()
-  );
+  const paymentRequestService = getPaymentRequestService();
 
   return useQuery({
     queryKey: ['payment-requests', 'supplier', supplierId],
@@ -115,9 +111,7 @@ export function usePaymentRequestsBySupplier(supplierId: string) {
 }
 
 export function usePaymentRequestsByProject(projectId: string) {
-  const paymentRequestService = new PaymentRequestService(
-    RepositoryFactory.getPaymentRepository()
-  );
+  const paymentRequestService = getPaymentRequestService();
 
   return useQuery({
     queryKey: ['payment-requests', 'project', projectId],

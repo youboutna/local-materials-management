@@ -86,15 +86,11 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const { createNotification } = useNotifications();
 
   // ============ Services hexagonaux ============
-  const documentService = new DocumentService();
-  const inspectionService = new InspectionService();
-  const stakeholderService = new StakeholderService(
-    RepositoryFactory.getStakeholderRepository()
-  );
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
-  const supplierPaymentService = new SupplierPaymentService();
+  const documentService = getDocumentService();
+  const inspectionService = getInspectionService();
+  const stakeholderService = getStakeholderService();
+  const projectService = getProjectService();
+  const supplierPaymentService = getSupplierPaymentService();
 
   // ============ Handlers ============
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -15,10 +15,7 @@ export interface PaymentStats {
 
 async function fetchPaymentStats(): Promise<PaymentStats> {
   try {
-    const service = new PaymentControlService(
-      RepositoryFactory.getPaymentRepository(),
-      RepositoryFactory.getNotificationRepository()
-    );
+    const service = getPaymentControlService();
     // Use the dashboard method to derive stats
     const dashboard = await service.getPaymentControlDashboard('system', 'month');
     return {

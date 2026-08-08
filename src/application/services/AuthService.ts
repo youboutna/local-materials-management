@@ -5,6 +5,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { 
   IAuthRepository, 

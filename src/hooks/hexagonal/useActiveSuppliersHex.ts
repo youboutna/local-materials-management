@@ -15,7 +15,7 @@ export interface ActiveSupplier {
 
 // Hook: Fetch active suppliers for task assignment
 export function useActiveSuppliersHex() {
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
   
   return useQuery({
     queryKey: ['active-suppliers'],

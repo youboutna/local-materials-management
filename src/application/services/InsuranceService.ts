@@ -23,7 +23,7 @@ export class InsuranceService {
     notificationService?: NotificationService
   ) {
     this.insuranceRepository = insuranceRepository || RepositoryFactory.getInsuranceRepository();
-    this.notificationService = notificationService || new NotificationService();
+    this.notificationService = notificationService || getNotificationService();
   }
 
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {

@@ -28,7 +28,7 @@ export interface SelectedMaterial {
 
 async function fetchProjectMaterials(projectId: string): Promise<ProjectMaterial[]> {
   try {
-    const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+    const materialService = getMaterialService();
     const materials = await materialService.getProjectMaterialsWithDetails(projectId);
     return materials.map((item: MaterialDTO) => ({
       id: item.id,
@@ -52,7 +52,7 @@ async function updateProjectMaterials(
   materials: SelectedMaterial[]
 ): Promise<void> {
   try {
-    const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+    const materialService = getMaterialService();
     // Add the new materials
     for (const material of materials) {
       await materialService.addMaterialToProject(projectId, material.materialId, material.quantity);
@@ -94,7 +94,7 @@ export const useProjectMaterialsHex = (projectId?: string) => {
 
   const addMaterialMutation = useMutation({
     mutationFn: async (material: SelectedMaterial) => {
-      const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+      const materialService = getMaterialService();
       await materialService.addMaterialToProject(projectId!, material.materialId, material.quantity);
     },
     onSuccess: () => {

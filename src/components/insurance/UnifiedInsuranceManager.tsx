@@ -169,7 +169,7 @@ const UnifiedInsuranceManager = () => {
   const loadInsuranceDataCallback = useCallback(async () => {
     try {
       setLoading(true);
-      const insuranceService = new InsuranceService();
+      const insuranceService = getInsuranceService();
       const expiringAlerts = await insuranceService.detectExpiringInsurance?.() || [];
       setAlerts(expiringAlerts);
     } catch (error) {
@@ -190,7 +190,7 @@ const UnifiedInsuranceManager = () => {
       console.log('Loading insurance certificates...');
       
       // Use InsuranceService instance instead of static call
-      const insuranceService = new InsuranceService();
+      const insuranceService = getInsuranceService();
       const data = await insuranceService.getInsuranceCertificates();
 
       console.log('Raw certificates data:', data);

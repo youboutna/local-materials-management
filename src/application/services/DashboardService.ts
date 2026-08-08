@@ -64,13 +64,13 @@ export class DashboardService {
     supplierService?: SupplierService
   ) {
     // ✅ Injection via constructeur avec fallback via RepositoryFactory
-    this.projectService = projectService || new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = projectService || getProjectService();
     this.employeeService = employeeService || new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.materialService = materialService || new MaterialService(RepositoryFactory.getMaterialRepository());
+    this.materialService = materialService || getMaterialService();
     this.documentService = documentService || new DocumentService(RepositoryFactory.getDocumentRepository());
-    this.paymentService = paymentService || new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = paymentService || getPaymentRequestService();
     this.inspectionService = inspectionService || new InspectionService(RepositoryFactory.getInspectionRepository());
-    this.supplierService = supplierService || new SupplierService(RepositoryFactory.getSupplierRepository());
+    this.supplierService = supplierService || getSupplierService();
   }
 
   // ============================================================================
@@ -82,13 +82,13 @@ export class DashboardService {
    */
   static default(): DashboardService {
     return new DashboardService(
-      new ProjectService(RepositoryFactory.getProjectRepository()),
+      getProjectService(),
       new EmployeeService(RepositoryFactory.getEmployeeRepository()),
-      new MaterialService(RepositoryFactory.getMaterialRepository()),
+      getMaterialService(),
       new DocumentService(RepositoryFactory.getDocumentRepository()),
-      new PaymentRequestService(RepositoryFactory.getPaymentRepository()),
+      getPaymentRequestService(),
       new InspectionService(RepositoryFactory.getInspectionRepository()),
-      new SupplierService(RepositoryFactory.getSupplierRepository())
+      getSupplierService()
     );
   }
 

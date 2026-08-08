@@ -67,7 +67,7 @@ export function useProjectLocationHex(
 
   // Enhanced location service with project methods
   const enhancedLocationService = useMemo(() => {
-    const service = new LocationService(RepositoryFactory.getLocationRepository());
+    const service = getLocationService();
     return service;
   }, []);
 

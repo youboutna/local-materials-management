@@ -45,7 +45,7 @@ export function useShareDocuments(tenderId: string) {
         throw new Error('Aucun document sélectionné');
       }
 
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const currentUser = await authService.getCurrentUser();
       const docRepo = RepositoryFactory.getDocumentRepository();
       

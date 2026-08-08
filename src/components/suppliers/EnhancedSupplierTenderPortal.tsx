@@ -198,7 +198,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryKey: ['granted-tender', accessGrantedTenderId],
     queryFn: async () => {
       if (!accessGrantedTenderId) return null;
-      const service = new TenderService();
+      const service = getTenderService();
       const t = await service.getTenderById({ id: accessGrantedTenderId });
       if (!t) return null;
       return {

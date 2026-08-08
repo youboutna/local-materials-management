@@ -61,7 +61,7 @@ export interface UseComplianceReportResult {
  */
 export function useReportsHex(projectId?: string): UseReportsHexResult {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const {
     data: reports = [],
@@ -115,7 +115,7 @@ export function useReportsHex(projectId?: string): UseReportsHexResult {
  */
 export function useProjectAnalyticsHex(projectId: string): UseProjectAnalyticsResult {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const {
     data: analytics = null,
@@ -164,7 +164,7 @@ export function useProjectAnalyticsHex(projectId: string): UseProjectAnalyticsRe
  */
 export function useFinancialMetricsHex(projectId: string): UseFinancialMetricsResult {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const {
     data: metrics = null,
@@ -213,7 +213,7 @@ export function useFinancialMetricsHex(projectId: string): UseFinancialMetricsRe
  */
 export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const {
     data: assessment = null,
@@ -266,7 +266,7 @@ export function useRiskAssessmentHex(projectId: string): UseRiskAssessmentResult
  */
 export function useComplianceReportHex(projectId: string): UseComplianceReportResult {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const {
     data: report = null,
@@ -339,7 +339,7 @@ export function useQuickReport(projectId: string, reportType: GenerateProjectRep
 
 export function useBatchReports(projectIds: string[]) {
   const queryClient = useQueryClient();
-  const reportService = new ReportService();
+  const reportService = getReportService();
 
   const batchGenerateMutation = useMutation({
     mutationFn: async (reportConfigs: GenerateProjectReportRequestDto[]): Promise<ProjectReportResultDto[]> => {

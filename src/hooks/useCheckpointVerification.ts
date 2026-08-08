@@ -34,7 +34,7 @@ const getMilestoneRepository = () => {
 
 // Get payment service
 const getPaymentService = () => {
-  return new PaymentService(RepositoryFactory.getPaymentRepository());
+  return getPaymentService();
 };
 
 export function useCheckpointVerification({ 

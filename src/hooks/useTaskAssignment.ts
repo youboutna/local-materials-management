@@ -48,7 +48,7 @@ export const useTaskAssignment = () => {
     RepositoryFactory.getTaskAssignmentRepository()
   );
   const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
 
   /**
    * Crée une assignation de tâche

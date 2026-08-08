@@ -70,7 +70,7 @@ import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // PhaseService instance for dynamic data
-const phaseService = new PhaseService();
+const phaseService = getPhaseService();
 
 //les types, interfaces sont à recuperer depuis les referentiels et domain, dtos, transformers.
 

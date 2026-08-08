@@ -60,7 +60,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
          type: 'report',
          projectId: projectId,
        };
-       const created = await new DocumentService().createDocument(payload);
+       const created = await getDocumentService().createDocument(payload);
        // refresh local documents
        if (projectId) {
          const docs = await DocumentService.getProjectDocuments(projectId);
@@ -77,7 +77,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
       if (!phaseId || !projectId) return;
       // Map common action names to MilestoneService instance methods
       const act = action?.action || action?.id;
-      const milestoneService = new MilestoneService();
+      const milestoneService = getMilestoneService();
       let res: unknown;
       if (act === 'approve' || act === 'approve_gate') {
         const approver = user?.email || user?.id || 'system';

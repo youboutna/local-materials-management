@@ -7,7 +7,7 @@ import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
 import { UserService } from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
-const userService = new UserService(RepositoryFactory.getUserRepository());
+const userService = getUserService();
 
 interface Profile {
   id: string;

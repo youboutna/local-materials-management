@@ -45,8 +45,8 @@ const ProjectPhasesDetail: React.FC = () => {
       if (!id) return;
       try {
         setLoading(true);
-        const phaseService = new PhaseService();
-        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+        const phaseService = getPhaseService();
+        const projectService = getProjectService();
         const [phasesData, projectData] = await Promise.all([
           phaseService.getPhasesByProject(id),
           projectService.getProjectWithDetails(id).catch(() => null),

@@ -62,10 +62,10 @@ const PaymentBlockingInterface = () => {
     const loadStats = async () => {
       try {
         // Initialize services
-        const paymentBlockingService = new PaymentBlockingService();
-        const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+        const paymentBlockingService = getPaymentBlockingService();
+        const paymentService = getPaymentService();
         const insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
-        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+        const projectService = getProjectService();
         const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
 
         // Load blocked payments using PaymentService
@@ -131,7 +131,7 @@ const PaymentBlockingInterface = () => {
   const onValidatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const result = await service.validatePaymentEligibility(
         values.projectId
       );
@@ -164,7 +164,7 @@ const PaymentBlockingInterface = () => {
   const onProcessPayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const result = await service.processPayment(values.projectId);
 
       if (result.success) {

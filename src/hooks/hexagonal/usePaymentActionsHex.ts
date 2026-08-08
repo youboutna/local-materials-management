@@ -69,7 +69,7 @@ export interface ActionMetadata {
 }
 
 export function usePaymentActionsHex() {
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
   const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
 
   // Create notification mutation

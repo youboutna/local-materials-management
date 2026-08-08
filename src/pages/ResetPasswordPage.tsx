@@ -13,7 +13,7 @@ const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword, loading } = usePasswordManagement();
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

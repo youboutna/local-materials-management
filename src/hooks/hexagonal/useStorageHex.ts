@@ -16,7 +16,7 @@ interface UploadResult {
 
 export function useStorageHex(bucketName: string = 'documents') {
   const queryClient = useQueryClient();
-  const storageService = new StorageService();
+  const storageService = getStorageService();
 
   // Upload file mutation
   const uploadMutation = useMutation({

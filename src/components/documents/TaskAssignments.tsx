@@ -132,7 +132,7 @@ const TaskAssignmentsComponent = () => {
 
   const createMutation = useMutation({
     mutationFn: async (taskData: TaskFormData) => {
-      const taskService = new TaskAssignmentService();
+      const taskService = getTaskAssignmentService();
       
       // Build proper DTO for service
       return await taskService.createTaskAssignment({ 
@@ -170,7 +170,7 @@ const TaskAssignmentsComponent = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: TaskFormData }) => {
-      const taskService = new TaskAssignmentService();
+      const taskService = getTaskAssignmentService();
       
       // Build proper update DTO
       return await taskService.updateTaskAssignment({ 
@@ -200,7 +200,7 @@ const TaskAssignmentsComponent = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const taskService = new TaskAssignmentService();
+      const taskService = getTaskAssignmentService();
       await taskService.deleteTaskAssignment({ id });
     },
     onSuccess: () => {

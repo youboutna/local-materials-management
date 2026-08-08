@@ -74,7 +74,7 @@ export class PerformanceMonitoringService {
   private monitoringRecords: Map<string, PerformanceMonitoringRecord> = new Map();
 
   constructor() {
-    this.notificationService = new NotificationService();
+    this.notificationService = getNotificationService();
   }
 
   /**

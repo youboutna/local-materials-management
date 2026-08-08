@@ -44,7 +44,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const { toast } = useToast();
   
   // Initialize services with proper hexagonal architecture
-  const complianceService = useMemo(() => new ComplianceService(RepositoryFactory.getComplianceRepository()), []);
+  const complianceService = useMemo(() => getComplianceService(), []);
   const bankGuaranteeService = useMemo(() => new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository()), []);
   const insuranceService = useMemo(() => new InsuranceService(RepositoryFactory.getInsuranceRepository()), []);
   const documentService = useMemo(() => new DocumentService(RepositoryFactory.getDocumentRepository()), []);

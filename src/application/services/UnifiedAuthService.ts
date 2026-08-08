@@ -54,7 +54,7 @@ export class UnifiedAuthService {
   private oAuthService: OAuthProviderService;
 
   constructor(private authRepository: IAuthRepository) {
-    this.oAuthService = new OAuthProviderService();
+    this.oAuthService = getOAuthProviderService();
   }
 
   /**

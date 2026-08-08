@@ -41,9 +41,7 @@ export type UpdateStakeholderData = UpdateStakeholderRequestDTO;
 
 export function useStakeholdersHex(projectId?: string) {
   const queryClient = useQueryClient();
-  const stakeholderService = new StakeholderService(
-    RepositoryFactory.getStakeholderRepository()
-  );
+  const stakeholderService = getStakeholderService();
 
   // ===== QUERY PRINCIPALE =====
   

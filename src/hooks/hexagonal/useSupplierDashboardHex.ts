@@ -31,7 +31,7 @@ export const useSupplierAuthHex = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const authService = new AuthService(RepositoryFactory.getAuthRepository());
+    const authService = getAuthService();
     
     // Set initial session
     authService.getCurrentSession().then(({ user }) => {
@@ -48,9 +48,7 @@ export const useSupplierProfileHex = (userId: string | null) => {
     queryFn: async () => {
       if (!userId) return null;
       
-      const supplierPortalService = new SupplierPortalService(
-        RepositoryFactory.getSupplierRepository()
-      );
+      const supplierPortalService = getSupplierPortalService();
       const supplier = await supplierPortalService.getSupplierProfile(userId);
       
       return supplier;
@@ -84,7 +82,7 @@ export const useSupplierPaymentsHex = (supplierId: string | undefined) => {
     queryFn: async () => {
       if (!supplierId) return [];
       
-      const supplierPaymentService = new SupplierPaymentService();
+      const supplierPaymentService = getSupplierPaymentService();
       const payments = await supplierPaymentService.getPaymentRequestsBySupplierId({
         supplierId
       });
@@ -101,7 +99,7 @@ export const useSupplierDocumentsHex = (userId: string | null, supplierName: str
     queryFn: async () => {
       if (!userId && !supplierName) return [];
       
-      const documentService = new DocumentService();
+      const documentService = getDocumentService();
       
       // Get documents by phase (using userId as phaseId for now)
       // This is a temporary solution until proper supplier document methods exist

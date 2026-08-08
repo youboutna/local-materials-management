@@ -89,7 +89,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   // Services - initialized with proper repositories
   const paymentRepository = RepositoryFactory.getPaymentRepository();
   const paymentRequestService = new PaymentRequestService(paymentRepository);
-  const documentService = new DocumentService();
+  const documentService = getDocumentService();
 
   // Handle prefill data from payment initiation
   useEffect(() => {

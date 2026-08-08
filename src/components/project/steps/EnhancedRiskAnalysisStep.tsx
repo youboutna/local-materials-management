@@ -53,7 +53,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
   const { toast } = useToast();
   
   // Initialize service with hexagonal architecture
-  const riskService = new RiskService(RepositoryFactory.getRiskRepository());
+  const riskService = getRiskService();
   
   const [risks, setRisks] = useState<EnhancedRisk[]>(formData.risks?.map(r => ({
     id: r.id,

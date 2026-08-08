@@ -96,7 +96,7 @@ export class WorkflowOrchestrator {
     this.projectRepository = RepositoryFactory.getProjectRepository();
     this.milestoneRepository = RepositoryFactory.getMilestoneRepository();
     this.phaseRepository = RepositoryFactory.getPhaseRepository();
-    this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = getPaymentService();
   }
 
   /**

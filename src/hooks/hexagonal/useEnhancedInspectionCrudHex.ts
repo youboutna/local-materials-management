@@ -5,7 +5,7 @@ import { InspectionService } from '@/application/services/InspectionService';
 
 export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   const queryClient = useQueryClient();
-  const inspectionService = new InspectionService();
+  const inspectionService = getInspectionService();
 
   // Fetch inspections
   const { data: inspections = [], isLoading, error } = useQuery({

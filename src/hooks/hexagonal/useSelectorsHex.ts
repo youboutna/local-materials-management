@@ -104,9 +104,7 @@ export function useUsersSelector(options?: {
   return useQuery({
     queryKey: ['users-selector', options?.searchTerm, options?.roleFilter],
     queryFn: async (): Promise<UserProfile[]> => {
-      const userService = new UserService(
-        RepositoryFactory.getUserRepository()
-      );
+      const userService = getUserService();
       
       const result = await userService.searchUsers({
         searchTerm: options?.searchTerm,
@@ -152,9 +150,7 @@ export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
   return useQuery({
     queryKey: ['suppliers-selector', searchTerm],
     queryFn: async (): Promise<SupplierOption[]> => {
-      const supplierService = new SupplierService(
-        RepositoryFactory.getSupplierRepository()
-      );
+      const supplierService = getSupplierService();
       
       const result = await supplierService.searchSuppliers({
         searchTerm,
@@ -186,9 +182,7 @@ export function useMaterialsSelector(options?: {
   return useQuery({
     queryKey: ['materials-selector', options?.searchTerm, options?.category],
     queryFn: async (): Promise<MaterialOption[]> => {
-      const materialService = new MaterialService(
-        RepositoryFactory.getMaterialRepository()
-      );
+      const materialService = getMaterialService();
       
       let materials: any[] = [];
       

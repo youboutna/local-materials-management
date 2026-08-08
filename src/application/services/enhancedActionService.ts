@@ -70,11 +70,11 @@ export class EnhancedActionService {
   private actionRecords: Map<string, EnhancedActionDTO> = new Map();
 
   constructor() {
-    this.notificationService = new NotificationService();
+    this.notificationService = getNotificationService();
     this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.taskAssignmentService = new TaskAssignmentService(RepositoryFactory.getTaskAssignmentRepository());
-    this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = getPaymentService();
   }
 
   /**

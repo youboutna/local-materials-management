@@ -49,10 +49,10 @@ export const PaymentRequestsManagement: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   
   // Initialize services
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const authService = getAuthService();
+  const supplierService = getSupplierService();
+  const projectService = getProjectService();
+  const paymentRequestService = getPaymentRequestService();
   const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
 
   const { data: paymentRequests = [], refetch } = useQuery({

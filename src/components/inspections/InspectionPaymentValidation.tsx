@@ -90,7 +90,7 @@ const InspectionPaymentValidation: React.FC = () => {
       if (!inspectionId) return null;
       
       // Create service instance and get inspection
-      const inspectionService = new InspectionService();
+      const inspectionService = getInspectionService();
       const inspectionData = await inspectionService.getInspectionById(inspectionId);
       
       if (!inspectionData) {
@@ -104,7 +104,7 @@ const InspectionPaymentValidation: React.FC = () => {
       }
       
       // Check for pending payment request
-      const paymentService = new SupplierPaymentService();
+      const paymentService = getSupplierPaymentService();
       const paymentRequest = await paymentService.getPendingPaymentRequestByInspectionId({ inspectionId });
       
       if (!paymentRequest) {
@@ -160,7 +160,7 @@ const InspectionPaymentValidation: React.FC = () => {
       if (!inspectionId) throw new Error('Inspection ID missing');
 
       // Use service instance to update
-      const inspectionService = new InspectionService();
+      const inspectionService = getInspectionService();
       await inspectionService.updateInspection(inspectionId, {
         status: data.status as any,
         comments: data.comments,

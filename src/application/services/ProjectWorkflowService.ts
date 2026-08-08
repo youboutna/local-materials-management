@@ -867,12 +867,8 @@ export class ProjectWorkflowService {
       import('@/application/services/ProjectBudgetLinkService'),
     ]);
 
-    const strategyService = new ProjectStrategyLinkService(
-      RepositoryFactory.getProjectStrategyLinkRepository()
-    );
-    const budgetService = new ProjectBudgetLinkService(
-      RepositoryFactory.getProjectBudgetLinkRepository()
-    );
+    const strategyService = getProjectStrategyLinkService();
+    const budgetService = getProjectBudgetLinkService();
 
     // --- Strategy links: delete-then-recreate (idempotent) ---
     try {

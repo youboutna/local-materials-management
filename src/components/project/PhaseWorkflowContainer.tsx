@@ -134,7 +134,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
         if (uploadRes.success) {
           const publicUrl = uploadRes.url || '';
           try {
-             const documentService = new DocumentService();
+             const documentService = getDocumentService();
              const docRecord = await documentService.createDocument({
                title: `PV - ${rawPhaseData.phase_name}`,
                name: `PV - ${rawPhaseData.phase_name}`,

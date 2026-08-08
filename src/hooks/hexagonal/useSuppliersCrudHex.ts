@@ -24,7 +24,7 @@ export function useSuppliersList() {
   return useQuery({
     queryKey: ['suppliers-list-crud'],
     queryFn: async () => {
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       const suppliers = await supplierService.getAllSuppliers();
       return suppliers || [];
     }
@@ -35,7 +35,7 @@ export function useCreateSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: SupplierMgmtFormData) => {
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       await supplierService.createSupplier({
         name: data.companyName || data.name || '',
         contactPerson: data.contactPerson,
@@ -56,7 +56,7 @@ export function useUpdateSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierMgmtFormData }) => {
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       await supplierService.updateSupplier(id, {
         name: data.companyName || data.name,
         contactPerson: data.contactPerson,
@@ -77,7 +77,7 @@ export function useDeleteSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       await supplierService.deleteSupplier(id);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['suppliers-list-crud'] })

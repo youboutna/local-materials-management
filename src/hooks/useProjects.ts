@@ -27,7 +27,7 @@ const toConstructionPhase = (phase?: string): ConstructionPhase | undefined => {
     : undefined;
 };
 
-const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+const projectService = getProjectService();
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectDTO[]>([]);

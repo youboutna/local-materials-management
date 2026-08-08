@@ -47,7 +47,7 @@ export function useInvoicesHex(): UseInvoicesResult {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const result = useQuery({
     queryKey: ['invoices'],
@@ -77,7 +77,7 @@ export function useInvoicesHex(): UseInvoicesResult {
  */
 export function useParsedInvoicesHex(supplierId: string): UseParsedInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const result = useQuery({
     queryKey: ['parsed-invoices', supplierId],
@@ -107,7 +107,7 @@ export function useParsedInvoicesHex(supplierId: string): UseParsedInvoicesResul
  */
 export function useInvoiceStatisticsHex(supplierId?: string): UseInvoiceStatisticsResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const result = useQuery({
     queryKey: ['invoice-statistics', supplierId],
@@ -140,7 +140,7 @@ export function useInvoiceStatisticsHex(supplierId?: string): UseInvoiceStatisti
 export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const createMutation = useMutation({
     mutationFn: async (invoiceData: CreateInvoiceDTO) => {
@@ -211,7 +211,7 @@ export function useInvoiceMutationsHex(): UseInvoiceMutationsResult {
  * Hook for fetching invoice by ID
  */
 export function useInvoiceHex(invoiceId: string) {
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   return useQuery({
     queryKey: ['invoice', invoiceId],
@@ -226,7 +226,7 @@ export function useInvoiceHex(invoiceId: string) {
  */
 export function useInvoicesByStatusHex(status: string): UseInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const result = useQuery({
     queryKey: ['invoices', 'status', status],
@@ -256,7 +256,7 @@ export function useInvoicesByStatusHex(status: string): UseInvoicesResult {
  */
 export function useInvoicesByDateRangeHex(startDate: string, endDate: string): UseInvoicesResult {
   const { toast } = useToast();
-  const service = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  const service = getInvoiceService();
 
   const result = useQuery({
     queryKey: ['invoices', 'date-range', startDate, endDate],

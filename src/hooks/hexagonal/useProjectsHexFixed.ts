@@ -13,9 +13,7 @@ import { toast } from 'sonner';
 export function useProjects() {
   const queryClient = useQueryClient();
   
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const projectService = getProjectService();
 
   const {
     data: projects = [],
@@ -83,9 +81,7 @@ export function useProjects() {
 }
 
 export function useProject(id: string) {
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const projectService = getProjectService();
 
   const {
     data: project,

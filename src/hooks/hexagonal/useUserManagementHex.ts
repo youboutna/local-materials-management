@@ -25,8 +25,8 @@ interface UpdateUserData {
 
 export function useUserManagementHex() {
   const queryClient = useQueryClient();
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
-  const userService = new UserService(RepositoryFactory.getUserRepository());
+  const authService = getAuthService();
+  const userService = getUserService();
 
   const createUserMutation = useMutation({
     mutationFn: async (data: CreateUserData) => {

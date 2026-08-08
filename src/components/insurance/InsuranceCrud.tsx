@@ -159,7 +159,7 @@ const InsuranceCrud: React.FC = () => {
     e.preventDefault();
     
     try {
-      const insuranceService = new InsuranceService();
+      const insuranceService = getInsuranceService();
       
       if (isEditing && selectedCertificate) {
         await insuranceService.updateInsuranceCertificate(selectedCertificate.id, {
@@ -203,7 +203,7 @@ const InsuranceCrud: React.FC = () => {
       setCertificates(prev => prev.filter(c => c.id !== certificateId));
       
       try {
-        const insuranceService = new InsuranceService();
+        const insuranceService = getInsuranceService();
         await insuranceService.deleteInsuranceCertificate(certificateId);
         
         toast({

@@ -57,7 +57,7 @@ async function fetchInspectionsSummary(phaseId: string): Promise<InspectionsSumm
 
 async function fetchPaymentsSummary(phaseId: string): Promise<PaymentsSummary> {
   try {
-    const service = new PaymentService(RepositoryFactory.getPaymentRepository());
+    const service = getPaymentService();
     const result = await service.getPaymentsByPhase(phaseId);
     const payments = result.data || [];
     const total = payments.length;

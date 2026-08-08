@@ -30,8 +30,8 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
   const actions: ActionItem[] = [];
 
   try {
-    const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    const inspectionService = new InspectionService();
+    const projectService = getProjectService();
+    const inspectionService = getInspectionService();
 
     // Fetch inspections and projects in parallel
     const [allInspections, allProjects] = await Promise.all([

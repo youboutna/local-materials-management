@@ -62,7 +62,7 @@ export function useTenders() {
   return useQuery({
     queryKey: ['tenders'],
     queryFn: async (): Promise<Tender[]> => {
-      const tenderService = new TenderService();
+      const tenderService = getTenderService();
       const tenders = await tenderService.getAllTenders();
       return tenders.map((t: any) => ({
         id: t.id,
@@ -115,7 +115,7 @@ export function useProjectsForTenders() {
   return useQuery({
     queryKey: ['projects-for-tender'],
     queryFn: async () => {
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const projectService = getProjectService();
       const projects = await projectService.getAllProjects();
       return projects.map(project => ({
         id: project.id,

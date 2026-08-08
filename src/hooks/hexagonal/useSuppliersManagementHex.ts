@@ -20,7 +20,7 @@ export interface SupplierFormData {
 }
 
 function getSupplierService() {
-  return new SupplierService(RepositoryFactory.getSupplierRepository());
+  return getSupplierService();
 }
 
 // Hook: Fetch all suppliers

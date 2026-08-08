@@ -42,11 +42,11 @@ export class DataPersistenceValidationService {
   private supplierService: SupplierService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
-    this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+    this.materialService = getMaterialService();
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+    this.supplierService = getSupplierService();
   }
 
   /**

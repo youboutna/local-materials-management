@@ -54,7 +54,7 @@ export const calculatePaymentEligibility = async (
   };
 
   // Check insurance certificates using InsuranceService
-  const insuranceService = new InsuranceService();
+  const insuranceService = getInsuranceService();
   const insurance = await insuranceService.getInsuranceCertificates(projectId)
     .then(certificates => certificates.filter(cert => 
       cert.contractor_id === contractorId && 
@@ -74,7 +74,7 @@ export const calculatePaymentEligibility = async (
   }
 
   // Check bank guarantees using BankGuaranteeService
-  const bankGuaranteeService = new BankGuaranteeService();
+  const bankGuaranteeService = getBankGuaranteeService();
   const guarantee = await bankGuaranteeService.getBankGuarantees(projectId)
     .then(guarantees => guarantees.filter(g => 
       g.contractor_id === contractorId && 
@@ -94,7 +94,7 @@ export const calculatePaymentEligibility = async (
   }
 
   // Check project progress vs payment using ProjectService
-  const projectService = new ProjectService();
+  const projectService = getProjectService();
   const project = await projectService.getProjectWithDetails(projectId);
 
   if (project) {
@@ -128,7 +128,7 @@ export const calculatePaymentEligibility = async (
   }
 
   // Check required documents using DocumentService
-  const documentService = new DocumentService();
+  const documentService = getDocumentService();
   const documents = await documentService.getProjectDocuments(projectId)
     .then(docs => docs.filter(doc => 
       ['contract'].includes(doc.document_type) && 
@@ -181,8 +181,8 @@ export const calculatePaymentMetrics = async (
   projectId?: string
 ): Promise<PaymentMetrics> => {
   // Use hexagonal services instead of direct Supabase access
-  const paymentService = new PaymentService();
-  const paymentBlockingService = new PaymentBlockingService();
+  const paymentService = getPaymentService();
+  const paymentBlockingService = getPaymentBlockingService();
 
   // Get payments via service
   let payments = [];

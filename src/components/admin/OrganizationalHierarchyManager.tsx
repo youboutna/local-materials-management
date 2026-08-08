@@ -231,9 +231,9 @@ const OrganizationalHierarchyManager: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const organizationService = new OrganizationService();
-      const hierarchyService = new OrganizationHierarchyService();
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const organizationService = getOrganizationService();
+      const hierarchyService = getOrganizationHierarchyService();
+      const projectService = getProjectService();
       const organization = await organizationService.upsert({
         name: template.name,
         code: 'DEFAULT_BTP',

@@ -13,7 +13,7 @@ export function useMaterialsForTakeoff() {
   return useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
-      const service = new MaterialService(RepositoryFactory.getMaterialRepository());
+      const service = getMaterialService();
       const materials = await service.getAllMaterials();
       return materials.map(m => ({
         id: m.id,
@@ -44,7 +44,7 @@ export function useCreateQuantityTakeoff(projectId: string) {
       milestone_id?: string;
       unit_price?: number;
     }) => {
-      const service = new QuantityTakeoffService();
+      const service = getQuantityTakeoffService();
       const allowed = new Set(['m³', 'm²', 'm', 'unité']);
       const unit = (allowed.has(data.unit) ? data.unit : 'unité') as 'm³' | 'm²' | 'm' | 'unité';
       await service.createQuantityTakeoff({

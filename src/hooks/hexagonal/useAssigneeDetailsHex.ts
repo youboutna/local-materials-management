@@ -21,7 +21,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   }
 
   const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
 
   // Try employees first
   const employeesResult = await employeeService.searchEmployees({});
@@ -47,7 +47,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
 
   // Try profiles (authenticated users) via UserService
   try {
-    const userService = new UserService(RepositoryFactory.getUserRepository());
+    const userService = getUserService();
     const profile = await userService.getUserById(assigneeId);
     if (profile) {
       return {

@@ -206,20 +206,20 @@ export class ProjectImportExportService {
 
   constructor(
     private readonly projectService: ProjectService,
-    private readonly phaseService = new PhaseService(),
-    private readonly milestoneService = new MilestoneService(),
-    private readonly taskAssignmentService = new TaskAssignmentService(),
-    private readonly stakeholderService = new ProjectStakeholderService(),
-    private readonly organizationService = new OrganizationService(),
-    private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
+    private readonly phaseService = getPhaseService(),
+    private readonly milestoneService = getMilestoneService(),
+    private readonly taskAssignmentService = getTaskAssignmentService(),
+    private readonly stakeholderService = getProjectStakeholderService(),
+    private readonly organizationService = getOrganizationService(),
+    private readonly supplierService = getSupplierService(),
     authService?: AuthService,
   ) {
-    this.authService = authService || new AuthService(RepositoryFactory.getAuthRepository());
+    this.authService = authService || getAuthService();
   }
 
   static default(): ProjectImportExportService {
     return new ProjectImportExportService(
-      new ProjectService(RepositoryFactory.getProjectRepository()),
+      getProjectService(),
     );
   }
 

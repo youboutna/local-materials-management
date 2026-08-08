@@ -90,7 +90,7 @@ const InsuranceManagementPage = () => {
 
   // Initialize service with useMemo to prevent re-creation
   const projectService = useMemo(() => 
-    new ProjectService(RepositoryFactory.getProjectRepository()), []);
+    getProjectService(), []);
 
   useEffect(() => {
     // Load a default project for monitoring with its hierarchy

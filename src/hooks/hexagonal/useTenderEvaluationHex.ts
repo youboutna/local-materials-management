@@ -25,7 +25,7 @@ export interface TenderSubmission {
 export function useTenderEvaluationHex(tenderId: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   // Fetch tender submissions
   const submissionsQuery = useQuery({

@@ -35,7 +35,7 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentRequestService = getPaymentRequestService();
 
   const createRequest = useCallback(async (input: PaymentRequestInput) => {
     setLoading(true);

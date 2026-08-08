@@ -142,11 +142,11 @@ export class ProjectManagementService {
   private managerService: ProjectManagerService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.analyticsService = new ProjectAnalyticsService();
+    this.projectService = getProjectService();
+    this.analyticsService = getProjectAnalyticsService();
     this.calculationService = ProjectCalculationService;
     this.workflowService = ProjectWorkflowService.default();
-    this.stakeholderService = new ProjectStakeholderService();
+    this.stakeholderService = getProjectStakeholderService();
     this.managerService = null as any; // Lazy init - requires project context
   }
 

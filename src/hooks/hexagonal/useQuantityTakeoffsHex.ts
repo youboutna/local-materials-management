@@ -6,7 +6,7 @@ export function useQuantityTakeoffsHex(projectId: string) {
   const queryClient = useQueryClient();
 
   // Quantity takeoff service instance (uses default repos from constructor)
-  const quantityTakeoffService = new QuantityTakeoffService();
+  const quantityTakeoffService = getQuantityTakeoffService();
 
   // Fetch quantity takeoffs
   const { data: quantityTakeoffs, isLoading } = useQuery({

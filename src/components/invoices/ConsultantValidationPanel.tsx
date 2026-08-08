@@ -62,7 +62,7 @@ export function ConsultantValidationPanel() {
   const { hasAnyRole, hasRole } = useCurrentUserRoles();
   
   // Initialize services
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
   const storageService = new StorageService(RepositoryFactory.getStorageRepository());
 
   // Check consultant permissions

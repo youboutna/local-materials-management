@@ -34,9 +34,9 @@ export function useProjectWithPaymentsHex(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return null;
 
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-      const inspectionService = new InspectionService();
-      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const projectService = getProjectService();
+      const inspectionService = getInspectionService();
+      const paymentService = getPaymentService();
 
       const [project, inspections, payments] = await Promise.all([
         projectService.findById(projectId),

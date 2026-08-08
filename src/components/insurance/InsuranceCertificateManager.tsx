@@ -61,7 +61,7 @@ const InsuranceCertificateManager = () => {
   const loadInsuranceData = async () => {
     try {
       setLoading(true);
-      const service = new InsuranceService();
+      const service = getInsuranceService();
       const expiringAlerts = await service.detectExpiringInsurance?.() || [];
       setAlerts(expiringAlerts);
     } catch (error) {
@@ -95,7 +95,7 @@ const InsuranceCertificateManager = () => {
 
   const onSubmit = async (values: z.infer<typeof insuranceFormSchema>) => {
     try {
-      const service = new InsuranceService();
+      const service = getInsuranceService();
       const certificate = await service.createInsuranceCertificate({
         ...values,
         insuranceType: values.coverageType,

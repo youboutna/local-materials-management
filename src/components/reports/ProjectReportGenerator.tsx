@@ -64,7 +64,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   });
 
   // Create ReportingService instance
-  const reportingServiceInstance = useMemo(() => new ReportingService(), []);
+  const reportingServiceInstance = useMemo(() => getReportingService(), []);
 
   // Generate report with profile + sections from referential.
   const generateCompleteReport = async (proj: any, profile: ReportProfile) => {

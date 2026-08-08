@@ -34,7 +34,7 @@ export interface PaymentControlActionsProps {
 
 export const usePaymentControlActionsHex = (props?: PaymentControlActionsProps) => {
   const queryClient = useQueryClient();
-  const paymentControlService = new PaymentControlActionsService();
+  const paymentControlService = getPaymentControlActionsService();
   
   // Default props if not provided
   const safeProps: PaymentControlActionsProps = props || {

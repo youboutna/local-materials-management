@@ -129,7 +129,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
     try {
       setSubmitting(true);
       const { QuantityTakeoffService } = await import('@/application/services/QuantityTakeoffService');
-      const service = new QuantityTakeoffService();
+      const service = getQuantityTakeoffService();
       await service.createQuantityTakeoff({
         project_id: projectId,
         material_id: formData.materialId,

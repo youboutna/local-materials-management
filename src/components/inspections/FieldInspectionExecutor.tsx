@@ -132,7 +132,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
     const loadData = async () => {
       if (inspection.status === 'in_progress') {
         try {
-          const service = new InspectionExecutionService();
+          const service = getInspectionExecutionService();
           // Try to load existing data
           setIsStarted(true);
         } catch (e) {
@@ -198,7 +198,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const service = new InspectionExecutionService();
+      const service = getInspectionExecutionService();
       const result = await service.completeInspection({
         inspectionId: inspection.id,
         finalData: {

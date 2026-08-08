@@ -24,7 +24,7 @@ export function useComplianceHex(projectId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   // Initialize service following hexagonal architecture with useMemo for performance
-  const complianceService = useMemo(() => new ComplianceService(RepositoryFactory.getComplianceRepository()), []);
+  const complianceService = useMemo(() => getComplianceService(), []);
 
   const fetchComplianceItems = useCallback(async () => {
     if (!projectId) return;

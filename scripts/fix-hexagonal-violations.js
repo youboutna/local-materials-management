@@ -246,7 +246,8 @@ class SmartHexAnalyzer {
       timestamp: new Date().toISOString(),
       stats: { filesScanned: 0, errors: 0, warnings: 0, fixed: 0, mocksRemoved: 0, duplicatesFound: 0, typesMoved: 0 },
       violations: [],
-      movedTypes: []
+      movedTypes: [],
+      duplicates: []
     };
     this.globalTypes = new Map();
     this.typeDeclarationsByName = new Map();
@@ -1224,15 +1225,29 @@ async function askConfirmation(q) {
 }
 
 const args = process.argv.slice(2);
+
+function getArgValue(flag) {
+  const exact = args.indexOf(flag);
+  if (exact !== -1) return args[exact + 1];
+  const prefixed = args.find(a => a.startsWith(`${flag}=`));
+  if (prefixed) return prefixed.slice(flag.length + 1);
+  return null;
+}
+
+const failOnValue = getArgValue('--fail-on');
+const ruleValue = getArgValue('--rule');
+
 const options = {
   fix: args.includes('--fix'),
   cleanMocks: args.includes('--clean-mocks'),
   dryRun: args.includes('--dry-run'),
   json: args.includes('--json'),
-  output: args.includes('--output') ? args[args.indexOf('--output') + 1] : null,
+  output: getArgValue('--output'),
   interactive: args.includes('--interactive'),
   moveTypes: args.includes('--move-types'),
-  tsCheck: args.includes('--ts-check')
+  tsCheck: args.includes('--ts-check'),
+  failOn: ['error', 'warning', 'none'].includes(failOnValue) ? failOnValue : 'none',
+  ruleFilter: ruleValue ? ruleValue.split(',').map(r => r.trim()).filter(Boolean) : null
 };
 
 (async () => {

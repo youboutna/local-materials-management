@@ -94,7 +94,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   // Singleton geocoding service injected via factory (hexagonal DI).
   const geocodingService = getGeocodingService();
 
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
 
   const {
     data: materials = [],
@@ -460,7 +460,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
 }
 
 export function useMaterialsByCategory(category: string) {
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
   return useQuery({
     queryKey: ['materials', 'category', category],
     queryFn: () => materialService.getMaterialsByCategory(category as MaterialCategory),
@@ -470,7 +470,7 @@ export function useMaterialsByCategory(category: string) {
 }
 
 export function useMaterialById(id: string) {
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
   return useQuery({
     queryKey: ['materials', 'id', id],
     queryFn: () => materialService.getMaterialById(id),
@@ -480,7 +480,7 @@ export function useMaterialById(id: string) {
 }
 
 export function useLowStockMaterials() {
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
   return useQuery({
     queryKey: ['materials', 'low-stock'],
     queryFn: () => materialService.getLowStockMaterials(),
@@ -489,7 +489,7 @@ export function useLowStockMaterials() {
 }
 
 export function useProjectMaterialsHex(projectId: string) {
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
   return useQuery({
     queryKey: ['project-materials', projectId],
     queryFn: () => materialService.getProjectMaterials(projectId),
@@ -500,7 +500,7 @@ export function useProjectMaterialsHex(projectId: string) {
 
 export function useAddMaterialToProjectHex() {
   const queryClient = useQueryClient();
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
 
   return useMutation({
     mutationFn: async ({ projectId, materialId, quantity }: { 
@@ -526,7 +526,7 @@ export function useMaterialHex(id: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
 
   const {
     data: material,

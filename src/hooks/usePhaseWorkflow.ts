@@ -108,7 +108,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
 
   // Initialize services
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-  const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+  const paymentService = getPaymentService();
   const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
 
   // Fetch inspections

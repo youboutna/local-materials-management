@@ -23,7 +23,7 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
 
   // Initialize service
   useEffect(() => {
-    realtimeServiceRef.current = new RealtimeService();
+    realtimeServiceRef.current = getRealtimeService();
 
     return () => {
       // Cleanup on unmount

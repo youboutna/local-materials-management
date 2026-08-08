@@ -43,7 +43,7 @@ export class WorkflowIntegrationTestService {
   private phaseService: PhaseService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
   }
 

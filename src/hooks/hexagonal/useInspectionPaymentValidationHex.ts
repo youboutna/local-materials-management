@@ -11,8 +11,8 @@ export function useInspectionPaymentValidationHex(inspectionId: string) {
 
   // Services instances with proper repository arguments
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const paymentRequestService = getPaymentRequestService();
+  const projectService = getProjectService();
 
   // Fetch inspection details with payment request
   const { data: inspection, isLoading: inspectionLoading } = useQuery({

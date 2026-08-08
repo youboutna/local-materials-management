@@ -104,7 +104,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   );
   
   const supplierService = useMemo(
-    () => new SupplierService(RepositoryFactory.getSupplierRepository()),
+    () => getSupplierService(),
     []
   );
 

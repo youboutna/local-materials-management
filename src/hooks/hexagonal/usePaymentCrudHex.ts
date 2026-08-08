@@ -18,7 +18,7 @@ export function usePaymentCrud() {
   const [loading, setLoading] = useState(true);
   
   const paymentService = useMemo(() => 
-    new PaymentService(RepositoryFactory.getPaymentRepository()), 
+    getPaymentService(), 
     []
   );
   const storageService = useMemo(() => 

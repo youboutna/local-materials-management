@@ -12,7 +12,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const getService = () =>
-  new ContactMessageService(RepositoryFactory.getContactMessageRepository());
+  getContactMessageService();
 
 const LIST_KEY = ['contact-messages'] as const;
 const STATS_KEY = ['contact-messages', 'stats'] as const;

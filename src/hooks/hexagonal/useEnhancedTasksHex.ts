@@ -91,7 +91,7 @@ export function useEnhancedTasksHex(projectId: string) {
   const taskAssignmentService = new TaskAssignmentService(
     RepositoryFactory.getTaskAssignmentRepository()
   );
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   // ===== QUERIES PRINCIPALES =====
   

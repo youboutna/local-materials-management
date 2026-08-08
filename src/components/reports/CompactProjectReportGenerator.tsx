@@ -76,7 +76,7 @@ export function CompactProjectReportGenerator({
   const isSingleProject = !projects && project;
 
   // Create service instance
-  const reportingService = useMemo(() => new ReportingService(), []);
+  const reportingService = useMemo(() => getReportingService(), []);
 
   useEffect(() => {
     const loadData = async () => {

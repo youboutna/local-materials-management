@@ -138,7 +138,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   });
 
   // Load stakeholders for the project
-  const stakeholderService = React.useMemo(() => new ProjectStakeholderService(), []);
+  const stakeholderService = React.useMemo(() => getProjectStakeholderService(), []);
   const { data: projectStakeholders } = useQuery({
     queryKey: ['project-stakeholders', projectId],
     queryFn: async () => {

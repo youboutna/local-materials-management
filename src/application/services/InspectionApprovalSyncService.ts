@@ -82,7 +82,7 @@ export class InspectionApprovalSyncService {
     private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository(),
     private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository()
   ) {
-    this.bankGuaranteeService = new BankGuaranteeService();
+    this.bankGuaranteeService = getBankGuaranteeService();
   }
 
   async synchronizeOnApproval(context: InspectionApprovalContext): Promise<SyncResult> {

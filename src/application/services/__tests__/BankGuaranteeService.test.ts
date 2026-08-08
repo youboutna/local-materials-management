@@ -17,7 +17,7 @@ describe('BankGuaranteeService', () => {
   
   beforeEach(() => {
     vi.spyOn(RepositoryFactory, 'getBankGuaranteeRepository').mockReturnValue(mockRepo as any);
-    service = new BankGuaranteeService();
+    service = getBankGuaranteeService();
   });
 
   describe('createBankGuarantee', () => {

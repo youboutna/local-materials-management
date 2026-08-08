@@ -44,7 +44,7 @@ export function useTaskAssignmentsHex(filters?: {
   const taskAssignmentService = new TaskAssignmentService(
     RepositoryFactory.getTaskAssignmentRepository()
   );
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   // ===== QUERIES =====
   
@@ -577,7 +577,7 @@ export function useTaskAssignmentHex(taskId: string | undefined) {
         throw new Error('Tâche non trouvée');
       }
 
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const user = await authService.getCurrentUser();
       const timestamp = new Date().toLocaleString('fr-FR');
       const userName = user?.full_name || user?.email || 'Utilisateur';
