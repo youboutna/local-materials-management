@@ -17,7 +17,7 @@
  *   - Option `--clean-mocks` ne touche pas aux TODO.
  *
  * Utilisation :
- *   node hex-analyzer.mjs [--fix] [--interactive] [--move-types] [--dry-run]
+ *   node fix-hexagonal-violations.js [--fix] [--interactive] [--move-types] [--dry-run]
  *                         [--json] [--output file] [--ts-check] [--clean-mocks]
  */
 
