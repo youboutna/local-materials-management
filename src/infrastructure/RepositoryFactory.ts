@@ -487,8 +487,9 @@ export class RepositoryFactory {
   }
 
   static getRiskTaskRelationRepository(): IRiskTaskRelationRepository {
-    if (registry.riskTaskRelation) return registry.riskTaskRelation;
-    registry.riskTaskRelation = new SupabaseRiskTaskRelationAdapter();
+    if (!registry.riskTaskRelation) {
+      registry.riskTaskRelation = new SupabaseRiskTaskRelationAdapter();
+    }
     return registry.riskTaskRelation;
   }
 

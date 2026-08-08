@@ -534,10 +534,35 @@ export class PerformanceMonitoringService {
   /**
    * Send event-driven performance alert notification
    */
+  /**
+   * Get the actual recipient (project manager / responsible) for a project
+   */
+  private async getProjectResponsibleId(projectId: string): Promise<string> {
+    try {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('project_responsable_id, technical_manager_id, supervisor_id, created_by')
+        .eq('id', projectId)
+        .single();
+
+      return (
+        project?.project_responsable_id ||
+        project?.technical_manager_id ||
+        project?.supervisor_id ||
+        project?.created_by ||
+        'system'
+      );
+    } catch (error) {
+      console.error('Failed to resolve project responsible for notification:', error);
+      return 'system';
+    }
+  }
+
   private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
     try {
+      const recipientId = await this.getProjectResponsibleId(alert.projectId);
       await this.notificationService.createNotification({
-        recipientId: 'system', // TODO: Get actual recipient based on project
+        recipientId,
         title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,
         message: alert.message,
         type: 'system',

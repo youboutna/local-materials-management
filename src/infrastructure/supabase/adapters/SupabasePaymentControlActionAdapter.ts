@@ -39,9 +39,8 @@ function mapRowToRecord(row: PaymentControlActionRow): PaymentControlActionRecor
 
 export class SupabasePaymentControlActionAdapter implements IPaymentControlActionRepository {
   async create(data: CreatePaymentControlActionRecord): Promise<PaymentControlActionRecord> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: row, error } = await supabase
-      .schema('btp')
       .from('payment_control_actions')
       .insert({
         payment_block_id: data.paymentBlockId,
@@ -60,9 +59,8 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
   }
 
   async findByBlockId(blockId: string): Promise<PaymentControlActionRecord[]> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: rows, error } = await supabase
-      .schema('btp')
       .from('payment_control_actions')
       .select('*')
       .eq('payment_block_id', blockId)
@@ -73,9 +71,8 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
   }
 
   async complete(id: string): Promise<PaymentControlActionRecord> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: row, error } = await supabase
-      .schema('btp')
       .from('payment_control_actions')
       .update({
         status: 'completed',

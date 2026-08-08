@@ -38,9 +38,8 @@ function mapRowToRecord(row: PaymentBlockRow): PaymentBlockRecord {
 
 export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   async create(data: CreatePaymentBlockRecord): Promise<PaymentBlockRecord> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: row, error } = await supabase
-      .schema('btp')
       .from('payment_blocks')
       .insert({
         project_id: data.projectId,
@@ -58,9 +57,8 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async findById(id: string): Promise<PaymentBlockRecord | null> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: row, error } = await supabase
-      .schema('btp')
       .from('payment_blocks')
       .select('*')
       .eq('id', id)
@@ -71,9 +69,8 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async findActiveByProjectAndContractor(projectId: string, contractorId: string): Promise<PaymentBlockRecord[]> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: rows, error } = await supabase
-      .schema('btp')
       .from('payment_blocks')
       .select('*')
       .eq('project_id', projectId)
@@ -86,9 +83,8 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   }
 
   async resolve(id: string, resolvedBy: string): Promise<PaymentBlockRecord> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data: row, error } = await supabase
-      .schema('btp')
       .from('payment_blocks')
       .update({
         resolved_at: new Date().toISOString(),

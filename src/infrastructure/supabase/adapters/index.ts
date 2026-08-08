@@ -13,6 +13,8 @@ export { SupabaseInspectionPaymentValidationAdapter } from './SupabaseInspection
 export { SupabaseLoadDataAdapter } from './SupabaseLoadDataAdapter';
 export { SupabaseMaterialAdapter } from './SupabaseMaterialAdapter';
 export { SupabasePaymentAdapter } from './SupabasePaymentAdapter';
+export { SupabasePaymentBlockAdapter } from './SupabasePaymentBlockAdapter';
+export { SupabasePaymentControlActionAdapter } from './SupabasePaymentControlActionAdapter';
 export { SupabasePhaseAdapter } from './SupabasePhaseAdapter';
 export { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
 export { SupabaseProjectFormAdapter } from './SupabaseProjectFormAdapter';
@@ -20,6 +22,7 @@ export { SupabaseQuantityTakeoffAdapter } from './SupabaseQuantityTakeoffAdapter
 export { SupabaseReportDataTransformerAdapter } from './SupabaseReportDataTransformerAdapter';
 export { SupabaseReportingAdapter } from './SupabaseReportingAdapter';
 export { SupabaseRiskAdapter } from './SupabaseRiskAdapter';
+export { SupabaseRiskTaskRelationAdapter } from './SupabaseRiskTaskRelationAdapter';
 export { SupabaseSupplierAdapter } from './SupabaseSupplierAdapter';
 export { SupabaseTenderAdapter } from './SupabaseTenderAdapter';
 
