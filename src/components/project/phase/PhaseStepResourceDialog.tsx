@@ -123,7 +123,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
     if (!empId || !empRole) return;
     try {
       await phaseEmployees.addEmployee({
-        employee_name: empId, // placeholder hook stores text — see usePhaseEmployeesHex
+        employee_name: empId,
         employee_role: empRole,
         daily_rate: dailyRate,
         start_date: startDate || undefined,
