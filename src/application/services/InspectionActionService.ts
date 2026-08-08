@@ -76,7 +76,7 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
-      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'inspection',

@@ -76,7 +76,7 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour garantie bancaire ${action.bankGuaranteeId}`,
-      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'bank_guarantee',

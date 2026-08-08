@@ -300,7 +300,7 @@ export class PaymentControlService {
       message: `Your payment of ${payment.amount} EUR has been blocked. Reason: ${reason}`,
       type: 'error',
       read: false,
-      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       priority: 'high'
     };
     
@@ -319,7 +319,7 @@ export class PaymentControlService {
       message: `Your payment of ${payment.amount} EUR has been approved${notes ? `. Notes: ${notes}` : ''}`,
       type: 'success',
       read: false,
-      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       priority: 'medium'
     };
     

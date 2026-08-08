@@ -9,8 +9,9 @@ export type {
   DocumentFacetDef,
   UploadInput,
   DocumentHubContract,
-  PreviewKind,
 } from '@/dtos/entities/DocumentHubDTO';
+import type { PreviewKind } from '@/dtos/entities/DocumentHubDTO';
+export type { PreviewKind };
 
 export function getPreviewKind(mime: string | null | undefined): PreviewKind {
   if (!mime) return 'unknown';

@@ -75,7 +75,7 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
       type: 'system',
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour assurance ${action.insuranceId}`,
-      recipientId: '00000000-0000-0000-0000-000000000000', // System notification
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       metadata: {
         actionType: action.actionType,
         entityType: 'insurance',
