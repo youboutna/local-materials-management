@@ -160,7 +160,7 @@ import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRe
 import { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
+import { StorageProviderToRepositoryAdapter } from '@/infrastructure/storage/StorageProviderToRepositoryAdapter';
 import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
 import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
 // ================================================================

@@ -413,11 +413,11 @@ export class DocumentValidationService {
   ): Promise<void> {
     try {
       await this.notificationService.createNotification({
-        recipientId: 'system',
+        recipient_id: 'system',
         title: 'Échec de validation de document',
         message: `Le document ${request.documentId} a échoué la validation avec ${result.errors.length} erreur(s)`,
         type: 'warning',
-        relatedId: request.submissionId,
+        related_id: request.submissionId,
         metadata: {
           documentId: request.documentId,
           submissionId: request.submissionId,
@@ -444,11 +444,11 @@ export class DocumentValidationService {
 
       if (invalidDocuments > 0) {
         await this.notificationService.createNotification({
-          recipientId: 'system',
+          recipient_id: 'system',
           title: 'Résumé de validation de documents',
           message: `${validDocuments}/${totalDocuments} documents validés avec succès. ${invalidDocuments} document(s) ont échoué.`,
           type: 'info',
-          relatedId: requests[0]?.submissionId,
+          related_id: requests[0]?.submissionId,
           metadata: {
             totalDocuments: totalDocuments,
             validDocuments: validDocuments,

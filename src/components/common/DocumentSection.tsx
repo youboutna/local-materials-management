@@ -282,7 +282,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                   ...selectedDocument,
                   description: selectedDocument.description || '',
                   mime_type: selectedDocument.mimeType || undefined
-                }} 
+                } as never} 
               />
             </div>
           </TabsContent>

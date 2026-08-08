@@ -2,6 +2,7 @@
  * Hexagonal hook for unified supplier portal
  * Simplified to avoid service method mismatches
  */
+import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { DocumentService } from '@/application/services/DocumentService';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { StorageService } from '@/application/services/StorageService';
@@ -166,7 +167,7 @@ export const useSupplierDocumentUploadHex = () => {
         title: data.title,
         description: data.description,
         fileUrl: data.fileUrl,
-        documentType: data.documentType,
+        documentType: data.documentType as CreateDocumentDTO['documentType'],
         supplierId: data.supplierId,
       });
       return { success: true, id: `doc-${Date.now()}` };

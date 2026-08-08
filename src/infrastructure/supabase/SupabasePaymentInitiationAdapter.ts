@@ -6,7 +6,7 @@ import {
     PaymentInitiationNotificationDTO,
     SupplierCompletionDTO,
     SupplierInfoDTO
-} from '@/dtos/workflows/paymentInitiationDTO';
+} from '@/dtos/entities/PaymentInitiationDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepository {

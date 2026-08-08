@@ -12,12 +12,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentInitiationService } from '@/application/services/PaymentInitiationService';
-import { 
-  PaymentInitiationNotification, 
-  STATUS_LABELS,
+import { STATUS_LABELS } from '@/dtos/types/paymentInitiation';
+import {
+  PaymentInitiationNotificationDTO as PaymentInitiationNotification,
   ROLE_LABELS,
   InitiatorRole
-} from '@/dtos/types/paymentInitiation';
+} from '@/dtos/entities/PaymentInitiationDTO';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
@@ -57,7 +57,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
   const fetchInitiations = async () => {
     setLoading(true);
     try {
-      const data = await PaymentInitiationService.getPendingInitiations(supplierId);
+      const data = await PaymentInitiationService.getInstance().getPendingInitiations(supplierId);
       setInitiations(data);
     } catch (error) {
       console.error('Error fetching initiations:', error);
@@ -68,7 +68,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
   const openCompletionDialog = (initiation: PaymentInitiationNotification) => {
     setSelectedInitiation(initiation);
-    setFinalAmount(initiation.estimated_amount.toString());
+    setFinalAmount(initiation.estimatedAmount.toString());
     setDescription('');
     setPaymentReason('progress_payment');
     setNotes('');
@@ -79,7 +79,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
     if (!selectedInitiation) return;
 
     const numAmount = parseFloat(finalAmount);
-    const maxAmount = selectedInitiation.estimated_amount * 1.1;
+    const maxAmount = selectedInitiation.estimatedAmount * 1.1;
 
     if (numAmount > maxAmount) {
       toast({
@@ -97,7 +97,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
     setSubmitting(true);
     try {
-      await PaymentInitiationService.handleSupplierCompletion({
+      await PaymentInitiationService.getInstance().handleSupplierCompletion({
         notification_id: selectedInitiation.id,
         final_amount: numAmount,
         description,
@@ -129,10 +129,10 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
   };
 
   const pendingInitiations = initiations.filter(i => 
-    i.status === 'supplier_notified' || i.status === 'ready_for_supplier'
+    i.status === 'ready_for_supplier'
   );
   const completedInitiations = initiations.filter(i => 
-    i.status !== 'supplier_notified' && i.status !== 'ready_for_supplier'
+    i.status !== 'ready_for_supplier'
   );
 
   if (loading) {
@@ -220,15 +220,15 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Projet</span>
-                    <span className="font-medium">{selectedInitiation.project_title || 'N/A'}</span>
+                    <span className="font-medium">{selectedInitiation.projectTitle || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Montant estimé</span>
-                    <span className="font-medium text-primary">{selectedInitiation.estimated_amount.toLocaleString()} MRU</span>
+                    <span className="font-medium text-primary">{selectedInitiation.estimatedAmount.toLocaleString()} MRU</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Montant max (+10%)</span>
-                    <span className="text-sm">{(selectedInitiation.estimated_amount * 1.1).toLocaleString()} MRU</span>
+                    <span className="text-sm">{(selectedInitiation.estimatedAmount * 1.1).toLocaleString()} MRU</span>
                   </div>
                 </CardContent>
               </Card>
@@ -278,12 +278,12 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                 />
               </div>
 
-              {selectedInitiation.supplier_deadline && (
-                <Alert className={isPast(new Date(selectedInitiation.supplier_deadline)) ? 'border-red-500 bg-red-50' : 'border-orange-200 bg-orange-50'}>
+              {selectedInitiation.supplierDeadline && (
+                <Alert className={isPast(new Date(selectedInitiation.supplierDeadline)) ? 'border-red-500 bg-red-50' : 'border-orange-200 bg-orange-50'}>
                   <Clock className="h-4 w-4" />
                   <AlertDescription>
-                    Date limite: {format(new Date(selectedInitiation.supplier_deadline), 'PPP', { locale: fr })}
-                    {isPast(new Date(selectedInitiation.supplier_deadline)) && (
+                    Date limite: {format(new Date(selectedInitiation.supplierDeadline), 'PPP', { locale: fr })}
+                    {isPast(new Date(selectedInitiation.supplierDeadline)) && (
                       <span className="text-red-600 font-medium ml-2">(Délai dépassé!)</span>
                     )}
                   </AlertDescription>
@@ -315,11 +315,11 @@ interface InitiationCardProps {
 }
 
 const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete, showCompleteButton }) => {
-  const isExpiring = initiation.supplier_deadline && 
-    !isPast(new Date(initiation.supplier_deadline)) &&
-    new Date(initiation.supplier_deadline).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+  const isExpiring = initiation.supplierDeadline && 
+    !isPast(new Date(initiation.supplierDeadline)) &&
+    new Date(initiation.supplierDeadline).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
 
-  const isExpired = initiation.supplier_deadline && isPast(new Date(initiation.supplier_deadline));
+  const isExpired = initiation.supplierDeadline && isPast(new Date(initiation.supplierDeadline));
 
   return (
     <Card className={`border-l-4 ${isExpired ? 'border-l-red-500' : isExpiring ? 'border-l-orange-500' : 'border-l-blue-500'}`}>
@@ -328,20 +328,20 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Building className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{initiation.project_title || 'Projet'}</span>
-              {initiation.phase_title && (
-                <span className="text-sm text-muted-foreground">• {initiation.phase_title}</span>
+              <span className="font-medium">{initiation.projectTitle || 'Projet'}</span>
+              {initiation.phaseId && (
+                <span className="text-sm text-muted-foreground">• {initiation.phaseId}</span>
               )}
             </div>
             
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
               <span className="flex items-center gap-1">
                 <DollarSign className="h-3 w-3" />
-                {initiation.estimated_amount.toLocaleString()} MRU
+                {initiation.estimatedAmount.toLocaleString()} MRU
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {format(new Date(initiation.created_at), 'dd/MM/yyyy')}
+                {format(new Date(initiation.createdAt), 'dd/MM/yyyy')}
               </span>
             </div>
 
@@ -349,14 +349,14 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
 
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
-                {ROLE_LABELS[initiation.initiator_role as InitiatorRole]}
+                {ROLE_LABELS[initiation.initiatorRole as InitiatorRole]}
               </Badge>
-              {initiation.supplier_deadline && (
+              {initiation.supplierDeadline && (
                 <span className={`text-xs ${isExpired ? 'text-red-600' : isExpiring ? 'text-orange-600' : 'text-muted-foreground'}`}>
                   <Clock className="h-3 w-3 inline mr-1" />
                   {isExpired 
                     ? 'Délai dépassé' 
-                    : `Expire ${formatDistanceToNow(new Date(initiation.supplier_deadline), { locale: fr, addSuffix: true })}`
+                    : `Expire ${formatDistanceToNow(new Date(initiation.supplierDeadline), { locale: fr, addSuffix: true })}`
                   }
                 </span>
               )}
