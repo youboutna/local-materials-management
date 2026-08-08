@@ -241,7 +241,7 @@ const KEYWORD_DOMAIN_HINTS = [
 // ==========================================
 class SmartHexAnalyzer {
   constructor(options = {}) {
-    this.options = { fix: false, cleanMocks: false, dryRun: false, json: false, output: null, moveTypes: false, tsCheck: false, ...options };
+    this.options = { fix: false, cleanMocks: false, dryRun: false, json: false, output: null, moveTypes: false, tsCheck: false, ruleFilter: null, failOn: 'none', ...options };
     this.report = {
       timestamp: new Date().toISOString(),
       stats: { filesScanned: 0, errors: 0, warnings: 0, fixed: 0, mocksRemoved: 0, duplicatesFound: 0, typesMoved: 0 },
@@ -249,6 +249,7 @@ class SmartHexAnalyzer {
       movedTypes: []
     };
     this.globalTypes = new Map();
+    this.typeDeclarationsByName = new Map();
     this.typesToMove = [];                // types à déplacer depuis des fichiers hors DTO
     this.dtoTypesToReconcile = [];       // types mal placés dans des DTO existants
     this.fileContentsCache = new Map();
