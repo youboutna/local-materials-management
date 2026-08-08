@@ -14,7 +14,7 @@
  * - ✅ Séparation UI / Logique métier
  */
 
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService } from '@/application/services/DocumentService';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,9 +52,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
   // ============================================================================
 
   // ✅ Injection du service via props ou création avec RepositoryFactory
-  const documentService = injectedDocumentService || new DocumentService(
-    RepositoryFactory.getDocumentRepository()
-  );
+  const documentService = injectedDocumentService || getDocumentService();
 
   // ============================================================================
   // STATE

@@ -10,7 +10,7 @@ import {
   FileText, Download, Send, CheckCircle, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PVGeneratorService } from '@/application/services/PVGeneratorService';
+import { getPVGeneratorService } from '@/application/services/PVGeneratorService';
 import type { GeneratedPV, PVType } from '@/dtos/workflows/InspectionExecutionDTO';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -64,7 +64,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const pvService = new PVGeneratorService();
+      const pvService = getPVGeneratorService();
       const result = await pvService.generatePV({ inspectionId: inspection.id, pvType });
       if (result.success && result.pv) {
         setGeneratedPV(result.pv);

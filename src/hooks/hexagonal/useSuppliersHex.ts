@@ -3,7 +3,6 @@
  */
 
 import { getSupplierService } from "@/application/services/SupplierService";
-import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

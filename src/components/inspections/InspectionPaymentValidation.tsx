@@ -1,5 +1,5 @@
 import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { SupplierPaymentService, getSupplierPaymentService} from '@/application/services/SupplierPaymentService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -194,7 +194,7 @@ const InspectionPaymentValidation: React.FC = () => {
           engineer_fees: 'honoraires ingénieur conseil'
         };
 
-        const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+        const notificationService = getNotificationService();
         
         await notificationService.createNotification({
           recipientId: beneficiaryUserId,

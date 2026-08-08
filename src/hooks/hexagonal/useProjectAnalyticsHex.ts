@@ -4,7 +4,6 @@
 
 import { getProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
 export interface ProjectAnalyticsError extends Error {
