@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { ProjectService } from '@/application/services/ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
 import type { CreateProjectDTO, ProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,8 +35,7 @@ export function useProjects(): UseProjectsHexResult {
   const queryClient = useQueryClient();
   
   // Initialize repository and service following hexagonal architecture
-  const projectRepository = RepositoryFactory.getProjectRepository();
-  const projectService = new ProjectService(projectRepository);
+  const projectService = getProjectService();
 
   const {
     data: projects = [],
@@ -143,8 +142,7 @@ export function useProjects(): UseProjectsHexResult {
 
 export function useProjectById(id: string) {
   // Initialize repository and service following hexagonal architecture
-  const projectRepository = RepositoryFactory.getProjectRepository();
-  const projectService = new ProjectService(projectRepository);
+  const projectService = getProjectService();
 
   return useQuery({
     queryKey: ['projects', 'id', id],
@@ -169,8 +167,7 @@ export function useProjectById(id: string) {
 
 export function useProjectsByStatus(status: string) {
   // Initialize repository and service following hexagonal architecture
-  const projectRepository = RepositoryFactory.getProjectRepository();
-  const projectService = new ProjectService(projectRepository);
+  const projectService = getProjectService();
 
   return useQuery({
     queryKey: ['projects', 'status', status],

@@ -2,7 +2,7 @@
  * Hexagonal Hook for Project Analytics
  */
 
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
+import { getProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
@@ -31,9 +31,7 @@ export interface UseProjectAnalyticsResult {
 }
 
 export function useProjectAnalytics(projectId: string | null, projectDetail: ProjectDetailDTO | null): UseProjectAnalyticsResult {
-  const analyticsService = new ProjectAnalyticsService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const analyticsService = getProjectAnalyticsService();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["project-analytics", projectId],
@@ -64,9 +62,7 @@ export function useProjectAnalytics(projectId: string | null, projectDetail: Pro
 }
 
 export function useProjectKPIs(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
-  const analyticsService = new ProjectAnalyticsService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const analyticsService = getProjectAnalyticsService();
 
   return useQuery({
     queryKey: ["project-kpis", projectId],
@@ -80,9 +76,7 @@ export function useProjectKPIs(projectId: string | null, projectDetail: ProjectD
 }
 
 export function useProjectCompliance(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
-  const analyticsService = new ProjectAnalyticsService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const analyticsService = getProjectAnalyticsService();
 
   return useQuery({
     queryKey: ["project-compliance", projectId],
