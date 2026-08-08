@@ -3,7 +3,7 @@
  * avec e-signature (dessin/upload) + téléchargement + envoi email.
  *
  * Réutilise DevisPDFDocument (@react-pdf/renderer) et l'edge function
- * send-email-notification. N'accède jamais à supabase.from() directement.
+ * send-email-notification. N'accède jamais directement aux tables Supabase.
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { pdf } from '@react-pdf/renderer';

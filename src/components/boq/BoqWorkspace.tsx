@@ -11,7 +11,7 @@
  *   • Récap fiscal HT / TVA / RAS / TTC via BoqCalculatorService
  *   • Alignement planification via TenderToPlanningService (mode planning/bid)
  *
- * N'accède jamais à supabase.from() directement. Toute écriture passe par
+ * N'accède jamais directement aux tables Supabase. Toute écriture passe par
  * useBoqDocument (hexagonal).
  */
 import React, { useMemo, useState, useEffect } from 'react';

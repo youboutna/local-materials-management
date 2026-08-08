@@ -2,7 +2,7 @@
  * WorkflowInspection
  * ------------------
  * Composant d'inspection workflow conforme à l'architecture hexagonale.
- * Aucun import legacy, aucun `supabase.from(...)`. Toutes les données
+ * Aucun import legacy, aucun accès direct aux tables Supabase. Toutes les données
  * proviennent du DTO `ProjectWithPaymentsDTO` et des hooks hexagonaux.
  *
  * Round-trip: UI → DTO (camelCase) → Service → Adapter → DB (snake_case).

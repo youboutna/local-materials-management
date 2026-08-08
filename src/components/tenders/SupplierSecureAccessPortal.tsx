@@ -1,7 +1,7 @@
 /**
  * SupplierSecureAccessPortal
  * Thin wrapper around <SecretCodeAccessGate /> for supplier document access.
- * No direct supabase.from() — all data goes through TenderService /
+ * No direct Supabase table access — all data goes through TenderService /
  * TenderSharingService.
  */
 
