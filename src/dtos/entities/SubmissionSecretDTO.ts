@@ -3,20 +3,6 @@
  * Centralized for hexagonal architecture
  */
 
-export interface SubmissionSecretDTO {
-  id: string;
-  submissionId: string;
-  secretCode: string;
-  expiresAt?: string;
-  isActive: boolean;
-  accessCount: number;
-  maxAccess: number;
-  createdAt: string;
-  updatedAt: string;
-  evaluationPhase?: string;
-  evaluationStage?: string;
-}
-
 export interface GenerateSubmissionSecretRequestDTO {
   submissionId: string;
   maxAccess?: number;
@@ -31,12 +17,7 @@ export interface GetSubmissionSecretsRequestDTO {
   submissionId: string;
 }
 
-export interface DeactivateSecretRequestDTO {
-  secretId: string;
-}
-
-export interface DeleteSubmissionSecretRequestDTO {
-  secretId: string;
+export interfId: string;
 }
 
 export interface RegenerateSecretRequestDTO {
@@ -44,7 +25,4 @@ export interface RegenerateSecretRequestDTO {
   submissionId: string;
 }
 
-export interface SecretValidationResultDTO {
-  valid: boolean;
-  reason?: string;
-}
+export interface

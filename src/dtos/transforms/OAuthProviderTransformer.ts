@@ -10,11 +10,7 @@ import {
   OAuthSessionCreateData,
   OAuthSessionUpdateData
 } from "@/domain/repositories/IOAuthProviderRepository";
-import {
-  OAuthProviderDTO,
-  OAuthProviderResponse,
-  OAuthSessionDTO
-} from "@/dtos/entities/OAuthProviderDTO";
+import { OAuthProviderDTO } from '@/dtos/entities/AuthDTO';;
 import { Json } from "@/integrations/supabase/types";
 
 // =============================================================================

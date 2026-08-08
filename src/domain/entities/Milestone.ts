@@ -8,7 +8,7 @@ import {
   DEFAULT_PROJECT_MILESTONES,
   getMilestoneTemplatesWithDefaults
 } from '@/config/referentials/milestones.referential';
-import { MilestonePriority, MilestoneTemplateDTO, MilestoneType } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneTemplateDTO } from '@/dtos/entities/ActionDTO';;
 
 export type MilestoneStatus = 
   | 'pending' 

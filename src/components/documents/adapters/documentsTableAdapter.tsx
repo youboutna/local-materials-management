@@ -5,6 +5,7 @@
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { DocumentsTableAdapterOptions } from '@/dtos/entities/DocumentDTO';
 import {
   DocumentFacetDef,
   DocumentFacetOption,
@@ -21,33 +22,12 @@ export type DocumentsTableFilter =
   | { column: 'document_type'; value: string }
   | { column: 'metadata_material_id'; value: string };
 
-export interface DocumentsTableAdapterOptions {
-  scopeLabel: string;
-  queryKey: unknown[];
-  filters: DocumentsTableFilter[];
-  /** Bucket name used when uploading through this adapter (defaults to 'documents'). */
-  bucket?: string;
-  /** File path prefix inside the bucket. */
-  pathPrefix?: string;
-  /** Categories offered in the upload dialog. */
-  uploadCategoryOptions?: DocumentFacetOption[];
-  /** Facets shown in the sidebar. */
-  facets?: DocumentFacetDef[];
-  categoryLabels?: Record<string, string>;
-  /** Extra columns merged into every INSERT (e.g. project_id: xxx). */
-  insertDefaults?: Record<string, unknown>;
-  /** Optional secondary facet extractor to enrich each item (e.g. lot, phase name). */
-  itemFacetBuilder?: (row: any) => Record<string, string | null>;
-  /** Preview strategy — 'proxy' hides the underlying storage URL. */
-  previewMode?: 'direct' | 'proxy';
-}
-
 function normalizeStr(v: unknown): string | null {
   if (v === null || v === undefined) return null;
   return String(v);
 }
 
-export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): DocumentHubContract {
+export function useDocumentsTableAdapterHex(opts: DocumentsTableAdapterOptions): DocumentHubContract {
   const qc = useQueryClient();
   const {
     scopeLabel,

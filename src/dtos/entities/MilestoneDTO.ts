@@ -31,30 +31,7 @@ export type MilestonePriority = 'critical' | 'high' | 'normal' | 'low';
  * Milestone template in a referential (used for auto-generation)
  * Aligned with Waterfall phase-gate methodology
  */
-export interface MilestoneTemplateDTO {
-  id: string;
-  name: string;
-  description?: string;
-  /** Relative offset in days from phase start */
-  relative_offset_days: number;
-  /** Weight for progress calculation (0.1 - 1.0) */
-  weight: number;
-  /** If true, this milestone is critical for phase completion (CPM) */
-  is_critical: boolean;
-  /** Type of milestone according to PM standards */
-  type: MilestoneType;
-  /** Priority level for scheduling */
-  priority: MilestonePriority;
-  /** Tags/categories for filtering */
-  tags?: string[];
-  /** Predecessor milestone IDs (for PERT/CPM dependency tracking) */
-  predecessor_ids?: string[];
-  /** Deliverables expected at this milestone */
-  deliverables?: string[];
-  /** Approval requirements for gate milestones */
-  approval_requirements?: string[];
-  requiresInspection?: true;
-}
+
 
 /**
  * Milestone instance attached to a phase
@@ -98,7 +75,7 @@ export interface MilestoneDTO {
   /** Deliverables list */
   deliverables?: string[];
   /** Approval status for gate milestones */
-  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
+  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'notApplicable';
   /** Approved by user ID */
   approvedBy?: string;
   /** Approval date */
@@ -146,12 +123,7 @@ export interface MilestoneFormDTO {
   description?: string;
   targetDate: string;
   type: MilestoneType;
-  priority: MilestonePriority;
-  weight: number;
-  notes?: string;
-  phaseId?: string;
-  deliverables?: string[];
-  dependencies?: string[];
+  prioritying[];
 }
 
 /**
@@ -165,12 +137,12 @@ export interface MilestoneProgressDTO {
   /** Weighted progress (0-100) */
   weightedProgress: number;
   /** Schedule Performance Index (SPI) = Earned Value / Planned Value */
-  schedulePerformance_index?: number;
+  schedulePerformanceIndex?: number;
   /** Critical path status */
   criticalPath_status: 'on_track' | 'at_risk' | 'delayed';
   /** Days of float remaining on critical path */
   criticalPathFloat_days?: number;
-  next_milestone?: MilestoneSummaryDTO;
+  nextMilestone?: MilestoneSummaryDTO;
   overdueMilestones: MilestoneSummaryDTO[];
   /** Upcoming milestones in next 14 days */
   upcomingMilestones: MilestoneSummaryDTO[];
@@ -214,19 +186,7 @@ export interface CriticalPathDTO {
 /**
  * Milestone role in phase gate methodology
  */
-export const MILESTONE_TYPES: Record<MilestoneType, { label: string; description: string; icon: string }> = {
-  gate: {
-    label: 'Point de décision',
-    description: 'Revue de phase nécessitant une approbation formelle pour continuer',
-    icon: 'ShieldCheck'
-  },
-  deliverable: {
-    label: 'Livrable',
-    description: 'Achèvement d\'un livrable tangible du projet',
-    icon: 'Package'
-  },
-  checkpoint: {
-    label: 'Point de contrôle',
+export const MILESTONE_TYPES: Record<MilestoneTyp: 'Point de contrôle',
     description: 'Vérification de l\'avancement sans approbation formelle',
     icon: 'CheckSquare'
   },
@@ -241,21 +201,7 @@ export const MILESTONE_TYPES: Record<MilestoneType, { label: string; description
  * Priority labels and colors
  */
 export const MILESTONE_PRIORITIES: Record<MilestonePriority, { label: string; color: string }> = {
-  critical: { label: 'Critique', color: 'destructive' },
-  high: { label: 'Haute', color: 'warning' },
-  normal: { label: 'Normale', color: 'default' },
-  low: { label: 'Basse', color: 'secondary' }
-};
-
-/**
- * Generated Milestone DTO
- * Used for milestone generation from templates
- */
-export interface GeneratedMilestoneDTO {
-  title: string;
-  description?: string;
-  targetDate: string;
-  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';
+  critical: { labent';
   priority: 'critical' | 'high' | 'normal' | 'low';
   weight: number;
   deliverables?: string[];
@@ -265,4 +211,171 @@ export interface GeneratedMilestoneDTO {
   inspectionType?: string;
   templateId?: string;
   phaseCode?: string;
+}
+// Moved from src/components/project/StepDashboard.tsx
+export type MilestoneSummary = {
+  id?: string;
+  name?: string;
+  dueDate?: string;
+}
+
+// Moved from src/components/project/hierarchy/PhaseWithDirectMilestonesView.tsx
+export interface Milestone {
+  id: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  type?: MilestoneType | string;
+  status: string;
+  dueDate?: string;
+  completionDate?: string;
+  documents?: unknown[];
+}
+
+// Moved from src/components/project/hierarchy/StepNode.tsx
+export interface Milestone {
+  id: string;
+  title?: string;
+  name?: string;
+  type?: string;
+  status: string;
+  dueDate?: string;
+  completionDate?: string;
+}
+
+// Moved from src/hooks/hexagonal/useMilestonesHex.ts
+export interface Milestone {
+  id: string;
+  projectId: string;
+  phaseId?: string;
+  title: string;
+  description?: string;
+  targetDate: string;
+  completionDate?: string;
+  status: 'pending' | 'inProgress' | 'completed' | 'delayed';
+  weight: number;
+  notes?: string;
+}
+
+// Moved from src/application/services/MilestoneService.ts
+export interface CreateMilestoneRequestDto {
+  projectId: string;
+  phaseId?: string;
+  title: string;
+  description?: string;
+  targetDate: string;
+  status?: 'pending' | 'inProgress' | 'completed' | 'delayed' | 'cancelled';
+  progress?: number;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  deliverables?: string[];
+  dependencies?: string[];
+  assignedTo?: string;
+  budget?: number;
+  actualCost?: number;
+  type?: MilestoneType;
+  weight?: number;
+  notes?: string;
+  stageType?: string;
+  materialUsage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
+}
+
+// Moved from src/application/services/MilestoneService.ts
+export interface UpdateMilestoneRequestDto {
+  title?: string;
+  description?: string;
+  targetDate?: string;
+  actual_completion_date?: string;
+  status?: 'pending' | 'inProgress' | 'completed' | 'delayed' | 'cancelled';
+  progress?: number;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  deliverables?: string[];
+  dependencies?: string[];
+  assignedTo?: string;
+  budget?: number;
+  actualCost?: number;
+  type?: MilestoneType;
+  weight?: number;
+  notes?: string;
+  stageType?: string;
+  materialUsage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
+}
+
+// Moved from src/application/services/MilestoneService.ts
+export interface MilestoneStatsDto {
+  total: number;
+  completed: number;
+  inProgress: number;
+  pending: number;
+  delayed: number;
+  cancelled: number;
+  completionRate: number;
+  on_time_completion_rate: number;
+  averageProgress: number;
+}
+
+// Moved from src/hooks/useProjectCheckpoints.ts
+export interface ProjectCheckpoint {
+  id: string;
+  phaseId: string;
+  phaseName?: string;
+  phaseName?: string;
+  estimatedCost?: number;
+  estimatedCost?: number;
+  status: 'pending' | 'completed';
+  progress: number;
+  documents: {
+    id: string;
+    type: string;
+    url: string;
+  }[];
+}
+
+// Moved from src/hooks/useProjectCheckpoints.ts
+export interface ProjectMilestone {
+  id: string;
+  phaseId: string | null;
+  status: string;
+  [key: string]: any;
+}
+
+// Moved from src/hooks/useCheckpointVerification.ts
+export interface SimpleCheckpoint {
+  id: string;
+  title: string;
+  status: string;
+  triggerProgress: number;
+  verificationScore: number;
+  phaseId: string | null;
+}
+
+// Moved from src/application/services/ProjectImportExportService.ts
+export interface ProjectImportMilestone {
+  externalRef?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  targetDate?: string;
+  targetDate?: string;
+  status?: string;
+  progress?: number;
+  progressPercent?: number;
+  completionDate?: string;
+  completionDate?: string;
+}
+
+// Moved from src/application/services/WorkflowOrchestrator.ts
+export interface CheckpointDTO {
+  id: string;
+  phaseId: string;
+  milestoneId: string;
+  status: 'pending' | 'inProgress' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  documents?: string[];
+  projectId: string;
 }

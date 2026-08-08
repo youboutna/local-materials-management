@@ -3,67 +3,27 @@
  * Centralized interfaces for TenderService
  */
 
-export interface TenderOption {
-  id: string;
-  title: string;
-  reference: string;
-  project_id: string;
-  status?: string;
-}
-
 export interface SearchTendersOptions {
   projectId?: string;
   limit?: number;
 }
 
 export interface GetProjectTendersRequestDto {
-  projectId?: string;
-  limit?: number;
-}
-
-export interface GetTenderByIdRequestDto {
+  protDto {
   id: string;
 }
 
 export interface CreateTenderDocumentRequestDto {
-  data: any; // CreateTenderDocumentDTO
-}
-
-export interface TenderSharingSecretDTO {
-  id: string;
+  data: a string;
   tender_id: string;
   secret_code: string;
   supplier_email: string;
-  supplier_id: string;
-  expires_at: string;
-  max_access_count: number;
+  supplier_t: number;
   current_access_count?: number;
-  workflow_phase?: string;
-  workflow_stage?: string;
-  allowed_document_ids?: string[];
-  metadata?: Record<string, unknown>;
+  workflow_phase: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
-  is_active?: boolean;
-}
-
-export interface CreateSharingSecretDTO {
-  tender_id: string;
-  supplier_email: string;
-  supplier_id?: string;
-  expires_at: string;
-  max_access_count?: number;
-  workflow_phase?: string;
-  workflow_stage?: string;
-  allowed_document_ids?: string[];
-  metadata?: Record<string, unknown>;
-}
-
-export interface CreateAccessLogDTO {
-  secret_id: string;
-  accessed_at: string;
-  ip_address: string;
-  user_agent: string;
+  is_active?: booleang;
 }
 
 export interface ValidateSecretResponseDTO {

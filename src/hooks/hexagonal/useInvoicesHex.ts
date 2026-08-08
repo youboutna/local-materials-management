@@ -4,7 +4,7 @@
  */
 
 import { InvoiceService } from '@/application/services/InvoiceService';
-import { CreateInvoiceDTO, InvoiceStatisticsDTO, ParsedInvoiceDTO, UpdateInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
+import { CreateInvoiceDTO } from '@/dtos/entities/PaymentDTO';;
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

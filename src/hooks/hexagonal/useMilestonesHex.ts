@@ -6,19 +6,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
-export interface Milestone {
-  id: string;
-  projectId: string;
-  phaseId?: string;
-  title: string;
-  description?: string;
-  targetDate: string;
-  completionDate?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
-  weight: number;
-  notes?: string;
-}
-
+import { Milestone } from '@/dtos/entities/MilestoneDTO';
 export function useMilestonesHex(projectId?: string, phaseId?: string) {
   const queryClient = useQueryClient();
 

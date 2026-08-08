@@ -11,25 +11,9 @@ import QuantityTakeoffsList from './QuantityTakeoffsList';
 import AdvancedQuantityCalculator from './AdvancedQuantityCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-interface QuantityTakeoff {
-  id: string;
-  element_type: string;
-  unit: string;
-  length: number;
-  width?: number;
-  height?: number;
-  quantity: number;
-  unit_price?: number;
-  total_value?: number;
-  note?: string;
-  material: {
-    id: string;
-    name: string;
-    unit: string;
-    price_per_unit: number;
-  };
-}
 
+
+import { QuantityTakeoff } from '@/dtos/entities/QuantityTakeoffDTO';
 interface QuantityTakeoffsProps {
   projectId: string;
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,17 +12,7 @@ import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 
-interface UserProfile {
-  id: string;
-  full_name: string | null;
-  phone: string | null;
-  national_id: string | null;
-  avatar_url: string | null;
-  roles?: string[];
-  is_active?: boolean;
-  email?: string;
-}
-
+import { UserProfile } from '@/dtos/entities/DocumentDTO';
 interface UserManagementDialogProps {
   user?: UserProfile | null;
   isOpen: boolean;

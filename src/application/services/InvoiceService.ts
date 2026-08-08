@@ -3,7 +3,7 @@
  * Handles supplier invoice data through proper architecture layers
  */
 
-import { ParsedInvoiceDTO, CreateInvoiceDTO, UpdateInvoiceDTO } from '@/dtos/entities/InvoiceDTO';
+import { CreateInvoiceDTO } from '@/dtos/entities/PaymentDTO';;
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ParsedInvoiceEntity, InvoiceStatus } from '@/domain/entities/ParsedInvoice';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

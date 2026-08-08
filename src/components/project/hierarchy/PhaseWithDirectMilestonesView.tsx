@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { MilestoneNode, MilestoneType } from "./MilestoneNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Milestone } from '@/dtos/entities/MilestoneDTO';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,17 +30,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
-interface Milestone {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  type?: MilestoneType | string;
-  status: string;
-  due_date?: string;
-  completion_date?: string;
-  documents?: unknown[];
-}
+
 
 interface PhaseWithDirectMilestonesViewProps {
   phase: {

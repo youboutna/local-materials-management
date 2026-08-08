@@ -1,11 +1,7 @@
 // Inspection Service - Hexagonal Architecture
 import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import {
-    InspectionDocumentEntity,
-    InspectionExecutionDataDTO,
-    InspectionPaymentValidationDTO
-} from '@/dtos/entities/InspectionDTO';
+import { InspectionPaymentValidationDTO } from '@/dtos/entities/PaymentDTO';;
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 

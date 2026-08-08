@@ -9,21 +9,15 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import {
-    CriticalPathDTO,
-    MilestoneDTO,
-    MilestoneFormDTO,
-    MilestonePriority,
-    MilestoneProgressDTO,
-    MilestoneSummaryDTO,
-    MilestoneTemplateDTO,
-    MilestoneType
-} from '@/dtos/entities/MilestoneDTO';
+import { MilestoneTemplateDTO } from '@/dtos/entities/ActionDTO';;
 import type { UserRoleDTO } from '@/dtos/entities/UserDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { differenceInDays } from 'date-fns';
 
+import { MilestoneStatsDto } from '@/dtos/entities/MilestoneDTO';
+import { UpdateMilestoneRequestDto } from '@/dtos/entities/MilestoneDTO';
+import { CreateMilestoneRequestDto } from '@/dtos/entities/MilestoneDTO';
 export interface Milestone {
   id: string;
   project_id: string;
@@ -52,62 +46,6 @@ export interface Milestone {
 }
 
 // Service DTOs for data exchange
-export interface CreateMilestoneRequestDto {
-  project_id: string;
-  phase_id?: string;
-  title: string;
-  description?: string;
-  target_date: string;
-  status?: 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
-  progress?: number;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
-  deliverables?: string[];
-  dependencies?: string[];
-  assigned_to?: string;
-  budget?: number;
-  actual_cost?: number;
-  type?: MilestoneType;
-  weight?: number;
-  notes?: string;
-  stage_type?: string;
-  material_usage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
-  material_cost_estimate?: number;
-  actual_material_cost?: number;
-}
-
-export interface UpdateMilestoneRequestDto {
-  title?: string;
-  description?: string;
-  target_date?: string;
-  actual_completion_date?: string;
-  status?: 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
-  progress?: number;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
-  deliverables?: string[];
-  dependencies?: string[];
-  assigned_to?: string;
-  budget?: number;
-  actual_cost?: number;
-  type?: MilestoneType;
-  weight?: number;
-  notes?: string;
-  stage_type?: string;
-  material_usage?: Array<{ materialId: string; plannedQuantity: number; usedQuantity: number; unitCost?: number }>;
-  material_cost_estimate?: number;
-  actual_material_cost?: number;
-}
-
-export interface MilestoneStatsDto {
-  total: number;
-  completed: number;
-  in_progress: number;
-  pending: number;
-  delayed: number;
-  cancelled: number;
-  completion_rate: number;
-  on_time_completion_rate: number;
-  average_progress: number;
-}
 
 export class MilestoneService {
   constructor(

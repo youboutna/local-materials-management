@@ -45,7 +45,7 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
   return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function useBoqDocumentList(filter: Omit<BoqLineFilter, 'documentId'>) {
+export function useBoqDocumentListHex(filter: Omit<BoqLineFilter, 'documentId'>) {
   const qc = useQueryClient();
   const key = ['boq-list', filter.source, filter.contextId ?? filter.projectId ?? filter.estimateId];
 

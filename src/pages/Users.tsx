@@ -1,4 +1,4 @@
-﻿import RoleBadge, { RoleType } from "@/components/RoleBadge";
+import RoleBadge, { RoleType } from "@/components/RoleBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,20 +30,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
 
+import { UserProfile } from '@/dtos/entities/DocumentDTO';
 // Define user profile type with roles array and email
-type UserProfile = {
-  id: string;
-  full_name: string | null;
-  phone: string | null;
-  national_id: string | null;
-  avatar_url: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-  roles?: string[];
-  primaryRole?: RoleType;
-  is_active?: boolean;
-  email?: string;
-};
+;
 
 // Mock profiles for development mode with email
 const DEV_PROFILES: UserProfile[] = [

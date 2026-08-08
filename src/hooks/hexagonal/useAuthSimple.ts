@@ -9,7 +9,7 @@ import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthMa
 import { AuthUser, AuthSession, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 import { AuthProvider } from '@/config/app';
 
-export function useAuth() {
+export function useAuthHex() {
   const authManager = getAuthManager();
   const authService = new AuthService(authManager.getAdapter() as any);
 

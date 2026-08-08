@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,21 +7,9 @@ import { toast } from '@/hooks/use-toast';
 import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  due_date?: string;
-  completion_date?: string;
-  notes?: string; // Added missing notes property
-  projects?: {
-    title: string;
-    location: string;
-  };
-}
 
+
+import { Task } from '@/dtos/entities/TaskAssignmentDTO';
 interface TaskCompletionProps {
   task: Task;
   onTaskCompleted: () => void;

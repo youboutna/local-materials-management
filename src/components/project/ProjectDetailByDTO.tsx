@@ -80,6 +80,7 @@ import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import { ProjectHeader } from "./hierarchy";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
+import { PhaseToSave } from '@/dtos/entities/PhaseDTO';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
@@ -88,21 +89,6 @@ interface ProjectDetailByDTOProps {
   projectId?: string;
   onEdit?: () => void;
   onClose?: () => void;
-}
-
-interface PhaseToSave {
-  project_id: string;
-  phase_name: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  estimated_duration: number;
-  estimated_cost: number;
-  status: string;
-  progress: number;
-  phase_type: string;
-  construction_phase: string;
-  custom_phase_data: Record<string, unknown>;
 }
 
 // ============================================================================

@@ -10,18 +10,9 @@ import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw } f
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-interface EscalationThreshold {
-  id: string;
-  threshold_type: string;
-  threshold_name: string;
-  threshold_value: number;
-  threshold_unit: string;
-  severity_level: string;
-  escalation_level: number;
-  description: string | null;
-  is_active: boolean;
-}
 
+
+import { EscalationThreshold } from '@/dtos/entities/NotificationDTO';
 const EscalationThresholdsSettings: React.FC = () => {
   const [thresholds, setThresholds] = useState<EscalationThreshold[]>([]);
   const [loading, setLoading] = useState(true);

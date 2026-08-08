@@ -13,7 +13,7 @@ export type { TenderLotDocumentRecord };
 
 const key = (tenderId: string) => ['tender-lot-documents', tenderId];
 
-export function useTenderLotDocuments(tenderId: string) {
+export function useTenderLotDocumentsHex(tenderId: string) {
   return useQuery({
     queryKey: key(tenderId),
     queryFn: () => getTenderLotDocumentService().listByTender(tenderId),
@@ -21,7 +21,7 @@ export function useTenderLotDocuments(tenderId: string) {
   });
 }
 
-export function useCreateTenderLotDocument(tenderId: string) {
+export function useCreateTenderLotDocumentHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateTenderLotDocumentInput) =>
@@ -35,7 +35,7 @@ export function useCreateTenderLotDocument(tenderId: string) {
   });
 }
 
-export function useUpdateTenderLotDocument(tenderId: string) {
+export function useUpdateTenderLotDocumentHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: { id: string; updates: Partial<TenderLotDocumentRecord> }) =>
@@ -49,7 +49,7 @@ export function useUpdateTenderLotDocument(tenderId: string) {
   });
 }
 
-export function useDeleteTenderLotDocument(tenderId: string) {
+export function useDeleteTenderLotDocumentHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => getTenderLotDocumentService().delete(id),
@@ -62,7 +62,7 @@ export function useDeleteTenderLotDocument(tenderId: string) {
   });
 }
 
-export function useUploadTenderLotFile() {
+export function useUploadTenderLotFileHex() {
   return useMutation({
     mutationFn: (payload: { tenderId: string; file: File }) =>
       getTenderLotDocumentService().uploadFile(payload.tenderId, payload.file),

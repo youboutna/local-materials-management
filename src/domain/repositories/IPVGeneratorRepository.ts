@@ -5,17 +5,17 @@
 
 export interface SavedPVRecord {
   id: string;
-  inspection_id: string;
-  pv_number: string;
-  pv_type: string;
+  inspectionId: string;
+  pvNumber: string;
+  pvType: string;
   title?: string | null;
   content: string;
-  pdf_url?: string | null;
+  pdfUrl?: string | null;
   status: string;
-  generated_by?: string | null;
+  generatedBy?: string | null;
   version: number;
   metadata?: Record<string, unknown> | null;
-  generated_at: string;
+  generatedAt: string;
 }
 
 export interface IPVGeneratorRepository {
@@ -28,17 +28,17 @@ export interface IPVGeneratorRepository {
    * Save generated PV to database
    */
   savePV(pvData: {
-    inspection_id: string;
-    pv_number: string;
-    pv_type: string;
+    inspectionId: string;
+    pvNumber: string;
+    pvType: string;
     title?: string;
     content: string;
-    pdf_url?: string;
+    pdfUrl?: string;
     status?: string;
-    generated_by?: string;
+    generatedBy?: string;
     version?: number;
     metadata?: Record<string, unknown>;
-    generated_at?: string;
+    generatedAt?: string;
   }): Promise<SavedPVRecord>;
 
   /**

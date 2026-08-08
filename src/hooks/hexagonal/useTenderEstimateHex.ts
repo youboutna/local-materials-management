@@ -4,7 +4,7 @@
 
 import { MaterialService } from '@/application/services/MaterialService';
 import { TenderEstimateService } from '@/application/services/TenderEstimateService';
-import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 import { EstimateItem } from '@/dtos/transforms/shared';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

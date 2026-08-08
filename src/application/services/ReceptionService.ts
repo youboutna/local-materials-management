@@ -8,19 +8,7 @@ import { IReceptionRepository } from '@/domain/repositories/IReceptionRepository
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
-import { 
-  ReceptionDTO, 
-  ReceptionType, 
-  ReceptionStatus,
-  ReceptionDocumentDTO,
-  ReceptionInspectionDTO,
-  ReceptionFindingDTO,
-  ReceptionDecisionDTO,
-  ReceptionConditionDTO,
-  ReceptionValidationDTO,
-  ReceptionWorkflowDTO,
-  ReceptionParticipantDTO
-} from '@/dtos/entities/ReceptionDTO';
+import { ReceptionValidationDTO } from '@/dtos/entities/PaymentValidationDTO';;
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';

@@ -26,43 +26,20 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
   updatedAt: string;
   
   // Legacy snake_case aliases for backward compatibility (PROMPTS.md Pattern 2)
-  project_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
+  projectId?: string;
+  contractorId?: string;
+  contractorName?: string;
+  insuranceCompany?: string;
+  policyNumber?: string;
+  coverageAmount?: number;
+  coverageType?: string;
+  validFrom?: string;
+  validUntil?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface InsuranceCertificateFormData {
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  insuranceCompany: string;
-  policyNumber: string;
-  coverageAmount: number;
-  coverageType: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
-  validFrom: string;
-  validUntil: string;
-  status: 'active' | 'expired' | 'expiring_soon' | 'missing';
-  notes?: string;
-  
-  // Legacy snake_case aliases for backward compatibility
-  project_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
-}
+
 
 export interface InsuranceCertificateCreateData extends InsuranceCertificateFormData {
   uploadedBy?: string;
@@ -89,25 +66,8 @@ export interface InsuranceCertificateUpdateData {
   insurance_company?: string;
   policy_number?: string;
   coverage_amount?: number;
-  coverage_type?: string;
+  coverageType?: string;
   valid_from?: string;
   valid_until?: string;
-  certificate_url?: string;
-  updated_by?: string;
-}
-
-export interface InsuranceCertificateFilterData {
-  projectId?: string;
-  contractorId?: string;
-  status?: 'active' | 'expired' | 'expiring_soon' | 'missing';
-  coverageType?: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
-  searchTerm?: string;
-  expiringSoonDays?: number;
-  
-  // Legacy snake_case aliases for backward compatibility
-  project_id?: string;
-  contractor_id?: string;
-  coverage_type?: string;
-  search_term?: string;
-  expiring_soon_days?: number;
-}
+  certificateUrl?: string;
+  updated

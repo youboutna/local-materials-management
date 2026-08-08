@@ -1,11 +1,4 @@
-import {
-    ApprovalActionDTO,
-    ApprovalChainStep,
-    CreatePaymentInitiationDTO,
-    PaymentInitiationNotificationDTO,
-    SupplierCompletionDTO,
-    SupplierInfoDTO
-} from '@/dtos/entities/PaymentInitiationDTO';
+import { ApprovalChainStep } from '@/dtos/entities/PhaseDTO';;
 
 export interface IPaymentInitiationRepository {
   findById(id: string): Promise<PaymentInitiationNotificationDTO | null>;

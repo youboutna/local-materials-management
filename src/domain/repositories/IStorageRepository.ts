@@ -10,16 +10,16 @@ export interface StorageFile {
   path: string;
   bucket: string;
   size?: number;
-  content_type?: string;
-  created_at?: string;
-  updated_at?: string;
+  contentType?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UploadResult {
   path: string;
   publicUrl: string;
   size?: number;
-  content_type?: string;
+  contentType?: string;
 }
 
 export interface IStorageRepository {

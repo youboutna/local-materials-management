@@ -17,40 +17,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-interface ProgressInvoice {
-  id: string;
-  invoiceNumber: string; // ✅ CAMELCASE: Instead of invoice_number
-  invoiceType: string; // ✅ CAMELCASE: Instead of invoice_type
-  progressPercentage: number; // ✅ CAMELCASE: Instead of progress_percentage
-  previousProgress: number; // ✅ CAMELCASE: Instead of previous_progress
-  totalContractAmount: number; // ✅ CAMELCASE: Instead of total_contract_amount
-  invoiceAmount: number; // ✅ CAMELCASE: Instead of invoice_amount
-  workDescription: string; // ✅ CAMELCASE: Instead of work_description
-  status: string;
-  submittedAt: string; // ✅ CAMELCASE: Instead of submitted_at
-  projectId: string; // ✅ CAMELCASE: Instead of project_id
-  inspectionId: string; // ✅ CAMELCASE: Instead of inspection_id
-  supportingDocuments: string[]; // ✅ CAMELCASE: Instead of supporting_documents
-  projects?: {
-    title: string;
-    projectType: string; // ✅ CAMELCASE: Instead of project_type
-    fundingSource: string; // ✅ CAMELCASE: Instead of funding_source
-  };
-  
-  // Legacy snake_case for backward compatibility
-  invoice_number?: string; // Legacy snake_case for backward compatibility
-  invoice_type?: string; // Legacy snake_case for backward compatibility
-  progress_percentage?: number; // Legacy snake_case for backward compatibility
-  previous_progress?: number; // Legacy snake_case for backward compatibility
-  total_contract_amount?: number; // Legacy snake_case for backward compatibility
-  invoice_amount?: number; // Legacy snake_case for backward compatibility
-  work_description?: string; // Legacy snake_case for backward compatibility
-  submitted_at?: string; // Legacy snake_case for backward compatibility
-  project_id?: string; // Legacy snake_case for backward compatibility
-  inspection_id?: string; // Legacy snake_case for backward compatibility
-  supporting_documents?: string[]; // Legacy snake_case for backward compatibility
-}
 
+
+import { ProgressInvoice } from '@/dtos/entities/PaymentDTO';
 export function ConsultantValidationPanel() {
   const [invoices, setInvoices] = useState<ProgressInvoice[]>([]);
   const [loading, setLoading] = useState(true);

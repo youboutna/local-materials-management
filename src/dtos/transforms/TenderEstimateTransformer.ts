@@ -4,13 +4,7 @@
  */
 
 import { TenderEstimate, TenderEstimateItem, CurrencyCode } from '@/domain/entities/TenderEstimate';
-import { 
-  TenderEstimateDTO,
-  TenderEstimateItemDTO,
-  TenderEstimateStatsDto,
-  TenderEstimateValidationDto,
-  TenderEstimateComparisonDto,
-} from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 
 export class TenderEstimateTransformer {
   /**

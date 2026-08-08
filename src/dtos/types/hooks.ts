@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { UserResponseDto } from '@/dtos/entities/EmployeeDTO';
+import { UserResponseDto } from '@/dtos/entities/AuthDTO';;
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { DocumentResponseDTO } from '@/dtos/entities/DocumentDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';

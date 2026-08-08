@@ -21,7 +21,7 @@ import {
   ProjectStatus,
   PROJECT_STATUS_LABELS,
 } from "@/dtos/entities/ProjectDTO";
-import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 
 interface ProjectInfoStepProps {
   workflowData: ProjectWorkflowData | null;

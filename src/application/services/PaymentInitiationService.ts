@@ -1,15 +1,6 @@
 import { IPaymentInitiationRepository } from '@/domain/repositories/IPaymentInitiationRepository';
 import { SupabasePaymentInitiationAdapter } from '@/infrastructure/supabase/SupabasePaymentInitiationAdapter';
-import {
-  ApprovalActionDTO,
-  ApprovalChainStep,
-  CreatePaymentInitiationDTO,
-  InitiatorRole,
-  PaymentInitiationNotificationDTO,
-  ROLE_APPROVAL_CHAIN,
-  ROLE_PAYMENT_LIMITS,
-  SupplierCompletionDTO
-} from '@/dtos/entities/PaymentInitiationDTO';
+import { ApprovalChainStep } from '@/dtos/entities/PhaseDTO';;
 
 export class PaymentInitiationService {
   private static instance: PaymentInitiationService | null = null;

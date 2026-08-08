@@ -15,25 +15,14 @@ import {
   LoginCredentials,
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
-import {
-  getDevUsersSnapshot,
-  DevUserProfile,
-  setActiveDevRole,
-} from '@/config/constants';
+import { DevUserProfile } from '@/dtos/entities/DocumentDTO';;
 
+import { PersistedDevSession } from '@/dtos/entities/AuthDTO';
 const SESSION_KEY = 'dev_session';
 const SESSION_VERSION = 3;
 
 interface PersistedDevSession {
-  v?: number;
-  userId: string;
-  roleKey: string;
-  access_token: string;
-  refresh_token: string;
-  expires_at: string;
-}
-
-function profileToAuthUser(profile: DevUserProfile): AuthUser {
+  v?: DevUserProfile): AuthUser {
   return {
     id: profile.id,
     email: profile.email,

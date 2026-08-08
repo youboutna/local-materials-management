@@ -6,7 +6,7 @@
 
 import { DatabaseMetrics, PerformanceMetrics } from '@/domain/entities/PerformanceMonitoring';
 import { TenderEstimate, TenderEstimateItem } from '@/domain/entities/TenderEstimate';
-import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 
 // Local interfaces for this transformer
 interface EntityToDTOMapper<E, D> {

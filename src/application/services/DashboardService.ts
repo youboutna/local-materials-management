@@ -10,12 +10,7 @@
  */
 
 import { InspectionStatus } from '@/domain/entities/Inspection';
-import {
-  Alert,
-  DashboardStats,
-  MonitoringConfiguration,
-  MonitoringMetrics
-} from '@/dtos/entities/DashboardDTO';
+import { MonitoringConfiguration } from '@/dtos/entities/MonitoringDTOs';;
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';

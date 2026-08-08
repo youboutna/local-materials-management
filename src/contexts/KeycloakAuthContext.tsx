@@ -1,19 +1,12 @@
-
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
 import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
 
-interface Profile {
-  id: string;
-  full_name: string;
-  phone: string;
-  national_id: string;
-  role: string;
-  avatar_url: string | null;
-}
 
+
+import { Profile } from '@/dtos/entities/DocumentDTO';
 interface KeycloakAuthContextProps {
   profile: Profile | null;
   loading: boolean;

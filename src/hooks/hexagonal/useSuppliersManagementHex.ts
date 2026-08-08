@@ -7,24 +7,13 @@ import { SupplierService } from '@/application/services/SupplierService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export interface SupplierFormData {
-  name: string;
-  contact_person: string;
-  email: string;
-  phone: string;
-  address: string;
-  category: string;
-  rating: number;
-  nif?: string;
-  commerce_register_ref?: string;
-}
-
+import { SupplierFormData } from '@/dtos/entities/SupplierDTO';
 function getSupplierService() {
   return new SupplierService(RepositoryFactory.getSupplierRepository());
 }
 
 // Hook: Fetch all suppliers
-export function useSuppliersList() {
+export function useSuppliersListHex() {
   return useQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
@@ -50,7 +39,7 @@ export function useSuppliersList() {
 }
 
 // Hook: Create supplier mutation
-export function useCreateSupplier() {
+export function useCreateSupplierHex() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -65,7 +54,7 @@ export function useCreateSupplier() {
 }
 
 // Hook: Update supplier mutation
-export function useUpdateSupplier() {
+export function useUpdateSupplierHex() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -80,7 +69,7 @@ export function useUpdateSupplier() {
 }
 
 // Hook: Delete supplier mutation
-export function useDeleteSupplier() {
+export function useDeleteSupplierHex() {
   const queryClient = useQueryClient();
 
   return useMutation({

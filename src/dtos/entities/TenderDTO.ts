@@ -3,7 +3,7 @@
  * Following hexagonal architecture principles
  */
 
-import { BaseEntityDTO } from './BaseEntityDTO';
+import { BaseEntityDTO } from '@/dtos/entities/OrganizationDTO';;
 import { 
   TenderStatus, 
   SelectionMode, 

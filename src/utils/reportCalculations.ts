@@ -12,10 +12,11 @@
  * - ✅ Pas de redéfinition de types dans UI
  */
 
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';;
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 
+import { PhaseTimeline } from '@/dtos/entities/PhaseDTO';
 /**
  * Interface pour les activités PERT
  * Utilisée en interne pour les calculs
@@ -50,14 +51,6 @@ interface FinancialExpense {
 /**
  * Interface pour la timeline des phases
  */
-interface PhaseTimeline {
-  id: string;
-  name: string;
-  startDate: Date;
-  endDate: Date;
-  progress: number;
-  status: 'planned' | 'in_progress' | 'completed';
-}
 
 /**
  * Classe utilitaire pour les calculs de rapports

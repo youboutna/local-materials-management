@@ -49,8 +49,8 @@ export interface Document {
   size?: number;
   mimeType?: string;
   // Legacy snake_case aliases
-  uploaded_at?: string;
-  uploaded_by?: string;
+  uploadedAt?: string;
+  uploadedBy?: string;
 }
 
 export class Inspection {

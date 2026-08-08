@@ -76,17 +76,17 @@ export type TenderDocumentStatus = 'pending' | 'approved' | 'rejected' | 'requir
 
 export interface TenderDocument {
   id: string;
-  project_id: string;
-  document_id: string;
+  projectId: string;
+  documentId: string;
   category: TenderDocumentCategory;
   subcategory: TenderDocumentSubcategory;
-  is_required: boolean;
-  is_submitted: boolean;
-  submission_date?: string;
-  reviewer_notes?: string;
+  isRequired: boolean;
+  isSubmitted: boolean;
+  submissionDate?: string;
+  reviewerNotes?: string;
   status: TenderDocumentStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TenderDocumentWithDetails extends TenderDocument {

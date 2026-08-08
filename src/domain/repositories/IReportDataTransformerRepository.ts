@@ -3,14 +3,7 @@
  * Defines the contract for report data transformation operations
  */
 import { ProjectDetailDTO, ProjectData } from '@/dtos/entities/ProjectDTO';
-import { 
-  ProjectReportDTO,
-  EnhancedPhaseDTO,
-  ConstructionMilestoneDTO,
-  ProjectAnalyticsDTO,
-  FinancialMetricsDTO,
-  RiskAssessmentDTO
-} from '@/dtos/entities/ReportDTO';
+import { ProjectReportDTO } from '@/dtos/entities/ProjectDTO';;
 
 export interface IReportDataTransformerRepository {
   /**

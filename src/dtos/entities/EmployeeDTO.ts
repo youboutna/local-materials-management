@@ -339,23 +339,7 @@ export interface EmployeeSkillDTO {
  * Employee project assignment interface
  * Project assignment tracking data
  */
-export interface EmployeeProjectAssignmentDTO {
-  id: string;
-  employeeId: string;
-  projectId: string;
-  role: string;
-  startDate?: string;
-  endDate?: string;
-  allocationPercentage?: number; // 0-100
-  isPrimary?: boolean;
-  hourlyRate?: number;
-  budget?: number;
-  actualCost?: number;
-  performanceRating?: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 /**
  * Employee filter interface
@@ -432,21 +416,21 @@ export type EmployeeDepartmentLegacy = 'engineering' | 'construction' | 'quality
 
 // Legacy request DTOs for backward compatibility
 export interface CreateEmployeeRequestDTO {
-  full_name: string;
+  fullName: string;
   position?: string;
   department?: string;
   email?: string;
   phone?: string;
-  employee_id: string;
+  employeeId: string;
 }
 
 export interface UpdateEmployeeRequestDTO {
-  full_name?: string;
+  fullName?: string;
   position?: string;
   department?: string;
   email?: string;
   phone?: string;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface UserResponseDto {
@@ -461,4 +445,37 @@ export interface UserResponseDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+// Moved from src/components/documents/EmployeeManagement.tsx
+export interface EmployeeFormData {
+  employe  fullName: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  hireDate?: string;
+  isActive?: boolean;
+  skills?: string[];
+  salary?: number;
+}
+
+// Moved from src/hooks/hexagonal/usePhaseEmployeesHex.ts
+export interface PhaseEmployee {
+  id: string;
+  phaseId: string;
+  employeeName: string;
+  employeeRole: string;
+  dailyRate?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  employeeContact?: string | null;
+  is_primary_supplier?: boolean | null;
+}
+
+// Moved from src/hooks/hexagonal/useActiveEmployeesHex.ts
+export interface ActiveEmployee {
+  id: string;
+  fullName: string;
+  position?: string | null;
+  department?: string | null;
 }

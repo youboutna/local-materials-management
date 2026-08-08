@@ -9,7 +9,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-export function useMaterials() {
+export function useMaterialsHex() {
   const queryClient = useQueryClient();
   
   const materialService = new MaterialService(
@@ -82,7 +82,7 @@ export function useMaterials() {
   };
 }
 
-export function useMaterialById(id: string) {
+export function useMaterialByIdHex(id: string) {
   const materialService = new MaterialService(
     RepositoryFactory.getMaterialRepository()
   );
@@ -97,7 +97,7 @@ export function useMaterialById(id: string) {
   });
 }
 
-export function useMaterialsByCategory(category: string) {
+export function useMaterialsByCategoryHex(category: string) {
   const materialService = new MaterialService(
     RepositoryFactory.getMaterialRepository()
   );
@@ -112,7 +112,7 @@ export function useMaterialsByCategory(category: string) {
   });
 }
 
-export function useLowStockMaterials() {
+export function useLowStockMaterialsHex() {
   const materialService = new MaterialService(
     RepositoryFactory.getMaterialRepository()
   );

@@ -1,11 +1,6 @@
 // services/ProjectManagerContext.ts
 import { createContext } from "react";
-import {
-  Alert,
-  EVMData,
-  GanttChartData,
-  PERTAnalysis,
-} from "@/dtos/entities/ProjectAggregateDTO"
+import { PERTAnalysis } from '@/dtos/entities/PERTAnalysisDTO';
 
 export interface ProjectManagerState {
   alerts: Alert[];

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
-import { SubmissionSecretDTO } from '@/dtos/entities/SubmissionSecretDTO';
+import { SubmissionSecretDTO } from '@/dtos/entities/TenderDTO';;
 
 interface SubmissionSecretDisplayProps {
   submissionId: string;

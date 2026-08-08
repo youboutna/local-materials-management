@@ -25,6 +25,7 @@ import { useProjects } from '@/hooks/projects/useProjects';
 import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
 
+import { PhaseFormState } from '@/dtos/entities/PhaseDTO';
 /**
  * Vue projet minimale consommée par ce composant. Camelcase strict.
  */
@@ -42,16 +43,6 @@ export interface WaterfallProjectSummaryDTO {
 interface WaterfallProjectPhasesManagerProps {
   selectedProject: WaterfallProjectSummaryDTO | null;
   onProjectChange?: (project: WaterfallProjectSummaryDTO | null) => void;
-}
-
-interface PhaseFormState {
-  id?: string;
-  name: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  budget: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
 }
 
 const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps> = ({

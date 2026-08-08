@@ -19,24 +19,6 @@ export type ResourceFamily = 'human' | 'material' | 'equipment';
 export type ResourceOrigin = 'dqe' | 'phase' | 'execution';
 
 /** Ligne unitaire de ressource, avec son couple planifié / réalisé. */
-export interface ResourceLineDTO {
-  id: string;
-  name: string;
-  family: ResourceFamily;
-  unit?: string;
-  origin: ResourceOrigin;
-  phaseId?: string;
-  phaseName?: string;
-  materialId?: string;
-  plannedQuantity: number;
-  plannedCost: number;
-  actualQuantity: number;
-  actualCost: number;
-  /** Écart coût (réalisé - planifié). */
-  costVariance: number;
-  /** Taux de consommation en % (réalisé / planifié). */
-  consumptionRate: number;
-}
 
 /** Agrégat d'une famille de ressources. */
 export interface ResourceFamilyBucketDTO {
@@ -56,24 +38,9 @@ export interface ProjectResourceContainerDTO {
   human: ResourceFamilyBucketDTO;
   materials: ResourceFamilyBucketDTO;
   equipment: ResourceFamilyBucketDTO;
-  totals: {
-    plannedCost: number;
-    actualCost: number;
-    costVariance: number;
-    consumptionRate: number;
-    lineCount: number;
-  };
-}
-
-/** Entrée brute (DTO déjà camelCase) attendue par l'agrégateur. */
-export interface ProjectResourceAggregationInput {
+  toce ProjectResourceAggregationInput {
   projectId: string;
   /** Phases du projet (avec dqeLines / materials / humanResources éventuels). */
   phases?: Array<Record<string, unknown>>;
   /** Lignes DQE au niveau projet (source = project). */
-  boqLines?: Array<Record<string, unknown>>;
-  /** Ressources exécutées (btp.project_resources). */
-  executedResources?: Array<Record<string, unknown>>;
-  /** Matériaux consommés / livrés (btp.project_materials). */
-  executedMaterials?: Array<Record<string, unknown>>;
-}
+  boqLines?: Array<Record<string,

@@ -5,27 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar, DollarSign, Clock, Eye } from 'lucide-react';
 
-interface Tender {
-  id: string;
-  title: string;
-  description: string;
-  status: 'draft' | 'published' | 'closed' | 'awarded';
-  launchDate?: string; // ✅ CAMELCASE: Instead of launch_date
-  deadlineDate?: string; // ✅ CAMELCASE: Instead of deadline_date
-  budgetMin?: number; // ✅ CAMELCASE: Instead of budget_min
-  budgetMax?: number; // ✅ CAMELCASE: Instead of budget_max
-  marketType?: string; // ✅ CAMELCASE: Instead of market_type
-  createdAt?: string; // ✅ CAMELCASE: Instead of created_at
-  
-  // Legacy snake_case for backward compatibility
-  launch_date?: string; // Legacy snake_case for backward compatibility
-  deadline_date?: string; // Legacy snake_case for backward compatibility
-  budget_min?: number; // Legacy snake_case for backward compatibility
-  budget_max?: number; // Legacy snake_case for backward compatibility
-  market_type?: string; // Legacy snake_case for backward compatibility
-  created_at?: string; // Legacy snake_case for backward compatibility
-}
-
+import { Tender } from '@/dtos/entities/TenderDTO';
 interface TenderListPaginatedProps {
   tenders: Tender[];
   currentPage: number;

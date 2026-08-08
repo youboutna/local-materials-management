@@ -4,43 +4,9 @@ import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
+import { ProjectPayment } from '@/dtos/entities/PaymentDTO';
+import { PhaseCostData } from '@/dtos/entities/PhaseDTO';
 // Local interfaces to avoid legacy imports
-interface PhaseCostData {
-  id: string;
-  name: string;
-  phase_name?: string;
-  status: string;
-  progress?: number;
-  actual_cost?: number;
-  project_id?: string;
-  estimated_cost?: number;
-  budget?: number;
-  estimated_labor_cost?: number;
-  estimated_material_cost?: number;
-  estimated_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  steps?: Array<{
-    id: string;
-    name: string;
-    status: string;
-    progress?: number;
-    tasks?: Array<{
-      id: string;
-      status: string;
-      progress?: number;
-      description?: string;
-    }>;
-    description?: string;
-  }>;
-}
-
-interface ProjectPayment {
-  amount: number;
-  phase_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-}
 
 interface PhaseCostsResult {
   totalPayments: number;

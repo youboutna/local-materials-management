@@ -5,15 +5,9 @@
 
 import { BaseEntityDTO } from "../shared";
 
-
 /**
  * Interface for uploaded documents in tender submissions
  */
-export interface UploadedDocument {
-  file: File;
-  category: 'administrative' | 'technical' | 'financial';
-  subcategory: string;
-}
 
 /**
  * Interface for creating tender submissions
@@ -34,15 +28,7 @@ export interface CreateTenderSubmissionDTO extends BaseEntityDTO {
 export interface UpdateTenderSubmissionDTO {
   id?: string;
   status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
-  documents?: UploadedDocument[];
-}
-
-/**
- * Main TenderSubmissionDTO interface
- */
-export interface TenderSubmissionDTO extends BaseEntityDTO {
-  id: string;
-  tender_id: string;
+  documents?: : string;
   user_id: string;
   supplier_name: string;
   supplier_email: string;

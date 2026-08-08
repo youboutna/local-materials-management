@@ -8,24 +8,7 @@
  */
 
 // Import workflow DTOs (following "similitude des voisins le plus proche")
-import { 
-  ProjectWorkflowData,
-  StepRelatedDataDTO,
-  WorkflowMetadataDTO,
-  ValidationResult,
-  SaveResult,
-  SaveContextDTO,
-  WorkflowStep,
-  WorkflowTransition,
-  WorkflowState,
-  ProjectCreationWorkflowDTO,
-  WorkflowTemplateDTO,
-  WorkflowSessionDTO,
-  WorkflowAuditLogDTO,
-  WorkflowMetricsDTO,
-  ProjectValidationDTO,
-  StepProgressDTO
-} from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO, ProjectStatus, ConstructionStage } from '@/dtos/entities/ProjectDTO';

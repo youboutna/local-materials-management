@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { CoordinatePoint } from '../entities/MaterialDTO';
+import { CoordinatePoint } from '@/dtos/entities/ActionDTO';;
 
 export interface BaseEntityDTO {
   id: string;
@@ -905,7 +905,7 @@ export interface PhaseStepDTO {
   id: string;
   name: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
+  status: 'pending' | 'inProgress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
   progress: number;
   order_index: number;
   tasks: PhaseTaskDTO[];
@@ -915,7 +915,7 @@ export interface PhaseTaskDTO {
   id: string;
   name: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  status: 'pending' | 'inProgress' | 'completed' | 'delayed';
   progress: number;
   order_index: number;
   assigned_to: string[];
@@ -1001,7 +1001,7 @@ export interface WorkspaceDTO {
   name: string;
   location: string;
   status: string;
-  contact_manager?: string;
+  contactManager?: string;
   contact_phone?: string;
   facilities?: {
     offices?: number;
@@ -1047,7 +1047,7 @@ export interface UpdateWorkspaceRequestDto {
 // Project Alert DTOs
 export interface ProjectAlertDTO {
   id: string;
-  project_id: string;
+  projectId: string;
   title: string;
   description?: string;
   type: string;
@@ -1118,7 +1118,7 @@ export interface UpdateProjectAlertRequestDto {
 // Action DTOs
 export interface ActionDTO {
   id: string;
-  action_type: string;
+  actionType: string;
   message: string;
   created_at: string;
   updated_at: string;
@@ -1139,7 +1139,7 @@ export interface TaskAssignmentDTO {
   id: string;
   title: string;
   description?: string;
-  project_id?: string;
+  projectId?: string;
   assigned_to?: string;
   assigned_by?: string;
   assignee_type?: "supplier" | "employee" | "user";
@@ -1231,7 +1231,7 @@ export interface PerformanceMetricsDTO {
 // Tender Estimate DTOs
 export interface TenderEstimateDTO {
   id: string;
-  tender_id: string;
+  tenderId: string;
   project_id?: string | null;
   estimate_type: string;
   total_materials_cost?: number | null;
@@ -1255,7 +1255,7 @@ export interface TenderEstimateDTO {
 
 export interface TenderEstimateItemDTO {
   id: string;
-  estimate_id: string;
+  estimateId: string;
   material_id?: string | null;
   quantity: number;
   unit_price: number;
@@ -1267,7 +1267,7 @@ export interface TenderEstimateItemDTO {
 }
 
 export interface TenderEstimateCreateDTO {
-  tender_id: string;
+  tenderId: string;
   project_id?: string;
   estimate_type: string;
   total_materials_cost?: number;
@@ -1287,7 +1287,7 @@ export interface TenderEstimateCreateDTO {
 }
 
 export interface TenderEstimateItemCreateDTO {
-  estimate_id: string;
+  estimateId: string;
   material_id?: string;
   quantity: number;
   unit_price: number;

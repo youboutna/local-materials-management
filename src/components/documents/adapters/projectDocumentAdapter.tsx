@@ -12,7 +12,7 @@ const PROJECT_CATEGORY_LABELS: Record<string, string> = {
   other: 'Autre',
 };
 
-export function useProjectDocumentAdapter(projectId: string): DocumentHubContract {
+export function useProjectDocumentAdapterHex(projectId: string): DocumentHubContract {
   return useDocumentsTableAdapter({
     scopeLabel: 'Documents du projet',
     queryKey: ['documents', 'project', projectId],

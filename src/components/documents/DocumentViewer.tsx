@@ -9,21 +9,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { Building2, Calendar, Camera, ClipboardList, Download, ExternalLink, FileBarChart, FileCheck, FileText, FolderOpen, RotateCw, User, Users, ZoomIn } from 'lucide-react';
 import { useState } from 'react';
 
-interface Document {
-  id: string;
-  title: string;
-  description: string;
-  document_type: string;
-  status: string;
-  file_url: string;
-  file_name: string;
-  file_size: number;
-  created_at: string;
-  uploaded_by: string;
-  project_id: string;
-  mime_type?: string;
-}
-
+import { Document } from '@/dtos/entities/DocumentDTO';
 interface DocumentViewerProps {
   document: Document;
 }

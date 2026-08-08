@@ -8,24 +8,9 @@ import { InspectionService } from '@/application/services/InspectionService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
-export interface AuditEntry {
-  id: string;
-  date: string;
-  status: string;
-  inspector?: string;
-  phaseId?: string | null;
-  phase_id?: string | null;
-  projectId?: string;
-  progressAtInspection?: number;
-  createdAt?: string;
-  created_at?: string;
-  comments?: string | null;
-  // Additional fields for backward compatibility
-  summary?: string;
-  message?: string;
-  action?: string;
-}
 
+
+import { AuditEntry } from '@/dtos/entities/InspectionDTO';
 const fetchAuditEntries = async (
   phaseId?: string | null, 
   projectId?: string | null
@@ -66,7 +51,7 @@ const fetchAuditEntries = async (
   }
 };
 
-export function useAuditEntries(phaseId?: string | null, projectId?: string | null) {
+export function useAuditEntriesHex(phaseId?: string | null, projectId?: string | null) {
   const queryKey = ['audit-entries', { phaseId, projectId }];
 
   const query = useQuery<AuditEntry[], Error>({

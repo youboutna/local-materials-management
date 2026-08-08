@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { Milestone } from '@/dtos/entities/MilestoneDTO';
 import {
   ChevronDown,
   ChevronUp,
@@ -23,15 +24,7 @@ import {
   Eye,
 } from "lucide-react";
 
-interface Milestone {
-  id: string;
-  title?: string;
-  name?: string;
-  type?: string;
-  status: string;
-  due_date?: string;
-  completion_date?: string;
-}
+
 
 interface StepNodeProps {
   step: {

@@ -40,7 +40,7 @@ function normalizeCategory(cat: string | null | undefined): string | null {
   return c;
 }
 
-export function useTenderDocumentAdapter(tenderId: string, projectId?: string): DocumentHubContract {
+export function useTenderDocumentAdapterHex(tenderId: string, projectId?: string): DocumentHubContract {
   const qc = useQueryClient();
   const { data: lots = [] } = useTenderLots(tenderId);
   const { data: lotDocs = [] } = useTenderLotDocuments(tenderId);

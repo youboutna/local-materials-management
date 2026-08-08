@@ -6,21 +6,6 @@
  */
 
 // AutomaticDecompteDTO type definition to avoid legacy imports
-export interface AutomaticDecompteDTO {
-  id: string;
-  decompteNumber: string;
-  amount: number;
-  calculatedAt: string;
-  items: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    total: number;
-  }>;
-  status: 'pending' | 'approved' | 'rejected';
-  projectId: string;
-  phaseId: string;
-}
 
 // WorkflowEvent type definition to avoid circular dependencies
 export type WorkflowEvent = 
@@ -51,11 +36,7 @@ export interface OnProgressUpdatedResponseDTO {
 /**
  * Payment trigger request DTO
  */
-export interface TriggerPaymentRequestDTO {
-  phaseId: string;
-  amount: number;
-  contractorId?: string;
-  contractorName?: string;
+export interface TriggerPaymentRequestDTO {tring;
   contractorContact?: string;
 }
 
@@ -63,15 +44,7 @@ export interface TriggerPaymentRequestDTO {
  * Payment trigger response DTO
  */
 export interface TriggerPaymentResponseDTO {
-  success: boolean;
-  paymentId?: string;
-  error?: string;
-}
-
-/**
- * Milestone threshold check request DTO
- */
-export interface CheckMilestoneThresholdsRequestDTO {
+  succeport interface CheckMilestoneThresholdsRequestDTO {
   phaseId: string;
   progress: number;
 }
@@ -79,17 +52,7 @@ export interface CheckMilestoneThresholdsRequestDTO {
 /**
  * Milestone threshold check response DTO
  */
-export interface CheckMilestoneThresholdsResponseDTO {
-  milestones: Array<{
-    id: string;
-    title: string;
-    weight: number;
-  }>;
-}
-
-/**
- * Workflow status DTO
- */
+export inte */
 export interface WorkflowStatusDTO {
   isProcessing: boolean;
   lastEvent: WorkflowEvent | null;
@@ -101,11 +64,7 @@ export interface WorkflowStatusDTO {
 }
 
 /**
- * Workflow metrics DTO
- */
-export interface WorkflowMetricsDTO {
-  progress: number;
-  verifiedMilestones: number;
+ * Work: number;
   totalMilestones: number;
   pendingPayment: number;
   blockedIssues: string[];
@@ -114,11 +73,7 @@ export interface WorkflowMetricsDTO {
 /**
  * Workflow state DTO
  */
-export interface WorkflowStateDTO {
-  id: string;
-  projectId: string;
-  currentPhase: string;
-  status: 'active' | 'paused' | 'completed' | 'error';
+export interface WorkflowStateDTO ed' | 'completed' | 'error';
   progress: number;
   lastUpdated: string;
   createdAt?: string;

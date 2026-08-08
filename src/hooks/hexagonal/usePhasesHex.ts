@@ -8,17 +8,8 @@ import type { PhaseMetrics } from '@/domain/repositories/IPhaseRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-export interface CreatePhaseData {
-  phase_name: string;
-  description: string;
-  construction_phase?: string;
-  construction_stage?: string;
-  start_date?: string;
-  end_date?: string;
-  estimated_cost?: number;
-  estimated_duration?: number;
-}
-
+import { UpdatePhaseData } from '@/dtos/entities/PhaseDTO';
+import { CreatePhaseData } from '@/dtos/entities/PhaseDTO';
 const defaultMetrics: PhaseMetrics = {
   materialCost: 0,
   totalMaterials: 0,
@@ -127,15 +118,6 @@ export function usePhaseHex(phaseId?: string): UsePhaseHexResult {
 /**
  * Hook for phases list by project with CRUD operations
  */
-export interface UpdatePhaseData {
-  phase_name?: string;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  estimated_cost?: number;
-  status?: string;
-  progress?: number;
-}
 
 export interface UsePhasesHexResult {
   phases: Phase[];

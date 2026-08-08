@@ -14,14 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 
-export interface DqeResourceValue {
-  resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
-  employee_qualification_id?: string;
-  supplier_id?: string;
-  supplier_contract_ref?: string;
-  estimated_hours?: number;
-}
-
+import { DqeResourceValue } from '@/dtos/entities/MaterialDTO';
 interface Props {
   value: DqeResourceValue;
   onChange: (v: DqeResourceValue) => void;

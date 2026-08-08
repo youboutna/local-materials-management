@@ -8,7 +8,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 
 export interface UnifiedWorkflowState {
   mode: 'creation' | 'edit';
@@ -70,7 +70,7 @@ export function createEmptyProjectWorkflowData(): ProjectWorkflowData {
   };
 }
 
-export function useUnifiedProjectWorkflow(
+export function useUnifiedProjectWorkflowHex(
   mode: 'creation' | 'edit',
   projectId?: string,
   initialData?: ProjectWorkflowData

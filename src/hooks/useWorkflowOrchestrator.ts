@@ -25,7 +25,7 @@ interface UseWorkflowOrchestratorResult {
   clearEvents: () => void;
 }
 
-export function useWorkflowOrchestrator(projectId: string | undefined): UseWorkflowOrchestratorResult {
+export function useWorkflowOrchestratorHex(projectId: string | undefined): UseWorkflowOrchestratorResult {
   const queryClient = useQueryClient();
   const [orchestrator, setOrchestrator] = useState<WorkflowOrchestrator | null>(null);
   const [state, setState] = useState<WorkflowState>({

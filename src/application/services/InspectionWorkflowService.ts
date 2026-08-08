@@ -23,6 +23,7 @@ import { DocumentService } from './DocumentService';
 import { InspectionService } from './InspectionService';
 import { NotificationService } from './NotificationService';
 
+import { InspectionReview } from '@/dtos/entities/InspectionDTO';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -94,15 +95,6 @@ export interface InspectionExecution {
     severity: 'minor' | 'major' | 'critical';
     actionRequired: string;
   }>;
-}
-
-export interface InspectionReview {
-  inspectionId: string;
-  reviewedBy: string;
-  reviewedAt: string;
-  decision: 'approved' | 'rejected' | 'requires_changes';
-  comments?: string;
-  requiredChanges?: string[];
 }
 
 // ============================================================================

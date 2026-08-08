@@ -13,18 +13,10 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
+import { SimpleCheckpoint } from '@/dtos/entities/MilestoneDTO';
 interface UseCheckpointVerificationOptions {
   projectId: string;
   phaseId?: string;
-}
-
-interface SimpleCheckpoint {
-  id: string;
-  title: string;
-  status: string;
-  trigger_progress: number;
-  verification_score: number;
-  phase_id: string | null;
 }
 
 // Get milestone repository
@@ -37,7 +29,7 @@ const getPaymentService = () => {
   return new PaymentService(RepositoryFactory.getPaymentRepository());
 };
 
-export function useCheckpointVerification({ 
+export function useCheckpointVerificationHex({ 
   projectId, 
   phaseId,
 }: UseCheckpointVerificationOptions) {

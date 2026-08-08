@@ -9,21 +9,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-import {
-    AddDocumentRequestDto,
-    AddMeasurementRequestDTO,
-    AddObservationRequestDto,
-    AddParticipantRequestDTO,
-    CHECKLIST_TEMPLATES,
-    ChecklistItem,
-    CompleteInspectionRequestDTO,
-    ConformityStatus,
-    InspectionDocumentEntity,
-    InspectionOperationResultDTO,
-    InspectionParticipant,
-    StartInspectionRequestDto,
-    UpdateChecklistItemRequestDto
-} from '@/dtos/entities/InspectionDTO';
+import { AddMeasurementRequestDTO } from '@/dtos/entities/QuantityTakeoffDTO';;
 
 function isValidInspectionStatusTransition(current: string, next: string): boolean {
   const validTransitions: Record<string, string[]> = {

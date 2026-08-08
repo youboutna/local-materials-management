@@ -4,21 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Mail, Phone, Building, Users } from 'lucide-react';
 
-interface HierarchyMember {
-  hierarchy_id: string;
-  employee_id: string;
-  employee_name: string;
-  position_title: string;
-  department: string;
-  level: number;
-  parent_id: string | null;
-  organization_name: string;
-  can_approve_projects: boolean;
-  can_approve_payments: boolean;
-  employee_email: string;
-  employee_phone: string;
-}
-
+import { HierarchyMember } from '@/dtos/entities/HierarchyDTO';
 interface ProjectHierarchyDisplayProps {
   hierarchy: HierarchyMember[];
   projectId: string;

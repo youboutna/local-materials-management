@@ -19,18 +19,8 @@ import { ComplianceItemDTO } from '../entities/ComplianceDTO';
 import { ProjectStrategyLinkDTO } from '../entities/ProjectStrategyLinkDTO';
 import { ProjectBudgetLinkDTO } from '../entities/ProjectBudgetLinkDTO';
 import { MilestoneDTO } from '../entities/MilestoneDTO';
-import { ProjectStakeholderDTO } from '../entities/ProjectStakeholderDTO';
+import { ProjectStakeholderDTO } from '@/dtos/entities/ProjectDTO';;
 import type { BoqLineDTO } from '../boq/BoqLineDTO';
-
-export interface ProjectWorkflowData {
-  projectId?: string;
-  currentStep: number;
-  isDraft: boolean;
-  isComplete: boolean;
-  projectData: ProjectDTO;
-  relatedData?: StepRelatedDataDTO;
-  metadata: WorkflowMetadataDTO;
-}
 
 export interface WorkflowMetadataDTO {
   lastSavedAt: string;
@@ -42,34 +32,11 @@ export interface WorkflowMetadataDTO {
 
 export interface StepRelatedDataDTO {
   phases?: PhaseDTO[];
-  milestones?: MilestoneDTO[];
-  dqeLines?: BoqLineDTO[];
-  risks?: RiskDTO[];
-  materials?: MaterialDTO[];
-  stakeholders?: ProjectStakeholderDTO[];
-  compliance?: ComplianceDataDTO;
+  milest: ComplianceDataDTO;
   tasks?: TaskAssignmentDTO[]; // Utilise TaskAssignmentDTO
   inspections?: InspectionDTO[];
   strategyLinks?: ProjectStrategyLinkDTO[];
-  budgetLinks?: ProjectBudgetLinkDTO[];
-}
-
-export interface ComplianceDataDTO {
-  regulations: ComplianceItemDTO[];
-  certifications: InsuranceCertificateDTO[];
-  standards: BankGuaranteeDTO[];
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  documents: DocumentDTO[];
-}
-
-export interface SaveContextDTO {
-  currentStep: number;
-  totalSteps: number;
-  isDraft?: boolean;
-  isComplete?: boolean;
-}
-
-export interface SaveResult {
+  budgterface SaveResult {
   success: boolean;
   data?: unknown;
   errors?: string[];
@@ -92,20 +59,7 @@ export interface WorkflowStep {
 }
 
 export interface WorkflowTransition {
-  fromStep: string;
-  toStep: string;
-  condition: string;
-  action?: string;
-}
-
-export interface WorkflowState {
-  currentStep: string;
-  completedSteps: string[];
-  availableTransitions: WorkflowTransition[];
-  validation: ValidationResult;
-}
-
-export interface ValidationResult {
+  fromStep: export interface ValidationResult {
   isValid: boolean;
   errors: string[];
 }
@@ -113,20 +67,9 @@ export interface ValidationResult {
 export interface ProjectCreationWorkflowDTO extends ProjectDTO {
   workflowState: WorkflowState;
   validationResults: ValidationResult[];
-  saveContext: SaveContextDTO;
-  transitions: WorkflowTransition[];
-}
-
-export interface WorkflowTemplateDTO {
-  id: string;
-  name: string;
-  description: string;
-  category: 'project_creation' | 'project_edit' | 'procurement' | 'inspection' | 'compliance';
-  steps: WorkflowStep[];
-  defaultSettings: {
-    allowSkipSteps: boolean;
-    requireValidation: boolean;
-    autoSave: boolean;
+  saveContext: SaveContextscription: string;
+  category: 'projectCreation' | 'project_edit' | 'procurement' | 'inspection' | 'compliance';
+  steps: Workf boolean;
     maxRetries: number;
   };
   isActive: boolean;
@@ -145,30 +88,17 @@ export interface WorkflowSessionDTO {
   currentState: WorkflowState;
   completedSteps: string[];
   skippedSteps: string[];
-  auditLog: WorkflowAuditLogDTO[];
-  metrics: WorkflowMetricsDTO;
-  isActive: boolean;
-  expiresAt?: string;
-}
-
-export interface WorkflowAuditLogDTO {
+  auport interface WorkflowAuditLogDTO {
   id: string;
   workflowId: string;
-  action: 'step_completed' | 'step_skipped' | 'data_saved' | 'workflow_completed' | 'error_occurred';
-  stepNumber?: number;
-  details: Record<string, unknown>;
-  timestamp: string;
-  userId?: string;
-  sessionId?: string;
+  action: 'stepCompleted' | 'step_skipped' | 'sessionId?: string;
   ipAddress?: string;
 }
 
 export interface WorkflowMetricsDTO {
   totalSteps: number;
   completedSteps: number;
-  averageTimePerStep: number; // in minutes
-  totalElapsedTime: number; // in minutes
-  validationErrors: number;
+  averageTimePerStep: number; // i: number;
   saveOperations: number;
   userInteractions: number;
   completionRate: number;
@@ -176,29 +106,9 @@ export interface WorkflowMetricsDTO {
 }
 
 export interface ProjectValidationDTO {
-  reception_status: 'pending' | 'provisional' | 'definitive';
-  closure_notes: string;
+  receptionStatus: 'pending' | 'provisional' | 'definitive';
+  closureNotes: string;
   finalInspection: {
     date: string;
-    inspector: string;
-    result: 'passed' | 'failed' | 'pending';
-    score?: number;
-    notes?: string;
-  };
-  clientAcceptance: {
-    accepted: boolean;
-    date?: string;
-    representative?: string;
-    notes?: string;
-  };
-  handoverDocumentation: DocumentDTO[];
-}
-
-export interface StepProgressDTO {
-  stepNumber: number;
-  stepName: string;
-  isCompleted: boolean;
-  progress: number;
-  hasErrors: boolean;
-  lastSavedAt?: string;
+   avedAt?: string;
 }

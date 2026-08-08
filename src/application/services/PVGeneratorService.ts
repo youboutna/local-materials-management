@@ -18,25 +18,9 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 
+import { InspectionWithProjectDTO } from '@/dtos/entities/InspectionDTO';
 // Service DTOs for data exchange
-export interface InspectionWithProjectDTO {
-  id: string;
-  project_id: string;
-  phase_id?: string | null;
-  date: string;
-  inspector: string;
-  status: string;
-  comments?: string | null;
-  progress_at_inspection: number;
-  documents?: unknown[];
-  projects?: {
-    title: string;
-    location?: string;
-  } | null;
-  project_phases?: {
-    phase_name: string;
-  } | null;
-}
+
 
 export interface GeneratePVRequestDto {
   inspectionId: string;
@@ -354,4 +338,3 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
     };
   }
 }
-

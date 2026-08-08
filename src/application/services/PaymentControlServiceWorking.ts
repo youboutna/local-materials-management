@@ -5,11 +5,7 @@
  * Simplified version that works with existing DTOs and repositories
  */
 
-import { 
-  PaymentControlDashboardDTO, 
-  PaymentControlSummaryDTO, 
-  PaymentBlockingInterfaceDTO 
-} from '@/dtos/entities/MonitoringDTOs';
+import { PaymentControlSummaryDTO } from '@/dtos/entities/PaymentDTO';;
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';

@@ -79,48 +79,7 @@ export interface SupplierPaymentRequestDTO extends BaseEntityDTO {
 // DTO DE CRÉATION
 // ============================================================================
 
-export interface CreateSupplierPaymentRequestDTO {
-  /** ID de l'inspection associée */
-  inspectionId: string;
-  /** ID du fournisseur */
-  supplierId: string;
-  /** ID du projet (optionnel) */
-  projectId?: string;
-  /** Montant en MRU */
-  amount: number;
-  /** Devise (défaut: MRU) */
-  currency?: string;
-  /** Type de paiement */
-  paymentType: string;
-  /** Commentaires */
-  comments?: string;
-  /** Notes (alias pour comments) */
-  notes?: string;
-  /** Documents justificatifs */
-  documents?: string[];
-  /** Documents support (alias pour documents) */
-  supportingDocuments?: string[];
-  /** Compte bancaire */
-  bankAccount?: string;
-  /** Numéro de facture */
-  invoiceNumber?: string;
-  /** Date de facture */
-  invoiceDate?: string;
-  /** Description des travaux */
-  workDescription?: string;
-  /** Localisation des travaux */
-  workLocation?: string;
-  /** Période des travaux */
-  workPeriod?: string;
-  /** Raison du paiement */
-  paymentReason?: string;
-  /** Statut initial (défaut: pending) */
-  status?: SupplierPaymentStatus;
-  /** Date de la demande (défaut: maintenant) */
-  requestedAt?: string;
-  /** Date de la demande (alias pour requestedAt) */
-  requestedDate?: string;
-}
+
 
 // ============================================================================
 // DTO DE MISE À JOUR
@@ -168,45 +127,7 @@ export interface UpdateSupplierPaymentRequestDTO {
 }
 
 // ============================================================================
-// DTO DE RÉPONSE (LISTE)
-// ============================================================================
-
-export interface SupplierPaymentRequestListDTO {
-  items: SupplierPaymentRequestDTO[];
-  total: number;
-  page: number;
-  limit: number;
-  statusCounts?: {
-    pending: number;
-    approved: number;
-    rejected: number;
-    paid: number;
-    cancelled: number;
-  };
-}
-
-// ============================================================================
-// DTO DE STATISTIQUES
-// ============================================================================
-
-export interface SupplierPaymentStatsDTO {
-  totalAmount: number;
-  pendingAmount: number;
-  approvedAmount: number;
-  paidAmount: number;
-  rejectedAmount: number;
-  averageAmount: number;
-  countByStatus: Record<SupplierPaymentStatus, number>;
-  countByType: Record<string, number>;
-  recentPayments: SupplierPaymentRequestDTO[];
-}
-
-// ============================================================================
-// UTILITAIRES
-// ============================================================================
-
-/**
- * Map des statuts vers les libellés d'affichage
+// DTO DE RÉPONge
  */
 export const SUPPLIER_PAYMENT_STATUS_LABELS: Record<SupplierPaymentStatus, string> = {
   pending: 'En attente',
@@ -245,17 +166,7 @@ export const SUPPLIER_PAYMENT_TYPE_LABELS: Record<SupplierPaymentType, string> =
 export function normalizePaymentStatus(status: string): SupplierPaymentStatus {
   const normalized = status?.toLowerCase().trim() || 'pending';
   const validStatuses: SupplierPaymentStatus[] = ['pending', 'approved', 'rejected', 'paid', 'cancelled'];
-  return validStatuses.includes(normalized as SupplierPaymentStatus) 
-    ? normalized as SupplierPaymentStatus 
-    : 'pending';
-}
-
-/**
- * Normalise un type de paiement
- */
-export function normalizePaymentType(type: string): SupplierPaymentType {
-  const normalized = type?.toLowerCase().trim() || 'other';
-  const validTypes: SupplierPaymentType[] = ['contractor_progress', 'inspector_fee', 'advance', 'final', 'retention', 'other'];
+  return validStatuses.includes(normalized as Suonst validTypes: SupplierPaymentType[] = ['contractor_progress', 'inspector_fee', 'advance', 'final', 'retention', 'other'];
   return validTypes.includes(normalized as SupplierPaymentType) 
     ? normalized as SupplierPaymentType 
     : 'other';

@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ImportOptions, ImportResult } from "@/dtos/entities/ProjectReportDTO";
+import { ImportOptions } from '@/dtos/entities/LoadDataDTO';;
 import { useToast } from "@/hooks/use-toast";
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {

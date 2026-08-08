@@ -35,21 +35,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
-interface Tender {
-  id: string;
-  title: string;
-  description?: string | null;
-  status: string;
-  projectId?: string | null;
-  project_id?: string | null;
-  launchDate?: string | null;
-  deadlineDate?: string | null;
-  attributionDate?: string | null;
-  submissionDeadline?: string | null;
-  currentPhase?: number | string | null;
-  tenderNumber?: string | null;
-}
-
+import { Tender } from '@/dtos/entities/TenderDTO';
 const TenderManagement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const paramTenderId = searchParams.get("tenderId") || "";

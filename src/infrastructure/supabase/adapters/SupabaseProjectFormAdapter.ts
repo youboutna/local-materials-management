@@ -8,20 +8,7 @@ import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 
 // Import workflow DTOs (following "similitude des voisins le plus proche")
-import { 
-  ProjectWorkflowData,
-  StepRelatedDataDTO,
-  WorkflowMetadataDTO,
-  ValidationResult,
-  SaveResult,
-  SaveContextDTO,
-  WorkflowStep,
-  WorkflowTransition,
-  WorkflowState,
-  ProjectCreationWorkflowDTO,
-  ProjectValidationDTO,
-  StepProgressDTO
-} from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';

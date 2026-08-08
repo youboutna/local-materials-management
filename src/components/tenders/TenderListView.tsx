@@ -11,23 +11,7 @@ import { Edit, Trash2, Eye, Search, Calendar, FolderKanban, CheckCircle2 } from 
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-interface TenderRow {
-  id: string;
-  tender_number?: string | null;
-  title: string;
-  description?: string | null;
-  project_id?: string | null;
-  status: string;
-  procurement_type?: string | null;
-  market_type?: string | null;
-  selection_mode?: string | null;
-  launch_date?: string | null;
-  submission_deadline?: string | null;
-  deadline_date?: string | null;
-  attribution_date?: string | null;
-  estimated_value?: number | null;
-}
-
+import { TenderRow } from '@/dtos/entities/TenderDTO';
 interface Props {
   tenders: TenderRow[];
   projects: Array<{ id: string; title: string }>;

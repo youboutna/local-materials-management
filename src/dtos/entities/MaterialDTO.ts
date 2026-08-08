@@ -57,13 +57,7 @@ export enum MaterialUnit {
 /**
  * Coordinate point interface for geographic locations
  */
-export interface CoordinatePoint {
-  lat: number;
-  lng: number;
-  address?: string;
-  type?: 'point' | 'polygon' | 'rectangle' | 'circle';
-  confidence?: number;
-}
+
 
 /**
  * Main Material DTO
@@ -328,25 +322,7 @@ export interface MaterialTransactionDTO {
   materialId: string;
   type: 'purchase' | 'sale' | 'transfer' | 'adjustment' | 'return';
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  reference?: string;
-  projectId?: string;
-  phaseId?: string;
-  taskId?: string;
-  performedBy?: string;
-  performedAt?: string;
-  notes?: string;
-}
-
-/**
- * Material filter interface
- * Filtering criteria for material lists
- */
-export interface MaterialFilterDTO {
-  id?: string;
-  name?: string;
-  category?: MaterialCategory;
+  unit MaterialCategory;
   subcategory?: string;
   unit?: MaterialUnit;
   priceRange?: {
@@ -398,4 +374,79 @@ export interface CreateProjectMaterialDTO {
   unitPrice?: number;
   status?: ProjectMaterialStatus;
   notes?: string | null;
+}
+// Moved from src/components/materials/MaterialDocuments.tsx
+export interface MaterialDocument {
+  id: string;
+  materialId: string;
+  documentType: 'invoice' | 'deliveryNote' | 'warranty' | 'certificate' | 'manual' | 'other';
+  title: string;
+  description?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  documentNumber?: string;
+  documentDate?: string;
+  expiryDate?: string;
+  supplierName?: string;
+  
+  // Legacy snakeCase for backward compatibility
+  materialId?: string;
+  documentType?: 'invoice' | 'deliveryNote' | 'warranty' | 'certificate' | 'manual' | 'other';
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  documentNumber?: string;
+  documentDate?: string;
+  expiryDate?: string;
+  supplierName?: string;
+  
+  metadata?: MaterialDocumentMetadata;
+  tags?: string[];
+  uploadedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Moved from src/components/project/ProjectMaterials.tsx
+export interface ProjectMaterial {
+  id: string;
+  quantity: number;
+  material: {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    unit: string;
+    price_per_unit: number;
+    originLocation?: string;
+    image?: string;
+  };
+}
+
+// Moved from src/components/project/TeamOverview.tsx
+export interface ProjectResource {
+  id: string;
+  projectId: string;
+  name: string;
+  type: string;
+  allocationDate: string | null;
+  cost_per_unit: number | null;
+  quantity: number | null;
+  totalCost: number | null;
+  unit: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Moved from src/components/tenders/DqeResourcePicker.tsx
+export interface DqeResourceValue {
+  resourceKind?: 'internalQualification' | 'externalProvider' | 'material';
+  employee_qualification_id?: string;
+  supplierId?: string;
+  supplier_contract_ref?: string;
+  estimatedHours?: number;
 }

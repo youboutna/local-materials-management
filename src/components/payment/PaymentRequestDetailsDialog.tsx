@@ -14,27 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, XCircle, AlertCircle, FileText, Building2, CreditCard } from 'lucide-react';
 
-interface PaymentRequest {
-  id: string;
-  supplier_id: string;
-  project_id: string;
-  amount: number;
-  description: string;
-  payment_reason: string;
-  status: string;
-  requested_date: string;
-  notes: string;
-  suppliers?: {
-    name: string;
-    account_number: string | null;
-    bank_name: string | null;
-    rib: string | null;
-  };
-  projects?: {
-    title: string;
-  };
-}
-
+import { PaymentRequest } from '@/dtos/entities/PaymentDTO';
 interface PaymentRequestDetailsDialogProps {
   request: PaymentRequest | null;
   open: boolean;

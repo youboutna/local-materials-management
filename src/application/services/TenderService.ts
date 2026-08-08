@@ -7,17 +7,8 @@ import { Tender } from '@/domain/entities/Tender';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
-import { TenderDocumentDTO } from '@/dtos/entities/TenderDocumentDTO';
-import {
-    CreateAccessLogDTO,
-    CreateSharingSecretDTO,
-    CreateTenderDocumentRequestDto,
-    GetProjectTendersRequestDto,
-    GetTenderByIdRequestDto,
-    TenderOption,
-    TenderSharingSecretDTO,
-    ValidateSecretResponseDTO
-} from '@/dtos/entities/TenderServiceDTO';
+import { TenderDocumentDTO } from '@/dtos/entities/TenderDTO';;
+import { TenderOption } from '@/dtos/entities/TenderDTO';;
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

@@ -52,18 +52,6 @@ export interface UpdateQuantityTakeoffData extends Partial<BaseFormDTO<QuantityT
 /**
  * Quantity calculation result
  */
-export interface QuantityCalculationResult {
-  materialId: string;
-  materialName: string;
-  originalQuantity: number;
-  calculatedQuantity: number;
-  unit: string;
-  unitPrice: number;
-  totalPrice: number;
-  wastageFactor: number;
-  wastageQuantity: number;
-  totalWithWastage: number;
-}
 
 /**
  * Quantity takeoff summary for project
@@ -103,16 +91,7 @@ export interface QuantityCalculationParams {
 /**
  * Calculate quantity with wastage factor (advanced)
  */
-export function calculateQuantityAdvanced(params: QuantityCalculationParams): QuantityCalculationResult {
-  const {
-    length = 0,
-    width = 0,
-    height = 0,
-    area = 0,
-    volume = 0,
-    weight = 0,
-    count = 0,
-    wastageFactor = 0.1
+export function wastageFactor = 0.1
   } = params;
 
   let baseQuantity = 0;
@@ -155,3 +134,75 @@ export const calculateQuantity = (
   if (unit === 'm') return length;
   return 1;
 };
+// Moved from src/components/project/QuantityTakeoffs.tsx
+export interface QuantityTakeoff {
+  id: string;
+  elementType: string;
+  unit: string;
+  length: number;
+  width?: number;
+  height?: number;
+  quantity: number;
+  unitPrice?: number;
+  totalValue?: number;
+  note?: string;
+  material: {
+    id: string;
+    name: string;
+    unit: string;
+    price_per_unit: number;
+  };
+}
+
+// Moved from src/application/services/QuantityTakeoffService.ts
+export interface QuantityTakeoffStats {
+  totalQuantityByUnit: Record<string, number>;
+  totalValue: number;
+  count: number;
+  averageUnitPrice: number;
+  materialBreakdown: Array<{
+    materialId: string;
+    materialName: string;
+    totalQuantity: number;
+    totalValue: number;
+    unit: string;
+  }>;
+  phaseBreakdown: Array<{
+    phaseId: string;
+    phaseName: string;
+    totalQuantity: number;
+    totalValue: number;
+    completionPercentage: number;
+  }>;
+  budgetUtilization: {
+    allocatedBudget: number;
+    estimatedCost: number;
+    utilizationPercentage: number;
+    variance: number;
+  };
+}
+
+// Moved from src/application/services/QuantityTakeoffService.ts
+export interface CreateQuantityTakeoffRequestDto {
+  projectId: string;
+  materialId: string;
+  elementType: string;
+  unit: 'm³' | 'm²' | 'm' | 'unité';
+  length: number;
+  width?: number;
+  height?: number;
+  unitPrice?: number;
+  phaseId?: string;
+  milestoneId?: string;
+  note?: string;
+}
+
+// Moved from src/application/services/QuantityTakeoffService.ts
+export interface UpdateQuantityTakeoffRequestDto {
+  quantity?: number;
+  unitPrice?: number;
+  materialId?: string;
+  phaseId?: string;
+  milestoneId?: string;
+  note?: string;
+}

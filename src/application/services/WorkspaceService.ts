@@ -5,11 +5,7 @@
  */
 
 import { OperationalStatus } from '@/domain/entities/Workspace';
-import {
-    CreateWorkspaceRequestDTO,
-    UpdateWorkspaceRequestDTO,
-    WorkspaceDTO
-} from '@/dtos/entities/WorkspaceDTO';
+import { WorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';;
 import { WorkspaceTransformer } from '@/dtos/transforms/WorkspaceTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

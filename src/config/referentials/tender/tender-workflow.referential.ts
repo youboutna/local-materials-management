@@ -1,3 +1,4 @@
+import { TenderTransition } from '@/dtos/entities/TenderDTO';
 /**
  * Tender Workflow Referential
  * Source de vérité pour les statuts, transitions et gardes métier du cycle DDE.
@@ -23,15 +24,6 @@ export interface TenderStatusDefinition {
   color: 'gray' | 'blue' | 'green' | 'amber' | 'purple' | 'emerald' | 'slate' | 'red';
   isPublic: boolean; // exposé au portail fournisseur ?
   isTerminal: boolean;
-}
-
-export interface TenderTransition {
-  from: TenderStatusCode;
-  to: TenderStatusCode;
-  label: string;
-  requiredRole?: Array<'admin' | 'project_manager' | 'director'>;
-  /** Gardes : renvoient un message d'erreur si non satisfaites (undefined = OK). */
-  guards?: Array<(ctx: TenderTransitionContext) => string | undefined>;
 }
 
 export interface TenderTransitionContext {

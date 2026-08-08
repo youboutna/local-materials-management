@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,21 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MaterialSelector from '@/components/MaterialSelector';
 
-interface ProjectMaterial {
-  id: string;
-  quantity: number;
-  material: {
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    unit: string;
-    price_per_unit: number;
-    origin_location?: string;
-    image?: string;
-  };
-}
-
+import { ProjectMaterial } from '@/dtos/entities/MaterialDTO';
 interface SelectedMaterial {
   materialId: string;
   quantity: number;
@@ -73,7 +58,6 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
       setLoading(false);
     }
   };
-
 
   const createQuantityTakeoffs = async (materials: SelectedMaterial[]) => {
     try {
