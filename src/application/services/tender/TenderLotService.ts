@@ -3,7 +3,9 @@
  * Hexagonal service (pure TS, no React).
  */
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { TenderLotTransformer, TenderLotRecord } from '@/dtos/transforms/TenderLotTransformer';
+import { TenderLotTransformer, type TenderLotRecord } from '@/dtos/transforms/TenderLotTransformer';
+
+export type { TenderLotRecord };
 
 export class TenderLotService {
   async listByTender(tenderId: string): Promise<TenderLotRecord[]> {
@@ -14,7 +16,7 @@ export class TenderLotService {
       .eq('tender_id', tenderId)
       .order('number', { ascending: true });
     if (error) throw error;
-    return (data ?? []).map(fromRow);
+    return (data ?? []).map((row) => TenderLotTransformer.fromRow(row));
   }
 
   async create(lot: Omit<TenderLotRecord, 'id'>): Promise<TenderLotRecord> {
