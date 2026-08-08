@@ -76,6 +76,7 @@ import {
     TenderEstimateAdapter
 } from '@/infrastructure/supabase/adapters';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter';
+import { SupabaseRealtimeAdapter } from '@/infrastructure/supabase/adapters/SupabaseRealtimeAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/SupabaseStorageAdapter';
 
 // ================================================================
@@ -146,6 +147,7 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
+import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
@@ -237,6 +239,7 @@ interface RepositoryRegistry {
   projectBudgetLink?: IProjectBudgetLinkRepository;
   paymentBlocking?: IPaymentBlockingRepository;
   taskAssignment?: ITaskAssignmentRepository;
+  realtime?: IRealtimeRepository;
 }
 
 const registry: RepositoryRegistry = {};
@@ -713,6 +716,13 @@ export class RepositoryFactory {
       delete registry[key as keyof RepositoryRegistry];
     });
     this.postgrestClient = undefined;
+  }
+
+  // ---------- REALTIME ----------
+  static getRealtimeRepository(): IRealtimeRepository {
+    if (registry.realtime) return registry.realtime;
+    registry.realtime = new SupabaseRealtimeAdapter();
+    return registry.realtime;
   }
 
   static getDataKind(): DataProviderKind {
