@@ -63,9 +63,16 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
     setIsCreating(true);
     try {
       const svc = getWorkflowStepService();
-      // createWorkflowStep not yet implemented - log warning
-      console.warn('WorkflowStepsManager: createWorkflowStep not yet implemented in WorkflowStepService');
-      // TODO: await svc.createWorkflowStep({ tender_id: tenderId, ...stepData });
+      await svc.createWorkflowStep({
+        tender_id: tenderId,
+        title: stepData.title,
+        description: stepData.description,
+        step_number: stepData.step_number,
+        procurement_phase: stepData.procurement_phase,
+        procurement_stage: stepData.procurement_stage,
+        required_documents: stepData.required_documents,
+        status: stepData.status,
+      });
 
       // Invalidate queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
