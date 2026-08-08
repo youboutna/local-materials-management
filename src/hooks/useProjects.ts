@@ -1,5 +1,5 @@
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
-import { ProjectDTO, ProjectFormDTO } from '@/dtos/entities/ProjectDTO';
+import { CreateProjectDTO, ProjectDTO, ProjectFormDTO } from '@/dtos/entities/ProjectDTO';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useEffect, useState } from 'react';
