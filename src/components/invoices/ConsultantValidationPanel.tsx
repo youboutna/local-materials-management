@@ -1,6 +1,6 @@
 import { AuthService, getAuthService} from '@/application/services/AuthService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { StorageService } from '@/application/services/StorageService';
+import { getNotificationService } from '@/application/services/NotificationService';
+import { getStorageService } from '@/application/services/StorageService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ export function ConsultantValidationPanel() {
   
   // Initialize services
   const authService = getAuthService();
-  const storageService = new StorageService(RepositoryFactory.getStorageRepository());
+  const storageService = getStorageService();
 
   // Check consultant permissions
   const isConsultant = hasAnyRole(['admin', 'consultant', 'manager']);
@@ -221,7 +221,7 @@ export function ConsultantValidationPanel() {
       // Create notification for supplier
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
-        const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+        const notificationService = getNotificationService();
         await notificationService.createNotification({
           recipientId: invoice.id, // Should be supplier user ID
           title: approved ? 'Facture approuvée par le consultant' : 'Facture rejetée par le consultant',

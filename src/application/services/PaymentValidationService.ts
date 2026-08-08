@@ -8,8 +8,11 @@ import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRe
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
+import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { PAYMENT_TOLERANCE_RATIO } from '@/config/referentials/mauritanian-public-procurement.referential';
 
 export interface PaymentStats {
   blockedPayments: number;
@@ -27,17 +30,23 @@ export class PaymentValidationService {
   private bankGuaranteeRepository: IBankGuaranteeRepository;
   private insuranceRepository: IInsuranceRepository;
   private documentRepository: IDocumentRepository;
+  private projectRepository: IProjectRepository;
+  private paymentRepository: IPaymentRepository;
 
   constructor(
     paymentBlockingRepository?: IPaymentBlockingRepository,
     bankGuaranteeRepository?: IBankGuaranteeRepository,
     insuranceRepository?: IInsuranceRepository,
-    documentRepository?: IDocumentRepository
+    documentRepository?: IDocumentRepository,
+    projectRepository?: IProjectRepository,
+    paymentRepository?: IPaymentRepository
   ) {
     this.paymentBlockingRepository = paymentBlockingRepository || RepositoryFactory.getPaymentBlockingRepository();
     this.bankGuaranteeRepository = bankGuaranteeRepository || RepositoryFactory.getBankGuaranteeRepository();
     this.insuranceRepository = insuranceRepository || RepositoryFactory.getInsuranceRepository();
     this.documentRepository = documentRepository || RepositoryFactory.getDocumentRepository();
+    this.projectRepository = projectRepository || RepositoryFactory.getProjectRepository();
+    this.paymentRepository = paymentRepository || RepositoryFactory.getPaymentRepository();
   }
 
   /**
@@ -132,14 +141,27 @@ export class PaymentValidationService {
 
   /**
    * Calculate allowed payment amount for a project (UI compatibility)
+   * Business rule: allowed amount = progress-based share of budget minus already paid amounts.
    */
   async calculateAllowedAmount(projectId: string): Promise<number> {
     try {
-      const project = await this.documentRepository.findByProjectId(projectId);
-      return 1000; // Placeholder - implement proper calculation
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Project ${projectId} not found`);
+      }
+
+      const payments = await this.paymentRepository.findByProjectId(projectId);
+      const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+      const progressBasedAmount = (project.budget * project.progress) / 100;
+      return Math.max(0, progressBasedAmount - totalPaid);
     } catch (error) {
       console.error('PaymentValidationService.calculateAllowedAmount failed:', error);
-      return 0;
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate allowed amount');
     }
   }
 
@@ -148,7 +170,7 @@ export class PaymentValidationService {
    */
   async getMaxAllowedAmountWithTolerance(projectId: string): Promise<number> {
     const allowedAmount = await this.calculateAllowedAmount(projectId);
-    return allowedAmount * 1.5;
+    return allowedAmount * PAYMENT_TOLERANCE_RATIO;
   }
 
   /**

@@ -8,10 +8,10 @@ import { Progress } from '../../ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 // Import DTOs and services for hexagonal architecture
-import { BankGuaranteeService } from "@/application/services/BankGuaranteeService";
+import { getBankGuaranteeService } from "@/application/services/BankGuaranteeService";
 import { ComplianceService, getComplianceService} from "@/application/services/ComplianceService";
-import { DocumentService } from "@/application/services/DocumentService";
-import { InsuranceService } from "@/application/services/InsuranceService";
+import { getDocumentService } from "@/application/services/DocumentService";
+import { getInsuranceService } from "@/application/services/InsuranceService";
 import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { DocumentDTO } from "@/dtos/entities/DocumentDTO";
@@ -45,9 +45,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   
   // Initialize services with proper hexagonal architecture
   const complianceService = useMemo(() => getComplianceService(), []);
-  const bankGuaranteeService = useMemo(() => new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository()), []);
-  const insuranceService = useMemo(() => new InsuranceService(RepositoryFactory.getInsuranceRepository()), []);
-  const documentService = useMemo(() => new DocumentService(RepositoryFactory.getDocumentRepository()), []);
+  const bankGuaranteeService = useMemo(() => getBankGuaranteeService(), []);
+  const insuranceService = useMemo(() => getInsuranceService(), []);
+  const documentService = useMemo(() => getDocumentService(), []);
   
   // State for aggregated compliance data (READ-ONLY VIEW)
   const [complianceItems, setComplianceItems] = useState<ComplianceItemDTO[]>(existingCompliance.regulations || []);

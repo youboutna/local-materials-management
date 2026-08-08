@@ -1,6 +1,6 @@
 
-import { DocumentService } from '@/application/services/DocumentService';
-import { TenderService } from '@/application/services/TenderService';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { getTenderService } from '@/application/services/TenderService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,8 +36,8 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
 
   // Initialize services
-  const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
-  const tenderService = new TenderService(RepositoryFactory.getTenderRepository());
+  const documentService = getDocumentService();
+  const tenderService = getTenderService();
 
   // Fetch documents related to the tender
   const { data: documents, isLoading } = useQuery({

@@ -1,5 +1,5 @@
-import { DocumentService } from '@/application/services/DocumentService';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { getInsuranceService } from '@/application/services/InsuranceService';
 import {
     PaymentBlockingService,
     PaymentEligibilityValidationDto, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
@@ -63,9 +63,9 @@ const PaymentBlockingInterface = () => {
         // Initialize services
         const paymentBlockingService = getPaymentBlockingService();
         const paymentService = getPaymentService();
-        const insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
+        const insuranceService = getInsuranceService();
         const projectService = getProjectService();
-        const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+        const documentService = getDocumentService();
 
         // Load blocked payments using PaymentService
         const blockedPayments = await paymentService.getActiveBlockedPayments();
