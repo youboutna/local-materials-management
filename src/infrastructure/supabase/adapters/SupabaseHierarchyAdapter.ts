@@ -6,7 +6,15 @@
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 // Import DTOs following Rule #4
-import { HierarchyStatisticsDTO } from '@/dtos/entities/ReportDTO';;
+import {
+  HierarchyNode,
+  CreateHierarchyNodeDTO,
+  UpdateHierarchyNodeDTO,
+  HierarchyStatisticsDTO,
+  HierarchySearchCriteriaDTO,
+  HierarchySearchResultDTO,
+  HierarchyValidationDTO
+} from '@/dtos/entities/HierarchyDTO';
 
 // Import domain entities
 import { ProjectHierarchy, HierarchyMember, EscalationTarget, EscalationLevel } from '@/domain/entities/Hierarchy';

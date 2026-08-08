@@ -5,7 +5,12 @@
  */
 
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { InsuranceCertificateFormData } from '@/dtos/entities/InsuranceDTO';;
+import { 
+  InsuranceCertificateDTO, 
+  InsuranceCertificateFormData,
+  InsuranceCertificateCreateData,
+  InsuranceCertificateUpdateData 
+} from '@/dtos/entities/InsuranceCertificateDTO';
 
 
 export const insuranceTransform = {

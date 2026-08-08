@@ -14,7 +14,7 @@ import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 export interface SupplierLegacyDTO {
   id: string;
   name: string;
-  contactPerson?: string;
+  contact_person?: string;
   email?: string;
   phone?: string;
 }

@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { ActionFormData } from '@/dtos/entities/ProjectDTO';;
+import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ActionsDropdownProps {

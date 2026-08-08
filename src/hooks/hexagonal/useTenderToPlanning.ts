@@ -8,7 +8,7 @@ import {
   type TenderToPlanningResult,
 } from '@/application/services/tender/TenderToPlanningService';
 
-export function useTenderToPlanningHex() {
+export function useTenderToPlanning() {
   const qc = useQueryClient();
   const mut = useMutation<TenderToPlanningResult, Error, TenderToPlanningInput>({
     mutationFn: (input) => tenderToPlanningService.convert(input),

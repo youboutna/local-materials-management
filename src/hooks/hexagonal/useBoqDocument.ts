@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 
-export function useBoqDocumentHex(filter: BoqLineFilter) {
+export function useBoqDocument(filter: BoqLineFilter) {
   const qc = useQueryClient();
   const key = ['boq', filter.source, filter.contextId ?? filter.projectId ?? filter.estimateId, filter.phaseId ?? '', filter.resourceType ?? '', filter.documentId ?? ''];
 

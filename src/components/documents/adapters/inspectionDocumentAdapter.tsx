@@ -9,7 +9,7 @@ const INSPECTION_CATEGORY_LABELS: Record<string, string> = {
   other: 'Autre',
 };
 
-export function useInspectionDocumentAdapterHex(inspectionId: string): DocumentHubContract {
+export function useInspectionDocumentAdapter(inspectionId: string): DocumentHubContract {
   return useDocumentsTableAdapter({
     scopeLabel: "Documents de l'inspection",
     queryKey: ['documents', 'inspection', inspectionId],

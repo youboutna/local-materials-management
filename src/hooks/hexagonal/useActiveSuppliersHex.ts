@@ -6,9 +6,13 @@ import { SupplierService } from '@/application/services/SupplierService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
+export interface ActiveSupplier {
+  id: string;
+  name: string;
+  contact_person?: string;
+  type?: string;
+}
 
-
-import { ActiveSupplier } from '@/dtos/entities/SupplierDTO';
 // Hook: Fetch active suppliers for task assignment
 export function useActiveSuppliersHex() {
   const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());

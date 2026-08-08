@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
-import { PhaseProgress } from '@/dtos/entities/PhaseDTO';;
+import { getWorkflowService, WorkflowService, PhaseProgress } from '@/application/services/WorkflowService';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =

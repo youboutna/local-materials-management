@@ -31,15 +31,60 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 
+interface PublicTender {
+  id: string;
+  title: string;
+  description: string;
+  project_id?: string;
+  launch_date?: string;
+  attribution_date?: string;
+  deadline_date?: string;
+  selection_mode?: string;
+  market_type?: string;
+  financing_source?: string;
+  project_reference?: string;
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+  current_phase?: number;
+  created_at: string;
+  updated_at: string;
+  project?: {
+    title: string;
+    description?: string;
+    location?: string;
+  };
+}
 
+interface BidSubmission {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  metadata?: {
+    tender_id?: string;
+    submission_date?: string;
+    submission_type?: string;
+    administrative_docs?: string[];
+    technical_docs?: string[];
+    financial_docs?: string[];
+  };
+}
 
+interface SharedDocument {
+  id: string;
+  title: string;
+  file_url: string;
+  file_name: string;
+  description?: string;
+  created_at: string;
+  metadata?: {
+    tender_id?: string;
+    phase?: number;
+    shared_by?: string;
+  };
+}
 
-
-
-
-import { SharedDocument } from '@/dtos/entities/DocumentDTO';
-import { BidSubmission } from '@/dtos/entities/TenderDTO';
-import { PublicTender } from '@/dtos/entities/TenderDTO';
 const DOCUMENT_CATEGORIES = {
   administrative: 'administrative',
   technical: 'technical', 
@@ -145,6 +190,7 @@ const EnhancedSupplierTenderPortal = () => {
       if (secret) setSupplierEmailFromSecret(prev => prev ?? '');
     }
   }, [searchParams, accessGrantedTenderId]);
+
 
   // Fetch the specific tender granted by the secret code so it can be selected
   // even if it is not listed in the public "browse" query.

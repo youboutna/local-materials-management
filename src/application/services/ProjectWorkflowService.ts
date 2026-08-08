@@ -47,15 +47,12 @@ import { PhaseDTO, PhasePriority, PhaseStatus, PhaseType } from '@/dtos/entities
 import { CreateProjectDTO, ProjectDTO, ProjectStatus, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import { ProjectWorkflowData, SaveResult, StepRelatedDataDTO, ValidationResult, WorkflowStep, WorkflowTransition } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
 
-import { GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
-import { GeneratedTaskData } from '@/dtos/entities/TaskAssignmentDTO';
-import { GeneratedPhaseData } from '@/dtos/entities/PhaseDTO';
 export enum WorkflowMode {
   CREATE = 'create',
   EDIT = 'edit',
@@ -70,6 +67,21 @@ export interface ProjectCreationWorkflowData extends ProjectWorkflowData {
 }
 
 // Phase generation interfaces (from PhaseGeneratorService)
+export interface GeneratedPhaseData {
+  id: string;
+  phaseCode: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  progress: number;
+  order: number;
+  steps: GeneratedStepData[];
+  milestones: GeneratedMilestoneDTO[];
+}
 
 export interface GeneratedStepData {
   id: string;
@@ -79,12 +91,38 @@ export interface GeneratedStepData {
   tasks: GeneratedTaskData[];
 }
 
+export interface GeneratedTaskData {
+  id: string;
+  taskCode: string;
+  name: string;
+  description?: string;
+  estimatedDurationDays: number;
+  requiresInspection: boolean;
+  requiresEngineerApproval: boolean;
+  status: 'not_started' | 'in_progress' | 'completed';
+}
+
 export interface ProjectGenerationConfig {
   referentialType: ReferentialType;
   projectStartDate: string;
   projectBudget: number;
   projectId?: string;
   generateMilestones: boolean;
+}
+
+export interface GeneratedMilestoneDTO {
+  title: string;
+  description: string;
+  target_date: string;
+  type: string;
+  priority: string;
+  weight: number;
+  deliverables: string[];
+  dependencies: string[];
+  requiresInspection: boolean;
+  inspectionType: string;
+  templateId?: string;
+  phaseCode?: string;
 }
 
 export interface GenerationSummary {
@@ -889,6 +927,8 @@ export class ProjectWorkflowService {
       throw e;
     }
   }
+
+
 
   // =================== WORKFLOW DATA PERSISTENCE ===================
 

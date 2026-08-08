@@ -1,56 +1,56 @@
 // Workflow DTOs for clean data transfer
 export interface WorkflowStepDTO {
   id: string;
-  tenderId: string;
-  stepNumber: number;
+  tender_id: string;
+  step_number: number;
   title: string;
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'approved';
-  dueDate?: string;
-  submissionDate?: string;
-  reviewDeadline?: string;
-  approvalDeadline?: string;
-  actualCompletionDate?: string;
-  procurementPhase?: string;
-  procurementStage?: string;
-  requiredDocuments: string[];
-  canUploadDocuments: boolean;
-  tasksCompleted: number;
-  tasksTotal: number;
-  createdAt: string;
-  updatedAt: string;
+  due_date?: string;
+  submission_date?: string;
+  review_deadline?: string;
+  approval_deadline?: string;
+  actual_completion_date?: string;
+  procurement_phase?: string;
+  procurement_stage?: string;
+  required_documents: string[];
+  can_upload_documents: boolean;
+  tasks_completed: number;
+  tasks_total: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StepDocumentDTO {
   id: string;
-  stepId: string;
-  documentId: string;
-  documentType: string;
-  isRequired: boolean;
+  step_id: string;
+  document_id: string;
+  document_type: string;
+  is_required: boolean;
   status: 'pending' | 'submitted' | 'approved' | 'rejected';
-  submittedAt?: string;
-  reviewerNotes?: string;
+  submitted_at?: string;
+  reviewer_notes?: string;
   document: DocumentInfoDTO;
-  canShare: boolean;
+  can_share: boolean;
 }
 
 export interface DocumentInfoDTO {
   id: string;
   title: string;
   description?: string;
-  fileUrl?: string;
-  fileName?: string;
-  mimeType?: string;
-  fileSize?: number;
+  file_url?: string;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
 }
 
 export interface WorkflowProgressDTO {
-  tenderId: string;
-  totalSteps: number;
-  completedSteps: number;
-  inProgressSteps: number;
-  progressPercentage: number;
-  currentStep?: WorkflowStepDTO;
+  tender_id: string;
+  total_steps: number;
+  completed_steps: number;
+  in_progress_steps: number;
+  progress_percentage: number;
+  current_step?: WorkflowStepDTO;
 }
 
 export interface DocumentUploadDTO {
@@ -58,14 +58,14 @@ export interface DocumentUploadDTO {
   description?: string;
   category: string;
   subcategory: string;
-  isRequired: boolean;
+  is_required: boolean;
   file: File;
-  stepId: string;
+  step_id: string;
 }
 
 export interface DocumentShareDTO {
-  documentIds: string[];
-  stepTitle: string;
-  procurementPhase?: string;
-  procurementStage?: string;
+  document_ids: string[];
+  step_title: string;
+  procurement_phase?: string;
+  procurement_stage?: string;
 }

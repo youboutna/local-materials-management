@@ -12,7 +12,7 @@ export interface DecisionNode {
   type?: MilestoneType | string;
   status?: WorkflowStatus | string;
   description?: string;
-  documents?: Array<{ id?: string; title?: string; fileUrl?: string }>;
+  documents?: Array<{ id?: string; title?: string; file_url?: string }>;
   suggestedActions?: Array<{ id: string; label: string; action?: string }>;
   metadata?: Record<string, unknown>;
 }

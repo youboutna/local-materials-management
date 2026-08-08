@@ -1,9 +1,3 @@
-import { TenderFormData } from '@/dtos/entities/TenderDTO';
-import { EmployeeFormData } from '@/dtos/entities/EmployeeDTO';
-import { PaymentMilestone } from '@/dtos/entities/PaymentDTO';
-import { KanbanTask } from '@/dtos/entities/TaskAssignmentDTO';
-import { ProjectRisk } from '@/dtos/entities/RiskDTO';
-import { ProjectTaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
 /**
  * Hexagonal Hooks Index
  * Central export point for all hexagonal architecture hooks
@@ -269,6 +263,7 @@ export {
   useParsedInvoicesHex, useTenderEstimatesHex
 } from './useTenderEstimateHex';
 
+
 // Document Sharing
 export {
   useShareDocuments, useTenderDocumentsForShare
@@ -442,6 +437,16 @@ export interface UserProfile {
 }
 
 // Form data types
+export interface ProjectTaskFormData {
+  title: string;
+  description?: string;
+  phase_id?: string;
+  assigned_to?: string;
+  priority?: 'low' | 'medium' | 'high';
+  due_date?: string;
+  estimated_hours?: number;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+}
 
 export interface RiskFormData {
   title: string;
@@ -451,6 +456,43 @@ export interface RiskFormData {
   category: string;
   mitigation?: string;
   status?: 'active' | 'mitigated' | 'closed';
+}
+
+export interface ProjectRisk {
+  id: string;
+  title: string;
+  description: string;
+  probability: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+  category: string;
+  mitigation?: string;
+  status: 'active' | 'mitigated' | 'closed';
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KanbanTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'todo' | 'in_progress' | 'done';
+  phase_id?: string;
+  assigned_to?: string;
+  priority: 'low' | 'medium' | 'high';
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentMilestone {
+  id: string;
+  title: string;
+  amount: number;
+  due_date: string;
+  status: 'pending' | 'completed' | 'overdue';
+  project_id: string;
+  phase_id?: string;
 }
 
 // Payment schedule hook (alias for usePaymentsHex)
@@ -473,6 +515,18 @@ export type { CriticalAlert } from './useKPIMetricsHex';
 export type { ActionItem } from './useManagementActionsHex';
 
 // Employee form data
+export interface EmployeeFormData {
+  employee_id: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  hire_date?: string;
+  is_active?: boolean;
+  skills?: string[];
+  salary?: number;
+}
 
 // Supplier management types
 export {
@@ -499,6 +553,25 @@ export type { ProjectDTO as Project } from '@/dtos/entities/ProjectDTO';
 export type { TenderDTO as Tender } from '@/dtos/entities/TenderDTO';
 
 // Tender form data type for compatibility
+export interface TenderFormData {
+  title: string;
+  description: string;
+  project_id: string;
+  launch_date: string;
+  attribution_date: string;
+  deadline_date: string;
+  submission_deadline: string;
+  evaluation_deadline: string;
+  selection_mode: string;
+  market_type: string;
+  financing_source: string;
+  project_reference: string;
+  current_phase: string;
+  current_stage: string;
+  procurement_type: string;
+  estimated_value: string;
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+}
 
 // Project phase type for tender
 export interface ProjectPhaseForTender {

@@ -6,7 +6,13 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
-import { ActiveEmployee } from '@/dtos/entities/EmployeeDTO';
+export interface ActiveEmployee {
+  id: string;
+  full_name: string;
+  position?: string | null;
+  department?: string | null;
+}
+
 export function useActiveEmployeesHex() {
   return useQuery({
     queryKey: ['active-employees'],

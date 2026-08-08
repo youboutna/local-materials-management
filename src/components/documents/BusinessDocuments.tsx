@@ -7,9 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Receipt, FileCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { BusinessDocumentFormData } from '@/dtos/entities/DocumentDTO';;
+import { useUploadBusinessDocument, BusinessDocumentFormData } from '@/hooks/hexagonal/useBusinessDocumentsHex';
 import { parseInvoiceFromPdf } from '@/utils/btpCalculations';
-import { InvoiceLine } from '@/dtos/entities/PaymentDTO';;
+import { InvoiceLine } from '@/utils/types';
 
 interface BusinessDocumentsProps {
   projectId?: string;

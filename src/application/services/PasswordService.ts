@@ -4,7 +4,11 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { PasswordValidationResultDTO } from '@/dtos/entities/PaymentValidationDTO';;
+import {
+  PasswordResetRequestDTO,
+  PasswordUpdateRequestDTO,
+  PasswordValidationResultDTO
+} from '@/dtos/entities/PasswordDTO';
 import { supabase } from '@/integrations/supabase/client';
 
 /**

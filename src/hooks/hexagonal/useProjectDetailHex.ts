@@ -14,7 +14,7 @@ interface ProjectDetailByDTOProps {
   onClose?: () => void;
 }
 
-export function useProjectDetailHex(projectId: string | undefined) {
+export function useProjectDetail(projectId: string | undefined) {
   const queryClient = useQueryClient();
   
   const { projects } = useProjectsHex();
@@ -33,7 +33,7 @@ export function useProjectDetailHex(projectId: string | undefined) {
   };
 }
 
-export function useProjectAnalyticsHex(projectId: string | undefined, projectDetail: any) {
+export function useProjectAnalytics(projectId: string | undefined, projectDetail: any) {
   return {
     analytics: null,
     kpiMetrics: null,
@@ -44,7 +44,7 @@ export function useProjectAnalyticsHex(projectId: string | undefined, projectDet
   };
 }
 
-export function useMilestonesHex(projectId: string | undefined) {
+export function useMilestones(projectId: string | undefined) {
   return {
     milestoneProgress: null,
     isLoading: false,
@@ -53,7 +53,7 @@ export function useMilestonesHex(projectId: string | undefined) {
   };
 }
 
-export function useToastNotificationsHex() {
+export function useToastNotifications() {
   return {
     success: (message: string) => toast.success(message),
     error: (message: string) => toast.error(message),

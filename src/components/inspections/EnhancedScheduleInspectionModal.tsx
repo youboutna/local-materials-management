@@ -126,13 +126,13 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
         // Create inspection request
         try {
           await InspectionWorkflowService.createInspectionRequest({
-            projectId: projectId,
-            phaseId: phaseId,
-            stepId: stepId,
-            inspectionType: inspectionType,
-            requestedBy: 'current_user',
-            requestedDate: details.scheduled_date,
-            proposedDates: details.proposed_dates,
+            project_id: projectId,
+            phase_id: phaseId,
+            step_id: stepId,
+            inspection_type: inspectionType,
+            requested_by: 'current_user',
+            requested_date: details.scheduled_date,
+            proposed_dates: details.proposed_dates,
             priority: details.priority,
             notes: details.requirements,
           });
@@ -147,10 +147,10 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
         // Schedule inspection
         try {
           await InspectionWorkflowService.scheduleInspection({
-            inspectionId: stepId || '',
-            scheduledDate: `${details.scheduled_date}T${details.scheduled_time}:00.000Z`,
-            scheduledTime: details.scheduled_time || '',
-            inspectorId: details.inspector_id || '',
+            inspection_id: stepId || '',
+            scheduled_date: `${details.scheduled_date}T${details.scheduled_time}:00.000Z`,
+            scheduled_time: details.scheduled_time || '',
+            inspector_id: details.inspector_id || '',
             notes: details.requirements,
           });
 

@@ -21,7 +21,22 @@ import { DollarSign, Eye, FileText, Plus, Send, Upload } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { LocalPaymentRequest } from '@/dtos/entities/PaymentDTO';
+interface LocalPaymentRequest {
+  id: string;
+  supplier_id: string;
+  project_id?: string;
+  amount: number;
+  description: string;
+  payment_reason: string;
+  supporting_documents: string[];
+  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  requested_date: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  rejection_reason?: string;
+}
+
 interface ValidationResult {
   hasValidGuarantee: boolean;
   hasValidInsurance: boolean;
@@ -108,6 +123,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
     }
   };
 
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -155,6 +171,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
       };
     }
   };
+
 
   const submitPaymentRequest = async () => {
     if (!amount || !description || !paymentReason) {

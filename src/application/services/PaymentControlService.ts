@@ -4,7 +4,11 @@
  * Business use cases for payment control and blocking functionality
  */
 
-import { PaymentControlSummaryDTO } from '@/dtos/entities/PaymentDTO';;
+import { 
+  PaymentControlDashboardDTO, 
+  PaymentControlSummaryDTO, 
+  PaymentBlockingInterfaceDTO 
+} from '@/dtos/entities/MonitoringDTOs';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';

@@ -34,6 +34,15 @@ export type InspectionStatus =
   | 'completed'
   | 'cancelled';
 
+export interface InspectionSummaryDTO {
+  id: string;
+  date: string;
+  status: InspectionStatus;
+  inspector?: string | null;
+  progressAtInspection?: number | null;
+  comments?: string | null;
+}
+
 export interface PaymentSummaryDTO {
   id: string;
   amount: number;
@@ -43,7 +52,10 @@ export interface PaymentSummaryDTO {
 
 /**
  * Payload UI → Service pour créer une inspection (camelCase strict).
- *Id: string;
+ * Le transformer se charge de la conversion vers snake_case côté DB.
+ */
+export interface CreateInspectionDTO {
+  projectId: string;
   date: string;
   status: InspectionStatus;
   inspectorId: string;
@@ -55,7 +67,15 @@ export interface PaymentSummaryDTO {
 /**
  * Payload UI → Service pour mettre à jour le statut d'un projet.
  */
-export interface UpdateProjectStatusng;
+export interface UpdateProjectStatusDTO {
+  projectId: string;
+  status: ProjectStatus | string;
+}
+
+export interface ProjectWithPaymentsDTO extends BaseEntityDTO {
+  title: string;
+  description?: string | null;
+  status: ProjectStatus | string;
   progress: number;
   startDate: string;
   endDate?: string | null;

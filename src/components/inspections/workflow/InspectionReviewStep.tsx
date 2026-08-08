@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { InspectionDetails } from '@/dtos/entities/InspectionDTO';;
+import { InspectionDetails } from './InspectionDetailsStep';
 import { InspectionDocumentType, InspectionWorkflowService } from '@/application/services/InspectionWorkflowService';
 
 interface InspectionReviewStepProps {

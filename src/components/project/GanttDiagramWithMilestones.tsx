@@ -6,7 +6,15 @@ import { Calendar, ChevronLeft, ChevronRight, Diamond, CheckCircle, Clock, Alert
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addDays, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-import { GanttPhase } from '@/dtos/entities/PhaseDTO';
+interface GanttPhase {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'in_progress' | 'completed';
+}
+
 interface Milestone {
   id: string;
   name: string;

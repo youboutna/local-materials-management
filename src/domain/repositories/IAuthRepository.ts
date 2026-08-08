@@ -7,18 +7,18 @@
 export interface AuthUser {
   id: string;
   email?: string;
-  fullName?: string;
+  full_name?: string;
   role?: string;
   phone?: string;
-  nationalId?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  national_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
   user: AuthUser;
 }
 
@@ -30,9 +30,9 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  fullName?: string;
+  full_name?: string;
   phone?: string;
-  nationalId?: string;
+  national_id?: string;
   role?: string;
 }
 

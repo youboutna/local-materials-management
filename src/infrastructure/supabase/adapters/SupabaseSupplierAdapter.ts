@@ -9,11 +9,9 @@ import { Supplier, SupplierCategory, SupplierStatus } from '@/domain/entities/Su
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Database } from '@/integrations/supabase/types';
 
-
-type SupplierRow = BtpRow;
-
-type BtpRow = Record<string, any>;
+type SupplierRow = Database['btp']['Tables']['suppliers']['Row'];
 
 export class SupabaseSupplierAdapter implements ISupplierRepository {
   private mapToEntity(data: SupplierRow): Supplier {
@@ -40,7 +38,7 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
 
   async save(supplier: Supplier): Promise<void> {
     const dbData = SupplierTransformer.toSupabase(supplier);
-    const { error } = await supabase.from('suppliers').insert([dbData as BtpRow]);
+    const { error } = await supabase.from('suppliers').insert([dbData as Database['btp']['Tables']['suppliers']['Insert']]);
     if (error) throw new Error(`Failed to save supplier: ${error.message}`);
   }
 
@@ -55,7 +53,7 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
     if (data.status !== undefined) updateData.is_active = data.status === 'active';
     if (data.externalRef !== undefined) updateData.external_ref = data.externalRef;
 
-    const { error } = await supabase.from('suppliers').update(updateData as BtpRow).eq('id', id);
+    const { error } = await supabase.from('suppliers').update(updateData as Database['btp']['Tables']['suppliers']['Update']).eq('id', id);
     if (error) throw new Error(`Failed to update supplier: ${error.message}`);
   }
 

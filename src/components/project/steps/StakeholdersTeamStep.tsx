@@ -33,7 +33,7 @@ import {
 
 // Import entity DTOs (PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import {
   StakeholderDTO,
   CreateStakeholderDTO,

@@ -8,7 +8,7 @@ export const useProjectManager = () => {
     // Return a default implementation when provider is not available
     return {
       data: null,
-      runChecks: async () => { /* TODO */ },
+      runChecks: async () => {},
       acknowledgeAlert: () => {}
     };
   }

@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { CreateEnhancedActionRequestDTO as CreateEnhancedActionRequest } from '@/dtos/entities/ActionDTO';
-import { InsuranceAlertDTO } from '@/dtos/entities/NotificationDTO';;
+import { InsuranceAlertDTO } from '@/dtos/entities/InsuranceDTO';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
@@ -31,7 +31,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-import { LocalInsuranceCertificate } from '@/dtos/entities/InsuranceDTO';
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'Project ID requis'),
   contractorId: z.string().min(1, 'Contractor ID requis'),
@@ -45,7 +44,40 @@ const insuranceFormSchema = z.object({
   notes: z.string().optional()
 });
 
-
+interface LocalInsuranceCertificate {
+  id?: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  coverageType: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
+  validFrom: string;
+  validUntil: string;
+  certificateUrl?: string;
+  status: 'active' | 'expired' | 'expiring_soon' | 'missing';
+  lastVerified?: string;
+  verifiedBy?: string;
+  notes?: string;
+  project_id?: string;
+  contractor_id?: string;
+  contractor_name?: string;
+  insurance_company?: string;
+  policy_number?: string;
+  coverage_amount?: number;
+  coverage_type?: string;
+  valid_from?: string;
+  valid_until?: string;
+  certificate_url?: string;
+  documents?: Array<{
+    id: string;
+    title: string;
+    file_url?: string;
+    file_name?: string;
+    mime_type?: string;
+  }>;
+}
 
 const UnifiedInsuranceManager = () => {
   const { toast } = useToast();

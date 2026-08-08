@@ -220,7 +220,7 @@ export interface UpdateRiskDTO {
   riskLevel?: RiskLevel;
   mitigationStrategy?: string;
   mitigationPlan?: string;
-  mitigationStatus?: 'notStarted' | 'in_progress' | 'completed';
+  mitigationStatus?: 'not_started' | 'in_progress' | 'completed';
   mitigationCost?: number;
   mitigationOwner?: string; // Employee ID only for DTO
   reviewer?: string; // Employee ID only for DTO
@@ -318,7 +318,7 @@ export interface RiskMitigationDTO {
   startDate?: string;
   targetDate?: string;
   completionDate?: string;
-  status: 'planned' | 'inProgress' | 'completed' | 'cancelled';
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
   cost?: number;
   effectiveness?: 'low' | 'medium' | 'high';
   lessons?: string[];
@@ -354,155 +354,4 @@ export interface RiskFilterDTO {
     startDate?: string;
     endDate?: string;
   };
-}
-// Moved from src/components/project/steps/EnhancedRiskAnalysisStep.tsx
-export interface EnhancedRisk {
-  id: string;
-  title: string;
-  description: string;
-  category: 'technical' | 'financial' | 'environmental' | 'regulatory' | 'operational' | 'security' | 'healthSafety' | 'quality' | 'schedule' | 'resource' | 'stakeholder';
-  probability: number; // 1-10 scale
-  impact: number; // 1-10 scale
-  riskScore: number; // probability * impact * weight
-  weight: number; // Category weight
-  mitigationPlan: string;
-  contingencyPlan: string;
-  status: 'identified' | 'assessed' | 'mitigated' | 'monitoring' | 'closed' | 'escalated';
-  owner: string;
-  reviewDate: string;
-  costs: number;
-  timelineImpact: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  dependencies: string[];
-  affectedPhases: string[];
-  riskResponse: 'accept' | 'mitigate' | 'transfer' | 'avoid';
-  lastUpdated: string;
-}
-
-// Moved from src/hooks/hexagonal/index.ts
-export interface ProjectRisk {
-  id: string;
-  title: string;
-  description: string;
-  probability: 'low' | 'medium' | 'high';
-  impact: 'low' | 'medium' | 'high';
-  category: string;
-  mitigation?: string;
-  status: 'active' | 'mitigated' | 'closed';
-  projectId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Moved from src/application/services/RiskService.ts
-export interface CreateRiskRequest {
-  projectId: string;
-  title: string;
-  description?: string;
-  probability: number;
-  impact: number;
-  category?: string;
-  mitigationStrategy?: string;
-  identifiedBy?: string;
-}
-
-// Moved from src/application/services/RiskService.ts
-export interface UpdateRiskRequest {
-  title?: string;
-  description?: string;
-  probability?: number;
-  impact?: number;
-  status?: string;
-  category?: string;
-  mitigationStrategy?: string;
-}
-// Moved from src/dtos/entities/AdvancedTenderEstimateDTO.ts (reconciled)
-export interface RiskFactorDTO {
-  type: 'amount' | 'validityPeriod' | 'itemCount' | 'expiry' | 'currency' | 'market';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  impactScore: number;
-  mitigationSuggestion: string;
-}
-
-// Moved from src/dtos/entities/ContractDTO.ts (reconciled)
-export interface ContractRiskAssessment {
-  overallRisk: 'low' | 'medium' | 'high' | 'critical';
-  financialRisk: 'low' | 'medium' | 'high' | 'critical';
-  operationalRisk: 'low' | 'medium' | 'high' | 'critical';
-  complianceRisk: 'low' | 'medium' | 'high' | 'critical';
-  riskFactors: Array<{
-    factor: string;
-    level: 'low' | 'medium' | 'high' | 'critical';
-    mitigation: string;
-  }>;
-  lastAssessed: string;
-}
-
-// Moved from src/dtos/entities/ProjectAnalyticsDTO.ts (reconciled)
-export interface CreateProjectRiskRequestDTO {
-  projectId: string;
-  riskTitle: string;
-  riskDescription: string;
-  riskCategory: string;
-  probability: 'low' | 'medium' | 'high';
-  impact: 'low' | 'medium' | 'high';
-  mitigationStrategy: string;
-  targetResolutionDate?: string;
-  assignedTo?: string;
-}
-
-// Moved from src/dtos/entities/ProjectAnalyticsDTO.ts (reconciled)
-export interface UpdateProjectRiskRequestDTO {
-  riskTitle?: string;
-  riskDescription?: string;
-  riskCategory?: string;
-  probability?: 'low' | 'medium' | 'high';
-  impact?: 'low' | 'medium' | 'high';
-  mitigationStrategy?: string;
-  status?: 'active' | 'mitigated' | 'closed';
-  targetResolutionDate?: string;
-  assignedTo?: string;
-}
-
-// Moved from src/dtos/entities/ReportDTO.ts (reconciled)
-export interface RiskAssessmentDTO {
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
-  risks: RiskDTO[];
-  mitigationStrategies: MitigationStrategyDTO[];
-}
-
-// Moved from src/dtos/entities/ReportDTO.ts (reconciled)
-export interface RiskItemDTO {
-  id: string;
-  category: 'financial' | 'technical' | 'environmental' | 'regulatory' | 'schedule';
-  description: string;
-  probability: number; // 0-100
-  impact: number; // 0-100
-  riskScore: number; // probability * impact
-  status: 'identified' | 'assessed' | 'mitigated' | 'closed';
-}
-
-// Moved from src/dtos/entities/ReportDTO.ts (reconciled)
-export interface IdentifiedRiskDTO {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  probability: number;
-  impact: number;
-  riskScore: number;
-  status: 'identified' | 'mitigated' | 'accepted' | 'monitoring';
-  identifiedDate: string;
-  mitigation?: MitigationStrategyDTO;
-}
-
-// Moved from src/dtos/entities/ReportDTO.ts (reconciled)
-export interface RiskMatrixDTO {
-  low: string[];
-  medium: string[];
-  high: string[];
-  critical: string[];
-  overallStrategy: string;
 }

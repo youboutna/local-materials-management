@@ -4,42 +4,42 @@
  * Following hexagonal architecture principles
  */
 
-import { MaterialUsageDTO } from '@/dtos/entities/MaterialDTO';;
+import { MaterialUsageDTO, MilestoneDTO, MilestonePriority, MilestoneType } from '@/dtos/entities/MilestoneDTO';
 
 export interface CreateMilestoneData {
-  projectId: string;
-  phaseId?: string;
+  project_id: string;
+  phase_id?: string;
   title: string;
   description?: string;
-  targetDate: string;
-  completionDate?: string;
+  target_date: string;
+  completion_date?: string;
   status?: string;
   priority?: MilestonePriority;
   type?: MilestoneType;
-  stageType?: string;
+  stage_type?: string;
   weight?: number;
   dependencies?: string[];
   notes?: string;
-  materialUsage?: MaterialUsageDTO[];
-  materialCostEstimate?: number;
-  actualMaterialCost?: number;
+  material_usage?: MaterialUsageDTO[];
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface UpdateMilestoneData {
   title?: string;
   description?: string;
-  targetDate?: string;
-  completionDate?: string;
+  target_date?: string;
+  completion_date?: string;
   status?: string;
   priority?: MilestonePriority;
   type?: MilestoneType;
-  stageType?: string;
+  stage_type?: string;
   weight?: number;
   dependencies?: string[];
   notes?: string;
-  materialUsage?: MaterialUsageDTO[];
-  materialCostEstimate?: number;
-  actualMaterialCost?: number;
+  material_usage?: MaterialUsageDTO[];
+  material_cost_estimate?: number;
+  actual_material_cost?: number;
 }
 
 export interface IMilestoneRepository {

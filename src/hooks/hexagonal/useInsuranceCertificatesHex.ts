@@ -6,7 +6,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { InsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
-import { InsuranceCertificateUpdateData } from '@/dtos/entities/InsuranceDTO';;
+import { 
+  InsuranceCertificateDTO, 
+  InsuranceCertificateCreateData,
+  InsuranceCertificateUpdateData 
+} from '@/dtos/entities/InsuranceCertificateDTO';
 
 // Export the type for external use
 export type { InsuranceCertificateDTO as InsuranceCertificateData } from '@/dtos/entities/InsuranceCertificateDTO';

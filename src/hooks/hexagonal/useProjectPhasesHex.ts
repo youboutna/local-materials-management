@@ -6,8 +6,33 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { PhaseFormData } from '@/dtos/entities/PhaseDTO';
-import { ProjectPhase } from '@/dtos/entities/PhaseDTO';
+export interface ProjectPhase {
+  id: string;
+  name: string;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  progress: number | null;
+  phase_type?: string | null;
+  construction_phase?: string | null;
+  custom_phase_data?: Record<string, unknown>;
+}
+
+export interface PhaseFormData {
+  project_id: string;
+  phase_name: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  estimated_duration?: number;
+  estimated_cost?: number;
+  status?: string;
+  progress?: number;
+  phase_type?: string;
+  construction_phase?: string;
+  custom_phase_data?: Record<string, unknown>;
+}
+
 export function useProjectPhasesHex(projectId?: string) {
   const queryClient = useQueryClient();
 

@@ -88,7 +88,7 @@ export interface Task {
 
 export interface Inspection {
   id: string;
-  projectId: string;
+  project_id: string;
   inspector: string;
   date: string;
   inspectionDate?: string;
@@ -102,12 +102,12 @@ export interface Inspection {
     | "requires_changes"
     | "pending"
     | "planned";
-  progressAtInspection: number;
+  progress_at_inspection: number;
   progressAtInspection?: number;
   comments?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  phaseId?: string | null;
+  created_at: string;
+  updated_at: string;
+  phase_id?: string | null;
   documents?: string[];
   issues?: InspectionIssue[] | string[];
   recommendations?: string[];
@@ -190,11 +190,11 @@ export interface ProjectData {
     longitude: number;
   };
 
-  geographicZone?: string;
-  terrainType?: string;
-  environmentalConstraints?: string;
-  hasUtilities?: boolean;
-  requiresPermits?: boolean;
+  geographic_zone?: string;
+  terrain_type?: string;
+  environmental_constraints?: string;
+  has_utilities?: boolean;
+  requires_permits?: boolean;
 
   // Project classification
   category?: string;
@@ -320,7 +320,7 @@ export interface GanttChartData {
 export interface GanttTask {
   id: string;
   text: string;
-  startDate: string;
+  start_date: string;
   duration: number;
   progress: number;
   parent?: string;
@@ -404,38 +404,38 @@ export type EscalationRoles = {
  * ---------------------------
  */
 export type ActionLabels = {
-  taskAssignment: "Assigner une tâche";
-  hierarchyNotification: "Notifier la hiérarchie";
+  task_assignment: "Assigner une tâche";
+  hierarchy_notification: "Notifier la hiérarchie";
   sms: "Envoyer SMS";
   call: "Programmer appel";
   email: "Envoyer email";
   mail: "Courrier postal";
-  exportReceipt: "Exporter reçu";
-  blockchainVerification: "Vérification blockchain";
-  documentUpload: "Uploader document";
-  meetingSchedule: "Planifier réunion";
-  financialReview: "Revue financière";
-  legalConsultation: "Consultation juridique";
+  export_receipt: "Exporter reçu";
+  blockchain_verification: "Vérification blockchain";
+  document_upload: "Uploader document";
+  meeting_schedule: "Planifier réunion";
+  financial_review: "Revue financière";
+  legal_consultation: "Consultation juridique";
 };
 
 export interface Payment {
   id: string;
   amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  progressAtPayment: number;
-  transactionId: string;
+  payment_date: string;
+  payment_method: string;
+  progress_at_payment: number;
+  transaction_id: string;
   // New contractor fields
-  contractorId?: string;
-  contractorName: string;
-  contractorContact: string;
+  contractor_id?: string;
+  contractor_name: string;
+  contractor_contact: string;
   // Method-specific fields
-  bankName?: string;
-  accountNumber?: string;
-  checkNumber?: string;
-  mobileNumber?: string;
-  mobileOperator?: string;
-  receiverName?: string;
+  bank_name?: string;
+  account_number?: string;
+  check_number?: string;
+  mobile_number?: string;
+  mobile_operator?: string;
+  receiver_name?: string;
 }
 
 export type InspectionStatus =
@@ -449,7 +449,7 @@ export interface InspectionData {
   date: string;
   status: InspectionStatus;
   inspector: string;
-  progressAtInspection: number;
+  progress_at_inspection: number;
   comments?: string | null;
   documents?: any[];
 }

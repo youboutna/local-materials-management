@@ -1,5 +1,5 @@
 import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
-import { WorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';;
+import { WorkspaceDTO, CreateWorkspaceRequestDTO, UpdateWorkspaceRequestDTO } from '@/dtos/entities/WorkspaceDTO';
 
 export class WorkspaceTransformer {
   static toDTO(workspace: Workspace): WorkspaceDTO {

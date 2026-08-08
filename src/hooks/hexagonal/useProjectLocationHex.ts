@@ -7,7 +7,7 @@
 
 import { LocationService } from '@/application/services/LocationService';
 import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectLocationData } from '@/dtos/entities/ActionDTO';;
+import { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 import { LocationDTO } from '@/dtos/shared';
 import { AutoFillLocationData, useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

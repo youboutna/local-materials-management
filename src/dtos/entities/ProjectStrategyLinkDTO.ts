@@ -18,6 +18,17 @@ export interface ProjectStrategyLinkDTO extends BaseEntityDTO {
   createdBy: string | null;
 }
 
+export interface CreateProjectStrategyLinkDTO {
+  projectId: string;
+  sourceReferential?: StrategyReferentialSource;
+  leverCode?: string | null;
+  chantierCode?: string | null;
+  interventionCode?: string | null;
+  objectiveCode?: string | null;
+  contributionPct?: number;
+  justification?: string | null;
+}
+
 export interface UpdateProjectStrategyLinkDTO {
   sourceReferential?: StrategyReferentialSource;
   leverCode?: string | null;

@@ -11,9 +11,26 @@ import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-import { SupplierNotificationResult } from '@/dtos/entities/NotificationDTO';
-import { CreateSupplierNotificationRequestDTO } from '@/dtos/entities/NotificationDTO';
-import { SupplierNotificationData } from '@/dtos/entities/NotificationDTO';
+export interface SupplierNotificationData {
+  type: 'password_reset' | 'task_assignment' | 'payment_request' | 'inspection_required';
+  email: string;
+  supplier_name?: string;
+  supplier_id?: string;
+  task_id?: string;
+  task_title?: string;
+  payment_id?: string;
+  payment_amount?: number;
+  inspection_id?: string;
+  inspection_date?: string;
+}
+
+export interface CreateSupplierNotificationRequestDTO {
+  data: SupplierNotificationData;
+  completion_url?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  scheduled_at?: string;
+}
+
 export interface GeneratePasswordResetRequestDTO {
   supplierEmail: string;
   supplierName: string;
@@ -21,7 +38,13 @@ export interface GeneratePasswordResetRequestDTO {
   expiryHours?: number;
 }
 
-export i
+export interface SupplierNotificationResult {
+  success: boolean;
+  notification_id?: string;
+  sent_at?: string;
+  error?: string;
+}
+
 /**
  * Service for managing supplier notifications with hexagonal architecture
  */

@@ -14,9 +14,26 @@ import {
 import { PhaseNode } from "./PhaseNode";
 import { cn } from "@/lib/utils";
 
+interface Phase {
+  id: string;
+  title?: string;
+  phase_name?: string;
+  phase?: string;
+  name?: string;
+  description?: string;
+  status: string;
+  progress: number;
+  startDate?: string;
+  endDate?: string;
+  start_date?: string;
+  end_date?: string;
+  budget?: number;
+  estimated_cost?: number;
+  steps?: any[];
+  stages?: any[];
+  milestones?: any[];
+}
 
-
-import { Phase } from '@/dtos/entities/PhaseDTO';
 interface ProjectHierarchyViewProps {
   project: {
     id: string;

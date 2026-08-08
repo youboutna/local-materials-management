@@ -36,7 +36,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentService } from "@/application/services/DocumentService";
 
-import { ProjectDocument } from '@/dtos/entities/DocumentDTO';
+interface ProjectDocument {
+  id: string;
+  description?: string;
+  file_name?: string;
+  file_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  document_type: string;
+  status: string;
+  created_at: string;
+  tags?: string[];
+}
+
 interface ProjectDocumentsProps {
   projectId: string;
 }

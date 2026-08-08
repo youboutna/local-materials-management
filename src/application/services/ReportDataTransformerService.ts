@@ -5,7 +5,14 @@
 
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { ProjectReportDTO } from '@/dtos/entities/ProjectDTO';;
+import {
+    ConstructionMilestoneDTO,
+    EnhancedPhaseDTO,
+    FinancialMetricsDTO,
+    ProjectAnalyticsDTO,
+    ProjectReportDTO,
+    RiskAssessmentDTO
+} from '@/dtos/entities/ReportDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 

@@ -7,11 +7,15 @@
  */
 
 import { NotificationService } from '@/application/services/NotificationService';
-import { DatabaseMetricsDTO } from '@/dtos/entities/DatabaseMetricsDTO';;
+import {
+    DatabaseMetricsDTO,
+    PerformanceAlertDTO,
+    PerformanceMetricsDTO,
+    PerformanceSummaryDTO
+} from '@/dtos/entities/PerformanceMetricsDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-import { EventPerformanceAlert } from '@/dtos/entities/NotificationDTO';
 // Event-driven interfaces for performance monitoring
 export interface EventPerformanceMetrics {
   overallScore: number;
@@ -21,6 +25,16 @@ export interface EventPerformanceMetrics {
   timelineAdherence: number;
   resourceUtilization: number;
   dataSources: string[];
+}
+
+export interface EventPerformanceAlert {
+  type: 'low_performance' | 'budget_overrun' | 'timeline_delay' | 'quality_issue';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  projectId: string;
+  message: string;
+  threshold: number;
+  currentValue: number;
+  recommendation: string;
 }
 
 export interface PerformanceMonitoringRecord {
@@ -107,6 +121,7 @@ export class PerformanceMonitoringService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get database metrics');
     }
   }
+
 
   /**
    * Get comprehensive performance metrics

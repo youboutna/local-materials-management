@@ -4,9 +4,18 @@ import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+interface Notification {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: string;
+  related_id?: string;
+  read: boolean;
+  created_at: string;
+  metadata: Record<string, unknown>;
+}
 
-
-import { Notification } from '@/dtos/entities/NotificationDTO';
 export const useNotifications = (userId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();

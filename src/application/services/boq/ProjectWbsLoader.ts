@@ -8,8 +8,26 @@
  */
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 
-import { RawTask } from '@/dtos/entities/TaskAssignmentDTO';
-import { RawStep } from '@/dtos/entities/PhaseDTO';
+interface RawStep {
+  id?: string;
+  code?: string;
+  name?: string;
+  label?: string;
+  title?: string;
+  order_index?: number;
+  order?: number;
+  tasks?: RawTask[];
+}
+interface RawTask {
+  id?: string;
+  code?: string;
+  name?: string;
+  label?: string;
+  title?: string;
+  order_index?: number;
+  order?: number;
+}
+
 const pickLabel = (...values: unknown[]) => {
   const match = values.find((v) => typeof v === 'string' && v.trim().length > 0);
   return typeof match === 'string' ? match.trim() : undefined;

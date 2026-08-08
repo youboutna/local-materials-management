@@ -3,7 +3,7 @@
  * Handles conversion between internal and DTO formats
  */
 
-import { SubmissionSecretDTO } from '@/dtos/entities/TenderDTO';;
+import { SubmissionSecretDTO, GenerateSubmissionSecretRequestDTO } from '@/dtos/entities/SubmissionSecretDTO';
 import { SubmissionSecret } from '@/domain/entities/SubmissionSecret';
 
 export class SubmissionSecretTransformer {

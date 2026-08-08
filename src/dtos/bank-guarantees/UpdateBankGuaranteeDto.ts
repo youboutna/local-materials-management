@@ -2,22 +2,22 @@ import { BankGuaranteeActionDTO } from './BankGuaranteeActionDTO';
 
 export interface UpdateBankGuaranteeDTO {
   /** Type of bank guarantee */
-  guaranteeType?: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
+  guarantee_type?: 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention';
   
   /** Guaranteed amount */
-  guaranteeAmount?: number;
+  guarantee_amount?: number;
   
   /** Bank issuing the guarantee */
-  issuingBank?: string;
+  issuing_bank?: string;
   
   /** Unique guarantee reference number */
-  guaranteeNumber?: string;
+  guarantee_number?: string;
   
   /** Date when guarantee was issued */
-  issueDate?: string;
+  issue_date?: string;
   
   /** Expiry date of the guarantee */
-  expiryDate?: string;
+  expiry_date?: string;
   
   /** Current status */
   status?: 'active' | 'expired' | 'cancelled' | 'claimed' | 'pending';
@@ -32,7 +32,7 @@ export interface UpdateBankGuaranteeDTO {
   currency?: string;
   
   /** Exchange rate if applicable */
-  exchangeRate?: number;
+  exchange_rate?: number;
   
   /** Actions performed on this guarantee */
   actions?: BankGuaranteeActionDTO[];

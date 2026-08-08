@@ -9,7 +9,13 @@
  * hexagonales (src/application/services).
  */
 
-import { DevUserProfile } from '@/dtos/entities/DocumentDTO';;
+import {
+  DevUserProfile,
+  getDefaultDevUsers,
+  getDevUsersSnapshot,
+  persistDevUsers,
+  setActiveDevRole,
+} from '@/config/constants';
 
 const isBrowser = typeof window !== 'undefined';
 const OVERRIDES_KEY = 'dev_users_overrides';

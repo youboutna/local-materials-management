@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +9,6 @@ import { useStorageHex } from '@/hooks/hexagonal';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
-import { Document } from '@/dtos/entities/DocumentDTO';
 export type TenderCategory = "administrative" | "technical" | "financial";
 export type TenderSubcategory =
   | "lettre_soumission"
@@ -37,7 +37,20 @@ export type DocumentStatus =
   | "rejected"
   | "archived";
 
-
+export interface Document {
+  id: string;
+  title: string;
+  description: string;
+  document_type: DocumentType;
+  status: DocumentStatus;
+  file_url: string;
+  file_name: string;
+  file_size: number;
+  created_at: string;
+  uploaded_by: string;
+  project_id: string;
+  mime_type?: string;
+}
 
 const TENDER_CATEGORIES: { value: TenderCategory; labelKey: string }[] = [
   { value: "administrative", labelKey: "tender_category.administrative" },

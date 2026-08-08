@@ -13,7 +13,14 @@ import {
 } from '@/config/referentials/reports/report-profiles.referential';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { ProjectReportDTO } from '@/dtos/entities/ProjectDTO';;
+import {
+    CostCalculation,
+    FinancialMetricsDTO,
+    ProjectAnalyticsDTO,
+    ProjectReportDTO,
+    ReportData,
+    RiskAssessmentDTO
+} from '@/dtos/entities/ReportDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 

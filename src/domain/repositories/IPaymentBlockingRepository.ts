@@ -5,29 +5,29 @@
 
 export interface PaymentBlock {
   id: string;
-  paymentRequestId: string;
-  blockReason: string;
-  blockType: 'financial' | 'document' | 'compliance' | 'technical';
+  payment_request_id: string;
+  block_reason: string;
+  block_type: 'financial' | 'document' | 'compliance' | 'technical';
   status: 'active' | 'resolved' | 'cancelled';
-  blockedAmount: number;
-  resolutionNotes?: string;
-  resolvedBy?: string;
-  resolvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  blocked_amount: number;
+  resolution_notes?: string;
+  resolved_by?: string;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PaymentControlAction {
   id: string;
-  paymentBlockId: string;
-  actionType: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  payment_block_id: string;
+  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
   description: string;
-  assignedTo?: string;
-  dueDate?: string;
+  assigned_to?: string;
+  due_date?: string;
   status: 'pending' | 'completed' | 'cancelled';
-  createdBy: string;
-  createdAt: string;
-  completedAt?: string;
+  created_by: string;
+  created_at: string;
+  completed_at?: string;
 }
 
 export interface IPaymentBlockingRepository {

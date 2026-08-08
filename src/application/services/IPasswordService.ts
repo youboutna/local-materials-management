@@ -1,4 +1,8 @@
-import { PasswordValidationResultDTO } from '@/dtos/entities/PaymentValidationDTO';;
+import {
+  PasswordResetRequestDTO,
+  PasswordUpdateRequestDTO,
+  PasswordValidationResultDTO
+} from '@/dtos/entities/PasswordDTO';
 
 export interface IPasswordService {
   requestPasswordReset(request: PasswordResetRequestDTO): Promise<{ success: boolean; error?: string }>;

@@ -15,7 +15,7 @@ import { MilestoneSummaryDTO } from '@/dtos/entities/MilestoneDTO';
 /**
  * Hook pour récupérer le contexte complet du projet
  */
-export function useProjectActionContextHex(projectId: string | undefined) {
+export function useProjectActionContext(projectId: string | undefined) {
   const service = getCheckpointActionContextService();
 
   return useQuery<ProjectActionContext | null>({
@@ -32,7 +32,7 @@ export function useProjectActionContextHex(projectId: string | undefined) {
 /**
  * Hook pour récupérer le contexte de paiement
  */
-export function usePaymentActionContextHex(
+export function usePaymentActionContext(
   projectId: string | undefined,
   milestoneId?: string,
   phaseId?: string
@@ -53,7 +53,7 @@ export function usePaymentActionContextHex(
 /**
  * Hook pour récupérer le contexte d'inspection
  */
-export function useInspectionActionContextHex(
+export function useInspectionActionContext(
   projectId: string | undefined,
   milestoneId?: string,
   phaseId?: string
@@ -74,7 +74,7 @@ export function useInspectionActionContextHex(
 /**
  * Hook pour récupérer les phases avec étapes
  */
-export function usePhasesWithStepsHex(projectId: string | undefined) {
+export function usePhasesWithSteps(projectId: string | undefined) {
   const service = getCheckpointActionContextService();
 
   return useQuery<PhaseSummary[]>({
@@ -91,7 +91,7 @@ export function usePhasesWithStepsHex(projectId: string | undefined) {
 /**
  * Hook pour récupérer les milestones actionnables
  */
-export function useActionableMilestonesHex(
+export function useActionableMilestones(
   projectId: string | undefined,
   phaseId?: string
 ) {

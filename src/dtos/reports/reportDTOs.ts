@@ -14,7 +14,14 @@ import { EmployeeDTO as ApplicationEmployeeDTO } from '@/dtos/entities/EmployeeD
 import { MaterialDTO as ApplicationMaterialDTO } from '@/dtos/entities/MaterialDTO';
 
 // Import available types from ProjectReportDTO
-import { NotificationMetadata } from '@/dtos/entities/NotificationDTO';;
+import { 
+  NotificationMetadata,
+  NotificationType,
+  TaskType,
+  TaskAssignment,
+  Notification,
+  RiskItemDTO,
+} from '@/dtos/entities/ProjectReportDTO';
 
 // Re-export imported types for downstream usage
 export type { NotificationMetadata, NotificationType, TaskType, TaskAssignment, Notification, RiskItemDTO };
@@ -296,7 +303,7 @@ export interface MitigationStrategyDTO {
   estimatedCost: number;
   timeline: string;
   owner: string;
-  status: 'planned' | 'inProgress' | 'completed';
+  status: 'planned' | 'in_progress' | 'completed';
   effectiveness?: number;
 }
 
@@ -318,7 +325,7 @@ export interface ComplianceItemDTO {
   id: string;
   type: string;
   requirement: string;
-  status: 'compliant' | 'nonCompliant' | 'partial';
+  status: 'compliant' | 'non_compliant' | 'partial';
   score: number;
   lastAssessed: string;
   evidence?: string[];
@@ -333,7 +340,7 @@ export interface ComplianceRecommendationDTO {
   estimatedEffort: string;
   dueDate?: string;
   assignee?: string;
-  status: 'pending' | 'inProgress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
 export interface ComplianceHistoryDTO {
@@ -469,7 +476,7 @@ export interface PhaseMilestoneDTO {
   title: string;
   description?: string;
   type: 'project' | 'phase' | 'delivery' | 'acceptance' | 'payment';
-  status: 'pending' | 'inProgress' | 'completed' | 'delayed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
   
   targetDate: string;
   actualDate?: string;
@@ -507,7 +514,7 @@ export interface ComparisonDataDTO {
   variance: number;
   variancePercentage: number;
   percentile: number;
-  comparison: 'aboveAverage' | 'average' | 'below_average';
+  comparison: 'above_average' | 'average' | 'below_average';
 }
 
 export interface VarianceCauseDTO {

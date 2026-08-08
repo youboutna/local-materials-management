@@ -9,7 +9,11 @@ import {
   AssignableInspector, 
   PermissionResult 
 } from '@/domain/repositories/IInspectionPermissionRepository';
-import { PermissionContextDTO } from '@/dtos/entities/MissionExpenseDTO';;
+import {
+  PermissionContextDTO,
+  AssignableInspectorDTO,
+  PermissionResultDTO
+} from '@/dtos/entities/InspectionPermissionDTO';
 
 export class InspectionPermissionService {
   constructor(

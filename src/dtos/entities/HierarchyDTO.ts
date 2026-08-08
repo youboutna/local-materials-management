@@ -3,7 +3,7 @@
  * Follows hexagonal architecture with proper camelCase naming
  */
 
-import { BaseEntityDTO } from '@/dtos/entities/OrganizationDTO';;
+import { BaseEntityDTO } from './BaseEntityDTO';
 
 export interface HierarchyNode extends BaseEntityDTO {
   projectId: string;
@@ -56,6 +56,24 @@ export interface UpdateHierarchyNodeDTO {
   metadata?: Partial<HierarchyNode['metadata']>;
 }
 
+export interface HierarchyStatisticsDTO {
+  projectId: string;
+  totalNodes: number;
+  maxDepth: number;
+  nodeTypes: Record<string, number>;
+  totalTasks: number;
+  completedTasks: number;
+  totalBudget: number;
+  actualCost: number;
+  overallProgress: number;
+  criticalPath?: string[];
+  riskAssessment?: {
+    level: 'low' | 'medium' | 'high';
+    factors: string[];
+    recommendations: string[];
+  };
+}
+
 export interface HierarchyPathDTO {
   nodeId: string;
   path: string;
@@ -88,7 +106,7 @@ export interface HierarchyValidationDTO {
   isValid: boolean;
   errors: Array<{
     nodeId: string;
-    type: 'circularReference' | 'invalid_parent' | 'duplicate_order' | 'missing_required';
+    type: 'circular_reference' | 'invalid_parent' | 'duplicate_order' | 'missing_required';
     message: string;
     severity: 'error' | 'warning';
   }>;
@@ -129,19 +147,4 @@ export interface HierarchySearchResultDTO {
     text: string;
     reason: string;
   }>;
-}
-// Moved from src/components/project/ProjectHierarchyDisplay.tsx
-export interface HierarchyMember {
-  hierarchyId: string;
-  employeeId: string;
-  employeeName: string;
-  positionTitle: string;
-  department: string;
-  level: number;
-  parentId: string | null;
-  organizationName: string;
-  can_approve_projects: boolean;
-  can_approve_payments: boolean;
-  employeeEmail: string;
-  employeePhone: string;
 }

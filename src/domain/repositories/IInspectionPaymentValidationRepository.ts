@@ -5,12 +5,12 @@
 
 export interface PaymentRequest {
   id: string;
-  inspectionId: string;
-  contractorId: string;
+  inspection_id: string;
+  contractor_id: string;
   amount: number;
   status: string;
-  requestDate: string;
-  createdAt: string;
+  request_date: string;
+  created_at: string;
 }
 
 export interface ProjectDetails {
@@ -22,13 +22,13 @@ export interface ProjectDetails {
 
 export interface InspectionDetails {
   id: string;
-  projectId: string;
+  project_id: string;
   status: string;
-  progressAtInspection: number;
+  progress_at_inspection: number;
   comments?: string | null;
   inspector: string;
   date: string;
-  phaseId?: string | null;
+  phase_id?: string | null;
 }
 
 export interface IInspectionPaymentValidationRepository {

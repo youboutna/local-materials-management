@@ -262,7 +262,7 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
 }
 
 // Hook for using hexagonal auth context
-export function useHexagonalAuthHex(): HexagonalAuthContextType {
+export function useHexagonalAuth(): HexagonalAuthContextType {
   const context = useContext(HexagonalAuthContext);
   if (context === undefined) {
     throw new Error('useHexagonalAuth must be used within a HexagonalAuthProvider');

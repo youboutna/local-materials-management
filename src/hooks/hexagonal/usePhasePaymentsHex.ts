@@ -8,8 +8,18 @@ import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { PhasePaymentFormData } from '@/dtos/entities/PaymentDTO';
-export function usePhasePaymentsHex(phaseId: string) {
+export interface PhasePaymentFormData {
+  amount: string;
+  payment_method: string;
+  payment_date: string;
+  progress_at_payment: string;
+  contractor_name: string;
+  contractor_contact: string;
+  transaction_id: string;
+  supplier_id: string;
+}
+
+export function usePhasePayments(phaseId: string) {
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
   
   return useQuery({
@@ -36,7 +46,7 @@ export function usePhasePaymentsHex(phaseId: string) {
   });
 }
 
-export function useAddPhasePaymentHex(phaseId: string, projectId: string) {
+export function useAddPhasePayment(phaseId: string, projectId: string) {
   const queryClient = useQueryClient();
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
 
@@ -60,7 +70,7 @@ export function useAddPhasePaymentHex(phaseId: string, projectId: string) {
   });
 }
 
-export function useDeletePhasePaymentHex(phaseId: string) {
+export function useDeletePhasePayment(phaseId: string) {
   const queryClient = useQueryClient();
   const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
 
@@ -78,7 +88,7 @@ export function useDeletePhasePaymentHex(phaseId: string) {
   });
 }
 
-export function useSupplierInfoHex(supplierId: string | null) {
+export function useSupplierInfo(supplierId: string | null) {
   const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
   
   return useQuery({

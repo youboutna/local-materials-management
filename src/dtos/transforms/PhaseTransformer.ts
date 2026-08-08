@@ -7,7 +7,14 @@
 
 import { getAllReferentials } from '@/config/referentials';
 import { Phase, PhasePriority, PhaseStatus, PhaseStep, PhaseTask, PhaseType } from '@/domain/entities/Phase';
-import { PhaseTaskDTO } from '@/dtos/entities/TaskAssignmentDTO';;
+import {
+  PhasePriority as DTOPriority,
+  PhaseStatus as DTOStatus,
+  PhaseType as DTOType,
+  PhaseDTO,
+  PhaseStepDTO,
+  PhaseTaskDTO
+} from '@/dtos/entities/PhaseDTO';
 
 // =============================================================================
 // PHASE TYPE CONSTANTS

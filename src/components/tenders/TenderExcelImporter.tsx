@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +10,27 @@ import { useAuth } from '@/hooks/hexagonal';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ImportedTender {
+  ordre: number;
+  objet: string;
+  imputation_budgetaire: string;
+  type_contrat: string;
+  mode_selection: string;
+  date_lancement: string;
+  date_attribution: string;
+}
 
+interface ProcessedTender {
+  title: string;
+  description: string;
+  launch_date: string | null;
+  attribution_date: string | null;
+  market_type: string;
+  selection_mode: string;
+  financing_source: string;
+  status: 'draft' | 'published' | 'closed' | 'awarded';
+}
 
-
-
-import { ProcessedTender } from '@/dtos/entities/TenderDTO';
-import { ImportedTender } from '@/dtos/entities/TenderDTO';
 const TenderExcelImporter: React.FC = () => {
   const { toast } = useToast();
   const { getUser } = useAuth();

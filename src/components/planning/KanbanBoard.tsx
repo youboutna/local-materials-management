@@ -21,7 +21,7 @@ import {
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { KanbanTask } from '@/dtos/entities/TaskAssignmentDTO';;
+import { useKanbanTasks, KanbanTask } from '@/hooks/hexagonal';
 
 interface KanbanColumn {
   id: string;

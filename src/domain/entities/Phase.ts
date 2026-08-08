@@ -19,11 +19,11 @@ export interface PhaseStep {
   description?: string;
   status: string;
   progress: number;
-  estimatedDurationDays?: number;
-  actualDurationDays?: number;
-  startDate?: string;
-  endDate?: string;
-  orderIndex: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index: number;
   tasks: PhaseTask[];
 }
 
@@ -33,14 +33,14 @@ export interface PhaseTask {
   description?: string;
   status: string;
   progress: number;
-  estimatedDurationDays?: number;
-  actualDurationDays?: number;
-  startDate?: string;
-  endDate?: string;
-  assignedTo?: string[];
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string[];
   dependencies?: string[];
   weight?: number;
-  orderIndex: number;
+  order_index: number;
 }
 
 // Types depuis les DTOs pour centralisation

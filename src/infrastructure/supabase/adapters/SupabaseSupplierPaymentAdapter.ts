@@ -18,7 +18,16 @@ const paymentsDb = supabase as unknown as {
   from: (table: string) => any;
 };
 import { ISupplierPaymentRepository } from '@/domain/repositories/ISupplierPaymentRepository';
-import { CreateSupplierPaymentRequestDTO } from '@/dtos/entities/PaymentDTO';;
+import { 
+  SupplierPaymentRequestDTO, 
+  CreateSupplierPaymentRequestDTO,
+  UpdateSupplierPaymentRequestDTO,
+  SupplierPaymentStatus,
+  SupplierPaymentStatsDTO,
+  SupplierPaymentRequestListDTO,
+  normalizePaymentStatus,
+  normalizePaymentType
+} from '@/dtos/entities/SupplierPaymentDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Database row type matching the table structure

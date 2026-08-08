@@ -6,10 +6,54 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { UpdateWorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';
-import { CreateWorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';
-import { UseWorkspacesHexResult } from '@/dtos/entities/TaskAssignmentDTO';
-export iexport function useWorkspacesHex(): UseWorkspacesHexResult {
+export interface UseWorkspacesHexResult {
+  workspaces: Array<{
+    id: string;
+    name: string;
+    location: string;
+    status: string;
+    contact_manager?: string;
+    contact_phone?: string;
+    facilities?: string[];
+    description?: string;
+    capacity?: number;
+    created_at?: string;
+    updated_at?: string;
+  }>;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+  createWorkspace: (data: CreateWorkspaceDTO) => void;
+  updateWorkspace: { mutate: (params: { id: string; data: UpdateWorkspaceDTO }) => void; isPending: boolean };
+  deleteWorkspace: (id: string) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+}
+
+export interface CreateWorkspaceDTO {
+  name: string;
+  location: string;
+  status?: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: string[];
+  description?: string;
+  capacity?: number;
+}
+
+export interface UpdateWorkspaceDTO {
+  name?: string;
+  location?: string;
+  status?: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: string[];
+  description?: string;
+  capacity?: number;
+}
+
+export function useWorkspacesHex(): UseWorkspacesHexResult {
   const queryClient = useQueryClient();
 
   const {
@@ -120,7 +164,7 @@ export iexport function useWorkspacesHex(): UseWorkspacesHexResult {
   };
 }
 
-export function useWorkspaceByIdHex(id: string) {
+export function useWorkspaceById(id: string) {
   return useQuery({
     queryKey: ['workspaces', 'id', id],
     queryFn: async () => {
@@ -132,7 +176,7 @@ export function useWorkspaceByIdHex(id: string) {
   });
 }
 
-export function useWorkspacesByStatusHex(status: string) {
+export function useWorkspacesByStatus(status: string) {
   return useQuery({
     queryKey: ['workspaces', 'status', status],
     queryFn: async () => {

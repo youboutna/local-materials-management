@@ -7,7 +7,14 @@
 import { Project } from '@/domain/entities/Project';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { ProjectReportDTO } from '@/dtos/entities/ProjectDTO';;
+import {
+  ConstructionMilestoneDTO,
+  EnhancedPhaseDTO,
+  FinancialMetricsDTO,
+  ProjectAnalyticsDTO,
+  ProjectReportDTO,
+  RiskAssessmentDTO
+} from '@/dtos/entities/ReportDTO';
 import { RiskCategory, RiskDTO, RiskLevel, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Database } from '@/integrations/supabase/types';

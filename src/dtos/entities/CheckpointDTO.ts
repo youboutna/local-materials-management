@@ -7,7 +7,7 @@
 
 // Types importés localement pour éviter les imports cycliques
 type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
-import { CheckpointVerificationResultDTO } from '@/dtos/entities/MilestoneDTO';;
+import { CheckpointVerificationResultDTO } from './CheckpointVerificationResultDTO';
 
 /**
  * Checkpoint complet avec toutes les vérifications
@@ -15,41 +15,41 @@ import { CheckpointVerificationResultDTO } from '@/dtos/entities/MilestoneDTO';;
  */
 export interface CheckpointDTO {
   id: string;
-  projectId: string;
-  phaseId?: string;
-  stepId?: string;
-  milestoneId: string;
+  project_id: string;
+  phase_id?: string;
+  step_id?: string;
+  milestone_id: string;
   
   // Identification
   title: string;
   description?: string;
-  checkpointType: 'gate' | 'review' | 'approval' | 'delivery';
+  checkpoint_type: 'gate' | 'review' | 'approval' | 'delivery';
   
   // Seuils
-  triggerProgress: number; // % de progression qui déclenche ce checkpoint
-  financialWeight: number; // % du budget phase lié à ce checkpoint
+  trigger_progress: number; // % de progression qui déclenche ce checkpoint
+  financial_weight: number; // % du budget phase lié à ce checkpoint
   
   // État
   status: VerificationStatus;
   progress: number; // 0-100
   
   // Vérifications requises
-  requiredInspections: string[];
-  requiredDocuments: string[];
-  requiredApprovals: string[];
+  required_inspections: string[];
+  required_documents: string[];
+  required_approvals: string[];
   
   // Résultat de vérification
-  verificationResult?: CheckpointVerificationResultDTO;
+  verification_result?: CheckpointVerificationResultDTO;
   
   // Actions déclenchées
-  triggersPayment: boolean;
-  paymentAmount?: number;
-  triggersNotification: boolean;
-  notificationRecipients?: string[];
+  triggers_payment: boolean;
+  payment_amount?: number;
+  triggers_notification: boolean;
+  notification_recipients?: string[];
   
   // Dates
-  targetDate?: string;
-  completionDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  target_date?: string;
+  completion_date?: string;
+  created_at: string;
+  updated_at: string;
 }

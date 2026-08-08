@@ -13,7 +13,11 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Import workflow DTOs
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import {
+    ProjectWorkflowData,
+    ValidationResult,
+    WorkflowMetricsDTO
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs
 import { CreateProjectDTO, ProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';

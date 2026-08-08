@@ -5,23 +5,23 @@
 
 export interface ProjectAlertDTO {
   id: string;
-  projectId: string;
+  project_id: string;
   type: string;
   severity: string;
   title: string;
   description?: string;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
   acknowledged?: boolean;
-  acknowledgedAt?: string;
-  acknowledgedBy?: string;
+  acknowledged_at?: string;
+  acknowledged_by?: string;
   resolved?: boolean;
-  resolvedAt?: string;
-  resolvedBy?: string;
+  resolved_at?: string;
+  resolved_by?: string;
 }
 
 export interface CreateProjectAlertRequestDto {
-  projectId: string;
+  project_id: string;
   type: string;
   severity: string;
   title: string;

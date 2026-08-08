@@ -90,70 +90,29 @@ export interface InsuranceStatisticsDTO {
   byStatus: Record<string, number>;
 }
 
+export interface InsuranceAlertDTO {
+  id: string;
+  certificateId: string;
+  type: 'expiring' | 'expired' | 'missing';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  daysUntilExpiry?: number;
+  projectId?: string;
+  contractorId?: string;
+  createdAt: string;
+  // UI convenience fields
+  alertLevel?: string;
+  insuranceType?: string;
+  contractorName?: string;
+  policyNumber?: string;
+  expiryDate?: string;
+  daysRemaining?: number;
+}
+
 export interface InsuranceFilterDTO {
   projectId?: string;
   status?: InsuranceStatus | string;
   type?: InsuranceType | string;
   expiringWithin?: number; // days
   contractorId?: string;
-}
-// Moved from src/components/insurance/InsuranceCrud.tsx
-export interface LocalInsuranceCertificate {
-  id: string;
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  coverageType: string;
-  insuranceCompany: string;
-  policyNumber: string;
-  coverageAmount: number;
-  startDate: string;
-  endDate: string;
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  coverageType: string;
-  insuranceCompany: string;
-  policyNumber: string;
-  coverageAmount: number;
-  validFrom: string;
-  validUntil: string;
-  status: string;
-  notes?: string;
-}
-
-// Moved from src/components/insurance/UnifiedInsuranceManager.tsx
-export interface LocalInsuranceCertificate {
-  id?: string;
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  insuranceCompany: string;
-  policyNumber: string;
-  coverageAmount: number;
-  coverageType: 'responsabiliteCivile' | 'decennale' | 'vehicules' | 'materiel' | 'tousRisques';
-  validFrom: string;
-  validUntil: string;
-  certificateUrl?: string;
-  status: 'active' | 'expired' | 'expiringSoon' | 'missing';
-  lastVerified?: string;
-  verifiedBy?: string;
-  notes?: string;
-  projectId?: string;
-  contractorId?: string;
-  contractorName?: string;
-  insuranceCompany?: string;
-  policyNumber?: string;
-  coverageAmount?: number;
-  coverageType?: string;
-  validFrom?: string;
-  validUntil?: string;
-  certificateUrl?: string;
-  documents?: Array<{
-    id: string;
-    title: string;
-    fileUrl?: string;
-    fileName?: string;
-    mimeType?: string;
-  }>;
 }

@@ -13,3 +13,9 @@ export interface PasswordUpdateRequestDTO {
   confirmPassword: string;
   resetToken?: string;
 }
+
+export interface PasswordValidationResultDTO {
+  valid: boolean;
+  email?: string;
+  error?: string;
+}

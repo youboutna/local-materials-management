@@ -19,8 +19,23 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
 
-import { PhaseStepTask } from '@/dtos/entities/TaskAssignmentDTO';
 // Local type for phase hierarchy view data (snake_case from DB query)
+interface PhaseStepTask {
+  phase_id: string;
+  phase_name: string;
+  phase_code: string;
+  status: string;
+  progress?: number;
+  start_date?: string;
+  end_date?: string;
+  step_id?: string;
+  step_name?: string;
+  step_code?: string;
+  task_id?: string;
+  task_name?: string;
+  task_description?: string;
+  assigned_to?: string[];
+}
 
 interface PhaseStepTaskManagerProps {
   projectId: string;

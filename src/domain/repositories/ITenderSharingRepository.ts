@@ -4,7 +4,13 @@
  * Following hexagonal architecture principles
  */
 
-import { TenderSharingSecretDTO } from '@/dtos/entities/TenderDTO';;
+import {
+  TenderSharingSecretDTO,
+  CreateSharingSecretDTO,
+  AccessLogDTO,
+  CreateAccessLogDTO,
+  ValidateSecretResponseDTO
+} from '@/dtos/entities/tender-sharing-dto';
 
 export interface ITenderSharingRepository {
   /**

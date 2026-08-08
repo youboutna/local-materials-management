@@ -10,7 +10,12 @@
  */
 
 import { InspectionStatus } from '@/domain/entities/Inspection';
-import { MonitoringConfiguration } from '@/dtos/entities/MonitoringDTOs';;
+import {
+  Alert,
+  DashboardStats,
+  MonitoringConfiguration,
+  MonitoringMetrics
+} from '@/dtos/entities/DashboardDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';
@@ -436,7 +441,7 @@ export class DashboardService {
     return Object.entries(locationCounts)
       .map(([name, value], index) => ({
         name,
-        value: Number(value),
+        value,
         color: locationColors[index % locationColors.length]
       }))
       .sort((a, b) => b.value - a.value);

@@ -6,7 +6,11 @@ import {
   OAuthProviderCreateData,
   OAuthProviderUpdateData
 } from "@/domain/repositories/IOAuthProviderRepository";
-import { OAuthProviderDTO } from '@/dtos/entities/AuthDTO';;
+import {
+  OAuthProviderDTO,
+  OAuthProviderListResponse,
+  OAuthProviderResponse
+} from "@/dtos/entities/OAuthProviderDTO";
 import { OAuthProviderTransformer } from "@/dtos/transforms/OAuthProviderTransformer";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { AppError, ErrorCode } from "@/utils/errorHandling";

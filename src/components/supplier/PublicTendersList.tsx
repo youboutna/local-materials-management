@@ -16,9 +16,20 @@ import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-import { PublicTender } from '@/dtos/entities/TenderDTO';
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;
+}
+
+interface PublicTender {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  deadline_date?: string;
+  publication_date?: string;
+  market_type?: string;
+  budget_max?: number;
+  project_reference?: string;
 }
 
 export function PublicTendersList({ onSelect }: PublicTendersListProps) {

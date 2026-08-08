@@ -3,7 +3,7 @@
  */
 
 import { HierarchyService } from '@/application/services/HierarchyService';
-import { HierarchyStatisticsDTO } from '@/dtos/entities/ReportDTO';;
+import { CreateHierarchyNodeDTO, HierarchyNode, HierarchyStatisticsDTO, UpdateHierarchyNodeDTO } from '@/dtos/entities/HierarchyDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

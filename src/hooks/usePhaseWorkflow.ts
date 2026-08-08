@@ -13,9 +13,6 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
-import { PhaseDocument } from '@/dtos/entities/DocumentDTO';
-import { PaymentRecord } from '@/dtos/entities/PaymentDTO';
-import { InspectionRecord } from '@/dtos/entities/InspectionDTO';
 export type WorkflowStage = 
   | 'not_started' 
   | 'in_progress' 
@@ -26,9 +23,28 @@ export type WorkflowStage =
   | 'payment_available' 
   | 'paid';
 
+export interface InspectionRecord {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+  date: string;
+  inspector: string;
+  phase_id: string | null;
+  project_id: string;
+  documents?: PhaseDocument[];
+  comments?: string | null;
+}
 
-
-
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  payment_date: string;
+  phase_id: string | null;
+  project_id: string;
+  contractor_name: string;
+  progress_at_payment: number;
+  payment_method: string;
+}
 
 export interface WorkflowMetrics {
   currentStage: WorkflowStage;
@@ -71,7 +87,12 @@ export interface DecompteData {
   remainingAmount: number;
 }
 
-
+interface PhaseDocument {
+  id: string;
+  type: string;
+  url: string;
+  uploaded_at: string;
+}
 
 interface WorkflowStep {
   id: string;
@@ -82,7 +103,7 @@ interface WorkflowStep {
   documents?: PhaseDocument[];
 }
 
-export function usePhaseWorkflowHex(projectId: string, phaseId: string, phase?: PhaseDTO | null) {
+export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: PhaseDTO | null) {
   const queryClient = useQueryClient();
 
   // Initialize services

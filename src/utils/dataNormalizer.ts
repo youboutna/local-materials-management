@@ -1,5 +1,14 @@
-import { NormalizedStep } from '@/dtos/entities/PhaseDTO';
-;
+export type NormalizedStep = {
+  id: string;
+  name: string;
+  description?: string;
+  status: string;
+  progress: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  position?: number;
+  rawData?: Record<string, unknown>;
+};
 
 const getField = (raw: Record<string, unknown>, alternatives: string[]): unknown => {
   if (!raw) return undefined;

@@ -18,13 +18,18 @@ import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { supabase } from '@/integrations/supabase/client';
 
-import { WorkflowStep } from '@/dtos/entities/TaskAssignmentDTO';
 interface EnhancedTenderEstimatorProps {
   tenderId: string;
   projectId?: string;
 }
 
-
+interface WorkflowStep {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  progress: number;
+}
 
 interface EstimateTemplate {
   id: string;

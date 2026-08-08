@@ -30,11 +30,11 @@ export interface MilestoneTemplateDTO {
   name: string;
   description?: string;
   /** Relative offset in days from phase start */
-  relativeOffsetDays: number;
+  relative_offset_days: number;
   /** Weight for progress calculation (0.1 - 1.0) */
   weight: number;
   /** If true, this milestone is critical for phase completion (CPM) */
-  isCritical: boolean;
+  is_critical: boolean;
   /** Type of milestone according to PM standards */
   type: MilestoneType;
   /** Priority level for scheduling */
@@ -42,11 +42,11 @@ export interface MilestoneTemplateDTO {
   /** Tags/categories for filtering */
   tags?: string[];
   /** Predecessor milestone IDs (for PERT/CPM dependency tracking) */
-  predecessorIds?: string[];
+  predecessor_ids?: string[];
   /** Deliverables expected at this milestone */
   deliverables?: string[];
   /** Approval requirements for gate milestones */
-  approvalRequirements?: string[];
+  approval_requirements?: string[];
    requiresInspection?: true,
 }
 
@@ -56,16 +56,16 @@ export interface MilestoneTemplateDTO {
  */
 export interface MilestoneDTO {
   id: string;
-  projectId: string;
-  phaseId?: string;
+  project_id: string;
+  phase_id?: string;
   title: string;
   description?: string;
-  targetDate: string;
+  target_date: string;
   /** Earliest start date (PERT forward pass) */
-  earlyStartDate?: string;
+  early_start_date?: string;
   /** Latest finish date without delay (PERT backward pass) */
-  lateFinishDate?: string;
-  completionDate?: string;
+  late_finish_date?: string;
+  completion_date?: string;
   status: MilestoneStatus;
   /** Milestone type */
   type: MilestoneType;
@@ -74,24 +74,24 @@ export interface MilestoneDTO {
   weight: number;
   notes?: string;
   /** Whether from referential template or custom */
-  isFromTemplate: boolean;
-  templateId?: string;
+  is_from_template: boolean;
+  template_id?: string;
   /** Predecessor milestone IDs (FS - Finish-to-Start dependencies) */
   dependencies?: string[];
   /** Float/slack time in days (0 = critical path) */
-  floatDays?: number;
+  float_days?: number;
   /** Is on critical path */
-  isOnCriticalPath?: boolean;
+  is_on_critical_path?: boolean;
   /** Deliverables list */
   deliverables?: string[];
   /** Approval status for gate milestones */
-  approvalStatus?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
+  approval_status?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
   /** Approved by user ID */
-  approvedBy?: string;
+  approved_by?: string;
   /** Approval date */
-  approvalDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  approval_date?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -100,19 +100,19 @@ export interface MilestoneDTO {
 export interface MilestoneSummaryDTO {
   id: string;
   title: string;
-  targetDate: string;
-  completionDate?: string;
+  target_date: string;
+  completion_date?: string;
   status: MilestoneStatus;
   type: MilestoneType;
   priority: MilestonePriority;
-  phaseName?: string;
-  phaseId?: string;
+  phase_name?: string;
+  phase_id?: string;
   weight: number;
-  isCritical?: boolean;
+  is_critical?: boolean;
   /** Float days for scheduling visualization */
-  floatDays?: number;
+  float_days?: number;
   /** Percent complete (0-100) for in-progress milestones */
-  percentComplete?: number;
+  percent_complete?: number;
 }
 
 /**
@@ -121,12 +121,12 @@ export interface MilestoneSummaryDTO {
 export interface MilestoneFormDTO {
   title: string;
   description?: string;
-  targetDate: string;
+  target_date: string;
   type: MilestoneType;
   priority: MilestonePriority;
   weight: number;
   notes?: string;
-  phaseId?: string;
+  phase_id?: string;
   deliverables?: string[];
   dependencies?: string[];
 }
@@ -136,55 +136,55 @@ export interface MilestoneFormDTO {
  * Aligned with Earned Value Management (EVM) concepts
  */
 export interface MilestoneProgressDTO {
-  totalMilestones: number;
-  completedMilestones: number;
-  delayedMilestones: number;
+  total_milestones: number;
+  completed_milestones: number;
+  delayed_milestones: number;
   /** Weighted progress (0-100) */
-  weightedProgress: number;
+  weighted_progress: number;
   /** Schedule Performance Index (SPI) = Earned Value / Planned Value */
-  schedulePerformanceIndex?: number;
+  schedule_performance_index?: number;
   /** Critical path status */
-  criticalPathStatus: 'on_track' | 'at_risk' | 'delayed';
+  critical_path_status: 'on_track' | 'at_risk' | 'delayed';
   /** Days of float remaining on critical path */
-  criticalPathFloatDays?: number;
-  nextMilestone?: MilestoneSummaryDTO;
-  overdueMilestones: MilestoneSummaryDTO[];
+  critical_path_float_days?: number;
+  next_milestone?: MilestoneSummaryDTO;
+  overdue_milestones: MilestoneSummaryDTO[];
   /** Upcoming milestones in next 14 days */
-  upcomingMilestones: MilestoneSummaryDTO[];
+  upcoming_milestones: MilestoneSummaryDTO[];
 }
 
 /**
  * PERT estimation for milestone duration
  */
 export interface PERTEstimateDTO {
-  milestoneId: string;
+  milestone_id: string;
   /** Optimistic duration (days) */
   optimistic: number;
   /** Most likely duration (days) */
-  mostLikely: number;
+  most_likely: number;
   /** Pessimistic duration (days) */
   pessimistic: number;
   /** Expected duration = (O + 4M + P) / 6 */
-  expectedDuration: number;
+  expected_duration: number;
   /** Standard deviation = (P - O) / 6 */
-  standardDeviation: number;
+  standard_deviation: number;
 }
 
 /**
  * Critical path analysis result
  */
 export interface CriticalPathDTO {
-  projectId: string;
+  project_id: string;
   /** List of milestone IDs on critical path */
-  criticalPathMilestones: string[];
+  critical_path_milestones: string[];
   /** Total project duration based on critical path */
-  totalDurationDays: number;
+  total_duration_days: number;
   /** Project end date based on critical path */
-  estimatedEndDate: string;
+  estimated_end_date: string;
   /** Near-critical paths (float < 5 days) */
-  nearCriticalPaths: Array<{
+  near_critical_paths: Array<{
     milestones: string[];
-    floatDays: number;
+    float_days: number;
   }>;
 }
 

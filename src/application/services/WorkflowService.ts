@@ -6,8 +6,6 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { standardWorkflow, WorkflowPhase, WorkflowStage, WorkflowTask } from '@/dtos/types/workflow';
 
-import { StageProgress } from '@/dtos/entities/PhaseDTO';
-import { PhaseProgress } from '@/dtos/entities/PhaseDTO';
 export interface WorkflowStatus {
   id: string;
   entity_id: string;
@@ -23,6 +21,27 @@ export interface WorkflowStatus {
   notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PhaseProgress {
+  phase_code: string;
+  phase_label: string;
+  total_stages: number;
+  completed_stages: number;
+  in_progress_stages: number;
+  pending_stages: number;
+  progress_percentage: number;
+  stages: StageProgress[];
+}
+
+export interface StageProgress {
+  stage_code: string;
+  stage_label: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  total_tasks: number;
+  completed_tasks: number;
+  progress_percentage: number;
+  tasks: WorkflowTask[];
 }
 
 /**

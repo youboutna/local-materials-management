@@ -3,6 +3,13 @@
  * Migrated from @/dtos/types/materialCategories
  */
 
+export interface MaterialCategoryConfig {
+  id: string;
+  name: string;
+  description?: string;
+  subcategories?: MaterialSubcategory[];
+}
+
 export interface MaterialSubcategory {
   id: string;
   name: string;
@@ -10,7 +17,11 @@ export interface MaterialSubcategory {
   unit: string;
 }
 
-export const MATERIAL_CATEGORIES: Mription: 'Matériaux de base pour la construction',
+export const MATERIAL_CATEGORIES: MaterialCategoryConfig[] = [
+  {
+    id: 'construction',
+    name: 'Matériaux de construction',
+    description: 'Matériaux de base pour la construction',
     subcategories: [
       { id: 'cement', name: 'Ciment', unit: 'sac' },
       { id: 'concrete', name: 'Béton', unit: 'm³' },

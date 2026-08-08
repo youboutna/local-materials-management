@@ -1,4 +1,3 @@
-import { DevUserProfile } from '@/dtos/entities/DocumentDTO';
 // Configuration flags - can be controlled by environment variables
 // Check if we're in a browser environment
 const isBrowser = typeof window !== "undefined";
@@ -14,6 +13,23 @@ export const DEV_MODE =
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
 // Mock user configuration for development mode
+export interface DevUserProfile {
+  id: string;
+  email: string;
+  password?: string;
+  user_metadata: {
+    full_name: string;
+    role: string;
+    phone: string;
+    national_id: string;
+  };
+  /** Fine-grained permissions (Mode B / audit UI). */
+  permissions?: string[];
+  /** Team memberships. */
+  teams?: string[];
+  /** User preferences (language, theme, defaults). */
+  preferences?: Record<string, unknown>;
+}
 
 const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
   admin: {

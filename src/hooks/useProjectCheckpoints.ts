@@ -19,11 +19,6 @@ import type { AutomaticDecompteDTO, CheckpointVerificationResultDTO, MilestoneDT
 
 
 
-import { ProjectMilestone } from '@/dtos/entities/MilestoneDTO';
-import { ProjectPayment } from '@/dtos/entities/PaymentDTO';
-import { ProjectDocument } from '@/dtos/entities/DocumentDTO';
-import { InspectionResult } from '@/dtos/entities/InspectionDTO';
-import { ProjectCheckpoint } from '@/dtos/entities/MilestoneDTO';
 interface ProjectMetrics {
 
   totalBudget: number;
@@ -42,11 +37,30 @@ interface ProjectMetrics {
 
 
 
+interface ProjectCheckpoint {
+  id: string;
+  phase_id: string;
+  phase_name?: string;
+  phaseName?: string;
+  estimated_cost?: number;
+  estimatedCost?: number;
+  status: 'pending' | 'completed';
+  progress: number;
+  documents: {
+    id: string;
+    type: string;
+    url: string;
+  }[];
+}
 
 
 
-
-
+interface InspectionResult {
+  id: string;
+  status: string;
+  phase_id: string | null;
+  [key: string]: any;
+}
 
 
 
@@ -128,15 +142,29 @@ interface ProjectCheckpointsResult {
 
 
 
+interface ProjectDocument {
+  id: string;
+  phase_id: string | null;
+  [key: string]: any;
+}
 
 
 
+interface ProjectPayment {
+  id: string;
+  phase_id: string | null;
+  amount: number;
+  [key: string]: any;
+}
 
 
 
-
-
-
+interface ProjectMilestone {
+  id: string;
+  phase_id: string | null;
+  status: string;
+  [key: string]: any;
+}
 
 
 
@@ -156,7 +184,7 @@ interface ProjectPhase {
 
 
 
-export function useProjectCheckpointsHex(projectId: string | undefined): ProjectCheckpointsResult {
+export function useProjectCheckpoints(projectId: string | undefined): ProjectCheckpointsResult {
 
   // Fetch phases
 
@@ -617,3 +645,4 @@ export function useProjectCheckpointsHex(projectId: string | undefined): Project
   };
 
 }
+

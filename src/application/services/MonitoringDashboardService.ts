@@ -4,7 +4,16 @@
  * Business use cases for monitoring and dashboard functionality
  */
 
-import { ProjectMonitoringDTO } from '@/dtos/entities/ProjectDTO';;
+import { 
+  MonitoringDashboardDTO, 
+  MonitoringWidgetDTO, 
+  MonitoringFiltersDTO,
+  ComprehensiveMonitoringDTO,
+  MonitoringOverviewDTO,
+  ProjectMonitoringDTO,
+  MonitoringAlertDTO,
+  PerformanceMetricsDTO
+} from '@/dtos/entities/MonitoringDTOs';
 
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';

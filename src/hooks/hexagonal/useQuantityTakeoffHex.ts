@@ -9,7 +9,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Hook: Fetch materials for quantity takeoff
-export function useMaterialsForTakeoffHex() {
+export function useMaterialsForTakeoff() {
   return useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
@@ -27,7 +27,7 @@ export function useMaterialsForTakeoffHex() {
 
 // Hook: Create quantity takeoff
 // IMPORTANT: matches CreateQuantityTakeoffRequestDto (snake_case) expected by QuantityTakeoffService
-export function useCreateQuantityTakeoffHex(projectId: string) {
+export function useCreateQuantityTakeoff(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -16,11 +16,33 @@ import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 
-import { EnhancedRisk } from '@/dtos/entities/RiskDTO';
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };
   onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
+}
+
+interface EnhancedRisk {
+  id: string;
+  title: string;
+  description: string;
+  category: 'technical' | 'financial' | 'environmental' | 'regulatory' | 'operational' | 'security' | 'health_safety' | 'quality' | 'schedule' | 'resource' | 'stakeholder';
+  probability: number; // 1-10 scale
+  impact: number; // 1-10 scale
+  riskScore: number; // probability * impact * weight
+  weight: number; // Category weight
+  mitigationPlan: string;
+  contingencyPlan: string;
+  status: 'identified' | 'assessed' | 'mitigated' | 'monitoring' | 'closed' | 'escalated';
+  owner: string;
+  reviewDate: string;
+  costs: number;
+  timelineImpact: number;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  dependencies: string[];
+  affectedPhases: string[];
+  riskResponse: 'accept' | 'mitigate' | 'transfer' | 'avoid';
+  lastUpdated: string;
 }
 
 const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({

@@ -5,7 +5,7 @@
  */
 
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceDTO';;
+import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceCertificateDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export interface IInsuranceRepository {

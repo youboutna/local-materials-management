@@ -6,7 +6,18 @@ import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { PhaseEmployee } from '@/dtos/entities/EmployeeDTO';
+export interface PhaseEmployee {
+  id: string;
+  phase_id: string;
+  employee_name: string;
+  employee_role: string;
+  daily_rate?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  employee_contact?: string | null;
+  is_primary_supplier?: boolean | null;
+}
+
 export interface EmployeeFormData {
   employee_name: string;
   employee_role: string;

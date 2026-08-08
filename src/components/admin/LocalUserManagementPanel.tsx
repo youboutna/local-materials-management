@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DevUserProfile } from '@/dtos/entities/DocumentDTO';;
+import { DevUserProfile, getActiveDevRole } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Plus, Trash2, Upload, UserCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';

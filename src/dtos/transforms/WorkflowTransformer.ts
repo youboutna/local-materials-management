@@ -6,7 +6,13 @@
  */
 
 // Import workflow DTOs
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import { 
+  ProjectWorkflowData,
+  WorkflowMetadataDTO,
+  StepRelatedDataDTO,
+  SaveResult,
+  ValidationResult
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { PhaseWorkflowDTO } from '@/dtos/workflows/PhaseWorkflowDTO';
 
 // Import entity DTOs
@@ -15,7 +21,10 @@ import { PhaseDTO, PhaseType, PhasePriority, PhaseStatus } from '@/dtos/entities
 import { RiskDTO, RiskCategory, RiskStatus } from '@/dtos/entities/RiskDTO';
 
 // Import request/response DTOs for workflow operations
-import { TriggerPaymentRequestDTO } from '@/dtos/entities/PaymentDTO';;
+import { 
+  OnProgressUpdatedRequestDTO,
+  TriggerPaymentRequestDTO
+} from '@/dtos/entities/WorkflowDTO';
 
 // Domain entities for transformation
 interface WorkflowProgressUpdate {

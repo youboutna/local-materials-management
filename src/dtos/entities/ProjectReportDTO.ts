@@ -15,6 +15,22 @@ export interface ProjectReportDTO extends BaseEntityDTO {
   data: ReportData;
 }
 
+export interface ReportData {
+  title: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+  charts?: {
+    type: string;
+    data: unknown;
+  config?: Record<string, unknown>;
+  }[];
+  tables?: {
+    headers: string[];
+    rows: unknown[][];
+    config?: Record<string, unknown>;
+  }[];
+}
+
 export interface CostCalculation {
   directCosts: number;
   indirectCosts: number;
@@ -29,7 +45,20 @@ export interface CostCalculation {
   };
 }
 
-export interface EnhancedPhaseDTO extends BaseEntityDTO {: string;
+export interface EnhancedPhaseDTO extends BaseEntityDTO {
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  budget: number;
+  actualCost: number;
+  tasks: Array<{
+    id: string;
+    title: string;
     status: string;
     progress: number;
     assignee?: string;
@@ -171,80 +200,133 @@ export type TaskType =
   | 'general';
 
 export interface NotificationMetadata {
-  taskType?: TaskType;
-  relatedProjectId?: string;
-  relatedInspectionId?: string;
-  relatedDocumentId?: string;
-  relatedPaymentId?: string;
-  relatedMaterialId?: string;
+  task_type?: TaskType;
+  related_project_id?: string;
+  related_inspection_id?: string;
+  related_document_id?: string;
+  related_payment_id?: string;
+  related_material_id?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  dueDate?: string;
-  assigneeName?: string;
-  assignerName?: string;
-  delayPercentage?: number;
-  bankLiaisonEmail?: string;
-  contractGuaranteeAmount?: number;
-  contractorName?: string;
-  engineeringConsultant?: string;
-  inspectionType?: string;
-  violationCount?: number;
-  escalationLeetionDate?: string;
+  due_date?: string;
+  assignee_name?: string;
+  assigner_name?: string;
+  delay_percentage?: number;
+  bank_liaison_email?: string;
+  contract_guarantee_amount?: number;
+  contractor_name?: string;
+  engineering_consultant?: string;
+  inspection_type?: string;
+  violation_count?: number;
+  escalation_level?: number;
+  penalty_amount?: number;
+  compliance_standard?: string;
+  payment_amount?: number;
+  payment_method?: string;
+  document_name?: string;
+  document_type?: string;
+  shared_with?: string[];
+  action_required?: string;
+  project_phase?: string;
+  completion_percentage?: number;
+  approval_status?: string;
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  related_id?: string;
+  metadata?: NotificationMetadata;
+  read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskAssignment {
+  id: string;
+  project_id?: string;
+  title: string;
+  description?: string;
+  assigned_to: string;
+  assigned_by: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  due_date?: string;
+  completion_date?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Workflow-related DTOs for Rule 4 compliance
 export interface WorkflowStepDTO {
   id: string;
-  workflowId: string;
+  workflow_id: string;
   name: string;
   description?: string;
-  orderIndex: number;
+  order_index: number;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  assignedTo?: string;
-  dueDate?: string;
-  completionDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  assigned_to?: string;
+  due_date?: string;
+  completion_date?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StepDocumentDTO {
   id: string;
-  stepId: string;
+  step_id: string;
   title: string;
   description?: string;
-  fileUrl: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadedBy: string;
-  createdAt: string;
-  updatedAt: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  uploaded_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface WorkflowPhase {
   id: string;
   name: string;
   description?: string;
-  orderIndex: number;
+  order_index: number;
   stages: WorkflowStage[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface WorkflowStage {
   id: string;
-  phaseId: string;
+  phase_id: string;
   name: string;
   description?: string;
-  orderIndex: number;
+  order_index: number;
   steps: WorkflowStepDTO[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export const standardWorkflow: WorkflowPt: new Date().toISOString(),
+export const standardWorkflow: WorkflowPhase[] = [
+  {
+    id: '1',
+    name: 'Planification',
+    description: 'Phase de planification du projet',
+    order_index: 1,
+    stages: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '2', 
+    name: 'Exécution',
+    description: 'Phase d\'exécution du projet',
+    order_index: 2,
+    stages: [],
+    created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
   {
@@ -262,7 +344,22 @@ export const standardWorkflow: WorkflowPt: new Date().toISOString(),
 export interface ImportOptions {
   skipDuplicates?: boolean;
   validateData?: boolean;
-  updateExistingessage?: string;
+  updateExisting?: boolean;
+  dryRun?: boolean;
+  format?: 'json' | 'csv' | 'xlsx';
+  maxFileSize?: number;
+  allowedFormats?: string[];
+  allowedMimeTypes?: string[];
+  validationRules?: Array<{
+    field: string;
+    required: boolean;
+    type: string;
+  }>;
+}
+
+export interface ImportResult {
+  success: boolean;
+  message?: string;
   importedCount?: number;
   imported?: number;
   skipped?: number;
@@ -276,4 +373,13 @@ export interface ImportOptions {
 export interface FinancialMetricsDTO {
   totalBudget: number;
   totalSpent: number;
-  spentAmoun
+  spentAmount?: number;
+  remainingBudget: number;
+  estimatedCost: number;
+  actualCost: number;
+  actualPhaseCost: number;
+  costVariance: number;
+  costEfficiency: number;
+  costPerformance: number;
+  budgetUtilization?: number;
+}

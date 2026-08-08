@@ -54,7 +54,7 @@ export interface LocationAutoFillResult {
   handleMapClick: (coordinates: { lat: number; lng: number }) => Promise<AutoFillLocationData | null>;
 }
 
-export function useLocationAutoFillHex(): LocationAutoFillResult {
+export function useLocationAutoFill(): LocationAutoFillResult {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Singleton geocoding service (factory) — keeps a single Nominatim

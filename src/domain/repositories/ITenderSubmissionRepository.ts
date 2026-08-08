@@ -7,7 +7,7 @@
  * Service → Repository Interface → Adapter → Database
  */
 
-import { UpdateTenderSubmissionDTO } from '@/dtos/entities/TenderDTO';;
+import { TenderSubmissionDTO, CreateTenderSubmissionDTO, UpdateTenderSubmissionDTO } from '@/dtos/entities/TenderSubmissionDTO';
 
 export interface ITenderSubmissionRepository {
   /**

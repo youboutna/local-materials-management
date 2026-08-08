@@ -1,6 +1,11 @@
 // Service for secure tender document sharing with ACID principles
 import { ITenderSharingRepository } from '@/domain/repositories';
-import { TenderSharingSecretDTO } from '@/dtos/entities/TenderDTO';;
+import {
+    CreateAccessLogDTO,
+    CreateSharingSecretDTO,
+    TenderSharingSecretDTO,
+    ValidateSecretResponseDTO
+} from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 /**

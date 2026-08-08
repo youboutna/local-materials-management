@@ -14,8 +14,8 @@ import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { CheckpointDTO } from '@/dtos/entities/CheckpointDTO';
-import { VerifyCheckpointRequestDto } from '@/dtos/entities/MilestoneDTO';;
-import { VerificationItemDTO } from '@/dtos/entities/MilestoneDTO';;
+import { CheckpointVerificationResult, VerifyApprovalsRequestDto, VerifyCheckpointRequestDto, VerifyDocumentsRequestDto, VerifyInspectionsRequestDto, VerifyResourcesRequestDto, VerifyServiceFaitRequestDto } from '@/dtos/entities/CheckpointVerificationDTO';
+import { DEFAULT_MAURITANIA_RULES, VerificationItemDTO } from '@/dtos/entities/VerificationItemDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 

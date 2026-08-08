@@ -16,7 +16,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
 import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
-import { InvoiceLine } from '@/dtos/entities/PaymentDTO';;
+import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
 import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";

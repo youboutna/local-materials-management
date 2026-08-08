@@ -5,7 +5,16 @@
  * Simplified version that works with existing DTOs and repositories
  */
 
-import { ProjectMonitoringDTO } from '@/dtos/entities/ProjectDTO';;
+import { 
+  MonitoringDashboardDTO, 
+  MonitoringWidgetDTO, 
+  MonitoringFiltersDTO,
+  ComprehensiveMonitoringDTO,
+  MonitoringOverviewDTO,
+  ProjectMonitoringDTO,
+  MonitoringAlertDTO,
+  PerformanceMetricsDTO
+} from '@/dtos/entities/MonitoringDTOs';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';

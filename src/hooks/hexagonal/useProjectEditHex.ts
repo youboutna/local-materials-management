@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 // Import DTOs
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { UpdateProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ValidationResult } from '@/dtos/entities/PaymentValidationDTO';;
+import { SaveResult, ValidationResult } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 // Import services
 import { PhaseService } from "@/application/services/PhaseService";

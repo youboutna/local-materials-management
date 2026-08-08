@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { getAppConfig, type AppConfig } from '@/config/app';
 import { validateProviders } from '@/config/app-validate';
 
-export function useAppConfigHex() {
+export function useAppConfig() {
   const config = useMemo<AppConfig>(() => getAppConfig(), []);
   const errors = useMemo(
     () =>

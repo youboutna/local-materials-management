@@ -4,7 +4,11 @@
  * Uses centralized DTOs and transformers to avoid circular dependencies
  */
 
-import { InsuranceCertificateFormData } from '@/dtos/entities/InsuranceDTO';;
+import {
+    InsuranceCertificateDTO,
+    InsuranceCertificateFormData,
+    InsuranceCertificateUpdateData
+} from '@/dtos/entities/InsuranceCertificateDTO';
 import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 

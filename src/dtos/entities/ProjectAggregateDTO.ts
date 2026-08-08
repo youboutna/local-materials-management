@@ -47,7 +47,22 @@ export type ConstructionStage =
  * ---------------------------
  */
 
-
+export interface InsurancePolicy {
+  id: string;
+  type: "assurance" | "garantie_bancaire";
+  reference: string;
+  projectId: string;
+  issuer: string;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  coverage: string;
+  status: "active" | "expiring_soon" | "expired";
+  renewalDate?: string;
+  documents?: string[];
+  notes?: string;
+  alertSent?: boolean;
+}
 
 export interface Task {
   id: string;
@@ -73,7 +88,7 @@ export interface Task {
 
 export interface Inspection {
   id: string;
-  projectId: string;
+  project_id: string;
   inspector: string;
   date: string;
   inspectionDate?: string;
@@ -87,9 +102,34 @@ export interface Inspection {
     | "requires_changes"
     | "pending"
     | "planned";
-  progressAtInspection: number;
+  progress_at_inspection: number;
   progressAtInspection?: number;
-  co "bank_guarantee"
+  comments?: string | null;
+  created_at: string;
+  updated_at: string;
+  phase_id?: string | null;
+  documents?: string[];
+  issues?: InspectionIssue[] | string[];
+  recommendations?: string[];
+}
+
+export interface InspectionIssue {
+  id: string;
+  description: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_progress" | "resolved";
+  deadline?: string;
+  assignedTo?: string;
+}
+
+export interface Alert {
+  id: string;
+  type:
+    | "insurance_expiry"
+    | "project_delay"
+    | "inspection_issue"
+    | "financial_risk"
+    | "bank_guarantee"
     | "inspection_overdue"
     | "payment_blocked"
     | "compliance_violation"
@@ -114,7 +154,14 @@ export interface Inspection {
   acknowledged: boolean;
   acknowledgedBy?: string;
   acknowledgedAt?: string;
-  g;
+  actionRequired: boolean;
+  actionTaken?: string;
+  actionTakenBy?: string;
+  actionTakenAt?: string;
+  escalationLevel?: number;
+  availableActions?: string[];
+  actionProof?: ActionProof[];
+  deadline?: string;
   recurrence?: number;
 }
 
@@ -143,11 +190,11 @@ export interface ProjectData {
     longitude: number;
   };
 
-  geographicZone?: string;
-  terrainType?: string;
-  environmentalConstraints?: string;
-  hasUtilities?: boolean;
-  requiresPermits?: boolean;
+  geographic_zone?: string;
+  terrain_type?: string;
+  environmental_constraints?: string;
+  has_utilities?: boolean;
+  requires_permits?: boolean;
 
   // Project classification
   category?: string;
@@ -164,14 +211,149 @@ export interface ProjectData {
   launchDate?: string;
   attributionDate?: string;
   projectReference?: string;
-  mainContractor?: strinStage;
+  mainContractor?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
+  projectResponsableId?: string;
+  currentPhase?: ConstructionPhase;
+  currentStage?: ConstructionStage;
   plannedPhases?: {
     id: string;
     phase: ConstructionPhase;
     startDate: string;
     endDate: string;
     estimatedDuration: number;
-    status: "not_started" | "in_per;
+    status: "not_started" | "in_progress" | "completed" | "delayed";
+    weight: number;
+    dependencies?: any[];
+  }[];
+  constructionMilestones?: {
+    id: string;
+    title: string;
+    phase: ConstructionPhase;
+    stage: ConstructionStage;
+    targetDate: string;
+    completionDate?: string;
+    status: "pending" | "completed" | "overdue";
+    notes?: string;
+    weight: number;
+    dependencies?: any[];
+  }[];
+
+  // Enhanced milestones structure
+  milestones?: {
+    name: string;
+    plannedDate: string;
+    actualDate?: string | null;
+    status: "planned" | "in_progress" | "completed" | "delayed";
+  }[];
+
+  inspections?: Inspection[];
+  tasks?: Task[];
+  risks?: ProjectRisk[];
+  expenses?: any[]; //real budget project consumation
+  resources?: ProjectResource[];
+
+  // Documents
+  documents?: {
+    name: string;
+    type: string;
+    url: string;
+    uploadDate: string;
+  }[];
+
+  // Stakeholders
+  stakeholders?: {
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    organization: string;
+    isPrimary: boolean;
+  }[];
+
+  insurancePolicies?: InsurancePolicy[];
+  alerts?: Alert[];
+  escalationThresholds?: {
+    alert: number;
+    notification: number;
+    guarantee: number;
+    legal: number;
+  };
+  forme?: string;
+  localisation?: any[];
+
+  methodology?: "waterfall" | "agile" | "hybrid";
+  ganttChart?: GanttChartData;
+  pertAnalysis?: PERTAnalysis;
+  earnedValueManagement?: EVMData;
+  contacts?: ProjectContact[];
+  checkScheduleLastRun?: CheckScheduleLastRun;
+}
+
+export interface ProjectRisk {
+  id: string;
+  title: string;
+  description: string;
+  probability: number;
+  impact: number;
+  mitigationPlan: string;
+  status: "identified" | "monitored" | "mitigated" | "resolved";
+  relatedTasks: string[];
+}
+
+export interface ProjectResource {
+  id: string;
+  name: string;
+  type: "human" | "material" | "equipment";
+  skills?: string[];
+  costPerHour?: number;
+  availability: number;
+  assignedTasks: string[];
+}
+
+export interface GanttChartData {
+  tasks: GanttTask[];
+  dependencies: GanttDependency[];
+}
+
+export interface GanttTask {
+  id: string;
+  text: string;
+  start_date: string;
+  duration: number;
+  progress: number;
+  parent?: string;
+  color?: string;
+}
+
+export interface GanttDependency {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface EVMMetrics {
+  plannedValue: number;
+  earnedValue: number;
+  actualCost: number;
+  scheduleVariance: number;
+  costVariance: number;
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  budgetAtCompletion: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
+}
+
+export interface PERTActivity {
+  name: string;
+  optimistic: number;
+  mostLikely: number;
+  pessimistic: number;
+  pertEstimate: number;
   standardDeviation: number;
 }
 
@@ -222,38 +404,38 @@ export type EscalationRoles = {
  * ---------------------------
  */
 export type ActionLabels = {
-  taskAssignment: "Assigner une tâche";
-  hierarchyNotification: "Notifier la hiérarchie";
+  task_assignment: "Assigner une tâche";
+  hierarchy_notification: "Notifier la hiérarchie";
   sms: "Envoyer SMS";
   call: "Programmer appel";
   email: "Envoyer email";
   mail: "Courrier postal";
-  exportReceipt: "Exporter reçu";
-  blockchainVerification: "Vérification blockchain";
-  documentUpload: "Uploader document";
-  meetingSchedule: "Planifier réunion";
-  financialReview: "Revue financière";
-  legalConsultation: "Consultation juridique";
+  export_receipt: "Exporter reçu";
+  blockchain_verification: "Vérification blockchain";
+  document_upload: "Uploader document";
+  meeting_schedule: "Planifier réunion";
+  financial_review: "Revue financière";
+  legal_consultation: "Consultation juridique";
 };
 
 export interface Payment {
   id: string;
   amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  progressAtPayment: number;
-  transactionId: string;
+  payment_date: string;
+  payment_method: string;
+  progress_at_payment: number;
+  transaction_id: string;
   // New contractor fields
-  contractorId?: string;
-  contractorName: string;
-  contractorContact: string;
+  contractor_id?: string;
+  contractor_name: string;
+  contractor_contact: string;
   // Method-specific fields
-  bankName?: string;
-  accountNumber?: string;
-  checkNumber?: string;
-  mobileNumber?: string;
-  mobileOperator?: string;
-  receiverName?: string;
+  bank_name?: string;
+  account_number?: string;
+  check_number?: string;
+  mobile_number?: string;
+  mobile_operator?: string;
+  receiver_name?: string;
 }
 
 export type InspectionStatus =
@@ -267,7 +449,7 @@ export interface InspectionData {
   date: string;
   status: InspectionStatus;
   inspector: string;
-  progressAtInspection: number;
+  progress_at_inspection: number;
   comments?: string | null;
   documents?: any[];
 }
@@ -319,10 +501,18 @@ export interface ProjectEntity {
   projectReference?: string;
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
-  // ConstionStage;
+  // Construction workflow fields
+  currentPhase?: ConstructionPhase;
+  currentStage?: ConstructionStage;
   plannedPhases?: any; // JSON field
   constructionMilestones?: any; // JSON field
-   TaskAssignment[];
+  createdAt: Date;
+  updatedAt: Date;
+  // Relations
+  payments?: Payment[];
+  inspections?: Inspection[];
+  materials?: ProjectMaterial[];
+  assignments?: TaskAssignment[];
 }
 
 export interface ProjectMaterial {
@@ -331,12 +521,30 @@ export interface ProjectMaterial {
   materialId: string;
   quantity: number;
   createdAt: Date;
-  update
+  updatedAt: Date;
+}
+
+export interface ProjectWithPayments extends ProjectData {
+  payments?: Payment[];
   inspections?: Inspection[];
   phases?: any[];
   milestones?: any[];
   materials?: any[];
-  team?: any[]g;
+  team?: any[];
+}
+
+export interface TaskAssignment {
+  id: string;
+  projectId?: string;
+  title: string;
+  description?: string;
+  assignedTo?: string;
+  assignedBy?: string;
+  status: "pending" | "in_progress" | "completed" | "cancelled";
+  priority: "low" | "medium" | "high" | "urgent";
+  dueDate?: Date;
+  completionDate?: Date;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -354,12 +562,27 @@ export interface ProjectDelay {
   projectId: string;
   projectName: string;
   contractorName: string;
-  p
+  plannedEndDate: string;
+  currentDate: string;
+  delayDays: number;
+  delayPercentage: number;
+  milestonesMissed: number;
+}
+
+// Role-based notification recipients
 export const NOTIFICATION_ROLES = {
   PROJECT_MANAGER: "project_manager",
   DIRECTOR_PROGRAMMING: "director_programming",
   DIRECTOR: "director",
-  BANK_LIAISON: "bank_liaisoK_NOTIFICATION: 20, // 20% delay triggers bank notification
+  BANK_LIAISON: "bank_liaison",
+  ENGINEERING_CONSULTANT: "engineering_consultant",
+  CONTRACTOR: "contractor",
+};
+
+// Delay thresholds for escalation
+export const DELAY_THRESHOLDS = {
+  WARNING: 10, // 10% delay triggers warning
+  BANK_NOTIFICATION: 20, // 20% delay triggers bank notification
   GUARANTEE_TRIGGER: 30, // 30% delay triggers guarantee clause
   LEGAL_ESCALATION: 40, // 40% delay triggers legal team
 };

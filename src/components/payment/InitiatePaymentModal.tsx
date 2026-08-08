@@ -112,15 +112,15 @@ const InitiatePaymentModal: React.FC<InitiatePaymentModalProps> = ({
 
     setLoading(true);
     try {
-      await PaymentInitiationService.getInstance().createInitiation({
-        projectId,
-        phaseId,
-        inspectionId,
-        initiatorRole,
-        supplierId,
-        estimatedAmount: numAmount,
+      await PaymentInitiationService.createInitiation({
+        project_id: projectId,
+        phase_id: phaseId,
+        inspection_id: inspectionId,
+        initiator_role: initiatorRole,
+        supplier_id: supplierId,
+        estimated_amount: numAmount,
         justification,
-        attachedDocuments: attachedDocs
+        attached_documents: attachedDocs
       }, user.id);
 
       toast({ 

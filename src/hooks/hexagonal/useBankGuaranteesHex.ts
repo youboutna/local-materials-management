@@ -7,7 +7,6 @@ import { BankGuaranteeStatus, BankGuaranteeType } from '@/dtos/entities/BankGuar
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { BankGuaranteeRow } from '@/dtos/entities/BankGuaranteeDTO';
 export interface BankGuaranteeFormData {
   projectId: string;
   contractorId: string;
@@ -21,6 +20,38 @@ export interface BankGuaranteeFormData {
   phaseId?: string;
   supportingDocuments: string[];
   notes?: string;
+}
+
+export interface BankGuaranteeRow {
+  id: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  bankName: string;
+  guaranteeAmount: number;
+  guaranteeType: string;
+  issueDate: string;
+  expiryDate: string;
+  status: string;
+  phaseId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  releasedAt?: string;
+  notes?: string;
+  supportingDocuments?: string[];
+  // Legacy snake_case for backward compatibility
+  project_id?: string;
+  contractor_id?: string;
+  contractor_name?: string;
+  bank_name?: string;
+  guarantee_amount?: number;
+  guarantee_type?: string;
+  issue_date?: string;
+  expiry_date?: string;
+  phase_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  released_at?: string;
 }
 
 function mapRowToCamelCase(item: any): BankGuaranteeRow {
@@ -55,7 +86,7 @@ function mapRowToCamelCase(item: any): BankGuaranteeRow {
   };
 }
 
-export function useBankGuaranteesListHex() {
+export function useBankGuaranteesList() {
   return useQuery({
     queryKey: ['bank-guarantees-list'],
     queryFn: async (): Promise<BankGuaranteeRow[]> => {
@@ -66,7 +97,7 @@ export function useBankGuaranteesListHex() {
   });
 }
 
-export function useCreateBankGuaranteeHex() {
+export function useCreateBankGuarantee() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -92,7 +123,7 @@ export function useCreateBankGuaranteeHex() {
   });
 }
 
-export function useUpdateBankGuaranteeHex() {
+export function useUpdateBankGuarantee() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -113,7 +144,7 @@ export function useUpdateBankGuaranteeHex() {
   });
 }
 
-export function useDeleteBankGuaranteeHex() {
+export function useDeleteBankGuarantee() {
   const queryClient = useQueryClient();
 
   return useMutation({

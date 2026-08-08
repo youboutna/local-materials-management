@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { MaterialCategoryConfig } from '@/dtos/entities/MaterialDTO';;
+import { MATERIAL_CATEGORIES, MaterialCategoryConfig, MaterialSubcategory } from '@/dtos/entities/MaterialCategoryDTO';
 
 interface MaterialCategorySelectorProps {
   selectedCategory?: string;

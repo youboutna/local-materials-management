@@ -13,11 +13,10 @@ import { useToast } from '../../../hooks/use-toast';
 
 // Import DTOs
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ReceptionValidationDTO } from '@/dtos/entities/PaymentValidationDTO';;
+import { ReceptionDTO, ReceptionType, ReceptionStatus, ReceptionValidationDTO } from "@/dtos/entities/ReceptionDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 
-import { ValidationField } from '@/dtos/entities/ActionDTO';
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
     compliance?: ComplianceItemDTO[];
@@ -26,6 +25,23 @@ interface EnhancedValidationStepProps {
   };
   onUpdate: (data: Partial<ProjectDTO>) => void;
   isEditing?: boolean;
+}
+
+interface ValidationField {
+  id: string;
+  name: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  description: string;
+  required: boolean;
+  lastUpdated?: string;
+  assignedTo?: string;
+  documents?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    uploadedAt: string;
+  }>;
 }
 
 const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({

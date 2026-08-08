@@ -14,13 +14,11 @@ import { Material, MaterialCategory } from '@/domain/entities/Material';
 import { IMaterialRepository, ProjectMaterial, StockSummary } from '@/domain/repositories/IMaterialRepository';
 import { MaterialTransformer } from '@/dtos/transforms/MaterialTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-
+import { Database } from '@/integrations/supabase/types';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-type MaterialRow = BtpRow;
-type ProjectMaterialRow = BtpRow;
-
-type BtpRow = Record<string, any>;
+type MaterialRow = Database['btp']['Tables']['materials']['Row'];
+type ProjectMaterialRow = Database['btp']['Tables']['project_materials']['Row'];
 
 export class SupabaseMaterialAdapter implements IMaterialRepository {
   private tableName = 'materials';
@@ -176,7 +174,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       const dbData = MaterialTransformer.toSupabase(material);
       const { error } = await supabase
         .from(this.tableName)
-        .insert(dbData as BtpRow);
+        .insert(dbData as Database['btp']['Tables']['materials']['Insert']);
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Failed to save material: ${error.message}`);
     } catch (error) {
@@ -221,7 +219,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
 
       const { error } = await supabase
         .from(this.tableName)
-        .update(updateData as BtpRow)
+        .update(updateData as Database['btp']['Tables']['materials']['Update'])
         .eq('id', id);
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Failed to update material: ${error.message}`);
@@ -922,7 +920,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       const dbData = materials.map(m => MaterialTransformer.toSupabase(m));
       const { error } = await supabase
         .from(this.tableName)
-        .insert(dbData as BtpRow[]);
+        .insert(dbData as Database['btp']['Tables']['materials']['Insert'][]);
 
       if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Failed to save materials: ${error.message}`);
     } catch (error) {

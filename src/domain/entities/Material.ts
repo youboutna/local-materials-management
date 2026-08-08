@@ -2,7 +2,7 @@
 // Pure business logic without infrastructure concerns
 
 import { GeographicUnit } from "@/utils/mauritania";
-import { CoordinatePoint } from '@/dtos/entities/ActionDTO';;
+import { CoordinatePoint } from "@/dtos/entities/MaterialDTO";
 
 export type MaterialCategory = 
   | 'construction' 

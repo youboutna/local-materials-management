@@ -16,14 +16,12 @@ import {
   InspectionStatus,
   UpdateInspectionDTO
 } from '@/dtos/entities/InspectionDTO';
-import { InspectionType } from '@/dtos/entities/InspectionDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';
 import { InspectionService } from './InspectionService';
 import { NotificationService } from './NotificationService';
 
-import { InspectionReview } from '@/dtos/entities/InspectionDTO';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -95,6 +93,15 @@ export interface InspectionExecution {
     severity: 'minor' | 'major' | 'critical';
     actionRequired: string;
   }>;
+}
+
+export interface InspectionReview {
+  inspectionId: string;
+  reviewedBy: string;
+  reviewedAt: string;
+  decision: 'approved' | 'rejected' | 'requires_changes';
+  comments?: string;
+  requiredChanges?: string[];
 }
 
 // ============================================================================
@@ -195,14 +202,14 @@ export class InspectionWorkflowService {
         phaseId: request.phaseId,
         title: `Inspection - ${request.inspectionType}`,
         description: request.notes || '',
-        inspector: request.requestedBy,
+        inspectorId: request.requestedBy,
         date: request.requestedDate,
         status: InspectionStatus.PENDING,
         priority: request.priority as InspectionPriority || InspectionPriority.MEDIUM,
-        type: request.inspectionType as InspectionType
+        type: request.inspectionType
       };
 
-      const inspection = await this.inspectionService.createInspection(inspectionData as never);
+      const inspection = await this.inspectionService.createInspection(inspectionData);
       
       // Send notifications
       await this.sendWorkflowNotification(
@@ -231,12 +238,12 @@ export class InspectionWorkflowService {
       const updateData: UpdateInspectionDTO = {
         id: schedule.inspectionId,
         date: schedule.scheduledDate,
-        inspector: schedule.inspectorId,
+        inspectorId: schedule.inspectorId,
         status: InspectionStatus.IN_PROGRESS,
         comments: schedule.notes || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(schedule.inspectionId, updateData as never);
+      const inspection = await this.inspectionService.updateInspection(schedule.inspectionId, updateData);
       
       await this.sendWorkflowNotification(
         'Inspection planifiée',
@@ -268,7 +275,7 @@ export class InspectionWorkflowService {
         progressAtInspection: 100
       };
 
-      const inspection = await this.inspectionService.updateInspection(execution.inspectionId, updateData as never);
+      const inspection = await this.inspectionService.updateInspection(execution.inspectionId, updateData);
       
       // Handle non-conformities
       if (execution.nonConformities && execution.nonConformities.length > 0) {
@@ -310,7 +317,7 @@ export class InspectionWorkflowService {
         comments: review.comments || ''
       };
 
-      const inspection = await this.inspectionService.updateInspection(review.inspectionId, updateData as never);
+      const inspection = await this.inspectionService.updateInspection(review.inspectionId, updateData);
       
       const notificationTitle = review.decision === 'approved' ? 'Inspection approuvée' :
                               review.decision === 'rejected' ? 'Inspection rejetée' :
@@ -423,7 +430,7 @@ export class InspectionWorkflowService {
   ): Promise<void> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: 'system',
+        recipientId: 'system',
         title,
         message,
         type: type as any,

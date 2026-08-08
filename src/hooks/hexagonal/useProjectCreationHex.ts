@@ -9,7 +9,10 @@ import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 // Import workflow DTOs
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import {
+    ProjectWorkflowData,
+    SaveResult
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // Import entity DTOs
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';

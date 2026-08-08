@@ -5,7 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar, User, Eye } from 'lucide-react';
 
-import { Document } from '@/dtos/entities/DocumentDTO';
+interface Document {
+  id: string;
+  title: string;
+  description?: string;
+  document_type: string;
+  status: string;
+  file_name?: string;
+  uploaded_by?: string;
+  created_at: string;
+  file_size?: number;
+}
+
 interface DocumentsListPaginatedProps {
   documents: Document[];
   currentPage: number;

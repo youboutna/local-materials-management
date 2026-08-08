@@ -17,7 +17,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Send, Upload } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { Supplier } from '@/dtos/entities/SupplierDTO';
 interface Document {
   id: string;
   title: string;
@@ -29,7 +28,12 @@ interface Document {
   description?: string | null;
 }
 
-
+interface Supplier {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  contact_person?: string | null;
+}
 
 interface EnhancedDocumentSharingProps {
   supplier: Supplier;

@@ -9,18 +9,25 @@
  */
 
 import { GanttChartData } from '@/domain/entities/index';
-import { PERTAnalysis } from '@/dtos/entities/PERTAnalysisDTO';;
+import { PERTAnalysis } from '@/dtos/entities/ProjectAggregateDTO';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
 import { PERTActivity } from '@/dtos/entities/ProjectAggregateDTO';
 
-import { GanttPhaseData } from '@/dtos/entities/PhaseDTO';
 /**
  * Interface pour les données Gantt des phases
  * Utilisée en interne, provient des DTOs PhaseDTO
  */
+export interface GanttPhaseData {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'in_progress' | 'completed';
+}
 
 /**
  * Interface pour les données Gantt des jalons

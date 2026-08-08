@@ -5,8 +5,8 @@
  * Gère les transformations bidirectionnelles pour l'architecture hexagonale
  */
 
-import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';;
-import { VerificationItemDTO } from '@/dtos/entities/MilestoneDTO';;
+import { AutomaticDecompteDTO, DecompteLineDTO } from '@/dtos/entities/AutomaticDecompteDTO';
+import { VerificationItemDTO } from '@/dtos/entities/VerificationItemDTO';
 
 // Entités de domaine (à créer si nécessaire)
 interface DecompteEntity {

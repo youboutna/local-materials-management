@@ -319,9 +319,9 @@ export class DocumentService {
 
       // Transformation et création
       const repositoryData = DocumentTransformer.createToRepository(data);
-      const created = await this.documentRepository.save(repositoryData as never);
+      const created = await this.documentRepository.save(repositoryData);
       
-      return DocumentTransformer.toDTO(created as never);
+      return DocumentTransformer.toDTO(created);
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
@@ -358,7 +358,7 @@ export class DocumentService {
 
       // Mise à jour
       const updateData = DocumentTransformer.updateToRepository(updates);
-      await this.documentRepository.update(id, updateData as never);
+      await this.documentRepository.update(id, updateData);
       
       const updatedDocument = await this.documentRepository.findById(id);
       if (!updatedDocument) {

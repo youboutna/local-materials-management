@@ -16,7 +16,6 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { InsuranceService } from '@/application/services/InsuranceService';
 
-import { LocalInsuranceCertificate } from '@/dtos/entities/InsuranceDTO';
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
   projectId: string;
@@ -33,6 +32,29 @@ interface InsuranceFormData {
 }
 
 // Local certificate type for display
+interface LocalInsuranceCertificate {
+  id: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  coverageType: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  startDate: string;
+  endDate: string;
+  project_id: string;
+  contractor_id: string;
+  contractor_name: string;
+  coverage_type: string;
+  insurance_company: string;
+  policy_number: string;
+  coverage_amount: number;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  notes?: string;
+}
 
 const InsuranceCrud: React.FC = () => {
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);

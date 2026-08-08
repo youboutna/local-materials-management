@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { TenderDTO } from '@/dtos/entities/TenderDTO';
-import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
+import { TenderEstimateDTO, TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
 import { EstimateData, EstimateItem, ExportConfig } from '@/dtos/transforms/shared';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

@@ -29,7 +29,6 @@ import { AppLayout } from '@/components/layout';
 import { useProjectsHex, useDocumentsHex } from '@/hooks/hexagonal';
 import { useProjectHierarchyHex } from '@/hooks/hexagonal/useProjectHierarchyHex';
 
-import { Alert } from '@/dtos/entities/NotificationDTO';
 interface ProjectAlert {
   id: string;
   title: string;
@@ -53,7 +52,14 @@ interface Document {
   type: 'plan' | 'report' | 'certificate';
 }
 
-
+interface Alert {
+  id: string;
+  message: string;
+  type: 'insurance_expiry' | 'bank_guarantee' | 'inspection_overdue' | 'payment_blocked' | 'compliance_violation' | 'delivery' | 'deadline' | 'quality';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  source: 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification';
+  data?: any;
+}
 
 // Dashboard Content Component that uses ProjectManager
 const DashboardContent = () => {

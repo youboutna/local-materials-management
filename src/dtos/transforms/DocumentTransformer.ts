@@ -202,9 +202,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    * Transform UpdateDocumentDTO to partial Document entity
    */
   static fromUpdateDTOToEntity(dto: UpdateDocumentDTO): Partial<Document> {
-    // Les propriétés du domaine sont readonly : on construit un objet mutable
-    // avant de le renvoyer sous forme de Partial<Document>.
-    const entity: Record<string, unknown> = {};
+    const entity: Partial<Document> = {};
     
     if (dto.title !== undefined) entity.title = dto.title;
     if (dto.description !== undefined) entity.description = dto.description;
@@ -227,7 +225,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
     if (dto.uploadedBy !== undefined) entity.uploadedBy = dto.uploadedBy;
     if (dto.metadata !== undefined) entity.metadata = dto.metadata;
     
-    return entity as Partial<Document>;
+    return entity;
   }
 
   /**
@@ -592,7 +590,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
    * Validate Document DTO
    */
   validate(dto: DocumentDTO): ValidationResult {
-    const document = DocumentTransformer.toEntity(dto);
+    const document = this.toEntity(dto);
     const validation = DocumentTransformer.validateDocumentData(document);
     return {
       isValid: validation.isValid,

@@ -16,7 +16,6 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-import { InspectionDetails } from '@/dtos/entities/InspectionDTO';
 interface InspectionDetailsStepProps {
   projectId: string;
   phaseId?: string;
@@ -27,7 +26,17 @@ interface InspectionDetailsStepProps {
   onComplete: (details: InspectionDetails) => void;
 }
 
-
+export interface InspectionDetails {
+  scheduled_date: string;
+  scheduled_time: string;
+  estimated_duration_hours: number;
+  inspector_id?: string;
+  inspector_name?: string;
+  backup_inspector_id?: string;
+  priority: 'low' | 'medium' | 'high';
+  requirements?: string;
+  proposed_dates?: string[];
+}
 
 const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
   projectId,

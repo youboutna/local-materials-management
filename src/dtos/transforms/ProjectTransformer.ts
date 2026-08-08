@@ -1251,8 +1251,8 @@ export class ProjectTransformer {
         status: doc.status,
         assignedTo: doc.assignedTo,
         uploadedBy: doc.uploadedBy,
-        createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
-        deadlineDate: doc.deadlineDate instanceof Date ? doc.deadlineDate.toISOString() : doc.deadlineDate,
+        createdAt: doc.createdAt,
+        deadlineDate: doc.deadlineDate,
         isInternalOnly: doc.isInternalOnly,
         isSharedWithSuppliers: doc.isSharedWithSuppliers,
         tags: doc.tags,
@@ -1264,7 +1264,7 @@ export class ProjectTransformer {
         paymentId: doc.paymentId,
         supplierId: doc.supplierId,
         sharedDate: null,
-        updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : doc.updatedAt
+        updatedAt: doc.updatedAt
       })) || [],
     };
   }

@@ -65,7 +65,9 @@ export class MaterialService {
     this.supplierService = new SupplierService(
       supplierRepository || RepositoryFactory.getSupplierRepository()
     );
-    this.workspaceService = new WorkspaceService();
+    this.workspaceService = new WorkspaceService(
+      workspaceRepository || RepositoryFactory.getWorkspaceRepository()
+    );
     this.documentService = new DocumentService(
       documentRepository || RepositoryFactory.getDocumentRepository()
     );
@@ -355,7 +357,7 @@ export class MaterialService {
         const material = await this.materialRepository.findById(pm.materialId);
         if (!material) continue;
 
-        let supplier: unknown = undefined;
+        let supplier = undefined;
         if (material.supplierId) {
           const supplierData = await this.supplierService.getSupplierById(material.supplierId);
           if (supplierData) {

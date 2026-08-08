@@ -12,7 +12,18 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
-import { ActionFormData } from '@/dtos/entities/ProjectDTO';
+export interface ActionFormData {
+  actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigneeId?: string;
+  recipientIds: string[];
+  dueDate?: Date;
+  escalationLevel?: 'team' | 'supervisor' | 'manager' | 'director';
+  metadata?: Record<string, any>;
+}
+
 interface ActionFormDialogProps {
   open: boolean;
   onClose: () => void;

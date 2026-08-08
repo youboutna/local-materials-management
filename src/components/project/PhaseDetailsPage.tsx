@@ -23,7 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import InitiatePaymentModal from "@/components/payment/InitiatePaymentModal";
 
 // Hooks
-import { PhaseMilestoneDTO } from '@/dtos/entities/MilestoneDTO';;
+import { PhaseDTO, PhaseMilestoneDTO, PhaseStepDTO, PhaseStatus } from '@/dtos/entities/PhaseDTO';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
 import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
 import { useWorkflowOrchestrator } from "@/hooks/useWorkflowOrchestrator";

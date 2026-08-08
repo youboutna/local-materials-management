@@ -150,6 +150,16 @@ export interface UpdateComplianceRequestDTO {
   updatedBy?: string;
 }
 
+export interface CreateComplianceDocumentRequestDTO {
+  complianceItemId: string;
+  documentId: string;
+  category: string;
+  subcategory?: string;
+  isRequired?: boolean;
+  uploadedBy?: string;
+  fileUrl?: string;
+}
+
 export interface CreateComplianceNoteRequestDTO {
   complianceItemId: string;
   note: string;
@@ -184,8 +194,18 @@ export interface ComplianceFilterDTO {
 export interface ComplianceAlertDTO {
   id: string;
   complianceItemId: string;
-  type: 'overdue' | 'criticalPriority' | 'risk_level' | 'mitigation_required';
+  type: 'overdue' | 'critical_priority' | 'risk_level' | 'mitigation_required';
   severity: 'low' | 'medium' | 'high' | 'critical';
-  message: strnceAuditEntry = ComplianceAuditEntryDTO;
+  message: string;
+  projectId?: string;
+  responsible?: string;
+  createdAt: string;
+}
+
+// Legacy exports for backward compatibility
+export type ComplianceItem = ComplianceItemDTO;
+export type ComplianceDocument = ComplianceDocumentDTO;
+export type ComplianceNote = ComplianceNoteDTO;
+export type ComplianceAuditEntry = ComplianceAuditEntryDTO;
 export type CreateComplianceData = CreateComplianceRequestDTO;
 export type UpdateComplianceData = UpdateComplianceRequestDTO;

@@ -38,7 +38,7 @@ import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProje
 // Import ProjectWorkflowService and RepositoryFactory
 
 // Import workflow DTOs
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';

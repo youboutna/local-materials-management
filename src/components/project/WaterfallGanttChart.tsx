@@ -5,11 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { GanttTaskDTO } from '@/dtos/entities/TaskAssignmentDTO';
 /**
  * GanttTaskDTO (camelCase strict) consommé par `WaterfallGanttChart`.
  * Le mapping depuis les phases hex/repos est effectué dans le parent.
  */
+export interface GanttTaskDTO {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  phase: string;
+  dependencies?: string[];
+  assignedTo?: string;
+  budget?: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  procurementStep?: number;
+}
 
 // Alias rétrocompatible
 type GanttTask = GanttTaskDTO;

@@ -4,7 +4,19 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { CreateComplianceDocumentRequestDTO } from '@/dtos/entities/DocumentDTO';;
+import {
+  ComplianceItemDTO,
+  ComplianceDocumentDTO,
+  ComplianceNoteDTO,
+  ComplianceAuditEntryDTO,
+  ComplianceStatisticsDTO,
+  ComplianceFilterDTO,
+  ComplianceAlertDTO,
+  CreateComplianceRequestDTO,
+  UpdateComplianceRequestDTO,
+  CreateComplianceDocumentRequestDTO,
+  CreateComplianceNoteRequestDTO
+} from '@/dtos/entities/ComplianceDTO';
 import { ComplianceItem, ComplianceDocument, ComplianceNote, ComplianceAuditEntry } from '@/domain/entities/Compliance';
 import { IComplianceRepository } from '@/domain/repositories/IComplianceRepository';
 import { ComplianceTransformer } from '@/dtos/transforms/ComplianceTransformer';

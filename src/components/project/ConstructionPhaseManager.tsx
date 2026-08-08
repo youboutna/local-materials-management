@@ -67,7 +67,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
+import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // PhaseService instance for dynamic data
 const phaseService = new PhaseService();

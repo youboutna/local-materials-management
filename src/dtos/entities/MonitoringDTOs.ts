@@ -22,6 +22,16 @@ export interface MonitoringDashboardDTO extends BaseEntityDTO {
   refreshInterval: number; // in seconds
 }
 
+export interface MonitoringWidgetDTO {
+  id: string;
+  type: 'chart' | 'metric' | 'table' | 'alert';
+  title: string;
+  position: { x: number; y: number; width: number; height: number };
+  config: Record<string, unknown>;
+  data: unknown;
+  lastRefresh: string;
+}
+
 export interface MonitoringFiltersDTO {
   dateRange: {
     start: string;
@@ -33,7 +43,15 @@ export interface MonitoringFiltersDTO {
   severity: ('low' | 'medium' | 'high' | 'critical')[];
 }
 
-// =================== PAYMENT CONTROL ====: 'week' | 'month' | 'quarter' | 'year';
+// =================== PAYMENT CONTROL ===================
+
+export interface PaymentControlDashboardDTO extends BaseEntityDTO {
+  totalPayments: number;
+  blockedPayments: number;
+  pendingApprovals: number;
+  overduePayments: number;
+  currency: string;
+  period: 'week' | 'month' | 'quarter' | 'year';
   payments: PaymentControlSummaryDTO[];
 }
 
@@ -56,7 +74,17 @@ export interface PaymentBlockingInterfaceDTO extends BaseEntityDTO {
   blockedBy: string;
   blockedAt: string;
   autoRelease: boolean;
-  releInspections: number;
+  releaseConditions: string[];
+  notifications: NotificationDTO[];
+}
+
+// =================== INSPECTION MONITORING ===================
+
+export interface InspectionMonitoringDTO extends BaseEntityDTO {
+  totalInspections: number;
+  scheduledInspections: number;
+  completedInspections: number;
+  overdueInspections: number;
   averageScore: number;
   criticalIssues: number;
   inspections: InspectionSummaryDTO[];
@@ -91,7 +119,20 @@ export interface ScheduledInspectionDTO {
   scheduledDate: string;
   duration: number; // in hours
   location: string;
-  type: 'routine' | 'special' | 'emeport interface InspectorAvailabilityDTO {
+  type: 'routine' | 'special' | 'emergency';
+  priority: 'low' | 'medium' | 'high';
+  dependencies: string[]; // other inspection IDs
+}
+
+export interface InspectionConflictDTO {
+  inspectionId1: string;
+  inspectionId2: string;
+  inspectorId: string;
+  conflictType: 'double_booking' | 'travel_time' | 'skill_mismatch';
+  resolution?: string;
+}
+
+export interface InspectorAvailabilityDTO {
   inspectorId: string;
   inspectorName: string;
   availableSlots: TimeSlotDTO[];
@@ -112,7 +153,21 @@ export interface NotificationCenterDTO extends BaseEntityDTO {
   userId: string;
   totalNotifications: number;
   unreadNotifications: number;
-  notifications: NotificationSummaryDTy: 'system' | 'project' | 'payment' | 'inspection' | 'safety';
+  notifications: NotificationSummaryDTO[];
+  preferences: NotificationPreferencesDTO;
+}
+
+export interface NotificationSummaryDTO {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'system';
+  read: boolean;
+  created_at: string;
+  updated_at?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: 'system' | 'project' | 'payment' | 'inspection' | 'safety';
   actionable: boolean;
   actions?: NotificationActionDTO[];
   expires_at?: string;
@@ -126,7 +181,19 @@ export interface NotificationPreferencesDTO {
   sms: boolean;
   categories: {
     system: boolean;
-    project: bxport interface NotificationActionDTO {
+    project: boolean;
+    payment: boolean;
+    inspection: boolean;
+    safety: boolean;
+  };
+  frequency: 'immediate' | 'hourly' | 'daily' | 'weekly';
+  quietHours: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface NotificationActionDTO {
   id: string;
   label: string;
   type: 'button' | 'link' | 'modal';
@@ -134,13 +201,23 @@ export interface NotificationPreferencesDTO {
   payload?: Record<string, unknown>;
 }
 
-// =================== INSURANCE MANAGEMENTotalCoverage: number;
+// =================== INSURANCE MANAGEMENT ===================
+
+export interface InsuranceMonitoringDTO extends BaseEntityDTO {
+  totalPolicies: number;
+  activePolicies: number;
+  expiredPolicies: number;
+  expiringSoon: number;
+  totalCoverage: number;
   totalPremium: number;
   policies: InsuranceSummaryDTO[];
 }
 
 export interface InsuranceSummaryDTO extends InsuranceCertificateDTO {
-  status: 'active' | 'expired' | 'expiring_soclaimsCount: number;
+  status: 'active' | 'expired' | 'expiring_soon' | 'cancelled';
+  daysUntilExpiry: number;
+  coverageUtilization: number;
+  claimsCount: number;
   lastClaimDate?: string;
   renewalReminder: boolean;
 }
@@ -154,7 +231,26 @@ export interface InsuranceClaimsDTO extends BaseEntityDTO {
   submittedDate: string;
   description: string;
   documents: string[];
-  assessment?: strinumber;
+  assessment?: string;
+  settlementDate?: string;
+}
+
+// =================== COMPREHENSIVE MONITORING ===================
+
+export interface ComprehensiveMonitoringDTO extends BaseEntityDTO {
+  userId: string;
+  overview: MonitoringOverviewDTO;
+  projects: ProjectMonitoringDTO[];
+  alerts: MonitoringAlertDTO[];
+  performance: PerformanceMetricsDTO;
+}
+
+export interface MonitoringOverviewDTO {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  atRiskProjects: number;
+  delayedProjects: number;
   totalBudget: number;
   spentBudget: number;
   budgetUtilization: number;
@@ -176,7 +272,19 @@ export interface ProjectMonitoringDTO {
   budget: number;
   progress: number;
   healthScore: number;
-  riskLevel: 'faible' | 'moyen' | 'eleve' | 'crnt_uploaded';
+  riskLevel: 'faible' | 'moyen' | 'eleve' | 'critique';
+  milestonesProgress: number;
+  budgetUtilization: number;
+  teamPerformance: number;
+  upcomingDeadlines: string[];
+  recentActivities: ProjectActivityDTO[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectActivityDTO {
+  id: string;
+  type: 'task_completed' | 'milestone_reached' | 'issue_raised' | 'document_uploaded';
   description: string;
   timestamp: string;
   userId: string;
@@ -190,7 +298,15 @@ export interface MonitoringAlertDTO {
   title: string;
   message: string;
   projectId: string;
-  timestamp: strctivity: number;
+  timestamp: string;
+  acknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  resolution?: string;
+}
+
+export interface PerformanceMetricsDTO {
+  productivity: number;
   quality: number;
   safety: number;
   budget: number;

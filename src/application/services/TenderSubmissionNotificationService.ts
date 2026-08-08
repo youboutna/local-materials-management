@@ -1,7 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-import { TenderSubmissionNotificationData } from '@/dtos/entities/NotificationDTO';
+export interface TenderSubmissionNotificationData {
+  supplier_email: string;
+  supplier_name: string;
+  tender_title: string;
+  submission_id: string;
+  secret_code: string;
+  admin_emails?: string[];
+}
+
 export const sendTenderSubmissionNotification = async (data: TenderSubmissionNotificationData) => {
   try {
     console.log('Sending tender submission notification:', data);

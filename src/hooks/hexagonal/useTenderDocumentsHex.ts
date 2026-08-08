@@ -24,7 +24,7 @@ export interface TenderDocumentWithDetails {
 type TenderDocumentCategory = string;
 
 // Hook: Fetch tender documents
-export function useTenderDocumentsListHex(tenderId: string) {
+export function useTenderDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
@@ -38,7 +38,7 @@ export function useTenderDocumentsListHex(tenderId: string) {
 }
 
 // Hook: Fetch workflow step documents
-export function useWorkflowStepDocumentsListHex(tenderId: string) {
+export function useWorkflowStepDocumentsList(tenderId: string) {
   return useQuery({
     queryKey: ['workflow-step-documents', tenderId],
     queryFn: async (): Promise<TenderDocumentWithDetails[]> => {
@@ -50,7 +50,7 @@ export function useWorkflowStepDocumentsListHex(tenderId: string) {
 }
 
 // Hook: Upload tender document
-export function useUploadTenderDocumentHex(tenderId: string, projectId?: string) {
+export function useUploadTenderDocument(tenderId: string, projectId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

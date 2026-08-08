@@ -3,7 +3,7 @@
  * Centralized for hexagonal architecture
  */
 
-import { BaseEntityDTO } from '@/dtos/entities/OrganizationDTO';;
+import { BaseEntityDTO } from './BaseEntityDTO';
 
 export enum ReceptionType {
   PROVISIONAL = 'provisional',
@@ -64,7 +64,7 @@ export interface ReceptionFindingDTO {
   photoUrls?: string[];
   resolutionRequired: boolean;
   resolutionDeadline?: string;
-  resolutionStatus: 'pending' | 'inProgress' | 'resolved';
+  resolutionStatus: 'pending' | 'in_progress' | 'resolved';
   assignedTo?: string;
 }
 
@@ -105,7 +105,7 @@ export interface ReceptionParticipantDTO {
 
 export interface ReceptionDecisionDTO {
   id: string;
-  type: 'approval' | 'conditionalApproval' | 'rejection' | 'deferment';
+  type: 'approval' | 'conditional_approval' | 'rejection' | 'deferment';
   description: string;
   conditions?: string[];
   validUntil?: string;
@@ -120,11 +120,25 @@ export interface ReceptionConditionDTO {
   priority: 'low' | 'medium' | 'high' | 'critical';
   deadline?: string;
   responsibleParty: string;
-  status: 'pending' | 'inProgress' | 'completed' | 'overdue';
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
   completedAt?: string;
 }
 
 // Validation DTOs
+export interface ReceptionValidationDTO {
+  isValid: boolean;
+  receptionType: ReceptionType;
+  requiredDocuments: string[];
+  submittedDocuments: string[];
+  missingDocuments: string[];
+  invalidDocuments: string[];
+  inspectionsCompleted: boolean;
+  findingsResolved: boolean;
+  conditionsMet: boolean;
+  errors: ReceptionValidationErrorDTO[];
+  warnings: ReceptionValidationWarningDTO[];
+  recommendations: string[];
+}
 
 export interface ReceptionValidationErrorDTO {
   field: string;
@@ -147,7 +161,9 @@ export interface ReceptionWorkflowDTO {
   projectId: string;
   currentStep: number;
   totalSteps: number;
-  ste;
+  steps: ReceptionWorkflowStepDTO[];
+  status: 'not_started' | 'in_progress' | 'pending_review' | 'approved' | 'rejected';
+  lastUpdated: string;
 }
 
 export interface ReceptionWorkflowStepDTO {
@@ -155,4 +171,8 @@ export interface ReceptionWorkflowStepDTO {
   name: string;
   title: string;
   description: string;
-  status: 'pending' | 'inP
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  completedAt?: string;
+  assignedTo?: string;
+  notes?: string;
+}

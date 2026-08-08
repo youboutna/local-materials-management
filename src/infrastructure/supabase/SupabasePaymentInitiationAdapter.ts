@@ -1,5 +1,12 @@
 import { IPaymentInitiationRepository } from '@/domain/repositories/IPaymentInitiationRepository';
-import { ApprovalChainStep } from '@/dtos/entities/PhaseDTO';;
+import {
+    ApprovalActionDTO,
+    ApprovalChainStep,
+    CreatePaymentInitiationDTO,
+    PaymentInitiationNotificationDTO,
+    SupplierCompletionDTO,
+    SupplierInfoDTO
+} from '@/dtos/workflows/paymentInitiationDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepository {

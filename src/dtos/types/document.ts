@@ -27,33 +27,33 @@ export interface Document {
   id: string;
   title: string;
   description?: string;
-  fileUrl?: string; // ✅ CAMELCASE: Instead of fileUrl
-  fileName?: string; // ✅ CAMELCASE: Instead of fileName
-  mimeType?: string; // ✅ CAMELCASE: Instead of mimeType
-  fileSize?: number; // ✅ CAMELCASE: Instead of fileSize
-  documentType: DocumentType; // ✅ CAMELCASE: Instead of documentType
+  fileUrl?: string; // ✅ CAMELCASE: Instead of file_url
+  fileName?: string; // ✅ CAMELCASE: Instead of file_name
+  mimeType?: string; // ✅ CAMELCASE: Instead of mime_type
+  fileSize?: number; // ✅ CAMELCASE: Instead of file_size
+  documentType: DocumentType; // ✅ CAMELCASE: Instead of document_type
   status?: DocumentStatus;
-  projectId?: string; // ✅ CAMELCASE: Instead of projectId
-  inspectionId?: string; // ✅ CAMELCASE: Instead of inspectionId
-  phaseId?: string; // ✅ CAMELCASE: Instead of phaseId
-  supplierId?: string; // ✅ CAMELCASE: Instead of supplierId
-  uploadedBy?: string; // ✅ CAMELCASE: Instead of uploadedBy
-  assignedTo?: string; // ✅ CAMELCASE: Instead of assignedTo
+  projectId?: string; // ✅ CAMELCASE: Instead of project_id
+  inspectionId?: string; // ✅ CAMELCASE: Instead of inspection_id
+  phaseId?: string; // ✅ CAMELCASE: Instead of phase_id
+  supplierId?: string; // ✅ CAMELCASE: Instead of supplier_id
+  uploadedBy?: string; // ✅ CAMELCASE: Instead of uploaded_by
+  assignedTo?: string; // ✅ CAMELCASE: Instead of assigned_to
   metadata?: Record<string, any>;
   tags?: string[];
-  createdAt?: string; // ✅ CAMELCASE: Instead of createdAt
-  updatedAt?: string; // ✅ CAMELCASE: Instead of updatedAt
+  createdAt?: string; // ✅ CAMELCASE: Instead of created_at
+  updatedAt?: string; // ✅ CAMELCASE: Instead of updated_at
   
   // Legacy snake_case for backward compatibility
   file_url?: string; // Legacy snake_case for backward compatibility
   file_name?: string; // Legacy snake_case for backward compatibility
   mime_type?: string; // Legacy snake_case for backward compatibility
   file_size?: number; // Legacy snake_case for backward compatibility
-  documentType?: DocumentType; // Legacy snake_case for backward compatibility
-  projectId?: string; // Legacy snake_case for backward compatibility
-  inspectionId?: string; // Legacy snake_case for backward compatibility
-  phaseId?: string; // Legacy snake_case for backward compatibility
-  supplierId?: string; // Legacy snake_case for backward compatibility
+  document_type?: DocumentType; // Legacy snake_case for backward compatibility
+  project_id?: string; // Legacy snake_case for backward compatibility
+  inspection_id?: string; // Legacy snake_case for backward compatibility
+  phase_id?: string; // Legacy snake_case for backward compatibility
+  supplier_id?: string; // Legacy snake_case for backward compatibility
   uploaded_by?: string; // Legacy snake_case for backward compatibility
   assigned_to?: string; // Legacy snake_case for backward compatibility
   created_at?: string; // Legacy snake_case for backward compatibility

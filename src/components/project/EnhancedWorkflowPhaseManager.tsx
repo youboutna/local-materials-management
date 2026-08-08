@@ -47,12 +47,36 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Phase {
+  id: string;
+  phase_name: string;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  status: string;
+  progress?: number | null;
+  budget_allocated?: number | null;
+  actual_cost?: number | null;
+  documents_count?: number;
+  tasks_count?: number;
+  inspections_count?: number;
+  payments_count?: number;
+  location?: any;
+  stakeholders?: any[];
+  team_delegation?: any;
+}
 
+interface Stakeholder {
+  id?: string;
+  stakeholder_type: string;
+  stakeholder_entity_type: string;
+  stakeholder_id: string;
+  role_description?: string | null;
+  is_primary?: boolean | null;
+  employee?: any;
+  supplier?: any;
+}
 
-
-
-import { Stakeholder } from '@/dtos/entities/StakeholderDTO';
-import { Phase } from '@/dtos/entities/PhaseDTO';
 interface TeamDelegation {
   projectManager?: string;
   technicalManager?: string;

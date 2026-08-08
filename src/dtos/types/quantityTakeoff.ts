@@ -1,17 +1,17 @@
 
 export interface QuantityTakeoff {
   id: string;
-  projectId: string;
-  materialId: string;
-  elementType: string;
+  project_id: string;
+  material_id: string;
+  element_type: string;
   unit: 'm³' | 'm²' | 'm' | 'unité';
   length: number;
   width?: number;
   height?: number;
   quantity: number;
   note?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface QuantityTakeoffWithDetails extends QuantityTakeoff {
@@ -25,9 +25,9 @@ export interface QuantityTakeoffWithDetails extends QuantityTakeoff {
 }
 
 export interface CreateQuantityTakeoffData {
-  projectId: string;
-  materialId: string;
-  elementType: string;
+  project_id: string;
+  material_id: string;
+  element_type: string;
   unit: 'm³' | 'm²' | 'm' | 'unité';
   length: number;
   width?: number;

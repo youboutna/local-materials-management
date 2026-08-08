@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { DashboardService } from '@/application/services/DashboardService';
-import { DashboardStats } from '@/dtos/entities/ReportDTO';;
+import { DashboardStats } from '@/dtos/entities/DashboardDTO';
 
 const dashboardService = new DashboardService();
 

@@ -30,7 +30,7 @@ export interface UseProjectAnalyticsResult {
   refetch: () => void;
 }
 
-export function useProjectAnalyticsHex(projectId: string | null, projectDetail: ProjectDetailDTO | null): UseProjectAnalyticsResult {
+export function useProjectAnalytics(projectId: string | null, projectDetail: ProjectDetailDTO | null): UseProjectAnalyticsResult {
   const analyticsService = new ProjectAnalyticsService(
     RepositoryFactory.getProjectRepository()
   );
@@ -63,7 +63,7 @@ export function useProjectAnalyticsHex(projectId: string | null, projectDetail: 
   };
 }
 
-export function useProjectKPIsHex(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
+export function useProjectKPIs(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
   const analyticsService = new ProjectAnalyticsService(
     RepositoryFactory.getProjectRepository()
   );
@@ -79,7 +79,7 @@ export function useProjectKPIsHex(projectId: string | null, projectDetail: Proje
   });
 }
 
-export function useProjectComplianceHex(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
+export function useProjectCompliance(projectId: string | null, projectDetail: ProjectDetailDTO | null) {
   const analyticsService = new ProjectAnalyticsService(
     RepositoryFactory.getProjectRepository()
   );

@@ -20,7 +20,7 @@ import { getAllGeographicUnits, getRegionsWithCapitals, getRegionsWithPorts, get
 import { GeographicUnit } from '@/utils/mauritania';
 import { toast } from '@/hooks/use-toast';
 import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
-import { WorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';;
+import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
 
 

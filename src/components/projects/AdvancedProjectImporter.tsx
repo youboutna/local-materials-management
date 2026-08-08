@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { ImportResult } from '@/dtos/entities/LoadDataDTO';;
+import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {

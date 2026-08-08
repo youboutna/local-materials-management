@@ -24,7 +24,13 @@ import {
 } from './PublicProcurementWorkflow';
 import ProcurementStepSelector from './ProcurementStepSelector';
 import { TenderListView } from './TenderListView';
-import { TenderFormData } from '@/dtos/entities/TenderDTO';
+import {
+  useTenders,
+  useProjectsForTenders,
+  useTenderMutation,
+  useDeleteTender,
+  TenderFormData
+} from '@/hooks/hexagonal'
 import { TenderDTO } from '@/dtos/entities/TenderDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 

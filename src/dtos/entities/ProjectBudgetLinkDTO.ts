@@ -18,6 +18,19 @@ export interface ProjectBudgetLinkDTO extends BaseEntityDTO {
   createdBy: string | null;
 }
 
+export interface CreateProjectBudgetLinkDTO {
+  projectId: string;
+  ministryCode?: string | null;
+  programCode?: string | null;
+  actionCode?: string | null;
+  chapterCode?: string | null;
+  lineCode?: string | null;
+  allocatedCe?: number;
+  allocatedCp?: number;
+  fiscalYear?: number;
+  notes?: string | null;
+}
+
 export interface UpdateProjectBudgetLinkDTO {
   ministryCode?: string | null;
   programCode?: string | null;

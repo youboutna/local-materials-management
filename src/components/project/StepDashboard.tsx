@@ -7,10 +7,9 @@ import { FileText, Calendar, Users, CheckCircle, AlertTriangle, DollarSign } fro
 import WorkflowKanban from './workflow/WorkflowKanban';
 import { MilestoneItem, mapMilestoneToDecisionNode, DecisionNode } from '@/dtos/types/unified-workflow';
 import { PhaseStepDTO, PhaseDTO } from '@/dtos/entities/PhaseDTO';
-import { AuditEntry } from '@/dtos/entities/InspectionDTO';;
+import { AuditEntry } from '@/hooks/useAuditEntries';
 import { StepItem } from '@/dtos/types/unified-workflow';
 
-import { MilestoneSummary } from '@/dtos/entities/MilestoneDTO';
 // Local metric and helper types to avoid loose Record usage
 type Metrics = {
   overallProgress?: number;
@@ -38,7 +37,11 @@ type PhaseCosts = {
   unlockable?: number;
 };
 
-;
+type MilestoneSummary = {
+  id?: string;
+  name?: string;
+  due_date?: string;
+};
 
 type InspectionSummary = {
   id?: string;

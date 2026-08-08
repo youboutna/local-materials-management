@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProjectDTO, ProjectStatus } from "@/dtos/entities/ProjectDTO";
 import { MaterialDTO } from "@/dtos/entities/MaterialDTO";
-import { WorkspaceDTO } from '@/dtos/entities/TaskAssignmentDTO';;
+import { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
 import { MAURITANIA_REGIONS, GeographicUnit, Region } from "@/utils/mauritania";
 import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
 import { useProjectsHex } from '@/hooks/hexagonal';

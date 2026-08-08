@@ -8,7 +8,31 @@ import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Us
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useToast } from '@/hooks/use-toast';
 
-import { Document } from '@/dtos/entities/DocumentDTO';
+interface Document {
+  id: string;
+  title: string;
+  description: string;
+  documentType: string; // ✅ CAMELCASE: Instead of document_type
+  status: string;
+  fileUrl: string; // ✅ CAMELCASE: Instead of file_url
+  fileName: string; // ✅ CAMELCASE: Instead of file_name
+  fileSize: number; // ✅ CAMELCASE: Instead of file_size
+  createdAt: string; // ✅ CAMELCASE: Instead of created_at
+  uploadedBy: string; // ✅ CAMELCASE: Instead of uploaded_by
+  projectId: string; // ✅ CAMELCASE: Instead of project_id
+  mimeType?: string; // ✅ CAMELCASE: Instead of mime_type
+  
+  // Legacy snake_case for backward compatibility
+  document_type?: string; // Legacy snake_case for backward compatibility
+  file_url?: string; // Legacy snake_case for backward compatibility
+  file_name?: string; // Legacy snake_case for backward compatibility
+  file_size?: number; // Legacy snake_case for backward compatibility
+  created_at?: string; // Legacy snake_case for backward compatibility
+  uploaded_by?: string; // Legacy snake_case for backward compatibility
+  project_id?: string; // Legacy snake_case for backward compatibility
+  mime_type?: string; // Legacy snake_case for backward compatibility
+}
+
 interface DocumentDetailsProps {
   document: Document | null;
   open: boolean;

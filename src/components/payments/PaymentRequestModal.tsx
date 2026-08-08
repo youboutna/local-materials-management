@@ -30,9 +30,15 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+interface PaymentDocument {
+  id: string;
+  type: string;
+  title: string;
+  file_url?: string;
+  created_at: string;
+  status?: string;
+}
 
-
-import { PaymentDocument } from '@/dtos/entities/PaymentDTO';
 interface PaymentRequestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

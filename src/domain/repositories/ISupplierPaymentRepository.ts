@@ -9,7 +9,14 @@
  * - Utilise les DTOs de SupplierPaymentDTO.ts
  */
 
-import { CreateSupplierPaymentRequestDTO } from '@/dtos/entities/PaymentDTO';;
+import { 
+  SupplierPaymentRequestDTO, 
+  CreateSupplierPaymentRequestDTO,
+  UpdateSupplierPaymentRequestDTO,
+  SupplierPaymentStatus,
+  SupplierPaymentStatsDTO,
+  SupplierPaymentRequestListDTO
+} from '@/dtos/entities/SupplierPaymentDTO';
 
 export interface ISupplierPaymentRepository {
   /**

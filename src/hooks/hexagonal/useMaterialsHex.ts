@@ -459,7 +459,7 @@ export function useMaterialsHex(): UseMaterialsHexResult {
   };
 }
 
-export function useMaterialsByCategoryHex(category: string) {
+export function useMaterialsByCategory(category: string) {
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
   return useQuery({
     queryKey: ['materials', 'category', category],
@@ -469,7 +469,7 @@ export function useMaterialsByCategoryHex(category: string) {
   });
 }
 
-export function useMaterialByIdHex(id: string) {
+export function useMaterialById(id: string) {
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
   return useQuery({
     queryKey: ['materials', 'id', id],
@@ -479,7 +479,7 @@ export function useMaterialByIdHex(id: string) {
   });
 }
 
-export function useLowStockMaterialsHex() {
+export function useLowStockMaterials() {
   const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
   return useQuery({
     queryKey: ['materials', 'low-stock'],

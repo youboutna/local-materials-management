@@ -44,7 +44,6 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { InspectionData } from '@/dtos/entities/InspectionDTO';
 // Workflow stage types
 type WorkflowStage = 'scheduled' | 'in_progress' | 'documents_pending' | 'validation_pending' | 'approved' | 'rejected' | 'payment_available';
 
@@ -56,7 +55,20 @@ interface StageData {
   progress: number;
 }
 
-
+interface InspectionData {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+  date: string;
+  inspector: string;
+  documents?: Array<{
+  id: string;
+  name: string;
+  type: string;
+  url?: string;
+  uploaded_at?: string;
+}>;
+}
 
 interface UnifiedPhaseWorkflowProps {
   projectId: string;

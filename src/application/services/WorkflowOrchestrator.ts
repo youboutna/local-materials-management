@@ -17,12 +17,28 @@ import { PaymentService } from '@/application/services/PaymentService';
 import { Milestone } from '@/domain/entities/Milestone';
 import type { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
 import type { AutomaticDecompteDTO } from '@/dtos/entities/WorkflowDTO';
-import { TriggerPaymentRequestDTO } from '@/dtos/entities/PaymentDTO';;
+import {
+    OnProgressUpdatedRequestDTO,
+    OnProgressUpdatedResponseDTO,
+    TriggerPaymentRequestDTO,
+    TriggerPaymentResponseDTO,
+    WorkflowStatusDTO
+} from '@/dtos/entities/WorkflowDTO';
 import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 
-import { CheckpointDTO } from '@/dtos/entities/MilestoneDTO';
 // Define CheckpointDTO locally to avoid legacy imports
+export interface CheckpointDTO {
+  id: string;
+  phaseId: string;
+  milestoneId: string;
+  status: 'pending' | 'in_progress' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  documents?: string[];
+  projectId: string;
+}
 
 // Domain entities following Rule #4 - Pure business objects
 interface WorkflowState {

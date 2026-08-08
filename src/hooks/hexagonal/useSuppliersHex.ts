@@ -155,7 +155,7 @@ export function useSuppliersHex(): UseSuppliersHexResult {
   };
 }
 
-export function useSuppliersBySpecializationHex(specialization: string) {
+export function useSuppliersBySpecialization(specialization: string) {
   const supplierRepository = RepositoryFactory.getSupplierRepository();
   const supplierService = new SupplierService(supplierRepository);
   

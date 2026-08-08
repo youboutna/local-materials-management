@@ -47,8 +47,6 @@ import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRep
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 
-import { ProjectImportTask } from '@/dtos/entities/TaskAssignmentDTO';
-import { ProjectImportMilestone } from '@/dtos/entities/MilestoneDTO';
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -101,6 +99,42 @@ export interface ProjectImportPhase {
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
   dqeLines?: BoqLineDTO[];
+}
+
+export interface ProjectImportMilestone {
+  externalRef?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  targetDate?: string;
+  target_date?: string;
+  status?: string;
+  progress?: number;
+  progressPercent?: number;
+  completionDate?: string;
+  completion_date?: string;
+}
+
+export interface ProjectImportTask {
+  id?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  progress?: number;
+  startDate?: string;
+  endDate?: string;
+  dueDate?: string;
+  due_date?: string;
+  /** Référence la phase locale (`phase.id` ou `phase.code`) quand la tâche est au niveau projet. */
+  phaseId?: string;
+  assignedTo?: string | string[];
+  assigneeName?: string;
+  assigneeEmail?: string;
+  AssignedEmail?: string;
+  assignedName?: string;
+  assignedID?: string;
 }
 
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {

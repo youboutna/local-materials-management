@@ -4,9 +4,6 @@
  */
 
 import { AppError, NetworkError } from '@/utils/errors';
-import { MapboxGeocodingResponse } from '@/dtos/entities/NotificationDTO';
-import { GoogleGeocodingResponse } from '@/dtos/entities/NotificationDTO';
-import { OpenStreetMapResponse } from '@/dtos/entities/NotificationDTO';
 import { 
   GeographicUnit,
   Region, 
@@ -98,6 +95,65 @@ export interface GeocodingConfig {
 }
 
 // =================== EXTERNAL API RESPONSE INTERFACES ===================
+
+interface OpenStreetMapResponse {
+  place_id?: string;
+  licence?: string;
+  osm_type?: string;
+  osm_id?: string;
+  boundingbox?: string[];
+  lat: string;
+  lon: string;
+  display_name: string;
+  class?: string;
+  type?: string;
+  importance?: number;
+  address?: Record<string, string | undefined>;
+}
+
+interface GoogleGeocodingResponse {
+  status: string;
+  results?: Array<{
+    address_components?: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+    formatted_address: string;
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+      location_type: string;
+    };
+    place_id?: string;
+    types?: string[];
+  }>;
+}
+
+interface MapboxGeocodingResponse {
+  features?: Array<{
+    id?: string;
+    type: string;
+    place_type?: string[];
+    relevance?: number;
+    properties?: Record<string, unknown>;
+    text?: string;
+    place_name?: string;
+    bbox?: number[];
+    center: [number, number];
+    geometry?: {
+      type: string;
+      coordinates: number[];
+    };
+    context?: Array<{
+      id: string;
+      text: string;
+      short_code?: string;
+    }>;
+  }>;
+}
 
 export class GeocodingService {
   getCity(cityName: any) {

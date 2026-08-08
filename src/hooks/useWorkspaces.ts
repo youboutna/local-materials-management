@@ -1,8 +1,17 @@
+
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { WorkspaceData } from '@/dtos/entities/TaskAssignmentDTO';
+interface WorkspaceData {
+  name: string;
+  location: string;
+  status?: string;
+  contact_manager?: string;
+  contact_phone?: string;
+  facilities?: string[];
+}
+
 export const useWorkspaces = () => {
   const queryClient = useQueryClient();
 

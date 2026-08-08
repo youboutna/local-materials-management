@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { TaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
-import { Supplier } from '@/dtos/entities/SupplierDTO';
-import { ProjectPhase } from '@/dtos/entities/PhaseDTO';
-import { TaskDependency } from '@/dtos/entities/TaskAssignmentDTO';
-import { TaskAssignmentExtended } from '@/dtos/entities/TaskAssignmentDTO';
-import { Task } from '@/dtos/entities/TaskAssignmentDTO';
 import { 
   Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter, 
   Target, DollarSign, TrendingUp, Link, ArrowRight, Layers
@@ -33,6 +27,14 @@ import {
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
 // supabase removed - using hexagonal hooks
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  dueDate?: string;
+}
+
 interface TaskManagerProps {
   tasks: Task[];
   onTaskUpdate: (updatedTask: Task) => void;
@@ -46,10 +48,86 @@ interface EnhancedTaskManagerProps {
   phases?: any[];
 }
 
+interface TaskAssignmentExtended {
+  id: string;
+  title: string | null;
+  description: string | null;
+  projectId: string | null;
+  phaseId: string | null;
+  assignedTo: string | null;
+  assigned_by: string | null;
+  dueDate: string | null;
+  priority: string | null;
+  status: string | null;
+  completion_date: string | null;
+  notes: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  // Enhanced fields
+  estimated_duration: number | null;
+  actual_duration: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  progress: number | null;
+  weight: number | null;
+  cost_estimate: number | null;
+  actual_cost: number | null;
+  optimistic_estimate: number | null;
+  pessimistic_estimate: number | null;
+  most_likely_estimate: number | null;
+  critical_path: boolean | null;
+}
+
+interface TaskDependency {
+  id: string;
+  task_id: string;
+  depends_on_task_id: string;
+  dependency_type: string | null;
+  lag_days: number | null;
+}
+
+interface ProjectPhase {
+  id: string;
+  name: string;
+  phaseName?: string;
+  status: string;
+  construction_phase?: string;
+  constructionPhase?: string;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  contact_person?: string;
+  type?: string;
+}
+
 interface Employee {
   id: string;
   fullName: string;
   position?: string | null;
+}
+
+interface TaskFormData {
+  title: string;
+  description: string;
+  phaseId: string;
+  assignedTo: string;
+  dueDate: string;
+  priority: string;
+  status: string;
+  notes: string;
+  estimated_duration: string;
+  startDate: string;
+  endDate: string;
+  weight: string;
+  cost_estimate: string;
+  optimistic_estimate: string;
+  pessimistic_estimate: string;
+  most_likely_estimate: string;
+  critical_path: boolean;
+  applyToAllPhases: boolean;
+  selectedPhases?: string[];
 }
 
 const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ 

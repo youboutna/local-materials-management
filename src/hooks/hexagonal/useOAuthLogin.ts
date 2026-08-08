@@ -18,7 +18,7 @@ export interface UseOAuthLoginResult {
   getOAuthProviders: () => Promise<any[]>;
 }
 
-export function useOAuthLoginHex(): UseOAuthLoginResult {
+export function useOAuthLogin(): UseOAuthLoginResult {
   const { loginWithOAuth, getOAuthProviders, generateOAuthUrl } = useHexagonalAuth();
   const location = useLocation();
   const navigate = useNavigate();

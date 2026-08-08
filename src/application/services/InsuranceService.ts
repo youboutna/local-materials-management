@@ -6,7 +6,7 @@
 import { NotificationService } from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
-import { InsuranceAlertDTO } from '@/dtos/entities/NotificationDTO';;
+import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
