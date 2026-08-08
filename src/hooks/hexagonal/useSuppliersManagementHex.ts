@@ -19,10 +19,6 @@ export interface SupplierFormData {
   commerce_register_ref?: string;
 }
 
-function getSupplierService() {
-  return getSupplierService();
-}
-
 // Hook: Fetch all suppliers
 export function useSuppliersList() {
   return useQuery({

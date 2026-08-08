@@ -14,7 +14,7 @@ import { Textarea } from '../../ui/textarea';
 import { RiskService, getRiskService} from "@/application/services/RiskService";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { getEmployeeService } from "@/application/services/EmployeeService";
 
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };
@@ -117,7 +117,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
   const loadEmployees = async () => {
     try {
-      const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+      const employeeService = getEmployeeService();
       const employeesData = await employeeService.getAllEmployees();
       setEmployees(employeesData.map(e => ({ id: e.id, name: e.name, role: e.position || e.role || '' })));
     } catch (error) {

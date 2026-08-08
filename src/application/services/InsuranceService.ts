@@ -289,3 +289,11 @@ export class InsuranceService {
     return new InsuranceService();
   }
 }
+
+let insuranceServiceInstance: InsuranceService | null = null;
+export function getInsuranceService(): InsuranceService {
+  if (!insuranceServiceInstance) {
+    insuranceServiceInstance = new InsuranceService();
+  }
+  return insuranceServiceInstance;
+}

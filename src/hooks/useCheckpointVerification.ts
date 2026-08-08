@@ -32,11 +32,6 @@ const getMilestoneRepository = () => {
   return RepositoryFactory.getMilestoneRepository();
 };
 
-// Get payment service
-const getPaymentService = () => {
-  return getPaymentService();
-};
-
 export function useCheckpointVerification({ 
   projectId, 
   phaseId,

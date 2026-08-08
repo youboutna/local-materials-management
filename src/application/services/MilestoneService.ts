@@ -278,7 +278,7 @@ export class MilestoneService {
       const inspections = await this.inspectionRepository.findByProjectId(milestone.projectId);
       if (!inspections || inspections.length === 0) return 0;
 
-      const completed = inspections.filter(i => i.status === 'completed' || i.status === 'approved').length;
+      const completed = inspections.filter(i => String(i.status) === 'completed' || String(i.status) === 'approved').length;
       return Math.round((completed / inspections.length) * 100);
     } catch (error) {
       console.error('MilestoneService.getInspectionsProgress failed:', error);

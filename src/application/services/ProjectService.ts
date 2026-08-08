@@ -42,6 +42,7 @@ import type { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 // Import geocoding for project location validation
 // NOTE: services must be pure TS — we use the singleton factory, never the React hook.
 import { getGeocodingService } from './GeocodingServiceFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { AutoFillLocationData } from '@/hooks/hexagonal/useLocationAutoFill';
 import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
 
