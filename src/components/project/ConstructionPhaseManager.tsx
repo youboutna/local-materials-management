@@ -61,7 +61,7 @@ import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseH
 
 import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
 
-import { MilestoneService } from '@/application/services/MilestoneService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
@@ -142,9 +142,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   
 
-  const phaseService = useMemo(() => new PhaseService(RepositoryFactory.getPhaseRepository()), []);
-
-  const milestoneService = useMemo(() => new MilestoneService(RepositoryFactory.getMilestoneRepository()), []);
+  const milestoneService = useMemo(() => getMilestoneService(), []);
 
 
 

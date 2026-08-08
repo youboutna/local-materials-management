@@ -1,7 +1,6 @@
-import { InspectionService } from '@/application/services/InspectionService';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { Inspection } from '@/domain/entities/Inspection';
 import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useEffect, useState } from 'react';
 
 /**
@@ -23,7 +22,7 @@ export const useSupplierInspections = (supplierId: string | null) => {
     try {
       setLoading(true);
       setError(null);
-      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      const inspectionService = getInspectionService();
       // Use getAllInspections and filter by supplier
       const allInspections = await inspectionService.getAllInspections();
       const supplierInspections = allInspections.filter(

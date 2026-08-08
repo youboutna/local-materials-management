@@ -1,9 +1,8 @@
 // hooks/hexagonal/usePhaseEmployeesHex.ts - Hexagonal hook for phase employees management
 // Uses EmployeeService instead of non-existent phase repo methods
 
-import { EmployeeService } from '@/application/services/EmployeeService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface PhaseEmployee {
@@ -29,7 +28,7 @@ export interface EmployeeFormData {
 
 export const usePhaseEmployeesHex = (phaseId: string) => {
   const queryClient = useQueryClient();
-  const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+  const employeeService = getEmployeeService();
 
   const {
     data: employees = [],
@@ -48,11 +47,18 @@ export const usePhaseEmployeesHex = (phaseId: string) => {
     enabled: !!phaseId
   });
 
+  // No phase_employees join table exists in the schema: assignments are only
+  // tracked at project level. Rather than faking persistence, surface an
+  // explicit, honest error so callers/UI can react accordingly.
+  const notSupported = (action: string) => {
+    throw new Error(
+      `${action} n'est pas disponible : aucune table de rattachement employé/phase n'existe en base.`
+    );
+  };
+
   const addMutation = useMutation({
     mutationFn: async (employeeData: EmployeeFormData) => {
-      // Placeholder - would need phase_employees join table
-      console.log('Adding employee to phase:', phaseId, employeeData);
-      return { id: crypto.randomUUID(), ...employeeData, phase_id: phaseId };
+      return notSupported('Ajout d\'un employé à une phase') as never;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
@@ -65,8 +71,7 @@ export const usePhaseEmployeesHex = (phaseId: string) => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
-      console.log('Updating phase employee:', id, data);
-      return { id, ...data };
+      return notSupported('Mise à jour d\'un employé de phase') as never;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
@@ -79,7 +84,7 @@ export const usePhaseEmployeesHex = (phaseId: string) => {
 
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Removing phase employee:', id);
+      notSupported('Suppression d\'un employé de phase');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });

@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
-import { WorkflowStepService } from '@/application/services/WorkflowStepService';
+import { getWorkflowStepService } from '@/application/services/WorkflowStepService';
 import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -12,7 +12,7 @@ interface StepDocumentsSectionProps {
   onOpenAddDocument: (step: WorkflowStepDTO) => void;
 }
 
-const workflowStepSvc = new WorkflowStepService();
+const workflowStepSvc = getWorkflowStepService();
 
 const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, readonly = false, onOpenAddDocument }) => {
   // WorkflowStepService doesn't have getStepDocuments yet - return empty until repo is ready

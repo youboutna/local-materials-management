@@ -4,10 +4,9 @@
  * Following hexagonal architecture principles with UI-specific enhancements
  */
 
-import { ProjectService } from "@/application/services/ProjectService";
+import { getProjectService } from "@/application/services/ProjectService";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
-import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -63,8 +62,7 @@ export const useProjects = (): UseProjectsResult => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
-  const projectRepository = RepositoryFactory.getProjectRepository();
-  const projectService = new ProjectService(projectRepository);
+  const projectService = getProjectService();
 
   // Query for projects list
   const {

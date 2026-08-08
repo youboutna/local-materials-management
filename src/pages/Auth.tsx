@@ -1,4 +1,4 @@
-import { AuthService } from '@/application/services/AuthService';
+import { getAuthService } from '@/application/services/AuthService';
 import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
 import OAuthLogin from "@/components/auth/OAuthLogin";
 import PasswordResetForm from "@/components/auth/PasswordResetForm";
@@ -60,8 +60,7 @@ const Auth = () => {
   }, [user, navigate, location]);
 
   // Create unified authentication service
-  const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository);
+  const authService = getAuthService();
 
   // Login mutation
   const loginMutation = useMutation({

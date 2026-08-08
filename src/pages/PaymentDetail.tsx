@@ -1,4 +1,4 @@
-import { PaymentService } from '@/application/services/PaymentService';
+import { getPaymentService } from '@/application/services/PaymentService';
 import { AppLayout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ const PaymentDetailPage: React.FC = () => {
     queryKey: ['payment', id],
     queryFn: async () => {
       if (!id) return null;
-      const service = new PaymentService(RepositoryFactory.getPaymentRepository() as any);
+      const service = getPaymentService();
       return service.getPaymentById(id);
     },
     enabled: !!id,

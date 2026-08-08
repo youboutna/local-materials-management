@@ -12,7 +12,7 @@ export const DEV_MODE =
   false;
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
-// Mock user configuration for development mode
+// Development-mode user registry (local accounts, overridable via localStorage)
 export interface DevUserProfile {
   id: string;
   email: string;

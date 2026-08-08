@@ -3,13 +3,12 @@
  * Centralise la logique métier: Étapes → Inspections → Validation → Paiement
  */
 
-import { InspectionService } from '@/application/services/InspectionService';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
-import { PhaseService } from '@/application/services/PhaseService';
+import { getPhaseService } from '@/application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { StepItem } from '@/dtos/types/unified-workflow';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
@@ -107,9 +106,9 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   const queryClient = useQueryClient();
 
   // Initialize services
-  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const inspectionService = getInspectionService();
   const paymentService = getPaymentService();
-  const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+  const phaseService = getPhaseService();
 
   // Fetch inspections
   const { data: inspections = [], isLoading: inspectionsLoading } = useQuery({

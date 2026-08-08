@@ -14,20 +14,19 @@
  * - ✅ Gestion complète des phases, steps et tâches
  */
 
-import { DocumentService } from '@/application/services/DocumentService';
-import { EmployeeService } from '@/application/services/EmployeeService';
-import { InspectionService } from '@/application/services/InspectionService';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
-import { PhaseService } from '@/application/services/PhaseService';
+import { getPhaseService } from '@/application/services/PhaseService';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { ReferentialService } from '@/application/services/ReferentialService';
-import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { ReferentialType } from '@/config/referentials';
 import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -82,7 +81,7 @@ type SemanticCategory = 'planning' | 'execution' | 'monitoring' | 'finalization'
 export function usePhaseDetails(phaseId: string | undefined) {
   const queryClient = useQueryClient();
   const workflowService = ProjectWorkflowService.default();
-  const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+  const phaseService = getPhaseService();
   const referentialService = ReferentialService.getInstance();
 
   // ===== QUERIES =====
@@ -113,13 +112,11 @@ export function usePhaseDetails(phaseId: string | undefined) {
       try {
         // Services hexagonaux
         const materialService = getMaterialService();
-        const taskAssignmentService = new TaskAssignmentService(
-          RepositoryFactory.getTaskAssignmentRepository()
-        );
-        const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-        const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+        const taskAssignmentService = getTaskAssignmentService();
+        const inspectionService = getInspectionService();
+        const employeeService = getEmployeeService();
         const paymentService = getPaymentService();
-        const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
+        const documentService = getDocumentService();
 
         const [
           materialsData,

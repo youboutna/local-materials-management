@@ -3,8 +3,7 @@
  * Following hexagonal architecture: UI → Hook → Service → Repository → DB
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
-import { SupabaseProjectStrategyLinkAdapter } from '@/infrastructure/supabase/adapters/SupabaseProjectStrategyLinkAdapter';
+import { getProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
 import type {
   ProjectStrategyLinkDTO,
   CreateProjectStrategyLinkDTO,
@@ -12,10 +11,7 @@ import type {
 } from '@/dtos/entities/ProjectStrategyLinkDTO';
 
 // Singleton service instance
-const getStrategyLinkService = (): ProjectStrategyLinkService => {
-  const adapter = new SupabaseProjectStrategyLinkAdapter();
-  return new ProjectStrategyLinkService(adapter);
-};
+const getStrategyLinkService = getProjectStrategyLinkService;
 
 export function useProjectStrategyLinkHex(projectId?: string) {
   const queryClient = useQueryClient();

@@ -28,7 +28,7 @@ import {
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { InspectionService } from '@/application/services/InspectionService';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Components
@@ -70,7 +70,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+  const inspectionService = getInspectionService();
   const paymentRepository = RepositoryFactory.getPaymentRepository();
 
   const [activeTab, setActiveTab] = useState<StepDetailTab>('overview');

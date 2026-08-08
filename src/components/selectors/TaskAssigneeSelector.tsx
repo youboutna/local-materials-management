@@ -2,13 +2,13 @@
  * TaskAssigneeSelector - Sélecteur d'assigné pour les tâches
  * 
  * Architecture Hexagonale - RÈGLES STRICTES :
- * - Zéro supabase.from() dans les composants
+ * - Zéro accès direct aux tables Supabase dans les composants
  * - Utilisation des services et DTOs
  * - Tous les types proviennent des DTOs
  * - UI Component → Hook → Service → Repository → Adapter → DB
  * 
  * Respecte PROMPT.md :
- * - ✅ Zéro supabase.from() dans les composants
+ * - ✅ Zéro accès direct aux tables Supabase dans les composants
  * - ✅ Utilisation de useStakeholdersHex
  * - ✅ Pas de redéfinition de types dans UI
  * - ✅ camelCase pour les DTOs
@@ -75,9 +75,8 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
   const { data: employees, isLoading: isLoadingEmployees } = useQuery({
     queryKey: ['employees-active', searchTerm],
     queryFn: async (): Promise<EmployeeDTO[]> => {
-      const { EmployeeService } = await import('@/application/services/EmployeeService');
-      const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
-      const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+      const { getEmployeeService } = await import('@/application/services/EmployeeService');
+      const employeeService = getEmployeeService();
       const allEmployees = await employeeService.getAllEmployees();
       
       if (searchTerm) {

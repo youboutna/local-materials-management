@@ -1,10 +1,9 @@
-import { InspectionService } from '@/application/services/InspectionService';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface CreatePaymentPayload {
@@ -32,7 +31,7 @@ export const useCreateProjectPayment = () => {
     mutationFn: async ({ projectId, payment }: CreatePaymentPayload) => {
       const projectService = getProjectService();
       const paymentService = getPaymentService();
-      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      const inspectionService = getInspectionService();
 
       const project = await projectService.getProjectById(projectId);
       if (!project) throw new Error('Project not found');
@@ -123,7 +122,7 @@ export const useProjectPayments = (projectId: string) => {
     queryFn: async (): Promise<ProjectWithPaymentsData | null> => {
       const projectService = getProjectService();
       const paymentService = getPaymentService();
-      const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
+      const inspectionService = getInspectionService();
 
       const projectData = await projectService.getProjectById(projectId);
       if (!projectData) throw new Error('Project not found');

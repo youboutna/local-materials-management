@@ -16,7 +16,7 @@
  * - ✅ Gestion des tâches par phase
  */
 
-import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { 
   TaskAssignmentDTO,
   CreateTaskAssignmentDTO,
@@ -24,7 +24,6 @@ import {
   TaskStatus,
   TaskPriority
 } from '@/dtos/entities/TaskAssignmentDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 
@@ -34,9 +33,7 @@ import { toast } from '@/hooks/use-toast';
  */
 export function usePhaseTasksHex(phaseId: string) {
   const queryClient = useQueryClient();
-  const taskAssignmentService = new TaskAssignmentService(
-    RepositoryFactory.getTaskAssignmentRepository()
-  );
+  const taskAssignmentService = getTaskAssignmentService();
 
   // ===== QUERIES =====
   

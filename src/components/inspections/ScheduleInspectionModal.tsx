@@ -4,7 +4,7 @@
  */
 
 import {
-    InspectionPermissionService
+    getInspectionPermissionService
 } from '@/application/services/InspectionPermissionService';
 import {
     INSPECTION_TYPES,
@@ -116,8 +116,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
     queryKey: ['assignable-inspectors', permissionContext],
     queryFn: async () => {
       if (!permissionContext) return [];
-      const repository = RepositoryFactory.getInspectionPermissionRepository();
-      const service = new InspectionPermissionService(repository);
+      const service = getInspectionPermissionService();
       return await service.getAssignableInspectors({ context: permissionContext });
     },
     enabled: !!permissionContext,

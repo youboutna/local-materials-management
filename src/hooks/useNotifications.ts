@@ -1,7 +1,6 @@
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { useAuth } from '@/contexts/use-auth';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
@@ -22,7 +21,7 @@ export const useNotifications = (userId?: string) => {
   const actualUserId = userId || user?.id;
   
   // Initialize notification service with repository
-  const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+  const notificationService = getNotificationService();
 
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', actualUserId],

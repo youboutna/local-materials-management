@@ -4,8 +4,7 @@
  * Legacy interface maintained for backward compatibility
  */
 
-import { InspectionService } from '@/application/services/InspectionService';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { useQuery } from '@tanstack/react-query';
 
 export interface AuditEntry {
@@ -33,8 +32,7 @@ const fetchAuditEntries = async (
   if (!phaseId && !projectId) return [];
 
   try {
-    const inspectionRepository = RepositoryFactory.getInspectionRepository();
-    const inspectionService = new InspectionService(inspectionRepository);
+    const inspectionService = getInspectionService();
     
     let inspections: any[] = [];
     

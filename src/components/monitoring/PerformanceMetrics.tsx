@@ -15,14 +15,14 @@ import {
 } from 'lucide-react';
 import { formatMetric } from '@/utils/monitoringCalculations';
 import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
-import { PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+import { getPerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 import {
   classifyPerformance,
   PERFORMANCE_STATUS_TEXT_CLASS,
 } from '@/config/referentials/kpi/health-thresholds.referential';
 
 // Create service instance once
-const performanceService = new PerformanceMonitoringService();
+const performanceService = getPerformanceMonitoringService();
 
 interface PerformanceData {
   database: {

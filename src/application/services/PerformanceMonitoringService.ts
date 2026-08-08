@@ -706,3 +706,11 @@ export class PerformanceMonitoringService {
     }
   }
 }
+
+let PerformanceMonitoringServiceInstance: PerformanceMonitoringService | null = null;
+export function getPerformanceMonitoringService(): PerformanceMonitoringService {
+  if (!PerformanceMonitoringServiceInstance) {
+    PerformanceMonitoringServiceInstance = new PerformanceMonitoringService();
+  }
+  return PerformanceMonitoringServiceInstance;
+}

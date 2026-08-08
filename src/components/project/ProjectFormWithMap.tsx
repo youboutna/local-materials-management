@@ -29,7 +29,7 @@ import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { EmployeeService } from '@/application/services/EmployeeService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 
 // ============================================================================
@@ -98,10 +98,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   initialData
 }) => {
   // ============ Services hexagonaux (stabilisés avec useMemo) ============
-  const employeeService = useMemo(
-    () => new EmployeeService(RepositoryFactory.getEmployeeRepository()),
-    []
-  );
+  const employeeService = useMemo(() => getEmployeeService(), []);
   
   const supplierService = useMemo(
     () => getSupplierService(),

@@ -29,6 +29,7 @@ import { Ban, CheckCircle, Edit, Search, User, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
+import { getDevUsersSnapshot, type DevUserProfile } from "@/config/constants";
 
 // Define user profile type with roles array and email
 type UserProfile = {
@@ -45,35 +46,23 @@ type UserProfile = {
   email?: string;
 };
 
-// Mock profiles for development mode with email
-const DEV_PROFILES: UserProfile[] = [
-  {
-    id: "dev-user-id",
-    full_name: "Développeur Test",
-    phone: "123456789",
-    national_id: "DEV12345",
-    avatar_url: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    roles: ["admin"],
-    primaryRole: "admin",
-    is_active: true,
-    email: "dev@example.com",
-  },
-  {
-    id: "dev-user-id-2",
-    full_name: "Marie Diallo",
-    phone: "987654321",
-    national_id: "DEV54321",
-    avatar_url: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    roles: ["project_manager"],
-    primaryRole: "project_manager",
-    is_active: true,
-    email: "marie@example.com",
-  },
-];
+// Development-mode profiles derived from the local DEV_USERS registry (no mock data)
+const toDevProfile = (u: DevUserProfile): UserProfile => ({
+  id: u.id,
+  full_name: u.user_metadata?.full_name ?? null,
+  phone: u.user_metadata?.phone ?? null,
+  national_id: u.user_metadata?.national_id ?? null,
+  avatar_url: null,
+  created_at: null,
+  updated_at: null,
+  roles: u.user_metadata?.role ? [u.user_metadata.role] : [],
+  primaryRole: (u.user_metadata?.role as RoleType) ?? undefined,
+  is_active: true,
+  email: u.email,
+});
+
+const getDevProfiles = (): UserProfile[] =>
+  Object.values(getDevUsersSnapshot()).map(toDevProfile);
 
 const Users = () => {
   const { toast } = useToast();
@@ -82,7 +71,7 @@ const Users = () => {
   const { hasAnyRole } = useCurrentUserRoles();
   const { t, language } = useLanguage();
   const [profiles, setProfiles] = useState<UserProfile[]>(
-    isDevelopmentMode ? DEV_PROFILES : []
+    isDevelopmentMode ? getDevProfiles() : []
   );
   const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -116,7 +105,7 @@ const Users = () => {
   // Set profiles from hook data or development mode
   useEffect(() => {
     if (isDevelopmentMode) {
-      setProfiles(DEV_PROFILES);
+      setProfiles(getDevProfiles());
     } else if (profilesData.length > 0) {
       setProfiles(profilesData as UserProfile[]);
     }

@@ -5,13 +5,12 @@
  * Following PROMPTS.md: UI Component → Transformer → DTO → Service → Domain ← Adapter → DB
  */
 
-import { OAuthLoginData, UnifiedAuthService, UnifiedAuthSession, UnifiedAuthUser } from '@/application/services/UnifiedAuthService';
+import { OAuthLoginData, getUnifiedAuthService, UnifiedAuthSession, UnifiedAuthUser } from '@/application/services/UnifiedAuthService';
 import { AuthProvider } from '@/config/app';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, ReactNode, useCallback, useContext, useEffect } from 'react';
@@ -53,8 +52,7 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
   
   // Initialize unified auth service
-  const authRepository = RepositoryFactory.getAuthRepository();
-  const unifiedAuthService = new UnifiedAuthService(authRepository);
+  const unifiedAuthService = getUnifiedAuthService();
 
   // Query for current session
   const {

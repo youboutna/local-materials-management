@@ -16,7 +16,7 @@ import {
   Clock,
   Zap
 } from 'lucide-react';
-import { PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+import { getPerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 // Local type definitions for metrics
 interface DatabaseMetricsDTO { totalSize?: number; activeConnections?: number; queryPerformance?: number; }
 interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; errorRate?: number; throughput?: number; }
@@ -35,7 +35,7 @@ const SystemHealthOverview: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const performanceMetrics = await new PerformanceMonitoringService().getPerformanceMetrics();
+      const performanceMetrics = await getPerformanceMonitoringService().getPerformanceMetrics();
       
       setStats(performanceMetrics);
       // Derive alerts from performance metrics thresholds (no dedicated alerts

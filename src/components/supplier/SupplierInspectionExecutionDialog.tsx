@@ -2,13 +2,13 @@
  * SupplierInspectionExecutionDialog - Dialog d'exécution d'inspection fournisseur
  * 
  * Architecture Hexagonale - RÈGLES STRICTES :
- * - Zéro supabase.from() dans les composants
+ * - Zéro accès direct aux tables Supabase dans les composants
  * - Utilisation des services et DTOs
  * - Tous les types proviennent des DTOs
  * - UI Component → Hook → Service → Repository → Adapter → DB
  * 
  * Respecte PROMPT.md :
- * - ✅ Zéro supabase.from() dans les composants
+ * - ✅ Zéro accès direct aux tables Supabase dans les composants
  * - ✅ Utilisation des services hexagonaux
  * - ✅ Pas de redéfinition de types dans UI
  * - ✅ camelCase pour les DTOs

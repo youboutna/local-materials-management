@@ -1,4 +1,4 @@
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -450,7 +450,7 @@ export function QuantitativeEstimateExporter({
       const { blob, fileName } = await generatePDF();
 
       // Use NotificationService to send email 
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationService = getNotificationService();
       
       await notificationService.sendEmail({
         to: exportConfig.recipientEmail!,

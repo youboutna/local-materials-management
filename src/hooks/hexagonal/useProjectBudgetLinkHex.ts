@@ -3,8 +3,7 @@
  * Following hexagonal architecture: UI → Hook → Service → Repository → DB
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
-import { SupabaseProjectBudgetLinkAdapter } from '@/infrastructure/supabase/adapters/SupabaseProjectBudgetLinkAdapter';
+import { getProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
 import type {
   ProjectBudgetLinkDTO,
   CreateProjectBudgetLinkDTO,
@@ -12,10 +11,7 @@ import type {
 } from '@/dtos/entities/ProjectBudgetLinkDTO';
 
 // Singleton service instance
-const getBudgetLinkService = (): ProjectBudgetLinkService => {
-  const adapter = new SupabaseProjectBudgetLinkAdapter();
-  return new ProjectBudgetLinkService(adapter);
-};
+const getBudgetLinkService = getProjectBudgetLinkService;
 
 export function useProjectBudgetLinkHex(projectId?: string) {
   const queryClient = useQueryClient();

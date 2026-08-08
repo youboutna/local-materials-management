@@ -4,7 +4,7 @@
  * and /evaluation-access (submission evaluation). Replaces the duplicate
  * Lock/Input/Validate UI that previously lived in two near-identical pages.
  *
- * - No `supabase.from()` here. Validation is delegated to the caller through
+ * - No direct Supabase table access here. Validation is delegated to the caller through
  *   `onValidate`, which returns a normalized `GateValidationResult`.
  * - The unlocked panel is rendered by the caller (`renderUnlocked`), so this
  *   component stays purely presentational and reusable.

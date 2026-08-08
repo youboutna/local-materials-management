@@ -1,4 +1,4 @@
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -252,7 +252,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
       const { blob, fileName } = await generatePDF();
 
       // Use NotificationService to send email 
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationService = getNotificationService();
       
       await notificationService.sendEmail({
         to: reportConfig.recipientEmail!,

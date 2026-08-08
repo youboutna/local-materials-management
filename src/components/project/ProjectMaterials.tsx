@@ -120,7 +120,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
     try {
       // Add materials using the service
       for (const material of selectedMaterials) {
-        await new MaterialService(null as any).addMaterialToProject(
+        await getMaterialService().addMaterialToProject(
           projectId,
           material.materialId,
           material.quantity
@@ -151,7 +151,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const handleRemoveMaterial = async (materialId: string) => {
     try {
-      await new MaterialService(null as any).removeMaterialFromProject(projectId, materialId);
+      await getMaterialService().removeMaterialFromProject(projectId, materialId);
 
       toast({
         title: "Matériau supprimé",

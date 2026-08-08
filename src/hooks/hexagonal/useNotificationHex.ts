@@ -3,13 +3,12 @@
  * Architecture hexagonale avec service centralisé
  */
 
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import {
     CreateNotificationRequestDTO,
     NotificationDTO,
     UpdateNotificationRequestDTO
 } from '@/dtos/entities/NotificationDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -37,9 +36,7 @@ export function useNotificationHex(): NotificationHookReturn {
   const queryClient = useQueryClient();
   
   // Service centralisé
-  const notificationService = new NotificationService(
-    RepositoryFactory.getNotificationRepository()
-  );
+  const notificationService = getNotificationService();
 
   // Récupérer toutes les notifications
   const {
@@ -187,9 +184,7 @@ export function useSystemNotificationsHex(): NotificationHookReturn {
   const queryClient = useQueryClient();
   
   // Service centralisé
-  const notificationService = new NotificationService(
-    RepositoryFactory.getNotificationRepository()
-  );
+  const notificationService = getNotificationService();
 
   // Récupérer les notifications système
   const {

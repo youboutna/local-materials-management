@@ -4,11 +4,10 @@
  * Following hexagonal architecture principles
  */
 
-import { PhaseService } from '@/application/services/PhaseService';
+import { getPhaseService } from '@/application/services/PhaseService';
 import { PhaseData, PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useEffect, useMemo, useState } from 'react';
 
 /**
@@ -17,9 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
  */
 export function useConstructionPhaseHex(projectId?: string) {
   // Initialize service with repository
-  const phaseService = useMemo(() => 
-    new PhaseService(RepositoryFactory.getPhaseRepository())
-  , []);
+  const phaseService = useMemo(() => getPhaseService(), []);
 
   // State management
   const [phases, setPhases] = useState<(PhaseData | PhaseDTO)[]>([]);

@@ -1,5 +1,5 @@
-import { InspectionMetrics, InspectionReportData, InspectionReportingService } from '@/application/services/InspectionReportingService';
-import { NotificationService } from '@/application/services/NotificationService';
+import { InspectionMetrics, InspectionReportData, getInspectionReportingService } from '@/application/services/InspectionReportingService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +50,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
   const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
-  const inspectionService = new InspectionReportingService();
+  const inspectionService = getInspectionReportingService();
   const [reportConfig, setReportConfig] = useState<LocalInspectionReportConfig>({
     title: `Rapport d'inspection - ${inspection.title || inspection.id}`,
     recipientEmail: '',
@@ -336,7 +336,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       const { blob, fileName } = await generatePDF();
 
       // Use NotificationService to send email 
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationService = getNotificationService();
       
       await notificationService.sendEmail({
         to: reportConfig.recipientEmail!,

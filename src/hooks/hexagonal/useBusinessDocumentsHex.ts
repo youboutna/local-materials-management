@@ -4,9 +4,8 @@
  */
 
 import { AuthService, getAuthService} from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
+import { getDocumentService } from '@/application/services/DocumentService';
 import { StorageService, getStorageService} from '@/application/services/StorageService';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface BusinessDocumentFormData {
@@ -44,7 +43,7 @@ export function useUploadBusinessDocument() {
       if (!user) throw new Error('User not authenticated');
 
       // Save document record via service
-      const docService = new DocumentService(RepositoryFactory.getDocumentRepository());
+      const docService = getDocumentService();
       await docService.createDocument({
         title: formData.title,
         description: formData.description,

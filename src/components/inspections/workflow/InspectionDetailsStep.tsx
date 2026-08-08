@@ -2,7 +2,7 @@
  * InspectionDetailsStep - Étape de configuration des détails de l'inspection
  */
 
-import { InspectionPermissionService } from '@/application/services/InspectionPermissionService';
+import { getInspectionPermissionService } from '@/application/services/InspectionPermissionService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -68,8 +68,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
   const { data: inspectors = [] } = useQuery({
     queryKey: ['assignable-inspectors', projectId, phaseId, user?.id],
     queryFn: async () => {
-      const repository = RepositoryFactory.getInspectionPermissionRepository();
-      const service = new InspectionPermissionService(repository);
+      const service = getInspectionPermissionService();
 
       const userId = user?.id || '';
 
