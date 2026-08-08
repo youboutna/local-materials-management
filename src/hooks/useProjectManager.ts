@@ -5,12 +5,7 @@ import { ProjectManagerContext } from '@/contexts/ProjectManagerReactContext';
 export const useProjectManager = () => {
   const context = useContext(ProjectManagerContext);
   if (!context) {
-    // Return a default implementation when provider is not available
-    return {
-      data: null,
-      runChecks: async () => {},
-      acknowledgeAlert: () => {}
-    };
+    throw new Error('useProjectManager must be used within a ProjectManagerProvider');
   }
   return context;
 };
