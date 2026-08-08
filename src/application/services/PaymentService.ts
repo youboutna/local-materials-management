@@ -365,7 +365,8 @@ export class PaymentService {
       // Ajouter le supplierId aux données du paiement
       const supplierPaymentRequest: CreatePaymentDTO = {
         ...request,
-        // TODO: Ajouter supplierId quand le DTO le supportera
+        supplierId,
+        contractorId: request.contractorId || supplierId
       };
 
       // Créer le paiement
@@ -393,8 +394,7 @@ export class PaymentService {
       });
 
       // 2. Approuver le paiement
-      await this.updatePayment(paymentId, {} as UpdatePaymentDTO);
-      // TODO: Ajouter le statut 'approved' quand UpdatePaymentRequestDto le supportera
+      await this.updatePayment(paymentId, { status: 'approved' });
       
       // Récupérer le paiement mis à jour
       const updatedPayment = await this.getPaymentById(paymentId);
