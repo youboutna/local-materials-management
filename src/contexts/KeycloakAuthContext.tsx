@@ -4,6 +4,10 @@ import { toast } from '@/hooks/use-toast';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
 import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
+import { UserService } from '@/application/services/UserService';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+const userService = new UserService(RepositoryFactory.getUserRepository());
 
 interface Profile {
   id: string;
@@ -71,18 +75,28 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      // For now, create a mock profile based on user metadata
-      // In production, this would fetch from the database
-      const mockProfile: Profile = {
-        id: user.id,
-        full_name: user.user_metadata?.full_name || 'Utilisateur',
-        phone: user.user_metadata?.phone || '',
-        national_id: user.user_metadata?.national_id || '',
-        role: user.user_metadata?.role || 'user',
-        avatar_url: user.user_metadata?.avatar_url || null,
-      };
+      const dbUser = await userService.getUserById(user.id);
 
-      setProfile(mockProfile);
+      if (dbUser) {
+        setProfile({
+          id: dbUser.id,
+          full_name: dbUser.fullName || dbUser.name,
+          phone: dbUser.phone || '',
+          national_id: user.user_metadata?.national_id || '',
+          role: dbUser.role,
+          avatar_url: dbUser.avatar || null,
+        });
+      } else {
+        // No profile record found yet — fall back to auth metadata
+        setProfile({
+          id: user.id,
+          full_name: user.user_metadata?.full_name || 'Utilisateur',
+          phone: user.user_metadata?.phone || '',
+          national_id: user.user_metadata?.national_id || '',
+          role: user.user_metadata?.role || 'user',
+          avatar_url: user.user_metadata?.avatar_url || null,
+        });
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to fetch profile.');
@@ -102,18 +116,30 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      // For now, create a mock profile
-      // In production, this would check for existing profiles and create in database
-      const mockProfile: Profile = {
+      const existing = await userService.getUserById(user.id);
+      const updated = existing
+        ? await userService.updateUser(user.id, {
+            fullName,
+            phone: phoneNumber,
+          } as any)
+        : await userService.createUser({
+            name: fullName,
+            email: user.email || '',
+            phone: phoneNumber,
+            role: 'user' as any,
+            image: '',
+            workspaceIds: [],
+            fullName,
+          } as any);
+
+      setProfile({
         id: user.id,
-        full_name: fullName,
+        full_name: (updated as any).fullName || fullName,
         phone: phoneNumber,
         national_id: nationalId,
         role: 'user',
         avatar_url: null,
-      };
-
-      setProfile(mockProfile);
+      });
       toast({
         title: t('common.success'),
         description: "Profil créé avec succès.",
@@ -142,8 +168,8 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      // For now, update the mock profile
-      // In production, this would update the database
+      await userService.updateProfile(user.id, { fullName });
+
       if (profile) {
         const updatedProfile = { ...profile, full_name: fullName };
         setProfile(updatedProfile);
