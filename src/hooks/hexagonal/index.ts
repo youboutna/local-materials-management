@@ -358,8 +358,9 @@ export type {
 } from '@/dtos/types/hooks';
 
 // Export commonly used DTOs
+export type { BaseEntityDTO } from '@/dtos/entities/BaseEntityDTO';
 export type {
-  BaseEntityDTO, CreateMaterialDTO, EmployeeDTO, InspectionDTO, MaterialDTO,
+  CreateMaterialDTO, EmployeeDTO, InspectionDTO, MaterialDTO,
   MaterialFormDataDTO, PhaseDTO, ProjectDTO, UpdateMaterialDTO
 } from '@/dtos/entities';
 

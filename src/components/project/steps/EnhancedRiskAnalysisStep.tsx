@@ -119,7 +119,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     try {
       const employeeService = getEmployeeService();
       const employeesData = await employeeService.getAllEmployees();
-      setEmployees(employeesData.map(e => ({ id: e.id, name: e.name, role: e.position || e.role || '' })));
+      setEmployees(employeesData.map(e => ({ id: e.id, name: e.fullName || '', role: e.position || e.role || '' })));
     } catch (error) {
       console.error('Failed to load employees:', error);
       setEmployees([]);
