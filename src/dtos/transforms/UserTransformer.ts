@@ -1,5 +1,5 @@
-import { SomelecRole, User, UserRoleEntity, UserRoleStatus } from '@/domain/entities/User';
-import { CreateUserRoleDTO, UpdateUserRoleDTO, UserDTO, UserRoleDTO } from '../entities/UserDTO';
+import { User, UserRoleEntity, UserRole, SomelecRole, UserRoleStatus } from '@/domain/entities/User';
+import { UserDTO, UserRoleDTO, CreateUserRoleDTO, UpdateUserRoleDTO } from '../entities/UserDTO';
 
 // =================== API DTOs (Adapter Layer) ===================
 
@@ -203,47 +203,5 @@ export class UserTransformer {
       isActive: requestDto.isActive,
       updatedAt: new Date()
     } as Partial<User>;
-  }
-
-
-  /**
-   * Transform Supabase database row to domain entity
-   */
-  static toDomain(data: any): User {
-    return new User(
-      data.id || '',
-      data.full_name || '',
-      data.email || '',
-      data.phone || '',
-      (data.role as SomelecRole) || 'user',
-      data.avatar_url || '',
-      [], // Permissions or internal roles array
-      data.is_admin || false, // Mapping is_admin as the isActive proxy
-      data.created_at ? new Date(data.created_at) : new Date(),
-      data.updated_at ? new Date(data.updated_at) : new Date(),
-      [], // userRoles
-      data.full_name || '',
-      data.avatar_url || '',
-      data.last_login ? new Date(data.last_login) : undefined
-    );
-  }
-
-  /**
-   * Transform domain entity (or partial) to Supabase database row
-   */
-  static toSupabaseRow(user: Partial<User>): any {
-    const row: any = {};
-    
-    if (user.id !== undefined) row.id = user.id;
-    // Map domain fields to Supabase snake_case columns
-    if (user.fullName !== undefined) row.full_name = user.fullName;
-    if (user.phone !== undefined) row.phone = user.phone;
-    if (user.role !== undefined) row.role = user.role;
-    if (user.avatar !== undefined) row.avatar_url = user.avatar;
-    if (user.isActive !== undefined) row.is_admin = user.isActive; 
-    if (user.updatedAt !== undefined) row.updated_at = user.updatedAt.toISOString();
-    if (user.createdAt !== undefined) row.created_at = user.createdAt.toISOString();
-    
-    return row;
   }
 }
