@@ -102,3 +102,11 @@ export class ProjectBudgetLinkService {
     }
   }
 }
+
+let projectBudgetLinkServiceInstance: ProjectBudgetLinkService | null = null;
+export function getProjectBudgetLinkService(): ProjectBudgetLinkService {
+  if (!projectBudgetLinkServiceInstance) {
+    projectBudgetLinkServiceInstance = new ProjectBudgetLinkService(RepositoryFactory.getProjectBudgetLinkRepository());
+  }
+  return projectBudgetLinkServiceInstance;
+}

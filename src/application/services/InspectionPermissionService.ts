@@ -71,3 +71,11 @@ export class InspectionPermissionService {
     };
   }
 }
+
+let inspectionPermissionServiceInstance: InspectionPermissionService | null = null;
+export function getInspectionPermissionService(): InspectionPermissionService {
+  if (!inspectionPermissionServiceInstance) {
+    inspectionPermissionServiceInstance = new InspectionPermissionService(RepositoryFactory.getInspectionPermissionRepository());
+  }
+  return inspectionPermissionServiceInstance;
+}

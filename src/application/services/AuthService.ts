@@ -297,3 +297,11 @@ export class AuthService {
     }
   }
 }
+
+let authServiceInstance: AuthService | null = null;
+export function getAuthService(): AuthService {
+  if (!authServiceInstance) {
+    authServiceInstance = new AuthService(RepositoryFactory.getAuthRepository());
+  }
+  return authServiceInstance;
+}

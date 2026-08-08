@@ -484,3 +484,11 @@ export class InspectionWorkflowService {
 }
 
 export default InspectionWorkflowService;
+
+let inspectionWorkflowServiceInstance: InspectionWorkflowService | null = null;
+export function getInspectionWorkflowService(): InspectionWorkflowService {
+  if (!inspectionWorkflowServiceInstance) {
+    inspectionWorkflowServiceInstance = new InspectionWorkflowService();
+  }
+  return inspectionWorkflowServiceInstance;
+}

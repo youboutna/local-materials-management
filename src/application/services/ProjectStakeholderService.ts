@@ -253,3 +253,11 @@ export class ProjectStakeholderService {
     };
   }
 }
+
+let projectStakeholderServiceInstance: ProjectStakeholderService | null = null;
+export function getProjectStakeholderService(): ProjectStakeholderService {
+  if (!projectStakeholderServiceInstance) {
+    projectStakeholderServiceInstance = new ProjectStakeholderService();
+  }
+  return projectStakeholderServiceInstance;
+}

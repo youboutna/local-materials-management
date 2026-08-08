@@ -69,3 +69,11 @@ export class ResourceService {
     return MaterialPriceResolver.applyPrices(lines, map);
   }
 }
+
+let resourceServiceInstance: ResourceService | null = null;
+export function getResourceService(): ResourceService {
+  if (!resourceServiceInstance) {
+    resourceServiceInstance = new ResourceService();
+  }
+  return resourceServiceInstance;
+}

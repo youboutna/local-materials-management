@@ -140,3 +140,11 @@ export class InspectorService {
     }
   }
 }
+
+let inspectorServiceInstance: InspectorService | null = null;
+export function getInspectorService(): InspectorService {
+  if (!inspectorServiceInstance) {
+    inspectorServiceInstance = new InspectorService(RepositoryFactory.getEmployeeRepository(), RepositoryFactory.getSupplierRepository(), RepositoryFactory.getProjectStakeholderRepository());
+  }
+  return inspectorServiceInstance;
+}

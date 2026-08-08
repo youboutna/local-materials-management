@@ -261,3 +261,11 @@ export class TenderDocumentService {
     }
   }
 }
+
+let tenderDocumentServiceInstance: TenderDocumentService | null = null;
+export function getTenderDocumentService(): TenderDocumentService {
+  if (!tenderDocumentServiceInstance) {
+    tenderDocumentServiceInstance = new TenderDocumentService();
+  }
+  return tenderDocumentServiceInstance;
+}

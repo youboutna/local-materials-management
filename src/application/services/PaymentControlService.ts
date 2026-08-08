@@ -291,3 +291,11 @@ export class PaymentControlService {
     };
   }
 }
+
+let paymentControlServiceInstance: PaymentControlService | null = null;
+export function getPaymentControlService(): PaymentControlService {
+  if (!paymentControlServiceInstance) {
+    paymentControlServiceInstance = new PaymentControlService(RepositoryFactory.getPaymentRepository(), RepositoryFactory.getNotificationRepository());
+  }
+  return paymentControlServiceInstance;
+}

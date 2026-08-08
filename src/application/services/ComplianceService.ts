@@ -307,3 +307,11 @@ export class ComplianceService {
     }
   }
 }
+
+let complianceServiceInstance: ComplianceService | null = null;
+export function getComplianceService(): ComplianceService {
+  if (!complianceServiceInstance) {
+    complianceServiceInstance = new ComplianceService(RepositoryFactory.getComplianceRepository());
+  }
+  return complianceServiceInstance;
+}

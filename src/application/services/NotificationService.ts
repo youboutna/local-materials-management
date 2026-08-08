@@ -473,3 +473,11 @@ export class NotificationService {
     await service.notifyUser(userId, title, message);
   }
 }
+
+let notificationServiceInstance: NotificationService | null = null;
+export function getNotificationService(): NotificationService {
+  if (!notificationServiceInstance) {
+    notificationServiceInstance = new NotificationService();
+  }
+  return notificationServiceInstance;
+}

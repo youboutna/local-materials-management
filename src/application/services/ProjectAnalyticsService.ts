@@ -352,3 +352,11 @@ export class ProjectAnalyticsService {
     return probabilityScore * impactScore * 10;
   }
 }
+
+let projectAnalyticsServiceInstance: ProjectAnalyticsService | null = null;
+export function getProjectAnalyticsService(): ProjectAnalyticsService {
+  if (!projectAnalyticsServiceInstance) {
+    projectAnalyticsServiceInstance = new ProjectAnalyticsService();
+  }
+  return projectAnalyticsServiceInstance;
+}

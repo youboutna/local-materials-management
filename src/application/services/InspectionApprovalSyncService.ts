@@ -245,3 +245,11 @@ export class InspectionApprovalSyncService {
     }
   }
 }
+
+let inspectionApprovalSyncServiceInstance: InspectionApprovalSyncService | null = null;
+export function getInspectionApprovalSyncService(): InspectionApprovalSyncService {
+  if (!inspectionApprovalSyncServiceInstance) {
+    inspectionApprovalSyncServiceInstance = new InspectionApprovalSyncService();
+  }
+  return inspectionApprovalSyncServiceInstance;
+}

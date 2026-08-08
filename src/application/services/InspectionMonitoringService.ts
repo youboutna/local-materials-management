@@ -181,3 +181,11 @@ export class InspectionMonitoringService {
     }
   }
 }
+
+let inspectionMonitoringServiceInstance: InspectionMonitoringService | null = null;
+export function getInspectionMonitoringService(): InspectionMonitoringService {
+  if (!inspectionMonitoringServiceInstance) {
+    inspectionMonitoringServiceInstance = new InspectionMonitoringService();
+  }
+  return inspectionMonitoringServiceInstance;
+}

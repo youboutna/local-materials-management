@@ -259,3 +259,11 @@ export class InvoiceService {
     };
   }
 }
+
+let invoiceServiceInstance: InvoiceService | null = null;
+export function getInvoiceService(): InvoiceService {
+  if (!invoiceServiceInstance) {
+    invoiceServiceInstance = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  }
+  return invoiceServiceInstance;
+}

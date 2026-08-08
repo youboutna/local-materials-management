@@ -1021,3 +1021,11 @@ export function createProjectService(
 ): ProjectService {
   return new ProjectService(projectRepository, stakeholderRepository);
 }
+
+let projectServiceInstance: ProjectService | null = null;
+export function getProjectService(): ProjectService {
+  if (!projectServiceInstance) {
+    projectServiceInstance = new ProjectService(RepositoryFactory.getProjectRepository());
+  }
+  return projectServiceInstance;
+}

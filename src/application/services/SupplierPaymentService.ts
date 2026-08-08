@@ -310,3 +310,11 @@ export class SupplierPaymentService {
     }
   }
 }
+
+let supplierPaymentServiceInstance: SupplierPaymentService | null = null;
+export function getSupplierPaymentService(): SupplierPaymentService {
+  if (!supplierPaymentServiceInstance) {
+    supplierPaymentServiceInstance = new SupplierPaymentService();
+  }
+  return supplierPaymentServiceInstance;
+}

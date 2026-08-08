@@ -287,3 +287,11 @@ export class AlertService {
     return AlertValidation.validateUpdate(data);
   }
 }
+
+let alertServiceInstance: AlertService | null = null;
+export function getAlertService(): AlertService {
+  if (!alertServiceInstance) {
+    alertServiceInstance = new AlertService();
+  }
+  return alertServiceInstance;
+}

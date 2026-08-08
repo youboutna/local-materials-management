@@ -336,3 +336,11 @@ export class ReportingService {
     }
   }
 }
+
+let reportingServiceInstance: ReportingService | null = null;
+export function getReportingService(): ReportingService {
+  if (!reportingServiceInstance) {
+    reportingServiceInstance = new ReportingService();
+  }
+  return reportingServiceInstance;
+}

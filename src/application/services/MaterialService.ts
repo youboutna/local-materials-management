@@ -775,3 +775,11 @@ export class MaterialService {
 }
 
 export default MaterialService;
+
+let materialServiceInstance: MaterialService | null = null;
+export function getMaterialService(): MaterialService {
+  if (!materialServiceInstance) {
+    materialServiceInstance = new MaterialService(RepositoryFactory.getMaterialRepository());
+  }
+  return materialServiceInstance;
+}

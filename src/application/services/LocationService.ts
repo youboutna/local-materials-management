@@ -322,3 +322,11 @@ export class LocationService {
     return degrees * (Math.PI / 180);
   }
 }
+
+let locationServiceInstance: LocationService | null = null;
+export function getLocationService(): LocationService {
+  if (!locationServiceInstance) {
+    locationServiceInstance = new LocationService(RepositoryFactory.getLocationRepository());
+  }
+  return locationServiceInstance;
+}

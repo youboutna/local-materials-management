@@ -200,3 +200,11 @@ export class ContactMessageService {
     }
   }
 }
+
+let contactMessageServiceInstance: ContactMessageService | null = null;
+export function getContactMessageService(): ContactMessageService {
+  if (!contactMessageServiceInstance) {
+    contactMessageServiceInstance = new ContactMessageService(RepositoryFactory.getContactMessageRepository());
+  }
+  return contactMessageServiceInstance;
+}

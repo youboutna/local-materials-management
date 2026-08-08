@@ -1697,3 +1697,11 @@ export function createProjectWorkflowService(
     receptionRepo
   );
 }
+
+let projectWorkflowServiceInstance: ProjectWorkflowService | null = null;
+export function getProjectWorkflowService(): ProjectWorkflowService {
+  if (!projectWorkflowServiceInstance) {
+    projectWorkflowServiceInstance = new ProjectWorkflowService(RepositoryFactory.getProjectRepository(), RepositoryFactory.getPhaseRepository(), RepositoryFactory.getRiskRepository(), RepositoryFactory.getProjectStakeholderRepository());
+  }
+  return projectWorkflowServiceInstance;
+}

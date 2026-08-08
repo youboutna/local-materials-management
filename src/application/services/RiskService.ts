@@ -124,3 +124,11 @@ export class RiskService {
     }
   }
 }
+
+let riskServiceInstance: RiskService | null = null;
+export function getRiskService(): RiskService {
+  if (!riskServiceInstance) {
+    riskServiceInstance = new RiskService(RepositoryFactory.getRiskRepository());
+  }
+  return riskServiceInstance;
+}

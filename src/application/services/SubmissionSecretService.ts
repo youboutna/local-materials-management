@@ -330,3 +330,11 @@ export class SubmissionSecretService {
     return { valid: true };
   }
 }
+
+let submissionSecretServiceInstance: SubmissionSecretService | null = null;
+export function getSubmissionSecretService(): SubmissionSecretService {
+  if (!submissionSecretServiceInstance) {
+    submissionSecretServiceInstance = new SubmissionSecretService();
+  }
+  return submissionSecretServiceInstance;
+}

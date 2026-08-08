@@ -851,6 +851,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, importPath);
       if (!fileMap.has(dtoFile)) fileMap.set(dtoFile, []);
       fileMap.get(dtoFile).push(t);
+      this.report.movedTypes.push({ type: t.typeName, from: t.filePath, to: dtoFile });
     }
 
     // Écriture / ajout dans les DTO
@@ -906,7 +907,6 @@ class SmartHexAnalyzer {
         if (impPath) this.updateImportsAcrossFiles(t.typeName, impPath, filePath);
       }
     }
-    this.report.stats.typesMoved += this.typesToMove.filter(t => importPaths.has(t.typeName)).length;
   }
 
   getAllExistingDtoFiles() {
@@ -1015,6 +1015,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, `@/dtos/entities/${path.basename(targetFile, '.ts')}`);
       if (!fileMap.has(targetFile)) fileMap.set(targetFile, []);
       fileMap.get(targetFile).push(t);
+      this.report.movedTypes.push({ type: t.typeName, from: t.sourceFile, to: targetFile });
     }
 
     const sourceFileModifications = new Map();
@@ -1056,7 +1057,6 @@ class SmartHexAnalyzer {
       }
     }
 
-    this.report.stats.typesMoved += this.dtoTypesToReconcile.filter(t => importPaths.has(t.typeName)).length;
   }
 
   /* ===================================================================

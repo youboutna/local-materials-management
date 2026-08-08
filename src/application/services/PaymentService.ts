@@ -391,3 +391,11 @@ export class PaymentService {
     }
   }
 }
+
+let paymentServiceInstance: PaymentService | null = null;
+export function getPaymentService(): PaymentService {
+  if (!paymentServiceInstance) {
+    paymentServiceInstance = new PaymentService(RepositoryFactory.getPaymentRepository());
+  }
+  return paymentServiceInstance;
+}

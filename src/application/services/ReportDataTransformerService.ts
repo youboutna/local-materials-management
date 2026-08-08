@@ -144,3 +144,11 @@ export class ReportDataTransformerService {
 export function createReportDataTransformerService(): ReportDataTransformerService {
   return new ReportDataTransformerService();
 };
+
+let reportDataTransformerServiceInstance: ReportDataTransformerService | null = null;
+export function getReportDataTransformerService(): ReportDataTransformerService {
+  if (!reportDataTransformerServiceInstance) {
+    reportDataTransformerServiceInstance = new ReportDataTransformerService();
+  }
+  return reportDataTransformerServiceInstance;
+}

@@ -269,3 +269,11 @@ export class StorageService {
     }
   }
 }
+
+let storageServiceInstance: StorageService | null = null;
+export function getStorageService(): StorageService {
+  if (!storageServiceInstance) {
+    storageServiceInstance = new StorageService();
+  }
+  return storageServiceInstance;
+}

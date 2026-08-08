@@ -190,3 +190,11 @@ export class PaymentRequestService {
     }
   }
 }
+
+let paymentRequestServiceInstance: PaymentRequestService | null = null;
+export function getPaymentRequestService(): PaymentRequestService {
+  if (!paymentRequestServiceInstance) {
+    paymentRequestServiceInstance = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  }
+  return paymentRequestServiceInstance;
+}

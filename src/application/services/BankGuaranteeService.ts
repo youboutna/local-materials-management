@@ -464,3 +464,11 @@ export interface ProjectDelay {
   originalEndDate: string;
   currentEndDate: string;
 }
+
+let bankGuaranteeServiceInstance: BankGuaranteeService | null = null;
+export function getBankGuaranteeService(): BankGuaranteeService {
+  if (!bankGuaranteeServiceInstance) {
+    bankGuaranteeServiceInstance = new BankGuaranteeService();
+  }
+  return bankGuaranteeServiceInstance;
+}

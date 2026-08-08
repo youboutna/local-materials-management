@@ -200,3 +200,11 @@ export class InspectionSchedulingService {
     };
   }
 }
+
+let inspectionSchedulingServiceInstance: InspectionSchedulingService | null = null;
+export function getInspectionSchedulingService(): InspectionSchedulingService {
+  if (!inspectionSchedulingServiceInstance) {
+    inspectionSchedulingServiceInstance = new InspectionSchedulingService();
+  }
+  return inspectionSchedulingServiceInstance;
+}

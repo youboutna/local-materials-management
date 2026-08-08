@@ -483,3 +483,11 @@ function isValidStakeholderRole(
   const validRoles = StakeholderRoles[type] as readonly string[] | undefined;
   return validRoles?.includes(role) ?? false;
 }
+
+let stakeholderServiceInstance: StakeholderService | null = null;
+export function getStakeholderService(): StakeholderService {
+  if (!stakeholderServiceInstance) {
+    stakeholderServiceInstance = new StakeholderService(RepositoryFactory.getStakeholderRepository());
+  }
+  return stakeholderServiceInstance;
+}

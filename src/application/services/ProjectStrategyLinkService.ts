@@ -96,3 +96,11 @@ export class ProjectStrategyLinkService {
     }
   }
 }
+
+let projectStrategyLinkServiceInstance: ProjectStrategyLinkService | null = null;
+export function getProjectStrategyLinkService(): ProjectStrategyLinkService {
+  if (!projectStrategyLinkServiceInstance) {
+    projectStrategyLinkServiceInstance = new ProjectStrategyLinkService(RepositoryFactory.getProjectStrategyLinkRepository());
+  }
+  return projectStrategyLinkServiceInstance;
+}

@@ -412,3 +412,11 @@ export class UnifiedAuthService {
     };
   }
 }
+
+let unifiedAuthServiceInstance: UnifiedAuthService | null = null;
+export function getUnifiedAuthService(): UnifiedAuthService {
+  if (!unifiedAuthServiceInstance) {
+    unifiedAuthServiceInstance = new UnifiedAuthService(RepositoryFactory.getAuthRepository());
+  }
+  return unifiedAuthServiceInstance;
+}

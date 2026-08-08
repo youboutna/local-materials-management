@@ -254,3 +254,11 @@ export class PaymentControlActionsService {
     }
   }
 }
+
+let paymentControlActionsServiceInstance: PaymentControlActionsService | null = null;
+export function getPaymentControlActionsService(): PaymentControlActionsService {
+  if (!paymentControlActionsServiceInstance) {
+    paymentControlActionsServiceInstance = new PaymentControlActionsService();
+  }
+  return paymentControlActionsServiceInstance;
+}

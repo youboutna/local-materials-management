@@ -464,3 +464,11 @@ export class PhaseService {
     }
   }
 }
+
+let phaseServiceInstance: PhaseService | null = null;
+export function getPhaseService(): PhaseService {
+  if (!phaseServiceInstance) {
+    phaseServiceInstance = new PhaseService();
+  }
+  return phaseServiceInstance;
+}

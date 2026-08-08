@@ -141,3 +141,11 @@ export class UserService {
     }
   }
 }
+
+let userServiceInstance: UserService | null = null;
+export function getUserService(): UserService {
+  if (!userServiceInstance) {
+    userServiceInstance = new UserService(RepositoryFactory.getUserRepository());
+  }
+  return userServiceInstance;
+}

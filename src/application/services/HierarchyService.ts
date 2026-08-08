@@ -198,3 +198,11 @@ export class HierarchyService {
     return types;
   }
 }
+
+let hierarchyServiceInstance: HierarchyService | null = null;
+export function getHierarchyService(): HierarchyService {
+  if (!hierarchyServiceInstance) {
+    hierarchyServiceInstance = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  }
+  return hierarchyServiceInstance;
+}

@@ -545,3 +545,11 @@ export class DashboardService {
     return Math.round((acknowledgedAlerts / alerts.length) * 100);
   }
 }
+
+let dashboardServiceInstance: DashboardService | null = null;
+export function getDashboardService(): DashboardService {
+  if (!dashboardServiceInstance) {
+    dashboardServiceInstance = new DashboardService();
+  }
+  return dashboardServiceInstance;
+}

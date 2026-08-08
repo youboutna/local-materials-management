@@ -254,3 +254,11 @@ export class OAuthProviderService {
     return results;
   }
 }
+
+let oAuthProviderServiceInstance: OAuthProviderService | null = null;
+export function getOAuthProviderService(): OAuthProviderService {
+  if (!oAuthProviderServiceInstance) {
+    oAuthProviderServiceInstance = new OAuthProviderService();
+  }
+  return oAuthProviderServiceInstance;
+}

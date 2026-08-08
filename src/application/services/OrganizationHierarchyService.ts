@@ -37,3 +37,11 @@ export class OrganizationHierarchyService {
     return this.repository.delete(id);
   }
 }
+
+let organizationHierarchyServiceInstance: OrganizationHierarchyService | null = null;
+export function getOrganizationHierarchyService(): OrganizationHierarchyService {
+  if (!organizationHierarchyServiceInstance) {
+    organizationHierarchyServiceInstance = new OrganizationHierarchyService();
+  }
+  return organizationHierarchyServiceInstance;
+}
