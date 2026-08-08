@@ -26,7 +26,6 @@ import { LocationService, getLocationService} from '@/application/services/Locat
 
 // Import repository factory for dependency injection
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // Interface for geocoding search results
 interface GeocodingSearchResult {

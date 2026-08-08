@@ -12,7 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Import GeoService and Mauritania utilities
-import { GeocodingService, getGeocodingService} from '@/application/services/GeocodingService';
+import { GeocodingService } from '@/application/services/GeocodingService';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import { 
   Region, 

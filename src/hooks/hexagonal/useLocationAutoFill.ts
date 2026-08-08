@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Import GeocodingService and Mauritania data
-import { GeocodingResult, ReverseGeocodingResult, getGeocodingService} from '@/application/services/GeocodingService';
+import { GeocodingResult, ReverseGeocodingResult } from '@/application/services/GeocodingService';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import { Region, City, MAURITANIA_CITIES, MAURITANIA_REGIONS } from '@/utils/mauritania';
 import { searchRegions, searchCities } from '@/utils/mauritaniaUtils';

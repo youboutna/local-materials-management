@@ -13,7 +13,6 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { getGeocodingService } from '@/application/services/GeocodingService';
 
 // Types for advanced UI features
 interface WorkspaceData {
