@@ -6,6 +6,9 @@
  * New hooks are automatically available without manual export updates.
  */
 
+import { useQuery } from '@tanstack/react-query';
+import { getPaymentService } from '@/application/services/PaymentService';
+
 // ==================== CORE HOOKS ====================
 // Authentication
 export {
@@ -496,11 +499,50 @@ export interface PaymentMilestone {
   phase_id?: string;
 }
 
-// Payment schedule hook (alias for usePaymentsHex)
-export const usePaymentSchedule = () => {
-  // This would be implemented in a separate hook file
-  // For now, provide a placeholder that matches the expected interface
-  throw new Error('usePaymentSchedule hook not implemented yet');
+// Payment schedule hook - builds a payment milestone schedule for a project
+export const usePaymentSchedule = (projectId: string) => {
+  const {
+    data: schedule = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['payment-schedule', projectId],
+    queryFn: async (): Promise<PaymentMilestone[]> => {
+      const paymentService = getPaymentService();
+      const payments = await paymentService.getPaymentsByProject(projectId);
+      return payments.map((payment): PaymentMilestone => {
+        const status: PaymentMilestone['status'] =
+          payment.status === 'completed' || payment.status === 'paid'
+            ? 'completed'
+            : payment.status === 'blocked' || payment.status === 'rejected'
+              ? 'overdue'
+              : 'pending';
+
+        return {
+          id: payment.id,
+          title: payment.contractorName
+            ? `Paiement ${payment.contractorName}`
+            : `Paiement ${payment.id.slice(0, 8)}`,
+          amount: payment.amount,
+          due_date: payment.paymentDate,
+          status,
+          project_id: payment.projectId,
+          phase_id: payment.phaseId
+        };
+      });
+    },
+    enabled: !!projectId,
+    retry: 3,
+    retryDelay: 1000
+  });
+
+  return {
+    schedule,
+    isLoading,
+    error: error instanceof Error ? error.message : null,
+    refetch
+  };
 };
 
 // Re-export types from useBankGuaranteesHex to ensure consistency

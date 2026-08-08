@@ -623,8 +623,19 @@ export class InspectionTransformer {
     const completedInspections = inspections.filter(i => i.status === InspectionStatus.COMPLETED || i.status === InspectionStatus.APPROVED);
     const completedRate = totalInspections > 0 ? (completedInspections.length / totalInspections) * 100 : 0;
 
-    // Calculate average duration (mock implementation)
-    const averageDuration = 2.5; // hours
+    // Calculate average duration based on real scheduled/actual dates (in hours)
+    const durations = completedInspections
+      .map(i => {
+        if (!i.scheduledDate || !i.actualDate) return null;
+        const scheduled = new Date(i.scheduledDate).getTime();
+        const completed = new Date(i.actualDate).getTime();
+        if (Number.isNaN(scheduled) || Number.isNaN(completed) || completed < scheduled) return null;
+        return (completed - scheduled) / (1000 * 60 * 60);
+      })
+      .filter((d): d is number => d !== null);
+    const averageDuration = durations.length > 0
+      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
+      : 0;
 
     // Status distribution
     const byStatus = inspections.reduce((acc, inspection) => {

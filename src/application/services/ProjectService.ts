@@ -261,6 +261,18 @@ export class ProjectService {
     }
   }
 
+  async getProjectHierarchy(projectId: string) {
+    try {
+      const hierarchyRepository = RepositoryFactory.getHierarchyRepository();
+      return await hierarchyRepository.getProjectHierarchy(projectId);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get project hierarchy: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_HIERARCHY_ERROR'
+      );
+    }
+  }
+
   async updateProjectStatus(id: string, newStatus: string, reason?: string): Promise<ProjectDTO | null> {
     try {
       const project = await this.projectRepository.findById(id);

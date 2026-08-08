@@ -10,6 +10,8 @@ import { createContext, ReactNode, useEffect, useState, useCallback } from 'reac
 import { getAuthManager, AuthManagerConfig } from '@/application/services/AuthManager';
 import { AuthProvider } from '@/config/app';
 import { AuthUser, AuthSession } from '@/dtos/entities/AuthDTO';
+import { supabase } from '@/integrations/supabase/client';
+import { login as keycloakLogin } from '@/integrations/keycloak/keycloak';
 
 type MultiProviderAuthContextType = {
   user: AuthUser | null;
@@ -201,13 +203,30 @@ export function MultiProviderAuthProvider({ children }: { children: ReactNode })
     try {
       setLoading(true);
       console.log('🔍 Attempting Google sign in...');
-      
-      // TODO: Implement Google OAuth based on current provider
-      toast({
-        title: t('common.info'),
-        description: "Google sign in will be available in the next update.",
+
+      if (currentProvider === 'keycloak') {
+        // Keycloak: redirect to the identity provider hinted login (Google)
+        await keycloakLogin({ idpHint: 'google' });
+        return;
+      }
+
+      // GoTrue/Supabase (default): use OAuth sign-in with Google provider
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
-      
+
+      if (error) {
+        console.error('❌ Google sign in error:', error);
+        toast({
+          title: t('common.error'),
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
     } catch (error) {
       console.error('Google sign in error:', error);
       throw error;

@@ -109,13 +109,9 @@ const InsuranceManagementPage = () => {
           
           setSelectedProject(projectData);
 
-          // Load organizational hierarchy for this project
-          // Note: This RPC call might need to be moved to a service method
-          // For now, keeping it as is since it's a specific RPC call
-          // TODO: Move this to ProjectService when available
-          // Since getProjectHierarchy doesn't exist on ProjectService, we'll skip this for now
-          const hierarchy: unknown[] = [];
-          
+          // Load organizational hierarchy for this project via ProjectService
+          const hierarchy = await projectService.getProjectHierarchy(project.id);
+
           setProjectHierarchy(hierarchy || []);
         }
       } catch (error) {

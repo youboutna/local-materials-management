@@ -24,6 +24,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 // ============================================================================
 
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { RiskTaskRelationService } from '@/application/services/RiskTaskRelationService';
 import { TaskAssignmentDTO, TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
@@ -115,6 +116,11 @@ export const useEnhancedRiskManagerHex = (
     RepositoryFactory.getTaskAssignmentRepository()
   );
 
+  // ✅ Service dédié aux relations risque <-> tâche (table risk_task_relations)
+  const riskTaskRelationService = new RiskTaskRelationService(
+    RepositoryFactory.getRiskTaskRelationRepository()
+  );
+
   // ===== QUERIES =====
 
   // Risques
@@ -182,8 +188,8 @@ export const useEnhancedRiskManagerHex = (
   const { data: riskTaskRelations = [], isLoading: relationsLoading } = useQuery({
     queryKey: ['risk-task-relations', projectId],
     queryFn: async (): Promise<RiskTaskRelation[]> => {
-      // TODO: Implémenter la récupération des relations via un service dédié
-      return [];
+      const riskIds = currentRisks.map(r => r.id);
+      return await riskTaskRelationService.getByRiskIds(riskIds);
     },
     enabled: !!currentRisks && currentRisks.length > 0,
     retry: 3,
@@ -240,9 +246,8 @@ export const useEnhancedRiskManagerHex = (
 
   // Créer une relation risque-tâche
   const createRiskTaskRelationMutation = useMutation({
-    mutationFn: async (_relation: Omit<RiskTaskRelation, 'id'>) => {
-      // TODO: Implémenter via un service dédié
-      return;
+    mutationFn: async (relation: Omit<RiskTaskRelation, 'id'>) => {
+      return await riskTaskRelationService.createRelation(relation);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risk-task-relations', projectId] });
@@ -254,9 +259,8 @@ export const useEnhancedRiskManagerHex = (
 
   // Supprimer une relation risque-tâche
   const deleteRiskTaskRelationMutation = useMutation({
-    mutationFn: async (_relationId: string) => {
-      // TODO: Implémenter via un service dédié
-      return;
+    mutationFn: async (relationId: string) => {
+      await riskTaskRelationService.deleteRelation(relationId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risk-task-relations', projectId] });

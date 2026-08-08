@@ -411,9 +411,30 @@ export class PerformanceMonitoringService {
         dataSources.push('inspections');
       }
 
-      // Calculate resource utilization (placeholder for now)
-      resourceUtilization = 85; // Default value
-      dataSources.push('resource_calculation');
+      // Calculate resource utilization from project resources and their assignments
+      const { data: projectResources } = await supabase
+        .from('project_resources')
+        .select('id')
+        .eq('project_id', projectId);
+
+      if (projectResources && projectResources.length > 0) {
+        const resourceIds = projectResources.map(r => r.id);
+        const { data: resourceAssignments } = await supabase
+          .from('resource_assignments')
+          .select('allocation_percentage')
+          .in('resource_id', resourceIds);
+
+        if (resourceAssignments && resourceAssignments.length > 0) {
+          const totalAllocation = resourceAssignments.reduce(
+            (sum, ra) => sum + (ra.allocation_percentage || 0),
+            0
+          );
+          resourceUtilization = Math.min(100, totalAllocation / resourceAssignments.length);
+        } else {
+          resourceUtilization = 0;
+        }
+        dataSources.push('project_resources', 'resource_assignments');
+      }
 
       // Calculate overall score (weighted average)
       const weights = {

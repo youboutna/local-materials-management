@@ -2,7 +2,7 @@ import React from 'react';
 import WorkflowKanban from './WorkflowKanban';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MilestoneItem, StepItem, DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
-import { mapMilestoneToDecisionNode } from '@/dtos/types/unified-workflow';
+import { mapMilestoneToDecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 type StepWorkflowStatus = {

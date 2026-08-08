@@ -57,6 +57,7 @@ import {
     SupabaseReportDataTransformerAdapter,
     SupabaseReportingAdapter,
     SupabaseRiskAdapter,
+    SupabaseRiskTaskRelationAdapter,
     SupabaseStakeholderAdapter,
     SupabaseSupplierAdapter,
     SupabaseTenderAdapter,
@@ -152,6 +153,7 @@ import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeo
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
+import { IRiskTaskRelationRepository } from '@/domain/repositories/IRiskTaskRelationRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
@@ -205,6 +207,7 @@ interface RepositoryRegistry {
   user?: IUserRepository;
   employee?: IEmployeeRepository;
   risk?: IRiskRepository;
+  riskTaskRelation?: IRiskTaskRelationRepository;
   supplier?: ISupplierRepository;
   hierarchy?: IHierarchyRepository;
   organization?: IOrganizationRepository;
@@ -481,6 +484,12 @@ export class RepositoryFactory {
     if (registry.risk) return registry.risk;
     registry.risk = new SupabaseRiskAdapter();
     return registry.risk;
+  }
+
+  static getRiskTaskRelationRepository(): IRiskTaskRelationRepository {
+    if (registry.riskTaskRelation) return registry.riskTaskRelation;
+    registry.riskTaskRelation = new SupabaseRiskTaskRelationAdapter();
+    return registry.riskTaskRelation;
   }
 
   // ---------- SUPPLIER ----------

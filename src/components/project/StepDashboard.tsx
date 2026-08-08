@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { FileText, Calendar, Users, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 import WorkflowKanban from './workflow/WorkflowKanban';
-import { MilestoneItem, mapMilestoneToDecisionNode, DecisionNode } from '@/dtos/types/unified-workflow';
+import { MilestoneItem, mapMilestoneToDecisionNode, DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { PhaseStepDTO, PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { AuditEntry } from '@/hooks/useAuditEntries';
-import { StepItem } from '@/dtos/types/unified-workflow';
+import { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 
 // Local metric and helper types to avoid loose Record usage
 type Metrics = {
