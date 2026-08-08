@@ -593,10 +593,13 @@ class SmartHexAnalyzer {
     const isUIFile = filePath.includes(path.join('src', 'pages')) || filePath.includes(path.join('src', 'components')) || filePath.includes('App.tsx');
     const isTsx = filePath.endsWith('.tsx');
     const typeRegions = this.getTypeRegions(content);
-    this.detectTypeDuplicates(filePath, content, fileViolations);
+    if (!this.options.ruleFilter || this.options.ruleFilter.includes('R014')) {
+      this.detectTypeDuplicates(filePath, content, fileViolations);
+    }
     const sortedRules = Object.entries(RULES).sort((a, b) => a[1].priority - b[1].priority);
 
     for (const [key, rule] of sortedRules) {
+      if (this.options.ruleFilter && !this.options.ruleFilter.includes(rule.id)) continue;
       if (rule.target === 'UI' && !isUIFile) continue;
       if (!this.shouldApplyFileRule(filePath, rule)) continue;
 
@@ -636,6 +639,7 @@ class SmartHexAnalyzer {
         if (rule.id === 'R003' || rule.id === 'R008') hasDirectDbCall = true;
         const line = modifiedContent.substring(0, m.index).split('\n').length;
         if (rule.skipIfInStringOrComment && this.isInStringOrComment(modifiedContent, m.index)) continue;
+        if (rule.skipIfObjectKey && this.isObjectKeyPosition(modifiedContent, m)) continue;
 
         if (rule.id === 'R004') {
           const inType = this.isInTypeRegion(m.index, typeRegions);
@@ -661,6 +665,13 @@ class SmartHexAnalyzer {
           fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: 'WARNING', message: '⚠️ [R004] Snake_case identifier – may be DB field.', line, match: m[0] });
           this.report.stats.warnings++;
           continue;
+        }
+
+        if (rule.id === 'R016') {
+          const typeName = m[2];
+          if (typeName && /Props$/.test(typeName)) continue;
+          const usageCount = (modifiedContent.match(new RegExp(`\\b${typeName}\\b`, 'g')) || []).length;
+          if (usageCount <= 1) continue; // local-only type, used nowhere else in the file
         }
 
         let extraMsg = '';
