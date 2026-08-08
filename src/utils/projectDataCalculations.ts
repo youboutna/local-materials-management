@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { ProjectService } from '../application/services/ProjectService';
+import { getProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
@@ -107,8 +107,7 @@ export class ProjectDataCalculations {
   static async calculateRealProjectCosts(projectId: string) {
     try {
       // Get project detail with all related data using ProjectService
-      const projectRepository = RepositoryFactory.getProjectRepository();
-      const projectService = new ProjectService(projectRepository);
+      const projectService = getProjectService();
       const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
       if (!projectDetail) {
         throw new Error('Project detail is null');
@@ -166,8 +165,7 @@ export class ProjectDataCalculations {
       }
 
       // Get project detail for payments data
-      const projectRepository = RepositoryFactory.getProjectRepository();
-      const projectService = new ProjectService(projectRepository);
+      const projectService = getProjectService();
       const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
       
       // Calculate costs from project data and phase information

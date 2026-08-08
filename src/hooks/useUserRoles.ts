@@ -4,12 +4,11 @@
  * Legacy interface maintained for backward compatibility
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { UserService } from '@/application/services/UserService';
+import { getAuthService } from '@/application/services/AuthService';
+import { getUserService } from '@/application/services/UserService';
 import { DEV_MODE, getActiveDevRole } from '@/config/constants';
 import { toast } from '@/hooks/use-toast';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -39,11 +38,9 @@ export interface Role {
 
 // Initialize services
 const getServices = () => {
-  const authRepository = RepositoryFactory.getAuthRepository();
-  const userRepository = RepositoryFactory.getUserRepository();
   return {
-    authService: new AuthService(authRepository),
-    userService: new UserService(userRepository)
+    authService: getAuthService(),
+    userService: getUserService()
   };
 };
 
