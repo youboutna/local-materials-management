@@ -12,7 +12,7 @@ import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { PAYMENT_TOLERANCE_RATIO } from '@/config/referentials/mauritanian-public-procurement.referential';
+import { PAYMENT_TOLERANCE_RATIO } from '@/config/referentials/payment-tolerance.referential';
 
 export interface PaymentStats {
   blockedPayments: number;

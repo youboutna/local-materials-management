@@ -27,7 +27,6 @@ import { ReferentialType } from '@/config/referentials';
 import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**

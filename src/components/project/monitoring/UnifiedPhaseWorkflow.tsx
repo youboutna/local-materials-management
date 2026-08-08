@@ -115,9 +115,8 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   const { data: inspections = [], isLoading: inspectionsLoading } = useQuery({
     queryKey: ['phase-inspections-workflow', phaseId],
     queryFn: async () => {
-      const { InspectionService } = await import('@/application/services/InspectionService');
-      const { RepositoryFactory } = await import( '@/infrastructure/RepositoryFactory');
-      const service = new InspectionService(RepositoryFactory.getInspectionRepository());
+      const { getInspectionService } = await import('@/application/services/InspectionService');
+      const service = getInspectionService();
       return await service.getInspectionsByPhase(phaseId);
     },
   });

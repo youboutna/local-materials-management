@@ -38,7 +38,7 @@ export function useDocumentsHex(filters?: DocumentFilters): UseDocumentsHexResul
   const queryClient = useQueryClient();
   
   // Initialize service with hexagonal architecture
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   // Query for documents list from DocumentService
   const {
@@ -243,7 +243,7 @@ export const useDocumentById = (id: string) => {
 };
 
 export const useTenderDocuments = (tenderId: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['tender-documents', tenderId],
@@ -266,7 +266,7 @@ export const useTenderDocuments = (tenderId: string) => {
 };
 
 export const useWorkflowStepDocuments = (stepId: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['workflow-step-documents', stepId],
@@ -294,7 +294,7 @@ export const useWorkflowStepDocuments = (stepId: string) => {
  * Hook for project documents summary and analytics
  */
 export const useProjectDocumentsSummary = (projectId: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['project-documents-summary', projectId],
@@ -314,7 +314,7 @@ export const useProjectDocumentsSummary = (projectId: string) => {
  * Hook for document metadata for reports
  */
 export const useDocumentMetadata = (projectId: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['document-metadata', projectId],
@@ -334,7 +334,7 @@ export const useDocumentMetadata = (projectId: string) => {
  * Hook for document compliance report
  */
 export const useDocumentComplianceReport = (projectId: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['document-compliance-report', projectId],
@@ -354,7 +354,7 @@ export const useDocumentComplianceReport = (projectId: string) => {
  * Hook for document download package generation
  */
 export const useDocumentDownloadPackage = (projectId: string, documentIds?: string[]) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useMutation({
     mutationFn: async () => {
@@ -378,7 +378,7 @@ export const useDocumentDownloadPackage = (projectId: string, documentIds?: stri
  * Hook for document analytics for dashboard
  */
 export const useDocumentAnalytics = (projectId?: string) => {
-  const documentService = DocumentService.getDocumentService();
+  const documentService = getDocumentService();
 
   return useQuery({
     queryKey: ['document-analytics', projectId],

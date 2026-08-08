@@ -1,4 +1,4 @@
-import { NotificationService } from '@/application/services/NotificationService';
+import { getNotificationService } from '@/application/services/NotificationService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -290,7 +290,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
       const { blob, fileName } = await generatePDF();
 
       // Use NotificationService to send email with PDF attachment
-      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      const notificationService = getNotificationService();
       
       await notificationService.sendEmail({
         to: reportConfig.recipientEmail!,

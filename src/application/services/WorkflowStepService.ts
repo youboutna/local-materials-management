@@ -185,11 +185,3 @@ export function getWorkflowStepService(): WorkflowStepService {
   }
   return WorkflowStepServiceInstance;
 }
-
-let workflowStepServiceInstance: WorkflowStepService | null = null;
-export function getWorkflowStepService(): WorkflowStepService {
-  if (!workflowStepServiceInstance) {
-    workflowStepServiceInstance = new WorkflowStepService();
-  }
-  return workflowStepServiceInstance;
-}
