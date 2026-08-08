@@ -1,72 +1,12 @@
 // Phase DTOs for project workflow phases, steps, and tasks
 // These map to project_phases table with custom_phase_data JSON column
+//
+// Canonical definitions now live in src/dtos/entities/PhaseDTO.ts (R014).
+// This module is kept as a compatibility re-export.
+import type { PhaseTaskDTO, PhaseStepDTO, PhaseDTO, PhaseStatusValue } from '../entities/PhaseDTO';
 
-export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
-
-/**
- * Task within a workflow step (from referential)
- *Distinct from TaskAssignmentDTO which represents assigned tasks (task_assignments table)
- */
-export interface PhaseTaskDTO {
-  id: string;
-  name: string;
-  description?: string;
-  status: PhaseStatus;
-  progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string[];
-  dependencies?: string[];
-  weight?: number;
-  order_index: number;
-}
-
-/**
- * Step within a phase (from referential)
- */
-export interface PhaseStepDTO {
-  id: string;
-  name: string;
-  description?: string;
-  status: PhaseStatus;
-  progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index: number;
-  tasks: PhaseTaskDTO[];
-}
-
-/**
- * Project phase with nested steps and tasks
- * Maps to project_phases table with custom_phase_data
- */
-export interface PhaseDTO {
-  id: string;
-  project_id: string;
-  phase_name: string;
-  construction_phase?: string;
-  construction_stage?: string;
-  description?: string;
-  status: PhaseStatus;
-  progress: number;
-  estimated_cost?: number;
-  actual_cost?: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  actual_start_date?: string;
-  actual_end_date?: string;
-  order_index: number;
-  dependencies?: string[];
-  steps: PhaseStepDTO[];
-  created_at: string;
-  updated_at: string;
-}
+export type PhaseStatus = PhaseStatusValue;
+export type { PhaseTaskDTO, PhaseStepDTO, PhaseDTO };
 
 /**
  * Summary DTO for phase list views (without nested data)

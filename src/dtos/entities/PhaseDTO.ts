@@ -16,7 +16,12 @@ export interface PhaseTaskDTO {
   name: string;
   phaseCode?: string;
   description?: string;
-  status: PhaseStatus;
+  status: PhaseStatusValue;
+  // Legacy/compat aliases (snake_case) used by some consumers
+  requires_inspection?: boolean;
+  requires_engineer_approval?: boolean;
+  cost_estimate?: number;
+  actual_cost?: number;
   progress: number;
   estimated_duration_days?: number;
   actual_duration_days?: number;
@@ -34,7 +39,7 @@ export interface PhaseStepDTO {
   /** Business reference used to idempotently import a phase. */
   phaseCode?: string;
   description?: string;
-  status: PhaseStatus;
+  status: PhaseStatusValue;
   progress: number;
   estimated_duration_days?: number;
   actual_duration_days?: number;
@@ -55,6 +60,12 @@ export enum PhaseStatus {
   DELAYED = 'delayed',
   CANCELLED = 'cancelled'
 }
+
+/**
+ * Broad status value type accepted by all known phase/step/task consumers.
+ * Includes legacy inspection-like statuses used by some workflow UIs.
+ */
+export type PhaseStatusValue = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
 
 /**
  * Phase priority enumeration
@@ -98,7 +109,7 @@ export interface PhaseDTO extends BaseEntityDTO {
   
   // Classification
   type: PhaseType;
-  status: PhaseStatus;
+  status: PhaseStatusValue;
   priority: PhasePriority;
   orderIndex?: number; // Order from referential
   
@@ -175,6 +186,24 @@ export interface PhaseDTO extends BaseEntityDTO {
   customPhaseData?: Record<string, unknown>;                // custom_phase_data (Json)
   humanResources?: Record<string, unknown>;                 // human_resources (Json)
   weight?: number;                      // weight
+
+  // Legacy/compat snake_case aliases (project_phases table shape)
+  project_id?: string;
+  phase_name?: string;
+  construction_phase?: string | null;
+  construction_stage?: string | null;
+  estimated_cost?: number;
+  actual_cost?: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  actual_start_date?: string;
+  actual_end_date?: string;
+  order_index?: number;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string | null;
 }
 
 // Phase form data DTO for UI

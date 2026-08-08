@@ -898,61 +898,9 @@ export interface ProjectListItemDTO extends BaseEntityDTO {
 }
 
 // Phase DTOs
-export interface PhaseStepDTO {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
-  progress: number;
-  order_index: number;
-  tasks: PhaseTaskDTO[];
-}
-
-export interface PhaseTaskDTO {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
-  progress: number;
-  order_index: number;
-  assigned_to: string[];
-  requires_inspection: boolean;
-  requires_engineer_approval: boolean;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  dependencies?: string[];
-  weight?: number;
-  cost_estimate?: number;
-  actual_cost?: number;
-}
-
-export interface PhaseDTO extends BaseEntityDTO {
-  id: string;
-  project_id: string;
-  phase_name: string;
-  description: string;
-  construction_phase: string | null;
-  construction_stage: string | null;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes';
-  progress: number;
-  estimated_cost: number;
-  actual_cost: number;
-  estimated_duration_days: number;
-  start_date: string;
-  end_date: string;
-  order_index: number;
-  steps: PhaseStepDTO[];
-  dependencies: string[]; // JSONB array of phase IDs
-  milestones: string[]; // JSONB array of milestone IDs
-  location?: string | null;
-  notes?: string | null;
-  weight?: number | null;
-  created_by?: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// Canonical definitions now live in src/dtos/entities/PhaseDTO.ts (R014).
+import type { PhaseStepDTO, PhaseTaskDTO, PhaseDTO } from '../entities/PhaseDTO';
+export type { PhaseStepDTO, PhaseTaskDTO, PhaseDTO };
 
 export interface CreatePhaseRequestDto {
   project_id: string;
