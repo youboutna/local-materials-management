@@ -8,7 +8,7 @@ import { Progress } from '../../ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 // Import DTOs and services for hexagonal architecture
-import { getBankGuaranteeService } from "@/application/services/BankGuaranteeService";
+import { BankGuaranteeService, getBankGuaranteeService } from "@/application/services/BankGuaranteeService";
 import { ComplianceService, getComplianceService} from "@/application/services/ComplianceService";
 import { getDocumentService } from "@/application/services/DocumentService";
 import { getInsuranceService } from "@/application/services/InsuranceService";
@@ -59,7 +59,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const loadComplianceData = useCallback(async () => {
     try {
       // Load bank guarantees using service - Correct method name
-      const guaranteesData = await bankGuaranteeService.getByProjectId(projectData.id || '');
+      const guaranteesData = await BankGuaranteeService.getByProjectId(projectData.id || '');
       setBankGuarantees(guaranteesData);
 
       // Load insurance policies using service - Correct method name

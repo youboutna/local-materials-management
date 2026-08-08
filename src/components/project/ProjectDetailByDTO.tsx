@@ -9,7 +9,7 @@
  */
 
 import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
-import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
+import { getProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
 import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
@@ -338,7 +338,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   // Milestone progress
   const milestoneServiceInstance = useMemo(() => getMilestoneService(), []);
-  const progressServiceInstance = useMemo(() => new ProgressCalculationHexService(), []);
+  const progressServiceInstance = useMemo(() => getProgressCalculationHexService(), []);
   const { data: milestoneProgress } = useQuery({
     queryKey: ["milestone-progress", projectId],
     queryFn: async () => {

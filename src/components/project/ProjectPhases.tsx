@@ -1,4 +1,4 @@
-import { PhaseService } from '@/application/services/PhaseService';
+import { getPhaseService } from '@/application/services/PhaseService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,7 +48,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     try {
       console.log('Starting to fetch phases...');
       setLoading(true);
-      const loadedPhases = await new PhaseService(RepositoryFactory.getPhaseRepository()).getPhasesByProject(projectId);
+      const loadedPhases = await getPhaseService().getPhasesByProject(projectId);
       console.log('Loaded phases from database:', loadedPhases);
       // Map PhaseDTO to PhaseData with required fields
       const mappedPhases: PhaseData[] = loadedPhases.map((phase: any) => ({
@@ -136,7 +136,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
        console.log('Phases to save:', newPhases.length);
        
        // PhaseService.saveProjectPhases does not exist, so we update phases individually
-       const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
+       const phaseService = getPhaseService();
        for (const phase of newPhases) {
          if (phase.id) {
            // Update existing phase
