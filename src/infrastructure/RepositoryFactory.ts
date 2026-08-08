@@ -26,53 +26,53 @@ export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
 // ================================================================
 
 import {
-  SupabaseAlertAdapter,
-  SupabaseAuthAdapter,
-  SupabaseComplianceAdapter,
-  SupabaseContactMessageAdapter,
-  SupabaseDocumentAdapter,
-  SupabaseEmployeeAdapter,
-  SupabaseHierarchyAdapter,
-  SupabaseInspectionAdapter,
-  SupabaseInspectionExecutionAdapter,
-  SupabaseInspectionPaymentValidationAdapter,
-  SupabaseInspectionPermissionAdapter,
-  SupabaseInsuranceAdapter,
-  SupabaseLoadDataAdapter,
-  SupabaseMaterialAdapter,
-  SupabaseMilestoneAdapter,
-  SupabaseMissionExpenseAdapter,
-  SupabaseMonitoringAdapter,
-  SupabaseNotificationAdapter,
-  SupabaseParsedInvoiceAdapter,
-  SupabasePaymentAdapter,
-  SupabasePhaseAdapter,
-  SupabaseProjectAdapter,
-  SupabaseProjectBudgetLinkAdapter,
-  SupabaseProjectFormAdapter,
-  SupabaseProjectStakeholderAdapter,
-  SupabaseProjectStrategyLinkAdapter,
-  SupabaseQuantityTakeoffAdapter,
-  SupabaseReportDataTransformerAdapter,
-  SupabaseReportingAdapter,
-  SupabaseRiskAdapter,
-  SupabaseStakeholderAdapter,
-  SupabaseSupplierAdapter,
-  SupabaseTenderAdapter,
-  SupabaseTenderDocumentAdapter,
-  SupabaseTenderSharingAdapter,
-  SupabaseUserAdapter,
-  SupabaseWorkspaceAdapter,
+    SupabaseAlertAdapter,
+    SupabaseAuthAdapter,
+    SupabaseComplianceAdapter,
+    SupabaseContactMessageAdapter,
+    SupabaseDocumentAdapter,
+    SupabaseEmployeeAdapter,
+    SupabaseHierarchyAdapter,
+    SupabaseInspectionAdapter,
+    SupabaseInspectionExecutionAdapter,
+    SupabaseInspectionPaymentValidationAdapter,
+    SupabaseInspectionPermissionAdapter,
+    SupabaseInsuranceAdapter,
+    SupabaseLoadDataAdapter,
+    SupabaseMaterialAdapter,
+    SupabaseMilestoneAdapter,
+    SupabaseMissionExpenseAdapter,
+    SupabaseMonitoringAdapter,
+    SupabaseNotificationAdapter,
+    SupabaseParsedInvoiceAdapter,
+    SupabasePaymentAdapter,
+    SupabasePhaseAdapter,
+    SupabaseProjectAdapter,
+    SupabaseProjectBudgetLinkAdapter,
+    SupabaseProjectFormAdapter,
+    SupabaseProjectStakeholderAdapter,
+    SupabaseProjectStrategyLinkAdapter,
+    SupabaseQuantityTakeoffAdapter,
+    SupabaseReportDataTransformerAdapter,
+    SupabaseReportingAdapter,
+    SupabaseRiskAdapter,
+    SupabaseStakeholderAdapter,
+    SupabaseSupplierAdapter,
+    SupabaseTenderAdapter,
+    SupabaseTenderDocumentAdapter,
+    SupabaseTenderSharingAdapter,
+    SupabaseUserAdapter,
+    SupabaseWorkspaceAdapter,
 } from '@/infrastructure/supabase/adapters';
 
-import { 
-  BankGuaranteeAdapter, 
-  InspectionSchedulingAdapter, 
-  LocationRepository, 
-  PaymentBlockingAdapter, 
-  PVGeneratorAdapter, 
-  TaskAssignmentAdapter, 
-  TenderEstimateAdapter 
+import {
+    BankGuaranteeAdapter,
+    InspectionSchedulingAdapter,
+    LocationRepository,
+    PaymentBlockingAdapter,
+    PVGeneratorAdapter,
+    TaskAssignmentAdapter,
+    TenderEstimateAdapter
 } from '@/infrastructure/supabase/adapters';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/SupabaseStorageAdapter';
@@ -81,8 +81,8 @@ import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/Supab
 // 3. IMPORTS – AUTH ADAPTERS
 // ================================================================
 
-import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
-import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
+import { GoTrueAuthAdapter } from '@/infrastructure/auth/GoTrueAuthAdapter';
+import { KeycloakAuthAdapter } from '@/infrastructure/auth/KeycloakAuthAdapter';
 import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
 
 // ================================================================
@@ -90,16 +90,16 @@ import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
 // ================================================================
 
 import {
-  LocalNotificationAdapter,
-  LocalOAuthProviderAdapter,
-  LocalStorageAdapter,
-} from '@/infrastructure/adapters/local';
+    LocalNotificationAdapter,
+    LocalOAuthProviderAdapter,
+    LocalStorageAdapter,
+} from '@/infrastructure/local';
 
 // ================================================================
 // 5. IMPORTS – STORAGE ADAPTERS
 // ================================================================
 
-import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
+import { S3StorageAdapter } from '@/infrastructure/storage/S3StorageAdapter';
 
 // ================================================================
 // 6. IMPORTS – CLIENTS
@@ -112,8 +112,6 @@ import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
 // ================================================================
 
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
-import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
-import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
 import { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
@@ -122,8 +120,6 @@ import { IContactMessageRepository } from '@/domain/repositories/IContactMessage
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { IHierarchyRepository } from '@/domain/repositories/IHierarchyRepository';
-import { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
-import { IOrganizationHierarchyRepository } from '@/domain/repositories/IOrganizationHierarchyRepository';
 import { IInspectionExecutionRepository } from '@/domain/repositories/IInspectionExecutionRepository';
 import { IInspectionPaymentValidationRepository } from '@/domain/repositories/IInspectionPaymentValidationRepository';
 import { IInspectionPermissionRepository } from '@/domain/repositories/IInspectionPermissionRepository';
@@ -137,6 +133,8 @@ import { IMissionExpenseRepository } from '@/domain/repositories/IMissionExpense
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
 import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { IOAuthProviderRepository } from '@/domain/repositories/IOAuthProviderRepository';
+import { IOrganizationHierarchyRepository } from '@/domain/repositories/IOrganizationHierarchyRepository';
+import { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlockingRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
@@ -152,17 +150,19 @@ import { IReportDataTransformerRepository } from '@/domain/repositories/IReportD
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
+import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRepository';
 import { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
+import { ILocationRepository } from '@/domain/repositories/LocationRepository';
+import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
 import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
 import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
-import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { ITenderDocumentRepository} from '@/domain/repositories/ITenderDocumentRepository';
 // ================================================================
 // 8. RESOLVE FUNCTIONS
 // ================================================================

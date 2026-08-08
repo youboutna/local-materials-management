@@ -6,18 +6,18 @@
  * the Settings UI taxonomy stays aligned with the canonical values wired
  * inside the RepositoryFactory (no dead paths, no duplicates).
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateProviders } from '@/config/app-validate';
+import { GoTrueAuthAdapter } from '@/infrastructure/auth/GoTrueAuthAdapter';
+import { KeycloakAuthAdapter } from '@/infrastructure/auth/KeycloakAuthAdapter';
 import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
-import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
-import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
-import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
-import { LocalStorageAdapter } from '@/infrastructure/adapters/local/LocalStorageAdapter';
-import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
-import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { LocalStorageAdapter } from '@/infrastructure/local/LocalStorageAdapter';
 import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { S3StorageAdapter } from '@/infrastructure/storage/S3StorageAdapter';
+import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
+import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
 
 function stubProviders(vars: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(vars)) {
