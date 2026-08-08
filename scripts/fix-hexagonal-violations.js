@@ -547,20 +547,66 @@ class SmartHexAnalyzer {
     return sq || dq || bt || lc || bc;
   }
 
+  isObjectKeyPosition(content, m) {
+    // Heuristic: treat as an object-literal key (e.g. DB payload construction) when the
+    // matched identifier is immediately followed by a colon (not part of a ternary) and
+    // is preceded (ignoring whitespace) by '{' or ',' — i.e. `{ some_field: value }`.
+    const after = content.slice(m.index + m[0].length);
+    const afterTrim = after.match(/^\s*/)[0].length;
+    if (after[afterTrim] !== ':' ) return false;
+    if (after[afterTrim + 1] === ':') return false; // type annotation `::`
+    const before = content.slice(0, m.index);
+    const beforeTrim = before.match(/\s*$/)[0];
+    const prevChar = before[before.length - beforeTrim.length - 1];
+    return prevChar === '{' || prevChar === ',';
+  }
+
+  isPureReexportLine(content, matchIndex) {
+    const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
+    const lineEnd = content.indexOf('\n', matchIndex);
+    const line = content.slice(lineStart, lineEnd === -1 ? content.length : lineEnd);
+    return /export\s+\*\s+from\s+['"]/.test(line) || /export\s+type\s*{[^}]*}\s*from\s+['"]/.test(line);
+  }
+
   detectTypeDuplicates(filePath, content, fileViolations) {
     const re = /export\s+(?:interface|type)\s+([A-Z]\w+)/g;
     let m;
     while ((m = re.exec(content)) !== null) {
       const name = m[1];
-      const existing = this.globalTypes.get(name);
-      if (existing && existing !== filePath) {
-        fileViolations.push({
+      if (this.isPureReexportLine(content, m.index)) continue;
+      const line = content.substring(0, m.index).split('\n').length;
+      if (!this.typeDeclarationsByName.has(name)) this.typeDeclarationsByName.set(name, []);
+      const locations = this.typeDeclarationsByName.get(name);
+      if (!locations.some(l => l.file === filePath && l.line === line)) {
+        locations.push({ file: filePath, line });
+      }
+      if (!this.globalTypes.has(name)) this.globalTypes.set(name, filePath);
+    }
+  }
+
+  finalizeDuplicateReport() {
+    const duplicateEntries = [];
+    for (const [name, locations] of this.typeDeclarationsByName.entries()) {
+      const uniqueFiles = [...new Set(locations.map(l => l.file))];
+      if (uniqueFiles.length < 2) continue;
+      duplicateEntries.push({
+        typeName: name,
+        locations: locations.map(l => ({ file: path.relative(this.projectRoot, l.file), line: l.line }))
+      });
+    }
+    this.report.duplicates = duplicateEntries;
+    this.report.stats.duplicatesFound = duplicateEntries.length;
+    this.report.stats.errors += duplicateEntries.length;
+    for (const entry of duplicateEntries) {
+      const filesList = entry.locations.map(l => `${l.file}:${l.line}`).join(', ');
+      this.report.violations.push({
+        file: entry.locations[0].file,
+        violations: [{
           ruleId: 'R014', priority: 2, severity: 'ERROR',
-          message: `❌ [R014] Duplicate Type "${name}" (${path.relative(this.projectRoot, existing)})`,
-          line: content.substring(0, m.index).split('\n').length, match: name
-        });
-        this.report.stats.errors++; this.report.stats.duplicatesFound++;
-      } else this.globalTypes.set(name, filePath);
+          message: `❌ [R014] Duplicate Type "${entry.typeName}" found in ${entry.locations.length} locations: ${filesList}`,
+          line: entry.locations[0].line, match: entry.typeName
+        }]
+      });
     }
   }
 
