@@ -16,27 +16,12 @@ import DocumentViewer from '@/components/documents/DocumentViewer';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Notification {
-  id: string;
-  recipient_id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  related_id?: string | null;
-  metadata?: any;
-  created_at?: string;
-  updated_at?: string;
-}
 
-interface NotificationFormData {
-  recipient_id: string;
-  title: string;
-  message: string;
-  type: string;
-  related_id: string;
-}
 
+
+
+import { NotificationFormData } from '@/dtos/entities/NotificationDTO';
+import { Notification } from '@/dtos/entities/NotificationDTO';
 const NotificationCrud: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);

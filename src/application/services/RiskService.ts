@@ -8,27 +8,9 @@ import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
 
+import { UpdateRiskRequest } from '@/dtos/entities/RiskDTO';
+import { CreateRiskRequest } from '@/dtos/entities/RiskDTO';
 // Local types for service
-interface CreateRiskRequest {
-  project_id: string;
-  title: string;
-  description?: string;
-  probability: number;
-  impact: number;
-  category?: string;
-  mitigation_strategy?: string;
-  identified_by?: string;
-}
-
-interface UpdateRiskRequest {
-  title?: string;
-  description?: string;
-  probability?: number;
-  impact?: number;
-  status?: string;
-  category?: string;
-  mitigation_strategy?: string;
-}
 
 export class RiskService {
   constructor(private riskRepository: IRiskRepository) {}

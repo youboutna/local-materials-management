@@ -6,7 +6,7 @@
 
 import { ProjectService } from "@/application/services/ProjectService";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
+import { ProjectData } from '@/dtos/entities/ProjectDTO';;
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';

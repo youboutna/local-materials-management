@@ -1,3 +1,4 @@
+import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -78,7 +79,7 @@ const DocumentUpload = ({ embedded = false }: { embedded?: boolean }) => {
       const documentData = {
         title: uploadData.title,
         description: uploadData.description,
-        documentType: uploadData.document_type,
+        documentType: uploadData.document_type as CreateDocumentDTO['documentType'],
         projectId: uploadData.project_id || null,
         status: uploadData.status,
         fileUrl: fileUrl,

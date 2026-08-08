@@ -24,19 +24,8 @@ import {
 } from '@/hooks/hexagonal';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 
+import { EmployeeFormData } from '@/dtos/entities/EmployeeDTO';
 // Form data interface matching snake_case database schema
-interface EmployeeFormData {
-  employee_id: string;
-  full_name: string;
-  position: string;
-  department: string;
-  phone: string;
-  email: string;
-  hire_date: string;
-  salary: number;
-  skills: string[];
-  is_active: boolean;
-}
 
 const EmployeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');

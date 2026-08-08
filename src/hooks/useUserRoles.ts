@@ -13,14 +13,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 
-export interface UserRole {
-  id: string;
-  roleName: string;
-  permissions?: Record<string, boolean>;
-  created_at?: string;
-  updated_at?: string;
-}
-
+import { UserRole } from '@/dtos/entities/AuthDTO';
 interface UserPermission {
   id: string;
   name: string;

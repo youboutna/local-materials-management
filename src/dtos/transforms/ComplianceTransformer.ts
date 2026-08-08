@@ -3,16 +3,7 @@
  * Handles bidirectional mapping between layers following hexagonal architecture
  */
 
-import {
-  ComplianceItemDTO,
-  ComplianceDocumentDTO,
-  ComplianceNoteDTO,
-  ComplianceAuditEntryDTO,
-  CreateComplianceRequestDTO,
-  UpdateComplianceRequestDTO,
-  CreateComplianceDocumentRequestDTO,
-  CreateComplianceNoteRequestDTO
-} from '@/dtos/entities/ComplianceDTO';
+import { CreateComplianceDocumentRequestDTO } from '@/dtos/entities/DocumentDTO';;
 import { ComplianceItem, ComplianceDocument, ComplianceNote, ComplianceAuditEntry } from '@/domain/entities/Compliance';
 
 // Database row types (from Supabase types)

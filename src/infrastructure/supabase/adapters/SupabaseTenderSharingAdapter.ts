@@ -4,13 +4,7 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { 
-  TenderSharingSecretDTO, 
-  CreateSharingSecretDTO, 
-  AccessLogDTO, 
-  CreateAccessLogDTO,
-  ValidateSecretResponseDTO 
-} from '@/dtos/entities/tender-sharing-dto';
+import { TenderSharingSecretDTO } from '@/dtos/entities/TenderDTO';;
 import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRepository';
 
 const mapDbRowToTenderSharingSecretDTO = (row: any): TenderSharingSecretDTO => ({

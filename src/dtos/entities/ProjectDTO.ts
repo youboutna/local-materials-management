@@ -26,18 +26,6 @@ import { TaskAssignmentDTO } from './TaskAssignmentDTO';
 import { TenderDTO } from './TenderDTO';
 
 // Project Location Data Interface - Enhanced location handling
-export interface ProjectLocationData {
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  regionCode?: string;
-  cityCode?: string;
-  locationData?: AutoFillLocationData;
-  // Additional metadata
-  validatedAt?: string;
-  validationSource?: string;
-  confidence?: number;
-}
 
 // Construction phase types
 export type ConstructionPhase =
@@ -268,19 +256,7 @@ export interface ResourceAssignmentDTO {
 }
 
 export interface TeamAllocationDTO {
-  id: string;
-  teamId: string;
-  projectId: string;
-  role: string;
-  members: string[];
-  capacity: number;
-  allocated: number;
-  startDate: string;
-  endDate?: string;
-}
-
-// Gantt Chart Data - Utilise TaskAssignmentDTO
-export interface ProjectGanttChartData {
+ nttChartData {
   phases: PhaseDTO[];
   milestones: MilestoneDTO[];
   tasks: TaskAssignmentDTO[];
@@ -290,14 +266,7 @@ export interface ProjectGanttChartData {
 // PERT Analysis - Utilise TaskAssignmentDTO
 export interface ProjectPertAnalysis {
   activities?: TaskAssignmentDTO[];
-  criticalPath?: string[];
-  expectedDuration: number;
-  variance: number;
-  // Additional PERT fields
-  optimisticEstimate?: number;
-  mostLikelyEstimate?: number;
-  pessimisticEstimate?: number;
-  standardDeviation?: number;
+  criticalPon?: number;
 }
 
 // Earned Value Management Data
@@ -942,4 +911,46 @@ export interface ProjectWithPayments extends ProjectDTO {
     comments?: string;
   }>;
   payments?: PaymentDTO[];
+}
+// Moved from src/components/actions/ActionFormDialog.tsx
+export interface ActionFormData {
+  actionType: 'taskAssignment' | 'hierarchyNotification' | 'sms' | 'call' | 'email' | 'mail' | 'exportReceipt' | 'blockchainVerification';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigneeId?: string;
+  recipientIds: string[];
+  dueDate?: Date;
+  escalationLevel?: 'team' | 'supervisor' | 'manager' | 'director';
+  metadata?: Record<string, any>;
+}
+
+// Moved from src/components/inspections/AdvancedInspectionScheduler.tsx
+export interface Project {
+  id: string;
+  title: string;
+  location?: string;
+  status?: string;
+  projectReference?: string | null;
+  budget?: number;
+  progress?: number;
+  contractorName?: string;
+  contractorContact?: string;
+}
+
+// Moved from src/components/project/QuantityTakeoffsList.tsx
+export interface RowDraft { quantity: number; unitPrice: number; dirty: boolean }
+
+// Moved from src/components/tenders/TenderProjectStructure.tsx
+export interface ProjectDetails {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  progress: number;
+  budget?: number;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  phases: Phase[];
 }

@@ -3,26 +3,6 @@
  * Centralized and standardized for hexagonal architecture
  */
 
-export interface ArchitectureValidationReport {
-  timestamp: Date;
-  overallScore: number;
-  architectureStatus: 'healthy' | 'warning' | 'critical';
-  sections: {
-    persistenceValidation: PersistenceValidationSection;
-    integrationTests: IntegrationTestSection;
-    consistencyMonitoring: ConsistencyMonitoringSection;
-  };
-  metrics: {
-    totalEntities: number;
-    validatedEntities: number;
-    testedWorkflows: number;
-    passedTests: number;
-    consistencyScore: number;
-  };
-  recommendations: string[];
-  nextSteps: string[];
-}
-
 export interface PersistenceValidationSection {
   score: number;
   totalValidations: number;
@@ -47,13 +27,7 @@ export interface IntegrationTestSection {
   recommendations: string[];
 }
 
-export interface ConsistencyMonitoringSection {
-  score: number;
-  totalRecords: number;
-  consistentRecords: number;
-  inconsistentRecords: number;
-  entityScores: Record<string, number>;
-  criticalIssues: number;
+export interfaer;
   highIssues: number;
   trends: {
     improving: string[];

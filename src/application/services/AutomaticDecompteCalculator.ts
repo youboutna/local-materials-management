@@ -14,16 +14,7 @@ import {
     IPhaseRepository,
     IProjectRepository
 } from '@/domain/repositories';
-import {
-    AutomaticDecompteDTO,
-    DecompteLineDTO,
-    DEFAULT_MAURITANIA_RULES,
-    MauritaniaBusinessRulesDTO,
-    PaymentType,
-    PhaseFinancials,
-    ProjectFinancials,
-    VerifiedMilestone
-} from '@/dtos/entities/DecompteDTO';
+import { MauritaniaBusinessRulesDTO } from '@/dtos/entities/MauritaniaBusinessRulesDTO';;
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

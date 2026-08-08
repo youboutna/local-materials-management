@@ -24,7 +24,7 @@ import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowSe
 import { ReferentialService } from '@/application/services/ReferentialService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { ReferentialType } from '@/config/referentials';
-import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseTaskDTO } from '@/dtos/entities/TaskAssignmentDTO';;
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -79,7 +79,7 @@ type SemanticCategory = 'planning' | 'execution' | 'monitoring' | 'finalization'
  * Hook hexagonal pour la gestion des détails d'une phase
  * Fournit les opérations CRUD pour les phases, steps et tâches
  */
-export function usePhaseDetails(phaseId: string | undefined) {
+export function usePhaseDetailsHex(phaseId: string | undefined) {
   const queryClient = useQueryClient();
   const workflowService = ProjectWorkflowService.default();
   const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());

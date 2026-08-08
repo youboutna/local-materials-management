@@ -31,7 +31,7 @@ export interface EnhancedPhaseDTO {
   actualCost: number;
   startDate: Date;
   endDate: Date;
-  status: 'planned' | 'in_progress' | 'completed' | 'delayed';
+  status: 'planned' | 'inProgress' | 'completed' | 'delayed';
   procurementStep: string;
   projectId: string;
   
@@ -48,7 +48,7 @@ export interface ConstructionMilestoneDTO {
   description: string;
   targetDate: Date;
   completionDate?: Date;
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+  status: 'pending' | 'inProgress' | 'completed' | 'overdue';
   projectId: string;
   phaseId?: string;
   

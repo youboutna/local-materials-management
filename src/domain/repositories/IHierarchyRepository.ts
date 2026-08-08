@@ -3,7 +3,7 @@
  * Follows hexagonal architecture port definition
  */
 
-import { HierarchyNode, CreateHierarchyNodeDTO, UpdateHierarchyNodeDTO, HierarchyStatisticsDTO, HierarchySearchCriteriaDTO, HierarchySearchResultDTO, HierarchyValidationDTO } from '@/dtos/entities/HierarchyDTO';
+import { HierarchyStatisticsDTO } from '@/dtos/entities/ReportDTO';;
 import { ProjectHierarchy, HierarchyMember, EscalationTarget, EscalationLevel } from '../entities/Hierarchy';
 
 export interface IHierarchyRepository {

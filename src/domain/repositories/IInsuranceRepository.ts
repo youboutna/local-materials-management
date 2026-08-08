@@ -4,7 +4,7 @@
  */
 
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
-import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceCertificateDTO';
+import { InsuranceCertificateFilterData } from '@/dtos/entities/InsuranceDTO';;
 
 export interface IInsuranceRepository {
   getByProjectId(projectId: string): Promise<InsuranceCertificateEntity[]>;

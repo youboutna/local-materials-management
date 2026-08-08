@@ -9,22 +9,6 @@
  * Task within a workflow step (from referential)
  *Distinct from TaskAssignmentDTO which represents assigned tasks (task_assignments table)
  */
-export interface PhaseTaskDTO {
-  id: string;
-  name: string;
-  phaseCode?: string;
-  description?: string;
-  status: PhaseStatus;
-  progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string[];
-  dependencies?: string[];
-  weight?: number;
-  order_index: number;
-}
 
 export interface PhaseStepDTO {
   id: string;
@@ -34,11 +18,11 @@ export interface PhaseStepDTO {
   description?: string;
   status: PhaseStatus;
   progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index: number;
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex: number;
   tasks: PhaseTaskDTO[];
 }
 
@@ -167,8 +151,8 @@ export interface PhaseDTO extends BaseEntityDTO {
   updatedAt: string;
 
   // NEW: Additional database fields from project_phases table
-  constructionPhase?: string;           // construction_phase
-  constructionStage?: string;           // construction_stage
+  constructionPhase?: string;           // constructionPhase
+  constructionStage?: string;           // constructionStage
   createdBy?: string;                   // created_by
   customPhaseData?: Record<string, unknown>;                // custom_phase_data (Json)
   humanResources?: Record<string, unknown>;                 // human_resources (Json)
@@ -193,12 +177,7 @@ export interface PhaseFormDataDTO {
   endDate?: string;
   budget?: number;
   estimatedCost?: number;
-  steps?: PhaseStepDTO[];
-}
-
-/**
- * Phase creation request interface
- * Input for creating new phases
+  sting new phases
  */
 export interface CreatePhaseDTO {
   name: string;
@@ -309,7 +288,7 @@ export interface PhaseMilestoneDTO {
   phaseId: string;
   title: string;
   description?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
+  status: 'pending' | 'inProgress' | 'completed' | 'overdue';
   targetDate?: string;
   completionDate?: string;
   progress?: number;
@@ -321,27 +300,13 @@ export interface PhaseMilestoneDTO {
  * Phase resource allocation interface
  * Resource management for phases
  */
-export interface PhaseResourceAllocationDTO {
-  phaseId: string;
-  resourceId: string;
-  resourceType: 'employee' | 'contractor' | 'equipment' | 'material';
-  allocationPercentage: number;
-  allocatedAt?: string;
-  allocatedBy?: string;
-  startDate?: string;
-  endDate?: string;
-  cost?: number;
-}
-
-/**
- * Phase dependency interface
- * Dependency relationships between phases
+export interface PhaseResourceAlloconships between phases
  */
 export interface PhaseDependencyDTO {
   id: string;
   fromPhaseId: string;
   toPhaseId: string;
-  dependencyType: 'finish_to_start' | 'resource_sharing' | 'sequential' | 'conditional';
+  dependencyType: 'finishToStart' | 'resource_sharing' | 'sequential' | 'conditional';
   description?: string;
   isBlocking?: boolean;
   minLagDays?: number;
@@ -351,20 +316,7 @@ export interface PhaseDependencyDTO {
 }
 
 export interface PhaseMetricsDTO {
-  totalSteps: number;
-  completedSteps: number;
-  totalTasks: number;
-  completedTasks: number;
-  overallProgress: number;
-  estimatedCompletionDate?: string;
-  budgetUtilization: number;
-  onTimeDelivery: number;
-}
-
-// Legacy interfaces for backward compatibility
-export interface PhaseData {
-  id: string;
-  phase?: string;
+  totalSteps: numberphase?: string;
   stage?: string;
   customPhase?: CustomPhase;
   title: string;
@@ -406,52 +358,52 @@ export interface CustomPhase {
 
 export interface PhaseDTOLegacy {
   id: string;
-  project_id: string;
-  phase_name: string;
+  projectId: string;
+  phaseName: string;
   description: string;
   status: string;
   progress: number;
   budget: number;
-  actual_cost: number;
-  start_date: string;
-  end_date: string;
-  created_at: string;
-  updated_at: string;
-  phase_type?: string;
-  construction_phase?: string;
-  construction_stage?: string;
+  actualCost: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  phaseType?: string;
+  constructionPhase?: string;
+  constructionStage?: string;
 }
 
 /**
  * Form data for creating/updating phases
  */
 export interface PhaseFormDTO {
-  phase_name: string;
+  phaseName: string;
   description?: string;
   construction_phase?: string;
   construction_stage?: string;
-  estimated_cost?: number;
-  estimated_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index?: number;
+  estimatedCost?: number;
+  estimatedDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex?: number;
   steps?: PhaseStepFormDTO[];
 }
 
 export interface PhaseStepFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  order_index?: number;
+  estimatedDurationDays?: number;
+  orderIndex?: number;
   tasks?: PhaseTaskFormDTO[];
 }
 
 export interface PhaseTaskFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  assigned_to?: string[];
-  order_index?: number;
+  estimatedDurationDays?: number;
+  assignedTo?: string[];
+  orderIndex?: number;
 }
 
 // Enhanced resource types for UI display with semantic search support
@@ -498,14 +450,7 @@ export interface EnhancedSupplierResource {
     quality: number;
     delivery: number;
     price: number;
-    communication: number;
-    overall: number;
-  };
-  isActive?: boolean;
-}
-
-// Enhanced PhaseData for UI with enriched resources
-export interface EnhancedPhaseData {
+  edPhaseData {
   // Core PhaseData properties
   id: string;
   phase?: string;
@@ -515,58 +460,20 @@ export interface EnhancedPhaseData {
   description: string;
   startDate: string;
   endDate: string;
-  estimatedDuration: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  budget: number;
-  actualCost: number;
-  progress: number;
-  location: string;
-  notes?: string;
-  
-  // Enhanced resources with full details from other entities
+  estimatedDuration: number;s
   humanResources?: EnhancedEmployeeResource[];
   materials?: EnhancedMaterialResource[];
   suppliers?: EnhancedSupplierResource[];
   
   // Search and display metadata
   searchableText?: string; // Combined text for semantic search
-  displayInfo?: {
-    employeeNames: string[];
-    materialNames: string[];
-    supplierNames: string[];
-    locationText: string;
-    fullDescription: string;
-  };
-}
-
-// Phase search input for semantic search across entities
-export interface PhaseSearchInput {
-  query?: string;
+  dis?: string;
   status?: string;
   type?: string;
   // Search across related entities
   employeeName?: string; // Search by employee name, not just ID
   materialName?: string; // Search by material name, not just ID
-  supplierName?: string; // Search by supplier name, not just ID
-  location?: string;
-  dateRange?: {
-    start?: string;
-    end?: string;
-  };
-  budgetRange?: {
-    min?: number;
-    max?: number;
-  };
-}
-
-// Phase search result with semantic matching
-export interface PhaseSearchResult {
-  phase: EnhancedPhaseData;
-  relevanceScore: number;
-  matchedFields: string[];
-  highlights: {
-    employeeNames?: string[];
-    materialNames?: string[];
+  supplierName?: string; // Search by supplier name, not jus: string[];
     supplierNames?: string[];
     description?: string[];
     location?: string[];
@@ -584,4 +491,378 @@ export interface EnrichedResources {
   employees: EnhancedEmployeeResource[];
   materials: EnhancedMaterialResource[];
   suppliers: EnhancedSupplierResource[];
+}
+// Moved from src/components/inspections/AdvancedInspectionScheduler.tsx
+export interface ProjectStep {
+  id: string;
+  name: string;
+  orderIndex: number;
+  status: string;
+  progress?: number;
+}
+
+// Moved from src/components/project/EnhancedTaskManager.tsx
+export interface ProjectPhase {
+  id: string;
+  name: string;
+  phaseName?: string;
+  status: string;
+  constructionPhase?: string;
+  constructionPhase?: string;
+}
+
+// Moved from src/components/project/EnhancedWorkflowPhaseManager.tsx
+export interface Phase {
+  id: string;
+  phaseName: string;
+  description?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  status: string;
+  progress?: number | null;
+  budgetAllocated?: number | null;
+  actualCost?: number | null;
+  documentsCount?: number;
+  tasksCount?: number;
+  inspectionsCount?: number;
+  paymentsCount?: number;
+  location?: any;
+  stakeholders?: any[];
+  teamDelegation?: any;
+}
+
+// Moved from src/components/project/GanttDiagramWithMilestones.tsx
+export interface GanttPhase {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'inProgress' | 'completed';
+}
+
+// Moved from src/components/project/ProjectDetailByDTO.tsx
+export interface PhaseToSave {
+  projectId: string;
+  phaseName: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  estimatedCost: number;
+  status: string;
+  progress: number;
+  phaseType: string;
+  constructionPhase: string;
+  custom_phase_data: Record<string, unknown>;
+}
+
+// Moved from src/components/project/TeamOverview.tsx
+export interface ProjectPhase {
+  id: string;
+  phaseName: string;
+  status: string;
+  constructionPhase?: string;
+}
+
+// Moved from src/components/project/WaterfallPrng;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  status: 'notStarted' | 'inProgress' | 'completed' | ?: string;
+  status: string;
+  progress?: number;
+  order?: number;
+  startDate?: string;
+  endDate?: string;
+  milestones?: any[];
+  tasks?: any[];
+}
+
+// Moved from src/components/project/hierarchy/ProjectHierarchyView.tsx
+export interface Phase {
+  id: string;
+  title?: string;
+  phaseName?: string;
+  phase?: string;
+  name?: string;
+  description?: string;
+  status: string;
+  progress: number;
+  startDate?: string;
+  endDate?: string;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  estimatedCost?: number;
+  steps?: any[];
+  stages?: any[];
+  milestones?: any[];
+}
+
+// Moved from src/components/project/hierarchy/ProjectMatrixView.tsx
+export interface Phase {
+  id: string;
+  title?: string;
+  phaseName?: string;
+  phase?: string;
+  name?: string;
+  status: string;
+  progress: number;
+  startDate?: string;
+  endDate?: string;
+  startDate?: string;
+  endDate?: string;
+  milestones?: any[];
+  inspections?: any[];
+  payments?: any[];
+}
+
+// Moved from src/components/tenders/TenderProjectStructure.tsx
+export interface Phase {
+  id: string;
+  name: string;
+  description?: string;
+  status: string;
+  progress: number;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  steps?: Step[];
+}
+
+// Moved from src/components/tenders/TenderProjectStructure.tsx
+export interface Step {
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  orderIndex: number;
+}
+
+// Moved from src/application/services/boq/ProjectWbsLoader.ts
+export interface RawStep {
+  id?: string;
+  code?: string;
+  name?: string;
+  label?: string;
+  title?: string;
+  orderIndex?: number;
+  order?: number;
+  tasks?: RawTask[];
+}
+
+// Moved from src/application/services/ProjectCalculationService.ts
+export interface PhaseCostData {
+  id: string;
+  name: string;
+  phaseName?: string;
+  status: string;
+  progress?: number;
+  actualCost?: number;
+  projectId?: string;
+  estimatedCost?: number;
+  budget?: number;
+  estimated_labor_cost?: number;
+  estimated_material_cost?: number;
+  estimated_duration_days?: number;
+  startDate?: string;
+  endDate?: string;
+  steps?: Array<{
+    id: string;
+    name: string;
+    status: string;
+    progress?: number;
+    tasks?: Array<{
+      id: string;
+      status: string;
+      progress?: number;
+      description?: string;
+    }>;
+    description?: string;
+  }>;
+}
+
+// Moved from src/application/services/ProjectWorkflowService.ts
+export interface GeneratedPhaseData {
+  id: string;
+  phaseCode: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'notStarted' | 'inProgress' | 'completed' | 'delayed';
+  budget: number;
+  progress: number;
+  order: number;
+  steps: GeneratedStepData[];
+  milestones: GeneratedMilestoneDTO[];
+}
+
+// Moved from src/hooks/hexagonal/useProjectPhasesHex.ts
+export interface ProjectPhase {
+  id: string;
+  name: string;
+  description: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  progress: number | null;
+  phaseType?: string | null;
+  constructionPhase?: string | null;
+  custom_phase_data?: Record<string, unknown>;
+}
+
+// Moved from src/hooks/hexagonal/useProjectPhasesHex.ts
+export interface PhaseFormData {
+  projectId: string;
+  phaseName: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  estimatedDuration?: number;
+  estimatedCost?: number;
+  status?: string;
+  progress?: number;
+  phaseType?: string;
+  constructionPhase?: string;
+  custom_phase_data?: Record<string, unknown>;
+}
+
+// Moved from src/application/services/GanttPertDataService.ts
+export interface GanttPhaseData {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'inProgress' | 'completed';
+}
+
+// Moved from src/application/services/ReferentialService.ts
+export interface ProjectPhaseDTO {
+  projectId: string;
+  name: string;
+  description: string;
+  phaseNumber: number;
+  startDate: string | null;
+  endDate: string | null;
+  status: 'notStarted' | 'inProgress' | 'completed' | 'onHold';
+  phases: {
+    referentialCode: string;
+    phaseId: string;
+    steps: Array<{
+      stepId: string;
+      name: string;
+      description?: string;
+      orderIndex: number;
+      tasks: Array<{
+        taskId: string;
+        name: string;
+        description?: string;
+        orderIndex: number;
+        estimated_duration_days?: number;
+      }>;
+    }>;
+  };
+}
+
+// Moved from src/utils/dataNormalizer.ts
+export type NormalizedStep = {
+  id: string;
+  name: string;
+  description?: string;
+  status: string;
+  progress: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  position?: number;
+  rawData?: Record<string, unknown>;
+}
+
+// Moved from src/utils/reportCalculations.ts
+export interface PhaseTimeline {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'planned' | 'inProgress' | 'completed';
+}
+
+// Moved from src/hooks/hexagonal/usePhasesHex.ts
+export interface CreatePhaseData {
+  phaseName: string;
+  description: string;
+  constructionPhase?: string;
+  constructionStage?: string;
+  startDate?: string;
+  endDate?: string;
+  estimatedCost?: number;
+  estimatedDuration?: number;
+}
+
+// Moved from src/hooks/hexagonal/usePhasesHex.ts
+export interface UpdatePhaseData {
+  phaseName?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  estimatedCost?: number;
+  status?: string;
+  progress?: number;
+}
+
+// Moved from src/utils/projectDataCalculations.ts
+export interface PhaseCostData {
+  id: string;
+  name: string;
+  phaseName?: string;
+  status: string;
+  progress?: number;
+  actualCost?: number;
+  projectId?: string;
+  estimatedCost?: number;
+  budget?: number;
+  estimated_labor_cost?: number;
+  estimated_material_cost?: number;
+  estimated_duration_days?: number;
+  startDate?: string;
+  endDate?: string;
+  steps?: Array<{
+    id: string;
+    name: string;
+    status: string;
+    progress?: number;
+    tasks?: Array<{
+      id: string;
+      status: string;
+      progress?: number;
+      description?: string;
+    }>;
+    description?: string;
+  }>;
+}
+
+// Moved from src/application/services/WorkflowService.ts
+export interface PhaseProgress {
+  phaseCode: string;
+  phaseLabel: string;
+  totalStages: number;
+  completedStages: number;
+  in_progress_stages: number;
+  pendingStages: number;
+  progressPercentage: number;
+  stages: StageProgress[];
+}
+
+// Moved from src/application/services/WorkflowService.ts
+export interface StageProgress {
+  stageCode: string;
+  stageLabel: string;
+  status: 'pending' | 'inProgress' | 'completed' | 'blocked';
+  totalTasks: number;
+  completedTasks: number;
+  progressPercentage: number;
+  tasks: WorkflowTask[];
 }

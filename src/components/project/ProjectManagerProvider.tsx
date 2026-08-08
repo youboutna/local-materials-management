@@ -19,7 +19,7 @@ import {
 import { createContext } from "react";
 
 const ProjectManagerContext = createContext<ProjectManagerContextType | null>(null);
-import { EscalationRoles, ProjectData } from "@/dtos/entities/ProjectAggregateDTO";
+import { ProjectData } from '@/dtos/entities/ProjectDTO';;
 
 // Adapter function to convert manager alert to context alert
 const adaptAlert = (alert: ManagerAlert): ProjectAlert => ({

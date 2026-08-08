@@ -5,43 +5,12 @@ import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory'
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 
-interface PhaseCostData {
-  id: string;
-  name: string;
-  phase_name?: string;
-  status: string;
-  progress?: number;
-  actual_cost?: number;
-  project_id?: string;
-  estimated_cost?: number;
-  budget?: number;
-  estimated_labor_cost?: number;
-  estimated_material_cost?: number;
-  estimated_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  steps?: Array<{
-    id: string;
-    name: string;
-    status: string;
-    progress?: number;
-    tasks?: Array<{
-      id: string;
-      status: string;
-      progress?: number;
-      description?: string;
-    }>;
-    description?: string;
-  }>;
-}
 
-interface ProjectPayment {
-  amount: number;
-  phase_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-}
 
+
+
+import { ProjectPayment } from '@/dtos/entities/PaymentDTO';
+import { PhaseCostData } from '@/dtos/entities/PhaseDTO';
 interface ProjectDetailDTO {
   payments?: ProjectPayment[];
   expenses?: any[];

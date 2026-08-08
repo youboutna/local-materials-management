@@ -7,19 +7,7 @@
 import { PaymentValidationService } from '@/application/services/PaymentValidationService';
 import { useCallback, useState } from 'react';
 
-export interface PaymentTransferValidationResult {
-  allowedAmount: number;
-  maxAllowedAmount: number;
-  isInitialPaymentPhase: boolean;
-  maxInitialPayment: number;
-  canPay: boolean;
-  blockingReasons: string[];
-  recommendations: string[];
-  paymentStatus: 'initial_allowed' | 'initial' | 'inspection_required' | 'requires_changes' | 'rejected';
-  isLoading: boolean;
-  error: string | null;
-}
-
+import { PaymentTransferValidationResult } from '@/dtos/entities/PaymentDTO';
 export interface PaymentTransferValidationProps {
   projectId: string;
   project: {
@@ -35,7 +23,7 @@ export interface PaymentTransferValidationProps {
   };
 }
 
-export function usePaymentTransferValidation({ 
+export function usePaymentTransferValidationHex({ 
   projectId, 
   project 
 }: PaymentTransferValidationProps): PaymentTransferValidationResult {

@@ -15,6 +15,7 @@ import { Calendar, Download, FileText, Plus, Tag, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { MaterialDocument } from '@/dtos/entities/MaterialDTO';
 interface MaterialDocumentMetadata {
   materialId: string;
   documentNumber?: string;
@@ -23,39 +24,7 @@ interface MaterialDocumentMetadata {
   supplierName?: string;
 }
 
-interface MaterialDocument {
-  id: string;
-  materialId: string;
-  documentType: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
-  title: string;
-  description?: string;
-  fileName?: string;
-  fileUrl?: string;
-  fileSize?: number;
-  mimeType?: string;
-  documentNumber?: string;
-  documentDate?: string;
-  expiryDate?: string;
-  supplierName?: string;
-  
-  // Legacy snake_case for backward compatibility
-  material_id?: string;
-  document_type?: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
-  file_name?: string;
-  file_url?: string;
-  file_size?: number;
-  mime_type?: string;
-  document_number?: string;
-  document_date?: string;
-  expiry_date?: string;
-  supplier_name?: string;
-  
-  metadata?: MaterialDocumentMetadata;
-  tags?: string[];
-  uploaded_by?: string;
-  created_at: string;
-  updated_at: string;
-}
+
 
 interface MaterialDocumentsProps {
   materialId: string;

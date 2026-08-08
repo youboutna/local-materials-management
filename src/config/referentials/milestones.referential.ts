@@ -1,4 +1,4 @@
-import { MilestoneTemplateDTO } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneTemplateDTO } from '@/dtos/entities/ActionDTO';;
 
 /**
  * Milestone templates by construction phase (referential)

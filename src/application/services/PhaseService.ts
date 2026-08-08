@@ -11,7 +11,7 @@ import {
 } from '@/config/referentials';
 import { ConstructionPhase, ConstructionStage, Phase } from '@/domain/entities/Phase';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseTaskDTO } from '@/dtos/entities/TaskAssignmentDTO';;
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

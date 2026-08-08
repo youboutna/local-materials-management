@@ -11,6 +11,7 @@
 
 import { Feature, Polygon } from 'geojson';
 
+import { EnhancedPayment } from '@/dtos/entities/PaymentDTO';
 // =================== ADMINISTRATIVE LEVELS ===================
 
 export enum AdministrativeLevel {
@@ -49,7 +50,6 @@ export interface City extends GeographicUnit {
   hasUniversity?: boolean;
   searchTerms?: string[]; // Alternative search terms for matching
 }
-
 
 // =================== WILAYAS (15 States) ===================
 
@@ -1235,13 +1235,11 @@ export function getAllGeographicUnits(): (Region | City)[] {
   return [...MAURITANIA_REGIONS, ...MAURITANIA_CITIES];
 }
 
-
 export enum OperationalStatus {
   active = "active",
   inactive = "inactive",
   closed = "closed",
 }
-
 
 export interface Workspace {
   id: string;
@@ -1387,21 +1385,6 @@ export enum PaymentMethod {
   Bank = "bank",
   MobileMoney = "mobile_money",
   Hawala = "hawala",
-}
-
-export interface EnhancedPayment {
-  id: string;
-  amount: number;
-  date: string; // ISO format
-  method: PaymentMethod;
-  progressAtPayment: number;
-  reference: string; // Better than "transaction_id"
-  recipient?: string; // Who received payment locally
-  verifiedBy?: string; // User ID who verified
-  notes?: string;
-  attachments?: Document[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export enum InspectionStatus {

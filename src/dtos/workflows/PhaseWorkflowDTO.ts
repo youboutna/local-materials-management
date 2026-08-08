@@ -27,31 +27,6 @@ export enum PhaseWorkflowStep {
  * Phase step interface
  * Individual step within a phase workflow
  */
-export interface PhaseStepDTO {
-  id: string;
-  name: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
-  progress: number;
-  orderIndex: number;
-  assignedTo?: string[]; // Task/Employee IDs only for DTO
-  requiresInspection?: boolean;
-  requiresEngineerApproval?: boolean;
-  estimatedDurationDays?: number;
-  actualDurationDays?: number;
-  startDate?: string;
-  endDate?: string;
-  dependencies?: string[]; // Task IDs only for DTO
-  materials?: string[]; // Material IDs only for DTO
-  documents?: string[]; // Document IDs only for DTO
-  inspections?: string[]; // Inspection IDs only for DTO
-  
-  // Step metadata
-  estimatedCost?: number;
-  actualCost?: number;
-  completionCriteria?: string[];
-  deliverables?: string[];
-}
 
 /**
  * Phase resources interface
@@ -89,18 +64,7 @@ export interface PhaseWorkflowDTO extends BaseEntityDTO {
   completedAt?: string;
   
   // Progress tracking
-  totalSteps: number;
-  completedSteps: number;
-  progressPercentage: number;
-  
-  // Phase data
-  phase?: PhaseDTO;
-  
-  // Workflow steps
-  steps: PhaseStepDTO[];
-  
-  // Resources
-  resources: PhaseResourcesDTO;
+  sDTO;
   
   // Tasks - Utilise TaskAssignmentDTO
   tasks: TaskAssignmentDTO[];
@@ -181,37 +145,7 @@ export interface UpdatePhaseRequestDTO {
   actualCost?: number;
   
   // Resources
-  resources?: {
-    employees?: string[];
-    contractors?: string[];
-    skills?: string[];
-  };
-  
-  // Tasks - Utilise TaskAssignmentDTO
-  tasks?: {
-    id?: string;
-    name?: string;
-    description?: string;
-    status?: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'delayed';
-    progress?: number;
-    assigneeId?: string;
-    priority?: string;
-  }[];
-  
-  // Metadata
-  updatedBy?: string;
-  changeReason?: string;
-}
-
-/**
- * Phase statistics interface
- * Performance metrics for phase operations
- */
-export interface PhaseStatisticsDTO {
-  phaseId: string;
-  totalPhases: number;
-  activePhases: number;
-  completedPhases: number;
+  resoletedPhases: number;
   averageCompletionTime?: number;
   successRate: number;
   lastUpdated?: string;
@@ -245,35 +179,7 @@ export interface PhaseNotificationDTO extends BaseEntityDTO {
  * Phase task statistics interface
  * Statistiques des tâches par phase
  */
-export interface PhaseTaskStatsDTO {
-  phaseId: string;
-  phaseName: string;
-  totalTasks: number;
-  completedTasks: number;
-  inProgressTasks: number;
-  pendingTasks: number;
-  blockedTasks: number;
-  overdueTasks: number;
-  completionRate: number;
-  averageProgress: number;
-}
-
-/**
- * Phase progress DTO
- * Suivi de l'avancement d'une phase
- */
-export interface PhaseProgressDTO {
-  phaseId: string;
-  phaseName: string;
-  progress: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed' | 'blocked';
-  startDate?: string;
-  endDate?: string;
-  remainingDays?: number;
-  totalTasks: number;
-  completedTasks: number;
-  tasksCompletionRate: number;
-  lastUpdated: string;
+astUpdated: string;
 }
 
 /**

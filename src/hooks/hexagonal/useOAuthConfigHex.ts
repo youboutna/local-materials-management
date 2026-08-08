@@ -31,7 +31,7 @@ export interface UseOAuthConfigReturn {
   isValidProvider: (providerId: string) => boolean;
 }
 
-export function useOAuthConfig(): UseOAuthConfigReturn {
+export function useOAuthConfigHex(): UseOAuthConfigReturn {
   const { getOAuthConfig, getAuthConfig } = useConfiguration();
   
   const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';

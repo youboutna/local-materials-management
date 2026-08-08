@@ -68,21 +68,6 @@ export const CONSTRUCTION_STAGE_LABELS: Record<ConstructionStage, string> = {
 };
 
 /** Payload UI → Service pour créer une phase (camelCase strict). */
-export interface CreatePhaseDTO {
-  phaseName: string;
-  description: string;
-  constructionPhase?: ConstructionPhase | string;
-  constructionStage?: ConstructionStage | string;
-  startDate?: string;
-  endDate?: string;
-  estimatedCost?: number;
-  estimatedDuration?: number;
-  phaseMethodology?: string;
-  /** Type normalisé persisté (contrainte CHECK `project_phases.phase_type`). */
-  phaseType?: string;
-  /** Code métier source conservé (ETUDES, TRAVAUX…). */
-  phaseCode?: string;
-}
 
 export interface PhaseStageSummaryDTO {
   name: string;
@@ -102,7 +87,4 @@ export interface PhaseSummaryDTO extends Partial<BaseEntityDTO> {
   budget?: number | null;
   stages?: PhaseStageSummaryDTO[];
   phaseType?: string;
-  phaseCode?: string;
-  customPhaseData?: Record<string, unknown>;
-}
-
+  phaseCode?:

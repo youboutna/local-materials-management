@@ -9,7 +9,7 @@ const MATERIAL_CATEGORY_LABELS: Record<string, string> = {
   other: 'Autre',
 };
 
-export function useMaterialDocumentAdapter(materialId: string): DocumentHubContract {
+export function useMaterialDocumentAdapterHex(materialId: string): DocumentHubContract {
   return useDocumentsTableAdapter({
     scopeLabel: 'Documents du matériau',
     queryKey: ['documents', 'material', materialId],

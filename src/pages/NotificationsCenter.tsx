@@ -42,19 +42,9 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-interface NotificationData {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
-  updated_at: string;
-  recipient_id: string;
-  related_id: string | null;
-  metadata: any;
-}
 
+
+import { NotificationData } from '@/dtos/entities/NotificationDTO';
 const NotificationsCenterPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();

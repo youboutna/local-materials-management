@@ -3,17 +3,6 @@
  * For data consistency monitoring and reporting
  */
 
-export interface ConsistencyReport {
-  timestamp: Date;
-  entity: string;
-  totalRecords: number;
-  inconsistentRecords: number;
-  consistencyScore: number;
-  criticalIssues: number;
-  highPriorityIssues: number;
-  recommendations: string[];
-}
-
 export interface ConsistencyIssue {
   severity: 'critical' | 'high' | 'medium' | 'low';
   recordId: string;
@@ -23,16 +12,7 @@ export interface ConsistencyIssue {
   suggestedFix: string;
 }
 
-export interface MonitoringMetrics {
-  overallConsistencyScore: number;
-  entityScores: Record<string, number>;
-  totalIssues: number;
-  criticalIssues: number;
-  highPriorityIssues: number;
-  lastMonitored: Date;
-}
-
-export interface MonitoringReport {
+gReport {
   summary: MonitoringMetrics;
   reports: ConsistencyReport[];
   recommendations: string[];

@@ -25,24 +25,7 @@ import { TenderEstimateItem } from '@/domain/entities/TenderEstimateItem';
 
 import { TenderEstimateItem as TenderEstimateItemEntity } from '@/domain/repositories/ITenderEstimateRepository';
 
-import {
-    CalculateEstimateTotalsRequestDto,
-    CreateTenderEstimateItemRequestDto,
-    CreateTenderEstimateRequestDto,
-    EstimateStatsDto,
-
-    EstimateTotalsDto,
-    GetEstimatesByProjectIdRequestDto,
-
-    GetEstimateStatsRequestDto,
-    GetMyEstimatesRequestDto,
-    GetTenderEstimateByIdRequestDto,
-
-    GetTenderEstimateItemsRequestDto,
-    TenderEstimateDTO,
-
-    TenderEstimateItemDTO
-} from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 
 
 

@@ -10,38 +10,15 @@ import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
+import { PaymentControlActionDTO } from '@/dtos/entities/PaymentDTO';
+import { CreatePaymentBlockRequestDto } from '@/dtos/entities/PaymentDTO';
+import { PaymentBlockDTO } from '@/dtos/entities/PaymentDTO';
 // Types pour les méthodes étendues
-export interface PaymentBlockDTO {
-  id: string;
-  payment_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
-  blocked_amount: number;
-  status: 'active' | 'resolved' | 'cancelled';
-  created_by: string;
-  created_at: string;
-  resolved_at?: string;
-}
 
-export interface CreatePaymentBlockRequestDto {
-  payment_id: string;
-  block_reason: string;
-  block_type: PaymentBlockDTO['block_type'];
-  blocked_amount: number;
-  created_by: string;
-}
 
-export interface PaymentControlActionDTO {
-  id: string;
-  payment_id: string;
-  action_type: 'verify' | 'approve' | 'reject' | 'block' | 'unblock';
-  description: string;
-  performed_by: string;
-  performed_at: string;
-  result: 'success' | 'failure';
-  notes?: string;
-}
+export i
 
+export i
 export enum PaymentStatusEnum {
   PENDING = 'pending',
   APPROVED = 'approved',

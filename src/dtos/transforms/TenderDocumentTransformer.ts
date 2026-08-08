@@ -4,14 +4,7 @@
  */
 
 import { TenderDocument } from '@/domain/entities/TenderDocument';
-import {
-  TenderDocumentDTO,
-  CreateTenderDocumentDTO,
-  UpdateTenderDocumentDTO,
-  TenderDocumentResponseDTO,
-  TenderDocumentListDTO,
-  TenderDocumentStatsDTO
-} from '@/dtos/entities/TenderDocumentDTO';
+import { TenderDocumentDTO } from '@/dtos/entities/TenderDTO';;
 
 export class TenderDocumentTransformer {
   // Entity to DTO

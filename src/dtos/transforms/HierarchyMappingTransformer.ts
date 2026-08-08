@@ -3,13 +3,7 @@
 
 import { Employee, EmployeeRole, Permission } from '@/domain/entities';
 import { HierarchyMember } from '@/domain/entities/Hierarchy';
-import { 
-  PositionTemplateDTO, 
-  RoleSuggestionDTO, 
-  HierarchyAssignmentDTO, 
-  RoleValidationDTO,
-  HierarchyMappingDTO 
-} from '../entities/HierarchyMappingDTO';
+import { PositionTemplateDTO } from '@/dtos/entities/ActionDTO';;
 import { 
   PositionTemplate, 
   RoleMapping, 

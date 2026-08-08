@@ -11,19 +11,9 @@ import { Layers, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { StepNode } from "./StepNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-interface Step {
-  id: string;
-  name: string;
-  description?: string;
-  status: string;
-  progress?: number;
-  order?: number;
-  start_date?: string;
-  end_date?: string;
-  milestones?: any[];
-  tasks?: any[];
-}
 
+
+import { Step } from '@/dtos/entities/PhaseDTO';
 interface PhaseWithStepsViewProps {
   phase: {
     id: string;

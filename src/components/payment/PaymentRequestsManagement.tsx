@@ -21,27 +21,9 @@ import { AlertCircle, CheckCircle, Eye, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { PaymentRequestDetailsDialog } from './PaymentRequestDetailsDialog';
 
-interface PaymentRequest {
-  id: string;
-  supplier_id: string;
-  project_id: string;
-  amount: number;
-  description: string;
-  payment_reason: string;
-  status: string;
-  requested_date: string;
-  notes: string;
-  suppliers?: {
-    name: string;
-    account_number: string | null;
-    bank_name: string | null;
-    rib: string | null;
-  };
-  projects?: {
-    title: string;
-  };
-}
 
+
+import { PaymentRequest } from '@/dtos/entities/PaymentDTO';
 export const PaymentRequestsManagement: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();

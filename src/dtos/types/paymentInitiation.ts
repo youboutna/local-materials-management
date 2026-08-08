@@ -15,62 +15,62 @@ export type PaymentInitiationStatus =
 export interface ApprovalChainStep {
   level: number;
   role: string;
-  approver_id?: string;
-  approver_name?: string;
+  approverId?: string;
+  approverName?: string;
   status: 'pending' | 'approved' | 'rejected' | 'skipped';
-  action_at?: string;
+  actionAt?: string;
   comments?: string;
   deadline: string;
 }
 
 export interface PaymentInitiationNotification {
   id: string;
-  project_id: string;
-  phase_id?: string;
-  inspection_id?: string;
-  initiated_by: string;
-  initiator_role: InitiatorRole;
-  initiator_name?: string;
-  supplier_id: string;
-  supplier_name?: string;
-  estimated_amount: number;
-  final_amount?: number;
+  projectId: string;
+  phaseId?: string;
+  inspectionId?: string;
+  initiatedBy: string;
+  initiatorRole: InitiatorRole;
+  initiatorName?: string;
+  supplierId: string;
+  supplierName?: string;
+  estimatedAmount: number;
+  finalAmount?: number;
   justification: string;
-  attached_documents: string[];
+  attachedDocuments: string[];
   status: PaymentInitiationStatus;
-  approval_chain: ApprovalChainStep[];
-  current_approval_level: number;
-  supplier_deadline?: string;
-  created_at: string;
-  updated_at: string;
-  project_title?: string;
-  phase_title?: string;
-  supplier_payment_request_id?: string;
+  approvalChain: ApprovalChainStep[];
+  currentApprovalLevel: number;
+  supplierDeadline?: string;
+  createdAt: string;
+  updatedAt: string;
+  projectTitle?: string;
+  phaseTitle?: string;
+  supplierPaymentRequestId?: string;
 }
 
 export interface CreatePaymentInitiationDTO {
-  project_id: string;
-  phase_id?: string;
-  inspection_id?: string;
-  initiator_role: InitiatorRole;
-  supplier_id: string;
-  estimated_amount: number;
+  projectId: string;
+  phaseId?: string;
+  inspectionId?: string;
+  initiatorRole: InitiatorRole;
+  supplierId: string;
+  estimatedAmount: number;
   justification: string;
-  attached_documents?: string[];
+  attachedDocuments?: string[];
 }
 
 export interface ApprovalActionDTO {
-  notification_id: string;
+  notificationId: string;
   action: 'approved' | 'rejected' | 'request_info';
   comments?: string;
 }
 
 export interface SupplierCompletionDTO {
-  notification_id: string;
-  final_amount: number;
+  notificationId: string;
+  finalAmount: number;
   description: string;
-  payment_reason: 'progress_payment' | 'inspection_fee' | 'final_payment' | 'other';
-  additional_documents?: string[];
+  paymentReason: 'progress_payment' | 'inspection_fee' | 'final_payment' | 'other';
+  additionalDocuments?: string[];
   notes?: string;
 }
 

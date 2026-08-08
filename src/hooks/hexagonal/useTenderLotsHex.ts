@@ -9,7 +9,7 @@ export type { TenderLotRecord };
 
 const key = (tenderId: string) => ['tender-lots', tenderId];
 
-export function useTenderLots(tenderId: string) {
+export function useTenderLotsHex(tenderId: string) {
   return useQuery({
     queryKey: key(tenderId),
     queryFn: () => getTenderLotService().listByTender(tenderId),
@@ -17,7 +17,7 @@ export function useTenderLots(tenderId: string) {
   });
 }
 
-export function useCreateTenderLot(tenderId: string) {
+export function useCreateTenderLotHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (lot: Omit<TenderLotRecord, 'id'>) => getTenderLotService().create(lot),
@@ -30,7 +30,7 @@ export function useCreateTenderLot(tenderId: string) {
   });
 }
 
-export function useUpdateTenderLot(tenderId: string) {
+export function useUpdateTenderLotHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: { id: string; lot: Partial<TenderLotRecord> & { tenderId: string } }) =>
@@ -41,7 +41,7 @@ export function useUpdateTenderLot(tenderId: string) {
   });
 }
 
-export function useDeleteTenderLot(tenderId: string) {
+export function useDeleteTenderLotHex(tenderId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => getTenderLotService().delete(id),

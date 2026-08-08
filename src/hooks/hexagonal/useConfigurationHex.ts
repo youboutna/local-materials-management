@@ -46,7 +46,7 @@ export interface UseConfigurationReturn {
   downloadFile: (content: string, filename: string) => void;
 }
 
-export function useConfiguration(): UseConfigurationReturn {
+export function useConfigurationHex(): UseConfigurationReturn {
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<ConfigurationTemplate | null>(null);
   const [currentConfig, setCurrentConfigState] = useState<DeploymentConfig | null>(null);

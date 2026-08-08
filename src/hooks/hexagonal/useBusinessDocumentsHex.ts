@@ -9,18 +9,8 @@ import { StorageService } from '@/application/services/StorageService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export interface BusinessDocumentFormData {
-  title: string;
-  description?: string;
-  amount?: number;
-  supplier?: string;
-  invoice_date?: string;
-  due_date?: string;
-  reference?: string;
-  file?: File;
-}
-
-export function useUploadBusinessDocument() {
+import { BusinessDocumentFormData } from '@/dtos/entities/DocumentDTO';
+export function useUploadBusinessDocumentHex() {
   const queryClient = useQueryClient();
 
   return useMutation({

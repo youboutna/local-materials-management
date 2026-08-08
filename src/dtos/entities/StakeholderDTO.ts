@@ -147,7 +147,7 @@ export interface CreateStakeholderDTO {
   hourlyRate?: number;
   budgetAllocation?: number;
   preferredContactMethod?: 'email' | 'phone' | 'meeting' | 'portal';
-  communicationFrequency?: 'daily' | 'weekly' | 'monthly' | 'as_needed';
+  communicationFrequency?: 'daily' | 'weekly' | 'monthly' | 'asNeeded';
   notes?: string;
   tags?: string[];
   isActive?: boolean; // Added missing field
@@ -189,7 +189,7 @@ export interface UpdateStakeholderDTO {
   hourlyRate?: number;
   budgetAllocation?: number;
   preferredContactMethod?: 'email' | 'phone' | 'meeting' | 'portal';
-  communicationFrequency?: 'daily' | 'weekly' | 'monthly' | 'as_needed';
+  communicationFrequency?: 'daily' | 'weekly' | 'monthly' | 'asNeeded';
   engagementLevel?: 'low' | 'medium' | 'high';
   lastContactDate?: string;
   notes?: string;
@@ -232,18 +232,7 @@ export interface StakeholderSummaryDTO extends BaseEntityDTO {
  * Stakeholder statistics interface
  * Performance metrics for stakeholder management
  */
-export interface StakeholderStatisticsDTO {
-  totalStakeholders: number;
-  activeStakeholders: number;
-  internalStakeholders: number;
-  externalStakeholders: number;
-  primaryStakeholders: number;
-  byType: Record<StakeholderType, number>;
-  byRole: Record<StakeholderRole, number>;
-  byEngagementLevel: Record<string, number>;
-  averageEngagementScore?: number;
-  lastUpdated?: string;
-}
+
 
 /**
  * Stakeholder communication interface
@@ -364,8 +353,11 @@ export interface StakeholderServiceResult<T = StakeholderResponseDTO> {
   error?: {
     code: string;
     message: string;
-    details?: unknown;
-  };
+  stakeholderType: string;
+  stakeholder_entity_type: string;
+  stakeholderId: string;
+  roleDescription?: string | null;
+  isPrimary?: boolean | null;
+  employee?: any;
+  supplier?: any;
 }
-
-export type StakeholderListResult = StakeholderServiceResult<StakeholderResponseDTO[]>;

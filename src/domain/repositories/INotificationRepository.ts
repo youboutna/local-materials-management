@@ -6,16 +6,16 @@
 
 export interface NotificationData {
   id: string;
-  recipient_id: string;
+  recipientId: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   priority?: 'low' | 'medium' | 'high';
-  expires_at?: string | null;
-  action_url?: string | null;
+  expiresAt?: string | null;
+  actionUrl?: string | null;
   metadata?: Record<string, any> | null;
 }
 
@@ -25,7 +25,7 @@ export interface EmailData {
   body: string;
   html?: string;
   from?: string;
-  reply_to?: string;
+  replyTo?: string;
 }
 
 export interface SMSData {
@@ -38,7 +38,7 @@ export interface CallData {
   to: string;
   from?: string;
   message?: string;
-  scheduled_at?: string;
+  scheduledAt?: string;
 }
 
 export interface INotificationRepository {

@@ -4,16 +4,7 @@
  */
 
 import { ISubmissionSecretRepository } from '@/domain/repositories/ISubmissionSecretRepository';
-import {
-    DeactivateSecretRequestDTO,
-    DeleteSubmissionSecretRequestDTO,
-    GenerateSubmissionSecretRequestDTO,
-    GetSubmissionSecretsRequestDTO,
-    RegenerateSecretRequestDTO,
-    SecretValidationResultDTO,
-    SubmissionSecretDTO,
-    ValidateSubmissionSecretRequestDTO
-} from '@/dtos/entities/SubmissionSecretDTO';
+import { SubmissionSecretDTO } from '@/dtos/entities/TenderDTO';;
 import { SubmissionSecretTransformer } from '@/dtos/transforms/SubmissionSecretTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

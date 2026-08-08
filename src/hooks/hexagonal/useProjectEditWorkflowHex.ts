@@ -9,10 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 // Import workflow DTOs
-import {
-    ProjectWorkflowData,
-    SaveResult
-} from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 
 // Import entity DTOs
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';

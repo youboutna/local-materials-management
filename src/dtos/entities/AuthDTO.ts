@@ -10,14 +10,6 @@ export interface LoginData {
   remember?: boolean;
 }
 
-export interface RegisterData {
-  email: string;
-  password: string;
-  full_name: string;
-  phone?: string;
-  national_id?: string;
-}
-
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -27,27 +19,27 @@ export interface AuthUser {
   id: string;
   email: string;
   name?: string;
-  full_name?: string;
+  fullName?: string;
   phone?: string;
-  national_id?: string;
-  avatar_url?: string;
-  email_verified?: boolean;
-  phone_verified?: boolean;
-  two_factor_enabled?: boolean;
-  last_login?: string;
-  last_password_change?: string;
-  failed_login_attempts?: number;
-  locked_until?: string;
-  created_at: string;
-  updated_at: string;
+  nationalId?: string;
+  avatarUrl?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  twoFactorEnabled?: boolean;
+  lastLogin?: string;
+  lastPasswordChange?: string;
+  failedLoginAttempts?: number;
+  lockedUntil?: string;
+  createdAt: string;
+  updatedAt: string;
   // Extended fields for compatibility
   role?: string;
   metadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
+  userMetadata?: Record<string, unknown>;
 }
 
 export interface AuthSession {
-  access_token: string;
+  accessToken: string;
   user: AuthUser;
   accessToken: string;
   refreshToken: string;
@@ -96,22 +88,22 @@ export interface UserRoleType {
 export interface UnifiedUser {
   id: string;
   email: string;
-  full_name?: string;
+  fullName?: string;
   phone?: string;
-  national_id?: string;
+  nationalId?: string;
   role?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
   metadata?: Record<string, unknown>;
   // Optional fields for compatibility
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UnifiedSession {
   user: UnifiedUser;
-  expires_at?: string;
+  expiresAt?: string;
   provider?: string;
-  access_token?: string;
+  accessToken?: string;
 }
 
 export interface UnifiedAuthContextType {
@@ -139,4 +131,22 @@ export interface UnifiedAuthContextType {
 export interface AuthResponse {
   user: AuthUser | null;
   session: AuthSession | null;
+}
+// Moved from src/hooks/useUserRoles.ts
+export interface UserRole {
+  id: string;
+  roleName: string;
+  permissions?: Record<string, boolean>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Moved from src/infrastructure/local/LocalAuthAdapter.ts
+export interface PersistedDevSession {
+  v?: number;
+  userId: string;
+  roleKey: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
 }

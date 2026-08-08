@@ -3,19 +3,7 @@
  * Handles conversion between Reception entities and DTOs
  */
 
-import { 
-  ReceptionDTO, 
-  ReceptionType, 
-  ReceptionStatus,
-  ReceptionDocumentDTO,
-  ReceptionInspectionDTO,
-  ReceptionFindingDTO,
-  ReceptionDecisionDTO,
-  ReceptionConditionDTO,
-  ReceptionParticipantDTO,
-  ReceptionValidationDTO,
-  ReceptionWorkflowDTO
-} from '@/dtos/entities/ReceptionDTO';
+import { ReceptionValidationDTO } from '@/dtos/entities/PaymentValidationDTO';;
 
 // Entity interfaces (would be in domain/entities)
 export interface Reception {

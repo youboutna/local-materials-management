@@ -9,7 +9,7 @@ const SUPPLIER_CATEGORY_LABELS: Record<string, string> = {
   other: 'Autre',
 };
 
-export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContract {
+export function useSupplierDocumentAdapterHex(supplierId: string): DocumentHubContract {
   return useDocumentsTableAdapter({
     scopeLabel: 'Documents du fournisseur',
     queryKey: ['documents', 'supplier', supplierId],

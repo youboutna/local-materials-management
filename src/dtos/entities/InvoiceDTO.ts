@@ -3,7 +3,7 @@
  * Follows hexagonal architecture with proper camelCase naming
  */
 
-import { BaseEntityDTO } from './BaseEntityDTO';
+import { BaseEntityDTO } from '@/dtos/entities/OrganizationDTO';;
 
 export interface InvoiceDTO extends BaseEntityDTO {
   invoiceNumber: string;
@@ -59,25 +59,6 @@ export interface ParsedInvoiceDTO extends BaseEntityDTO {
   processingStatus: 'processing' | 'completed' | 'failed';
 }
 
-export interface CreateInvoiceDTO {
-  invoiceNumber: string;
-  supplierId: string;
-  amount: number;
-  currency: string;
-  issueDate: string;
-  dueDate: string;
-  status?: InvoiceDTO['status'];
-  description?: string;
-  projectId?: string;
-  purchaseOrderNumber?: string;
-  paymentTerms?: string;
-  paymentMethod?: InvoiceDTO['paymentMethod'];
-  taxAmount?: number;
-  totalAmount?: number;
-  attachments?: Omit<InvoiceAttachmentDTO, 'id' | 'createdAt' | 'updatedAt'>[];
-  metadata?: InvoiceDTO['metadata'];
-}
-
 export interface UpdateInvoiceDTO {
   invoiceNumber?: string;
   amount?: number;
@@ -95,32 +76,7 @@ export interface UpdateInvoiceDTO {
   metadata?: Partial<InvoiceDTO['metadata']>;
 }
 
-export interface InvoiceAttachmentDTO extends BaseEntityDTO {
-  invoiceId: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  fileUrl: string;
-  uploadedAt: string;
-  uploadedBy: string;
-  description?: string;
-  isPrimary: boolean;
-}
-
-export interface InvoiceLineItemDTO {
-  id?: string;
-  invoiceId: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  taxRate?: number;
-  taxAmount?: number;
-  category?: string;
-  productCode?: string;
-}
-
-export interface InvoiceSearchCriteriaDTO {
+export interface InvoiceAttachmentDTOort interface InvoiceSearchCriteriaDTO {
   supplierId?: string;
   status?: InvoiceDTO['status'];
   projectId?: string;
@@ -153,15 +109,7 @@ export interface InvoiceSearchResultDTO {
   }>;
 }
 
-export interface InvoiceStatisticsDTO {
-  totalInvoices: number;
-  totalAmount: number;
-  paidAmount: number;
-  pendingAmount: number;
-  overdueAmount: number;
-  averageAmount: number;
-  currencyBreakdown: Record<string, number>;
-  statusBreakdown: Record<string, number>;
+ Record<string, number>;
   monthlyTrends: Array<{
     month: string;
     count: number;
@@ -175,20 +123,7 @@ export interface InvoiceStatisticsDTO {
 }
 
 export interface InvoiceValidationDTO {
-  isValid: boolean;
-  confidence: number;
-  errors: Array<{
-    field: string;
-    type: 'missing' | 'invalid_format' | 'business_rule' | 'duplicate';
-    message: string;
-    severity: 'error' | 'warning';
-  }>;
-  warnings: Array<{
-    field: string;
-    type: 'suggestion' | 'best_practice';
-    message: string;
-  }>;
-  suggestions: Array<{
+  iray<{
     action: string;
     reason: string;
     priority: 'low' | 'medium' | 'high';
@@ -200,12 +135,5 @@ export interface InvoiceProcessingDTO {
   status: 'queued' | 'processing' | 'validated' | 'rejected' | 'completed';
   steps: Array<{
     step: string;
-    status: 'pending' | 'in_progress' | 'completed' | 'failed';
-    startedAt?: string;
-    completedAt?: string;
-    error?: string;
-  }>;
-  currentStep?: string;
-  estimatedCompletion?: string;
-  progress: number;
-}
+    status: 'pending' | 'inProgress' | 'completed' | 'failed';
+    startedA

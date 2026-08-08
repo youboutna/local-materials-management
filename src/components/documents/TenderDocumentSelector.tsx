@@ -1,4 +1,3 @@
-
 import { DocumentService } from '@/application/services/DocumentService';
 import { TenderService } from '@/application/services/TenderService';
 import { Badge } from '@/components/ui/badge';
@@ -12,16 +11,9 @@ import { fr } from 'date-fns/locale';
 import { Calendar, CheckCircle, FileText } from 'lucide-react';
 import React, { useState } from 'react';
 
-interface Document {
-  id: string;
-  title: string;
-  document_type: string;
-  file_name?: string;
-  created_at: string;
-  uploaded_by?: string;
-  file_size?: number;
-}
 
+
+import { Document } from '@/dtos/entities/DocumentDTO';
 interface TenderDocumentSelectorProps {
   tenderId: string;
   onDocumentsSelected: (documentIds: string[]) => void;

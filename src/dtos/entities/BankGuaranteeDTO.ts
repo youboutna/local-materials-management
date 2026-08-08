@@ -9,42 +9,42 @@ export type BankGuaranteeStatus = 'active' | 'expired' | 'claimed' | 'cancelled'
 export interface BankGuaranteeDTO {
   id: string;
   projectId: string;
-  project_id?: string;
+  projectId?: string;
   contractorId?: string;
-  contractor_id?: string;
+  contractorId?: string;
   type: BankGuaranteeType;
   guaranteeType?: BankGuaranteeType;
-  guarantee_type?: string;
+  guaranteeType?: string;
   number: string;
   guaranteeNumber?: string;
-  guarantee_number?: string;
+  guaranteeNumber?: string;
   issuingBank: string;
-  issuing_bank?: string;
-  bank_name?: string;
+  issuingBank?: string;
+  bankName?: string;
   beneficiary?: string;
   issueDate: string;
-  issue_date?: string;
+  issueDate?: string;
   expiryDate: string;
-  expiry_date?: string;
+  expiryDate?: string;
   amount: number;
   guaranteeAmount?: number;
-  guarantee_amount?: number;
+  guaranteeAmount?: number;
   currency: string;
   status: BankGuaranteeStatus;
   conditions?: string[];
   documents: string[];
   actions?: BankGuaranteeActionDTO[];
   createdAt: string;
-  created_at?: string;
+  createdAt?: string;
   updatedAt: string;
-  updated_at?: string;
+  updatedAt?: string;
 }
 
 export interface BankGuaranteeActionDTO {
   id: string;
   guaranteeId: string;
   type: 'notification' | 'claim' | 'renewal' | 'cancellation' | 'extension';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'failed';
+  status: 'pending' | 'inProgress' | 'completed' | 'cancelled' | 'failed';
   performedBy: string;
   performedAt?: string;
   dueDate?: string;
@@ -56,14 +56,14 @@ export interface BankGuaranteeActionDTO {
 }
 
 export interface CreateBankGuaranteeActionRequestDto {
-  guarantee_id: string;
-  action_type: BankGuaranteeActionDTO['type'];
+  guaranteeId: string;
+  actionType: BankGuaranteeActionDTO['type'];
   title: string;
   description: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  assigned_to?: string;
-  created_by: string;
-  due_date?: string;
+  assignedTo?: string;
+  createdBy: string;
+  dueDate?: string;
   documents?: string[];
   notes?: string;
 }
@@ -73,8 +73,8 @@ export interface UpdateBankGuaranteeActionRequestDto {
   description?: string;
   status?: BankGuaranteeActionDTO['status'];
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  assigned_to?: string;
-  due_date?: string;
+  assignedTo?: string;
+  dueDate?: string;
   documents?: string[];
   notes?: string;
 }
@@ -82,13 +82,13 @@ export interface UpdateBankGuaranteeActionRequestDto {
 export interface BankGuaranteeActionStatistics {
   total: number;
   pending: number;
-  in_progress: number;
+  inProgress: number;
   completed: number;
   cancelled: number;
   failed: number;
   overdue: number;
-  by_type: Record<string, number>;
-  by_priority: Record<string, number>;
+  byType: Record<string, number>;
+  byPriority: Record<string, number>;
 }
 
 export interface BankGuaranteeStatsDTO {
@@ -120,4 +120,56 @@ export interface GetBankGuaranteesOptionsDTO {
   limit?: number;
   offset?: number;
   status?: BankGuaranteeStatus;
+}
+// Moved from src/hooks/hexagonal/useBankGuaranteesHex.ts
+export interface BankGuaranteeRow {
+  id: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  bankName: string;
+  guaranteeAmount: number;
+  guaranteeType: string;
+  issueDate: string;
+  expiryDate: string;
+  status: string;
+  phaseId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  releasedAt?: string;
+  notes?: string;
+  supportingDocuments?: string[];
+  // Legacy snakeCase for backward compatibility
+  projectId?: string;
+  contractorId?: string;
+  contractorName?: string;
+  bankName?: string;
+  guaranteeAmount?: number;
+  guaranteeType?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  phaseId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  releasedAt?: string;
+}
+// Moved from src/dtos/entities/ProjectAggregateDTO.ts (reconciled)
+export interface BankGuaranteeData {
+  projectId: string;
+  contractorId: string;
+  bankLiaisonEmail: string;
+  guaranteeAmount: number;
+  delayPercentage: number;
+  contractClause: string;
+}
+
+// Moved from src/dtos/entities/ReportDTO.ts (reconciled)
+export interface BankGuaranteeDTO {
+  id: string;
+  type: string;
+  amount: number;
+  issueDate: Date;
+  expiryDate: Date;
+  bankName: string;
+  status: 'active' | 'expired' | 'claimed';
 }

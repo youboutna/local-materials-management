@@ -5,13 +5,7 @@
 
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import {
-    CreateProjectStakeholderDTO,
-    CreateStakeholderInputDTO,
-    ProjectStakeholderDTO,
-    StakeholderInputDTO,
-    UpdateProjectStakeholderDTO
-} from '@/dtos/entities/ProjectStakeholderDTO';
+import { ProjectStakeholderDTO } from '@/dtos/entities/ProjectDTO';;
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 

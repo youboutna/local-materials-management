@@ -1,3 +1,5 @@
+import { InvoiceLine } from '@/dtos/entities/PaymentDTO';
+import { CalculationResult } from '@/dtos/entities/NotificationDTO';
 //ouverture btp
 export interface Opening {
   id: string;
@@ -21,44 +23,6 @@ export interface Dimensions {
   weight?:number
 }
 
-export interface CalculationResult {
-
-  originalLabel?: string;
-  elementType?: string;
-  elementLabel?: string;
-  timestamp?: string;
-  dimensions?: Dimensions;
-  openings?: Opening[];
-  results?: Record<string, number | string>;
-  metadata?: {
-    sourceUnit?: string;
-    workType?: string;
-    parsedAt?: string;
-    type?: string;
-    unitWeights?: number;
-    unit?: string;
-    description?: string;
-    coverageRate?: number;
-    currency?: string | null;
-    status?: string;
-    created_at?: string;
-    updated_at?: string;
-    tax_rate?: number | null;
-    tax_amount?: number | null;
-    isFixedPrice?: boolean;
-    section?: string;
-    originalUnit?: string;
-    // Champs additionnels utilisés par le calculateur / parseurs BOQ
-    imported?: boolean;
-    source?: string;
-    file?: string;
-    resourceType?: string;
-    recommendation?: boolean;
-    phaseId?: string | null;
-    milestoneId?: string | null;
-    taskId?: string | null;
-  };
-}
 export interface MasonryMaterials extends CalculationResult {
   bricks?: number;
   blocks?: number;
@@ -75,7 +39,6 @@ export interface RebarMaterials extends CalculationResult{
   rebarWeight: number;
   barCount: number;
 }
-
 
 export interface ConcreteOptions extends CalculationResult{
   dosage?: number;
@@ -151,25 +114,7 @@ export interface ConcreteMixCalculation {
   };
 }
 
-
 //ligne de devis
-export interface InvoiceLine {
-  id?: string;
-  number?: string;         // numero
-  designation: string;
-  unit?: string;           // unite
-  quantity: number;       // quantite
-  unitPrice?: number;      // prixUnitaire
-  totalPrice?: number;     // prixTotal
-  currency?: string | null;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-  tax_rate?: number | null;
-  tax_amount?: number | null;
-  metadata?: Record<string, unknown>;
-  dimensions?: Dimensions;
-}
 
 export const STANDARD_OPENINGS = [
   { id: "1", label: "Porte standard", length: 0.9, width: 2.1 },
@@ -177,7 +122,6 @@ export const STANDARD_OPENINGS = [
   { id: "3", label: "Baie vitrée", length: 2.4, width: 2.1 },
   { id: "4", label: "Ouverture technique", length: 0.6, width: 0.6 },
 ];
-
 
 // Updated interface
 
@@ -599,7 +543,6 @@ export const elementTypeSynonyms: Record<string, string[]> = {
     "faitage zinc", "arêtier zinc", "faîtage métallique"
   ]  
 };
-
 
 // Enhanced Element Type Detection
 export const detectElementType = (designation: string): ElementType => {

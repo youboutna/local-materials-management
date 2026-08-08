@@ -8,7 +8,7 @@ import { UnifiedAuthContext } from '@/contexts/UnifiedAuthContext';
 import { UnifiedAuthContextType } from '@/dtos/entities/AuthDTO';
 
 // Hook for using the unified auth context
-export function useUnifiedAuth(): UnifiedAuthContextType {
+export function useUnifiedAuthHex(): UnifiedAuthContextType {
   const context = useContext(UnifiedAuthContext);
   if (context === undefined) {
     throw new Error('useUnifiedAuth must be used within a UnifiedAuthProvider');
@@ -17,6 +17,6 @@ export function useUnifiedAuth(): UnifiedAuthContextType {
 }
 
 // Backward compatibility hook
-export function useAuth(): UnifiedAuthContextType {
+export function useAuthHex(): UnifiedAuthContextType {
   return useUnifiedAuth();
 }

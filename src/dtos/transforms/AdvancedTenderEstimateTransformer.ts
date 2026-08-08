@@ -4,7 +4,7 @@
  */
 
 import { TenderEstimate, CurrencyCode } from '@/domain/entities/TenderEstimate';
-import { TenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 
 // Type for price range distribution
 interface PriceRangeDistribution {

@@ -20,39 +20,14 @@ import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+import { Submission } from '@/dtos/entities/TenderDTO';
 interface TenderEvaluationPanelProps {
   tenderId: string;
   onEvaluationUpdate?: () => void;
   verifiedSubmissions?: string[];
 }
 
-interface Submission {
-  id: string;
-  user_id: string;
-  tender_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date: string;
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected';
-  administrative_score?: number;
-  technical_score?: number;
-  financial_score?: number;
-  total_score?: number;
-  evaluator_notes?: string;
-  reviewer_id?: string;
-  reviewed_at?: string;
-  submission_documents?: {
-    id: string;
-    category: 'administrative' | 'technical' | 'financial';
-    subcategory?: string;
-    document: {
-      id: string;
-      title: string;
-      file_url: string;
-      file_name: string;
-    };
-  }[];
-}
+
 
 const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({ 
   tenderId, 

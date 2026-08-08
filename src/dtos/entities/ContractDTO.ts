@@ -61,21 +61,7 @@ export interface ContractDetailsDTO extends ContractDTO {
   auditTrail: ContractAuditEntry[];
 }
 
-export interface ContractSummaryDTO {
-  id: string;
-  contractNumber: string;
-  title: string;
-  contractType: ContractType;
-  status: ContractStatus;
-  totalValue: MonetaryDTO;
-  startDate: string;
-  endDate: string | null;
-  progress: number;
-  isOverdue: boolean;
-  isExpiringSoon: boolean;
-  projectTitle?: string;
-  supplierName?: string;
-}
+
 
 export interface CreateContractDTO {
   contractNumber: string;
@@ -128,29 +114,7 @@ export interface ContractFilterDTO {
   searchQuery?: string;
   isOverdue?: boolean;
   isExpiringSoon?: boolean;
-  needsRenewal?: boolean;
-}
-
-export type ContractType = 
-  | 'fixed_price'
-  | 'time_materials'
-  | 'cost_plus'
-  | 'retainer'
-  | 'service_agreement'
-  | 'consulting'
-  | 'construction'
-  | 'supply'
-  | 'maintenance'
-  | 'other';
-
-export type ContractStatus = 
-  | 'draft'
-  | 'pending_signature'
-  | 'signed'
-  | 'active'
-  | 'suspended'
-  | 'completed'
-  | 'terminated'
+inated'
   | 'expired'
   | 'cancelled';
 
@@ -191,19 +155,7 @@ export interface ContractAmendment {
   amendmentNumber: number;
   title: string;
   description: string;
-  type: 'addition' | 'modification' | 'termination' | 'extension';
-  effectiveDate: string;
-  changes: Record<string, unknown>;
-  approvedBy: string;
-  approvedAt: string;
-  documents: string[]; // Document IDs
-}
-
-export interface ContractPayment {
-  id: string;
-  paymentNumber: number;
-  amount: MonetaryDTO;
-  dueDate: string;
+  type: 'addition' | 'modifica
   paidDate: string | null;
   status: 'pending' | 'paid' | 'overdue' | 'cancelled';
   associatedMilestones: string[];
@@ -213,35 +165,13 @@ export interface ContractPayment {
 export interface ContractPerformanceMetrics {
   overallScore: number; // 0-100
   onTimeDelivery: number; // percentage
-  qualityScore: number; // 0-100
-  budgetAdherence: number; // percentage
-  complianceScore: number; // 0-100
-  lastUpdated: string;
-  trend: 'improving' | 'stable' | 'declining';
-}
-
-export interface ContractRiskAssessment {
-  overallRisk: 'low' | 'medium' | 'high' | 'critical';
-  financialRisk: 'low' | 'medium' | 'high' | 'critical';
+  qualityScore: number; // 0-100Risk: 'low' | 'medium' | 'high' | 'critical';
   operationalRisk: 'low' | 'medium' | 'high' | 'critical';
   complianceRisk: 'low' | 'medium' | 'high' | 'critical';
   riskFactors: Array<{
     factor: string;
     level: 'low' | 'medium' | 'high' | 'critical';
-    mitigation: string;
-  }>;
-  lastAssessed: string;
-}
-
-export interface ContractComplianceStatus {
-  isCompliant: boolean;
-  complianceScore: number; // 0-100
-  violations: Array<{
-    type: string;
-    description: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    identifiedAt: string;
-    resolvedAt: string | null;
+    mitigation:
   }>;
   lastAuditDate: string;
   nextAuditDate: string | null;

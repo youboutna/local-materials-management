@@ -22,21 +22,14 @@ import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvi
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/application/services/ProjectManagerService';
 import { EscalationRoles } from '@/domain/entities/Hierarchy';
-import { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';;
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useProjectsHex, usePaymentControlHex, useNotificationsHex, usePaymentBlocksHex } from '@/hooks/hexagonal';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 
-interface NotificationData {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
-  metadata: Record<string, unknown>;
-}
 
+
+import { NotificationData } from '@/dtos/entities/NotificationDTO';
 // Component to render payment control actions with real data
 const PaymentControlActionsContainer = () => {
   const { userId } = useAuthUserHex();

@@ -1,17 +1,21 @@
 import { IPaymentInitiationRepository } from '@/domain/repositories/IPaymentInitiationRepository';
-import {
-  ApprovalActionDTO,
-  ApprovalChainStep,
-  CreatePaymentInitiationDTO,
-  InitiatorRole,
-  PaymentInitiationNotificationDTO,
-  ROLE_APPROVAL_CHAIN,
-  ROLE_PAYMENT_LIMITS,
-  SupplierCompletionDTO
-} from '@/dtos/entities/paymentInitiationDTO';
+import { SupabasePaymentInitiationAdapter } from '@/infrastructure/supabase/SupabasePaymentInitiationAdapter';
+import { ApprovalChainStep } from '@/dtos/entities/PhaseDTO';;
 
 export class PaymentInitiationService {
+  private static instance: PaymentInitiationService | null = null;
+
   constructor(private readonly repository: IPaymentInitiationRepository) {}
+
+  /** Instance par défaut branchée sur l'adaptateur Supabase. */
+  static getInstance(): PaymentInitiationService {
+    if (!PaymentInitiationService.instance) {
+      PaymentInitiationService.instance = new PaymentInitiationService(
+        new SupabasePaymentInitiationAdapter()
+      );
+    }
+    return PaymentInitiationService.instance;
+  }
 
   async createInitiation(dto: CreatePaymentInitiationDTO, initiatorId: string): Promise<PaymentInitiationNotificationDTO> {
     // 1. Validation métier des limites par rôle

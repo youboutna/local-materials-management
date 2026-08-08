@@ -623,15 +623,15 @@ export interface AuthSession {
 // Legacy interface for backward compatibility
 export interface UserProfile {
   id: string;
-  full_name?: string | null;
+  fullName?: string | null;
   phone?: string | null;
-  national_id?: string | null;
+  nationalId?: string | null;
   role?: string | null;
   email?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  is_active?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  isActive?: boolean;
   userRoles?: UserRole[]; // Add support for multiple roles
   primaryRole?: string; // Add primary role for multi-role support
-  avatar_url?: string | null;
+  avatarUrl?: string | null;
 }

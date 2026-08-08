@@ -9,7 +9,7 @@ import { useToast } from '../../../hooks/use-toast';
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO, } from "@/dtos/entities/ProjectDTO";
-import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 import { RiskDTO, RiskCategory, RiskStatus, RiskProbability, RiskImpact, CreateRiskDTO, UpdateRiskDTO, RISK_CATEGORY_LABELS, PROBABILITY_LABELS, IMPACT_LABELS } from "@/dtos/entities/RiskDTO";
 import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
 

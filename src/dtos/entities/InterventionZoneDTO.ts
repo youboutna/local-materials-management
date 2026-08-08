@@ -9,23 +9,10 @@
 
 export type InterventionZoneShape = 'polygon' | 'rectangle' | 'circle' | 'point';
 
-export interface InterventionZoneLatLng {
-  lat: number;
-  lng: number;
-}
-
 /** Métadonnées du résultat de géocodage (provider, confiance, place_id…). */
 export interface InterventionZoneGeocodingMeta {
   provider?: string;
-  confidence?: number;
-  displayName?: string;
-  placeId?: string | number;
-  geocodedAt?: string;
-}
-
-export interface InterventionZoneDTO {
-  type: InterventionZoneShape;
-  coordinates: InterventionZoneLatLng[];
+  confidenceoordinates: InterventionZoneLatLng[];
   radiusMeters?: number;
   label?: string;
   address?: string;

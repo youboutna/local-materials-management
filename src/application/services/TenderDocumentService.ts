@@ -4,20 +4,7 @@
  */
 
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
-import {
-    ApproveTenderDocumentRequestDTO,
-    CreateTenderDocumentDTO,
-    DeleteTenderDocumentRequestDTO,
-    GetProjectStatisticsRequestDTO,
-    GetProjectTenderDocumentsRequestDTO,
-    GetTenderDocumentByIdRequestDTO,
-    RejectTenderDocumentRequestDTO,
-    SubmitTenderDocumentRequestDTO,
-    TenderDocumentDTO,
-    TenderDocumentListDTO,
-    TenderDocumentStatsDTO,
-    UpdateTenderDocumentRequestDTO
-} from '@/dtos/entities/TenderDocumentDTO';
+import { TenderDocumentDTO } from '@/dtos/entities/TenderDTO';;
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';

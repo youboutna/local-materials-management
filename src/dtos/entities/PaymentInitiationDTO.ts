@@ -1,11 +1,4 @@
-export type InitiatorRole = 'inspector' | 'manager' | 'director' | 'supervisor';
-
-export interface ApprovalChainStep {
-  level: number;
-  role: InitiatorRole;
-  status: 'pending' | 'approved' | 'rejected';
-  deadline: string;
-}
+export type InitiatorRole = 'inspector' | 'manager' | 'director' | 'supervisor' | 'project_manager';
 
 export interface ApprovalRecord {
   step: number;
@@ -14,27 +7,13 @@ export interface ApprovalRecord {
   timestamp: string;
 }
 
-export interface SupplierCompletionData {
-  completedAt: string;
-  finalAmount: number;
-  description: string;
-  paymentReason: string;
-  additionalDocuments?: string[];
+export interface SupplienalDocuments?: string[];
   notes?: string;
 }
 
 export interface CreatePaymentInitiationDTO {
   projectId: string;
-  phaseId?: string;
-  inspectionId?: string;
-  initiatorRole: InitiatorRole;
-  supplierId: string;
-  estimatedAmount: number;
-  justification: string;
-  attachedDocuments?: string[];
-}
-
-export interface ApprovalActionDTO {
+  phaseId?: strinace ApprovalActionDTO {
   notificationId: string;
   action: 'approved' | 'rejected';
   comments?: string;
@@ -42,20 +21,7 @@ export interface ApprovalActionDTO {
 
 export interface SupplierCompletionDTO {
   notificationId: string;
-  finalAmount: number;
-  description: string;
-  paymentReason: string;
-  additionalDocuments?: string[];
-  notes?: string;
-}
-
-export interface SupplierInfoDTO {
-  userId: string;
-  name: string;
-  email: string;
-}
-
-export interface PaymentInitiationNotificationDTO {
+  finalAmount: onDTO {
   id: string;
   projectId: string;
   phaseId?: string;
@@ -66,28 +32,20 @@ export interface PaymentInitiationNotificationDTO {
   estimatedAmount: number;
   justification: string;
   attachedDocuments: string[];
-  approvalChain: ApprovalChainStep[];
-  currentApprovalLevel: number;
-  status: 'pending_approval' | 'ready_for_supplier' | 'rejected' | 'completed';
+  apper' | 'rejected' | 'completed';
   supplierDeadline?: string;
   projectTitle: string;
   supplierInfo?: SupplierInfoDTO;
-  approvals?: ApprovalRecord[];
-  supplierCompletion?: SupplierCompletionData;
-  createdAt: string;
-  updatedAt: string;
-}
+  anspector: 'Inspecteur',
+  manager: 'Responsable',
+  project_manager: 'Chef de Projet',
+  supervisor: 'Superviseur',
+  director: 'Directeur'
+};
 
-export const ROLE_PAYMENT_LIMITS: Record<InitiatorRole, number> = {
-  inspector: 500000,
-  manager: 2000000,
+export const ROLE_PAYMENT_LIMITS: Record<Initiato000000,
   supervisor: 5000000,
   director: 20000000
 };
 
-export const ROLE_APPROVAL_CHAIN: Record<InitiatorRole, InitiatorRole[]> = {
-  inspector: ['manager', 'supervisor', 'director'],
-  manager: ['supervisor', 'director'],
-  supervisor: ['director'],
-  director: []
-};
+export const ROLE_APPROVAL_CHAIN:

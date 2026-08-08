@@ -101,11 +101,11 @@ export interface InspectionDTO extends BaseEntityDTO {
   photos?: string[]; // Photo URLs only for DTO
   
   // Legacy snake_case aliases for backward compatibility (Rule #9)
-  project_id?: string;        // Legacy: Use projectId instead
+  projectId?: string;        // Legacy: Use projectId instead
   date?: string;             // Legacy: Use scheduledDate instead
   progress_at_inspection?: number; // Legacy: Use progress instead
   phase_id?: string;          // Legacy: Use phaseId instead
-  created_at?: string;         // Legacy: Use createdAt from BaseEntityDTO instead
+  createdAt?: string;         // Legacy: Use createdAt from BaseEntityDTO instead
   updated_at?: string;         // Legacy: Use updatedAt from BaseEntityDTO instead
   videos?: string[]; // Video URLs only for DTO
   reports?: string[]; // Report URLs only for DTO
@@ -143,7 +143,7 @@ export interface CreateInspectionDTO {
   findings?: string[];
   recommendations?: string[];
   actionItems?: string[];
-  complianceStatus?: 'compliant' | 'non_compliant' | 'partially_compliant';
+  complianceStatus?: 'compliant' | 'nonCompliant' | 'partially_compliant';
   qualityRating?: number; // 1-5
   relatedInspections?: string[]; // Inspection IDs only for DTO
   documents?: string[]; // Document IDs only for DTO
@@ -354,20 +354,14 @@ export interface InspectionParticipant {
   joinedAt?: string;
 }
 
-export interface AddMeasurementRequestDTO {
-  inspectionId: string;
-  measurement: Omit<InspectionMeasurement, 'id'>;
-}
+
 
 export interface AddParticipantRequestDTO {
   inspectionId: string;
   participant: Omit<InspectionParticipant, 'id'>;
 }
 
-export interface CompleteInspectionRequestDTO {
-  inspectionId: string;
-  finalData: {
-    overallConformity: ConformityStatus;
+exprmityStatus;
     notes?: string;
     documents?: string[];
   };
@@ -413,19 +407,13 @@ export interface VerificationItemDTO {
   id: string;
   name: string;
   title: string;
-  status: 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
+  status: 'pending' | 'inProgress' | 'verified' | 'failed' | 'skipped';
   verifiedBy?: string;
   verifiedAt?: string;
   notes?: string;
 }
 
-// Add execution data interface from InspectionService
-export interface InspectionExecutionDataDTO {
-  id: string;
-  status: string;
-  progressAtInspection?: number;
-  comments?: string;
-  documents: InspectionDocumentEntity[];
+// Add ex
   completedAt?: string;
   completedBy?: string;
   projectId?: string;
@@ -439,11 +427,11 @@ export interface InspectionExecutionDataDTO {
 export interface InspectionPaymentValidationDTO {
   status: string;
   comments: string;
-  payment_type: string;
-  payment_status?: string;
+  paymentType: string;
+  paymentStatus?: string;
   project_id?: string;
-  inspection_id?: string;
-  rejection_notes?: string;
+  inspectionId?: string;
+  rejectionNotes?: string;
 }
 
 // Types moved from InspectionExecutionService
@@ -453,23 +441,16 @@ export interface InspectionExecutionData {
   status: 'in_progress' | 'completed' | 'paused';
   progressAtInspection: number;
   comments?: string;
-  documents: InspectionDocumentEntity[];
-  observations: InspectionObservation[];
-  checklist: ChecklistItem[];
-  projectId: string;
-  inspector: string;
-  date: string;
-  // Extended fields
-  measurements?: unknown[];
+  docown[];
   participants?: unknown[];
-  location?: { latitude: number; longitude: number; address?: string; captured_at?: string };
-  started_at?: Date | string;
-  completed_at?: string;
-  overall_conformity?: ConformityStatus;
-  progress_percentage?: number;
+  location?: { latitude: number; longitude: number; address?: string; capturedAt?: string };
+  startedAt?: Date | string;
+  completedAt?: string;
+  overallConformity?: ConformityStatus;
+  progressPercentage?: number;
   summary?: string;
   recommendations?: string[];
-  corrective_actions_required?: boolean;
+  correctiveActionsRequired?: boolean;
 }
 
 export interface InspectionObservation {
@@ -507,9 +488,9 @@ export interface InspectionDocumentEntity {
   uploadedAt: string;
   uploadedBy?: string;
   size?: number;
-  mime_type?: string;
-  uploaded_at?: string;
-  uploaded_by?: string;
+  mimeType?: string;
+  uploadedAt?: string;
+  uploadedBy?: string;
 }
 
 // Additional types for UI compatibility
@@ -573,3 +554,79 @@ export type UpdateChecklistItemRequestDto = {
   itemId: string;
   updates: Partial<ChecklistItem>;
 };
+// Moved from src/components/project/monitoring/UnifiedPhaseWorkflow.tsx
+export interface InspectionData {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+  date: string;
+  inspector: string;
+  documents?: Array<{
+  id: string;
+  name: string;
+  type: string;
+  url?: string;
+  uploa {
+  inspectionId: string;
+  reviewedBy: string;
+  reviewedAt: string;
+  decision: 'approved' | 'rejected' | 'requiresChanges';
+  commentsatorService.ts
+export interface InspectionWithProjectDTO {
+  id: string;
+  projectId: string;
+  phaseId?: string | null;
+  date: string;
+  inspector: string;
+  status: string;
+  comments?: string | null;
+  progress_at_inspection: number;
+  documents?: unknown[];
+  projects?: {
+    title: string;
+    location?: string;
+  } | null;
+  projectPhases?: {
+    phaseName: string;
+  } | null;
+}
+
+// Moved from src/hooks/usePhaseWorkflow.ts
+export interface InspectionRecord {
+  id: string;
+  status: string;
+  progress_at_inspection: number;
+  date: string;
+  inspector: string;
+  phaseId: string | null;
+  projectId: string;
+  documents?: PhaseDocument[];
+  comments?: string | null;
+}
+
+// Moved from src/hooks/useProjectCheckpoints.ts
+export interface InspectionResult {
+  id: string;
+  status: string;
+  phaseId: string | null;
+  [key: string]: any;
+}
+
+// Moved from src/hooks/useAuditEntries.ts
+export interface AuditEntry {
+  id: string;
+  date: string;
+  status: string;
+  inspector?: string;
+  phaseId?: string | null;
+  phaseId?: string | null;
+  projectId?: string;
+  progressAtInspection?: number;
+  createdAt?: string;
+  createdAt?: string;
+  comments?: string | null;
+  // Additional fields for backward compatibility
+  summary?: string;
+  message?: string;
+  action?: string;
+}

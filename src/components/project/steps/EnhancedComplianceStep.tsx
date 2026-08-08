@@ -17,7 +17,7 @@ import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { DocumentDTO } from "@/dtos/entities/DocumentDTO";
 import { InsuranceCertificateDTO } from "@/dtos/entities/InsuranceDTO";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { ProjectWorkflowData } from '@/dtos/entities/TaskAssignmentDTO';;
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 
 interface EnhancedComplianceStepProps {

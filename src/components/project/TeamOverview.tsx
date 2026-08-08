@@ -13,33 +13,13 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Users, Clock, DollarSign, Settings, User, Wrench, Package, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+import { ProjectPhase } from '@/dtos/entities/PhaseDTO';
+import { ProjectResource } from '@/dtos/entities/MaterialDTO';
 interface TeamOverviewProps {
   resources?: any[];
   setResources?: (resources: any[]) => void;
   projectId: string;
   phases?: any[];
-}
-
-interface ProjectResource {
-  id: string;
-  project_id: string;
-  name: string;
-  type: string;
-  allocation_date: string | null;
-  cost_per_unit: number | null;
-  quantity: number | null;
-  total_cost: number | null;
-  unit: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ProjectPhase {
-  id: string;
-  phase_name: string;
-  status: string;
-  construction_phase?: string;
 }
 
 interface ResourceFormData {

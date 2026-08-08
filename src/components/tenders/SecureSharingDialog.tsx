@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
-import { CreateSharingSecretDTO } from '@/dtos/entities/tender-sharing-dto';
+import { CreateSharingSecretDTO } from '@/dtos/entities/tender-sharing-dto';;
 import { Copy, Check, Shield, Clock, Users, Lock, Eye, Download } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';

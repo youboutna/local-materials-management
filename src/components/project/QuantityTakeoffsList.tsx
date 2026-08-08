@@ -9,11 +9,10 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
 import { useQuantityTakeoffsHex } from '@/hooks/hexagonal';
 
+import { RowDraft } from '@/dtos/entities/ProjectDTO';
 interface QuantityTakeoffsListProps {
   projectId: string;
 }
-
-interface RowDraft { quantity: number; unit_price: number; dirty: boolean }
 
 const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
   const {
@@ -209,7 +208,6 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
               );
             })()}
           </div>
-
 
           <PaginationControls
             currentPage={currentPage}

@@ -3,27 +3,9 @@
  * Data transfer objects for payment validation operations
  */
 
-import { BaseEntityDTO } from './BaseEntityDTO';
+import { BaseEntityDTO } from '@/dtos/entities/OrganizationDTO';;
 
 // =================== VALIDATION DTOs ===================
-
-export interface PaymentValidationRequestDTO {
-  projectId: string;
-  amount: number;
-  paymentMethod: string;
-  paymentDate: string;
-  contractorId?: string;
-  contractorName?: string;
-  contractorContact: string;
-  
-  // Method-specific fields
-  bankName?: string;
-  accountNumber?: string;
-  checkNumber?: string;
-  mobileNumber?: string;
-  mobileOperator?: string;
-  receiverName?: string;
-}
 
 export interface PaymentValidationResultDTO {
   isValid: boolean;
@@ -39,16 +21,7 @@ export interface PaymentRiskAssessmentDTO {
   level: 'low' | 'medium' | 'high' | 'critical';
   factors: string[];
   recommendations: string[];
-  score: number;
-}
-
-// =================== MAIN VALIDATION DTO ===================
-
-export interface PaymentValidationDTO extends BaseEntityDTO {
-  projectId: string;
-  request: PaymentValidationRequestDTO;
-  result: PaymentValidationResultDTO;
-  riskAssessment?: PaymentRiskAssessmentDTO;
+  score: nussessment?: PaymentRiskAssessmentDTO;
   validatedAt: string;
   validatedBy: string;
 }
@@ -57,11 +30,7 @@ export interface PaymentValidationDTO extends BaseEntityDTO {
 
 export interface PaymentRuleConfigDTO {
   maxInitialPaymentPercentage: number;
-  maxInitialPaymentAmount: number;
-  requireInspectionForProgressThreshold: number;
-  allowedPaymentMethods: string[];
-  paymentDateValidationDays: number;
-  contractorValidationRequired: boolean;
+  maxInitialPaymentAmount: uired: boolean;
   bankValidationRequired: boolean;
 }
 
@@ -81,20 +50,7 @@ export interface PaymentValidationStatisticsDTO {
 
 // =================== CONFIGURATION DTOs ===================
 
-export interface PaymentValidationConfigDTO {
-  rules: PaymentRuleConfigDTO;
-  notifications: {
-    successEmail?: string;
-    failureEmail?: string;
-    escalationEmail?: string;
-  };
-  integration: {
-    accountingSystem?: string;
-    erpSystem?: string;
-    bankApi?: {
-      enabled: boolean;
-      endpoint: string;
-      apiKey: string;
+export interface PaymentValidationCon
     };
   };
 }

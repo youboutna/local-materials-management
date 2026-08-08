@@ -39,62 +39,62 @@ export type TaskType =
   | 'general';
 
 export interface NotificationMetadata {
-  task_type?: TaskType;
-  related_project_id?: string;
-  related_inspection_id?: string;
-  related_document_id?: string;
-  related_payment_id?: string;
-  related_material_id?: string;
+  taskType?: TaskType;
+  relatedProjectId?: string;
+  relatedInspectionId?: string;
+  relatedDocumentId?: string;
+  relatedPaymentId?: string;
+  relatedMaterialId?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  due_date?: string;
-  assignee_name?: string;
-  assigner_name?: string;
-  delay_percentage?: number;
-  bank_liaison_email?: string;
-  contract_guarantee_amount?: number;
-  contractor_name?: string;
-  engineering_consultant?: string;
-  inspection_type?: string;
-  violation_count?: number;
-  escalation_level?: number;
-  penalty_amount?: number;
-  compliance_standard?: string;
-  payment_amount?: number;
-  payment_method?: string;
-  document_name?: string;
-  document_type?: string;
-  shared_with?: string[];
-  action_required?: string;
-  project_phase?: string;
-  completion_percentage?: number;
-  approval_status?: string;
+  dueDate?: string;
+  assigneeName?: string;
+  assignerName?: string;
+  delayPercentage?: number;
+  bankLiaisonEmail?: string;
+  contractGuaranteeAmount?: number;
+  contractorName?: string;
+  engineeringConsultant?: string;
+  inspectionType?: string;
+  violationCount?: number;
+  escalationLevel?: number;
+  penaltyAmount?: number;
+  complianceStandard?: string;
+  paymentAmount?: number;
+  paymentMethod?: string;
+  documentName?: string;
+  documentType?: string;
+  sharedWith?: string[];
+  actionRequired?: string;
+  projectPhase?: string;
+  completionPercentage?: number;
+  approvalStatus?: string;
 }
 
 export interface Notification {
   id: string;
-  recipient_id: string;
+  recipientId: string;
   title: string;
   message: string;
   type: NotificationType;
-  related_id?: string;
+  relatedId?: string;
   metadata?: NotificationMetadata;
   read: boolean;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TaskAssignment {
   id: string;
-  project_id?: string;
+  projectId?: string;
   title: string;
   description?: string;
-  assigned_to: string;
-  assigned_by: string;
+  assignedTo: string;
+  assignedBy: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  due_date?: string;
-  completion_date?: string;
+  dueDate?: string;
+  completionDate?: string;
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }

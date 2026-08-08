@@ -13,6 +13,9 @@ import { calculateQuantity } from '@/dtos/types/quantityTakeoff';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
+import { UpdateQuantityTakeoffRequestDto } from '@/dtos/entities/QuantityTakeoffDTO';
+import { CreateQuantityTakeoffRequestDto } from '@/dtos/entities/QuantityTakeoffDTO';
+import { QuantityTakeoffStats } from '@/dtos/entities/QuantityTakeoffDTO';
 // Enhanced types for comprehensive quantity takeoff operations
 export interface QuantityTakeoffWithDetails {
   id: string;
@@ -45,55 +48,11 @@ export interface QuantityTakeoffWithDetails {
   updated_at: string;
 }
 
-export interface QuantityTakeoffStats {
-  totalQuantityByUnit: Record<string, number>;
-  totalValue: number;
-  count: number;
-  averageUnitPrice: number;
-  materialBreakdown: Array<{
-    material_id: string;
-    material_name: string;
-    total_quantity: number;
-    total_value: number;
-    unit: string;
-  }>;
-  phaseBreakdown: Array<{
-    phase_id: string;
-    phase_name: string;
-    total_quantity: number;
-    total_value: number;
-    completion_percentage: number;
-  }>;
-  budgetUtilization: {
-    allocated_budget: number;
-    estimated_cost: number;
-    utilization_percentage: number;
-    variance: number;
-  };
-}
 
-export interface CreateQuantityTakeoffRequestDto {
-  project_id: string;
-  material_id: string;
-  element_type: string;
-  unit: 'm³' | 'm²' | 'm' | 'unité';
-  length: number;
-  width?: number;
-  height?: number;
-  unit_price?: number;
-  phase_id?: string;
-  milestone_id?: string;
-  note?: string;
-}
 
-export interface UpdateQuantityTakeoffRequestDto {
-  quantity?: number;
-  unit_price?: number;
-  material_id?: string;
-  phase_id?: string;
-  milestone_id?: string;
-  note?: string;
-}
+
+
+
 
 export interface QuantityTakeoffValidationResult {
   isValid: boolean;

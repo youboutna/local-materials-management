@@ -13,14 +13,14 @@ export interface PhaseTaskDTO {
   description?: string;
   status: PhaseStatus;
   progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string[];
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  assignedTo?: string[];
   dependencies?: string[];
   weight?: number;
-  order_index: number;
+  orderIndex: number;
 }
 
 /**
@@ -32,11 +32,11 @@ export interface PhaseStepDTO {
   description?: string;
   status: PhaseStatus;
   progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index: number;
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex: number;
   tasks: PhaseTaskDTO[];
 }
 
@@ -46,26 +46,26 @@ export interface PhaseStepDTO {
  */
 export interface PhaseDTO {
   id: string;
-  project_id: string;
-  phase_name: string;
-  construction_phase?: string;
-  construction_stage?: string;
+  projectId: string;
+  phaseName: string;
+  constructionPhase?: string;
+  constructionStage?: string;
   description?: string;
   status: PhaseStatus;
   progress: number;
-  estimated_cost?: number;
-  actual_cost?: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  actual_start_date?: string;
-  actual_end_date?: string;
-  order_index: number;
+  estimatedCost?: number;
+  actualCost?: number;
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  orderIndex: number;
   dependencies?: string[];
   steps: PhaseStepDTO[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -73,46 +73,46 @@ export interface PhaseDTO {
  */
 export interface PhaseSummaryDTO {
   id: string;
-  project_id: string;
-  phase_name: string;
+  projectId: string;
+  phaseName: string;
   status: PhaseStatus;
   progress: number;
-  steps_count: number;
-  tasks_count: number;
-  completed_tasks: number;
-  start_date?: string;
-  end_date?: string;
-  order_index: number;
+  stepsCount: number;
+  tasksCount: number;
+  completedTasks: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex: number;
 }
 
 /**
  * Form data for creating/updating phases
  */
 export interface PhaseFormDTO {
-  phase_name: string;
+  phaseName: string;
   description?: string;
-  construction_phase?: string;
-  construction_stage?: string;
-  estimated_cost?: number;
-  estimated_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index?: number;
+  constructionPhase?: string;
+  constructionStage?: string;
+  estimatedCost?: number;
+  estimatedDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex?: number;
   steps?: PhaseStepFormDTO[];
 }
 
 export interface PhaseStepFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  order_index?: number;
+  estimatedDurationDays?: number;
+  orderIndex?: number;
   tasks?: PhaseTaskFormDTO[];
 }
 
 export interface PhaseTaskFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  assigned_to?: string[];
-  order_index?: number;
+  estimatedDurationDays?: number;
+  assignedTo?: string[];
+  orderIndex?: number;
 }

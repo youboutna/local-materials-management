@@ -15,26 +15,12 @@ import UserSelector from '@/components/selectors/UserSelector';
 import { NotificationService } from '@/application/services/NotificationService';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Project {
-  id: string;
-  title: string;
-  location?: string;
-  status?: string;
-  project_reference?: string | null;
-  budget?: number;
-  progress?: number;
-  contractor_name?: string;
-  contractor_contact?: string;
-}
 
-interface ProjectStep {
-  id: string;
-  name: string;
-  order_index: number;
-  status: string;
-  progress?: number;
-}
 
+
+
+import { ProjectStep } from '@/dtos/entities/PhaseDTO';
+import { Project } from '@/dtos/entities/ProjectDTO';
 interface AdvancedInspectionSchedulerProps {
   projects: Project[];
   onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => Promise<void>;

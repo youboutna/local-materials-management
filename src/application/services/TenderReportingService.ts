@@ -6,7 +6,7 @@
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { TenderDTO, TenderDocumentDTO } from '@/dtos/entities/TenderDTO';
-import { TenderEstimateDTO } from '@/dtos/entities/TenderEstimateDTO';
+import { TenderEstimateDTO } from '@/dtos/entities/TenderDTO';;
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { differenceInDays, format } from 'date-fns';

@@ -24,23 +24,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Phase {
-  id: string;
-  title?: string;
-  phase_name?: string;
-  phase?: string;
-  name?: string;
-  status: string;
-  progress: number;
-  startDate?: string;
-  endDate?: string;
-  start_date?: string;
-  end_date?: string;
-  milestones?: any[];
-  inspections?: any[];
-  payments?: any[];
-}
 
+
+import { Phase } from '@/dtos/entities/PhaseDTO';
 interface ProjectMatrixViewProps {
   projectId: string;
   phases: Phase[];

@@ -5,15 +5,7 @@ import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { SubmissionSecretService } from './SubmissionSecretService';
 
-export interface CreateTenderSubmissionDTO {
-  tender_id: string;
-  user_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date?: string;
-  status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
-}
-
+import { CreateTenderSubmissionDTO } from '@/dtos/entities/TenderDTO';
 export interface UploadedDocument {
   file: File;
   category: 'administrative' | 'technical' | 'financial';
