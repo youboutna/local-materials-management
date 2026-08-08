@@ -1,4 +1,4 @@
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { toast } from '@/hooks/use-toast';
 
 export const checkAndSendInsuranceAlerts = async () => {
@@ -6,7 +6,7 @@ export const checkAndSendInsuranceAlerts = async () => {
     console.log('Checking for insurance expiry alerts...');
     
     // Detect expiring insurance using service instance
-    const insuranceService = new InsuranceService();
+    const insuranceService = getInsuranceService();
     const alerts = await insuranceService.detectExpiringInsurance();
     
     if (alerts.length === 0) {

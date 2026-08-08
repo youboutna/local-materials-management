@@ -75,7 +75,7 @@ const AlertsProcessorSettings: React.FC = () => {
       
       const formattedLogs: ProcessingLog[] = logNotifications.map(notification => ({
         id: notification.id,
-        created_at: notification.created_at,
+        created_at: notification.createdAt,
         summary: (notification.metadata as ProcessingLog['summary']) || {
           processedProjects: 0,
           totalAlerts: 0,
@@ -99,7 +99,7 @@ const AlertsProcessorSettings: React.FC = () => {
     setSaving(true);
     try {
       await notificationService.createNotification({
-        recipient_id: 'system',
+        recipientId: 'system',
         title: 'Configuration processeur mise à jour',
         message: `Nouvelle configuration: ${config.enabled ? 'Activé' : 'Désactivé'}, lot: ${config.batchSize}, interval: ${config.intervalMinutes}min`,
         type: 'info',
@@ -126,7 +126,7 @@ const AlertsProcessorSettings: React.FC = () => {
     setIsRunning(true);
     try {
       await notificationService.createNotification({
-        recipient_id: 'system',
+        recipientId: 'system',
         title: 'Exécution du processeur d\'alertes',
         message: `Démarrage du traitement par lots de ${config.batchSize} projets`,
         type: 'system',
@@ -155,7 +155,7 @@ const AlertsProcessorSettings: React.FC = () => {
       };
 
       await notificationService.createNotification({
-        recipient_id: 'system',
+        recipientId: 'system',
         title: 'Résultat du processeur d\'alertes',
         message: `${processorResult.alertsGenerated} alertes générées pour ${processorResult.processed} projets.`,
         type: 'success',

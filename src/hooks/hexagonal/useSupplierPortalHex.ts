@@ -1,7 +1,7 @@
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { TenderService } from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
-import { UserService } from '@/application/services/UserService';
+import { UserService, getUserService} from '@/application/services/UserService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -82,7 +82,7 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
     queryFn: async () => {
       if (!selectedTenderId) return null;
       
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const user = await authService.getCurrentUser();
       if (!user) return null;
 
@@ -111,12 +111,12 @@ export function useSupplierPortalHex(selectedTenderId?: string) {
         }
       }
       
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const user = await authService.getCurrentUser();
       if (!user) throw new Error('Utilisateur non connecté');
 
       // Get user profile via hexagonal service
-      const userService = new UserService(RepositoryFactory.getUserRepository());
+      const userService = getUserService();
       const profile = await userService.getUserById(user.id);
 
       // Create submission with documents using hexagonal service

@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Payment Control Service - Hexagonal Architecture
  * 
@@ -290,4 +291,12 @@ export class PaymentControlService {
       priority: payment.amount > 50000 ? 'high' : payment.amount > 10000 ? 'medium' : 'low'
     };
   }
+}
+
+let paymentControlServiceInstance: PaymentControlService | null = null;
+export function getPaymentControlService(): PaymentControlService {
+  if (!paymentControlServiceInstance) {
+    paymentControlServiceInstance = new PaymentControlService(RepositoryFactory.getPaymentRepository(), RepositoryFactory.getNotificationRepository());
+  }
+  return paymentControlServiceInstance;
 }

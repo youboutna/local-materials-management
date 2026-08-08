@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Payment Request Service
  * Implements business logic for payment request management
@@ -189,4 +190,12 @@ export class PaymentRequestService {
       throw error;
     }
   }
+}
+
+let paymentRequestServiceInstance: PaymentRequestService | null = null;
+export function getPaymentRequestService(): PaymentRequestService {
+  if (!paymentRequestServiceInstance) {
+    paymentRequestServiceInstance = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  }
+  return paymentRequestServiceInstance;
 }

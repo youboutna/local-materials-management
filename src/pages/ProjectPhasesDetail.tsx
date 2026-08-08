@@ -1,5 +1,5 @@
-import { PhaseService } from '@/application/services/PhaseService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
 import MonitoringEvaluationPanel from '@/components/project/monitoring/MonitoringEvaluationPanel';
 import PhaseCompliance from '@/components/project/PhaseCompliance';
@@ -45,8 +45,8 @@ const ProjectPhasesDetail: React.FC = () => {
       if (!id) return;
       try {
         setLoading(true);
-        const phaseService = new PhaseService();
-        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+        const phaseService = getPhaseService();
+        const projectService = getProjectService();
         const [phasesData, projectData] = await Promise.all([
           phaseService.getPhasesByProject(id),
           projectService.getProjectWithDetails(id).catch(() => null),

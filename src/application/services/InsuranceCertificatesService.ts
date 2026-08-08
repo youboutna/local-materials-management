@@ -137,3 +137,11 @@ export class InsuranceCertificatesService {
     return new InsuranceCertificatesService();
   }
 }
+
+let insuranceCertificatesServiceInstance: InsuranceCertificatesService | null = null;
+export function getInsuranceCertificatesService(): InsuranceCertificatesService {
+  if (!insuranceCertificatesServiceInstance) {
+    insuranceCertificatesServiceInstance = new InsuranceCertificatesService();
+  }
+  return insuranceCertificatesServiceInstance;
+}

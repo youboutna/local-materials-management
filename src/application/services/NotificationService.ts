@@ -52,14 +52,14 @@ export class NotificationService {
     try {
       // Transform DTO to domain entity
       const notificationData: Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> = {
-        recipient_id: data.recipient_id,
+        recipient_id: data.recipientId,
         title: data.title,
         message: data.message,
         type: data.type,
         read: false,
         priority: data.priority || 'medium',
-        expires_at: data.expires_at || undefined,
-        action_url: data.action_url || undefined,
+        expires_at: data.expiresAt || undefined,
+        action_url: data.actionUrl || undefined,
         metadata: data.metadata || undefined
       };
       
@@ -76,16 +76,16 @@ export class NotificationService {
       // Transform domain entity back to DTO
       return {
         id: result.notification.id,
-        recipient_id: result.notification.recipient_id,
+        recipientId: result.notification.recipient_id,
         title: result.notification.title,
         message: result.notification.message,
         type: result.notification.type,
         read: result.notification.read,
-        created_at: result.notification.created_at || new Date().toISOString(),
-        updated_at: result.notification.updated_at,
+        createdAt: result.notification.created_at || new Date().toISOString(),
+        updatedAt: result.notification.updated_at,
         priority: result.notification.priority,
-        expires_at: result.notification.expires_at || undefined,
-        action_url: result.notification.action_url || undefined,
+        expiresAt: result.notification.expires_at || undefined,
+        actionUrl: result.notification.action_url || undefined,
         metadata: result.notification.metadata || undefined
       };
     } catch (error) {
@@ -206,16 +206,16 @@ export class NotificationService {
       
       return {
         id,
-        recipient_id: 'system',
+        recipientId: 'system',
         title: data.title || 'Updated Notification',
         message: data.message || 'Updated message',
         type: data.type || 'info',
         read: data.read || false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         priority: data.priority || 'medium',
-        expires_at: data.expires_at,
-        action_url: data.action_url,
+        expiresAt: data.expiresAt,
+        actionUrl: data.actionUrl,
         metadata: data.metadata,
       };
     } catch (error) {
@@ -238,13 +238,13 @@ export class NotificationService {
       // Return a mock notification since the repository doesn't return the updated notification
       return {
         id: notificationId,
-        recipient_id: 'system',
+        recipientId: 'system',
         title: 'Notification',
         message: 'Marked as read',
         type: 'info',
         read: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         priority: 'medium',
       };
     } catch (error) {
@@ -263,13 +263,13 @@ export class NotificationService {
       
       return {
         id: notificationId,
-        recipient_id: 'system',
+        recipientId: 'system',
         title: 'Notification',
         message: 'Marked as unread',
         type: 'info',
         read: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         priority: 'medium',
       };
     } catch (error) {
@@ -394,16 +394,16 @@ export class NotificationService {
   private mapToDTO(notification: NotificationData): NotificationDTO {
     return {
       id: notification.id,
-      recipient_id: notification.recipient_id,
+      recipientId: notification.recipient_id,
       title: notification.title,
       message: notification.message,
       type: notification.type,
       read: notification.read,
-      created_at: notification.created_at || new Date().toISOString(),
-      updated_at: notification.updated_at || undefined,
+      createdAt: notification.created_at || new Date().toISOString(),
+      updatedAt: notification.updated_at || undefined,
       priority: notification.priority || undefined,
-      expires_at: notification.expires_at || undefined,
-      action_url: notification.action_url || undefined,
+      expiresAt: notification.expires_at || undefined,
+      actionUrl: notification.action_url || undefined,
       metadata: notification.metadata || undefined,
     };
   }
@@ -414,7 +414,7 @@ export class NotificationService {
   async notifyUser(userId: string, title: string, message: string, type: NotificationData['type'] = 'info'): Promise<void> {
     try {
       await this.createNotification({
-        recipient_id: userId,
+        recipientId: userId,
         title,
         message,
         type
@@ -472,4 +472,12 @@ export class NotificationService {
     const service = new NotificationService(RepositoryFactory.getNotificationRepository());
     await service.notifyUser(userId, title, message);
   }
+}
+
+let notificationServiceInstance: NotificationService | null = null;
+export function getNotificationService(): NotificationService {
+  if (!notificationServiceInstance) {
+    notificationServiceInstance = new NotificationService();
+  }
+  return notificationServiceInstance;
 }

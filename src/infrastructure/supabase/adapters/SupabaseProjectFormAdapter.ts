@@ -35,8 +35,8 @@ import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 import { Project } from '@/domain/entities';
 import { SupabaseProjectAdapter } from './SupabaseProjectAdapter';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // Interface pour les données de formulaire
@@ -93,7 +93,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
 
   constructor() {
     this.projectAdapter = new SupabaseProjectAdapter();
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
   }
 
   /**
@@ -273,7 +273,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
       switch (step) {
         case 2: // Stakeholders
           if (data.stakeholders?.length) {
-            await new ProjectStakeholderService().createProjectStakeholders(projectId, data.stakeholders as any, {} as any);
+            await getProjectStakeholderService().createProjectStakeholders(projectId, data.stakeholders as any, {} as any);
           }
           break;
 
@@ -409,7 +409,7 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
   async loadRelatedData(projectId: string): Promise<any> {
     try {
       // Load stakeholders
-      const stakeholders = await new ProjectStakeholderService().getProjectStakeholders(projectId);
+      const stakeholders = await getProjectStakeholderService().getProjectStakeholders(projectId);
 
       // Load phases
       const { data: phasesData } = await supabase

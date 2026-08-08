@@ -4,8 +4,8 @@
  * — Exposes sharing secret hooks aligned with SupabaseTenderSharingAdapter
  */
 
-import { ProjectService } from '@/application/services/ProjectService';
-import { TenderService } from '@/application/services/TenderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { TenderService, getTenderService} from '@/application/services/TenderService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -62,7 +62,7 @@ export function useTenders() {
   return useQuery({
     queryKey: ['tenders'],
     queryFn: async (): Promise<Tender[]> => {
-      const tenderService = new TenderService();
+      const tenderService = getTenderService();
       const tenders = await tenderService.getAllTenders();
       return tenders.map((t: any) => ({
         id: t.id,
@@ -115,7 +115,7 @@ export function useProjectsForTenders() {
   return useQuery({
     queryKey: ['projects-for-tender'],
     queryFn: async () => {
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const projectService = getProjectService();
       const projects = await projectService.getAllProjects();
       return projects.map(project => ({
         id: project.id,

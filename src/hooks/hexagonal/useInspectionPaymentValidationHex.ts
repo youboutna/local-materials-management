@@ -1,6 +1,6 @@
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { InspectionStatus } from '@/domain/entities/Inspection';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -11,8 +11,8 @@ export function useInspectionPaymentValidationHex(inspectionId: string) {
 
   // Services instances with proper repository arguments
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
-  const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+  const paymentRequestService = getPaymentRequestService();
+  const projectService = getProjectService();
 
   // Fetch inspection details with payment request
   const { data: inspection, isLoading: inspectionLoading } = useQuery({

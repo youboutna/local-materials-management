@@ -85,8 +85,8 @@ export const DocumentService = {
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       const b64 = btoa(binary);
 
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase.functions.invoke('send-email-notification', {
+      const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
+      const { error } = await RepositoryFactory.getNotificationGateway().invokeFunction('send-email-notification', {
         body: {
           to: ctx.recipientEmail,
           subject: `${ctx.title}`,

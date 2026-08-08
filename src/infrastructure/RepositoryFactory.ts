@@ -12,6 +12,7 @@
 import { getAppConfig } from '@/config/app';
 import { validateProviders } from '@/config/app-validate';
 import { DEV_MODE } from '@/config/constants';
+import { NotificationGatewayAdapter, notificationGatewayAdapter } from '@/infrastructure/supabase/adapters/NotificationGatewayAdapter';
 
 // ================================================================
 // 1. TYPES
@@ -423,6 +424,11 @@ export class RepositoryFactory {
     if (registry.material) return registry.material;
     registry.material = new SupabaseMaterialAdapter();
     return registry.material;
+  }
+
+  // ---------- NOTIFICATION GATEWAY ----------
+  static getNotificationGateway(): NotificationGatewayAdapter {
+    return notificationGatewayAdapter;
   }
 
   // ---------- DOCUMENT ----------

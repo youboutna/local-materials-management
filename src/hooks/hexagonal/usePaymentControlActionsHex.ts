@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { PaymentControlActionsService } from '@/application/services/PaymentControlActionsService';
+import { PaymentControlActionsService, getPaymentControlActionsService} from '@/application/services/PaymentControlActionsService';
 import type { ActionFormData, ActionMetadata } from '@/application/services/PaymentControlActionsService';
 
 export const actionFormSchema = z.object({
@@ -34,7 +34,7 @@ export interface PaymentControlActionsProps {
 
 export const usePaymentControlActionsHex = (props?: PaymentControlActionsProps) => {
   const queryClient = useQueryClient();
-  const paymentControlService = new PaymentControlActionsService();
+  const paymentControlService = getPaymentControlActionsService();
   
   // Default props if not provided
   const safeProps: PaymentControlActionsProps = props || {

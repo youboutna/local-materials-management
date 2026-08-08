@@ -301,3 +301,11 @@ export class BankGuaranteeActionService {
     }
   }
 }
+
+let bankGuaranteeActionServiceInstance: BankGuaranteeActionService | null = null;
+export function getBankGuaranteeActionService(): BankGuaranteeActionService {
+  if (!bankGuaranteeActionServiceInstance) {
+    bankGuaranteeActionServiceInstance = new BankGuaranteeActionService();
+  }
+  return bankGuaranteeActionServiceInstance;
+}

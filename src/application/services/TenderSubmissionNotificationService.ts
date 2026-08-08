@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { toast } from '@/hooks/use-toast';
 
 export interface TenderSubmissionNotificationData {
@@ -15,9 +15,7 @@ export const sendTenderSubmissionNotification = async (data: TenderSubmissionNot
     console.log('Sending tender submission notification:', data);
 
     // Call the edge function
-    const { data: result, error } = await supabase.functions.invoke('send-tender-submission-notification', {
-      body: data
-    });
+    const { data: result, error } = await RepositoryFactory.getNotificationGateway().invokeFunction('send-tender-submission-notification', data);
 
     if (error) {
       console.error('Edge function error:', error);

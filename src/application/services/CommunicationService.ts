@@ -63,11 +63,11 @@ export interface CommunicationResult {
 export class CommunicationService {
   static async assignTask(payload: AssignTaskPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
-      recipient_id: payload.assigneeId,
+      recipientId: payload.assigneeId,
       title: `Tâche assignée: ${payload.title}`,
       message: payload.description,
       type: 'info',
-      related_id: payload.relatedId,
+      relatedId: payload.relatedId,
       metadata: {
         channel: 'task',
         priority: payload.priority,
@@ -82,7 +82,7 @@ export class CommunicationService {
 
   static async sendEmail(payload: SendEmailPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
-      recipient_id: payload.to,
+      recipientId: payload.to,
       title: `📧 ${payload.subject}`,
       message: payload.message,
       type: 'system',
@@ -99,7 +99,7 @@ export class CommunicationService {
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
-      recipient_id: payload.to,
+      recipientId: payload.to,
       title: '📱 SMS',
       message: payload.message,
       type: 'system',
@@ -116,7 +116,7 @@ export class CommunicationService {
 
   static async scheduleCall(payload: ScheduleCallPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
-      recipient_id: payload.recipientId,
+      recipientId: payload.recipientId,
       title: `📞 Appel programmé: ${payload.subject}`,
       message: payload.message,
       type: 'system',
@@ -134,7 +134,7 @@ export class CommunicationService {
 
   static async sendMail(payload: SendEmailPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
-      recipient_id: payload.to,
+      recipientId: payload.to,
       title: `📮 Courrier: ${payload.subject}`,
       message: payload.message,
       type: 'system',

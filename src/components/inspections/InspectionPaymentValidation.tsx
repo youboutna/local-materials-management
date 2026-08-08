@@ -1,6 +1,6 @@
-import { InspectionService } from '@/application/services/InspectionService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
 import { NotificationService } from '@/application/services/NotificationService';
-import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
+import { SupplierPaymentService, getSupplierPaymentService} from '@/application/services/SupplierPaymentService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,7 +90,7 @@ const InspectionPaymentValidation: React.FC = () => {
       if (!inspectionId) return null;
       
       // Create service instance and get inspection
-      const inspectionService = new InspectionService();
+      const inspectionService = getInspectionService();
       const inspectionData = await inspectionService.getInspectionById(inspectionId);
       
       if (!inspectionData) {
@@ -104,7 +104,7 @@ const InspectionPaymentValidation: React.FC = () => {
       }
       
       // Check for pending payment request
-      const paymentService = new SupplierPaymentService();
+      const paymentService = getSupplierPaymentService();
       const paymentRequest = await paymentService.getPendingPaymentRequestByInspectionId({ inspectionId });
       
       if (!paymentRequest) {
@@ -160,7 +160,7 @@ const InspectionPaymentValidation: React.FC = () => {
       if (!inspectionId) throw new Error('Inspection ID missing');
 
       // Use service instance to update
-      const inspectionService = new InspectionService();
+      const inspectionService = getInspectionService();
       await inspectionService.updateInspection(inspectionId, {
         status: data.status as any,
         comments: data.comments,
@@ -197,7 +197,7 @@ const InspectionPaymentValidation: React.FC = () => {
         const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
         
         await notificationService.createNotification({
-          recipient_id: beneficiaryUserId,
+          recipientId: beneficiaryUserId,
           title: 'Validation de paiement',
           message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${
             data.payment_status === 'approved' ? 'approuvée' : 'rejetée'

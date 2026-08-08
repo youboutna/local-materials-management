@@ -3,11 +3,11 @@
  * Centralizes all supplier portal operations via services
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { DocumentService } from '@/application/services/DocumentService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { StorageService } from '@/application/services/StorageService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -95,7 +95,7 @@ export function useSupplierAuthHex() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       await authService.login({ email: email.trim(), password });
       return { success: true };
     },
@@ -109,7 +109,7 @@ export function useSupplierAuthHex() {
 
   const signUpMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       await authService.register({ email: email.trim(), password, full_name: email.split('@')[0] } as any);
       return { success: true };
     },
@@ -123,7 +123,7 @@ export function useSupplierAuthHex() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       await authService.logout();
     },
     onSuccess: () => {
@@ -148,7 +148,7 @@ export function useSupplierProfileHex(userId?: string | null) {
     queryKey: ['supplier-profile', userId],
     queryFn: async (): Promise<Supplier | null> => {
       if (!userId) return null;
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       // Search for supplier linked to this user
       const result = await supplierService.searchSuppliers({ searchTerm: userId, limit: 1 });
       if (result.suppliers.length > 0) {
@@ -167,7 +167,7 @@ export function useSupplierDocumentsHex(userId?: string | null) {
     queryKey: ['supplier-documents', userId],
     queryFn: async (): Promise<SupplierDocument[]> => {
       if (!userId) return [];
-      const documentService = new DocumentService();
+      const documentService = getDocumentService();
       const docs = await documentService.getAllDocuments();
       return (docs || []).filter((d: any) => d.uploadedBy === userId) as unknown as SupplierDocument[];
     },
@@ -208,7 +208,7 @@ export function useSupplierNotificationsHex(supplierId?: string | null) {
     queryKey: ['supplier-notifications', supplierId],
     queryFn: async (): Promise<SupplierNotification[]> => {
       if (!supplierId) return [];
-      const notifService = new NotificationService();
+      const notifService = getNotificationService();
       const data = await notifService.getUserNotifications(supplierId);
       return (data || []) as unknown as SupplierNotification[];
     },
@@ -257,12 +257,12 @@ export function useUploadSupplierDocumentHex() {
       const fileName = `${crypto.randomUUID()}.${file.name.split('.').pop()}`;
       const filePath = `supplier-documents/${userId}/${fileName}`;
 
-      const storageService = new StorageService();
+      const storageService = getStorageService();
       await storageService.uploadFile({ bucket: 'supplier-documents', path: filePath, file });
 
       const publicUrl = storageService.getPublicUrl({ bucket: 'supplier-documents', path: filePath });
 
-      const documentService = new DocumentService();
+      const documentService = getDocumentService();
       await documentService.createDocument({
         title,
         description: description || '',
@@ -321,9 +321,9 @@ export function useMarkTaskCompletedHex() {
 
       const task = await taskRepo.findById(taskId);
 
-      const notifService = new NotificationService();
+      const notifService = getNotificationService();
       await notifService.createNotification({
-        recipient_id: projectManagerId,
+        recipientId: projectManagerId,
         title: "Tâche complétée",
         message: `La tâche "${(task as any)?.title}" a été marquée comme complétée par le fournisseur.`,
         type: 'info',

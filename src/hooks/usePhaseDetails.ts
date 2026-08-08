@@ -17,8 +17,8 @@
 import { DocumentService } from '@/application/services/DocumentService';
 import { EmployeeService } from '@/application/services/EmployeeService';
 import { InspectionService } from '@/application/services/InspectionService';
-import { MaterialService } from '@/application/services/MaterialService';
-import { PaymentService } from '@/application/services/PaymentService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { PhaseService } from '@/application/services/PhaseService';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 import { ReferentialService } from '@/application/services/ReferentialService';
@@ -112,13 +112,13 @@ export function usePhaseDetails(phaseId: string | undefined) {
 
       try {
         // Services hexagonaux
-        const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+        const materialService = getMaterialService();
         const taskAssignmentService = new TaskAssignmentService(
           RepositoryFactory.getTaskAssignmentRepository()
         );
         const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
         const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-        const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+        const paymentService = getPaymentService();
         const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
 
         const [

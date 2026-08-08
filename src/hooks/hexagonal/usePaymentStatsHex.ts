@@ -5,6 +5,7 @@
 import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
+import { getPaymentControlService } from '@/application/services/PaymentControlService';
 
 export interface PaymentStats {
   blockedPayments: number;
@@ -15,10 +16,7 @@ export interface PaymentStats {
 
 async function fetchPaymentStats(): Promise<PaymentStats> {
   try {
-    const service = new PaymentControlService(
-      RepositoryFactory.getPaymentRepository(),
-      RepositoryFactory.getNotificationRepository()
-    );
+    const service = getPaymentControlService();
     // Use the dashboard method to derive stats
     const dashboard = await service.getPaymentControlDashboard('system', 'month');
     return {

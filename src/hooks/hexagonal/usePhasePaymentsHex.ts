@@ -2,8 +2,8 @@
  * Hexagonal hooks for Phase Payments management
  */
 
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ export interface PhasePaymentFormData {
 }
 
 export function usePhasePayments(phaseId: string) {
-  const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentService = getPaymentRequestService();
   
   return useQuery({
     queryKey: ['phase-payments', phaseId],
@@ -48,7 +48,7 @@ export function usePhasePayments(phaseId: string) {
 
 export function useAddPhasePayment(phaseId: string, projectId: string) {
   const queryClient = useQueryClient();
-  const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentService = getPaymentRequestService();
 
   return useMutation({
     mutationFn: async (paymentData: PhasePaymentFormData) => {
@@ -72,7 +72,7 @@ export function useAddPhasePayment(phaseId: string, projectId: string) {
 
 export function useDeletePhasePayment(phaseId: string) {
   const queryClient = useQueryClient();
-  const paymentService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentService = getPaymentRequestService();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -89,7 +89,7 @@ export function useDeletePhasePayment(phaseId: string) {
 }
 
 export function useSupplierInfo(supplierId: string | null) {
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
   
   return useQuery({
     queryKey: ['supplier-info', supplierId],

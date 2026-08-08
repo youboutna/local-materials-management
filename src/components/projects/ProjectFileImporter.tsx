@@ -1,4 +1,4 @@
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { ProjectImportExportService } from '@/application/services/ProjectImportExportService';
 import {
   projectImportTemplateService,
@@ -77,7 +77,7 @@ export default function ProjectFileImporter({
   const { toast } = useToast();
   const { t } = useLanguage();
   const projectService = useMemo(
-    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    () => getProjectService(),
     [],
   );
   const projectImportService = useMemo(

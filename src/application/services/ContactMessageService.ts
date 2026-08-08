@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Contact Message Application Service
  * Orchestrates contact message business logic and repository interactions
@@ -199,4 +200,12 @@ export class ContactMessageService {
       console.error('Failed to auto-block sender:', error);
     }
   }
+}
+
+let contactMessageServiceInstance: ContactMessageService | null = null;
+export function getContactMessageService(): ContactMessageService {
+  if (!contactMessageServiceInstance) {
+    contactMessageServiceInstance = new ContactMessageService(RepositoryFactory.getContactMessageRepository());
+  }
+  return contactMessageServiceInstance;
 }

@@ -1,5 +1,5 @@
-import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectDTO, ProjectFormDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { CreateProjectDTO, ProjectDTO, ProjectFormDTO } from '@/dtos/entities/ProjectDTO';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useEffect, useState } from 'react';
@@ -27,7 +27,7 @@ const toConstructionPhase = (phase?: string): ConstructionPhase | undefined => {
     : undefined;
 };
 
-const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+const projectService = getProjectService();
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
@@ -70,7 +70,7 @@ export const useProjects = () => {
         updatedAt: new Date().toISOString(),
       };
 
-      const createdDTO = await projectService.createProject(formDTO);
+      const createdDTO = await projectService.createProject(formDTO as unknown as CreateProjectDTO);
       const newProject = createdDTO as unknown as ProjectDTO;
 
       setProjects(prev => [newProject, ...prev]);

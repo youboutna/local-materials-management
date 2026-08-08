@@ -4,10 +4,10 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { DashboardService } from '@/application/services/DashboardService';
+import { DashboardService, getDashboardService} from '@/application/services/DashboardService';
 import { DashboardStats } from '@/dtos/entities/DashboardDTO';
 
-const dashboardService = new DashboardService();
+const dashboardService = getDashboardService();
 
 export interface UseDashboardHexResult {
   stats: DashboardStats | null;

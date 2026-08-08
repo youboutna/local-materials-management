@@ -1,6 +1,6 @@
 // hooks/hexagonal/usePhaseMaterialsHex.ts - Hexagonal hook for phase materials management
 
-import { MaterialService } from '@/application/services/MaterialService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,7 +34,7 @@ export interface AvailableMaterial {
 
 export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   const queryClient = useQueryClient();
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
 
   const loadAvailable = async (): Promise<AvailableMaterial[]> => {
     const materials = await materialService.getAllMaterials();
@@ -197,7 +197,7 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
 };
 
 export function useAvailableMaterials() {
-  const materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+  const materialService = getMaterialService();
 
   return useQuery({
     queryKey: ['available-materials-hex'],

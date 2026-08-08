@@ -4,7 +4,7 @@
  */
 
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { PhaseService } from '@/application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { StepItem } from '@/dtos/types/unified-workflow';
@@ -108,7 +108,7 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
 
   // Initialize services
   const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-  const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+  const paymentService = getPaymentService();
   const phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
 
   // Fetch inspections

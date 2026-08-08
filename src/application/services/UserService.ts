@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * User Service
  * Implements business logic for user and profile management
@@ -140,4 +141,12 @@ export class UserService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
     }
   }
+}
+
+let userServiceInstance: UserService | null = null;
+export function getUserService(): UserService {
+  if (!userServiceInstance) {
+    userServiceInstance = new UserService(RepositoryFactory.getUserRepository());
+  }
+  return userServiceInstance;
 }

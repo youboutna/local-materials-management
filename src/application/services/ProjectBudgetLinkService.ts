@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectBudgetLinkService - Application layer
  * Orchestrates project-budget linkage operations
@@ -101,4 +102,12 @@ export class ProjectBudgetLinkService {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Allocated CP must be non-negative');
     }
   }
+}
+
+let projectBudgetLinkServiceInstance: ProjectBudgetLinkService | null = null;
+export function getProjectBudgetLinkService(): ProjectBudgetLinkService {
+  if (!projectBudgetLinkServiceInstance) {
+    projectBudgetLinkServiceInstance = new ProjectBudgetLinkService(RepositoryFactory.getProjectBudgetLinkRepository());
+  }
+  return projectBudgetLinkServiceInstance;
 }

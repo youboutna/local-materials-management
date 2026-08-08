@@ -9,13 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
-export type ProjectStatus =
-  | "en cours"
-  | "terminé"
-  | "en attente"
-  | "en inspection"
-  | "suspendu"
-  | "annulé";
+export type { ProjectStatus } from "@/dtos/entities/ProjectAggregateDTO";
 
 interface ProjectMapProps {
   projects?: ProjectDTO[];

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ReportingService } from '@/application/services/ReportingService';
+import { ReportingService, getReportingService} from '@/application/services/ReportingService';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectDetailDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
@@ -76,7 +76,7 @@ export function CompactProjectReportGenerator({
   const isSingleProject = !projects && project;
 
   // Create service instance
-  const reportingService = useMemo(() => new ReportingService(), []);
+  const reportingService = useMemo(() => getReportingService(), []);
 
   useEffect(() => {
     const loadData = async () => {

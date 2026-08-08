@@ -2,7 +2,7 @@
  * Hexagonal Hook for Payment Workflows
  */
 
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useState } from 'react';
@@ -35,7 +35,7 @@ export function usePaymentWorkflowHex(): UsePaymentWorkflowHexResult {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentRequestService = getPaymentRequestService();
 
   const createRequest = useCallback(async (input: PaymentRequestInput) => {
     setLoading(true);

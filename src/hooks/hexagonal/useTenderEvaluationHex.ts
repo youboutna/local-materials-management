@@ -1,4 +1,4 @@
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -25,7 +25,7 @@ export interface TenderSubmission {
 export function useTenderEvaluationHex(tenderId: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   // Fetch tender submissions
   const submissionsQuery = useQuery({

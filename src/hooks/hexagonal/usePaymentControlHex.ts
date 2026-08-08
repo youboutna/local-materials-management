@@ -9,6 +9,7 @@ import {
 } from '@/dtos/entities/MonitoringDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getPaymentControlService } from '@/application/services/PaymentControlService';
 
 export interface UsePaymentControlHexResult {
   dashboard: PaymentControlDashboardDTO | null;
@@ -23,10 +24,7 @@ export interface UsePaymentControlHexResult {
 export function usePaymentControlHex(userId: string, period: 'week' | 'month' | 'quarter' | 'year' = 'month'): UsePaymentControlHexResult {
   const queryClient = useQueryClient();
 
-  const paymentControlService = new PaymentControlService(
-    RepositoryFactory.getPaymentRepository(),
-    RepositoryFactory.getNotificationRepository()
-  );
+  const paymentControlService = getPaymentControlService();
 
   const {
     data: dashboard,

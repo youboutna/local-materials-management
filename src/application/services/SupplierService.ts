@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Supplier Service
  * Implements business logic for supplier management
@@ -171,4 +172,12 @@ export class SupplierService {
     }
   }
 
+}
+
+let supplierServiceInstance: SupplierService | null = null;
+export function getSupplierService(): SupplierService {
+  if (!supplierServiceInstance) {
+    supplierServiceInstance = new SupplierService(RepositoryFactory.getSupplierRepository());
+  }
+  return supplierServiceInstance;
 }

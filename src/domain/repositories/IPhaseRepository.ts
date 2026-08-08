@@ -27,6 +27,11 @@ export interface IPhaseRepository {
   // ============= CRUD Operations =============
 
   /**
+   * Insert a phase_employees row (workforce plan entry).
+   */
+  insertPhaseEmployee(row: Record<string, unknown>): Promise<void>;
+
+  /**
    * Find phase by ID
    */
   findById(id: string): Promise<Phase | null>;

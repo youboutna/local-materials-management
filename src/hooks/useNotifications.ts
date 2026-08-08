@@ -33,13 +33,13 @@ export const useNotifications = (userId?: string) => {
         const notifications = await notificationService.getUserNotifications(actualUserId);
         return notifications.map((notification: NotificationDTO) => ({
           id: notification.id,
-          recipient_id: notification.recipient_id,
+          recipient_id: notification.recipientId,
           title: notification.title,
           message: notification.message,
           type: notification.type,
           related_id: undefined, // NotificationDTO doesn't have related_id, set to undefined
           read: notification.read,
-          created_at: notification.created_at,
+          created_at: notification.createdAt,
           metadata: notification.metadata || {}
         }));
       } catch (err) {
@@ -87,11 +87,11 @@ export const useNotifications = (userId?: string) => {
   ) => {
     try {
       await notificationService.createNotification({
-        recipient_id: recipientId,
+        recipientId,
         title,
         message,
         type,
-        related_id: relatedId,
+        relatedId,
         metadata: metadata || {},
       });
       

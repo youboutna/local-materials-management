@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ReportingService } from '@/application/services/ReportingService';
+import { ReportingService, getReportingService} from '@/application/services/ReportingService';
 import { DeviationEngine } from '@/application/services/DeviationEngine';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
@@ -64,7 +64,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   });
 
   // Create ReportingService instance
-  const reportingServiceInstance = useMemo(() => new ReportingService(), []);
+  const reportingServiceInstance = useMemo(() => getReportingService(), []);
 
   // Generate report with profile + sections from referential.
   const generateCompleteReport = async (proj: any, profile: ReportProfile) => {

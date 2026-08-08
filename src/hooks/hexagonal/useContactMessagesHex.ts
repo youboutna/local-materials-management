@@ -2,7 +2,7 @@
  * Hexagonal hooks for contact_messages (messagerie réception)
  * UI -> ContactMessageService -> SupabaseContactMessageAdapter
  */
-import { ContactMessageService } from '@/application/services/ContactMessageService';
+import { ContactMessageService, getContactMessageService} from '@/application/services/ContactMessageService';
 import type {
     ContactMessageFilters,
     CreateContactMessageData,
@@ -12,7 +12,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const getService = () =>
-  new ContactMessageService(RepositoryFactory.getContactMessageRepository());
+  getContactMessageService();
 
 const LIST_KEY = ['contact-messages'] as const;
 const STATS_KEY = ['contact-messages', 'stats'] as const;

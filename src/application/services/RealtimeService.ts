@@ -195,3 +195,11 @@ export class RealtimeService {
     };
   }
 }
+
+let realtimeServiceInstance: RealtimeService | null = null;
+export function getRealtimeService(): RealtimeService {
+  if (!realtimeServiceInstance) {
+    realtimeServiceInstance = new RealtimeService();
+  }
+  return realtimeServiceInstance;
+}

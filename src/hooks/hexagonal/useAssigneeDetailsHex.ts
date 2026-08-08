@@ -3,8 +3,8 @@
  * Fetches assignee details (employees, suppliers, profiles) via services
  */
 import { EmployeeService } from '@/application/services/EmployeeService';
-import { SupplierService } from '@/application/services/SupplierService';
-import { UserService } from '@/application/services/UserService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
+import { UserService, getUserService} from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
@@ -21,7 +21,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
   }
 
   const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
 
   // Try employees first
   const employeesResult = await employeeService.searchEmployees({});
@@ -47,7 +47,7 @@ async function fetchAssigneeDetails(assigneeId: string): Promise<AssigneeDetails
 
   // Try profiles (authenticated users) via UserService
   try {
-    const userService = new UserService(RepositoryFactory.getUserRepository());
+    const userService = getUserService();
     const profile = await userService.getUserById(assigneeId);
     if (profile) {
       return {

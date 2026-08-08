@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * RiskService - Service hexagonal pour la gestion des risques
  * Respecte l'architecture hexagonale : Service → Repository → Adapter → Supabase
@@ -123,4 +124,12 @@ export class RiskService {
       throw new Error('Impact must be between 0 and 1');
     }
   }
+}
+
+let riskServiceInstance: RiskService | null = null;
+export function getRiskService(): RiskService {
+  if (!riskServiceInstance) {
+    riskServiceInstance = new RiskService(RepositoryFactory.getRiskRepository());
+  }
+  return riskServiceInstance;
 }

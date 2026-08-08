@@ -250,3 +250,11 @@ export class InspectionService {
     }
   }
 }
+
+let inspectionServiceInstance: InspectionService | null = null;
+export function getInspectionService(): InspectionService {
+  if (!inspectionServiceInstance) {
+    inspectionServiceInstance = new InspectionService();
+  }
+  return inspectionServiceInstance;
+}

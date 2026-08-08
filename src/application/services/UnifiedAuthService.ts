@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Unified Auth Service
  * Implements unified authentication logic for multiple providers
@@ -12,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 import { OAuthProviderService } from './OAuthProviderService';
 import type { OAuthProvider } from '@/domain/repositories/IOAuthProviderRepository';
+import { getOAuthProviderService } from '@/application/services/OAuthProviderService';
 import { 
   IAuthRepository, 
   AuthUser, 
@@ -54,7 +56,7 @@ export class UnifiedAuthService {
   private oAuthService: OAuthProviderService;
 
   constructor(private authRepository: IAuthRepository) {
-    this.oAuthService = new OAuthProviderService();
+    this.oAuthService = getOAuthProviderService();
   }
 
   /**
@@ -411,4 +413,12 @@ export class UnifiedAuthService {
       updatedAt: profile?.updated_at
     };
   }
+}
+
+let unifiedAuthServiceInstance: UnifiedAuthService | null = null;
+export function getUnifiedAuthService(): UnifiedAuthService {
+  if (!unifiedAuthServiceInstance) {
+    unifiedAuthServiceInstance = new UnifiedAuthService(RepositoryFactory.getAuthRepository());
+  }
+  return unifiedAuthServiceInstance;
 }

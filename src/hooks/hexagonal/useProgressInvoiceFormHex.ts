@@ -1,4 +1,4 @@
-import { StorageService } from '@/application/services/StorageService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -95,7 +95,7 @@ export const useProgressInvoiceFormHex = (projectId?: string) => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `progress_invoices/${fileName}`;
-      const storageService = new StorageService();
+      const storageService = getStorageService();
       const result = await storageService.uploadFile({ bucket: 'documents', path: filePath, file });
       return result.publicUrl;
     },

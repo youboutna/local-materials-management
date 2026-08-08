@@ -3,6 +3,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError } from '@/utils/errorHandling';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BankGuaranteeService } from '../BankGuaranteeService';
+import { getBankGuaranteeService } from '@/application/services/BankGuaranteeService';
 
 describe('BankGuaranteeService', () => {
   let service: BankGuaranteeService;
@@ -17,7 +18,7 @@ describe('BankGuaranteeService', () => {
   
   beforeEach(() => {
     vi.spyOn(RepositoryFactory, 'getBankGuaranteeRepository').mockReturnValue(mockRepo as any);
-    service = new BankGuaranteeService();
+    service = getBankGuaranteeService();
   });
 
   describe('createBankGuarantee', () => {

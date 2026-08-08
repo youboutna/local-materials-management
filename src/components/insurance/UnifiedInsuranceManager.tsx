@@ -1,5 +1,5 @@
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
-import { InsuranceService } from '@/application/services/InsuranceService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -169,7 +169,7 @@ const UnifiedInsuranceManager = () => {
   const loadInsuranceDataCallback = useCallback(async () => {
     try {
       setLoading(true);
-      const insuranceService = new InsuranceService();
+      const insuranceService = getInsuranceService();
       const expiringAlerts = await insuranceService.detectExpiringInsurance?.() || [];
       setAlerts(expiringAlerts);
     } catch (error) {
@@ -190,7 +190,7 @@ const UnifiedInsuranceManager = () => {
       console.log('Loading insurance certificates...');
       
       // Use InsuranceService instance instead of static call
-      const insuranceService = new InsuranceService();
+      const insuranceService = getInsuranceService();
       const data = await insuranceService.getInsuranceCertificates();
 
       console.log('Raw certificates data:', data);

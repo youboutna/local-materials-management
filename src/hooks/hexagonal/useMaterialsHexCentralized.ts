@@ -3,7 +3,7 @@
  * Uses MaterialService with domain entities
  */
 
-import { MaterialService } from '@/application/services/MaterialService';
+import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { CreateMaterialDTO, UpdateMaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,9 +12,7 @@ import { toast } from 'sonner';
 export function useMaterials() {
   const queryClient = useQueryClient();
   
-  const materialService = new MaterialService(
-    RepositoryFactory.getMaterialRepository()
-  );
+  const materialService = getMaterialService();
 
   const {
     data: materials = [],
@@ -83,9 +81,7 @@ export function useMaterials() {
 }
 
 export function useMaterialById(id: string) {
-  const materialService = new MaterialService(
-    RepositoryFactory.getMaterialRepository()
-  );
+  const materialService = getMaterialService();
 
   return useQuery({
     queryKey: ['materials', 'id', id],
@@ -98,9 +94,7 @@ export function useMaterialById(id: string) {
 }
 
 export function useMaterialsByCategory(category: string) {
-  const materialService = new MaterialService(
-    RepositoryFactory.getMaterialRepository()
-  );
+  const materialService = getMaterialService();
 
   return useQuery({
     queryKey: ['materials', 'category', category],
@@ -113,9 +107,7 @@ export function useMaterialsByCategory(category: string) {
 }
 
 export function useLowStockMaterials() {
-  const materialService = new MaterialService(
-    RepositoryFactory.getMaterialRepository()
-  );
+  const materialService = getMaterialService();
 
   return useQuery({
     queryKey: ['materials', 'low-stock'],

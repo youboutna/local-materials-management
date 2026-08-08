@@ -13,7 +13,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { AutomaticDecompteCalculator } from './AutomaticDecompteCalculator';
 import { getCheckpointVerificationEngine } from './CheckpointVerificationEngine';
 // Use AutomaticDecompteDTO from WorkflowDTO to avoid legacy imports
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { Milestone } from '@/domain/entities/Milestone';
 import type { CalculatePhaseDecompteRequestDto } from '@/dtos/entities/DecompteDTO';
 import type { AutomaticDecompteDTO } from '@/dtos/entities/WorkflowDTO';
@@ -96,7 +96,7 @@ export class WorkflowOrchestrator {
     this.projectRepository = RepositoryFactory.getProjectRepository();
     this.milestoneRepository = RepositoryFactory.getMilestoneRepository();
     this.phaseRepository = RepositoryFactory.getPhaseRepository();
-    this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = getPaymentService();
   }
 
   /**

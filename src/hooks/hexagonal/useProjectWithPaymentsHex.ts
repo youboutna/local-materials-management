@@ -9,9 +9,9 @@
  *
  * Aucun `supabase.from(...)` ici, aucun import legacy.
  */
-import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import type {
     InspectionStatus,
     InspectionSummaryDTO,
@@ -34,9 +34,9 @@ export function useProjectWithPaymentsHex(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return null;
 
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-      const inspectionService = new InspectionService();
-      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const projectService = getProjectService();
+      const inspectionService = getInspectionService();
+      const paymentService = getPaymentService();
 
       const [project, inspections, payments] = await Promise.all([
         projectService.findById(projectId),

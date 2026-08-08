@@ -262,11 +262,11 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       // Notify contractor if requested
       if (notifyContractor && selectedProject.contractor_contact) {
         await NotificationService.createNotification({
-          recipient_id: selectedProject.contractor_contact,
+          recipientId: selectedProject.contractor_contact,
           title: 'Inspection Programmée',
           message: `Une inspection ${INSPECTION_TYPES.find(t => t.value === inspectionType)?.label} a été programmée pour le projet "${selectedProject.title}" le ${new Date(inspectionDate).toLocaleDateString('fr-FR')}.`,
           type: 'info',
-          related_id: selectedProject.id,
+          relatedId: selectedProject.id,
           metadata: {
             project_id: selectedProject.id,
             inspection_type: inspectionType,

@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
-import { TenderService } from '@/application/services/TenderService';
+import { TenderService, getTenderService} from '@/application/services/TenderService';
 import { TenderTransformer } from '@/dtos/transforms/TenderTransformer';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle, Download, FileText, Lock } from 'lucide-react';
@@ -38,7 +38,7 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
   const { data: tenderDTO, isLoading: tenderLoading } = useQuery({
     queryKey: ['tender-by-secret', payload.tenderId],
     queryFn: async () => {
-      const service = new TenderService();
+      const service = getTenderService();
       const tender = await service.getTenderById({ id: payload.tenderId });
       return tender ? TenderTransformer.toDTO(tender) : null;
     },

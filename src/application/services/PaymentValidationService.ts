@@ -196,3 +196,11 @@ export class PaymentValidationService {
     }
   }
 }
+
+let paymentValidationServiceInstance: PaymentValidationService | null = null;
+export function getPaymentValidationService(): PaymentValidationService {
+  if (!paymentValidationServiceInstance) {
+    paymentValidationServiceInstance = new PaymentValidationService();
+  }
+  return paymentValidationServiceInstance;
+}

@@ -4,8 +4,8 @@
  */
 
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
-import { InsuranceService } from '@/application/services/InsuranceService';
-import { PaymentBlockingService } from '@/application/services/PaymentBlockingService';
+import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
+import { PaymentBlockingService, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -162,7 +162,7 @@ export function usePaymentBlocksHex(projectId?: string) {
     setError(null);
 
     try {
-      const blockingService = new PaymentBlockingService();
+      const blockingService = getPaymentBlockingService();
       const data = await blockingService.getPaymentBlocks(projectId);
       
       setBlocks(data.map(b => ({
@@ -190,7 +190,7 @@ export function usePaymentBlocksHex(projectId?: string) {
 
   const resolveBlock = useCallback(async (blockId: string, resolvedBy: string): Promise<boolean> => {
     try {
-      const blockingService = new PaymentBlockingService();
+      const blockingService = getPaymentBlockingService();
       await blockingService.resolvePaymentBlock({ block_id: blockId, resolution_notes: '', resolved_by: resolvedBy } as any);
       await fetchBlocks();
       return true;
@@ -222,7 +222,7 @@ export function useInsurancesHex(projectId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   const insuranceService = useMemo(() => 
-    new InsuranceService(), 
+    getInsuranceService(), 
     []
   );
 

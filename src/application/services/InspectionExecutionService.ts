@@ -357,3 +357,11 @@ export class InspectionExecutionService {
     return this.addDocument(request);
   }
 }
+
+let inspectionExecutionServiceInstance: InspectionExecutionService | null = null;
+export function getInspectionExecutionService(): InspectionExecutionService {
+  if (!inspectionExecutionServiceInstance) {
+    inspectionExecutionServiceInstance = new InspectionExecutionService();
+  }
+  return inspectionExecutionServiceInstance;
+}

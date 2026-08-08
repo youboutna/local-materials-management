@@ -10,6 +10,9 @@ import { MaterialService } from './MaterialService';
 import { PhaseService } from './PhaseService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
+import { getProjectService } from '@/application/services/ProjectService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getMaterialService } from '@/application/services/MaterialService';
 
 // Local type definitions that match what this service needs
 export interface ConsistencyIssue {
@@ -49,11 +52,11 @@ export class DataConsistencyMonitoringService {
   private supplierService: SupplierService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
-    this.materialService = new MaterialService(RepositoryFactory.getMaterialRepository());
+    this.materialService = getMaterialService();
     this.employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+    this.supplierService = getSupplierService();
   }
 
   /**

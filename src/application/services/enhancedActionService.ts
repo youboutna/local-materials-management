@@ -7,9 +7,9 @@
  */
 
 import { InspectionService } from '@/application/services/InspectionService';
-import { NotificationService } from '@/application/services/NotificationService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import {
     CreateEnhancedActionRequestDTO,
@@ -70,11 +70,11 @@ export class EnhancedActionService {
   private actionRecords: Map<string, EnhancedActionDTO> = new Map();
 
   constructor() {
-    this.notificationService = new NotificationService();
+    this.notificationService = getNotificationService();
     this.inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.taskAssignmentService = new TaskAssignmentService(RepositoryFactory.getTaskAssignmentRepository());
-    this.paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = getPaymentService();
   }
 
   /**
@@ -149,7 +149,7 @@ export class EnhancedActionService {
 
         // Send notification to assignee
         await this.notificationService.createNotification({
-          recipient_id: actionEvent.assigneeId || '',
+          recipientId: actionEvent.assigneeId || '',
           title: 'Nouvelle inspection planifiée',
           message: `Inspection "${actionEvent.title}" planifiée pour ${actionEvent.scheduledFor || 'dès que possible'}`,
           type: 'info',
@@ -175,7 +175,7 @@ export class EnhancedActionService {
     if (actionEvent.assigneeId) {
       // Send call notification
       await this.notificationService.createNotification({
-        recipient_id: actionEvent.assigneeId || '',
+        recipientId: actionEvent.assigneeId || '',
         title: 'Appel planifié',
         message: `Veuillez appeler concernant: ${actionEvent.description}`,
         type: 'info',
@@ -205,7 +205,7 @@ export class EnhancedActionService {
           const hierarchyMessage = `Information hiérarchique: ${actionEvent.description}`;
           
           await this.notificationService.createNotification({
-            recipient_id: project.projectManagerId || '',
+            recipientId: project.projectManagerId || '',
             title: 'Information hiérarchique',
             message: hierarchyMessage,
             type: 'info',
@@ -235,7 +235,7 @@ export class EnhancedActionService {
     
     for (const recipientId of recipients) {
       await this.notificationService.createNotification({
-        recipient_id: recipientId || '',
+        recipientId: recipientId || '',
         title: actionEvent.title,
         message: actionEvent.description,
         type: 'info',
@@ -272,7 +272,7 @@ export class EnhancedActionService {
 
         // Envoyer une notification à l'assigné
         await this.notificationService.createNotification({
-          recipient_id: actionEvent.assigneeId || '',
+          recipientId: actionEvent.assigneeId || '',
           title: 'Nouvelle tâche assignée',
           message: `Tâche "${actionEvent.title}" vous a été assignée`,
           type: 'info',
@@ -313,7 +313,7 @@ export class EnhancedActionService {
         
         // Send payment approval notification
         await this.notificationService.createNotification({
-          recipient_id: actionEvent.assigneeId || '',
+          recipientId: actionEvent.assigneeId || '',
           title: 'Paiement approuvé',
           message: `Paiement "${actionEvent.title}" a été approuvé`,
           type: 'success',
@@ -340,7 +340,7 @@ export class EnhancedActionService {
     
     // Send escalation notification to management
     await this.notificationService.createNotification({
-      recipient_id: actionEvent.assigneeId || '',
+      recipientId: actionEvent.assigneeId || '',
       title: 'Problème escaladé',
       message: `Problème escaladé: ${actionEvent.description}`,
       type: 'warning',
@@ -362,7 +362,7 @@ export class EnhancedActionService {
     console.log(`📄 Requesting document: ${actionEvent.title}`);
     
     await this.notificationService.createNotification({
-      recipient_id: actionEvent.assigneeId || '',
+      recipientId: actionEvent.assigneeId || '',
       title: 'Document demandé',
       message: `Document demandé: ${actionEvent.description}`,
       type: 'info',
@@ -386,7 +386,7 @@ export class EnhancedActionService {
     
     for (const recipientId of recipients) {
       await this.notificationService.createNotification({
-        recipient_id: recipientId || '',
+        recipientId: recipientId || '',
         title: 'Réunion planifiée',
         message: `Réunion "${actionEvent.title}" planifiée pour ${actionEvent.scheduledFor || 'à déterminer'}`,
         type: 'info',

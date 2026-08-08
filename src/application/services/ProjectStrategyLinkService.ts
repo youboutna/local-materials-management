@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectStrategyLinkService - Application layer
  * Orchestrates project-strategy linkage operations
@@ -95,4 +96,12 @@ export class ProjectStrategyLinkService {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Contribution percentage must be between 0 and 100');
     }
   }
+}
+
+let projectStrategyLinkServiceInstance: ProjectStrategyLinkService | null = null;
+export function getProjectStrategyLinkService(): ProjectStrategyLinkService {
+  if (!projectStrategyLinkServiceInstance) {
+    projectStrategyLinkServiceInstance = new ProjectStrategyLinkService(RepositoryFactory.getProjectStrategyLinkRepository());
+  }
+  return projectStrategyLinkServiceInstance;
 }

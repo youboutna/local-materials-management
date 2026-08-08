@@ -760,3 +760,11 @@ export class QuantityTakeoffService {
     }
   }
 }
+
+let quantityTakeoffServiceInstance: QuantityTakeoffService | null = null;
+export function getQuantityTakeoffService(): QuantityTakeoffService {
+  if (!quantityTakeoffServiceInstance) {
+    quantityTakeoffServiceInstance = new QuantityTakeoffService();
+  }
+  return quantityTakeoffServiceInstance;
+}

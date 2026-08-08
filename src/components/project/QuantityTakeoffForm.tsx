@@ -18,6 +18,7 @@ import { BOQ_UNITS, BoqUnit } from '@/config/referentials/boq/units.referential'
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { BoqValidatorService, BoqFieldError } from '@/application/services/boq/BoqValidatorService';
 import { WBS_REFERENTIAL, getPhase } from '@/config/referentials/wbs/wbs.referential';
+import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 
 interface QuantityTakeoffFormProps {
   projectId: string;
@@ -129,7 +130,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
     try {
       setSubmitting(true);
       const { QuantityTakeoffService } = await import('@/application/services/QuantityTakeoffService');
-      const service = new QuantityTakeoffService();
+      const service = getQuantityTakeoffService();
       await service.createQuantityTakeoff({
         project_id: projectId,
         material_id: formData.materialId,

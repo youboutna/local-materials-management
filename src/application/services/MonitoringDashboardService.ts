@@ -501,3 +501,11 @@ export class MonitoringDashboardService {
 
 // Import pour le RepositoryFactory
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+let monitoringDashboardServiceInstance: MonitoringDashboardService | null = null;
+export function getMonitoringDashboardService(): MonitoringDashboardService {
+  if (!monitoringDashboardServiceInstance) {
+    monitoringDashboardServiceInstance = new MonitoringDashboardService(RepositoryFactory.getMonitoringRepository(), RepositoryFactory.getProjectRepository(), RepositoryFactory.getPaymentRepository());
+  }
+  return monitoringDashboardServiceInstance;
+}

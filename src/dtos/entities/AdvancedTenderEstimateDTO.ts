@@ -7,71 +7,71 @@
 export interface TenderEstimateDTO {
   // Core fields
   id: string;
-  tender_id: string;
-  submitted_by: string;
-  submission_date: string;
+  tenderId: string;
+  submittedBy: string;
+  submissionDate: string;
   status: TenderEstimateStatus;
-  total_amount: number;
+  totalAmount: number;
   currency: CurrencyCode;
-  validity_period: number;
+  validityPeriod: number;
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 
   // Computed fields (calculated by domain)
-  display_name: string;
-  formatted_total_amount: string;
-  expiry_date: string;
-  is_expired: boolean;
-  days_until_expiry: number;
-  can_be_edited: boolean;
-  can_be_submitted: boolean;
-  can_be_reviewed: boolean;
-  can_be_accepted: boolean;
-  can_be_rejected: boolean;
-  is_finalized: boolean;
-  
+  displayName: string;
+  formattedTotalAmount: string;
+  expiryDate: string;
+  isExpired: boolean;
+  daysUntilExpiry: number;
+  canBeEdited: boolean;
+  canBeSubmitted: boolean;
+  canBeReviewed: boolean;
+  canBeAccepted: boolean;
+  canBeRejected: boolean;
+  isFinalized: boolean;
+
   // Business metrics
-  risk_assessment: TenderEstimateRiskDTO;
+  riskAssessment: TenderEstimateRiskDTO;
   metrics: TenderEstimateMetricsDTO;
 }
 
 export interface TenderEstimateItemDTO {
   id: string;
-  estimate_id: string;
-  item_code: string;
+  estimateId: string;
+  itemCode: string;
   description: string;
   unit: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  unitPrice: number;
+  totalPrice: number;
   category?: string;
   specifications?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 
   // Computed fields
-  formatted_unit_price: string;
-  formatted_total_price: string;
-  price_per_unit_ratio: number;
+  formattedUnitPrice: string;
+  formattedTotalPrice: string;
+  pricePerUnitRatio: number;
 }
 
 // ============= Request DTOs =============
 export interface CreateTenderEstimateRequestDTO {
-  tender_id: string;
-  submitted_by: string;
+  tenderId: string;
+  submittedBy: string;
   currency: CurrencyCode;
-  validity_period?: number;
+  validityPeriod?: number;
   notes?: string;
   items?: CreateTenderEstimateItemRequestDTO[];
 }
 
 export interface CreateTenderEstimateItemRequestDTO {
-  item_code: string;
+  itemCode: string;
   description: string;
   unit: string;
   quantity: number;
-  unit_price: number;
+  unitPrice: number;
   category?: string;
   specifications?: string;
 }
@@ -79,104 +79,104 @@ export interface CreateTenderEstimateItemRequestDTO {
 export interface UpdateTenderEstimateRequestDTO {
   status?: TenderEstimateStatus;
   currency?: CurrencyCode;
-  validity_period?: number;
+  validityPeriod?: number;
   notes?: string;
-  rejection_reason?: string;
+  rejectionReason?: string;
 }
 
 export interface UpdateTenderEstimateItemRequestDTO {
-  item_code?: string;
+  itemCode?: string;
   description?: string;
   unit?: string;
   quantity?: number;
-  unit_price?: number;
+  unitPrice?: number;
   category?: string;
   specifications?: string;
 }
 
 export interface SubmitTenderEstimateRequestDTO {
-  estimate_id: string;
-  submission_notes?: string;
+  estimateId: string;
+  submissionNotes?: string;
 }
 
 export interface ReviewTenderEstimateRequestDTO {
-  estimate_id: string;
-  review_decision: 'accept' | 'reject';
-  review_notes?: string;
-  reviewer_id: string;
+  estimateId: string;
+  reviewDecision: 'accept' | 'reject';
+  reviewNotes?: string;
+  reviewerId: string;
 }
 
 // ============= Query DTOs =============
 export interface GetTenderEstimatesQueryDTO {
-  tender_id?: string;
-  submitted_by?: string;
+  tenderId?: string;
+  submittedBy?: string;
   status?: TenderEstimateStatus | TenderEstimateStatus[];
-  submission_date_from?: string;
-  submission_date_to?: string;
-  amount_min?: number;
-  amount_max?: number;
+  submissionDateFrom?: string;
+  submissionDateTo?: string;
+  amountMin?: number;
+  amountMax?: number;
   currency?: CurrencyCode;
-  is_expired?: boolean;
-  risk_level?: RiskLevel;
-  include_items?: boolean;
+  isExpired?: boolean;
+  riskLevel?: RiskLevel;
+  includeItems?: boolean;
   page?: number;
   limit?: number;
-  sort_by?: 'submission_date' | 'total_amount' | 'expiry_date' | 'risk_score';
-  sort_order?: 'asc' | 'desc';
+  sortBy?: 'submissionDate' | 'totalAmount' | 'expiryDate' | 'riskScore';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface GetTenderEstimateItemsQueryDTO {
-  estimate_id: string;
+  estimateId: string;
   category?: string;
-  item_code?: string;
-  min_total_price?: number;
-  max_total_price?: number;
-  sort_by?: 'total_price' | 'quantity' | 'unit_price' | 'category';
-  sort_order?: 'asc' | 'desc';
+  itemCode?: string;
+  minTotalPrice?: number;
+  maxTotalPrice?: number;
+  sortBy?: 'totalPrice' | 'quantity' | 'unitPrice' | 'category';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // ============= Response DTOs =============
 export interface TenderEstimateStatsDTO {
-  total_estimates: number;
-  estimates_by_status: Record<TenderEstimateStatus, number>;
-  total_value: number;
-  average_amount: number;
-  median_amount: number;
-  highest_amount: number;
-  lowest_amount: number;
-  estimates_by_currency: Record<CurrencyCode, number>;
-  estimates_by_risk_level: Record<RiskLevel, number>;
-  expired_estimates: number;
-  expiring_soon_estimates: number; // Within 7 days
-  submission_trend: Array<{
+  totalEstimates: number;
+  estimatesByStatus: Record<TenderEstimateStatus, number>;
+  totalValue: number;
+  averageAmount: number;
+  medianAmount: number;
+  highestAmount: number;
+  lowestAmount: number;
+  estimatesByCurrency: Record<CurrencyCode, number>;
+  estimatesByRiskLevel: Record<RiskLevel, number>;
+  expiredEstimates: number;
+  expiringSoonEstimates: number; // Within 7 days
+  submissionTrend: Array<{
     date: string;
     count: number;
-    total_value: number;
+    totalValue: number;
   }>;
 }
 
 export interface TenderEstimateComparisonDTO {
-  estimate_1: TenderEstimateDTO;
-  estimate_2: TenderEstimateDTO;
-  comparison_metrics: {
-    price_difference: number;
-    price_difference_percentage: number;
-    item_count_difference: number;
-    risk_level_difference: number;
-    validity_period_difference: number;
+  estimate1: TenderEstimateDTO;
+  estimate2: TenderEstimateDTO;
+  comparisonMetrics: {
+    priceDifference: number;
+    priceDifferencePercentage: number;
+    itemCountDifference: number;
+    riskLevelDifference: number;
+    validityPeriodDifference: number;
   };
-  item_comparisons: TenderEstimateItemComparisonDTO[];
+  itemComparisons: TenderEstimateItemComparisonDTO[];
   recommendation: string;
 }
 
 export interface TenderEstimateItemComparisonDTO {
-  item_code: string;
+  itemCode: string;
   description: string;
-  estimate_1_item?: TenderEstimateItemDTO;
-  estimate_2_item?: TenderEstimateItemDTO;
-  price_difference: number;
-  price_difference_percentage: number;
-  availability_status: 'both' | 'estimate_1_only' | 'estimate_2_only' | 'neither';
+  estimate1Item?: TenderEstimateItemDTO;
+  estimate2Item?: TenderEstimateItemDTO;
+  priceDifference: number;
+  priceDifferencePercentage: number;
+  availabilityStatus: 'both' | 'estimate1Only' | 'estimate2Only' | 'neither';
 }
 
 // ============= Business Logic DTOs =============
@@ -184,57 +184,57 @@ export interface TenderEstimateRiskDTO {
   level: RiskLevel;
   score: number;
   factors: RiskFactorDTO[];
-  assessment_date: string;
-  recommended_actions: string[];
+  assessmentDate: string;
+  recommendedActions: string[];
 }
 
 export interface RiskFactorDTO {
-  type: 'amount' | 'validity_period' | 'item_count' | 'expiry' | 'currency' | 'market';
+  type: 'amount' | 'validityPeriod' | 'itemCount' | 'expiry' | 'currency' | 'market';
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
-  impact_score: number;
-  mitigation_suggestion: string;
+  impactScore: number;
+  mitigationSuggestion: string;
 }
 
 export interface TenderEstimateMetricsDTO {
-  total_items: number;
-  total_amount: number;
-  average_item_price: number;
-  median_item_price: number;
-  most_expensive_item?: TenderEstimateItemDTO;
-  cheapest_item?: TenderEstimateItemDTO;
-  category_breakdown: CategoryBreakdownDTO[];
-  price_distribution: PriceDistributionDTO;
-  complexity_score: number;
+  totalItems: number;
+  totalAmount: number;
+  averageItemPrice: number;
+  medianItemPrice: number;
+  mostExpensiveItem?: TenderEstimateItemDTO;
+  cheapestItem?: TenderEstimateItemDTO;
+  categoryBreakdown: CategoryBreakdownDTO[];
+  priceDistribution: PriceDistributionDTO;
+  complexityScore: number;
 }
 
 export interface CategoryBreakdownDTO {
   category: string;
-  total_amount: number;
-  item_count: number;
-  percentage_of_total: number;
-  average_item_price: number;
+  totalAmount: number;
+  itemCount: number;
+  percentageOfTotal: number;
+  averageItemPrice: number;
 }
 
 export interface PriceDistributionDTO {
   ranges: Array<{
-    min_price: number;
-    max_price: number;
-    item_count: number;
+    minPrice: number;
+    maxPrice: number;
+    itemCount: number;
     percentage: number;
   }>;
-  standard_deviation: number;
+  standardDeviation: number;
   variance: number;
 }
 
 // ============= Validation DTOs =============
 export interface TenderEstimateValidationDTO {
-  is_valid: boolean;
-  validation_score: number;
+  isValid: boolean;
+  validationScore: number;
   errors: ValidationErrorDTO[];
   warnings: ValidationWarningDTO[];
   recommendations: string[];
-  validation_date: string;
+  validationDate: string;
 }
 
 export interface ValidationErrorDTO {
@@ -242,7 +242,7 @@ export interface ValidationErrorDTO {
   code: string;
   message: string;
   severity: 'error';
-  suggested_fix: string;
+  suggestedFix: string;
 }
 
 export interface ValidationWarningDTO {
@@ -256,40 +256,40 @@ export interface ValidationWarningDTO {
 
 // ============= Workflow DTOs =============
 export interface TenderEstimateWorkflowDTO {
-  estimate_id: string;
-  current_status: TenderEstimateStatus;
-  available_transitions: WorkflowTransitionDTO[];
-  workflow_history: WorkflowHistoryDTO[];
-  next_actions: WorkflowActionDTO[];
-  approval_chain: ApprovalChainDTO[];
+  estimateId: string;
+  currentStatus: TenderEstimateStatus;
+  availableTransitions: WorkflowTransitionDTO[];
+  workflowHistory: WorkflowHistoryDTO[];
+  nextActions: WorkflowActionDTO[];
+  approvalChain: ApprovalChainDTO[];
 }
 
 export interface WorkflowTransitionDTO {
-  from_status: TenderEstimateStatus;
-  to_status: TenderEstimateStatus;
-  is_available: boolean;
+  fromStatus: TenderEstimateStatus;
+  toStatus: TenderEstimateStatus;
+  isAvailable: boolean;
   requirements: string[];
   restrictions: string[];
-  estimated_processing_time: number; // in hours
+  estimatedProcessingTime: number; // in hours
 }
 
 export interface WorkflowHistoryDTO {
   id: string;
   action: string;
-  from_status?: TenderEstimateStatus;
-  to_status?: TenderEstimateStatus;
-  performed_by: string;
-  performed_at: string;
+  fromStatus?: TenderEstimateStatus;
+  toStatus?: TenderEstimateStatus;
+  performedBy: string;
+  performedAt: string;
   notes?: string;
   metadata?: Record<string, any>;
 }
 
 export interface WorkflowActionDTO {
-  action_type: 'submit' | 'review' | 'approve' | 'reject' | 'cancel' | 'resubmit';
+  actionType: 'submit' | 'review' | 'approve' | 'reject' | 'cancel' | 'resubmit';
   description: string;
-  is_available: boolean;
+  isAvailable: boolean;
   requirements: string[];
-  estimated_time: number;
+  estimatedTime: number;
 }
 
 export interface ApprovalChainDTO {
@@ -297,23 +297,23 @@ export interface ApprovalChainDTO {
   role: string;
   name: string;
   status: 'pending' | 'approved' | 'rejected';
-  approved_at?: string;
+  approvedAt?: string;
   notes?: string;
 }
 
 // ============= Analytics DTOs =============
 export interface TenderEstimateAnalyticsDTO {
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  start_date: string;
-  end_date: string;
+  startDate: string;
+  endDate: string;
   metrics: {
-    total_estimates: number;
-    total_value: number;
-    average_value: number;
-    success_rate: number; // accepted / submitted
-    average_processing_time: number; // in hours
-    rejection_rate: number;
-    expiry_rate: number;
+    totalEstimates: number;
+    totalValue: number;
+    averageValue: number;
+    successRate: number; // accepted / submitted
+    averageProcessingTime: number; // in hours
+    rejectionRate: number;
+    expiryRate: number;
   };
   trends: AnalyticsTrendDTO[];
   forecasts: AnalyticsForecastDTO[];
@@ -323,20 +323,20 @@ export interface TenderEstimateAnalyticsDTO {
 export interface AnalyticsTrendDTO {
   metric: string;
   direction: 'up' | 'down' | 'stable';
-  percentage_change: number;
+  percentageChange: number;
   confidence: number;
   factors: string[];
 }
 
 export interface AnalyticsForecastDTO {
   metric: string;
-  predicted_value: number;
-  confidence_interval: {
+  predictedValue: number;
+  confidenceInterval: {
     lower: number;
     upper: number;
   };
-  time_horizon: string;
-  accuracy_score: number;
+  timeHorizon: string;
+  accuracyScore: number;
 }
 
 export interface AnalyticsInsightDTO {
@@ -345,8 +345,8 @@ export interface AnalyticsInsightDTO {
   description: string;
   impact: 'low' | 'medium' | 'high';
   actionable: boolean;
-  suggested_actions: string[];
-  data_points: Array<{
+  suggestedActions: string[];
+  dataPoints: Array<{
     label: string;
     value: number;
     comparison?: number;
@@ -363,26 +363,26 @@ export interface PaginationDTO {
   page: number;
   limit: number;
   total: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface SearchFiltersDTO {
   text?: string;
   filters: Record<string, any>;
-  advanced_filters?: {
-    date_range?: {
+  advancedFilters?: {
+    dateRange?: {
       field: string;
       start: string;
       end: string;
     };
-    number_range?: {
+    numberRange?: {
       field: string;
       min: number;
       max: number;
     };
-    enum_values?: {
+    enumValues?: {
       field: string;
       values: string[];
     };
@@ -391,9 +391,9 @@ export interface SearchFiltersDTO {
 
 export interface ExportOptionsDTO {
   format: 'pdf' | 'excel' | 'csv' | 'json';
-  include_items: boolean;
-  include_metrics: boolean;
-  include_history: boolean;
+  includeItems: boolean;
+  includeMetrics: boolean;
+  includeHistory: boolean;
   language: 'fr' | 'en';
   template?: string;
 }
@@ -402,8 +402,8 @@ export interface ExportOptionsDTO {
 export interface TenderEstimateListResponseDTO {
   estimates: TenderEstimateDTO[];
   pagination: PaginationDTO;
-  filters_applied: SearchFiltersDTO;
-  sort_options: {
+  filtersApplied: SearchFiltersDTO;
+  sortOptions: {
     field: string;
     direction: 'asc' | 'desc';
   };
@@ -424,8 +424,8 @@ export interface TenderEstimateOperationResponseDTO {
   errors?: string[];
   warnings?: string[];
   metadata?: {
-    operation_id: string;
-    processing_time: number;
-    affected_records: number;
+    operationId: string;
+    processingTime: number;
+    affectedRecords: number;
   };
 }

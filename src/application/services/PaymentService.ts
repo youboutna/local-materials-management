@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Payment Service
  * Handles payment operations with hexagonal architecture
@@ -390,4 +391,12 @@ export class PaymentService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active blocked payments');
     }
   }
+}
+
+let paymentServiceInstance: PaymentService | null = null;
+export function getPaymentService(): PaymentService {
+  if (!paymentServiceInstance) {
+    paymentServiceInstance = new PaymentService(RepositoryFactory.getPaymentRepository());
+  }
+  return paymentServiceInstance;
 }

@@ -507,8 +507,9 @@ export class ProjectCalculationService {
       }
       
       const totalBudget = projectDetail.budget || 0;
-      // Simplified cost calculation
-      const totalPayments = totalBudget * 0.3; // Placeholder
+      const paymentRepository = RepositoryFactory.getPaymentRepository();
+      const paymentSummary = await paymentRepository.getPaymentSummary(projectId);
+      const totalPayments = paymentSummary.paid || 0;
       const totalExpenses = totalBudget * 0.05;
       const budgetUtilization = totalBudget > 0 ? ((totalPayments + totalExpenses) / totalBudget) * 100 : 0;
       

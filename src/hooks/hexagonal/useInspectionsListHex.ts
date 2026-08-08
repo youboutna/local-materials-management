@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { InspectionService } from '@/application/services/InspectionService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
 import { StatusType } from '@/components/StatusBadge';
 
 export interface InspectionData {
@@ -21,7 +21,7 @@ export function useInspectionsListHex(projectId: string) {
   return useQuery({
     queryKey: ['inspections-list', projectId],
     queryFn: async () => {
-      const service = new InspectionService();
+      const service = getInspectionService();
       const inspections = await service.getInspectionsByProject(projectId);
       
       return inspections.map((item) => ({

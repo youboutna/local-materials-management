@@ -4,7 +4,7 @@ import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvi
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
@@ -90,7 +90,7 @@ const InsuranceManagementPage = () => {
 
   // Initialize service with useMemo to prevent re-creation
   const projectService = useMemo(() => 
-    new ProjectService(RepositoryFactory.getProjectRepository()), []);
+    getProjectService(), []);
 
   useEffect(() => {
     // Load a default project for monitoring with its hierarchy

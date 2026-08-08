@@ -73,17 +73,13 @@ const RULES = {
   },
   STATIC_MOCK_DATA: {
     id: 'R017', priority: 0, severity: 'WARNING',
-    pattern: /(?:const|let|var)\s+(\w+)\s*[:=]\s*\[[\s\S]*?\]|\s*\{[\s\S]*?\}/g,
+    pattern: /(?:const|let|var)\s+(\w*(?:mock|fake|dummy|sample|stub)\w*)\s*[:=]/gi,
     message: '⚠️ [R017] Possible static mock data in "$1".',
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/', 'src/config/', 'src/domain/', 'src/dtos/'],
     check: (content, varName) => {
-      const mockIndicators = /(?:name|email|id|title|description|status|date|price|amount)/i;
-      const lines = content.split('\n').length;
-      if (lines < 5) return null;
-      if (!mockIndicators.test(varName) && !mockIndicators.test(content)) return null;
-      if (/\bfunction\b|\bimport\b|\brequire\b|\bfetch\b|\baxios\b/.test(content)) return null;
-      return `Possible mock data block (${lines} lines).`;
+      if (!/(mock|fake|dummy|sample|stub)/i.test(varName)) return null;
+      return `Identifier "${varName}" looks like mock data.`;
     }
   },
   LEGACY_SERVICES: {
@@ -103,7 +99,11 @@ const RULES = {
     pattern: /(?:^|\n)\s*export\s+(interface|type)\s+([A-Z]\w*)/gm,
     message: '❌ [R016] Type definition outside domain/dtos.',
     isAutoFixable: false,
-    checkFile: fp => !fp.replace(/\\/g, '/').includes('/domain/') && !fp.replace(/\\/g, '/').includes('/dtos/')
+    exclude: ['src/config/', 'src/integrations/supabase/types.ts'],
+    checkFile: fp => {
+      const n = fp.replace(/\\/g, '/');
+      return !n.includes('/domain/') && !n.includes('/dtos/');
+    }
   },
   TRANSFORM_FUNCTION_LOCATION: {
     id: 'R015', priority: 1, severity: 'ERROR',
@@ -118,8 +118,9 @@ const RULES = {
     message: '⚠️ [R004] Snake_case identifier.',
     isAutoFixable: true,
     fix: m => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()),
-    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/'],
-    skipIfInStringOrComment: true
+    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/', 'src/integrations/supabase/types.ts', 'supabase/'],
+    skipIfInStringOrComment: true,
+    skipIfObjectKey: true
   },
   NON_HEX_HOOK: {
     id: 'R006', priority: 1, severity: 'WARNING',
@@ -240,14 +241,16 @@ const KEYWORD_DOMAIN_HINTS = [
 // ==========================================
 class SmartHexAnalyzer {
   constructor(options = {}) {
-    this.options = { fix: false, cleanMocks: false, dryRun: false, json: false, output: null, moveTypes: false, tsCheck: false, ...options };
+    this.options = { fix: false, cleanMocks: false, dryRun: false, json: false, output: null, moveTypes: false, tsCheck: false, ruleFilter: null, failOn: 'none', ...options };
     this.report = {
       timestamp: new Date().toISOString(),
       stats: { filesScanned: 0, errors: 0, warnings: 0, fixed: 0, mocksRemoved: 0, duplicatesFound: 0, typesMoved: 0 },
       violations: [],
-      movedTypes: []
+      movedTypes: [],
+      duplicates: []
     };
     this.globalTypes = new Map();
+    this.typeDeclarationsByName = new Map();
     this.typesToMove = [];                // types à déplacer depuis des fichiers hors DTO
     this.dtoTypesToReconcile = [];       // types mal placés dans des DTO existants
     this.fileContentsCache = new Map();
@@ -546,20 +549,66 @@ class SmartHexAnalyzer {
     return sq || dq || bt || lc || bc;
   }
 
+  isObjectKeyPosition(content, m) {
+    // Heuristic: treat as an object-literal key (e.g. DB payload construction) when the
+    // matched identifier is immediately followed by a colon (not part of a ternary) and
+    // is preceded (ignoring whitespace) by '{' or ',' — i.e. `{ some_field: value }`.
+    const after = content.slice(m.index + m[0].length);
+    const afterTrim = after.match(/^\s*/)[0].length;
+    if (after[afterTrim] !== ':' ) return false;
+    if (after[afterTrim + 1] === ':') return false; // type annotation `::`
+    const before = content.slice(0, m.index);
+    const beforeTrim = before.match(/\s*$/)[0];
+    const prevChar = before[before.length - beforeTrim.length - 1];
+    return prevChar === '{' || prevChar === ',';
+  }
+
+  isPureReexportLine(content, matchIndex) {
+    const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
+    const lineEnd = content.indexOf('\n', matchIndex);
+    const line = content.slice(lineStart, lineEnd === -1 ? content.length : lineEnd);
+    return /export\s+\*\s+from\s+['"]/.test(line) || /export\s+type\s*{[^}]*}\s*from\s+['"]/.test(line);
+  }
+
   detectTypeDuplicates(filePath, content, fileViolations) {
     const re = /export\s+(?:interface|type)\s+([A-Z]\w+)/g;
     let m;
     while ((m = re.exec(content)) !== null) {
       const name = m[1];
-      const existing = this.globalTypes.get(name);
-      if (existing && existing !== filePath) {
-        fileViolations.push({
+      if (this.isPureReexportLine(content, m.index)) continue;
+      const line = content.substring(0, m.index).split('\n').length;
+      if (!this.typeDeclarationsByName.has(name)) this.typeDeclarationsByName.set(name, []);
+      const locations = this.typeDeclarationsByName.get(name);
+      if (!locations.some(l => l.file === filePath && l.line === line)) {
+        locations.push({ file: filePath, line });
+      }
+      if (!this.globalTypes.has(name)) this.globalTypes.set(name, filePath);
+    }
+  }
+
+  finalizeDuplicateReport() {
+    const duplicateEntries = [];
+    for (const [name, locations] of this.typeDeclarationsByName.entries()) {
+      const uniqueFiles = [...new Set(locations.map(l => l.file))];
+      if (uniqueFiles.length < 2) continue;
+      duplicateEntries.push({
+        typeName: name,
+        locations: locations.map(l => ({ file: path.relative(this.projectRoot, l.file), line: l.line }))
+      });
+    }
+    this.report.duplicates = duplicateEntries;
+    this.report.stats.duplicatesFound = duplicateEntries.length;
+    this.report.stats.errors += duplicateEntries.length;
+    for (const entry of duplicateEntries) {
+      const filesList = entry.locations.map(l => `${l.file}:${l.line}`).join(', ');
+      this.report.violations.push({
+        file: entry.locations[0].file,
+        violations: [{
           ruleId: 'R014', priority: 2, severity: 'ERROR',
-          message: `❌ [R014] Duplicate Type "${name}" (${path.relative(this.projectRoot, existing)})`,
-          line: content.substring(0, m.index).split('\n').length, match: name
-        });
-        this.report.stats.errors++; this.report.stats.duplicatesFound++;
-      } else this.globalTypes.set(name, filePath);
+          message: `❌ [R014] Duplicate Type "${entry.typeName}" found in ${entry.locations.length} locations: ${filesList}`,
+          line: entry.locations[0].line, match: entry.typeName
+        }]
+      });
     }
   }
 
@@ -592,10 +641,13 @@ class SmartHexAnalyzer {
     const isUIFile = filePath.includes(path.join('src', 'pages')) || filePath.includes(path.join('src', 'components')) || filePath.includes('App.tsx');
     const isTsx = filePath.endsWith('.tsx');
     const typeRegions = this.getTypeRegions(content);
-    this.detectTypeDuplicates(filePath, content, fileViolations);
+    if (!this.options.ruleFilter || this.options.ruleFilter.includes('R014')) {
+      this.detectTypeDuplicates(filePath, content, fileViolations);
+    }
     const sortedRules = Object.entries(RULES).sort((a, b) => a[1].priority - b[1].priority);
 
     for (const [key, rule] of sortedRules) {
+      if (this.options.ruleFilter && !this.options.ruleFilter.includes(rule.id)) continue;
       if (rule.target === 'UI' && !isUIFile) continue;
       if (!this.shouldApplyFileRule(filePath, rule)) continue;
 
@@ -635,6 +687,7 @@ class SmartHexAnalyzer {
         if (rule.id === 'R003' || rule.id === 'R008') hasDirectDbCall = true;
         const line = modifiedContent.substring(0, m.index).split('\n').length;
         if (rule.skipIfInStringOrComment && this.isInStringOrComment(modifiedContent, m.index)) continue;
+        if (rule.skipIfObjectKey && this.isObjectKeyPosition(modifiedContent, m)) continue;
 
         if (rule.id === 'R004') {
           const inType = this.isInTypeRegion(m.index, typeRegions);
@@ -660,6 +713,13 @@ class SmartHexAnalyzer {
           fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: 'WARNING', message: '⚠️ [R004] Snake_case identifier – may be DB field.', line, match: m[0] });
           this.report.stats.warnings++;
           continue;
+        }
+
+        if (rule.id === 'R016') {
+          const typeName = m[2];
+          if (typeName && /Props$/.test(typeName)) continue;
+          const usageCount = (modifiedContent.match(new RegExp(`\\b${typeName}\\b`, 'g')) || []).length;
+          if (usageCount <= 1) continue; // local-only type, used nowhere else in the file
         }
 
         let extraMsg = '';
@@ -792,6 +852,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, importPath);
       if (!fileMap.has(dtoFile)) fileMap.set(dtoFile, []);
       fileMap.get(dtoFile).push(t);
+      if (!this.options.dryRun) this.report.movedTypes.push({ type: t.typeName, from: t.filePath, to: dtoFile });
     }
 
     // Écriture / ajout dans les DTO
@@ -847,7 +908,6 @@ class SmartHexAnalyzer {
         if (impPath) this.updateImportsAcrossFiles(t.typeName, impPath, filePath);
       }
     }
-    this.report.stats.typesMoved += this.typesToMove.filter(t => importPaths.has(t.typeName)).length;
   }
 
   getAllExistingDtoFiles() {
@@ -956,6 +1016,7 @@ class SmartHexAnalyzer {
       importPaths.set(t.typeName, `@/dtos/entities/${path.basename(targetFile, '.ts')}`);
       if (!fileMap.has(targetFile)) fileMap.set(targetFile, []);
       fileMap.get(targetFile).push(t);
+      if (!this.options.dryRun) this.report.movedTypes.push({ type: t.typeName, from: t.sourceFile, to: targetFile });
     }
 
     const sourceFileModifications = new Map();
@@ -997,7 +1058,6 @@ class SmartHexAnalyzer {
       }
     }
 
-    this.report.stats.typesMoved += this.dtoTypesToReconcile.filter(t => importPaths.has(t.typeName)).length;
   }
 
   /* ===================================================================
@@ -1087,6 +1147,12 @@ class SmartHexAnalyzer {
       out += '\n🚚 TYPES DÉPLACÉS :\n';
       for (const mt of this.report.movedTypes) out += `- ${mt.type} : ${path.relative(this.projectRoot, mt.from)} → ${path.relative(this.projectRoot, mt.to)}\n`;
     }
+    if (this.report.duplicates && this.report.duplicates.length) {
+      out += '\n🧬 TYPES DUPLIQUÉS :\n';
+      for (const d of this.report.duplicates) {
+        out += `- ${d.typeName} (${d.locations.length} occurrences): ${d.locations.map(l => `${l.file}:${l.line}`).join(', ')}\n`;
+      }
+    }
     return out;
   }
 
@@ -1143,10 +1209,16 @@ class SmartHexAnalyzer {
 
     if (this.options.tsCheck) this.runTypeScriptCheck();
 
+    this.finalizeDuplicateReport();
+    this.report.stats.typesMoved = this.report.movedTypes.length;
+
     if (this.options.json && !this.options.output) console.log(JSON.stringify(this.report, null, 2));
     else console.log(this.generateTextReport());
 
     this.saveReportIfNeeded();
+
+    if (this.options.failOn === 'error' && this.report.stats.errors > 0) process.exitCode = 1;
+    else if (this.options.failOn === 'warning' && (this.report.stats.errors > 0 || this.report.stats.warnings > 0)) process.exitCode = 1;
   }
 }
 
@@ -1159,15 +1231,29 @@ async function askConfirmation(q) {
 }
 
 const args = process.argv.slice(2);
+
+function getArgValue(flag) {
+  const exact = args.indexOf(flag);
+  if (exact !== -1) return args[exact + 1];
+  const prefixed = args.find(a => a.startsWith(`${flag}=`));
+  if (prefixed) return prefixed.slice(flag.length + 1);
+  return null;
+}
+
+const failOnValue = getArgValue('--fail-on');
+const ruleValue = getArgValue('--rule');
+
 const options = {
   fix: args.includes('--fix'),
   cleanMocks: args.includes('--clean-mocks'),
   dryRun: args.includes('--dry-run'),
   json: args.includes('--json'),
-  output: args.includes('--output') ? args[args.indexOf('--output') + 1] : null,
+  output: getArgValue('--output'),
   interactive: args.includes('--interactive'),
   moveTypes: args.includes('--move-types'),
-  tsCheck: args.includes('--ts-check')
+  tsCheck: args.includes('--ts-check'),
+  failOn: ['error', 'warning', 'none'].includes(failOnValue) ? failOnValue : 'none',
+  ruleFilter: ruleValue ? ruleValue.split(',').map(r => r.trim()).filter(Boolean) : null
 };
 
 (async () => {

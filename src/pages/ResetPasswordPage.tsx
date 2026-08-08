@@ -1,4 +1,4 @@
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword, loading } = usePasswordManagement();
-  const authService = new AuthService(RepositoryFactory.getAuthRepository());
+  const authService = getAuthService();
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

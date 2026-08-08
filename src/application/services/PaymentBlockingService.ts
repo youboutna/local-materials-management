@@ -365,3 +365,11 @@ export class PaymentBlockingService {
     }
   }
 }
+
+let paymentBlockingServiceInstance: PaymentBlockingService | null = null;
+export function getPaymentBlockingService(): PaymentBlockingService {
+  if (!paymentBlockingServiceInstance) {
+    paymentBlockingServiceInstance = new PaymentBlockingService();
+  }
+  return paymentBlockingServiceInstance;
+}

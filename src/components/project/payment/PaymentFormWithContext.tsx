@@ -152,11 +152,11 @@ export function PaymentFormWithContext({
         try {
           const paymentMethodLabel = paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod;
           await NotificationService.createNotification({
-            recipient_id: contractorId,
+            recipientId: contractorId,
             title: 'Paiement effectué',
             message: `Un paiement de ${amount.toLocaleString()} MRU a été effectué par ${paymentMethodLabel} - Projet: ${context?.project.title || projectId}`,
             type: 'success',
-            related_id: projectId,
+            relatedId: projectId,
             metadata: {
               project_id: projectId,
               amount: amount,

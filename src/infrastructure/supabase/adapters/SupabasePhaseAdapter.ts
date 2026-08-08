@@ -54,6 +54,11 @@ interface PhaseDB {
 }
 
 export class SupabasePhaseAdapter implements IPhaseRepository {
+  async insertPhaseEmployee(row: Record<string, unknown>): Promise<void> {
+    const { error } = await supabase.from('phase_employees').insert(row as any);
+    if (error) throw error;
+  }
+
   // ============= CRUD Operations =============
 
   async findById(id: string): Promise<Phase | null> {

@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Service: StakeholderService
  * Gère les parties prenantes avec architecture hexagonale
@@ -482,4 +483,12 @@ function isValidStakeholderRole(
   if (!type) return false;
   const validRoles = StakeholderRoles[type] as readonly string[] | undefined;
   return validRoles?.includes(role) ?? false;
+}
+
+let stakeholderServiceInstance: StakeholderService | null = null;
+export function getStakeholderService(): StakeholderService {
+  if (!stakeholderServiceInstance) {
+    stakeholderServiceInstance = new StakeholderService(RepositoryFactory.getStakeholderRepository());
+  }
+  return stakeholderServiceInstance;
 }

@@ -25,6 +25,10 @@ import { MaterialService } from './MaterialService';
 import { PaymentRequestService } from './PaymentRequestService';
 import { ProjectService } from './ProjectService';
 import { SupplierService } from './SupplierService';
+import { getPaymentRequestService } from '@/application/services/PaymentRequestService';
+import { getProjectService } from '@/application/services/ProjectService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getMaterialService } from '@/application/services/MaterialService';
 
 // ============================================================================
 // ERROR CLASS
@@ -64,13 +68,13 @@ export class DashboardService {
     supplierService?: SupplierService
   ) {
     // ✅ Injection via constructeur avec fallback via RepositoryFactory
-    this.projectService = projectService || new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = projectService || getProjectService();
     this.employeeService = employeeService || new EmployeeService(RepositoryFactory.getEmployeeRepository());
-    this.materialService = materialService || new MaterialService(RepositoryFactory.getMaterialRepository());
+    this.materialService = materialService || getMaterialService();
     this.documentService = documentService || new DocumentService(RepositoryFactory.getDocumentRepository());
-    this.paymentService = paymentService || new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+    this.paymentService = paymentService || getPaymentRequestService();
     this.inspectionService = inspectionService || new InspectionService(RepositoryFactory.getInspectionRepository());
-    this.supplierService = supplierService || new SupplierService(RepositoryFactory.getSupplierRepository());
+    this.supplierService = supplierService || getSupplierService();
   }
 
   // ============================================================================
@@ -82,13 +86,13 @@ export class DashboardService {
    */
   static default(): DashboardService {
     return new DashboardService(
-      new ProjectService(RepositoryFactory.getProjectRepository()),
+      getProjectService(),
       new EmployeeService(RepositoryFactory.getEmployeeRepository()),
-      new MaterialService(RepositoryFactory.getMaterialRepository()),
+      getMaterialService(),
       new DocumentService(RepositoryFactory.getDocumentRepository()),
-      new PaymentRequestService(RepositoryFactory.getPaymentRepository()),
+      getPaymentRequestService(),
       new InspectionService(RepositoryFactory.getInspectionRepository()),
-      new SupplierService(RepositoryFactory.getSupplierRepository())
+      getSupplierService()
     );
   }
 
@@ -544,4 +548,12 @@ export class DashboardService {
     const acknowledgedAlerts = alerts.filter(a => a.status === 'acknowledged' || a.status === 'resolved').length;
     return Math.round((acknowledgedAlerts / alerts.length) * 100);
   }
+}
+
+let dashboardServiceInstance: DashboardService | null = null;
+export function getDashboardService(): DashboardService {
+  if (!dashboardServiceInstance) {
+    dashboardServiceInstance = new DashboardService();
+  }
+  return dashboardServiceInstance;
 }

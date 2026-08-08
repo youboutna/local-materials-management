@@ -22,7 +22,7 @@ import {
 
 // Import services (application layer)
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
-import { LocationService } from '@/application/services/LocationService';
+import { LocationService, getLocationService} from '@/application/services/LocationService';
 
 // Import repository factory for dependency injection
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -89,7 +89,7 @@ interface UseLocationHexResult {
 export function useLocationHex(): UseLocationHexResult {
   // Memoize services to prevent recreation on every render
   const locationService = useMemo(() => 
-    new LocationService(RepositoryFactory.getLocationRepository()), 
+    getLocationService(), 
     []
   );
 

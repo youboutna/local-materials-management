@@ -75,8 +75,7 @@ import {
   CreatePaymentBlockRequestDto, 
   ResolvePaymentBlockRequestDto, 
   GetPaymentBlockStatsRequestDto, 
-  PaymentEligibilityValidationDto 
-} from '@/application/services/PaymentBlockingService';
+  PaymentEligibilityValidationDto, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
 import ProjectSelector from "@/components/selectors/ProjectSelector";
 import SupplierSelector from "@/components/suppliers/SupplierSelector";
 import UserSelector from "@/components/selectors/UserSelector";
@@ -176,7 +175,7 @@ const EnhancedPaymentBlockingInterface = () => {
   ];
 
   // Payment blocking service - using static methods
-  // const paymentBlockingService = new PaymentBlockingService();
+  // const paymentBlockingService = getPaymentBlockingService();
 
   const onValidatePayment = async (
     values: z.infer<typeof paymentFormSchema>
@@ -184,7 +183,7 @@ const EnhancedPaymentBlockingInterface = () => {
     try {
       setLoading(true);
       // Use PaymentBlockingService to validate payment eligibility
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const eligibilityResult = await service.validatePaymentEligibility(values.projectId);
       
       // Transform to local PaymentValidationResult format
@@ -234,7 +233,7 @@ const EnhancedPaymentBlockingInterface = () => {
     try {
       setLoading(true);
       // Use PaymentBlockingService to process payment
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const result = await service.processPayment(values.projectId);
 
       if (result.success) {
@@ -356,7 +355,7 @@ const EnhancedPaymentBlockingInterface = () => {
       }
 
       // Use PaymentBlockingService to create payment control action
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       // Note: createPaymentControlAction may not exist as a method, skipping for now
 
       toast({

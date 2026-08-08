@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 // Import DTOs and services for hexagonal architecture
 import { BankGuaranteeService } from "@/application/services/BankGuaranteeService";
-import { ComplianceService } from "@/application/services/ComplianceService";
+import { ComplianceService, getComplianceService} from "@/application/services/ComplianceService";
 import { DocumentService } from "@/application/services/DocumentService";
 import { InsuranceService } from "@/application/services/InsuranceService";
 import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";
@@ -44,7 +44,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const { toast } = useToast();
   
   // Initialize services with proper hexagonal architecture
-  const complianceService = useMemo(() => new ComplianceService(RepositoryFactory.getComplianceRepository()), []);
+  const complianceService = useMemo(() => getComplianceService(), []);
   const bankGuaranteeService = useMemo(() => new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository()), []);
   const insuranceService = useMemo(() => new InsuranceService(RepositoryFactory.getInsuranceRepository()), []);
   const documentService = useMemo(() => new DocumentService(RepositoryFactory.getDocumentRepository()), []);

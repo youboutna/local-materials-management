@@ -4,7 +4,7 @@ import { usePhaseWorkflow } from '@/hooks/usePhaseWorkflow';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { StorageFactory } from '@/application/services/StorageFactory';
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { DocumentType } from '@/domain/entities/Document';
 import type { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 type CreateDocumentRequestDto = CreateDocumentDTO;
@@ -134,7 +134,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
         if (uploadRes.success) {
           const publicUrl = uploadRes.url || '';
           try {
-             const documentService = new DocumentService();
+             const documentService = getDocumentService();
              const docRecord = await documentService.createDocument({
                title: `PV - ${rawPhaseData.phase_name}`,
                name: `PV - ${rawPhaseData.phase_name}`,

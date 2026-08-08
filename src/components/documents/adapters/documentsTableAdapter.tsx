@@ -5,6 +5,7 @@
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {
   DocumentFacetDef,
   DocumentFacetOption,
@@ -63,24 +64,17 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
     previewMode = 'proxy',
   } = opts;
 
+  const documentRepository = useMemo(() => RepositoryFactory.getDocumentRepository(), []);
+
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      let q: any = supabase.from('documents').select('*');
-      for (const f of filters) {
-        if (f.column === 'metadata_material_id') {
-          q = q.contains('metadata', { material_id: f.value });
-        } else {
-          q = q.eq(f.column, f.value);
-        }
-      }
-      q = q.order('created_at', { ascending: false }).limit(500);
-      const { data, error } = await q;
-      if (error) {
-        console.warn('[documentsTableAdapter] fetch failed', error);
-        return [] as any[];
-      }
-      return (data ?? []) as any[];
+      const mappedFilters = filters.map((f) =>
+        f.column === 'metadata_material_id'
+          ? { column: 'material_id', value: f.value, op: 'contains' as const }
+          : { column: f.column, value: f.value, op: 'eq' as const }
+      );
+      return await documentRepository.findRawByFilters(mappedFilters);
     },
   });
 
@@ -139,14 +133,12 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
       ...insertDefaults,
       ...(input.extras ?? {}),
     };
-    const { error: insErr } = await supabase.from('documents').insert(insertPayload as any);
-    if (insErr) throw insErr;
+    await documentRepository.insertRaw(insertPayload);
     qc.invalidateQueries({ queryKey });
   };
 
   const onDelete = async (item: DocumentItem) => {
-    const { error } = await supabase.from('documents').delete().eq('id', item.id);
-    if (error) throw error;
+    await documentRepository.delete(item.id);
     qc.invalidateQueries({ queryKey });
   };
 

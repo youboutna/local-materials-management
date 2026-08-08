@@ -52,6 +52,8 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
+import { getProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
+import { getProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
 
 export enum WorkflowMode {
   CREATE = 'create',
@@ -867,12 +869,8 @@ export class ProjectWorkflowService {
       import('@/application/services/ProjectBudgetLinkService'),
     ]);
 
-    const strategyService = new ProjectStrategyLinkService(
-      RepositoryFactory.getProjectStrategyLinkRepository()
-    );
-    const budgetService = new ProjectBudgetLinkService(
-      RepositoryFactory.getProjectBudgetLinkRepository()
-    );
+    const strategyService = getProjectStrategyLinkService();
+    const budgetService = getProjectBudgetLinkService();
 
     // --- Strategy links: delete-then-recreate (idempotent) ---
     try {
@@ -1696,4 +1694,12 @@ export function createProjectWorkflowService(
     supplierRepo,
     receptionRepo
   );
+}
+
+let projectWorkflowServiceInstance: ProjectWorkflowService | null = null;
+export function getProjectWorkflowService(): ProjectWorkflowService {
+  if (!projectWorkflowServiceInstance) {
+    projectWorkflowServiceInstance = new ProjectWorkflowService(RepositoryFactory.getProjectRepository(), RepositoryFactory.getPhaseRepository(), RepositoryFactory.getRiskRepository(), RepositoryFactory.getProjectStakeholderRepository());
+  }
+  return projectWorkflowServiceInstance;
 }

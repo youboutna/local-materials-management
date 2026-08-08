@@ -3,10 +3,10 @@
  * Simplified to avoid service method mismatches
  */
 import { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { DocumentService } from '@/application/services/DocumentService';
-import { PaymentRequestService } from '@/application/services/PaymentRequestService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { PaymentRequestService, getPaymentRequestService} from '@/application/services/PaymentRequestService';
 import { StorageService } from '@/application/services/StorageService';
-import { SupplierService } from '@/application/services/SupplierService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,7 +55,7 @@ export const useSupplierPortalAuthHex = () => {
 };
 
 export const useFetchSupplierProfileHex = (user: SupabaseUser | null) => {
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
   
   return useQuery({
     queryKey: ['supplier-portal-profile', user?.id],
@@ -140,7 +140,7 @@ export const useSupplierLogoutHex = () => {
 };
 
 export const useUpdateSupplierProfileHex = () => {
-  const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+  const supplierService = getSupplierService();
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -162,7 +162,7 @@ export const useSupplierDocumentUploadHex = () => {
   
   return useMutation({
     mutationFn: async (data: { title: string; description: string; fileUrl: string; fileSize: number; documentType: string; supplierId: string; }) => {
-      const documentService = new DocumentService();
+      const documentService = getDocumentService();
       await documentService.createDocument({
         title: data.title,
         description: data.description,
@@ -229,7 +229,7 @@ export const useSupplierTasksHex = (supplierId: string) => {
 };
 
 export const useSupplierPortalPaymentRequestsHex = (supplierId: string) => {
-  const paymentRequestService = new PaymentRequestService(RepositoryFactory.getPaymentRepository());
+  const paymentRequestService = getPaymentRequestService();
   
   return useQuery({
     queryKey: ['supplier-payment-requests', supplierId],
@@ -273,7 +273,7 @@ export const useUploadDocumentHex = () => {
 };
 
 export const useSupplierPortalDocumentsHex = (supplierId: string) => {
-  const documentService = new DocumentService();
+  const documentService = getDocumentService();
   
   return useQuery({
     queryKey: ['supplier-portal-documents', supplierId],

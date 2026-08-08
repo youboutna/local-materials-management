@@ -1077,3 +1077,11 @@ export class GeocodingService {
     };
   }
 }
+
+let geocodingServiceInstance: GeocodingService | null = null;
+export function getGeocodingService(): GeocodingService {
+  if (!geocodingServiceInstance) {
+    geocodingServiceInstance = new GeocodingService();
+  }
+  return geocodingServiceInstance;
+}

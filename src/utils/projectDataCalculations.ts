@@ -4,6 +4,7 @@ import { ProjectService } from '../application/services/ProjectService';
 import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { getPhaseService } from '@/application/services/PhaseService';
 
 interface PhaseCostData {
   id: string;
@@ -114,7 +115,7 @@ export class ProjectDataCalculations {
       }
 
       // Get project phases using PhaseService
-      const phaseService = new PhaseService();
+      const phaseService = getPhaseService();
       const phases: PhaseCostData[] = await phaseService.getPhasesByProject(projectId) || [];
 
       // Calculate costs from expenses (payments are not in ProjectDetailDTO, use expenses instead)
@@ -158,7 +159,7 @@ export class ProjectDataCalculations {
   static async calculatePhaseCosts(projectId: string, phaseId: string) {
     try {
       // Get phase details using PhaseService
-      const phaseService = new PhaseService();
+      const phaseService = getPhaseService();
       const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
@@ -237,7 +238,7 @@ export class ProjectDataCalculations {
   static async calculatePhaseResourceUtilization(projectId: string, phaseId: string) {
     try {
       // Get phase details
-      const phaseService = new PhaseService();
+      const phaseService = getPhaseService();
       const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');
@@ -298,7 +299,7 @@ export class ProjectDataCalculations {
   static async calculatePhaseProgressMetrics(phaseId: string) {
     try {
       // Get phase with detailed information using PhaseService
-      const phaseService = new PhaseService();
+      const phaseService = getPhaseService();
       const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
       if (!phase) {
         throw new Error('Phase not found');

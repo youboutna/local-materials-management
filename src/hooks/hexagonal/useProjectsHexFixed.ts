@@ -4,7 +4,7 @@
  * Following hexagonal architecture principles
  */
 
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { CreateProjectDTO, ProjectDTO, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,9 +13,7 @@ import { toast } from 'sonner';
 export function useProjects() {
   const queryClient = useQueryClient();
   
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const projectService = getProjectService();
 
   const {
     data: projects = [],
@@ -83,9 +81,7 @@ export function useProjects() {
 }
 
 export function useProject(id: string) {
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
+  const projectService = getProjectService();
 
   const {
     data: project,

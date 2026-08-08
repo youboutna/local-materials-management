@@ -1,9 +1,9 @@
-import { OrganizationService } from '@/application/services/OrganizationService';
+import { OrganizationService, getOrganizationService} from '@/application/services/OrganizationService';
 import type { CreateOrganizationDTO, UpdateOrganizationDTO } from '@/dtos/entities/OrganizationDTO';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useOrganizations() {
-  const service = new OrganizationService();
+  const service = getOrganizationService();
   const queryClient = useQueryClient();
   const queryKey = ['organizations'];
   const query = useQuery({ queryKey, queryFn: () => service.list() });

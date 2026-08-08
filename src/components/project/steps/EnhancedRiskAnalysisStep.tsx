@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../ui/textarea';
 
 // Import DTOs and services for hexagonal architecture
-import { RiskService } from "@/application/services/RiskService";
+import { RiskService, getRiskService} from "@/application/services/RiskService";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
-import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+import { getEmployeeService } from "@/application/services/EmployeeService";
 
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };
@@ -53,7 +53,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
   const { toast } = useToast();
   
   // Initialize service with hexagonal architecture
-  const riskService = new RiskService(RepositoryFactory.getRiskRepository());
+  const riskService = getRiskService();
   
   const [risks, setRisks] = useState<EnhancedRisk[]>(formData.risks?.map(r => ({
     id: r.id,
@@ -117,19 +117,12 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
   const loadEmployees = async () => {
     try {
-      // In a real implementation, this would use the EmployeeService
-      // const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
-      // const employeesData = await employeeService.getAllEmployees();
-      // setEmployees(employeesData);
-      
-      // Mock data for now
-      setEmployees([
-        { id: '1', name: 'John Doe', role: 'Project Manager' },
-        { id: '2', name: 'Jane Smith', role: 'Engineer' },
-        { id: '3', name: 'Bob Johnson', role: 'Safety Officer' }
-      ]);
+      const employeeService = getEmployeeService();
+      const employeesData = await employeeService.getAllEmployees();
+      setEmployees(employeesData.map(e => ({ id: e.id, name: e.fullName || '', role: e.position || e.role || '' })));
     } catch (error) {
       console.error('Failed to load employees:', error);
+      setEmployees([]);
     }
   };
 

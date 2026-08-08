@@ -5,7 +5,7 @@
  * Following Rule #5: UI Layer Separation with Business Logic in Hooks
  */
 
-import { LocationService } from '@/application/services/LocationService';
+import { LocationService, getLocationService} from '@/application/services/LocationService';
 import { ProjectService } from '@/application/services/ProjectService';
 import { ProjectLocationData } from '@/dtos/entities/ProjectDTO';
 import { LocationDTO } from '@/dtos/shared';
@@ -67,7 +67,7 @@ export function useProjectLocationHex(
 
   // Enhanced location service with project methods
   const enhancedLocationService = useMemo(() => {
-    const service = new LocationService(RepositoryFactory.getLocationRepository());
+    const service = getLocationService();
     return service;
   }, []);
 

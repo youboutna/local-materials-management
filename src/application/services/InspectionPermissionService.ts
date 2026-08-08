@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Inspection Permission Service - Hexagonal Architecture
  * Business logic for inspection permission management
@@ -70,4 +71,12 @@ export class InspectionPermissionService {
       reason: result.reason
     };
   }
+}
+
+let inspectionPermissionServiceInstance: InspectionPermissionService | null = null;
+export function getInspectionPermissionService(): InspectionPermissionService {
+  if (!inspectionPermissionServiceInstance) {
+    inspectionPermissionServiceInstance = new InspectionPermissionService(RepositoryFactory.getInspectionPermissionRepository());
+  }
+  return inspectionPermissionServiceInstance;
 }

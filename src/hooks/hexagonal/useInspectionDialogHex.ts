@@ -6,8 +6,8 @@
  *   UI Component → Transformer → DTO (camelCase) → Service → Adapter → DB
  */
 
-import { InspectionService } from '@/application/services/InspectionService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import type {
     CreateInspectionDTO,
     UpdateProjectStatusDTO,
@@ -25,7 +25,7 @@ export function useCreateInspectionHex() {
     mutationFn: async (dto: CreateInspectionDTO) => {
       // UI DTO → snake_case row (round-trip côté écriture)
       const row = ProjectWithPaymentsTransformer.toSupabaseInsert(dto);
-      const service = new InspectionService();
+      const service = getInspectionService();
       return await service.createInspection({
         projectId: row.project_id,
         date: row.date,
@@ -49,7 +49,7 @@ export function useUpdateProjectStatusHex() {
   return useMutation({
     mutationFn: async (dto: UpdateProjectStatusDTO) => {
       const patch = ProjectWithPaymentsTransformer.toSupabaseStatusUpdate(dto);
-      const service = new ProjectService(RepositoryFactory.getProjectRepository());
+      const service = getProjectService();
       await service.updateProject(dto.projectId, patch as any);
     },
     onSuccess: (_, { projectId }) => {

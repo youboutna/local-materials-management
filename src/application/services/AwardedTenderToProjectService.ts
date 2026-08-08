@@ -165,7 +165,6 @@ export class AwardedTenderToProjectService {
       const lotItems = rawItems.filter((it) => (it.category || '').trim() === lotKey && it.resource_kind);
       for (const it of lotItems) {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
           const row = {
             phase_id: phaseId!,
             employee_name: it.resource_kind === 'internal_qualification'
@@ -180,8 +179,7 @@ export class AwardedTenderToProjectService {
               : it.unit_price ?? null,
             is_primary_supplier: it.resource_kind === 'external_provider',
           };
-          const { error } = await supabase.from('phase_employees').insert(row);
-          if (error) throw error;
+          await phaseRepo.insertPhaseEmployee(row);
         } catch (err) {
           warnings.push(`Plan de charge (${it.item_code}) : ${(err as Error).message}`);
         }

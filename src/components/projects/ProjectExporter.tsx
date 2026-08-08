@@ -1,5 +1,5 @@
 
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ const ProjectExporter = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const projectService = useMemo(
-    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    () => getProjectService(),
     [],
   );
 

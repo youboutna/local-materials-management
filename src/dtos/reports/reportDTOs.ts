@@ -27,14 +27,6 @@ import {
 export type { NotificationMetadata, NotificationType, TaskType, TaskAssignment, Notification, RiskItemDTO };
 
 // Local type definitions for types not in ProjectReportDTO
-export interface CostCalculation {
-  directCosts: number;
-  indirectCosts: number;
-  totalCost: number;
-  contingencyPercentage: number;
-  contingencyAmount: number;
-}
-
 export interface EnhancedPhaseDTO {
   id: string;
   name: string;
@@ -44,14 +36,6 @@ export interface EnhancedPhaseDTO {
   spent: number;
   startDate?: string;
   endDate?: string;
-}
-
-export interface ProjectAnalyticsDTO {
-  projectId: string;
-  totalBudget: number;
-  totalSpent: number;
-  progress: number;
-  taskCompletion: number;
 }
 
 export interface RiskAssessmentDTO {
@@ -175,6 +159,12 @@ export interface ProjectAnalyticsDTO {
   trends?: TrendDataDTO[];
   comparisons?: ComparisonDataDTO;
   filteredData?: any;
+
+  // Merged from legacy duplicate declaration
+  totalBudget?: number;
+  totalSpent?: number;
+  progress?: number;
+  taskCompletion?: number;
 }
 
 export interface ProgressMetricsDTO {
@@ -537,6 +527,12 @@ export interface CostCalculation {
   efficiency: number;
   projectedCompletion: string;
   projectedOverrun: number;
+  // Merged from legacy duplicate declaration
+  directCosts?: number;
+  indirectCosts?: number;
+  totalCost?: number;
+  contingencyPercentage?: number;
+  contingencyAmount?: number;
 }
 
 // Base DTOs pour les rapports

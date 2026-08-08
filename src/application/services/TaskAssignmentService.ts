@@ -217,3 +217,11 @@ export class TaskAssignmentService {
 }
 
 export default TaskAssignmentService;
+
+let taskAssignmentServiceInstance: TaskAssignmentService | null = null;
+export function getTaskAssignmentService(): TaskAssignmentService {
+  if (!taskAssignmentServiceInstance) {
+    taskAssignmentServiceInstance = new TaskAssignmentService();
+  }
+  return taskAssignmentServiceInstance;
+}

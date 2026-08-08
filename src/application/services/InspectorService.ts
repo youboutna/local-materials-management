@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Inspector Service
  * Implements business logic for inspector management and selection
@@ -139,4 +140,12 @@ export class InspectorService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get inspector');
     }
   }
+}
+
+let inspectorServiceInstance: InspectorService | null = null;
+export function getInspectorService(): InspectorService {
+  if (!inspectorServiceInstance) {
+    inspectorServiceInstance = new InspectorService(RepositoryFactory.getEmployeeRepository(), RepositoryFactory.getSupplierRepository(), RepositoryFactory.getProjectStakeholderRepository());
+  }
+  return inspectorServiceInstance;
 }

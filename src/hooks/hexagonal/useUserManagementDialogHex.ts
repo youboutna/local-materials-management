@@ -2,8 +2,8 @@
  * Hexagonal hook for User Management Dialog
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { UserService } from '@/application/services/UserService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { UserService, getUserService} from '@/application/services/UserService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -27,7 +27,7 @@ export function useCreateUserHex() {
 
   return useMutation({
     mutationFn: async (data: CreateUserData) => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const result = await authService.register({
         email: data.email,
         password: data.password,
@@ -39,7 +39,7 @@ export function useCreateUserHex() {
       
       // Update profile with additional data
       if (result.id) {
-        const userService = new UserService(RepositoryFactory.getUserRepository());
+        const userService = getUserService();
         await userService.updateProfile(result.id, {
           fullName: data.full_name,
           phone: data.phone,
@@ -59,7 +59,7 @@ export function useUpdateUserProfileHex() {
 
   return useMutation({
     mutationFn: async (data: UpdateUserData) => {
-      const userService = new UserService(RepositoryFactory.getUserRepository());
+      const userService = getUserService();
       await userService.updateProfile(data.userId, {
         fullName: data.full_name,
         phone: data.phone,

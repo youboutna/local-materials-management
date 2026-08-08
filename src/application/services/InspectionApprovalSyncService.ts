@@ -13,6 +13,7 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { BankGuaranteeService } from './BankGuaranteeService';
+import { getBankGuaranteeService } from '@/application/services/BankGuaranteeService';
 
 export interface InspectionApprovalContext {
   inspectionId: string;
@@ -82,7 +83,7 @@ export class InspectionApprovalSyncService {
     private bankGuaranteeRepository: IBankGuaranteeRepository = RepositoryFactory.getBankGuaranteeRepository(),
     private paymentRepository: IPaymentRepository = RepositoryFactory.getPaymentRepository()
   ) {
-    this.bankGuaranteeService = new BankGuaranteeService();
+    this.bankGuaranteeService = getBankGuaranteeService();
   }
 
   async synchronizeOnApproval(context: InspectionApprovalContext): Promise<SyncResult> {
@@ -244,4 +245,12 @@ export class InspectionApprovalSyncService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to calculate payment amount');
     }
   }
+}
+
+let inspectionApprovalSyncServiceInstance: InspectionApprovalSyncService | null = null;
+export function getInspectionApprovalSyncService(): InspectionApprovalSyncService {
+  if (!inspectionApprovalSyncServiceInstance) {
+    inspectionApprovalSyncServiceInstance = new InspectionApprovalSyncService();
+  }
+  return inspectionApprovalSyncServiceInstance;
 }

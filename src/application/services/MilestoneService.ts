@@ -246,10 +246,15 @@ export class MilestoneService {
    */
   private async getDeliverablesProgress(milestoneId: string): Promise<number> {
     try {
-      // TODO: Implement proper deliverable tracking when repository supports it
-      // For now, return default progress as deliverables are not linked to milestones
-       // // console.log(`Deliverables progress for milestone ${milestoneId}: Not implemented, returning 0`);
-      return 0;
+      // Deliverables are stored as free-text labels on the milestone itself;
+      // there is no dedicated deliverable-completion table/column to source
+      // a real completion percentage from, so we approximate using the
+      // milestone's own status/progress instead of always returning a stub.
+      const milestone = await this.milestoneRepository.findById(milestoneId);
+      if (!milestone) return 0;
+      if (milestone.status === 'completed') return 100;
+      if (!milestone.deliverables || milestone.deliverables.length === 0) return 0;
+      return milestone.status === 'in_progress' ? 50 : 0;
     } catch (error) {
       console.error('MilestoneService.getDeliverablesProgress failed:', error);
       return 0;
@@ -261,10 +266,20 @@ export class MilestoneService {
    */
   private async getInspectionsProgress(milestoneId: string): Promise<number> {
     try {
-      // TODO: Implement proper inspection tracking when repository supports it
-      // For now, return default progress as inspections are not linked to milestones
-       // // console.log(`Inspections progress for milestone ${milestoneId}: Not implemented, returning 0`);
-      return 0;
+      // Inspections are not linked to milestones by ID in the schema (they
+      // are linked to projects/phases/steps), so there is no direct query
+      // to source a per-milestone inspection completion rate from. We fall
+      // back to the project's overall inspection completion rate when the
+      // milestone belongs to a project, which is the closest real signal
+      // available without inventing a milestone_id column on inspections.
+      const milestone = await this.milestoneRepository.findById(milestoneId);
+      if (!milestone?.projectId) return 0;
+
+      const inspections = await this.inspectionRepository.findByProjectId(milestone.projectId);
+      if (!inspections || inspections.length === 0) return 0;
+
+      const completed = inspections.filter(i => String(i.status) === 'completed' || String(i.status) === 'approved').length;
+      return Math.round((completed / inspections.length) * 100);
     } catch (error) {
       console.error('MilestoneService.getInspectionsProgress failed:', error);
       return 0;
@@ -1225,8 +1240,8 @@ export class MilestoneService {
   async deleteTemplateMilestones(phaseId: string): Promise<void> {
     try {
       // Get all milestones for this phase and delete them
-      console.log(`Template milestones deletion for phase ${phaseId} - not fully implemented`);
-      // TODO: Implement actual deletion logic
+      const milestones = await this.milestoneRepository.findByPhaseId(phaseId);
+      await Promise.all(milestones.map(m => this.milestoneRepository.delete(m.id)));
     } catch (error) {
       console.error('MilestoneService.deleteTemplateMilestones failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete template milestones');

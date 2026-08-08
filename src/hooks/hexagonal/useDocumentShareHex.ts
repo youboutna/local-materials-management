@@ -3,7 +3,7 @@
  * Uses DocumentService instead of direct Supabase access
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -45,7 +45,7 @@ export function useShareDocuments(tenderId: string) {
         throw new Error('Aucun document sélectionné');
       }
 
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const currentUser = await authService.getCurrentUser();
       const docRepo = RepositoryFactory.getDocumentRepository();
       

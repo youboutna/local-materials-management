@@ -6,7 +6,7 @@
  * TODO: Replace direct Supabase calls with RepositoryFactory pattern
  */
 
-import { NotificationService } from '@/application/services/NotificationService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
 import {
     DatabaseMetricsDTO,
     PerformanceAlertDTO,
@@ -74,7 +74,7 @@ export class PerformanceMonitoringService {
   private monitoringRecords: Map<string, PerformanceMonitoringRecord> = new Map();
 
   constructor() {
-    this.notificationService = new NotificationService();
+    this.notificationService = getNotificationService();
   }
 
   /**
@@ -516,7 +516,7 @@ export class PerformanceMonitoringService {
   private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: 'system', // TODO: Get actual recipient based on project
+        recipientId: 'system', // TODO: Get actual recipient based on project
         title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,
         message: alert.message,
         type: 'system',

@@ -10,6 +10,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import { getSupplierService } from '@/application/services/SupplierService';
 
 interface PhaseEmployeesProps {
   phaseId: string;
@@ -63,7 +64,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     queryKey: ['suppliers'],
     queryFn: async () => {
       const { SupplierService } = await import('@/application/services/SupplierService');
-      const supplierService = new SupplierService(RepositoryFactory.getSupplierRepository());
+      const supplierService = getSupplierService();
       const result = await supplierService.searchSuppliers({ isActive: true });
       // Map to UI compatible format with dual-casing
       return result.suppliers.map((s: any) => ({

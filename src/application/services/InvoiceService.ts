@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * InvoiceService - Hexagonal service for invoice operations
  * Handles supplier invoice data through proper architecture layers
@@ -258,4 +259,12 @@ export class InvoiceService {
                        entity.status === 'processing' ? 'processing' : 'completed'
     };
   }
+}
+
+let invoiceServiceInstance: InvoiceService | null = null;
+export function getInvoiceService(): InvoiceService {
+  if (!invoiceServiceInstance) {
+    invoiceServiceInstance = new InvoiceService(RepositoryFactory.getParsedInvoiceRepository());
+  }
+  return invoiceServiceInstance;
 }

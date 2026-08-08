@@ -947,3 +947,11 @@ export class EnhancedValidationService {
     }
   }
 }
+
+let enhancedValidationServiceInstance: EnhancedValidationService | null = null;
+export function getEnhancedValidationService(): EnhancedValidationService {
+  if (!enhancedValidationServiceInstance) {
+    enhancedValidationServiceInstance = new EnhancedValidationService();
+  }
+  return enhancedValidationServiceInstance;
+}

@@ -8,10 +8,10 @@
  * - Toutes les données proviennent des services
  */
 
-import { MilestoneService } from '@/application/services/MilestoneService';
+import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
 import { ProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import { CriticalPathView, GanttChart, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
@@ -131,7 +131,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   
   // ============ Services ============
   const projectService = useMemo(
-    () => new ProjectService(RepositoryFactory.getProjectRepository()),
+    () => getProjectService(),
     [],
   );
 
@@ -227,7 +227,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-analytics", projectId],
     queryFn: async () => {
       if (!projectId) return null;
-      const analyticsService = new ProjectAnalyticsService();
+      const analyticsService = getProjectAnalyticsService();
       return await analyticsService.getProjectAnalytics(projectId);
     },
     enabled: !!projectId,
@@ -240,7 +240,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryFn: async () => {
       if (!projectId || !projectDetail) return null;
       
-      const analyticsService = new ProjectAnalyticsService();
+      const analyticsService = getProjectAnalyticsService();
       const [analytics, metrics, costAnalysis] = await Promise.all([
         analyticsService.getProjectAnalytics(projectDetail.id),
         analyticsService.getProjectMetrics(projectDetail.id),
@@ -301,7 +301,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-compliance", projectId],
     queryFn: async (): Promise<any> => {
       if (!projectId || !projectDetail) return null;
-      const analyticsService = new ProjectAnalyticsService();
+      const analyticsService = getProjectAnalyticsService();
       return await analyticsService.getComplianceData(projectDetail);
     },
     enabled: !!projectId && !!projectDetail,
@@ -337,7 +337,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   });
 
   // Milestone progress
-  const milestoneServiceInstance = useMemo(() => new MilestoneService(), []);
+  const milestoneServiceInstance = useMemo(() => getMilestoneService(), []);
   const progressServiceInstance = useMemo(() => new ProgressCalculationHexService(), []);
   const { data: milestoneProgress } = useQuery({
     queryKey: ["milestone-progress", projectId],

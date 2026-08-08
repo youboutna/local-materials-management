@@ -13,14 +13,14 @@
  *   en incluant la zone d'intervention (interventionZone) lorsqu'elle existe.
  */
 
-import { AuthService } from '@/application/services/AuthService';
-import { MilestoneService } from '@/application/services/MilestoneService';
-import { OrganizationService } from '@/application/services/OrganizationService';
-import { PhaseService } from '@/application/services/PhaseService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
-import { SupplierService } from '@/application/services/SupplierService';
-import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
+import { OrganizationService, getOrganizationService} from '@/application/services/OrganizationService';
+import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
+import { TaskAssignmentService, getTaskAssignmentService} from '@/application/services/TaskAssignmentService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
@@ -206,20 +206,20 @@ export class ProjectImportExportService {
 
   constructor(
     private readonly projectService: ProjectService,
-    private readonly phaseService = new PhaseService(),
-    private readonly milestoneService = new MilestoneService(),
-    private readonly taskAssignmentService = new TaskAssignmentService(),
-    private readonly stakeholderService = new ProjectStakeholderService(),
-    private readonly organizationService = new OrganizationService(),
-    private readonly supplierService = new SupplierService(RepositoryFactory.getSupplierRepository()),
+    private readonly phaseService = getPhaseService(),
+    private readonly milestoneService = getMilestoneService(),
+    private readonly taskAssignmentService = getTaskAssignmentService(),
+    private readonly stakeholderService = getProjectStakeholderService(),
+    private readonly organizationService = getOrganizationService(),
+    private readonly supplierService = getSupplierService(),
     authService?: AuthService,
   ) {
-    this.authService = authService || new AuthService(RepositoryFactory.getAuthRepository());
+    this.authService = authService || getAuthService();
   }
 
   static default(): ProjectImportExportService {
     return new ProjectImportExportService(
-      new ProjectService(RepositoryFactory.getProjectRepository()),
+      getProjectService(),
     );
   }
 

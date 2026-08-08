@@ -1,4 +1,4 @@
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { PaymentRequestService } from '@/application/services/PaymentRequestService';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
@@ -89,7 +89,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   // Services - initialized with proper repositories
   const paymentRepository = RepositoryFactory.getPaymentRepository();
   const paymentRequestService = new PaymentRequestService(paymentRepository);
-  const documentService = new DocumentService();
+  const documentService = getDocumentService();
 
   // Handle prefill data from payment initiation
   useEffect(() => {
@@ -215,7 +215,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
       // Create notification for managers using NotificationService
       const notificationData = {
-        recipient_id: supplierId,
+        recipientId: supplierId,
         title: 'Demande de paiement créée',
         message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
         type: 'info' as const,

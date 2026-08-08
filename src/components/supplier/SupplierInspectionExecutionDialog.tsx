@@ -28,16 +28,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { DocumentService } from '@/application/services/DocumentService';
+import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { StorageFactory } from '@/application/services/StorageFactory';
-import { InspectionService } from '@/application/services/InspectionService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
 import { generatePVPDF } from '@/lib/pvGenerator';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
-import { SupplierPaymentService } from '@/application/services/SupplierPaymentService';
-import { StakeholderService } from '@/application/services/StakeholderService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { SupplierPaymentService, getSupplierPaymentService} from '@/application/services/SupplierPaymentService';
+import { StakeholderService, getStakeholderService} from '@/application/services/StakeholderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 // ============================================================================
@@ -86,15 +86,11 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const { createNotification } = useNotifications();
 
   // ============ Services hexagonaux ============
-  const documentService = new DocumentService();
-  const inspectionService = new InspectionService();
-  const stakeholderService = new StakeholderService(
-    RepositoryFactory.getStakeholderRepository()
-  );
-  const projectService = new ProjectService(
-    RepositoryFactory.getProjectRepository()
-  );
-  const supplierPaymentService = new SupplierPaymentService();
+  const documentService = getDocumentService();
+  const inspectionService = getInspectionService();
+  const stakeholderService = getStakeholderService();
+  const projectService = getProjectService();
+  const supplierPaymentService = getSupplierPaymentService();
 
   // ============ Handlers ============
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

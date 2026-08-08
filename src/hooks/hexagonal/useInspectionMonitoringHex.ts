@@ -3,7 +3,7 @@
  * Uses services instead of direct supabase calls
  */
 
-import { AuthService } from '@/application/services/AuthService';
+import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { InspectionService } from '@/application/services/InspectionService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -104,7 +104,7 @@ export function useInspectionMonitoringHex(options?: {
   const userQuery = useQuery({
     queryKey: ['current-user-inspector'],
     queryFn: async () => {
-      const authService = new AuthService(RepositoryFactory.getAuthRepository());
+      const authService = getAuthService();
       const user = await authService.getCurrentUser();
       if (!user) return null;
       return { type: 'user', name: user.full_name || user.email || '' };

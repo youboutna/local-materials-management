@@ -9,7 +9,7 @@
  */
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -142,7 +142,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         // 2) Charge le référentiel projet (métadonnée) si pas déjà fourni
         if (!defaultReferentialCode) {
-          const service = new ProjectService(RepositoryFactory.getProjectRepository());
+          const service = getProjectService();
           const project = await service.getProjectById(resolvedProjectId);
           if (!cancelled) {
             if (project?.referentialCode) {

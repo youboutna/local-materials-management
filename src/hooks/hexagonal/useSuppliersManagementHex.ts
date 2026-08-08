@@ -3,7 +3,7 @@
  * Centralizes CRUD operations for suppliers via SupplierService
  */
 
-import { SupplierService } from '@/application/services/SupplierService';
+import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -17,10 +17,6 @@ export interface SupplierFormData {
   rating: number;
   nif?: string;
   commerce_register_ref?: string;
-}
-
-function getSupplierService() {
-  return new SupplierService(RepositoryFactory.getSupplierRepository());
 }
 
 // Hook: Fetch all suppliers

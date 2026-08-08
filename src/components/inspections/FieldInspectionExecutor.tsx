@@ -17,7 +17,7 @@ import {
   FileText, Users, Ruler, Play, Square, Save, Clock, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { InspectionExecutionService } from '@/application/services/InspectionExecutionService';
+import { InspectionExecutionService, getInspectionExecutionService} from '@/application/services/InspectionExecutionService';
 import {
   InspectionExecutionData,
   InspectionObservation,
@@ -132,7 +132,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
     const loadData = async () => {
       if (inspection.status === 'in_progress') {
         try {
-          const service = new InspectionExecutionService();
+          const service = getInspectionExecutionService();
           // Try to load existing data
           setIsStarted(true);
         } catch (e) {
@@ -198,7 +198,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const service = new InspectionExecutionService();
+      const service = getInspectionExecutionService();
       const result = await service.completeInspection({
         inspectionId: inspection.id,
         finalData: {

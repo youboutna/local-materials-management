@@ -2,8 +2,8 @@
 // Uses EnhancedActionService for event-driven action management
 
 import { EnhancedActionService } from '@/application/services/enhancedActionService';
-import { InspectionService } from '@/application/services/InspectionService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,8 +30,8 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
   const actions: ActionItem[] = [];
 
   try {
-    const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    const inspectionService = new InspectionService();
+    const projectService = getProjectService();
+    const inspectionService = getInspectionService();
 
     // Fetch inspections and projects in parallel
     const [allInspections, allProjects] = await Promise.all([

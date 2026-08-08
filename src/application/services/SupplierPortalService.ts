@@ -238,3 +238,11 @@ export class SupplierPortalService {
     return new SupplierPortalService(RepositoryFactory.getSupplierRepository());
   }
 }
+
+let supplierPortalServiceInstance: SupplierPortalService | null = null;
+export function getSupplierPortalService(): SupplierPortalService {
+  if (!supplierPortalServiceInstance) {
+    supplierPortalServiceInstance = new SupplierPortalService(RepositoryFactory.getSupplierRepository());
+  }
+  return supplierPortalServiceInstance;
+}

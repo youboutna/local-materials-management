@@ -7,6 +7,7 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { PhaseService } from './PhaseService';
 import { ProjectService } from './ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
 
 export interface IntegrationTestResult {
   testName: string;
@@ -43,7 +44,7 @@ export class WorkflowIntegrationTestService {
   private phaseService: PhaseService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+    this.projectService = getProjectService();
     this.phaseService = new PhaseService(RepositoryFactory.getPhaseRepository());
   }
 

@@ -37,3 +37,11 @@ export class OrganizationService {
     if ('name' in data && !data.name?.trim()) throw new Error('Organization name is required');
   }
 }
+
+let organizationServiceInstance: OrganizationService | null = null;
+export function getOrganizationService(): OrganizationService {
+  if (!organizationServiceInstance) {
+    organizationServiceInstance = new OrganizationService();
+  }
+  return organizationServiceInstance;
+}

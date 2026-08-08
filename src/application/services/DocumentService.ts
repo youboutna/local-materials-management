@@ -795,3 +795,10 @@ export class DocumentService {
 }
 
 export default DocumentService;
+let documentServiceInstance: DocumentService | null = null;
+export function getDocumentService(): DocumentService {
+  if (!documentServiceInstance) {
+    documentServiceInstance = new DocumentService();
+  }
+  return documentServiceInstance;
+}

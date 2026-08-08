@@ -3,7 +3,7 @@
  * Provides file upload functionality through StorageService
  */
 
-import { StorageService } from '@/application/services/StorageService';
+import { StorageService, getStorageService} from '@/application/services/StorageService';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -16,7 +16,7 @@ interface UploadResult {
 
 export function useStorageHex(bucketName: string = 'documents') {
   const queryClient = useQueryClient();
-  const storageService = new StorageService();
+  const storageService = getStorageService();
 
   // Upload file mutation
   const uploadMutation = useMutation({

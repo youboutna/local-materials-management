@@ -1,4 +1,4 @@
-import { ProjectService } from '@/application/services/ProjectService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ const SimpleProjectTest = () => {
     queryKey: ['simple-project', projectId],
     queryFn: async () => {
       if (!projectId) throw new Error('No project ID');
-      const service = new ProjectService(RepositoryFactory.getProjectRepository());
+      const service = getProjectService();
       return await service.getProjectById(projectId);
     },
     enabled: !!projectId,

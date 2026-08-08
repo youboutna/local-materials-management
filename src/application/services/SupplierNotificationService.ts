@@ -112,9 +112,8 @@ export class SupplierNotificationService {
     try {
       this.validatePasswordResetRequest(request);
 
-      // Use Supabase RPC via supabase client directly since IAuthRepository doesn't have invokeRPC
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data: resetData, error } = await supabase.rpc('generate_supplier_reset_token', {
+      // Notification gateway wraps the RPC call so no direct supabase import is needed here.
+      const { data: resetData, error } = await RepositoryFactory.getNotificationGateway().rpc('generate_supplier_reset_token', {
         supplier_email: request.supplierEmail
       });
 

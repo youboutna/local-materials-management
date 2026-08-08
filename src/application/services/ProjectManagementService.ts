@@ -2,11 +2,11 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Import all project-related services
-import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
+import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import { ProjectManagerService } from '@/application/services/ProjectManagerService';
-import { ProjectService } from '@/application/services/ProjectService';
-import { ProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
 import { ProjectWorkflowService } from '@/application/services/ProjectWorkflowService';
 
 // Import DTOs
@@ -142,11 +142,11 @@ export class ProjectManagementService {
   private managerService: ProjectManagerService;
 
   constructor() {
-    this.projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-    this.analyticsService = new ProjectAnalyticsService();
+    this.projectService = getProjectService();
+    this.analyticsService = getProjectAnalyticsService();
     this.calculationService = ProjectCalculationService;
     this.workflowService = ProjectWorkflowService.default();
-    this.stakeholderService = new ProjectStakeholderService();
+    this.stakeholderService = getProjectStakeholderService();
     this.managerService = null as any; // Lazy init - requires project context
   }
 

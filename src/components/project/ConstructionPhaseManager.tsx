@@ -59,7 +59,7 @@ import { ReferentialType } from '@/config/referentials';
 
 import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
 
-import { PhaseService } from '@/application/services/PhaseService';
+import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
 
 import { MilestoneService } from '@/application/services/MilestoneService';
 
@@ -70,7 +70,7 @@ import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
 // PhaseService instance for dynamic data
-const phaseService = new PhaseService();
+const phaseService = getPhaseService();
 
 //les types, interfaces sont à recuperer depuis les referentiels et domain, dtos, transformers.
 

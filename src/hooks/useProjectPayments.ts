@@ -1,6 +1,6 @@
 import { InspectionService } from '@/application/services/InspectionService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { CreatePaymentDTO, PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { toast } from '@/hooks/use-toast';
@@ -30,8 +30,8 @@ export const useCreateProjectPayment = () => {
 
   return useMutation({
     mutationFn: async ({ projectId, payment }: CreatePaymentPayload) => {
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const projectService = getProjectService();
+      const paymentService = getPaymentService();
       const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
       const project = await projectService.getProjectById(projectId);
@@ -121,8 +121,8 @@ export const useProjectPayments = (projectId: string) => {
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project-with-payments', projectId],
     queryFn: async (): Promise<ProjectWithPaymentsData | null> => {
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
-      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+      const projectService = getProjectService();
+      const paymentService = getPaymentService();
       const inspectionService = new InspectionService(RepositoryFactory.getInspectionRepository());
 
       const projectData = await projectService.getProjectById(projectId);
@@ -154,8 +154,8 @@ export const useProjectPayments = (projectId: string) => {
 
   const createPayment = async (paymentData: ProjectPayment) => {
     try {
-      const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
-      const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+      const paymentService = getPaymentService();
+      const projectService = getProjectService();
 
       const paymentDTO: CreatePaymentDTO = {
         projectId,

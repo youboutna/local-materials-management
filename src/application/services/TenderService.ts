@@ -249,3 +249,11 @@ export class TenderService {
   }
 
 }
+
+let tenderServiceInstance: TenderService | null = null;
+export function getTenderService(): TenderService {
+  if (!tenderServiceInstance) {
+    tenderServiceInstance = new TenderService();
+  }
+  return tenderServiceInstance;
+}

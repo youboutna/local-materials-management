@@ -3,7 +3,7 @@
  * Following Rule #1: Arrow Flow - UI → Service → Domain ← Adapter → DB
  */
 
-import { ComplianceService } from '@/application/services/ComplianceService';
+import { ComplianceService, getComplianceService} from '@/application/services/ComplianceService';
 import {
     ComplianceItemDTO,
     CreateComplianceRequestDTO as CreateComplianceItemDTO,
@@ -24,7 +24,7 @@ export function useComplianceHex(projectId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   // Initialize service following hexagonal architecture with useMemo for performance
-  const complianceService = useMemo(() => new ComplianceService(RepositoryFactory.getComplianceRepository()), []);
+  const complianceService = useMemo(() => getComplianceService(), []);
 
   const fetchComplianceItems = useCallback(async () => {
     if (!projectId) return;

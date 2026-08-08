@@ -1,9 +1,9 @@
-import { OrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
+import { OrganizationHierarchyService, getOrganizationHierarchyService} from '@/application/services/OrganizationHierarchyService';
 import type { CreateOrganizationHierarchyDTO, UpdateOrganizationHierarchyDTO } from '@/dtos/entities/OrganizationHierarchyDTO';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useOrganizationHierarchy(organizationId: string) {
-  const service = new OrganizationHierarchyService();
+  const service = getOrganizationHierarchyService();
   const queryClient = useQueryClient();
   const queryKey = ['organization-hierarchy', organizationId];
   const query = useQuery({ queryKey, queryFn: () => service.list(organizationId), enabled: !!organizationId });

@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal';
-import { TenderService } from '@/application/services/TenderService';
+import { TenderService, getTenderService} from '@/application/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/application/services/TenderSubmissionService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -198,7 +198,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryKey: ['granted-tender', accessGrantedTenderId],
     queryFn: async () => {
       if (!accessGrantedTenderId) return null;
-      const service = new TenderService();
+      const service = getTenderService();
       const t = await service.getTenderById({ id: accessGrantedTenderId });
       if (!t) return null;
       return {

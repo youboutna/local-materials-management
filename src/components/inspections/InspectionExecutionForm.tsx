@@ -12,8 +12,7 @@ import {
   InspectionApprovalSyncService, 
   InspectionApprovalContext,
   SyncResult,
-  SYNC_THRESHOLDS 
-} from '@/application/services/InspectionApprovalSyncService';
+  SYNC_THRESHOLDS, getInspectionApprovalSyncService} from '@/application/services/InspectionApprovalSyncService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInspectionExecutionHex } from '@/hooks/hexagonal';
 
@@ -70,7 +69,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
       // Si le statut est "approved", déclencher la synchronisation complète
       if (newStatus === 'approved') {
         setIsSyncing(true);
-        const syncService = new InspectionApprovalSyncService();
+        const syncService = getInspectionApprovalSyncService();
         const validationDocs: any[] = [];
         const context: InspectionApprovalContext = {
           inspectionId: inspection.id,

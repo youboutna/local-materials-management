@@ -78,7 +78,7 @@ export class InspectionMonitoringService {
   async createDigitalInspection(data: Omit<InspectionData, 'id' | 'status' | 'findings'>): Promise<InspectionData> {
     try {
       await this.notificationService.createNotification({
-        recipient_id: data.inspectorId,
+        recipientId: data.inspectorId,
         title: 'New Inspection Scheduled',
         message: `Inspection scheduled for ${data.scheduledDate}`,
         type: 'info'
@@ -180,4 +180,12 @@ export class InspectionMonitoringService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update inspection status');
     }
   }
+}
+
+let inspectionMonitoringServiceInstance: InspectionMonitoringService | null = null;
+export function getInspectionMonitoringService(): InspectionMonitoringService {
+  if (!inspectionMonitoringServiceInstance) {
+    inspectionMonitoringServiceInstance = new InspectionMonitoringService();
+  }
+  return inspectionMonitoringServiceInstance;
 }

@@ -252,3 +252,11 @@ export class EmployeeService {
     return `EMP${Date.now().toString().slice(-6)}`;
   }
 }
+
+let employeeServiceInstance: EmployeeService | null = null;
+export function getEmployeeService(): EmployeeService {
+  if (!employeeServiceInstance) {
+    employeeServiceInstance = new EmployeeService();
+  }
+  return employeeServiceInstance;
+}

@@ -3,7 +3,7 @@
  * Business logic for insurance certificate management
  */
 
-import { NotificationService } from '@/application/services/NotificationService';
+import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
 import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertificate.entity';
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
@@ -23,7 +23,7 @@ export class InsuranceService {
     notificationService?: NotificationService
   ) {
     this.insuranceRepository = insuranceRepository || RepositoryFactory.getInsuranceRepository();
-    this.notificationService = notificationService || new NotificationService();
+    this.notificationService = notificationService || getNotificationService();
   }
 
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
@@ -288,4 +288,12 @@ export class InsuranceService {
   static getInsuranceService(): InsuranceService {
     return new InsuranceService();
   }
+}
+
+let insuranceServiceInstance: InsuranceService | null = null;
+export function getInsuranceService(): InsuranceService {
+  if (!insuranceServiceInstance) {
+    insuranceServiceInstance = new InsuranceService();
+  }
+  return insuranceServiceInstance;
 }

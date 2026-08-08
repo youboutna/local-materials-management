@@ -5,6 +5,7 @@
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
 import { 
   IAuthRepository, 
@@ -296,4 +297,12 @@ export class AuthService {
       return { session: null, error: error as Error };
     }
   }
+}
+
+let authServiceInstance: AuthService | null = null;
+export function getAuthService(): AuthService {
+  if (!authServiceInstance) {
+    authServiceInstance = new AuthService(RepositoryFactory.getAuthRepository());
+  }
+  return authServiceInstance;
 }

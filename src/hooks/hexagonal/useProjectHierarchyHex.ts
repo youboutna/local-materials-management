@@ -2,7 +2,7 @@
  * Hexagonal hook for project hierarchy operations
  */
 
-import { HierarchyService } from '@/application/services/HierarchyService';
+import { HierarchyService, getHierarchyService} from '@/application/services/HierarchyService';
 import { CreateHierarchyNodeDTO, HierarchyNode, HierarchyStatisticsDTO, UpdateHierarchyNodeDTO } from '@/dtos/entities/HierarchyDTO';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -34,7 +34,7 @@ export interface UseHierarchyMutationResult {
 
 export function useProjectHierarchyHex(projectId: string): UseProjectHierarchyResult {
   const { toast } = useToast();
-  const service = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  const service = getHierarchyService();
 
   const result = useQuery({
     queryKey: ['project-hierarchy', projectId],
@@ -62,7 +62,7 @@ export function useProjectHierarchyHex(projectId: string): UseProjectHierarchyRe
 
 export function useHierarchyStatisticsHex(projectId: string): UseHierarchyStatisticsResult {
   const { toast } = useToast();
-  const service = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  const service = getHierarchyService();
 
   const result = useQuery({
     queryKey: ['hierarchy-statistics', projectId],
@@ -104,7 +104,7 @@ export function useHierarchyStatisticsHex(projectId: string): UseHierarchyStatis
 export function useHierarchyMutationsHex(projectId: string): UseHierarchyMutationResult {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const service = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  const service = getHierarchyService();
 
   const createMutation = useMutation({
     mutationFn: (nodeData: CreateHierarchyNodeDTO) => service.createHierarchyNode(nodeData),
@@ -155,7 +155,7 @@ export function useHierarchyMutationsHex(projectId: string): UseHierarchyMutatio
 }
 
 export function useHierarchyPathHex(nodeId: string) {
-  const service = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  const service = getHierarchyService();
 
   return useQuery({
     queryKey: ['hierarchy-path', nodeId],
@@ -174,7 +174,7 @@ export function useHierarchySearchHex(criteria: {
   nodeType?: HierarchyNode['type'];
   status?: string;
 }) {
-  const service = new HierarchyService(RepositoryFactory.getHierarchyRepository());
+  const service = getHierarchyService();
 
   return useQuery({
     queryKey: ['hierarchy-search', criteria],

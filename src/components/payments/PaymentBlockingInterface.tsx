@@ -2,10 +2,9 @@ import { DocumentService } from '@/application/services/DocumentService';
 import { InsuranceService } from '@/application/services/InsuranceService';
 import {
     PaymentBlockingService,
-    PaymentEligibilityValidationDto
-} from '@/application/services/PaymentBlockingService';
-import { PaymentService } from '@/application/services/PaymentService';
-import { ProjectService } from '@/application/services/ProjectService';
+    PaymentEligibilityValidationDto, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
+import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,18 +61,19 @@ const PaymentBlockingInterface = () => {
     const loadStats = async () => {
       try {
         // Initialize services
-        const paymentBlockingService = new PaymentBlockingService();
-        const paymentService = new PaymentService(RepositoryFactory.getPaymentRepository());
+        const paymentBlockingService = getPaymentBlockingService();
+        const paymentService = getPaymentService();
         const insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
-        const projectService = new ProjectService(RepositoryFactory.getProjectRepository());
+        const projectService = getProjectService();
         const documentService = new DocumentService(RepositoryFactory.getDocumentRepository());
-        
-        // Load blocked payments using PaymentService (fallback to mock data)
-        const blockedPayments = []; // TODO: Implement when PaymentService has status filtering
-        
-        // Load expired insurances using InsuranceService (fallback to mock data)
-        const expiredInsurances = []; // TODO: Implement when InsuranceService.getAllInsurances() is available
-        
+
+        // Load blocked payments using PaymentService
+        const blockedPayments = await paymentService.getActiveBlockedPayments();
+
+        // Load expiring/expired insurances using InsuranceService
+        const expiredInsurances = (await insuranceService.detectExpiringInsurance(0))
+          .filter(alert => alert.type === 'expired');
+
         // Load delayed projects using ProjectService
         const allProjects = await projectService.getAllProjects();
         const delayedProjects = allProjects.filter(project => {
@@ -87,9 +87,9 @@ const PaymentBlockingInterface = () => {
           // Using 20 days as default delay threshold
           return (progressExpected - actualProgress) > 20;
         });
-        
-        // Load documents with missing status using DocumentService (fallback to mock data)
-        const missingDocs = []; // TODO: Implement when DocumentService.getDocumentsByStatus() is available
+
+        // Load documents pending approval (treated as "missing" until approved) using DocumentService
+        const missingDocs = await documentService.getDocumentsByStatus('pending_approval' as any);
 
         setStats({
           blockedPayments: blockedPayments.length,
@@ -98,8 +98,17 @@ const PaymentBlockingInterface = () => {
           missingDocuments: missingDocs.length
         });
 
-        // Load recent blocked payments using existing service function
-        const recentBlocks: PaymentBlockHistoryItem[] = []; // TODO: Implement when PaymentBlockingService supports history listing
+        // Load recent blocked payments using PaymentBlockingService
+        const activeBlocks = await paymentBlockingService.getActivePaymentBlocks();
+        const recentBlocks: PaymentBlockHistoryItem[] = activeBlocks.map(block => ({
+          id: block.id,
+          projectId: block.payment_request_id,
+          contractorId: block.resolved_by || '',
+          amount: block.blocked_amount,
+          blockedAt: block.created_at,
+          resolvedAt: block.resolved_at,
+          reason: block.block_reason,
+        }));
         setBlockHistory(recentBlocks);
       } catch (error) {
         console.error('Error loading payment stats:', error);
@@ -121,7 +130,7 @@ const PaymentBlockingInterface = () => {
   const onValidatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const result = await service.validatePaymentEligibility(
         values.projectId
       );
@@ -154,7 +163,7 @@ const PaymentBlockingInterface = () => {
   const onProcessPayment = async (values: z.infer<typeof paymentFormSchema>) => {
     try {
       setLoading(true);
-      const service = new PaymentBlockingService();
+      const service = getPaymentBlockingService();
       const result = await service.processPayment(values.projectId);
 
       if (result.success) {

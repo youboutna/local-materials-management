@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { DevisPDFDocument } from '@/components/reports/pdf/DevisPDFDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
-import { supabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { EstimateData, EstimateItem, ExportConfig } from '@/dtos/transforms/shared';
 
@@ -196,8 +196,7 @@ export function BoqDevisDialog({
       let bin = ''; const bytes = new Uint8Array(buf);
       for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
       const b64 = btoa(bin);
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: JSON.stringify({
+      const { error } = await RepositoryFactory.getNotificationGateway().invokeFunction('send-email-notification', {
           to: config.recipientEmail,
           subject: `${label} — ${config.title}`,
           html: `<p>Bonjour,</p>
@@ -215,7 +214,6 @@ export function BoqDevisDialog({
               encoding: 'base64',
             }] : []),
           ],
-        }),
       });
       if (error) throw error;
       toast({ title: 'Email envoyé', description: config.recipientEmail });

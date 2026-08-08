@@ -5,7 +5,7 @@
  */
 
 import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
-import { PaymentService } from '@/application/services/PaymentService';
+import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { AutomaticDecompteDTO } from '@/dtos/entities/DecompteDTO';
 import type { CreatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { toast } from '@/hooks/use-toast';
@@ -30,11 +30,6 @@ interface SimpleCheckpoint {
 // Get milestone repository
 const getMilestoneRepository = () => {
   return RepositoryFactory.getMilestoneRepository();
-};
-
-// Get payment service
-const getPaymentService = () => {
-  return new PaymentService(RepositoryFactory.getPaymentRepository());
 };
 
 export function useCheckpointVerification({ 

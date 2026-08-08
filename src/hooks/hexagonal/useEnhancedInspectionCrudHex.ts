@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { InspectionDTO, CreateInspectionDTO, UpdateInspectionDTO } from '@/dtos/entities/InspectionDTO';
-import { InspectionService } from '@/application/services/InspectionService';
+import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
 
 export const useEnhancedInspectionCrudHex = (projectId?: string) => {
   const queryClient = useQueryClient();
-  const inspectionService = new InspectionService();
+  const inspectionService = getInspectionService();
 
   // Fetch inspections
   const { data: inspections = [], isLoading, error } = useQuery({

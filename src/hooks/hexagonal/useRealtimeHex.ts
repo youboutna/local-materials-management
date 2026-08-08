@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { RealtimeService, SubscribeToSubmissionUpdatesRequestDto, SubscribeToDocumentUpdatesRequestDto, SubscribeToNotificationUpdatesRequestDto } from '@/application/services/RealtimeService';
+import { RealtimeService, SubscribeToSubmissionUpdatesRequestDto, SubscribeToDocumentUpdatesRequestDto, SubscribeToNotificationUpdatesRequestDto, getRealtimeService} from '@/application/services/RealtimeService';
 import type { RealtimePayload } from '@/domain/repositories/IRealtimeRepository';
 
 export interface UseRealtimeOptions {
@@ -23,7 +23,7 @@ export const useRealtimeHex = (options: UseRealtimeOptions = {}) => {
 
   // Initialize service
   useEffect(() => {
-    realtimeServiceRef.current = new RealtimeService();
+    realtimeServiceRef.current = getRealtimeService();
 
     return () => {
       // Cleanup on unmount

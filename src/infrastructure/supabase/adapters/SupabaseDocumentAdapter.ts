@@ -164,6 +164,31 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
+
+  // Generic raw-row helpers used by the DocumentHub table adapter (documentsTableAdapter).
+  async findRawByFilters(filters: { column: string; value: string; op?: 'eq' | 'contains' }[]): Promise<any[]> {
+    let q: any = supabase.from('documents').select('*');
+    for (const f of filters) {
+      if (f.op === 'contains') {
+        q = q.contains('metadata', { [f.column]: f.value });
+      } else {
+        q = q.eq(f.column, f.value);
+      }
+    }
+    q = q.order('created_at', { ascending: false }).limit(500);
+    const { data, error } = await q;
+    if (error) {
+      console.warn('[SupabaseDocumentAdapter] findRawByFilters failed', error);
+      return [];
+    }
+    return data ?? [];
+  }
+
+  async insertRaw(payload: Record<string, unknown>): Promise<void> {
+    const { error } = await supabase.from('documents').insert(payload as any);
+    if (error) throw error;
+  }
+
   async countByType(projectId: string): Promise<Record<DocumentType, number>> { return {} as Record<DocumentType, number>; }
   async countByStatus(projectId: string): Promise<Record<DocumentStatus, number>> { return {} as Record<DocumentStatus, number>; }
   async getTotalSize(projectId: string): Promise<number> { return 0; }
