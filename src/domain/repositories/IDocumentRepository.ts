@@ -40,5 +40,7 @@ export interface IDocumentRepository {
   countByStatus(projectId: string): Promise<Record<DocumentStatus, number>>;
   getTotalSize(projectId: string): Promise<number>;
   
-  // Additional methods
+  // Additional methods (generic hub adapter support)
+  findRawByFilters(filters: { column: string; value: string; op?: 'eq' | 'contains' }[]): Promise<any[]>;
+  insertRaw(payload: Record<string, unknown>): Promise<void>;
 }
