@@ -98,7 +98,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async searchUsers(options: SearchUsersOptions = {}): Promise<SearchUsersResult> {
     try {
       let query = supabase
-        .from('users')
+        .from('users' as any)
         .select('id, full_name, phone, national_id, role, created_at, updated_at, is_admin')
         .order('full_name', { ascending: true });
 
@@ -148,7 +148,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async findAll(): Promise<User[]> {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('users' as any)
         .select('*')
         .order('full_name', { ascending: true });
 
@@ -169,7 +169,7 @@ export class SupabaseUserAdapter implements IUserRepository {
       const dbData = UserTransformer.toSupabaseRow(userData as User);
       
       const { data, error } = await supabase
-        .from('users')
+        .from('users' as any)
         .insert(dbData)
         .select()
         .single();
@@ -195,7 +195,7 @@ export class SupabaseUserAdapter implements IUserRepository {
       const dbData = UserTransformer.toSupabaseRow(userData as User);
       
       const { data, error } = await supabase
-        .from('users')
+        .from('users' as any)
         .update(dbData)
         .eq('id', id)
         .select()
@@ -220,7 +220,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('users' as any)
         .delete()
         .eq('id', id);
 

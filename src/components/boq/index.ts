@@ -6,9 +6,9 @@
  */
 
 // Domain
-export { BoqLine, type BoqLineProps, type BoqSource, type BoqResourceType } from '@/domain/boq/BoqLine';
-export { BoqDocument } from '@/domain/boq/BoqDocument';
-export type { WbsRef } from '@/domain/boq/WbsRef';
+export { BoqLine, type BoqLineProps, type BoqSource, type BoqResourceType } from '@/domain/entities/boq/BoqLine';
+export { BoqDocument } from '@/domain/entities/boq/BoqDocument';
+export type { WbsRef } from '@/domain/entities/boq/WbsRef';
 
 // DTOs / Mapper
 export type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
