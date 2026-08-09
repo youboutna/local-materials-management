@@ -1,24 +1,17 @@
 #!/usr/bin/env node
 /**
- * 🧠 ADVANCED HEXAGONAL ARCHITECTURE ANALYZER & DEPENDENCY TRACER (v28 – Final)
+ * 🧠 HEXAGONAL ARCHITECTURE ANALYZER & SEMANTIC CODE QUALITY ENFORCER (v31)
  *
- * Analyse le code en suivant l’arbre des dépendances.
- * Priorités : P0 (DB) → P1 (types hors domain/dtos, mapping) → P2 (snake_case) → P3 (any).
- *
- * 🔧 INTELLIGENCE AMÉLIORÉE :
- *   - Détection automatique des entités métier (domain/entities + repositories).
- *   - Index global des types déjà présents dans les DTO existants.
- *   - Résolution du domaine enrichie (heuristiques de mots‑clés, contexte fichier…).
- *   - **Fusion automatique** : un type qui doit être déplacé sera toujours ajouté
- *     à un fichier DTO existant (le plus proche par similarité), sauf si aucun
- *     fichier DTO pertinent n’existe (création en dernier recours).
- *   - Réconciliation des DTO existants (déplacement des types mal classés).
- *   - Noms de fichiers en CamelCaseDTO.ts, ignorés les props React.
- *   - Option `--clean-mocks` ne touche pas aux TODO.
+ * PRIORITÉS P0 (CRITIQUES) :
+ *   1. Corps de méthode non finalisé (TODO, NotImplemented, vide)
+ *   2. Appels Supabase directs dans l'UI (components, pages)
+ *   3. Types 'any' dans le code
+ *   4. Violations d'architecture hexagonale
  *
  * Utilisation :
  *   node fix-hexagonal-violations.js [--fix] [--interactive] [--move-types] [--dry-run]
  *                         [--json] [--output file] [--ts-check] [--clean-mocks]
+ *                         [--scoring] [--consolidate-duplicates] [--semantic-analysis]
  */
 
 import { execSync } from 'child_process';
@@ -31,50 +24,349 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ==========================================
-// RÈGLES (inchangées pour la plupart, identiques à v27)
+// CONFIGURATION ARCHITECTURE HEXAGONALE
 // ==========================================
+
+const ARCHITECTURE = {
+  layers: {
+    UI: {
+      paths: ['src/components/', 'src/pages/'],
+      allowed: ['hooks/ui', 'components', 'pages', 'contexts'],
+      forbidden: ['application', 'domain', 'infrastructure'],
+      description: 'Composants React, pages, hooks UI'
+    },
+    APPLICATION: {
+      paths: ['src/application/'],
+      allowed: ['services', 'transformers', 'dtos'],
+      forbidden: ['components', 'pages', 'infrastructure'],
+      description: 'Services métier, cas d\'usage, orchestration'
+    },
+    DOMAIN: {
+      paths: ['src/domain/'],
+      allowed: ['entities', 'repositories', 'events', 'value-objects'],
+      forbidden: ['components', 'pages', 'infrastructure', 'application'],
+      description: 'Entités métier pures, règles, interfaces'
+    },
+    INFRASTRUCTURE: {
+      paths: ['src/infrastructure/'],
+      allowed: ['adapters', 'clients', 'config', 'external'],
+      forbidden: ['components', 'pages', 'domain'],
+      description: 'Implémentations techniques, adaptateurs'
+    },
+    DTOS: {
+      paths: ['src/dtos/'],
+      allowed: ['entities', 'workflows', 'transforms', 'types'],
+      forbidden: ['components', 'pages', 'infrastructure'],
+      description: 'Data Transfer Objects et Transformers'
+    },
+    HOOKS: {
+      paths: ['src/hooks/'],
+      allowed: ['hexagonal', 'ui'],
+      forbidden: ['components', 'pages', 'infrastructure'],
+      description: 'Hooks React (hexagonaux et UI)'
+    }
+  },
+  
+  fileTypes: {
+    entity: {
+      pattern: /src\/domain\/entities\/.*\.ts$/,
+      score: 100,
+      category: 'ENTITY',
+      description: 'Entité métier pure'
+    },
+    repository: {
+      pattern: /src\/domain\/repositories\/I.*\.ts$/,
+      score: 95,
+      category: 'REPOSITORY_INTERFACE',
+      description: 'Interface de repository (port)'
+    },
+    dto: {
+      pattern: /src\/dtos\/.*DTO\.ts$/,
+      score: 90,
+      category: 'DTO',
+      description: 'Data Transfer Object'
+    },
+    transformer: {
+      pattern: /src\/dtos\/transforms\/.*\.ts$/,
+      score: 85,
+      category: 'TRANSFORMER',
+      description: 'Mapper entre domain et DTO'
+    },
+    service: {
+      pattern: /src\/application\/services\/.*Service\.ts$/,
+      score: 80,
+      category: 'SERVICE',
+      description: 'Service métier application'
+    },
+    adapter: {
+      pattern: /src\/infrastructure\/.*Adapter\.ts$/,
+      score: 75,
+      category: 'ADAPTER',
+      description: 'Adaptateur infrastructure'
+    },
+    hook: {
+      pattern: /src\/hooks\/(hexagonal|ui)\/.*\.ts$/,
+      score: 70,
+      category: 'HOOK',
+      description: 'Hook React hexagonal'
+    },
+    component: {
+      pattern: /src\/components\/.*\.tsx$/,
+      score: 50,
+      category: 'COMPONENT',
+      description: 'Composant React UI'
+    },
+    page: {
+      pattern: /src\/pages\/.*\.tsx$/,
+      score: 50,
+      category: 'PAGE',
+      description: 'Page React'
+    },
+    legacy: {
+      pattern: /src\/(services|types|utils)\/.*\.ts$/,
+      score: 20,
+      category: 'LEGACY',
+      description: 'Fichier legacy à migrer'
+    }
+  },
+  
+  dependencyRules: [
+    { from: 'UI', to: 'APPLICATION', allowed: true },
+    { from: 'UI', to: 'DOMAIN', allowed: true },
+    { from: 'UI', to: 'DTOS', allowed: true },
+    { from: 'UI', to: 'HOOKS', allowed: true },
+    { from: 'UI', to: 'INFRASTRUCTURE', allowed: false },
+    { from: 'APPLICATION', to: 'DOMAIN', allowed: true },
+    { from: 'APPLICATION', to: 'DTOS', allowed: true },
+    { from: 'APPLICATION', to: 'INFRASTRUCTURE', allowed: false },
+    { from: 'DOMAIN', to: 'APPLICATION', allowed: false },
+    { from: 'DOMAIN', to: 'INFRASTRUCTURE', allowed: false },
+    { from: 'DOMAIN', to: 'DTOS', allowed: false },
+    { from: 'INFRASTRUCTURE', to: 'DOMAIN', allowed: true },
+    { from: 'INFRASTRUCTURE', to: 'APPLICATION', allowed: true },
+    { from: 'DTOS', to: 'DOMAIN', allowed: true },
+    { from: 'HOOKS', to: 'APPLICATION', allowed: true },
+    { from: 'HOOKS', to: 'DOMAIN', allowed: true },
+    { from: 'HOOKS', to: 'DTOS', allowed: true },
+    { from: 'HOOKS', to: 'INFRASTRUCTURE', allowed: false }
+  ]
+};
+
+// ==========================================
+// RÈGLES AVEC PRIORITÉS P0
+// ==========================================
+
 const RULES = {
+  // ============================================================
+  // P0 - CRITIQUE : Corps de méthode non finalisé
+  // ============================================================
+  MISSING_IMPLEMENTATION: {
+    id: 'P0-M001', 
+    priority: 0, 
+    severity: 'ERROR',
+    pattern: null,
+    message: '🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide).',
+    isAutoFixable: false,
+    exclude: ['src/test/', 'src/__tests__/', '.spec.', '.test.'],
+    check: (content) => {
+      const emptyFuncs = (content.match(/(?:function|const|let|var)\s+\w+\s*=\s*(?:\([^)]*\)|[^=]+)\s*=>\s*{\s*}/g) || []).length;
+      const todoComments = (content.match(/\/\/\s*TODO\s*[:=]/gi) || []).length;
+      const notImpl = (content.match(/throw\s+new\s+Error\(['"`](?:Not implemented|TODO|Not implemented yet).*?['"`]\)/gi) || []).length;
+      return {
+        emptyFunctions: emptyFuncs,
+        todoComments: todoComments,
+        notImplemented: notImpl,
+        total: emptyFuncs + todoComments + notImpl
+      };
+    }
+  },
+
+  // ============================================================
+  // P0 - CRITIQUE : Appels Supabase directs dans l'UI
+  // ============================================================
+  DB_IN_COMPONENT: {
+    id: 'P0-DB001', 
+    priority: -1, 
+    severity: 'ERROR', 
+    target: 'UI',
+    pattern: /(?:await\s+)?(?:supabase|db|database)\.\w+\(/g,
+    message: '🚨 [P0-DB001] Appel base de données direct dans composant UI ! Utiliser repository pattern via service + hook.',
+    isAutoFixable: false,
+    exclude: ['src/hooks/', 'src/application/', 'src/infrastructure/', 'src/dtos/', 'src/domain/'],
+    fixSuggestion: 'Déplacer la logique dans un service et utiliser use[Entity]Hex()'
+  },
+
+  // ============================================================
+  // P0 - CRITIQUE : 'any' type
+  // ============================================================
+  ANY_TYPE: {
+    id: 'P0-ANY001', 
+    priority: -1, 
+    severity: 'ERROR',
+    pattern: /:\s*any\b/g,
+    message: '🚨 [P0-ANY001] Type "any" interdit ! Définir un type ou interface approprié.',
+    isAutoFixable: false, 
+    exclude: ['node_modules/', 'dist/', 'build/', 'src/test/'],
+    fixSuggestion: 'Utiliser unknown puis affiner avec type guard, ou définir interface dédiée'
+  },
+
+  // ============================================================
+  // P0 - ARCHITECTURE : Appels Supabase directs (partout)
+  // ============================================================
   DIRECT_SUPABASE: {
-    id: 'R003', priority: -1, severity: 'ERROR',
+    id: 'P0-SUP001', 
+    priority: -1, 
+    severity: 'ERROR',
     pattern: /supabase\.(?:from\(['"]([^'"]+)['"]\)\.(?:select|insert|update|delete|upsert|eq|neq|in|order|limit|single|maybeSingle)|rpc\(['"]([^'"]+)['"]|functions\.invoke\(['"]([^'"]+)['"]|channel\(['"]([^'"]+)['"])/g,
-    message: '🚨 [R003] Direct supabase call detected. Use repository pattern via adapters.',
+    message: '🚨 [P0-SUP001] Appel Supabase direct détecté ! Utiliser Repository pattern via adapters.',
     isAutoFixable: false,
     exclude: ['src/infrastructure/', 'src/integrations/'],
-    contextMap: { /* … (inchangé) … */ }
+    contextMap: {
+      'materials': 'IMaterialRepository → SupabaseMaterialAdapter',
+      'projects': 'IProjectRepository → SupabaseProjectAdapter',
+      'inspections': 'IInspectionRepository → SupabaseInspectionAdapter',
+      'users': 'IUserRepository → SupabaseUserAdapter',
+      'tenders': 'ITenderRepository → SupabaseTenderAdapter',
+      'payments': 'IPaymentRepository → SupabasePaymentAdapter',
+      'documents': 'IDocumentRepository → SupabaseDocumentAdapter',
+      'notifications': 'INotificationRepository → SupabaseNotificationAdapter'
+    }
   },
-  DB_IN_COMPONENT: {
-    id: 'R008', priority: -1, severity: 'ERROR', target: 'UI',
-    pattern: /(?:await\s+)?(?:supabase|db|database)\.\w+\(/g,
-    message: '🚨 [R008] Database call in UI component.',
+
+  // ============================================================
+  // P1 - HAUTE PRIORITÉ : Types hors domain/dtos
+  // ============================================================
+  TYPE_DEFINITION_LOCATION: {
+    id: 'P1-TYP001', 
+    priority: 1, 
+    severity: 'ERROR',
+    pattern: /(?:^|\n)\s*export\s+(interface|type|enum)\s+([A-Z]\w*)/gm,
+    message: '❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.',
     isAutoFixable: false,
-    exclude: ['src/hooks/', 'src/application/', 'src/infrastructure/', 'src/dtos/', 'src/domain/']
+    exclude: ['src/config/', 'src/integrations/supabase/types.ts'],
+    checkFile: fp => {
+      const n = fp.replace(/\\/g, '/');
+      if (n.includes('/components/') || n.includes('/pages/')) {
+        return !n.includes('/domain/') && !n.includes('/dtos/');
+      }
+      return !n.includes('/domain/') && !n.includes('/dtos/');
+    }
   },
-  MISSING_IMPLEMENTATION: {
-    id: 'R013', priority: 0, severity: 'WARNING',
-    pattern: /(?:const|let|var)\s+\w+\s*=\s*(?:\([^)]*\)|[^=]+)\s*=>\s*{\s*}|throw\s+new\s+Error\(['"`](?:Not implemented|TODO).*?['"`]\)/gi,
-    message: '⚠️ [R013] Missing implementation.',
+
+  // ============================================================
+  // P1 - HAUTE PRIORITÉ : Transform functions mal placées
+  // ============================================================
+  TRANSFORM_FUNCTION_LOCATION: {
+    id: 'P1-TRF001', 
+    priority: 1, 
+    severity: 'ERROR',
+    pattern: /(?:function\s+|const\s+|let\s+|var\s+)(fromRow|toRow|fromSupabase|toSupabase|mapFromDB|mapToDB|fromDb|toDb)\b/g,
+    message: '❌ [P1-TRF001] Fonction de mapping hors dtos/transforms !',
+    isAutoFixable: false,
+    checkFile: fp => !fp.replace(/\\/g, '/').includes('/dtos/transforms/')
+  },
+
+  // ============================================================
+  // P1 - HAUTE PRIORITÉ : Transformers incomplets
+  // ============================================================
+  TRANSFORMER_COMPLETENESS: {
+    id: 'P1-TRF002', 
+    priority: 1, 
+    severity: 'WARNING',
+    pattern: /class\s+(\w+)Transformer\s*{([^}]*)}/gs,
+    message: '⚠️ [P1-TRF002] Transformer incomplet - méthodes manquantes.',
+    isAutoFixable: false,
+    check: (c) => {
+      const methods = ['fromSupabase', 'toSupabase', 'toDTO', 'fromDTO'];
+      const missing = methods.filter(m => !c.includes(m));
+      return missing.length > 0 ? `Missing: ${missing.join(', ')}` : null;
+    },
+    exclude: ['src/test/']
+  },
+
+  // ============================================================
+  // P2 - MOYENNE PRIORITÉ : Snake_case
+  // ============================================================
+  SNAKE_CASE_IDENTIFIER: {
+    id: 'P2-CAS001', 
+    priority: 2, 
+    severity: 'WARNING',
+    pattern: /\b([a-z]+_[a-z]+(?:_[a-z]+)*)\b/g,
+    message: '⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).',
     isAutoFixable: true,
-    fix: m => m.includes('throw new Error') ? m : m.replace(/{\s*}/, '{ /* TODO */ }'),
-    exclude: ['src/test/', 'src/__tests__/', '.spec.', '.test.']
+    fix: (m) => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()),
+    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/', 'src/integrations/supabase/types.ts', 'supabase/'],
+    skipIfInStringOrComment: true,
+    skipIfObjectKey: true
   },
+
+  // ============================================================
+  // P2 - MOYENNE PRIORITÉ : DTO snake_case
+  // ============================================================
+  DTO_SNAKE_CASE: {
+    id: 'P2-CAS002', 
+    priority: 1, 
+    severity: 'ERROR',
+    pattern: /interface\s+\w+DTO\s*{([^}]*?)(\w+_\w+)/g,
+    message: '❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.',
+    isAutoFixable: true,
+    fix: (m, _, field) => m.replace(field, field.replace(/_([a-z])/g, (_, l) => l.toUpperCase()))
+  },
+
+  // ============================================================
+  // LEGACY (à migrer)
+  // ============================================================
+  LEGACY_SERVICES: {
+    id: 'L001', priority: 1, severity: 'ERROR',
+    pattern: /import\s+{?\s*([^}]+?)\s*}?\s+from\s+['"]@\/services\/([^'"]+)['"]/g,
+    message: '❌ [L001] Import service legacy → utiliser @/application/services/',
+    isAutoFixable: true, 
+    fix: (m) => m.replace(/@\/services\//g, '@/application/services/')
+  },
+  LEGACY_TYPES: {
+    id: 'L002', priority: 1, severity: 'ERROR',
+    pattern: /import\s+{?\s*([^}]+?)\s*}?\s+from\s+['"]@\/types\/([^'"]+)['"]/g,
+    message: '❌ [L002] Import types legacy → utiliser @/dtos/entities/',
+    isAutoFixable: true, 
+    fix: (m) => m.replace(/@\/types\//g, '@/dtos/entities/')
+  },
+  LEGACY_SERVICE_REF: {
+    id: 'L003', priority: 1, severity: 'ERROR',
+    pattern: /new\s+(\w+Service)\(/g,
+    message: '❌ [L003] Instanciation service legacy → utiliser RepositoryFactory',
+    isAutoFixable: false, 
+    exclude: ['src/application/', 'src/infrastructure/']
+  },
+  NON_HEX_HOOK: {
+    id: 'L004', priority: 1, severity: 'WARNING',
+    pattern: /export\s+function\s+use(\w+)\(/g,
+    message: '⚠️ [L004] Hook non hexagonal → ajouter "Hex" au nom ou déplacer.',
+    isAutoFixable: true,
+    fix: (m, name) => name.endsWith('Hex') ? m : m.replace(/use(\w+)\(/, (_, n) => `use${n}Hex(`),
+    exclude: ['useProjectsHex', 'useProjectWorkflowHex', 'useProjectEditHex', 'usePhasesHex']
+  },
+
+  // ============================================================
+  // MOCKS (à supprimer)
+  // ============================================================
   HARDCODED_MOCK_STORE: {
-    id: 'R011', priority: 0, severity: 'ERROR',
+    id: 'M001', priority: 0, severity: 'ERROR',
     pattern: /(?:const|let|var)\s+(\w*(?:mock|fake|stub|dummy|hardcoded)\w*)\s*[:=]/gi,
-    message: '❌ [R011] Mock/fake data variable: "$1".',
+    message: '❌ [M001] Données mock/hardcodées dans le code !',
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/', '.spec.', '.test.', 'node_modules/']
   },
   MOCK_CORE_LOGIC: {
-    id: 'R012', priority: 0, severity: 'ERROR',
+    id: 'M002', priority: 0, severity: 'ERROR',
     pattern: /\/\/\s*(?:Mock|Hardcoded|Stub|Fake|Temporary|Placeholder|Replace|TODO: implement|TODO: replace)/gi,
-    message: '❌ [R012] Mock/hardcoded comment.',
+    message: '❌ [M002] Commentaires mock/hardcodés !',
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/']
   },
   STATIC_MOCK_DATA: {
-    id: 'R017', priority: 0, severity: 'WARNING',
+    id: 'M003', priority: 0, severity: 'WARNING',
     pattern: /(?:const|let|var)\s+(\w*(?:mock|fake|dummy|sample|stub)\w*)\s*[:=]/gi,
-    message: '⚠️ [R017] Possible static mock data in "$1".',
+    message: '⚠️ [M003] Données mock suspectes.',
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/', 'src/config/', 'src/domain/', 'src/dtos/'],
     check: (content, varName) => {
@@ -82,84 +374,14 @@ const RULES = {
       return `Identifier "${varName}" looks like mock data.`;
     }
   },
-  LEGACY_SERVICES: {
-    id: 'R001', priority: 1, severity: 'ERROR',
-    pattern: /import\s+{?\s*([^}]+?)\s*}?\s+from\s+['"]@\/services\/([^'"]+)['"]/g,
-    message: '❌ [R001] Legacy service import.',
-    isAutoFixable: true, fix: m => m.replace(/@\/services\//g, '@/application/services/')
-  },
-  LEGACY_TYPES: {
-    id: 'R002', priority: 1, severity: 'ERROR',
-    pattern: /import\s+{?\s*([^}]+?)\s*}?\s+from\s+['"]@\/types\/([^'"]+)['"]/g,
-    message: '❌ [R002] Legacy type import.',
-    isAutoFixable: true, fix: m => m.replace(/@\/types\//g, '@/dtos/entities/')
-  },
-  TYPE_DEFINITION_LOCATION: {
-    id: 'R016', priority: 1, severity: 'ERROR',
-    pattern: /(?:^|\n)\s*export\s+(interface|type)\s+([A-Z]\w*)/gm,
-    message: '❌ [R016] Type definition outside domain/dtos.',
-    isAutoFixable: false,
-    exclude: ['src/config/', 'src/integrations/supabase/types.ts'],
-    checkFile: fp => {
-      const n = fp.replace(/\\/g, '/');
-      return !n.includes('/domain/') && !n.includes('/dtos/');
-    }
-  },
-  TRANSFORM_FUNCTION_LOCATION: {
-    id: 'R015', priority: 1, severity: 'ERROR',
-    pattern: /(?:function\s+|const\s+|let\s+|var\s+)(fromRow|toRow|fromSupabase|toSupabase|mapFromDB|mapToDB|fromDb|toDb)\b/g,
-    message: '❌ [R015] Mapping function outside dtos/transforms.',
-    isAutoFixable: false,
-    checkFile: fp => !fp.replace(/\\/g, '/').includes('/dtos/transforms/')
-  },
-  SNAKE_CASE_IDENTIFIER: {
-    id: 'R004', priority: 2, severity: 'WARNING',
-    pattern: /\b([a-z]+_[a-z]+(?:_[a-z]+)*)\b/g,
-    message: '⚠️ [R004] Snake_case identifier.',
-    isAutoFixable: true,
-    fix: m => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()),
-    exclude: ['src/infrastructure/', 'src/dtos/transforms/', 'src/test/', 'src/integrations/supabase/types.ts', 'supabase/'],
-    skipIfInStringOrComment: true,
-    skipIfObjectKey: true
-  },
-  NON_HEX_HOOK: {
-    id: 'R006', priority: 1, severity: 'WARNING',
-    pattern: /export\s+function\s+use(\w+)\(/g,
-    message: '⚠️ [R006] Non hexagonal hook.',
-    isAutoFixable: true,
-    fix: (m, name) => name.endsWith('Hex') ? m : m.replace(/use(\w+)\(/, (_, n) => `use${n}Hex(`),
-    exclude: ['useProjectsHex', 'useProjectWorkflowHex', 'useProjectEditHex', 'usePhasesHex']
-  },
-  DTO_SNAKE_CASE: {
-    id: 'R007', priority: 1, severity: 'ERROR',
-    pattern: /interface\s+\w+DTO\s*{([^}]*?)(\w+_\w+)/g,
-    message: '❌ [R007] Snake_case in DTO.',
-    isAutoFixable: true,
-    fix: (m, _, field) => m.replace(field, field.replace(/_([a-z])/g, (_, l) => l.toUpperCase()))
-  },
-  LEGACY_SERVICE_REF: {
-    id: 'R009', priority: 1, severity: 'ERROR',
-    pattern: /new\s+(\w+Service)\(/g,
-    message: '❌ [R009] Legacy service instantiation.',
-    isAutoFixable: false, exclude: ['src/application/', 'src/infrastructure/']
-  },
-  TRANSFORMER_COMPLETENESS: {
-    id: 'R010', priority: 1, severity: 'WARNING',
-    pattern: /class\s+(\w+)Transformer\s*{([^}]*)}/gs,
-    message: '⚠️ [R010] Transformer incomplete.',
-    isAutoFixable: false,
-    check: c => {
-      const methods = ['fromSupabase', 'toSupabase', 'toDTO', 'fromDTO'];
-      const missing = methods.filter(m => !c.includes(m));
-      return missing.length > 0 ? `Missing: ${missing.join(', ')}` : null;
-    },
-    exclude: ['src/test/']
-  },
-  ANY_TYPE: {
-    id: 'R005', priority: 3, severity: 'ERROR',
-    pattern: /:\s*any\b/g,
-    message: '❌ [R005] "any" type.',
-    isAutoFixable: false, exclude: ['node_modules/', 'dist/', 'build/']
+
+  // ============================================================
+  // DUPLICATES
+  // ============================================================
+  DUPLICATE_TYPE: {
+    id: 'D001', priority: 2, severity: 'ERROR',
+    message: '❌ [D001] Type dupliqué trouvé !',
+    isAutoFixable: true
   }
 };
 
@@ -173,7 +395,6 @@ const GENERIC_NAMES = new Set([
 
 const REACT_PROP_INDICATORS = /\b(children|className|style|key|ref|on[A-Z]\w*)\s*[?:]/i;
 
-// Mapping explicite – enrichi pour éviter les fichiers parasites
 const DOMAIN_MAP = {
   'PersistedDevSession': 'Auth',
   'UserSession': 'Auth',
@@ -186,10 +407,9 @@ const DOMAIN_MAP = {
   'CreateMilestoneRequestDto': 'Milestone',
   'UpdateMilestoneRequestDto': 'Milestone',
   'MilestoneStatsDto': 'Milestone',
-  'CheckpointVerificationResultDTO': 'Milestone',   // ajout explicite
+  'CheckpointVerificationResultDTO': 'Milestone'
 };
 
-// Heuristiques de mots-clés (étendues)
 const KEYWORD_DOMAIN_HINTS = [
   { keywords: ['map', 'geocode', 'location', 'address', 'place', 'coordinate', 'lat', 'lon'], domain: 'Location' },
   { keywords: ['notification', 'alert', 'email'], domain: 'Notification' },
@@ -236,23 +456,86 @@ const KEYWORD_DOMAIN_HINTS = [
   { keywords: ['oauth', 'provider'], domain: 'OAuthProvider' },
 ];
 
+const CONSOLIDATE_TYPES = {
+  'CheckpointCategory': 'src/dtos/entities/MilestoneDTO.ts',
+  'VerificationStatus': 'src/dtos/entities/MilestoneDTO.ts',
+  'VerificationItemDTO': 'src/dtos/entities/MilestoneDTO.ts',
+  'CheckpointVerificationDTO': 'src/dtos/entities/MilestoneDTO.ts',
+  'CheckpointVerificationResultDTO': 'src/dtos/entities/MilestoneDTO.ts',
+  'CheckpointDTO': 'src/dtos/entities/MilestoneDTO.ts',
+  'InspectionDetails': 'src/dtos/entities/InspectionDTO.ts',
+  'InspectionObservation': 'src/dtos/entities/InspectionDTO.ts',
+  'ChecklistItem': 'src/dtos/entities/InspectionDTO.ts',
+  'InspectionMeasurement': 'src/dtos/entities/InspectionDTO.ts',
+  'InspectionParticipant': 'src/dtos/entities/InspectionDTO.ts',
+  'ProjectRisk': 'src/dtos/entities/ProjectDTO.ts',
+  'ProjectResource': 'src/dtos/entities/ProjectDTO.ts',
+  'ProjectStakeholder': 'src/dtos/entities/ProjectDTO.ts',
+  'ProjectBudget': 'src/dtos/entities/ProjectDTO.ts',
+  'UserProfile': 'src/dtos/entities/UserDTO.ts',
+  'EmployeeFormData': 'src/dtos/entities/EmployeeDTO.ts',
+  'TaskAssignment': 'src/dtos/entities/TaskAssignmentDTO.ts',
+  'Milestone': 'src/dtos/entities/MilestoneDTO.ts',
+  'Workspace': 'src/dtos/entities/WorkspaceDTO.ts',
+  'Task': 'src/dtos/entities/TaskAssignmentDTO.ts',
+  'Notification': 'src/dtos/entities/NotificationDTO.ts',
+  'Document': 'src/dtos/entities/DocumentDTO.ts',
+  'PhaseStatus': 'src/dtos/types/phase-dto.ts',
+  'ProjectStatus': 'src/dtos/entities/ProjectDTO.ts',
+  'InspectionStatus': 'src/dtos/entities/InspectionDTO.ts',
+  'MilestoneStatus': 'src/dtos/entities/MilestoneDTO.ts',
+  'MilestoneType': 'src/dtos/entities/MilestoneDTO.ts',
+  'RiskStatus': 'src/dtos/entities/RiskDTO.ts',
+  'RiskLevel': 'src/dtos/entities/RiskDTO.ts',
+  'RiskCategory': 'src/dtos/entities/RiskDTO.ts',
+};
+
 // ==========================================
 // ANALYSEUR PRINCIPAL
 // ==========================================
 class SmartHexAnalyzer {
   constructor(options = {}) {
-    this.options = { fix: false, cleanMocks: false, dryRun: false, json: false, output: null, moveTypes: false, tsCheck: false, ruleFilter: null, failOn: 'none', ...options };
+    this.options = { 
+      fix: false, 
+      cleanMocks: false, 
+      dryRun: false, 
+      json: false, 
+      output: null, 
+      moveTypes: false, 
+      tsCheck: false, 
+      ruleFilter: null, 
+      failOn: 'error',
+      scoring: false,
+      consolidateDuplicates: false,
+      semanticAnalysis: false,
+      ...options 
+    };
+    
     this.report = {
       timestamp: new Date().toISOString(),
-      stats: { filesScanned: 0, errors: 0, warnings: 0, fixed: 0, mocksRemoved: 0, duplicatesFound: 0, typesMoved: 0 },
+      stats: { 
+        filesScanned: 0, 
+        errors: 0, 
+        warnings: 0, 
+        fixed: 0, 
+        mocksRemoved: 0, 
+        duplicatesFound: 0, 
+        typesMoved: 0,
+        typesConsolidated: 0,
+        p0Violations: 0
+      },
       violations: [],
       movedTypes: [],
-      duplicates: []
+      duplicates: [],
+      consolidatedTypes: [],
+      fileScores: [],
+      summary: {}
     };
+    
     this.globalTypes = new Map();
     this.typeDeclarationsByName = new Map();
-    this.typesToMove = [];                // types à déplacer depuis des fichiers hors DTO
-    this.dtoTypesToReconcile = [];       // types mal placés dans des DTO existants
+    this.typesToMove = [];
+    this.dtoTypesToReconcile = [];
     this.fileContentsCache = new Map();
     this.projectRoot = process.cwd();
     this.knownEntities = this.collectKnownEntities();
@@ -296,7 +579,8 @@ class SmartHexAnalyzer {
     const index = new Map();
     const dirs = [
       path.join(this.projectRoot, 'src', 'dtos', 'entities'),
-      path.join(this.projectRoot, 'src', 'dtos', 'workflows')
+      path.join(this.projectRoot, 'src', 'dtos', 'workflows'),
+      path.join(this.projectRoot, 'src', 'dtos', 'types')
     ];
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) continue;
@@ -304,7 +588,7 @@ class SmartHexAnalyzer {
       for (const file of files) {
         const filePath = path.join(dir, file);
         const content = fs.readFileSync(filePath, 'utf8');
-        const re = /export\s+(?:interface|type)\s+(\w+)/g;
+        const re = /export\s+(?:interface|type|enum)\s+(\w+)/g;
         let m;
         while ((m = re.exec(content)) !== null) {
           if (!index.has(m[1])) index.set(m[1], filePath);
@@ -315,14 +599,676 @@ class SmartHexAnalyzer {
   }
 
   /* ===================================================================
-     OUTILS DE BASE (identiques à v27)
+     DÉTECTION DE LA COUCHE ARCHITECTURALE
+     =================================================================== */
+  detectLayer(filePath) {
+    for (const [layer, config] of Object.entries(ARCHITECTURE.layers)) {
+      for (const pattern of config.paths) {
+        if (filePath.includes(pattern)) {
+          return layer;
+        }
+      }
+    }
+    return 'UNKNOWN';
+  }
+
+  /* ===================================================================
+     DÉTECTION DU TYPE DE FICHIER
+     =================================================================== */
+  detectFileType(filePath) {
+    for (const [name, type] of Object.entries(ARCHITECTURE.fileTypes)) {
+      if (type.pattern.test(filePath)) {
+        return {
+          category: type.category,
+          score: type.score,
+          description: type.description,
+          name: name
+        };
+      }
+    }
+    const ext = path.extname(filePath);
+    if (ext === '.tsx') return { category: 'COMPONENT', score: 50, description: 'React Component', name: 'component' };
+    if (ext === '.ts') return { category: 'UTILITY', score: 30, description: 'Utility File', name: 'utility' };
+    return { category: 'UNKNOWN', score: 10, description: 'Unknown Type', name: 'unknown' };
+  }
+
+  /* ===================================================================
+     CALCUL DU SCORE DU FICHIER
+     =================================================================== */
+  calculateFileScore(filePath, content, violations) {
+    let score = 50;
+    const fileType = this.detectFileType(filePath);
+    const layer = this.detectLayer(filePath);
+    
+    score += fileType.score / 2;
+    
+    for (const violation of violations) {
+      if (violation.ruleId && violation.ruleId.startsWith('P0')) {
+        score -= 25;
+        this.report.stats.p0Violations++;
+      } else if (violation.severity === 'ERROR') {
+        score -= 15;
+      } else if (violation.severity === 'WARNING') {
+        score -= 5;
+      }
+    }
+    
+    if (content.includes('Repository')) score += 5;
+    if (content.includes('interface') && content.includes('export')) score += 5;
+    if (content.includes('DTO')) score += 5;
+    if (layer === 'UNKNOWN') score -= 10;
+    if (fileType.category === 'LEGACY') score -= 15;
+    
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /* ===================================================================
+     DÉTECTION DES TYPES DUPLIQUÉS
+     =================================================================== */
+  detectTypeDuplicates(filePath, content, fileViolations) {
+    const re = /export\s+(?:interface|type|enum)\s+([A-Z]\w+)/g;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      const name = m[1];
+      if (/Props$/.test(name)) continue;
+      if (this.isPureReexportLine(content, m.index)) continue;
+      const line = content.substring(0, m.index).split('\n').length;
+      if (!this.typeDeclarationsByName.has(name)) this.typeDeclarationsByName.set(name, []);
+      const locations = this.typeDeclarationsByName.get(name);
+      if (!locations.some(l => l.file === filePath && l.line === line)) {
+        locations.push({ file: filePath, line });
+      }
+      if (!this.globalTypes.has(name)) this.globalTypes.set(name, filePath);
+    }
+  }
+
+  /* ===================================================================
+     CONSOLIDATION DES TYPES DUPLIQUÉS
+     =================================================================== */
+  consolidateDuplicates() {
+    if (!this.options.consolidateDuplicates) return;
+    
+    const duplicateEntries = [];
+    for (const [name, locations] of this.typeDeclarationsByName.entries()) {
+      const uniqueFiles = [...new Set(locations.map(l => l.file))];
+      if (uniqueFiles.length < 2) continue;
+      
+      const targetFile = CONSOLIDATE_TYPES[name];
+      if (!targetFile) {
+        if (this.options.scoring) {
+          console.log(`⚠️ Type ${name} dupliqué mais pas dans la liste de consolidation`);
+        }
+        continue;
+      }
+      
+      const targetPath = path.join(this.projectRoot, targetFile);
+      if (!fs.existsSync(targetPath)) {
+        const targetDir = path.dirname(targetPath);
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        fs.writeFileSync(targetPath, `// ${path.basename(targetPath)}\n// Consolidated DTO\n\n`);
+      }
+      
+      duplicateEntries.push({
+        typeName: name,
+        locations: locations.map(l => ({ file: l.file, line: l.line })),
+        targetFile: targetPath
+      });
+    }
+    
+    if (duplicateEntries.length === 0) {
+      if (this.options.scoring) console.log('✅ Aucun type dupliqué à consolider.');
+      return;
+    }
+    
+    console.log(`\n🔧 Consolidation de ${duplicateEntries.length} types dupliqués...`);
+    
+    for (const entry of duplicateEntries) {
+      const { typeName, locations, targetFile } = entry;
+      
+      let targetContent = fs.readFileSync(targetFile, 'utf8');
+      const typeRegex = new RegExp(`(?:export\\s+)?(?:interface|type|enum)\\s+${typeName}\\b`);
+      if (typeRegex.test(targetContent)) {
+        console.log(`⏭️ Type ${typeName} déjà présent dans ${path.relative(this.projectRoot, targetFile)}`);
+        continue;
+      }
+      
+      let bestDefinition = '';
+      let bestFile = '';
+      let maxFields = 0;
+      
+      for (const loc of locations) {
+        const content = fs.readFileSync(loc.file, 'utf8');
+        const lines = content.split('\n');
+        const startLine = loc.line - 1;
+        
+        let definition = '';
+        let braceCount = 0;
+        let started = false;
+        let fieldCount = 0;
+        
+        for (let i = startLine; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmedLine = line.trim();
+          
+          if (!started && new RegExp(`export\\s+(interface|type|enum)\\s+${typeName}\\b`).test(line)) {
+            started = true;
+            braceCount += (line.match(/{/g) || []).length;
+            definition += line + '\n';
+          } else if (started) {
+            braceCount += (line.match(/{/g) || []).length;
+            braceCount -= (line.match(/}/g) || []).length;
+            definition += line + '\n';
+            
+            if (trimmedLine && !trimmedLine.startsWith('//') && !trimmedLine.startsWith('/*') && trimmedLine !== '}') {
+              if (trimmedLine.includes(':') && !trimmedLine.includes('=>')) {
+                fieldCount++;
+              }
+            }
+            
+            if (braceCount === 0 && line.includes('}')) break;
+          }
+        }
+        
+        if (fieldCount > maxFields) {
+          maxFields = fieldCount;
+          bestDefinition = definition;
+          bestFile = loc.file;
+        }
+      }
+      
+      if (!bestDefinition) {
+        console.log(`⚠️ Impossible d'extraire la définition de ${typeName}`);
+        continue;
+      }
+      
+      const relPath = path.relative(this.projectRoot, bestFile);
+      const separator = targetContent.trimEnd().endsWith('\n\n') ? '' : '\n\n';
+      const newContent = targetContent.trimEnd() + separator +
+        `// Consolidated from ${relPath}\n${bestDefinition}`;
+      
+      if (!this.options.dryRun) {
+        fs.writeFileSync(targetFile, newContent, 'utf8');
+        this.report.consolidatedTypes.push({
+          typeName,
+          from: locations.map(l => l.file),
+          to: targetFile
+        });
+        this.report.stats.typesConsolidated++;
+        console.log(`✅ Type ${typeName} consolidé dans ${path.relative(this.projectRoot, targetFile)}`);
+      } else {
+        console.log(`[DRY RUN] Would consolidate ${typeName} in ${path.relative(this.projectRoot, targetFile)}`);
+      }
+      
+      if (!this.options.dryRun) {
+        for (const loc of locations) {
+          if (loc.file === targetFile) continue;
+          let content = fs.readFileSync(loc.file, 'utf8');
+          const lines = content.split('\n');
+          const startLine = loc.line - 1;
+          
+          let endLine = startLine;
+          let braceCount = 0;
+          let started = false;
+          for (let i = startLine; i < lines.length; i++) {
+            const line = lines[i];
+            if (!started && new RegExp(`export\\s+(interface|type|enum)\\s+${typeName}\\b`).test(line)) {
+              started = true;
+              braceCount += (line.match(/{/g) || []).length;
+            } else if (started) {
+              braceCount += (line.match(/{/g) || []).length;
+              braceCount -= (line.match(/}/g) || []).length;
+              if (braceCount === 0 && line.includes('}')) {
+                endLine = i;
+                break;
+              }
+            }
+          }
+          
+          lines.splice(startLine, endLine - startLine + 1);
+          const newContent2 = lines.join('\n');
+          fs.writeFileSync(loc.file, newContent2, 'utf8');
+          console.log(`🗑️ Définition supprimée de ${path.relative(this.projectRoot, loc.file)}`);
+        }
+      }
+    }
+  }
+
+  /* ===================================================================
+     ANALYSE SÉMANTIQUE AVANCÉE
+     =================================================================== */
+  semanticAnalysis(filePath, content) {
+    const analysis = {
+      file: path.relative(this.projectRoot, filePath),
+      type: this.detectFileType(filePath),
+      layer: this.detectLayer(filePath),
+      complexity: this.calculateComplexity(content),
+      imports: this.extractImports(content),
+      exports: this.extractExports(content),
+      types: this.extractTypes(content),
+      suggestions: []
+    };
+    
+    analysis.suggestions = this.generateSemanticSuggestions(analysis, content);
+    return analysis;
+  }
+
+  calculateComplexity(content) {
+    const lines = content.split('\n').length;
+    const functions = (content.match(/function\s+\w+|=>\s*{/g) || []).length;
+    const classes = (content.match(/class\s+\w+/g) || []).length;
+    const interfaces = (content.match(/interface\s+\w+/g) || []).length;
+    const imports = (content.match(/import\s+/g) || []).length;
+    
+    let score = 1;
+    if (lines > 100) score++;
+    if (lines > 300) score++;
+    if (lines > 500) score++;
+    if (functions > 10) score++;
+    if (functions > 20) score++;
+    if (classes > 3) score++;
+    if (interfaces > 5) score++;
+    if (imports > 15) score++;
+    if (imports > 30) score++;
+    
+    return {
+      lines,
+      functions,
+      classes,
+      interfaces,
+      imports,
+      score: Math.min(score, 10)
+    };
+  }
+
+  extractImports(content) {
+    const imports = [];
+    const regex = /import\s+(?:{([^}]+)}|(\w+))\s+from\s+['"]([^'"]+)['"]/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const names = match[1] ? match[1].split(',').map(s => s.trim()) : [match[2]];
+      imports.push({
+        names: names,
+        source: match[3],
+        line: content.substring(0, match.index).split('\n').length
+      });
+    }
+    return imports;
+  }
+
+  extractExports(content) {
+    const exports = [];
+    const regex = /export\s+(?:{(.+?)}|(?:interface|type|enum|const|function|class)\s+(\w+))/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      if (match[1]) {
+        const names = match[1].split(',').map(s => s.trim());
+        exports.push({ type: 'named', names });
+      } else if (match[2]) {
+        exports.push({ type: 'declaration', name: match[2] });
+      }
+    }
+    return exports;
+  }
+
+  extractTypes(content) {
+    const types = [];
+    const patterns = [
+      /(?:^|\n)\s*export\s+interface\s+(\w+)/g,
+      /(?:^|\n)\s*export\s+type\s+(\w+)/g,
+      /(?:^|\n)\s*export\s+enum\s+(\w+)/g,
+      /(?:^|\n)\s*(?:interface|type|enum)\s+(\w+)/g
+    ];
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const name = match[1];
+        if (!types.find(t => t.name === name)) {
+          const kind = match[0].includes('interface') ? 'interface' :
+                      match[0].includes('enum') ? 'enum' : 'type';
+          types.push({
+            name: name,
+            kind: kind,
+            line: content.substring(0, match.index).split('\n').length
+          });
+        }
+      }
+    }
+    return types;
+  }
+
+  generateSemanticSuggestions(analysis, content) {
+    const suggestions = [];
+    const { type, layer, imports, complexity } = analysis;
+    
+    if (type.category === 'LEGACY' && layer === 'UNKNOWN') {
+      suggestions.push({
+        priority: 'HIGH',
+        message: `📦 Fichier legacy à migrer vers l'architecture hexagonale`,
+        action: `Déplacer vers src/application/services/ ou src/infrastructure/adapters/`
+      });
+    }
+    
+    for (const imp of imports) {
+      if (imp.source.includes('@/services/')) {
+        suggestions.push({
+          priority: 'HIGH',
+          message: `🔧 Import legacy @/services/ détecté`,
+          action: `Remplacer par @/application/services/`
+        });
+      }
+      if (imp.source.includes('@/types/')) {
+        suggestions.push({
+          priority: 'HIGH',
+          message: `🔧 Import legacy @/types/ détecté`,
+          action: `Remplacer par @/dtos/entities/`
+        });
+      }
+    }
+    
+    if (complexity.score > 7) {
+      suggestions.push({
+        priority: 'MEDIUM',
+        message: `📊 Fichier complexe (score: ${complexity.score}/10)`,
+        action: `Extraire les responsabilités dans des fichiers séparés`
+      });
+    }
+    
+    return suggestions;
+  }
+
+  /* ===================================================================
+     ANALYSE D'UN FICHIER
+     =================================================================== */
+  analyzeFile(filePath) {
+    this.report.stats.filesScanned++;
+    const content = fs.readFileSync(filePath, 'utf8');
+    this.fileContentsCache.set(filePath, content);
+    let modifiedContent = content;
+    let fileModified = false;
+    const fileViolations = [];
+    let hasDirectDbCall = false;
+    const isUIFile = filePath.includes(path.join('src', 'pages')) || filePath.includes(path.join('src', 'components')) || filePath.includes('App.tsx');
+    const isTsx = filePath.endsWith('.tsx');
+    const typeRegions = this.getTypeRegions(content);
+    
+    if (!this.options.ruleFilter || this.options.ruleFilter.includes('D001')) {
+      this.detectTypeDuplicates(filePath, content, fileViolations);
+    }
+    
+    const sortedRules = Object.entries(RULES).sort((a, b) => a[1].priority - b[1].priority);
+
+    for (const [key, rule] of sortedRules) {
+      if (this.options.ruleFilter && !this.options.ruleFilter.includes(rule.id)) continue;
+      if (rule.target === 'UI' && !isUIFile) continue;
+      if (!this.shouldApplyFileRule(filePath, rule)) continue;
+
+      // Règle M003 - STATIC_MOCK_DATA (check personnalisé)
+      if (rule.id === 'M003') {
+        if (!this.shouldExclude(filePath, rule)) {
+          if (rule.pattern) {
+            rule.pattern.lastIndex = 0;
+            let m;
+            while ((m = rule.pattern.exec(content)) !== null) {
+              const block = m[0], varName = m[1];
+              const res = rule.check(block, varName);
+              if (res) {
+                const line = content.substring(0, m.index).split('\n').length;
+                fileViolations.push({ 
+                  ruleId: rule.id, 
+                  priority: rule.priority, 
+                  severity: rule.severity, 
+                  message: `${rule.message} (${res})`, 
+                  line, 
+                  match: varName 
+                });
+                this.report.stats.warnings++;
+              }
+            }
+          }
+        }
+        continue;
+      }
+
+      // Règle P0-M001 - MISSING_IMPLEMENTATION (check personnalisé)
+      if (rule.id === 'P0-M001') {
+        if (!this.shouldExclude(filePath, rule)) {
+          const checkResult = rule.check(content);
+          if (checkResult.total > 0) {
+            const violation = { 
+              ruleId: rule.id, 
+              priority: rule.priority, 
+              severity: rule.severity, 
+              message: `${rule.message} (${checkResult.emptyFunctions} fonctions vides, ${checkResult.todoComments} TODO, ${checkResult.notImplemented} Not Implemented)`,
+              line: 1, 
+              match: 'TODO/NotImplemented/empty function'
+            };
+            if (!fileViolations.some(v => v.ruleId === rule.id)) {
+              fileViolations.push(violation);
+              this.report.stats.errors++;
+            }
+          }
+        }
+        continue;
+      }
+
+      // Règle P1-TRF002 - TRANSFORMER_COMPLETENESS (check personnalisé)
+      if (rule.id === 'P1-TRF002') {
+        if (!this.shouldExclude(filePath, rule)) {
+          if (rule.pattern) {
+            rule.pattern.lastIndex = 0;
+            let m;
+            while ((m = rule.pattern.exec(content)) !== null) {
+              const transformerContent = m[2];
+              const res = rule.check(transformerContent);
+              if (res) {
+                const line = content.substring(0, m.index).split('\n').length;
+                fileViolations.push({ 
+                  ruleId: rule.id, 
+                  priority: rule.priority, 
+                  severity: rule.severity, 
+                  message: `${rule.message} (${res})`, 
+                  line, 
+                  match: m[1] 
+                });
+                this.report.stats.warnings++;
+              }
+            }
+          }
+        }
+        continue;
+      }
+
+      // Règles avec pattern standard
+      if (rule.pattern) {
+        rule.pattern.lastIndex = 0;
+        let m;
+        while ((m = rule.pattern.exec(modifiedContent)) !== null) {
+          if (rule.id === 'P0-SUP001' || rule.id === 'P0-DB001') {
+            hasDirectDbCall = true;
+          }
+          const line = modifiedContent.substring(0, m.index).split('\n').length;
+          if (rule.skipIfInStringOrComment && this.isInStringOrComment(modifiedContent, m.index)) continue;
+          if (rule.skipIfObjectKey && this.isObjectKeyPosition(modifiedContent, m)) continue;
+
+          // Règle P2-CAS001 - SNAKE_CASE_IDENTIFIER
+          if (rule.id === 'P2-CAS001') {
+            const inType = this.isInTypeRegion(m.index, typeRegions);
+            const fileIsDomainOrDtos = this.isDomainOrDtosFile(filePath);
+            if (inType && !fileIsDomainOrDtos) {
+              const region = typeRegions.find(r => m.index >= r.start && m.index <= r.end);
+              const violation = { 
+                ruleId: 'P2-CAS001', 
+                priority: rule.priority, 
+                severity: 'ERROR', 
+                message: '❌ [P2-CAS001] Snake_case field in type definition – move the entire type.', 
+                line, 
+                match: m[0], 
+                typeRegion: region 
+              };
+              if (!fileViolations.some(v => v.line === line && v.ruleId === 'P2-CAS001' && v.message.includes('move the entire type'))) {
+                fileViolations.push(violation); 
+                this.report.stats.errors++;
+              }
+              continue;
+            }
+            if (inType && fileIsDomainOrDtos) {
+              if (this.options.fix && rule.isAutoFixable && rule.fix) {
+                const replacement = rule.fix(m[0]);
+                if (replacement !== m[0]) { 
+                  modifiedContent = modifiedContent.replace(m[0], replacement); 
+                  fileModified = true; 
+                  this.report.stats.fixed++; 
+                }
+              } else {
+                fileViolations.push({ 
+                  ruleId: rule.id, 
+                  priority: rule.priority, 
+                  severity: rule.severity, 
+                  message: rule.message, 
+                  line, 
+                  match: m[0] 
+                });
+                this.report.stats.warnings++;
+              }
+              continue;
+            }
+            fileViolations.push({ 
+              ruleId: rule.id, 
+              priority: rule.priority, 
+              severity: 'WARNING', 
+              message: '⚠️ [P2-CAS001] Snake_case identifier – may be DB field.', 
+              line, 
+              match: m[0] 
+            });
+            this.report.stats.warnings++;
+            continue;
+          }
+
+          // Règle P1-TYP001 - TYPE_DEFINITION_LOCATION
+          if (rule.id === 'P1-TYP001') {
+            const typeName = m[2];
+            if (typeName && /Props$/.test(typeName)) continue;
+            const usageCount = (modifiedContent.match(new RegExp(`\\b${typeName}\\b`, 'g')) || []).length;
+            if (usageCount <= 1) continue;
+          }
+
+          let extraMsg = '';
+          if (rule.id === 'P0-SUP001') {
+            const context = this.findContextDomain(modifiedContent, m.index);
+            if (context) {
+              extraMsg = ` → Utiliser ${context.suggestion}`;
+            }
+          }
+
+          const violation = { 
+            ruleId: rule.id, 
+            priority: rule.priority, 
+            severity: rule.severity, 
+            message: rule.message + extraMsg, 
+            line, 
+            match: m[0] 
+          };
+          
+          if (!fileViolations.some(v => v.line === line && v.ruleId === rule.id)) {
+            fileViolations.push(violation);
+            if (rule.severity === 'ERROR') this.report.stats.errors++; 
+            else this.report.stats.warnings++;
+          }
+
+          if (this.options.fix && rule.isAutoFixable && rule.fix && !(rule.id === 'P2-CAS001' && this.isInTypeRegion(m.index, typeRegions))) {
+            const repl = rule.fix(m[0], m[1], m[2], filePath);
+            if (repl && repl !== m[0]) { 
+              modifiedContent = modifiedContent.replace(m[0], repl); 
+              fileModified = true; 
+              this.report.stats.fixed++; 
+            }
+          }
+
+          if (this.options.cleanMocks && (rule.id === 'M001' || rule.id === 'M002' || rule.id === 'M003')) {
+            if (!/TODO/i.test(m[0])) {
+              modifiedContent = modifiedContent.replace(m[0], '/* [CLEANED MOCK] */');
+              fileModified = true;
+              this.report.stats.mocksRemoved++;
+            }
+          }
+        }
+      }
+    }
+
+    if (hasDirectDbCall) {
+      fileViolations.forEach(v => { 
+        if (v.ruleId === 'P2-CAS001') v.message += ' (ℹ️ probably DB→domain missing)'; 
+      });
+    }
+
+    for (const region of typeRegions) {
+      const { start, end, typeName } = region;
+      if (this.isDomainOrDtosFile(filePath)) continue;
+      const typeContent = content.substring(start, end + 1);
+      const hasSnake = /\b[a-z]+_[a-z]+\b/.test(typeContent);
+      if (!hasSnake) continue;
+      if (isTsx && (this.isReactProps(typeContent) || /Props$/i.test(typeName))) continue;
+      const importedFromDto = new RegExp(`import\\s+{[^}]*\\b${typeName}\\b[^}]*}\\s+from\\s+['"]@/dtos/`).test(content);
+      if (importedFromDto) continue;
+      if (this.globalTypes.has(typeName) && this.globalTypes.get(typeName) !== filePath) continue;
+      if (!this.typesToMove.some(t => t.filePath === filePath && t.typeName === typeName)) {
+        let camel = typeContent.replace(/\b([a-z]+_[a-z]+)\b/g, m => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()));
+        if (!/^\s*export\s+/.test(camel.trimStart())) camel = camel.replace(/(interface|type)\s+/, 'export $1 ');
+        this.typesToMove.push({ filePath, typeName, original: typeContent, camel, region: { start, end } });
+      }
+    }
+
+    if (this.options.semanticAnalysis) {
+      const semantic = this.semanticAnalysis(filePath, content);
+      for (const suggestion of semantic.suggestions) {
+        fileViolations.push({
+          ruleId: 'S001',
+          priority: 1,
+          severity: 'INFO',
+          message: `💡 ${suggestion.message}`,
+          line: 0,
+          match: suggestion.action
+        });
+      }
+    }
+
+    if (this.options.scoring) {
+      const score = this.calculateFileScore(filePath, content, fileViolations);
+      this.report.fileScores.push({
+        file: path.relative(this.projectRoot, filePath),
+        score: score,
+        type: this.detectFileType(filePath).category,
+        layer: this.detectLayer(filePath),
+        violations: fileViolations.length,
+        p0Violations: fileViolations.filter(v => v.ruleId && v.ruleId.startsWith('P0')).length
+      });
+    }
+
+    if (fileViolations.length > 0) {
+      fileViolations.sort((a, b) => a.priority - b.priority);
+      this.report.violations.push({ file: path.relative(this.projectRoot, filePath), violations: fileViolations });
+    }
+    
+    if (fileModified && !this.options.dryRun) {
+      fs.writeFileSync(filePath, modifiedContent, 'utf8');
+      this.fileContentsCache.set(filePath, modifiedContent);
+    }
+    
+    return modifiedContent;
+  }
+
+  /* ===================================================================
+     OUTILS DE BASE
      =================================================================== */
   shouldExclude(filePath, rule) { return rule.exclude?.some(p => filePath.includes(p)) ?? false; }
   shouldApplyFileRule(filePath, rule) { if (rule.checkFile && !rule.checkFile(filePath)) return false; return !this.shouldExclude(filePath, rule); }
 
   getTypeRegions(content) {
     const regions = [];
-    const re = /\b(interface|type)\s+(\w+)/g;
+    const re = /\b(interface|type|enum)\s+(\w+)/g;
     let match;
     while ((match = re.exec(content)) !== null) {
       if (this.isInStringOrComment(content, match.index)) continue;
@@ -448,11 +1394,6 @@ class SmartHexAnalyzer {
     return cleaned && !GENERIC_NAMES.has(cleaned.toLowerCase()) ? cleaned : null;
   }
 
-  /**
-   * Cherche le meilleur fichier DTO existant pour un type.
-   * Si le type est déjà dans un DTO et que son domaine correspond, on retourne ce fichier.
-   * Sinon, on cherche par domaine, puis par similarité avec tous les DTO existants.
-   */
   findBestDtoFile(typeName, filePath, fileContent) {
     const existing = this.existingDtoTypes.get(typeName);
     if (existing) {
@@ -460,7 +1401,6 @@ class SmartHexAnalyzer {
       if (domain) {
         const fileBase = path.basename(existing, path.extname(existing)).replace(/DTO$/i, '');
         if (fileBase.toLowerCase() === domain.toLowerCase()) return existing;
-        console.log(`⚠️ Type ${typeName} trouvé dans ${existing} mais son domaine est "${domain}" → sera redirigé.`);
         return null;
       }
       return existing;
@@ -474,7 +1414,6 @@ class SmartHexAnalyzer {
       path.join(this.projectRoot, 'src', 'dtos', 'workflows')
     ];
 
-    // 1. Correspondance exacte du domaine
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) continue;
       const files = fs.readdirSync(dir).filter(f => /\.(ts|tsx)$/.test(f));
@@ -484,7 +1423,6 @@ class SmartHexAnalyzer {
       }
     }
 
-    // 2. Sous‑chaîne
     const lowerDomain = domain.toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) continue;
@@ -495,7 +1433,6 @@ class SmartHexAnalyzer {
       }
     }
 
-    // 3. LCS avec tous les fichiers DTO (priorité aux fichiers dont le nom est une entité connue)
     let bestScore = 0, bestFile = null;
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) continue;
@@ -510,7 +1447,6 @@ class SmartHexAnalyzer {
     }
     if (bestScore >= 0.5) return bestFile;
 
-    // 4. Aucun fichier pertinent → null (on évitera de créer un nouveau fichier dans moveMisplacedTypes)
     return null;
   }
 
@@ -550,13 +1486,10 @@ class SmartHexAnalyzer {
   }
 
   isObjectKeyPosition(content, m) {
-    // Heuristic: treat as an object-literal key (e.g. DB payload construction) when the
-    // matched identifier is immediately followed by a colon (not part of a ternary) and
-    // is preceded (ignoring whitespace) by '{' or ',' — i.e. `{ some_field: value }`.
     const after = content.slice(m.index + m[0].length);
     const afterTrim = after.match(/^\s*/)[0].length;
     if (after[afterTrim] !== ':' ) return false;
-    if (after[afterTrim + 1] === ':') return false; // type annotation `::`
+    if (after[afterTrim + 1] === ':') return false;
     const before = content.slice(0, m.index);
     const beforeTrim = before.match(/\s*$/)[0];
     const prevChar = before[before.length - beforeTrim.length - 1];
@@ -570,48 +1503,6 @@ class SmartHexAnalyzer {
     return /export\s+\*\s+from\s+['"]/.test(line) || /export\s+type\s*{[^}]*}\s*from\s+['"]/.test(line);
   }
 
-  detectTypeDuplicates(filePath, content, fileViolations) {
-    const re = /export\s+(?:interface|type)\s+([A-Z]\w+)/g;
-    let m;
-    while ((m = re.exec(content)) !== null) {
-      const name = m[1];
-      if (this.isPureReexportLine(content, m.index)) continue;
-      const line = content.substring(0, m.index).split('\n').length;
-      if (!this.typeDeclarationsByName.has(name)) this.typeDeclarationsByName.set(name, []);
-      const locations = this.typeDeclarationsByName.get(name);
-      if (!locations.some(l => l.file === filePath && l.line === line)) {
-        locations.push({ file: filePath, line });
-      }
-      if (!this.globalTypes.has(name)) this.globalTypes.set(name, filePath);
-    }
-  }
-
-  finalizeDuplicateReport() {
-    const duplicateEntries = [];
-    for (const [name, locations] of this.typeDeclarationsByName.entries()) {
-      const uniqueFiles = [...new Set(locations.map(l => l.file))];
-      if (uniqueFiles.length < 2) continue;
-      duplicateEntries.push({
-        typeName: name,
-        locations: locations.map(l => ({ file: path.relative(this.projectRoot, l.file), line: l.line }))
-      });
-    }
-    this.report.duplicates = duplicateEntries;
-    this.report.stats.duplicatesFound = duplicateEntries.length;
-    this.report.stats.errors += duplicateEntries.length;
-    for (const entry of duplicateEntries) {
-      const filesList = entry.locations.map(l => `${l.file}:${l.line}`).join(', ');
-      this.report.violations.push({
-        file: entry.locations[0].file,
-        violations: [{
-          ruleId: 'R014', priority: 2, severity: 'ERROR',
-          message: `❌ [R014] Duplicate Type "${entry.typeName}" found in ${entry.locations.length} locations: ${filesList}`,
-          line: entry.locations[0].line, match: entry.typeName
-        }]
-      });
-    }
-  }
-
   findContextDomain(content, matchIndex) {
     const before = content.substring(0, matchIndex);
     const funcMatch = before.match(/(?:export\s+)?(?:async\s+)?function\s+(\w+)|(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(/g);
@@ -621,168 +1512,15 @@ class SmartHexAnalyzer {
       const m = last.match(/(?:function\s+|const\s+)(\w+)/);
       if (m) lastFuncName = m[1].toLowerCase();
     }
-    for (const [key, val] of Object.entries(RULES.DIRECT_SUPABASE.contextMap)) {
+    const contextMap = RULES.DIRECT_SUPABASE.contextMap || {};
+    for (const [key, val] of Object.entries(contextMap)) {
       if (lastFuncName.includes(key.replace(/_/g, ''))) return { domain: key, suggestion: val };
     }
     return null;
   }
 
   /* ===================================================================
-     ANALYSE D'UN FICHIER (identique à v27)
-     =================================================================== */
-  analyzeFile(filePath) {
-    this.report.stats.filesScanned++;
-    const content = fs.readFileSync(filePath, 'utf8');
-    this.fileContentsCache.set(filePath, content);
-    let modifiedContent = content;
-    let fileModified = false;
-    const fileViolations = [];
-    let hasDirectDbCall = false;
-    const isUIFile = filePath.includes(path.join('src', 'pages')) || filePath.includes(path.join('src', 'components')) || filePath.includes('App.tsx');
-    const isTsx = filePath.endsWith('.tsx');
-    const typeRegions = this.getTypeRegions(content);
-    if (!this.options.ruleFilter || this.options.ruleFilter.includes('R014')) {
-      this.detectTypeDuplicates(filePath, content, fileViolations);
-    }
-    const sortedRules = Object.entries(RULES).sort((a, b) => a[1].priority - b[1].priority);
-
-    for (const [key, rule] of sortedRules) {
-      if (this.options.ruleFilter && !this.options.ruleFilter.includes(rule.id)) continue;
-      if (rule.target === 'UI' && !isUIFile) continue;
-      if (!this.shouldApplyFileRule(filePath, rule)) continue;
-
-      if (rule.id === 'R017') {
-        if (!this.shouldExclude(filePath, rule)) {
-          rule.pattern.lastIndex = 0;
-          let m;
-          while ((m = rule.pattern.exec(content)) !== null) {
-            const block = m[0], varName = m[1];
-            const res = rule.check(block, varName);
-            if (res) {
-              const line = content.substring(0, m.index).split('\n').length;
-              fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: rule.severity, message: `${rule.message} (${res})`, line, match: varName });
-              this.report.stats.warnings++;
-            }
-          }
-        }
-        continue;
-      }
-
-      if (rule.check && rule.pattern.test(content)) {
-        rule.pattern.lastIndex = 0;
-        let m;
-        while ((m = rule.pattern.exec(content)) !== null) {
-          const res = rule.check(m[2]);
-          if (res) {
-            const line = content.substring(0, m.index).split('\n').length;
-            fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: rule.severity, message: `${rule.message} (${res})`, line, match: m[1] });
-            this.report.stats.warnings++;
-          }
-        }
-      }
-
-      rule.pattern.lastIndex = 0;
-      let m;
-      while ((m = rule.pattern.exec(modifiedContent)) !== null) {
-        if (rule.id === 'R003' || rule.id === 'R008') hasDirectDbCall = true;
-        const line = modifiedContent.substring(0, m.index).split('\n').length;
-        if (rule.skipIfInStringOrComment && this.isInStringOrComment(modifiedContent, m.index)) continue;
-        if (rule.skipIfObjectKey && this.isObjectKeyPosition(modifiedContent, m)) continue;
-
-        if (rule.id === 'R004') {
-          const inType = this.isInTypeRegion(m.index, typeRegions);
-          const fileIsDomainOrDtos = this.isDomainOrDtosFile(filePath);
-          if (inType && !fileIsDomainOrDtos) {
-            const region = typeRegions.find(r => m.index >= r.start && m.index <= r.end);
-            const violation = { ruleId: 'R004', priority: rule.priority, severity: 'ERROR', message: '❌ [R004] Snake_case field in type definition – move the entire type.', line, match: m[0], typeRegion: region };
-            if (!fileViolations.some(v => v.line === line && v.ruleId === 'R004' && v.message.includes('move the entire type'))) {
-              fileViolations.push(violation); this.report.stats.errors++;
-            }
-            continue;
-          }
-          if (inType && fileIsDomainOrDtos) {
-            if (this.options.fix && rule.isAutoFixable && rule.fix) {
-              const replacement = rule.fix(m[0]);
-              if (replacement !== m[0]) { modifiedContent = modifiedContent.replace(m[0], replacement); fileModified = true; this.report.stats.fixed++; }
-            } else {
-              fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: rule.severity, message: rule.message, line, match: m[0] });
-              this.report.stats.warnings++;
-            }
-            continue;
-          }
-          fileViolations.push({ ruleId: rule.id, priority: rule.priority, severity: 'WARNING', message: '⚠️ [R004] Snake_case identifier – may be DB field.', line, match: m[0] });
-          this.report.stats.warnings++;
-          continue;
-        }
-
-        if (rule.id === 'R016') {
-          const typeName = m[2];
-          if (typeName && /Props$/.test(typeName)) continue;
-          const usageCount = (modifiedContent.match(new RegExp(`\\b${typeName}\\b`, 'g')) || []).length;
-          if (usageCount <= 1) continue; // local-only type, used nowhere else in the file
-        }
-
-        let extraMsg = '';
-        if (rule.id === 'R003') {
-          const context = this.findContextDomain(modifiedContent, m.index);
-          if (context) extraMsg = ` → Use ${context.suggestion}`;
-        }
-
-        const violation = { ruleId: rule.id, priority: rule.priority, severity: rule.severity, message: rule.message + extraMsg, line, match: m[0] };
-        if (!fileViolations.some(v => v.line === line && v.ruleId === rule.id)) {
-          fileViolations.push(violation);
-          if (rule.severity === 'ERROR') this.report.stats.errors++; else this.report.stats.warnings++;
-        }
-
-        if (this.options.fix && rule.isAutoFixable && rule.fix && !(rule.id === 'R004' && this.isInTypeRegion(m.index, typeRegions))) {
-          const repl = rule.fix(m[0], m[1], m[2], filePath);
-          if (repl && repl !== m[0]) { modifiedContent = modifiedContent.replace(m[0], repl); fileModified = true; this.report.stats.fixed++; }
-        }
-
-        if (this.options.cleanMocks && (rule.id === 'R011' || rule.id === 'R012' || rule.id === 'R017')) {
-          if (!/TODO/i.test(m[0])) {
-            modifiedContent = modifiedContent.replace(m[0], '/* [CLEANED MOCK] */');
-            fileModified = true;
-            this.report.stats.mocksRemoved++;
-          }
-        }
-      }
-    }
-
-    if (hasDirectDbCall) {
-      fileViolations.forEach(v => { if (v.ruleId === 'R004') v.message += ' (ℹ️ probably DB→domain missing)'; });
-    }
-
-    for (const region of typeRegions) {
-      const { start, end, typeName } = region;
-      if (this.isDomainOrDtosFile(filePath)) continue;
-      const typeContent = content.substring(start, end + 1);
-      const hasSnake = /\b[a-z]+_[a-z]+\b/.test(typeContent);
-      if (!hasSnake) continue;
-      if (isTsx && (this.isReactProps(typeContent) || /Props$/i.test(typeName))) continue;
-      const importedFromDto = new RegExp(`import\\s+{[^}]*\\b${typeName}\\b[^}]*}\\s+from\\s+['"]@/dtos/`).test(content);
-      if (importedFromDto) continue;
-      if (this.globalTypes.has(typeName) && this.globalTypes.get(typeName) !== filePath) continue;
-      if (!this.typesToMove.some(t => t.filePath === filePath && t.typeName === typeName)) {
-        let camel = typeContent.replace(/\b([a-z]+_[a-z]+)\b/g, m => m.replace(/_([a-z])/g, (_, l) => l.toUpperCase()));
-        if (!/^\s*export\s+/.test(camel.trimStart())) camel = camel.replace(/(interface|type)\s+/, 'export $1 ');
-        this.typesToMove.push({ filePath, typeName, original: typeContent, camel, region: { start, end } });
-      }
-    }
-
-    if (fileViolations.length > 0) {
-      fileViolations.sort((a, b) => a.priority - b.priority);
-      this.report.violations.push({ file: path.relative(this.projectRoot, filePath), violations: fileViolations });
-    }
-    if (fileModified && !this.options.dryRun) {
-      fs.writeFileSync(filePath, modifiedContent, 'utf8');
-      this.fileContentsCache.set(filePath, modifiedContent);
-    }
-    return modifiedContent;
-  }
-
-  /* ===================================================================
-     DÉPLACEMENT DES TYPES (amélioré – évite la création de fichiers)
+     DÉPLACEMENT DES TYPES
      =================================================================== */
   moveMisplacedTypes() {
     if (this.typesToMove.length === 0) return;
@@ -809,7 +1547,6 @@ class SmartHexAnalyzer {
           console.log(`⚠️ Type ${t.typeName} ignoré (domaine inconnu).`);
           continue;
         }
-        // Chercher n'importe quel fichier DTO existant dont le nom partage une sous-chaîne avec le domaine
         const existingDtoFiles = this.getAllExistingDtoFiles();
         let closestFile = null;
         let closestScore = 0;
@@ -825,7 +1562,6 @@ class SmartHexAnalyzer {
           dtoFile = closestFile;
           console.log(`🔀 Type ${t.typeName} redirigé vers le DTO existant ${dtoFile} (domaine "${domain}" proche).`);
         } else if (this.knownEntities.has(domain) || DOMAIN_MAP[t.typeName]) {
-          // Créer un nouveau fichier UNIQUEMENT si le domaine est une entité connue et aucun fichier proche
           dtoFile = path.join(entitiesDir, domain + 'DTO.ts');
           console.log(`📄 Création d'un nouveau fichier ${dtoFile} pour l'entité ${domain}.`);
         } else {
@@ -834,7 +1570,6 @@ class SmartHexAnalyzer {
         }
       }
 
-      // Anti‑doublon local
       let targetContent = this.fileContentsCache.get(dtoFile);
       if (!targetContent && fs.existsSync(dtoFile)) {
         targetContent = fs.readFileSync(dtoFile, 'utf8');
@@ -855,7 +1590,6 @@ class SmartHexAnalyzer {
       if (!this.options.dryRun) this.report.movedTypes.push({ type: t.typeName, from: t.filePath, to: dtoFile });
     }
 
-    // Écriture / ajout dans les DTO
     for (const [dtoFilePath, types] of fileMap.entries()) {
       const existing = fs.existsSync(dtoFilePath) ? fs.readFileSync(dtoFilePath, 'utf8') : '';
       let newContent = existing ? existing.trimEnd() : '// Auto-generated DTO\n';
@@ -868,7 +1602,6 @@ class SmartHexAnalyzer {
       console.log(existing ? `📦 Ajout dans ${dtoFilePath}` : `📄 Création ${dtoFilePath}`);
     }
 
-    // Mise à jour des fichiers sources
     const perSourceFile = new Map();
     for (const t of this.typesToMove) {
       const impPath = importPaths.get(t.typeName);
@@ -926,7 +1659,7 @@ class SmartHexAnalyzer {
   }
 
   /* ===================================================================
-     RÉCONCILIATION DES FICHIERS DTO EXISTANTS (identique à v27)
+     RÉCONCILIATION DES FICHIERS DTO
      =================================================================== */
   reconcileDtoFiles() {
     const entitiesDir = path.join(this.projectRoot, 'src', 'dtos', 'entities');
@@ -1057,11 +1790,10 @@ class SmartHexAnalyzer {
         this.updateImportsAcrossFiles(t.typeName, newPath, t.sourceFile);
       }
     }
-
   }
 
   /* ===================================================================
-     MISE À JOUR DES IMPORTS (identique)
+     MISE À JOUR DES IMPORTS
      =================================================================== */
   updateImportsAcrossFiles(typeName, newImportPath, sourceFilePath) {
     const allFiles = this.collectAllFiles(path.join(this.projectRoot, 'src'));
@@ -1128,32 +1860,84 @@ class SmartHexAnalyzer {
 
   generateTextReport() {
     let out = '============================================================\n';
-    out += '📊 RAPPORT DE CONFORMITÉ\n';
+    out += '📊 RAPPORT DE CONFORMITÉ ARCHITECTURALE (P0 - CRITIQUE)\n';
     out += '============================================================\n';
     out += `Date/Heure: ${this.report.timestamp}\n`;
     out += `Fichiers analysés: ${this.report.stats.filesScanned}\n`;
-    out += `Erreurs: ${this.report.stats.errors}  Avertissements: ${this.report.stats.warnings}\n`;
-    out += `Doublons: ${this.report.stats.duplicatesFound}  Corrigés: ${this.report.stats.fixed}\n`;
-    out += `Mocks supprimés: ${this.report.stats.mocksRemoved}  Types déplacés: ${this.report.stats.typesMoved}\n`;
+    out += `\n🚨 P0 - CRITIQUES:\n`;
+    out += `   Violations P0: ${this.report.stats.p0Violations}\n`;
+    out += `   - Méthodes non finalisées (TODO/NotImplemented): ${this.countViolationsByRule('P0-M001')}\n`;
+    out += `   - Appels Supabase dans UI: ${this.countViolationsByRule('P0-DB001')}\n`;
+    out += `   - Types 'any': ${this.countViolationsByRule('P0-ANY001')}\n`;
+    out += `   - Appels Supabase directs: ${this.countViolationsByRule('P0-SUP001')}\n`;
+    out += `\n📊 Statistiques:\n`;
+    out += `   Erreurs: ${this.report.stats.errors}  Avertissements: ${this.report.stats.warnings}\n`;
+    out += `   Doublons: ${this.report.stats.duplicatesFound}  Corrigés: ${this.report.stats.fixed}\n`;
+    out += `   Mocks supprimés: ${this.report.stats.mocksRemoved}  Types déplacés: ${this.report.stats.typesMoved}\n`;
+    out += `   Types consolidés: ${this.report.stats.typesConsolidated}\n`;
     out += '============================================================\n\n';
+    
+    if (this.options.scoring && this.report.fileScores.length > 0) {
+      const avgScore = this.report.fileScores.reduce((s, f) => s + f.score, 0) / this.report.fileScores.length;
+      out += `📈 SCORE MOYEN: ${avgScore.toFixed(0)}/100\n\n`;
+      
+      const sorted = [...this.report.fileScores].sort((a, b) => a.score - b.score);
+      out += '🚨 FICHIERS À CORRIGER EN PRIORITÉ:\n';
+      for (const file of sorted.slice(0, 10)) {
+        out += `   ${file.file} (${file.score}/100) - ${file.violations} violations (${file.p0Violations || 0} P0)\n`;
+      }
+      out += '\n';
+    }
+    
     if (this.report.violations.length) {
-      for (const v of this.report.violations) {
-        out += `📄 ${v.file}\n`;
-        for (const i of v.violations) out += `  [${i.ruleId}] L${i.line}: ${i.message}\n`;
+      const sortedViolations = [...this.report.violations].sort((a, b) => {
+        const aP0 = a.violations.some(v => v.ruleId && v.ruleId.startsWith('P0'));
+        const bP0 = b.violations.some(v => v.ruleId && v.ruleId.startsWith('P0'));
+        return (bP0 ? 1 : 0) - (aP0 ? 1 : 0);
+      });
+      
+      out += '📋 VIOLATIONS DÉTECTÉES:\n';
+      for (const v of sortedViolations) {
+        const hasP0 = v.violations.some(i => i.ruleId && i.ruleId.startsWith('P0'));
+        out += `${hasP0 ? '🚨' : '📄'} ${v.file}\n`;
+        for (const i of v.violations) {
+          const isP0 = i.ruleId && i.ruleId.startsWith('P0');
+          out += `  ${isP0 ? '🚨' : '  '} [${i.ruleId}] L${i.line}: ${i.message}\n`;
+        }
         out += '\n';
       }
-    } else out += '✨ Aucun problème.\n';
+    } else out += '✨ Aucun problème détecté.\n';
+    
     if (this.report.movedTypes.length) {
       out += '\n🚚 TYPES DÉPLACÉS :\n';
       for (const mt of this.report.movedTypes) out += `- ${mt.type} : ${path.relative(this.projectRoot, mt.from)} → ${path.relative(this.projectRoot, mt.to)}\n`;
     }
+    
     if (this.report.duplicates && this.report.duplicates.length) {
       out += '\n🧬 TYPES DUPLIQUÉS :\n';
       for (const d of this.report.duplicates) {
         out += `- ${d.typeName} (${d.locations.length} occurrences): ${d.locations.map(l => `${l.file}:${l.line}`).join(', ')}\n`;
       }
     }
+    
+    if (this.report.consolidatedTypes && this.report.consolidatedTypes.length) {
+      out += '\n🔧 TYPES CONSOLIDÉS :\n';
+      for (const ct of this.report.consolidatedTypes) {
+        out += `- ${ct.typeName} : ${ct.from.map(f => path.relative(this.projectRoot, f)).join(', ')} → ${path.relative(this.projectRoot, ct.to)}\n`;
+      }
+    }
+    
     return out;
+  }
+
+  countViolationsByRule(ruleId) {
+    let count = 0;
+    for (const v of this.report.violations) {
+      for (const i of v.violations) {
+        if (i.ruleId === ruleId) count++;
+      }
+    }
+    return count;
   }
 
   saveReportIfNeeded() {
@@ -1169,9 +1953,9 @@ class SmartHexAnalyzer {
      EXÉCUTION PRINCIPALE
      =================================================================== */
   run() {
-    console.log(`\n🔍 Analyse depuis src/pages/*, src/components/*...\n`);
+    console.log(`\n🔍 Analyse architecturale (P0 - CRITIQUE)...\n`);
     const visited = new Set(), queue = [];
-    const seedDirs = ['src/pages', 'src/components'];
+    const seedDirs = ['src/pages', 'src/components', 'src/application', 'src/domain', 'src/infrastructure', 'src/dtos', 'src/hooks'];
     let count = 0;
     for (const d of seedDirs) {
       const full = path.join(this.projectRoot, d);
@@ -1198,6 +1982,10 @@ class SmartHexAnalyzer {
       }
     }
 
+    if (this.options.consolidateDuplicates) {
+      this.consolidateDuplicates();
+    }
+
     if (this.options.moveTypes && this.typesToMove.length) {
       this.moveMisplacedTypes();
     }
@@ -1217,8 +2005,44 @@ class SmartHexAnalyzer {
 
     this.saveReportIfNeeded();
 
-    if (this.options.failOn === 'error' && this.report.stats.errors > 0) process.exitCode = 1;
-    else if (this.options.failOn === 'warning' && (this.report.stats.errors > 0 || this.report.stats.warnings > 0)) process.exitCode = 1;
+    const failOn = this.options.failOn || 'error';
+    if (failOn === 'error' && (this.report.stats.errors > 0 || this.report.stats.p0Violations > 0)) {
+      process.exitCode = 1;
+    } else if (failOn === 'warning' && (this.report.stats.errors > 0 || this.report.stats.warnings > 0 || this.report.stats.p0Violations > 0)) {
+      process.exitCode = 1;
+    }
+  }
+
+  /* ===================================================================
+     FINALISATION DU RAPPORT DE DUPLICATS
+     =================================================================== */
+  finalizeDuplicateReport() {
+    const duplicateEntries = [];
+    for (const [name, locations] of this.typeDeclarationsByName.entries()) {
+      const uniqueFiles = [...new Set(locations.map(l => l.file))];
+      if (uniqueFiles.length < 2) continue;
+      duplicateEntries.push({
+        typeName: name,
+        locations: locations.map(l => ({ file: path.relative(this.projectRoot, l.file), line: l.line }))
+      });
+    }
+    this.report.duplicates = duplicateEntries;
+    this.report.stats.duplicatesFound = duplicateEntries.length;
+    this.report.stats.errors += duplicateEntries.length;
+    for (const entry of duplicateEntries) {
+      const filesList = entry.locations.map(l => `${l.file}:${l.line}`).join(', ');
+      this.report.violations.push({
+        file: entry.locations[0].file,
+        violations: [{
+          ruleId: 'D001', 
+          priority: 2, 
+          severity: 'ERROR',
+          message: `❌ [D001] Type dupliqué "${entry.typeName}" trouvé dans ${entry.locations.length} emplacements: ${filesList}`,
+          line: entry.locations[0].line, 
+          match: entry.typeName
+        }]
+      });
+    }
   }
 }
 
@@ -1252,7 +2076,10 @@ const options = {
   interactive: args.includes('--interactive'),
   moveTypes: args.includes('--move-types'),
   tsCheck: args.includes('--ts-check'),
-  failOn: ['error', 'warning', 'none'].includes(failOnValue) ? failOnValue : 'none',
+  scoring: args.includes('--scoring'),
+  consolidateDuplicates: args.includes('--consolidate-duplicates'),
+  semanticAnalysis: args.includes('--semantic-analysis'),
+  failOn: ['error', 'warning', 'none'].includes(failOnValue) ? failOnValue : 'error',
   ruleFilter: ruleValue ? ruleValue.split(',').map(r => r.trim()).filter(Boolean) : null
 };
 
@@ -1262,8 +2089,9 @@ const options = {
     const dry = new SmartHexAnalyzer({ ...options, fix: false, dryRun: true, moveTypes: false, tsCheck: false });
     dry.run();
     if (dry.typesToMove.length || dry.dtoTypesToReconcile.length) options.moveTypes = await askConfirmation('❓ Déplacer les types mal placés ? (o/n) ');
+    if (dry.report.duplicates.length) options.consolidateDuplicates = await askConfirmation('❓ Consolider les types dupliqués ? (o/n) ');
     const fixConfirm = await askConfirmation('❓ Appliquer les corrections automatiques ? (o/n) ');
-    if (fixConfirm || options.moveTypes) {
+    if (fixConfirm || options.moveTypes || options.consolidateDuplicates) {
       console.log('\n🔧 Application...\n');
       const fixer = new SmartHexAnalyzer({ ...options, fix: fixConfirm, dryRun: false, moveTypes: options.moveTypes, tsCheck: options.tsCheck });
       fixer.run();
