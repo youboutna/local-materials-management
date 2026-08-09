@@ -3,6 +3,9 @@ import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
+// Destinataire technique des notifications système (traçabilité des actions).
+const SYSTEM_NOTIFICATION_RECIPIENT_ID = '00000000-0000-0000-0000-000000000000';
+
 export interface InspectionControlAction {
   id: string;
   inspectionId: string;
@@ -72,11 +75,13 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
     await executeInspectionAction(action);
 
     // Track action in notifications table
-    await supabase.from('notifications').insert({
-      type: 'system',
+    await NotificationService.createNotification({
+      recipientId: SYSTEM_NOTIFICATION_RECIPIENT_ID,
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      type: 'system',
+      priority: action.priority === 'urgent' ? 'high' : action.priority,
+      relatedId: action.inspectionId,
       metadata: {
         actionType: action.actionType,
         entityType: 'inspection',
@@ -84,8 +89,7 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
         projectId: action.projectId,
         priority: action.priority,
         executedAt: action.createdAt
-      },
-      relatedId: action.inspectionId
+      }
     });
 
     return action;
