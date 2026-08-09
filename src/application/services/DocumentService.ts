@@ -234,6 +234,19 @@ export class DocumentService {
   /**
    * Get documents by type
    */
+  /**
+   * Documents d'appel d'offres partagés avec les fournisseurs pour un tender donné.
+   */
+  async getSharedTenderDocuments(tenderId: string): Promise<DocumentDTO[]> {
+    if (!tenderId) return [];
+    const documents = await this.getDocumentsByType('tender' as DocumentType);
+    return documents.filter((doc) => {
+      if (!doc.isSharedWithSuppliers) return false;
+      const metadata = (doc.metadata || {}) as Record<string, unknown>;
+      return metadata.tender_id === tenderId || metadata.tenderId === tenderId;
+    });
+  }
+
   async getDocumentsByType(type: DocumentType): Promise<DocumentDTO[]> {
     try {
       if (!type || !isDocumentType(type)) {
