@@ -30,10 +30,11 @@ export class SupabaseUserAdapter implements IUserRepository {
           .eq('user_id', id);
 
         const roles = userRoles?.map(ur => ur.role_name) || [];
-
+        const email = await this.getUserEmail(profile.id);
+  
         const mergedData = {
           id: profile.id,
-          email: '', // Email not in profiles table, will be filled by auth fallback
+          email: email, // Email not in profiles table, will be filled by auth fallback
           full_name: profile.full_name || '',
           role: roles[0] || profile.role || 'user',
           phone: profile.phone || null,
@@ -97,7 +98,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async searchUsers(options: SearchUsersOptions = {}): Promise<SearchUsersResult> {
     try {
       let query = supabase
-        .from('profiles')
+        .from('users')
         .select('id, full_name, phone, national_id, role, created_at, updated_at, is_admin')
         .order('full_name', { ascending: true });
 
@@ -147,7 +148,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async findAll(): Promise<User[]> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .order('full_name', { ascending: true });
 
@@ -168,7 +169,7 @@ export class SupabaseUserAdapter implements IUserRepository {
       const dbData = UserTransformer.toSupabaseRow(userData as User);
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .insert(dbData)
         .select()
         .single();
@@ -194,7 +195,7 @@ export class SupabaseUserAdapter implements IUserRepository {
       const dbData = UserTransformer.toSupabaseRow(userData as User);
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .update(dbData)
         .eq('id', id)
         .select()
@@ -219,7 +220,7 @@ export class SupabaseUserAdapter implements IUserRepository {
   async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('users')
         .delete()
         .eq('id', id);
 
@@ -244,4 +245,27 @@ export class SupabaseUserAdapter implements IUserRepository {
   private mapToUser(data: any): User {
     return UserTransformer.toDomain(data);
   }
+
+  // Add better error handling
+private async getUserEmail(id: string): Promise<string> {
+  try {
+    // Try to get from session
+    const { data: sessionData } = await supabase.auth.getUser();
+    if (sessionData?.user?.email && sessionData.user.id === id) {
+      return sessionData.user.email;
+    }
+    
+    // Try admin API (requires service role)
+    const { data: adminData, error: adminError } = await supabase.auth.admin.getUserById(id);
+    if (adminData?.user?.email && !adminError) {
+      return adminData.user.email;
+    }
+    
+    console.warn(`No email found for user ${id}`);
+    return ''; // Return empty and handle in User constructor
+  } catch (error) {
+    console.error('Error fetching user email:', error);
+    return '';
+  }
+}
 }
