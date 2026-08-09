@@ -1,29 +1,29 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack, Save } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist";
-import Papa from "papaparse";
-import { toast } from "@/hooks/use-toast";
-import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
-import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
-import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
-import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
-import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
-import type { BoqResourceType } from "@/domain/boq/BoqLine";
-import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
 import { BoqImportOrchestrator } from "@/application/services/boq/BoqImportOrchestrator";
+import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import type { BoqResourceType } from "@/domain/entities/boq/BoqLine";
+import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
+import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
+import { toast } from "@/hooks/use-toast";
+import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
+import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
 import { getRecommendationItems } from "@/utils/recommendations";
+import { CalculationParams, CalculationResult, elementTypes, InvoiceLine, mapToElementType, Opening, STANDARD_OPENINGS } from "@/utils/types";
+import { Calculator, Download, Save, SkipBack, SkipForward, Trash2, Upload, X } from "lucide-react";
+import Papa from "papaparse";
+import * as pdfjsLib from "pdfjs-dist";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(

@@ -3,16 +3,16 @@
  * P0/P1: extended fuzzy detection (length/width/height/material/category) +
  * keyword-based WBS/DQE resolution when no explicit phase column is present.
  */
-import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
-import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
-import { PdfBoqParser } from './parsers/PdfBoqParser';
-import { BoqCategoryResolver } from './BoqCategoryResolver';
-import { BoqCalculatorService } from './BoqCalculatorService';
+import type { ReferentialType } from '@/config/referentials';
 import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
-import type { ReferentialType } from '@/config/referentials';
+import { BoqCalculatorService } from './BoqCalculatorService';
+import { BoqCategoryResolver } from './BoqCategoryResolver';
+import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
+import { PdfBoqParser } from './parsers/PdfBoqParser';
+import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 
 export interface ImportMapping {
   designation?: string;

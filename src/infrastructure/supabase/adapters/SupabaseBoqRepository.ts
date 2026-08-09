@@ -2,11 +2,11 @@
  * SupabaseBoqRepository — single adapter over btp.boq_lines.
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 import { BOQ_LINE_TYPE_BY_SOURCE, BoqLineMapper, type BoqDbRow } from '@/dtos/boq/BoqLineMapper';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 const TABLE = 'boq_lines';
 

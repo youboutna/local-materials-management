@@ -9,18 +9,17 @@
  */
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getPhasesForReferential, getReferentialOptions, type ReferentialType } from '@/config/referentials';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BoqLineTable } from './BoqLineTable';

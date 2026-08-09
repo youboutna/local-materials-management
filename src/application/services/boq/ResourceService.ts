@@ -7,9 +7,9 @@
  *
  * Pure TS — pas de React, pas de Supabase.
  */
-import { MaterialPriceResolver, type MaterialLike } from './MaterialPriceResolver';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqResourceType } from '@/domain/boq/BoqLine';
+import { MaterialPriceResolver, type MaterialLike } from './MaterialPriceResolver';
 
 export interface ResourceRecord {
   id: string;

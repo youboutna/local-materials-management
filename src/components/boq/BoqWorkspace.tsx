@@ -14,32 +14,32 @@
  * N'accède jamais directement aux tables Supabase. Toute écriture passe par
  * useBoqDocument (hexagonal).
  */
-import React, { useMemo, useState, useEffect } from 'react';
-import { FileSpreadsheet, Plus, ArrowRightCircle, Loader2, FileCheck2, Calculator, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { BoqLineTable } from './BoqLineTable';
+import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
+import { BoqLineTable } from './BoqLineTable';
 import { WbsSelector, type WbsValue } from './WbsSelector';
 
-import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
-import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
+import type { ReferentialType } from '@/config/referentials';
+import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
-import { getReferentialOptions } from '@/config/referentials';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
-import type { BoqSource, BoqResourceType } from '@/domain/boq/BoqLine';
+import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { ReferentialType } from '@/config/referentials';
+import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
+import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>

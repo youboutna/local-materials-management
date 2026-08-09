@@ -3,7 +3,7 @@
  *   { lineType, projectId, tenderId, submissionId, senderId, allowedActions }.
  * Consumed by DqeWorkspace / BoqActionsBar to hide non-authorized actions.
  */
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 
 export type BoqAction =
   | 'create'

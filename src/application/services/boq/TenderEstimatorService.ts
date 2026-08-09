@@ -9,11 +9,11 @@
  *     source='tender_estimate' so downstream comparison / analytics work
  *     unchanged.
  */
-import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqResourceType } from '@/domain/boq/BoqLine';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
 
 export type TenderCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 

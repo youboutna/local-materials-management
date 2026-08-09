@@ -3,12 +3,11 @@
  * pour la Vue Liste (DQE/Devis/Facture). Aucun accès direct à Supabase :
  * on réutilise le repository hexagonal.
  */
-import { useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import type { BoqStatus } from '@/domain/entities/boq/BoqLine';
+import type { BoqDocumentSummary, BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
-import type { BoqLineDTO, BoqLineFilter, BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
-import type { BoqStatus } from '@/domain/boq/BoqLine';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
 
 const STATUS_PRIORITY: Partial<Record<BoqStatus, number>> = {
   draft: 1, submitted: 2, validated: 3, invoiced: 4, paid: 5,

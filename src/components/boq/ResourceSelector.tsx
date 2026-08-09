@@ -5,9 +5,9 @@
  * BoqImportDialog (mapping ressource). Zéro accès Supabase — les listes
  * sont injectées par le parent.
  */
-import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { BoqResourceType } from '@/domain/boq/BoqLine';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
+import React from 'react';
 
 export interface ResourceOption {
   id: string;

@@ -6,11 +6,11 @@
  * (BoqImportDialog, DQE tab, Tender Estimator, AdvancedQuantityCalculator)
  * must depend on this class, never on individual parsers.
  */
+import type { ReferentialType } from '@/config/referentials';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
+import type { MeterInputDTO, MeterInputSourceFormat } from '@/dtos/boq/MeterInputDTO';
 import { BoqImportOrchestrator, type ImportMapping } from './BoqImportOrchestrator';
 import type { ParseResult } from './parsers/IDocumentParser';
-import type { BoqSource } from '@/domain/boq/BoqLine';
-import type { ReferentialType } from '@/config/referentials';
-import type { MeterInputDTO, MeterInputSourceFormat } from '@/dtos/boq/MeterInputDTO';
 
 export interface UnifiedParseResult extends ParseResult {
   format: MeterInputSourceFormat;

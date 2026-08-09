@@ -2,13 +2,13 @@
  * useBoqImport — parse a file → mapping → BoqLineDTO[] → bulk persist.
  * Pure orchestration hook (no supabase.from() calls in components).
  */
-import { useCallback, useEffect, useState } from 'react';
 import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 import { unifiedBoqParser, type UnifiedParseResult } from '@/application/services/boq/UnifiedBoqParser';
-import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqSource } from '@/domain/boq/BoqLine';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import type { ReferentialType } from '@/config/referentials';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { useCallback, useEffect, useState } from 'react';
 
 export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
   const [parseResult, setParseResult] = useState<UnifiedParseResult | null>(null);

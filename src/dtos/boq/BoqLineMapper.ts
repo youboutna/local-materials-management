@@ -5,9 +5,9 @@
  * a planned project's quantity takeoffs.
  */
 
-import type { BoqLineDTO } from './BoqLineDTO';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import { getDQELineType, normalizeDQEType } from '@/utils/dqeTypeMapper';
+import type { BoqLineDTO } from './BoqLineDTO';
 
 /** Raw DB row shape (super-set of both tables' columns). */
 export interface BoqDbRow {

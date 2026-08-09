@@ -3,10 +3,10 @@
  * BOQ documents. Loads the FULL set of lines for a given context from the BOQ
  * repository — no dependency on client-side selection.
  */
-import { BoqPdfRenderer, type BoqPdfContext } from './BoqPdfRenderer';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { BoqPdfRenderer, type BoqPdfContext } from './BoqPdfRenderer';
 
 export interface DocumentContext {
   docPrefix: string;

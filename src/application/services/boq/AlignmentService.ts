@@ -7,7 +7,7 @@
  * Hexagonal : dépend d'un port `IAlignmentRepository` — un adapter Supabase
  * peut être branché quand la table est disponible ; fallback in-memory sinon.
  */
-import type { BoqResourceType } from '@/domain/boq/BoqLine';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 
 export interface AlignmentEntry {
   id?: string;

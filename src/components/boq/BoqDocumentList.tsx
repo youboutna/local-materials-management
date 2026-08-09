@@ -5,17 +5,17 @@
  *
  * Aucune requête directe Supabase : uniquement le repository hexagonal.
  */
-import React, { useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, Download, Plus, Search, FileSpreadsheet } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
-import type { BoqSource } from '@/domain/boq/BoqLine';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
+import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
+import { useToast } from '@/hooks/use-toast';
+import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 interface Props {
   source: BoqSource;

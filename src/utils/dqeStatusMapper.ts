@@ -2,7 +2,7 @@
  * dqeStatusMapper — normalisation multilingue des statuts de lignes DQE
  * vers les valeurs acceptées par `btp.boq_lines.status`.
  */
-import type { BoqStatus } from '@/domain/boq/BoqLine';
+import type { BoqStatus } from '@/domain/entities/boq/BoqLine';
 
 const STATUS_MAPPING: Record<string, BoqStatus> = {
   termine: 'validated',
