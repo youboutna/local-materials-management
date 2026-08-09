@@ -7,7 +7,7 @@ export const DEV_CONFIG = {
   // Development mode flags
   DEV_MODE: typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : false,
   
-  // Mock data configuration
+  // Jeu de données de développement local
   USE_MOCK_DATA: typeof process !== 'undefined' ? process.env.USE_MOCK_DATA === 'true' : false,
   
   // API simulation delays (in ms)
@@ -96,10 +96,11 @@ export function getDevApiUrl(): string {
 }
 
 /**
- * Mock data generators for development
+ * Générateurs de valeurs synthétiques pour l'outillage de développement
+ * (identifiants/horodatages de test) — jamais utilisés en production.
  */
-export const mockDataGenerators = {
-  generateId: () => `mock_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
+export const devValueGenerators = {
+  generateId: () => `dev_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
   
   generateTimestamp: () => new Date().toISOString(),
   

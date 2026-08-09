@@ -87,38 +87,6 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     };
   }
 
-  /**
-   * Données mockées pour le développement
-   */
-  private getMockProjectMaterials(projectId: string): ProjectMaterial[] {
-    return [
-      {
-        id: `mock-pm-${Date.now()}`,
-        projectId,
-        materialId: 'mock-material-1',
-        quantity: 100,
-        unit: 'kg',
-        unitPrice: 1500,
-        totalPrice: 150000,
-        status: 'planned',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: `mock-pm-${Date.now() + 1}`,
-        projectId,
-        materialId: 'mock-material-2',
-        quantity: 50,
-        unit: 'm³',
-        unitPrice: 25000,
-        totalPrice: 1250000,
-        status: 'ordered',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-  }
-
   // ============================================================================
   // CRUD OPERATIONS
   // ============================================================================
@@ -608,7 +576,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
         console.warn('SupabaseMaterialAdapter: project_materials table not found, returning mock data');
-        return this.getMockProjectMaterials(projectId);
+        return [];
       }
 
       const { data, error } = await supabase
@@ -620,7 +588,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return data.map(row => this.toProjectMaterial(row as ProjectMaterialRow));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.getProjectMaterials failed:', error);
-      return this.getMockProjectMaterials(projectId);
+      return [];
     }
   }
 
@@ -629,8 +597,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
         console.warn('SupabaseMaterialAdapter: project_materials table not found');
-        const mock = this.getMockProjectMaterials(projectId);
-        return mock.find(pm => pm.materialId === materialId) || null;
+        return null;
       }
 
       const { data, error } = await supabase
@@ -710,14 +677,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, update mocked');
-        const mock = this.getMockProjectMaterials(projectId);
-        const existing = mock.find(pm => pm.materialId === materialId);
-        return {
-          ...existing,
-          quantity,
-          updatedAt: new Date().toISOString(),
-        } as ProjectMaterial;
+        throw new AppError(ErrorCode.DATABASE_ERROR, 'project_materials table is not available');
       }
 
       const { data, error } = await supabase
@@ -744,14 +704,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, update mocked');
-        const mock = this.getMockProjectMaterials(projectId);
-        const existing = mock.find(pm => pm.materialId === materialId);
-        return {
-          ...existing,
-          ...data,
-          updatedAt: new Date().toISOString(),
-        } as ProjectMaterial;
+        throw new AppError(ErrorCode.DATABASE_ERROR, 'project_materials table is not available');
       }
 
       const updateData: Record<string, unknown> = {};
