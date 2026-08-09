@@ -3,6 +3,9 @@ import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
+// Destinataire technique des notifications système (traçabilité des actions).
+const SYSTEM_NOTIFICATION_RECIPIENT_ID = '00000000-0000-0000-0000-000000000000';
+
 export interface InsuranceControlAction {
   id: string;
   insuranceId: string;
@@ -71,11 +74,13 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
     await executeInsuranceAction(action);
 
     // Track action execution in notifications table
-    await supabase.from('notifications').insert({
-      type: 'system',
+    await NotificationService.createNotification({
+      recipientId: SYSTEM_NOTIFICATION_RECIPIENT_ID,
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour assurance ${action.insuranceId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      type: 'system',
+      priority: action.priority === 'urgent' ? 'high' : action.priority,
+      relatedId: action.insuranceId,
       metadata: {
         actionType: action.actionType,
         entityType: 'insurance',
@@ -83,8 +88,7 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
         projectId: action.projectId,
         priority: action.priority,
         executedAt: action.createdAt
-      },
-      relatedId: action.insuranceId
+      }
     });
 
     return action;

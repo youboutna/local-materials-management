@@ -3,6 +3,9 @@ import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
+// Destinataire technique des notifications système (traçabilité des actions).
+const SYSTEM_NOTIFICATION_RECIPIENT_ID = '00000000-0000-0000-0000-000000000000';
+
 export interface BankGuaranteeControlAction {
   id: string;
   bankGuaranteeId: string;
@@ -72,11 +75,13 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
     await executeBankGuaranteeAction(action);
 
     // Optionally persist to notifications table for tracking
-    await supabase.from('notifications').insert({
-      type: 'system',
+    await NotificationService.createNotification({
+      recipientId: SYSTEM_NOTIFICATION_RECIPIENT_ID,
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour garantie bancaire ${action.bankGuaranteeId}`,
-      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      type: 'system',
+      priority: action.priority === 'urgent' ? 'high' : action.priority,
+      relatedId: action.projectId,
       metadata: {
         actionType: action.actionType,
         entityType: 'bank_guarantee',
@@ -84,8 +89,7 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
         projectId: action.projectId,
         priority: action.priority,
         executedAt: action.createdAt
-      },
-      relatedId: action.projectId
+      }
     });
 
     return action;

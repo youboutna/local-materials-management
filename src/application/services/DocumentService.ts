@@ -234,6 +234,19 @@ export class DocumentService {
   /**
    * Get documents by type
    */
+  /**
+   * Documents d'appel d'offres partagés avec les fournisseurs pour un tender donné.
+   */
+  async getSharedTenderDocuments(tenderId: string): Promise<DocumentDTO[]> {
+    if (!tenderId) return [];
+    const documents = await this.getDocumentsByType('tender' as DocumentType);
+    return documents.filter((doc) => {
+      if (!doc.isSharedWithSuppliers) return false;
+      const metadata = (doc.metadata || {}) as Record<string, unknown>;
+      return metadata.tender_id === tenderId || metadata.tenderId === tenderId;
+    });
+  }
+
   async getDocumentsByType(type: DocumentType): Promise<DocumentDTO[]> {
     try {
       if (!type || !isDocumentType(type)) {
@@ -676,19 +689,72 @@ export class DocumentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'No documents found to package');
       }
 
-      // Créer le package
+      // Création réelle de l'archive ZIP (fichiers récupérés puis compressés)
+      const { default: JSZip } = await import('jszip');
+      const zip = new JSZip();
+      const usedNames = new Set<string>();
+      let addedCount = 0;
+
+      for (const doc of documents) {
+        if (!doc.fileUrl) continue;
+        try {
+          const response = await fetch(doc.fileUrl);
+          if (!response.ok) continue;
+          const blob = await response.blob();
+
+          const baseName = doc.fileName || `${doc.title || 'document'}-${doc.id}`;
+          let entryName = baseName;
+          let suffix = 1;
+          while (usedNames.has(entryName)) {
+            entryName = `${baseName.replace(/(\.[^.]+)$/, '')}-${suffix}${(baseName.match(/(\.[^.]+)$/) || [''])[0]}`;
+            suffix += 1;
+          }
+          usedNames.add(entryName);
+          zip.file(entryName, blob);
+          addedCount += 1;
+        } catch (fetchError) {
+          console.warn('DocumentService.generateDownloadPackage: file skipped', doc.id, fetchError);
+        }
+      }
+
+      if (addedCount === 0) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Aucun fichier téléchargeable pour ce package');
+      }
+
+      // Manifeste inclus dans l'archive pour la traçabilité
+      zip.file(
+        'manifest.json',
+        JSON.stringify(
+          {
+            projectId,
+            generatedAt: new Date().toISOString(),
+            documents: documents.map(d => ({ id: d.id, title: d.title, fileName: d.fileName })),
+          },
+          null,
+          2
+        )
+      );
+
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
       const packageName = `documents_${projectId}_${Date.now()}.zip`;
       const packagePath = `packages/${projectId}/${packageName}`;
-      const packageSize = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);
-      const packageUrl = `/api/documents/download/${projectId}/${packageName}`;
+      const zipFile = new File([zipBlob], packageName, { type: 'application/zip' });
 
-      // TODO: Implémenter la création du ZIP avec les fichiers
-      // Pour l'instant, créer un enregistrement du package
+      const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
+      const storage = RepositoryFactory.getStorageProvider();
+      const uploaded = await storage.uploadFile(zipFile, packagePath, {
+        contentType: 'application/zip',
+        upsert: true,
+      });
+
+      if (!uploaded.success || !uploaded.url) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, uploaded.error || 'Échec de l\'upload du package');
+      }
 
       return {
-        packageUrl,
-        documentCount: documents.length,
-        packageSize,
+        packageUrl: uploaded.url,
+        documentCount: addedCount,
+        packageSize: zipBlob.size,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       };
     } catch (error) {

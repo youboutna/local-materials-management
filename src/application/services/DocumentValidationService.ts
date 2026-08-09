@@ -14,6 +14,8 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';
 import { NotificationService } from './NotificationService';
+import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
+import type { DocumentValidationLogDTO } from '@/dtos/entities/DocumentValidationLogDTO';
 
 // ============================================================================
 // TYPES
@@ -199,9 +201,8 @@ export class DocumentValidationService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Submission ID is required');
       }
 
-      // TODO: Implémenter la récupération des logs via repository
-      // Pour l'instant, retourner un tableau vide
-      return [];
+      const logs = await this.getValidationLogRepository().listBySubmission(submissionId);
+      return logs.map((log) => this.toValidationLog(log));
     } catch (error) {
       console.error('Error fetching validation logs:', error);
       throw error instanceof AppError ? error : new AppError(
@@ -397,8 +398,14 @@ export class DocumentValidationService {
     result: ValidationResult
   ): Promise<void> {
     try {
-      // TODO: Implémenter via repository
-      console.log('Validation logged:', { documentId, submissionId, result });
+      await this.getValidationLogRepository().create({
+        documentId,
+        submissionId,
+        isValid: result.isValid,
+        errors: (result.errors || []).map((e) => (typeof e === 'string' ? e : JSON.stringify(e))),
+        warnings: (result.warnings || []).map((w) => (typeof w === 'string' ? w : JSON.stringify(w))),
+        validatedAt: new Date().toISOString(),
+      });
     } catch (error) {
       console.error('Error logging validation result:', error);
     }
@@ -463,12 +470,37 @@ export class DocumentValidationService {
   }
 
   /**
+   * Repository des journaux de validation (résolu via la factory).
+   */
+  private getValidationLogRepository(): IDocumentValidationLogRepository {
+    return RepositoryFactory.getDocumentValidationLogRepository();
+  }
+
+  /**
+   * Mappe un journal persistant vers le contrat métier ValidationLog.
+   */
+  private toValidationLog(log: DocumentValidationLogDTO): ValidationLog {
+    return {
+      id: log.id,
+      documentId: log.documentId,
+      submissionId: log.submissionId,
+      validationType: 'document',
+      result: {
+        isValid: log.isValid,
+        errors: log.errors as unknown as ValidationResult['errors'],
+        warnings: log.warnings as unknown as ValidationResult['warnings'],
+      } as ValidationResult,
+      validatedAt: log.validatedAt,
+      processingTimeMs: 0,
+    };
+  }
+
+  /**
    * Clear validation logs for a document
    */
   private async clearValidationLogs(documentId: string, submissionId: string): Promise<void> {
     try {
-      // TODO: Implémenter via repository
-      console.log('Validation logs cleared:', { documentId, submissionId });
+      await this.getValidationLogRepository().deleteByDocument(documentId, submissionId);
     } catch (error) {
       console.error('Error clearing validation logs:', error);
     }

@@ -27,6 +27,28 @@ export class SupabaseReportingAdapter implements IReportingRepository {
 
     if (!data || data.length === 0) return [];
 
+    const phaseIds = data.map((p: any) => p.id).filter(Boolean);
+
+    // Tâches et jalons réellement rattachés aux phases (une requête par collection).
+    const [tasksRes, milestonesRes] = await Promise.all([
+      supabase.from('tasks').select('*').in('phase_id', phaseIds),
+      supabase.from('project_milestones').select('*').in('phase_id', phaseIds),
+    ]);
+
+    const tasksByPhase = new Map<string, any[]>();
+    (tasksRes.data || []).forEach((t: any) => {
+      const list = tasksByPhase.get(t.phase_id) || [];
+      list.push(t);
+      tasksByPhase.set(t.phase_id, list);
+    });
+
+    const milestonesByPhase = new Map<string, any[]>();
+    (milestonesRes.data || []).forEach((m: any) => {
+      const list = milestonesByPhase.get(m.phase_id) || [];
+      list.push(m);
+      milestonesByPhase.set(m.phase_id, list);
+    });
+
     return data.map((phase: any) => {
       const vm = hydratePhase(phase);
       return {
@@ -40,8 +62,23 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         actualEndDate: vm.actualEndDate || vm.endDate,
         budget: vm.budget,
         actualCost: vm.actualCost,
-        tasks: [], // TODO: Fetch actual tasks for this phase
-        milestones: [], // TODO: Fetch actual milestones for this phase
+        tasks: (tasksByPhase.get(phase.id) || []).map((t: any) => ({
+          id: t.id,
+          title: t.title || t.name || 'Tâche',
+          status: t.status || 'pending',
+          progress: t.progress ?? 0,
+          assignedTo: Array.isArray(t.assigned_to) ? t.assigned_to : t.assigned_to ? [t.assigned_to] : [],
+          startDate: t.start_date || undefined,
+          endDate: t.due_date || t.end_date || undefined,
+        })),
+        milestones: (milestonesByPhase.get(phase.id) || []).map((m: any) => ({
+          id: m.id,
+          title: m.title || m.name || 'Jalon',
+          status: m.status || 'pending',
+          dueDate: m.due_date || m.target_date || undefined,
+          completedAt: m.completed_at || undefined,
+          weight: m.weight ?? 0,
+        })),
         createdAt: phase.created_at || new Date().toISOString(),
         updatedAt: phase.updated_at || new Date().toISOString(),
         createdBy: phase.created_by || undefined,

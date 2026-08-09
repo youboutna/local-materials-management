@@ -28,7 +28,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { getUserService } from '@/application/services/UserService';
 
 
 interface PublicTender {
@@ -245,16 +246,16 @@ const EnhancedSupplierTenderPortal = () => {
     queryFn: async () => {
       if (!selectedTender?.id) return [];
       
-      // TODO: Create DocumentService to handle this
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('document_type', 'tender')
-        .eq('is_shared_with_suppliers', true)
-        .contains('metadata', { tender_id: selectedTender.id });
-
-      if (error) throw error;
-      return (data || []) as SharedDocument[];
+      const docs = await getDocumentService().getSharedTenderDocuments(selectedTender.id);
+      return docs.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        file_url: doc.fileUrl || '',
+        file_name: doc.fileName || doc.title,
+        description: doc.description || undefined,
+        created_at: doc.createdAt,
+        metadata: (doc.metadata || undefined) as SharedDocument['metadata'],
+      }));
     },
     enabled: !!selectedTender?.id
   });
@@ -302,12 +303,9 @@ const EnhancedSupplierTenderPortal = () => {
       const user = await getUser();
       if (!user?.id) throw new Error('Utilisateur non connecté');
 
-      // Get user profile for supplier info
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
+      // Get user profile for supplier info (via service, jamais Supabase depuis l'UI)
+      const profileUser = await getUserService().getUserById(user.id);
+      const profile = profileUser ? { full_name: profileUser.fullName } : null;
 
       // Prepare documents for upload
       const documents: UploadedDocument[] = Object.entries(selectedFiles).map(([docKey, file]) => {

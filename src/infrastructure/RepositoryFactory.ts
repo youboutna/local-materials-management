@@ -195,6 +195,9 @@ function resolveStorage(): StorageProviderKind {
 // 9. REGISTRY (lazy loading)
 // ================================================================
 
+import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
+import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/supabase/adapters/SupabaseDocumentValidationLogAdapter';
+
 interface RepositoryRegistry {
   auth?: IAuthRepository;
   storage?: IStorageProvider;
@@ -205,6 +208,7 @@ interface RepositoryRegistry {
   phase?: IPhaseRepository;
   material?: IMaterialRepository;
   document?: IDocumentRepository;
+  documentValidationLog?: IDocumentValidationLogRepository;
   inspection?: IInspectionRepository;
   payment?: IPaymentRepository;
   tender?: ITenderRepository;
@@ -322,6 +326,14 @@ export class RepositoryFactory {
       );
     }
     return registry.storageRepository;
+  }
+
+  // ---------- DOCUMENT VALIDATION LOGS ----------
+  static getDocumentValidationLogRepository(): IDocumentValidationLogRepository {
+    if (!registry.documentValidationLog) {
+      registry.documentValidationLog = new SupabaseDocumentValidationLogAdapter();
+    }
+    return registry.documentValidationLog;
   }
 
   // ---------- NOTIFICATIONS ----------
