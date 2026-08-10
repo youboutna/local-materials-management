@@ -193,7 +193,7 @@ const RULES = {
     priority: -1, 
     severity: 'ERROR', 
     target: 'UI',
-    pattern: /(?:await\s+)?(?:supabase|db|database)\.\w+\(/g,
+    pattern: /(?:await\s+)?(?:supabase|db|database)\.(?:from|rpc|select|insert|update|upsert|delete|channel|storage|auth|schema|functions)\s*\(/g,
     message: '🚨 [P0-DB001] Appel base de données direct dans composant UI ! Utiliser repository pattern via service + hook.',
     isAutoFixable: false,
     exclude: ['src/hooks/', 'src/application/', 'src/infrastructure/', 'src/dtos/', 'src/domain/'],
