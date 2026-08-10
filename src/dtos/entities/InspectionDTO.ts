@@ -409,15 +409,10 @@ export interface InspectionAction {
   assigneeId?: string;
 }
 
-export interface VerificationItemDTO {
-  id: string;
-  name: string;
-  title: string;
-  status: 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
-  verifiedBy?: string;
-  verifiedAt?: string;
-  notes?: string;
-}
+// VerificationItemDTO est défini de façon canonique dans './MilestoneDTO'
+// (un item de vérification appartient au checkpoint d'un jalon).
+export type { VerificationItemDTO } from './MilestoneDTO';
+
 
 // Add execution data interface from InspectionService
 export interface InspectionExecutionDataDTO {
