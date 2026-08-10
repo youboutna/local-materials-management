@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-08-10T09:16:13.303Z",
+  "timestamp": "2026-08-10T09:59:03.644Z",
   "stats": {
     "filesScanned": 1341,
-    "errors": 3162,
+    "errors": 3160,
     "warnings": 5204,
     "fixed": 0,
     "mocksRemoved": 32,
     "duplicatesFound": 340,
     "typesMoved": 0,
     "typesConsolidated": 0,
-    "p0Violations": 980
+    "p0Violations": 978
   },
   "violations": [
     {
@@ -24157,14 +24157,6 @@
       "file": "src/components/tenders/TenderListView.tsx",
       "violations": [
         {
-          "ruleId": "P0-DB001",
-          "priority": -1,
-          "severity": "ERROR",
-          "message": "🚨 [P0-DB001] Appel base de données direct dans composant UI ! Utiliser repository pattern via service + hook.",
-          "line": 76,
-          "match": "db.localeCompare("
-        },
-        {
           "ruleId": "P0-ANY001",
           "priority": -1,
           "severity": "ERROR",
@@ -24176,7 +24168,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 16,
           "match": "tender_number",
           "typeRegion": {
@@ -24190,7 +24182,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 19,
           "match": "project_id",
           "typeRegion": {
@@ -24204,7 +24196,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 21,
           "match": "procurement_type",
           "typeRegion": {
@@ -24218,7 +24210,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 22,
           "match": "market_type",
           "typeRegion": {
@@ -24232,7 +24224,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 23,
           "match": "selection_mode",
           "typeRegion": {
@@ -24246,7 +24238,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 24,
           "match": "launch_date",
           "typeRegion": {
@@ -24260,7 +24252,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 25,
           "match": "submission_deadline",
           "typeRegion": {
@@ -24274,7 +24266,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 26,
           "match": "deadline_date",
           "typeRegion": {
@@ -24288,7 +24280,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 27,
           "match": "attribution_date",
           "typeRegion": {
@@ -24302,7 +24294,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type. (ℹ️ probably DB→domain missing)",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 28,
           "match": "estimated_value",
           "typeRegion": {
@@ -24316,7 +24308,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 68,
           "match": "tender_number"
         },
@@ -24324,7 +24316,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 74,
           "match": "submission_deadline"
         },
@@ -24332,7 +24324,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 74,
           "match": "deadline_date"
         },
@@ -24340,7 +24332,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 75,
           "match": "submission_deadline"
         },
@@ -24348,7 +24340,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 75,
           "match": "deadline_date"
         },
@@ -24356,7 +24348,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 113,
           "match": "project_id"
         },
@@ -24364,7 +24356,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 113,
           "match": "project_id"
         },
@@ -24372,7 +24364,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 114,
           "match": "submission_deadline"
         },
@@ -24380,7 +24372,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 114,
           "match": "deadline_date"
         },
@@ -24388,7 +24380,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 125,
           "match": "tender_number"
         },
@@ -24396,7 +24388,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 127,
           "match": "tender_number"
         },
@@ -24404,7 +24396,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 159,
           "match": "selection_mode"
         },
@@ -24412,7 +24404,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 159,
           "match": "selection_mode"
         },
@@ -24420,7 +24412,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 160,
           "match": "market_type"
         },
@@ -24428,7 +24420,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 160,
           "match": "market_type"
         },
@@ -24436,7 +24428,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 161,
           "match": "procurement_type"
         },
@@ -24444,7 +24436,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 161,
           "match": "procurement_type"
         },
@@ -24452,7 +24444,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 171,
           "match": "launch_date"
         },
@@ -24460,7 +24452,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 177,
           "match": "attribution_date"
         },
@@ -24468,7 +24460,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 180,
           "match": "estimated_value"
         },
@@ -24476,7 +24468,7 @@
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 182,
           "match": "estimated_value"
         }
@@ -64696,14 +64688,6 @@
       "file": "src/hooks/hexagonal/useRealtimeHex.ts",
       "violations": [
         {
-          "ruleId": "P0-M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide). (2 fonctions vides, 0 TODO, 0 Not Implemented)",
-          "line": 1,
-          "match": "TODO/NotImplemented/empty function"
-        },
-        {
           "ruleId": "P1-TYP001",
           "priority": 1,
           "severity": "ERROR",
@@ -87335,8 +87319,8 @@
       "score": 0,
       "type": "COMPONENT",
       "layer": "UI",
-      "violations": 33,
-      "p0Violations": 2
+      "violations": 32,
+      "p0Violations": 1
     },
     {
       "file": "src/components/tenders/TenderLotBuilder.tsx",
@@ -93292,11 +93276,11 @@
     },
     {
       "file": "src/hooks/hexagonal/useRealtimeHex.ts",
-      "score": 55,
+      "score": 80,
       "type": "HOOK",
       "layer": "HOOKS",
-      "violations": 2,
-      "p0Violations": 1
+      "violations": 1,
+      "p0Violations": 0
     },
     {
       "file": "src/hooks/hexagonal/useReceptionManagement.ts",
