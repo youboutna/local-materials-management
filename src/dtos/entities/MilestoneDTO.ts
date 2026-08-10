@@ -266,3 +266,173 @@ export interface GeneratedMilestoneDTO {
   templateId?: string;
   phaseCode?: string;
 }
+
+/* =============================================================================
+ * CHECKPOINT & VERIFICATION (canonical)
+ * Un checkpoint n'est pas une entité autonome : c'est l'action de vérification
+ * d'un jalon (milestone) d'un projet ou d'une phase. Les DTO associés sont donc
+ * définis ici, aux côtés du MilestoneDTO. Les anciens fichiers
+ * (CheckpointDTO.ts, CheckpointVerificationDTO.ts,
+ * CheckpointVerificationResultDTO.ts, VerificationItemDTO.ts) ne sont plus que
+ * des ré-exports de compatibilité.
+ * ========================================================================== */
+
+export type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
+
+/** Catégories de vérification (union de tous les usages métier) */
+export type CheckpointCategory =
+  | 'inspection'
+  | 'resource'
+  | 'document'
+  | 'service_fait'
+  | 'approval'
+  | 'material'
+  | 'payment'
+  | 'pv'
+  | 'quality'
+  | 'safety'
+  | 'documentation'
+  | 'delivery';
+
+export type CheckpointType = 'gate' | 'review' | 'approval' | 'delivery';
+
+/** Item de vérification individuel rattaché à un checkpoint de jalon */
+export interface VerificationItemDTO {
+  id: string;
+  name?: string;
+  category: CheckpointCategory;
+  title: string;
+  description?: string;
+  status: VerificationStatus;
+  required: boolean;
+  /** Poids dans le calcul global (0-1) */
+  weight: number;
+  reference_id?: string;
+  reference_type?: 'inspection' | 'document' | 'material' | 'payment' | 'pv';
+  verified_by?: string;
+  verified_at?: string;
+  completedAt?: string;
+  notes?: string;
+  evidence_urls?: string[];
+}
+
+/** Résultat de vérification d'un checkpoint de jalon */
+export interface CheckpointVerificationResultDTO {
+  checkpoint_id: string;
+  milestone_id: string;
+  overall_status: VerificationStatus;
+  /** Score 0-100 */
+  verification_score: number;
+  verification_items: VerificationItemDTO[];
+  required_items_count: number;
+  verified_items_count: number;
+  failed_items_count: number;
+  blocking_issues: string[];
+  warnings: string[];
+  can_proceed: boolean;
+  verified_at?: string;
+  verified_by?: string;
+}
+
+/** Checkpoint : vérifications requises rattachées à un jalon */
+export interface CheckpointDTO {
+  id: string;
+  project_id: string;
+  phase_id?: string;
+  step_id?: string;
+  milestone_id: string;
+
+  title: string;
+  description?: string;
+  checkpoint_type: CheckpointType;
+
+  /** % de progression qui déclenche ce checkpoint */
+  trigger_progress: number;
+  /** % du budget phase lié à ce checkpoint */
+  financial_weight: number;
+
+  status: VerificationStatus;
+  progress: number;
+
+  required_inspections: string[];
+  required_documents: string[];
+  required_approvals: string[];
+
+  verification_result?: CheckpointVerificationResultDTO;
+
+  triggers_payment: boolean;
+  payment_amount?: number;
+  triggers_notification: boolean;
+  notification_recipients?: string[];
+
+  target_date?: string;
+  completion_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/* --- Requêtes / réponses de vérification --- */
+
+export interface VerifyCheckpointRequestDto {
+  checkpoint: CheckpointDTO;
+  projectId?: string;
+  phaseId?: string;
+}
+
+export interface CheckpointVerificationResult {
+  id: string;
+  checkpointId: string;
+  projectId: string;
+  verified: boolean;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  documents?: string[];
+  status: 'pending' | 'verified' | 'rejected';
+}
+
+export interface VerifyCheckpointResponseDto {
+  result: CheckpointVerificationResult;
+  errors?: string[];
+}
+
+export interface VerifyInspectionsRequestDto {
+  requiredInspectionIds: string[];
+  triggerProgress: number;
+  projectId: string;
+}
+
+export interface VerifyDocumentsRequestDto {
+  requiredDocumentIds: string[];
+  projectId: string;
+}
+
+export interface VerifyApprovalsRequestDto {
+  requiredApprovalIds: string[];
+  projectId: string;
+}
+
+export interface VerifyResourcesRequestDto {
+  stepId: string;
+  projectId: string;
+}
+
+export interface VerifyServiceFaitRequestDto {
+  checkpointId: string;
+  projectId: string;
+}
+
+export interface CreateCheckpointVerificationDto {
+  checkpointId: string;
+  projectId: string;
+  verifiedBy: string;
+  notes?: string;
+  documents?: string[];
+}
+
+export interface UpdateCheckpointVerificationDto {
+  verified?: boolean;
+  notes?: string;
+  documents?: string[];
+  status?: 'pending' | 'verified' | 'rejected';
+}
