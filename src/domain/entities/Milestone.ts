@@ -71,6 +71,49 @@ export interface MilestoneConfiguration {
   relativeOffsetDays: number;
 }
 
+
+/** Statut d'une vérification de checkpoint de jalon */
+export type MilestoneVerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
+
+/** Catégorie d'item de vérification */
+export type MilestoneVerificationCategory =
+  | 'inspection'
+  | 'resource'
+  | 'document'
+  | 'service_fait'
+  | 'approval'
+  | 'material'
+  | 'payment'
+  | 'pv';
+
+/** Item de vérification rattaché au checkpoint du jalon */
+export interface MilestoneVerificationItem {
+  id: string;
+  title: string;
+  category: MilestoneVerificationCategory;
+  status: MilestoneVerificationStatus;
+  required: boolean;
+  /** Poids relatif dans le score (défaut 1) */
+  weight: number;
+  referenceId?: string;
+  notes?: string;
+}
+
+/** Résultat de la vérification du checkpoint du jalon */
+export interface MilestoneCheckpointVerification {
+  milestoneId: string;
+  overallStatus: MilestoneVerificationStatus;
+  /** Score pondéré 0-100 */
+  score: number;
+  requiredItemsCount: number;
+  verifiedItemsCount: number;
+  failedItemsCount: number;
+  blockingIssues: string[];
+  warnings: string[];
+  canProceed: boolean;
+  items: MilestoneVerificationItem[];
+}
+
 export class Milestone {
   constructor(
     public readonly id: string,
@@ -492,5 +535,49 @@ export class Milestone {
       new Date().toISOString(),
       this.configuration
     );
+  }
+
+  /**
+   * Vérification métier du checkpoint du jalon (logique pure, sans I/O).
+   * Un checkpoint n'est pas une entité autonome : c'est l'action de vérification
+   * de ce jalon. Le score est pondéré par le poids des items requis.
+   */
+  verifyCheckpoint(items: MilestoneVerificationItem[]): MilestoneCheckpointVerification {
+    const required = items.filter(i => i.required);
+    const totalWeight = required.reduce((sum, i) => sum + (i.weight || 1), 0);
+    const verifiedWeight = required
+      .filter(i => i.status === 'verified')
+      .reduce((sum, i) => sum + (i.weight || 1), 0);
+
+    const failed = required.filter(i => i.status === 'failed');
+    const pending = required.filter(i => i.status === 'pending' || i.status === 'in_progress');
+
+    const score = totalWeight > 0 ? Math.round((verifiedWeight / totalWeight) * 100) : 0;
+    const blockingIssues = failed.map(i => `Vérification échouée : ${i.title}`);
+    const warnings = pending.map(i => `Vérification en attente : ${i.title}`);
+
+    const overallStatus: MilestoneVerificationStatus =
+      failed.length > 0 ? 'failed'
+      : score === 100 ? 'verified'
+      : verifiedWeight > 0 ? 'in_progress'
+      : 'pending';
+
+    return {
+      milestoneId: this.id,
+      overallStatus,
+      score,
+      requiredItemsCount: required.length,
+      verifiedItemsCount: required.filter(i => i.status === 'verified').length,
+      failedItemsCount: failed.length,
+      blockingIssues,
+      warnings,
+      canProceed: failed.length === 0 && score === 100,
+      items,
+    };
+  }
+
+  /** Le jalon est-il libérable au paiement (checkpoint vérifié + jalon complétable) ? */
+  isPaymentEligible(items: MilestoneVerificationItem[]): boolean {
+    return this.verifyCheckpoint(items).canProceed && this.canBeCompleted();
   }
 }

@@ -21,6 +21,7 @@ export type DecompteStatus = 'draft' | 'calculated' | 'submitted' | 'approved' |
 export type PaymentType = 'initial' | 'progress' | 'retention_release' | 'final';
 
 export type { MauritaniaBusinessRulesDTO } from '@/dtos/entities/VerificationItemDTO';
+export { DEFAULT_MAURITANIA_RULES } from '@/dtos/entities/VerificationItemDTO';
 
 import type {
   CheckpointDTO,
