@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-08-09T18:03:12.750Z",
+  "timestamp": "2026-08-10T09:16:13.303Z",
   "stats": {
-    "filesScanned": 1338,
-    "errors": 3180,
-    "warnings": 5262,
+    "filesScanned": 1341,
+    "errors": 3162,
+    "warnings": 5204,
     "fixed": 0,
-    "mocksRemoved": 37,
-    "duplicatesFound": 344,
+    "mocksRemoved": 32,
+    "duplicatesFound": 340,
     "typesMoved": 0,
     "typesConsolidated": 0,
-    "p0Violations": 982
+    "p0Violations": 980
   },
   "violations": [
     {
@@ -20466,37 +20466,15 @@
       "file": "src/components/suppliers/EnhancedSupplierTenderPortal.tsx",
       "violations": [
         {
-          "ruleId": "P0-M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide). (0 fonctions vides, 1 TODO, 0 Not Implemented)",
-          "line": 1,
-          "match": "TODO/NotImplemented/empty function"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 38,
-          "match": "project_id",
-          "typeRegion": {
-            "start": 1515,
-            "end": 2019,
-            "typeName": "PublicTender",
-            "typeKind": "interface"
-          }
-        },
-        {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 39,
-          "match": "launch_date",
+          "match": "project_id",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20507,10 +20485,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 40,
-          "match": "attribution_date",
+          "match": "launch_date",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20521,10 +20499,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 41,
-          "match": "deadline_date",
+          "match": "attribution_date",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20535,10 +20513,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 42,
-          "match": "selection_mode",
+          "match": "deadline_date",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20549,10 +20527,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 43,
-          "match": "market_type",
+          "match": "selection_mode",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20563,10 +20541,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 44,
-          "match": "financing_source",
+          "match": "market_type",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20577,10 +20555,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 45,
-          "match": "project_reference",
+          "match": "financing_source",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20590,11 +20568,11 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 47,
-          "match": "current_phase",
+          "line": 46,
+          "match": "project_reference",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20605,10 +20583,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 48,
-          "match": "created_at",
+          "match": "current_phase",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20619,10 +20597,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 49,
-          "match": "updated_at",
+          "match": "created_at",
           "typeRegion": {
-            "start": 1515,
-            "end": 2019,
+            "start": 1602,
+            "end": 2106,
             "typeName": "PublicTender",
             "typeKind": "interface"
           }
@@ -20632,12 +20610,12 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 62,
-          "match": "created_at",
+          "line": 50,
+          "match": "updated_at",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
-            "typeName": "BidSubmission",
+            "start": 1602,
+            "end": 2106,
+            "typeName": "PublicTender",
             "typeKind": "interface"
           }
         },
@@ -20647,10 +20625,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 63,
-          "match": "updated_at",
+          "match": "created_at",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20660,11 +20638,11 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 65,
-          "match": "tender_id",
+          "line": 64,
+          "match": "updated_at",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20675,10 +20653,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 66,
-          "match": "submission_date",
+          "match": "tender_id",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20689,10 +20667,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 67,
-          "match": "submission_type",
+          "match": "submission_date",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20703,10 +20681,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 68,
-          "match": "administrative_docs",
+          "match": "submission_type",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20717,10 +20695,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 69,
-          "match": "technical_docs",
+          "match": "administrative_docs",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20731,10 +20709,10 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 70,
-          "match": "financial_docs",
+          "match": "technical_docs",
           "typeRegion": {
-            "start": 2022,
-            "end": 2406,
+            "start": 2109,
+            "end": 2493,
             "typeName": "BidSubmission",
             "typeKind": "interface"
           }
@@ -20744,12 +20722,12 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 77,
-          "match": "file_url",
+          "line": 71,
+          "match": "financial_docs",
           "typeRegion": {
-            "start": 2409,
-            "end": 2642,
-            "typeName": "SharedDocument",
+            "start": 2109,
+            "end": 2493,
+            "typeName": "BidSubmission",
             "typeKind": "interface"
           }
         },
@@ -20759,10 +20737,24 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
           "line": 78,
+          "match": "file_url",
+          "typeRegion": {
+            "start": 2496,
+            "end": 2729,
+            "typeName": "SharedDocument",
+            "typeKind": "interface"
+          }
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
+          "line": 79,
           "match": "file_name",
           "typeRegion": {
-            "start": 2409,
-            "end": 2642,
+            "start": 2496,
+            "end": 2729,
             "typeName": "SharedDocument",
             "typeKind": "interface"
           }
@@ -20772,11 +20764,11 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 80,
+          "line": 81,
           "match": "created_at",
           "typeRegion": {
-            "start": 2409,
-            "end": 2642,
+            "start": 2496,
+            "end": 2729,
             "typeName": "SharedDocument",
             "typeKind": "interface"
           }
@@ -20786,11 +20778,11 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 82,
+          "line": 83,
           "match": "tender_id",
           "typeRegion": {
-            "start": 2409,
-            "end": 2642,
+            "start": 2496,
+            "end": 2729,
             "typeName": "SharedDocument",
             "typeKind": "interface"
           }
@@ -20800,22 +20792,14 @@
           "priority": 2,
           "severity": "ERROR",
           "message": "❌ [P2-CAS001] Snake_case field in type definition – move the entire type.",
-          "line": 84,
+          "line": 85,
           "match": "shared_by",
           "typeRegion": {
-            "start": 2409,
-            "end": 2642,
+            "start": 2496,
+            "end": 2729,
             "typeName": "SharedDocument",
             "typeKind": "interface"
           }
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 289,
-          "match": "deadline_date"
         },
         {
           "ruleId": "P2-CAS001",
@@ -20830,7 +20814,15 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 327,
+          "line": 291,
+          "match": "deadline_date"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 325,
           "match": "full_name"
         },
         {
@@ -20838,7 +20830,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 410,
+          "line": 408,
           "match": "deadline_date"
         },
         {
@@ -20846,7 +20838,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 411,
+          "line": 409,
           "match": "deadline_date"
         },
         {
@@ -20854,7 +20846,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 415,
+          "line": 413,
           "match": "current_phase"
         },
         {
@@ -20862,7 +20854,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 418,
+          "line": 416,
           "match": "current_phase"
         },
         {
@@ -20870,7 +20862,15 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 506,
+          "line": 504,
+          "match": "launch_date"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 505,
           "match": "launch_date"
         },
         {
@@ -20879,14 +20879,6 @@
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
           "line": 507,
-          "match": "launch_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 509,
           "match": "deadline_date"
         },
         {
@@ -20894,7 +20886,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 512,
+          "line": 510,
           "match": "deadline_date"
         },
         {
@@ -20902,7 +20894,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 560,
+          "line": 558,
           "match": "created_at"
         },
         {
@@ -20910,8 +20902,16 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 566,
+          "line": 564,
           "match": "file_url"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 619,
+          "match": "deadline_date"
         },
         {
           "ruleId": "P2-CAS001",
@@ -20926,15 +20926,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 623,
-          "match": "deadline_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 635,
+          "line": 633,
           "match": "submission_date"
         }
       ]
@@ -25825,7 +25817,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 22,
+          "line": 25,
           "match": ": any"
         },
         {
@@ -25833,7 +25825,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 212,
+          "line": 216,
           "match": ": any"
         },
         {
@@ -25841,87 +25833,79 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 299,
+          "line": 303,
           "match": ": any"
-        },
-        {
-          "ruleId": "P0-SUP001",
-          "priority": -1,
-          "severity": "ERROR",
-          "message": "🚨 [P0-SUP001] Appel Supabase direct détecté ! Utiliser Repository pattern via adapters.",
-          "line": 75,
-          "match": "supabase.from('notifications').insert"
         },
         {
           "ruleId": "P1-TYP001",
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 4,
+          "line": 7,
           "match": "\n\nexport interface BankGuaranteeControlAction"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 134,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 138,
           "match": "full_name"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 212,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 216,
           "match": "is_primary"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 232,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 236,
           "match": "employee_id"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 244,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 248,
           "match": "hierarchy_level"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 246,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 250,
           "match": "position_title"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 306,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 310,
           "match": "full_name"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 321,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 325,
           "match": "full_name"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 375,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 379,
           "match": "guarantee_amount"
         }
       ]
@@ -26940,12 +26924,12 @@
       "file": "src/application/services/DocumentService.ts",
       "violations": [
         {
-          "ruleId": "P0-M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide). (0 fonctions vides, 1 TODO, 0 Not Implemented)",
-          "line": 1,
-          "match": "TODO/NotImplemented/empty function"
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 246,
+          "match": "tender_id"
         }
       ]
     },
@@ -26953,19 +26937,11 @@
       "file": "src/application/services/DocumentValidationService.ts",
       "violations": [
         {
-          "ruleId": "P0-M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide). (0 fonctions vides, 3 TODO, 0 Not Implemented)",
-          "line": 1,
-          "match": "TODO/NotImplemented/empty function"
-        },
-        {
           "ruleId": "P1-TYP001",
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 20,
+          "line": 22,
           "match": "\n\nexport interface ValidationResult"
         },
         {
@@ -26973,7 +26949,7 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 31,
+          "line": 33,
           "match": "\n\nexport interface DocumentValidationRequest"
         },
         {
@@ -26981,7 +26957,7 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 38,
+          "line": 40,
           "match": "\n\nexport interface ValidationRule"
         },
         {
@@ -26989,7 +26965,7 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 48,
+          "line": 50,
           "match": "\n\nexport interface ValidationLog"
         }
       ]
@@ -27922,55 +27898,47 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 22,
+          "line": 25,
           "match": ": any"
-        },
-        {
-          "ruleId": "P0-SUP001",
-          "priority": -1,
-          "severity": "ERROR",
-          "message": "🚨 [P0-SUP001] Appel Supabase direct détecté ! Utiliser Repository pattern via adapters.",
-          "line": 75,
-          "match": "supabase.from('notifications').insert"
         },
         {
           "ruleId": "P1-TYP001",
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 4,
+          "line": 7,
           "match": "\n\nexport interface InspectionControlAction"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 134,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 138,
           "match": "full_name"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 212,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 216,
           "match": "employee_id"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 224,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 228,
           "match": "hierarchy_level"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 225,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 229,
           "match": "position_title"
         }
       ]
@@ -28338,55 +28306,47 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 22,
+          "line": 25,
           "match": ": any"
-        },
-        {
-          "ruleId": "P0-SUP001",
-          "priority": -1,
-          "severity": "ERROR",
-          "message": "🚨 [P0-SUP001] Appel Supabase direct détecté ! Utiliser Repository pattern via adapters.",
-          "line": 74,
-          "match": "supabase.from('notifications').insert"
         },
         {
           "ruleId": "P1-TYP001",
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
-          "line": 4,
+          "line": 7,
           "match": "\n\nexport interface InsuranceControlAction"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 133,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 137,
           "match": "full_name"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 211,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 215,
           "match": "employee_id"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 223,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 227,
           "match": "hierarchy_level"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field. (ℹ️ probably DB→domain missing)",
-          "line": 224,
+          "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
+          "line": 228,
           "match": "position_title"
         }
       ]
@@ -38076,7 +38036,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 110,
+          "line": 153,
           "match": "relative_offset_days"
         },
         {
@@ -38084,7 +38044,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 122,
+          "line": 165,
           "match": "predecessor_ids"
         },
         {
@@ -38092,7 +38052,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 142,
+          "line": 185,
           "match": "is_critical"
         },
         {
@@ -38100,7 +38060,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 146,
+          "line": 189,
           "match": "predecessor_ids"
         },
         {
@@ -38108,7 +38068,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 148,
+          "line": 191,
           "match": "approval_requirements"
         },
         {
@@ -38116,7 +38076,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Snake_case identifier – may be DB field.",
-          "line": 149,
+          "line": 192,
           "match": "relative_offset_days"
         }
       ]
@@ -39998,59 +39958,6 @@
       ]
     },
     {
-      "file": "src/infrastructure/supabase/adapters/SupabaseMaterialAdapter.ts",
-      "violations": [
-        {
-          "ruleId": "M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "❌ [M001] Données mock/hardcodées dans le code !",
-          "line": 632,
-          "match": "const mock ="
-        },
-        {
-          "ruleId": "M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "❌ [M001] Données mock/hardcodées dans le code !",
-          "line": 714,
-          "match": "const mock ="
-        },
-        {
-          "ruleId": "M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "❌ [M001] Données mock/hardcodées dans le code !",
-          "line": 748,
-          "match": "const mock ="
-        },
-        {
-          "ruleId": "M003",
-          "priority": 0,
-          "severity": "WARNING",
-          "message": "⚠️ [M003] Données mock suspectes. (Identifier \"mock\" looks like mock data.)",
-          "line": 632,
-          "match": "mock"
-        },
-        {
-          "ruleId": "M003",
-          "priority": 0,
-          "severity": "WARNING",
-          "message": "⚠️ [M003] Données mock suspectes. (Identifier \"mock\" looks like mock data.)",
-          "line": 714,
-          "match": "mock"
-        },
-        {
-          "ruleId": "M003",
-          "priority": 0,
-          "severity": "WARNING",
-          "message": "⚠️ [M003] Données mock suspectes. (Identifier \"mock\" looks like mock data.)",
-          "line": 748,
-          "match": "mock"
-        }
-      ]
-    },
-    {
       "file": "src/infrastructure/supabase/adapters/SupabaseMilestoneAdapter.ts",
       "violations": [
         {
@@ -40427,7 +40334,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 84,
+          "line": 39,
           "match": ": any"
         },
         {
@@ -40435,7 +40342,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 167,
+          "line": 46,
           "match": ": any"
         },
         {
@@ -40443,7 +40350,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 196,
+          "line": 52,
           "match": ": any"
         },
         {
@@ -40451,7 +40358,7 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 234,
+          "line": 65,
           "match": ": any"
         },
         {
@@ -40459,7 +40366,31 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 255,
+          "line": 74,
+          "match": ": any"
+        },
+        {
+          "ruleId": "P0-ANY001",
+          "priority": -1,
+          "severity": "ERROR",
+          "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
+          "line": 121,
+          "match": ": any"
+        },
+        {
+          "ruleId": "P0-ANY001",
+          "priority": -1,
+          "severity": "ERROR",
+          "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
+          "line": 204,
+          "match": ": any"
+        },
+        {
+          "ruleId": "P0-ANY001",
+          "priority": -1,
+          "severity": "ERROR",
+          "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
+          "line": 233,
           "match": ": any"
         },
         {
@@ -40475,16 +40406,24 @@
           "priority": -1,
           "severity": "ERROR",
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
-          "line": 281,
+          "line": 292,
           "match": ": any"
         },
         {
-          "ruleId": "P0-M001",
-          "priority": 0,
+          "ruleId": "P0-ANY001",
+          "priority": -1,
           "severity": "ERROR",
-          "message": "🚨 [P0-M001] Corps de méthode non finalisé (TODO/NotImplemented/vide). (0 fonctions vides, 2 TODO, 0 Not Implemented)",
-          "line": 1,
-          "match": "TODO/NotImplemented/empty function"
+          "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
+          "line": 308,
+          "match": ": any"
+        },
+        {
+          "ruleId": "P0-ANY001",
+          "priority": -1,
+          "severity": "ERROR",
+          "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
+          "line": 318,
+          "match": ": any"
         }
       ]
     },
@@ -42166,341 +42105,6 @@
       ]
     },
     {
-      "file": "src/dtos/entities/CheckpointDTO.ts",
-      "violations": [
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 16,
-          "match": "interface CheckpointDTO {\r\n  id: string;\r\n  project_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 18,
-          "match": "project_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 19,
-          "match": "phase_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 20,
-          "match": "step_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 21,
-          "match": "milestone_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 26,
-          "match": "checkpoint_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 29,
-          "match": "trigger_progress"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 30,
-          "match": "financial_weight"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 37,
-          "match": "required_inspections"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 38,
-          "match": "required_documents"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 39,
-          "match": "required_approvals"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 42,
-          "match": "verification_result"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 45,
-          "match": "triggers_payment"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 46,
-          "match": "payment_amount"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 47,
-          "match": "triggers_notification"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 48,
-          "match": "notification_recipients"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 51,
-          "match": "target_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 52,
-          "match": "completion_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 53,
-          "match": "created_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 54,
-          "match": "updated_at"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-      "violations": [
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 6,
-          "match": "interface VerificationItemDTO {\n  id: string;\n  name: string;\n  title: string;\n  category: CheckpointCategory;\n  status: VerificationStatus;\n  required: boolean;\n  weight: number;\n  completedAt?: string;\n  notes?: string;\n  description?: string;\n  reference_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 17,
-          "match": "reference_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 18,
-          "match": "reference_id"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationResultDTO.ts",
-      "violations": [
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 32,
-          "match": "interface CheckpointVerificationResultDTO {\r\n  checkpoint_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 19,
-          "match": "reference_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 20,
-          "match": "reference_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 21,
-          "match": "verified_by"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 22,
-          "match": "verified_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 24,
-          "match": "evidence_urls"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 34,
-          "match": "milestone_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 35,
-          "match": "overall_status"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 36,
-          "match": "verification_score"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 37,
-          "match": "verification_items"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 38,
-          "match": "required_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 39,
-          "match": "verified_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 40,
-          "match": "failed_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 41,
-          "match": "blocking_issues"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 43,
-          "match": "can_proceed"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 44,
-          "match": "verified_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 45,
-          "match": "verified_by"
-        }
-      ]
-    },
-    {
       "file": "src/dtos/entities/ComplianceDTO.ts",
       "violations": [
         {
@@ -43242,15 +42846,7 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 412,
-          "match": "interface VerificationItemDTO {\r\n  id: string;\r\n  name: string;\r\n  title: string;\r\n  status: 'pending' | 'in_progress"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 439,
+          "line": 434,
           "match": "interface InspectionPaymentValidationDTO {\r\n  status: string;\r\n  comments: string;\r\n  payment_type"
         },
         {
@@ -43306,7 +42902,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 442,
+          "line": 437,
           "match": "payment_type"
         },
         {
@@ -43314,7 +42910,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 443,
+          "line": 438,
           "match": "payment_status"
         },
         {
@@ -43322,7 +42918,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 444,
+          "line": 439,
           "match": "project_id"
         },
         {
@@ -43330,7 +42926,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 445,
+          "line": 440,
           "match": "inspection_id"
         },
         {
@@ -43338,7 +42934,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 446,
+          "line": 441,
           "match": "rejection_notes"
         },
         {
@@ -43346,7 +42942,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 465,
+          "line": 460,
           "match": "captured_at"
         },
         {
@@ -43354,7 +42950,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 466,
+          "line": 461,
           "match": "started_at"
         },
         {
@@ -43362,7 +42958,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 467,
+          "line": 462,
           "match": "completed_at"
         },
         {
@@ -43370,7 +42966,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 468,
+          "line": 463,
           "match": "overall_conformity"
         },
         {
@@ -43378,7 +42974,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 469,
+          "line": 464,
           "match": "progress_percentage"
         },
         {
@@ -43386,7 +42982,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 472,
+          "line": 467,
           "match": "corrective_actions_required"
         },
         {
@@ -43394,7 +42990,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 487,
+          "line": 482,
           "match": "created_at"
         },
         {
@@ -43402,7 +42998,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 510,
+          "line": 505,
           "match": "mime_type"
         },
         {
@@ -43410,7 +43006,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 511,
+          "line": 506,
           "match": "uploaded_at"
         },
         {
@@ -43418,7 +43014,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 512,
+          "line": 507,
           "match": "uploaded_by"
         }
       ]
@@ -43850,6 +43446,30 @@
           "match": "interface MilestoneProgressDTO {\r\n  totalMilestones: number;\r\n  completedMilestones: number;\r\n  delayedMilestones: number;\r\n  /** Weighted progress (0-100) */\r\n  weightedProgress: number;\r\n  /** Schedule Performance Index (SPI) = Earned Value / Planned Value */\r\n  schedulePerformance_index"
         },
         {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 300,
+          "match": "interface VerificationItemDTO {\n  id: string;\n  name?: string;\n  category: CheckpointCategory;\n  title: string;\n  description?: string;\n  status: VerificationStatus;\n  required: boolean;\n  /** Poids dans le calcul global (0-1) */\n  weight: number;\n  reference_id"
+        },
+        {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 320,
+          "match": "interface CheckpointVerificationResultDTO {\n  checkpoint_id"
+        },
+        {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 338,
+          "match": "interface CheckpointDTO {\n  id: string;\n  project_id"
+        },
+        {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
@@ -43888,6 +43508,286 @@
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
           "line": 173,
           "match": "next_milestone"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 310,
+          "match": "reference_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 311,
+          "match": "reference_type"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 312,
+          "match": "verified_by"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 313,
+          "match": "verified_at"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 316,
+          "match": "evidence_urls"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 322,
+          "match": "milestone_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 323,
+          "match": "overall_status"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 325,
+          "match": "verification_score"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 326,
+          "match": "verification_items"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 327,
+          "match": "required_items_count"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 328,
+          "match": "verified_items_count"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 329,
+          "match": "failed_items_count"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 330,
+          "match": "blocking_issues"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 332,
+          "match": "can_proceed"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 333,
+          "match": "verified_at"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 334,
+          "match": "verified_by"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 340,
+          "match": "project_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 341,
+          "match": "phase_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 342,
+          "match": "step_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 343,
+          "match": "milestone_id"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 347,
+          "match": "checkpoint_type"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 350,
+          "match": "trigger_progress"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 352,
+          "match": "financial_weight"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 357,
+          "match": "required_inspections"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 358,
+          "match": "required_documents"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 359,
+          "match": "required_approvals"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 361,
+          "match": "verification_result"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 363,
+          "match": "triggers_payment"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 364,
+          "match": "payment_amount"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 365,
+          "match": "triggers_notification"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 366,
+          "match": "notification_recipients"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 368,
+          "match": "target_date"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 369,
+          "match": "completion_date"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 370,
+          "match": "created_at"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 371,
+          "match": "updated_at"
         }
       ]
     },
@@ -47799,15 +47699,7 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 13,
-          "match": "interface VerificationItemDTO {\n  id: string;\n  name?: string; // Optional name field for flexibility\n  category: CheckpointCategory;\n  title: string;\n  description?: string;\n  status: VerificationStatus;\n  required: boolean;\n  weight: number; // Poids dans le calcul global (0-1)\n  reference_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 31,
+          "line": 16,
           "match": "interface MauritaniaBusinessRulesDTO {\n  payment_thresholds"
         },
         {
@@ -47815,47 +47707,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 22,
-          "match": "reference_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 23,
-          "match": "reference_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 24,
-          "match": "verified_by"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 25,
-          "match": "verified_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 27,
-          "match": "evidence_urls"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 33,
+          "line": 18,
           "match": "guarantee_retention_rate"
         },
         {
@@ -47863,7 +47715,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 34,
+          "line": 19,
           "match": "retention_release_at_provisional"
         },
         {
@@ -47871,7 +47723,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 35,
+          "line": 20,
           "match": "retention_release_at_final"
         },
         {
@@ -47879,7 +47731,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 36,
+          "line": 21,
           "match": "inspection_frequency_days"
         },
         {
@@ -47887,7 +47739,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 37,
+          "line": 22,
           "match": "document_retention_days"
         },
         {
@@ -47895,7 +47747,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 38,
+          "line": 23,
           "match": "approval_hierarchy_levels"
         },
         {
@@ -47903,7 +47755,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 39,
+          "line": 24,
           "match": "quality_acceptance_threshold"
         },
         {
@@ -47911,7 +47763,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 40,
+          "line": 25,
           "match": "safety_inspection_required"
         },
         {
@@ -47919,7 +47771,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 41,
+          "line": 26,
           "match": "environmental_compliance_required"
         },
         {
@@ -47927,7 +47779,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 42,
+          "line": 27,
           "match": "local_content_percentage"
         },
         {
@@ -47935,7 +47787,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 43,
+          "line": 28,
           "match": "technical_supervision_required"
         },
         {
@@ -47943,7 +47795,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 44,
+          "line": 29,
           "match": "progress_reporting_frequency"
         }
       ]
@@ -49707,367 +49559,47 @@
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 20,
-          "match": "interface VerificationItemDTO {\r\n  id: string;\r\n  category: CheckpointCategory;\r\n  title: string;\r\n  description?: string;\r\n  status: VerificationStatus;\r\n  required: boolean;\r\n  weight: number; // Poids dans le calcul global (0-1)\r\n  reference_id"
+          "line": 35,
+          "match": "interface DecompteLineDTO {\n  id: string;\n  description: string;\n  quantity: number;\n  unit: string;\n  unit_price"
         },
         {
           "ruleId": "P2-CAS002",
           "priority": 1,
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 39,
-          "match": "interface CheckpointVerificationResultDTO {\r\n  checkpoint_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 61,
-          "match": "interface CheckpointDTO {\r\n  id: string;\r\n  project_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 107,
-          "match": "interface DecompteLineDTO {\r\n  id: string;\r\n  description: string;\r\n  quantity: number;\r\n  unit: string;\r\n  unit_price"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 123,
-          "match": "interface AutomaticDecompteDTO {\r\n  id: string;\r\n  project_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 183,
-          "match": "interface ProjectMilestoneAggregateDTO {\r\n  project_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 221,
-          "match": "interface PhaseMilestoneDTO {\r\n  id: string;\r\n  title: string;\r\n  description?: string;\r\n  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';\r\n  priority: 'critical' | 'high' | 'normal' | 'low';\r\n  \r\n  // Lien hiérarchique\r\n  phase_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 261,
-          "match": "interface MauritaniaBusinessRulesDTO {\r\n  // Paiements échelonnés\r\n  payment_thresholds"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 290,
-          "match": "interface CheckpointFormDTO {\r\n  milestone_id"
-        },
-        {
-          "ruleId": "P2-CAS002",
-          "priority": 1,
-          "severity": "ERROR",
-          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
-          "line": 307,
-          "match": "interface VerificationFormDTO {\r\n  checkpoint_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 28,
-          "match": "reference_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 29,
-          "match": "reference_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 30,
-          "match": "verified_by"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 31,
-          "match": "verified_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 33,
-          "match": "evidence_urls"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 41,
-          "match": "milestone_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 42,
-          "match": "overall_status"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 43,
-          "match": "verification_score"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 44,
-          "match": "verification_items"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 45,
-          "match": "required_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 46,
-          "match": "verified_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 47,
-          "match": "failed_items_count"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 48,
-          "match": "blocking_issues"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 50,
-          "match": "can_proceed"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
           "line": 51,
-          "match": "verified_at"
+          "match": "interface AutomaticDecompteDTO {\n  id: string;\n  project_id"
+        },
+        {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 101,
+          "match": "interface PhaseMilestoneDTO {\n  id: string;\n  title: string;\n  description?: string;\n  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';\n  priority: 'critical' | 'high' | 'normal' | 'low';\n\n  phase_id"
+        },
+        {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 134,
+          "match": "interface ProjectMilestoneAggregateDTO {\n  project_id"
+        },
+        {
+          "ruleId": "P2-CAS002",
+          "priority": 1,
+          "severity": "ERROR",
+          "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
+          "line": 167,
+          "match": "interface CheckpointFormDTO {\n  milestone_id"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 52,
-          "match": "verified_by"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 63,
-          "match": "project_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 64,
-          "match": "phase_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 65,
-          "match": "step_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 66,
-          "match": "milestone_id"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 71,
-          "match": "checkpoint_type"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 74,
-          "match": "trigger_progress"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 75,
-          "match": "financial_weight"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 82,
-          "match": "required_inspections"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 83,
-          "match": "required_documents"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 84,
-          "match": "required_approvals"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 87,
-          "match": "verification_result"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 90,
-          "match": "triggers_payment"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 91,
-          "match": "payment_amount"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 92,
-          "match": "triggers_notification"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 93,
-          "match": "notification_recipients"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 96,
-          "match": "target_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 97,
-          "match": "completion_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 98,
-          "match": "created_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 99,
-          "match": "updated_at"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 112,
+          "line": 40,
           "match": "unit_price"
         },
         {
@@ -50075,7 +49607,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 113,
+          "line": 41,
           "match": "total_amount"
         },
         {
@@ -50083,7 +49615,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 115,
+          "line": 43,
           "match": "milestone_id"
         },
         {
@@ -50091,7 +49623,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 116,
+          "line": 44,
           "match": "checkpoint_id"
         },
         {
@@ -50099,7 +49631,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 117,
+          "line": 45,
           "match": "verification_status"
         },
         {
@@ -50107,7 +49639,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 125,
+          "line": 53,
           "match": "project_id"
         },
         {
@@ -50115,7 +49647,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 126,
+          "line": 54,
           "match": "phase_id"
         },
         {
@@ -50123,7 +49655,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 127,
+          "line": 55,
           "match": "decompte_number"
         },
         {
@@ -50131,7 +49663,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 128,
+          "line": 56,
           "match": "decompte_type"
         },
         {
@@ -50139,7 +49671,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 131,
+          "line": 58,
           "match": "contract_amount"
         },
         {
@@ -50147,7 +49679,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 132,
+          "line": 59,
           "match": "previous_cumulative"
         },
         {
@@ -50155,7 +49687,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 133,
+          "line": 60,
           "match": "current_period_amount"
         },
         {
@@ -50163,7 +49695,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 134,
+          "line": 61,
           "match": "cumulative_amount"
         },
         {
@@ -50171,7 +49703,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 137,
+          "line": 63,
           "match": "retention_rate"
         },
         {
@@ -50179,7 +49711,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 138,
+          "line": 64,
           "match": "retention_amount"
         },
         {
@@ -50187,7 +49719,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 139,
+          "line": 65,
           "match": "previous_retention_released"
         },
         {
@@ -50195,7 +49727,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 140,
+          "line": 66,
           "match": "retention_to_release"
         },
         {
@@ -50203,7 +49735,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 143,
+          "line": 68,
           "match": "net_payable"
         },
         {
@@ -50211,7 +49743,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 146,
+          "line": 70,
           "match": "verified_milestones"
         },
         {
@@ -50219,7 +49751,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 151,
+          "line": 75,
           "match": "verified_at"
         },
         {
@@ -50227,7 +49759,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 158,
+          "line": 80,
           "match": "progress_at_decompte"
         },
         {
@@ -50235,7 +49767,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 159,
+          "line": 81,
           "match": "inspection_reference"
         },
         {
@@ -50243,7 +49775,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 160,
+          "line": 82,
           "match": "pv_reference"
         },
         {
@@ -50251,7 +49783,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 164,
+          "line": 85,
           "match": "calculated_at"
         },
         {
@@ -50259,7 +49791,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 165,
+          "line": 86,
           "match": "submitted_at"
         },
         {
@@ -50267,7 +49799,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 166,
+          "line": 87,
           "match": "approved_at"
         },
         {
@@ -50275,7 +49807,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 167,
+          "line": 88,
           "match": "approved_by"
         },
         {
@@ -50283,7 +49815,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 168,
+          "line": 89,
           "match": "paid_at"
         },
         {
@@ -50291,7 +49823,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 171,
+          "line": 91,
           "match": "calculation_log"
         },
         {
@@ -50299,143 +49831,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 185,
-          "match": "project_title"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 186,
-          "match": "project_budget"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 187,
-          "match": "project_progress"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 190,
-          "match": "total_milestones"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 191,
-          "match": "completed_milestones"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 192,
-          "match": "verified_milestones"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 193,
-          "match": "pending_verification"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 196,
-          "match": "total_decompte_amount"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 197,
-          "match": "total_paid"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 198,
-          "match": "total_retention_held"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 203,
-          "match": "phase_name"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 204,
-          "match": "phase_progress"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 205,
-          "match": "phase_budget"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 210,
-          "match": "next_checkpoints"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 211,
-          "match": "overdue_checkpoints"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 214,
-          "match": "critical_path_milestones"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 215,
-          "match": "estimated_completion_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 229,
+          "line": 108,
           "match": "phase_id"
         },
         {
@@ -50443,7 +49839,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 230,
+          "line": 109,
           "match": "step_id"
         },
         {
@@ -50451,7 +49847,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 231,
+          "line": 110,
           "match": "step_name"
         },
         {
@@ -50459,7 +49855,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 234,
+          "line": 112,
           "match": "target_date"
         },
         {
@@ -50467,7 +49863,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 235,
+          "line": 113,
           "match": "completion_date"
         },
         {
@@ -50475,7 +49871,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 240,
+          "line": 117,
           "match": "requires_verification"
         },
         {
@@ -50483,7 +49879,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 241,
+          "line": 118,
           "match": "verification_status"
         },
         {
@@ -50491,7 +49887,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 245,
+          "line": 121,
           "match": "financial_impact"
         },
         {
@@ -50499,7 +49895,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 246,
+          "line": 122,
           "match": "triggers_decompte"
         },
         {
@@ -50507,7 +49903,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 247,
+          "line": 123,
           "match": "decompte_id"
         },
         {
@@ -50515,7 +49911,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 252,
+          "line": 127,
           "match": "is_on_critical_path"
         },
         {
@@ -50523,7 +49919,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 253,
+          "line": 128,
           "match": "float_days"
         },
         {
@@ -50531,87 +49927,143 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 263,
-          "match": "payment_thresholds"
+          "line": 136,
+          "match": "project_title"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 266,
-          "match": "guarantee_retention_rate"
+          "line": 137,
+          "match": "project_budget"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 267,
-          "match": "retention_release_at_provisional"
+          "line": 138,
+          "match": "project_progress"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 268,
-          "match": "retention_release_at_final"
+          "line": 140,
+          "match": "total_milestones"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 271,
-          "match": "provisional_reception_delay_days"
+          "line": 141,
+          "match": "completed_milestones"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 272,
-          "match": "final_reception_delay_days"
+          "line": 142,
+          "match": "verified_milestones"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 275,
-          "match": "mandatory_inspection_thresholds"
+          "line": 143,
+          "match": "pending_verification"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 278,
-          "match": "local_material_priority_threshold"
+          "line": 145,
+          "match": "total_decompte_amount"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 281,
-          "match": "requires_donor_approval"
+          "line": 146,
+          "match": "total_paid"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 282,
-          "match": "donor_approval_threshold"
+          "line": 147,
+          "match": "total_retention_held"
         },
         {
           "ruleId": "P2-CAS001",
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 294,
+          "line": 151,
+          "match": "phase_name"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 152,
+          "match": "phase_progress"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 153,
+          "match": "phase_budget"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 157,
+          "match": "next_checkpoints"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 158,
+          "match": "overdue_checkpoints"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 160,
+          "match": "critical_path_milestones"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 161,
+          "match": "estimated_completion_date"
+        },
+        {
+          "ruleId": "P2-CAS001",
+          "priority": 2,
+          "severity": "WARNING",
+          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
+          "line": 171,
           "match": "checkpoint_type"
         },
         {
@@ -50619,7 +50071,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 295,
+          "line": 172,
           "match": "trigger_progress"
         },
         {
@@ -50627,7 +50079,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 296,
+          "line": 173,
           "match": "financial_weight"
         },
         {
@@ -50635,7 +50087,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 297,
+          "line": 174,
           "match": "required_inspections"
         },
         {
@@ -50643,7 +50095,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 298,
+          "line": 175,
           "match": "required_documents"
         },
         {
@@ -50651,7 +50103,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 299,
+          "line": 176,
           "match": "required_approvals"
         },
         {
@@ -50659,7 +50111,7 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 300,
+          "line": 177,
           "match": "triggers_payment"
         },
         {
@@ -50667,40 +50119,8 @@
           "priority": 2,
           "severity": "WARNING",
           "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 301,
+          "line": 178,
           "match": "target_date"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 309,
-          "match": "verification_items"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 313,
-          "match": "evidence_urls"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 315,
-          "match": "overall_notes"
-        },
-        {
-          "ruleId": "P2-CAS001",
-          "priority": 2,
-          "severity": "WARNING",
-          "message": "⚠️ [P2-CAS001] Identifiant snake_case détecté (préférer camelCase).",
-          "line": 316,
-          "match": "verified_by"
         }
       ]
     },
@@ -74335,22 +73755,6 @@
           "message": "🚨 [P0-ANY001] Type \"any\" interdit ! Définir un type ou interface approprié.",
           "line": 77,
           "match": ": any"
-        },
-        {
-          "ruleId": "M001",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "❌ [M001] Données mock/hardcodées dans le code !",
-          "line": 101,
-          "match": "const mockDataGenerators ="
-        },
-        {
-          "ruleId": "M002",
-          "priority": 0,
-          "severity": "ERROR",
-          "message": "❌ [M002] Commentaires mock/hardcodés !",
-          "line": 10,
-          "match": "// Mock"
         }
       ]
     },
@@ -75089,8 +74493,8 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ValidationResult\" trouvé dans 9 emplacements: src/application/services/DocumentValidationService.ts:22, src/application/services/InspectionSchedulingService.ts:41, src/domain/entities/Template.ts:26, src/domain/validation-types.ts:14, src/dtos/shared.ts:133, src/dtos/transforms/shared.ts:12, src/dtos/utils/index.ts:20, src/dtos/workflows/ProjectWorkflowDTOs.ts:108, src/hooks/hexagonal/useAlertsHex.ts:33",
-          "line": 22,
+          "message": "❌ [D001] Type dupliqué \"ValidationResult\" trouvé dans 9 emplacements: src/application/services/DocumentValidationService.ts:24, src/application/services/InspectionSchedulingService.ts:41, src/domain/entities/Template.ts:26, src/domain/validation-types.ts:14, src/dtos/shared.ts:133, src/dtos/transforms/shared.ts:12, src/dtos/utils/index.ts:20, src/dtos/workflows/ProjectWorkflowDTOs.ts:108, src/hooks/hexagonal/useAlertsHex.ts:33",
+          "line": 24,
           "match": "ValidationResult"
         }
       ]
@@ -75102,8 +74506,8 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ValidationRule\" trouvé dans 6 emplacements: src/application/services/DocumentValidationService.ts:40, src/application/services/EnhancedValidationService.ts:70, src/domain/validation-types.ts:1, src/dtos/entities/ProjectImportDTO.ts:104, src/dtos/shared.ts:123, src/dtos/utils/index.ts:10",
-          "line": 40,
+          "message": "❌ [D001] Type dupliqué \"ValidationRule\" trouvé dans 6 emplacements: src/application/services/DocumentValidationService.ts:42, src/application/services/EnhancedValidationService.ts:70, src/domain/validation-types.ts:1, src/dtos/entities/ProjectImportDTO.ts:104, src/dtos/shared.ts:123, src/dtos/utils/index.ts:10",
+          "line": 42,
           "match": "ValidationRule"
         }
       ]
@@ -75596,7 +75000,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"CheckpointDTO\" trouvé dans 3 emplacements: src/application/services/WorkflowOrchestrator.ts:31, src/dtos/entities/CheckpointDTO.ts:16, src/dtos/types/checkpoint-dto.ts:61",
+          "message": "❌ [D001] Type dupliqué \"CheckpointDTO\" trouvé dans 2 emplacements: src/application/services/WorkflowOrchestrator.ts:31, src/dtos/entities/MilestoneDTO.ts:338",
           "line": 31,
           "match": "CheckpointDTO"
         }
@@ -76389,7 +75793,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"MauritaniaBusinessRulesDTO\" trouvé dans 5 emplacements: src/domain/repositories/IDecompteRepository.ts:14, src/dtos/entities/DecompteDTO.ts:4, src/dtos/entities/MauritaniaBusinessRulesDTO.ts:8, src/dtos/entities/VerificationItemDTO.ts:31, src/dtos/types/checkpoint-dto.ts:261",
+          "message": "❌ [D001] Type dupliqué \"MauritaniaBusinessRulesDTO\" trouvé dans 4 emplacements: src/domain/repositories/IDecompteRepository.ts:14, src/dtos/entities/DecompteDTO.ts:4, src/dtos/entities/MauritaniaBusinessRulesDTO.ts:8, src/dtos/entities/VerificationItemDTO.ts:16",
           "line": 14,
           "match": "MauritaniaBusinessRulesDTO"
         }
@@ -76454,7 +75858,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"InspectionExecutionData\" trouvé dans 4 emplacements: src/domain/repositories/IInspectionExecutionRepository.ts:12, src/dtos/entities/InspectionDTO.ts:322, src/dtos/entities/InspectionDTO.ts:450, src/dtos/workflows/InspectionExecutionDTO.ts:86",
+          "message": "❌ [D001] Type dupliqué \"InspectionExecutionData\" trouvé dans 4 emplacements: src/domain/repositories/IInspectionExecutionRepository.ts:12, src/dtos/entities/InspectionDTO.ts:322, src/dtos/entities/InspectionDTO.ts:445, src/dtos/workflows/InspectionExecutionDTO.ts:86",
           "line": 12,
           "match": "InspectionExecutionData"
         }
@@ -76493,7 +75897,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"InspectionObservation\" trouvé dans 3 emplacements: src/domain/repositories/IInspectionRepository.ts:5, src/dtos/entities/InspectionDTO.ts:475, src/dtos/workflows/InspectionExecutionDTO.ts:18",
+          "message": "❌ [D001] Type dupliqué \"InspectionObservation\" trouvé dans 3 emplacements: src/domain/repositories/IInspectionRepository.ts:5, src/dtos/entities/InspectionDTO.ts:470, src/dtos/workflows/InspectionExecutionDTO.ts:18",
           "line": 5,
           "match": "InspectionObservation"
         }
@@ -76506,7 +75910,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ChecklistItem\" trouvé dans 3 emplacements: src/domain/repositories/IInspectionRepository.ts:18, src/dtos/entities/InspectionDTO.ts:490, src/dtos/workflows/InspectionExecutionDTO.ts:51",
+          "message": "❌ [D001] Type dupliqué \"ChecklistItem\" trouvé dans 3 emplacements: src/domain/repositories/IInspectionRepository.ts:18, src/dtos/entities/InspectionDTO.ts:485, src/dtos/workflows/InspectionExecutionDTO.ts:51",
           "line": 18,
           "match": "ChecklistItem"
         }
@@ -76961,7 +76365,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"DecompteStatus\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:11, src/dtos/entities/DecompteDTO.ts:57, src/dtos/types/checkpoint-dto.ts:12",
+          "message": "❌ [D001] Type dupliqué \"DecompteStatus\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:11, src/dtos/entities/DecompteDTO.ts:57, src/dtos/types/checkpoint-dto.ts:20",
           "line": 11,
           "match": "DecompteStatus"
         }
@@ -76974,7 +76378,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"PaymentType\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:12, src/dtos/entities/DecompteDTO.ts:56, src/dtos/types/checkpoint-dto.ts:13",
+          "message": "❌ [D001] Type dupliqué \"PaymentType\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:12, src/dtos/entities/DecompteDTO.ts:56, src/dtos/types/checkpoint-dto.ts:21",
           "line": 12,
           "match": "PaymentType"
         }
@@ -76987,7 +76391,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"AutomaticDecompteDTO\" trouvé dans 4 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:17, src/dtos/entities/DecompteDTO.ts:83, src/dtos/entities/WorkflowDTO.ts:9, src/dtos/types/checkpoint-dto.ts:123",
+          "message": "❌ [D001] Type dupliqué \"AutomaticDecompteDTO\" trouvé dans 4 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:17, src/dtos/entities/DecompteDTO.ts:83, src/dtos/entities/WorkflowDTO.ts:9, src/dtos/types/checkpoint-dto.ts:51",
           "line": 17,
           "match": "AutomaticDecompteDTO"
         }
@@ -77000,7 +76404,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"DecompteLineDTO\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:75, src/dtos/entities/DecompteDTO.ts:59, src/dtos/types/checkpoint-dto.ts:107",
+          "message": "❌ [D001] Type dupliqué \"DecompteLineDTO\" trouvé dans 3 emplacements: src/dtos/entities/AutomaticDecompteDTO.ts:75, src/dtos/entities/DecompteDTO.ts:59, src/dtos/types/checkpoint-dto.ts:35",
           "line": 75,
           "match": "DecompteLineDTO"
         }
@@ -77042,58 +76446,6 @@
           "message": "❌ [D001] Type dupliqué \"BudgetAnalytics\" trouvé dans 2 emplacements: src/dtos/entities/CalculationsDTO.ts:31, src/dtos/types/calculations.ts:26",
           "line": 31,
           "match": "BudgetAnalytics"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-      "violations": [
-        {
-          "ruleId": "D001",
-          "priority": 2,
-          "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"VerificationStatus\" trouvé dans 3 emplacements: src/dtos/entities/CheckpointVerificationDTO.ts:3, src/dtos/entities/VerificationItemDTO.ts:7, src/dtos/types/checkpoint-dto.ts:10",
-          "line": 3,
-          "match": "VerificationStatus"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-      "violations": [
-        {
-          "ruleId": "D001",
-          "priority": 2,
-          "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"CheckpointCategory\" trouvé dans 3 emplacements: src/dtos/entities/CheckpointVerificationDTO.ts:4, src/dtos/entities/VerificationItemDTO.ts:8, src/dtos/types/checkpoint-dto.ts:11",
-          "line": 4,
-          "match": "CheckpointCategory"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-      "violations": [
-        {
-          "ruleId": "D001",
-          "priority": 2,
-          "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"VerificationItemDTO\" trouvé dans 4 emplacements: src/dtos/entities/CheckpointVerificationDTO.ts:6, src/dtos/entities/InspectionDTO.ts:412, src/dtos/entities/VerificationItemDTO.ts:13, src/dtos/types/checkpoint-dto.ts:20",
-          "line": 6,
-          "match": "VerificationItemDTO"
-        }
-      ]
-    },
-    {
-      "file": "src/dtos/entities/CheckpointVerificationResultDTO.ts",
-      "violations": [
-        {
-          "ruleId": "D001",
-          "priority": 2,
-          "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"CheckpointVerificationResultDTO\" trouvé dans 2 emplacements: src/dtos/entities/CheckpointVerificationResultDTO.ts:32, src/dtos/types/checkpoint-dto.ts:39",
-          "line": 32,
-          "match": "CheckpointVerificationResultDTO"
         }
       ]
     },
@@ -77273,8 +76625,8 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ObservationType\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:516, src/dtos/workflows/InspectionExecutionDTO.ts:13",
-          "line": 516,
+          "message": "❌ [D001] Type dupliqué \"ObservationType\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:511, src/dtos/workflows/InspectionExecutionDTO.ts:13",
+          "line": 511,
           "match": "ObservationType"
         }
       ]
@@ -77286,8 +76638,8 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"SeverityLevel\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:517, src/dtos/workflows/InspectionExecutionDTO.ts:14",
-          "line": 517,
+          "message": "❌ [D001] Type dupliqué \"SeverityLevel\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:512, src/dtos/workflows/InspectionExecutionDTO.ts:14",
+          "line": 512,
           "match": "SeverityLevel"
         }
       ]
@@ -77299,8 +76651,8 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ConformityStatus\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:539, src/dtos/workflows/InspectionExecutionDTO.ts:15",
-          "line": 539,
+          "message": "❌ [D001] Type dupliqué \"ConformityStatus\" trouvé dans 2 emplacements: src/dtos/entities/InspectionDTO.ts:534, src/dtos/workflows/InspectionExecutionDTO.ts:15",
+          "line": 534,
           "match": "ConformityStatus"
         }
       ]
@@ -77780,7 +77132,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"PhaseMilestoneDTO\" trouvé dans 4 emplacements: src/dtos/entities/PhaseDTO.ts:331, src/dtos/entities/ReportDTO.ts:303, src/dtos/reports/reportDTOs.ts:464, src/dtos/types/checkpoint-dto.ts:221",
+          "message": "❌ [D001] Type dupliqué \"PhaseMilestoneDTO\" trouvé dans 4 emplacements: src/dtos/entities/PhaseDTO.ts:331, src/dtos/entities/ReportDTO.ts:303, src/dtos/reports/reportDTOs.ts:464, src/dtos/types/checkpoint-dto.ts:101",
           "line": 331,
           "match": "PhaseMilestoneDTO"
         }
@@ -79634,7 +78986,7 @@
       "locations": [
         {
           "file": "src/application/services/DocumentValidationService.ts",
-          "line": 22
+          "line": 24
         },
         {
           "file": "src/application/services/InspectionSchedulingService.ts",
@@ -79675,7 +79027,7 @@
       "locations": [
         {
           "file": "src/application/services/DocumentValidationService.ts",
-          "line": 40
+          "line": 42
         },
         {
           "file": "src/application/services/EnhancedValidationService.ts",
@@ -80260,12 +79612,8 @@
           "line": 31
         },
         {
-          "file": "src/dtos/entities/CheckpointDTO.ts",
-          "line": 16
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 61
+          "file": "src/dtos/entities/MilestoneDTO.ts",
+          "line": 338
         }
       ]
     },
@@ -81230,11 +80578,7 @@
         },
         {
           "file": "src/dtos/entities/VerificationItemDTO.ts",
-          "line": 31
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 261
+          "line": 16
         }
       ]
     },
@@ -81307,7 +80651,7 @@
         },
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 450
+          "line": 445
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -81354,7 +80698,7 @@
         },
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 475
+          "line": 470
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -81371,7 +80715,7 @@
         },
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 490
+          "line": 485
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -81874,7 +81218,7 @@
         },
         {
           "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 12
+          "line": 20
         }
       ]
     },
@@ -81891,7 +81235,7 @@
         },
         {
           "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 13
+          "line": 21
         }
       ]
     },
@@ -81912,7 +81256,7 @@
         },
         {
           "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 123
+          "line": 51
         }
       ]
     },
@@ -81929,7 +81273,7 @@
         },
         {
           "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 107
+          "line": 35
         }
       ]
     },
@@ -81969,74 +81313,6 @@
         {
           "file": "src/dtos/types/calculations.ts",
           "line": 26
-        }
-      ]
-    },
-    {
-      "typeName": "VerificationStatus",
-      "locations": [
-        {
-          "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-          "line": 3
-        },
-        {
-          "file": "src/dtos/entities/VerificationItemDTO.ts",
-          "line": 7
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 10
-        }
-      ]
-    },
-    {
-      "typeName": "CheckpointCategory",
-      "locations": [
-        {
-          "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-          "line": 4
-        },
-        {
-          "file": "src/dtos/entities/VerificationItemDTO.ts",
-          "line": 8
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 11
-        }
-      ]
-    },
-    {
-      "typeName": "VerificationItemDTO",
-      "locations": [
-        {
-          "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-          "line": 6
-        },
-        {
-          "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 412
-        },
-        {
-          "file": "src/dtos/entities/VerificationItemDTO.ts",
-          "line": 13
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 20
-        }
-      ]
-    },
-    {
-      "typeName": "CheckpointVerificationResultDTO",
-      "locations": [
-        {
-          "file": "src/dtos/entities/CheckpointVerificationResultDTO.ts",
-          "line": 32
-        },
-        {
-          "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 39
         }
       ]
     },
@@ -82250,7 +81526,7 @@
       "locations": [
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 516
+          "line": 511
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -82263,7 +81539,7 @@
       "locations": [
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 517
+          "line": 512
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -82276,7 +81552,7 @@
       "locations": [
         {
           "file": "src/dtos/entities/InspectionDTO.ts",
-          "line": 539
+          "line": 534
         },
         {
           "file": "src/dtos/workflows/InspectionExecutionDTO.ts",
@@ -82813,7 +82089,7 @@
         },
         {
           "file": "src/dtos/types/checkpoint-dto.ts",
-          "line": 221
+          "line": 101
         }
       ]
     },
@@ -87771,8 +87047,8 @@
       "score": 0,
       "type": "COMPONENT",
       "layer": "UI",
-      "violations": 41,
-      "p0Violations": 1
+      "violations": 40,
+      "p0Violations": 0
     },
     {
       "file": "src/components/suppliers/SubmissionProgressTracker.tsx",
@@ -88667,8 +87943,8 @@
       "score": 0,
       "type": "UTILITY",
       "layer": "APPLICATION",
-      "violations": 13,
-      "p0Violations": 4
+      "violations": 12,
+      "p0Violations": 3
     },
     {
       "file": "src/application/services/BankGuaranteeActionService.ts",
@@ -88776,19 +88052,19 @@
     },
     {
       "file": "src/application/services/DocumentService.ts",
-      "score": 80,
+      "score": 100,
       "type": "SERVICE",
       "layer": "APPLICATION",
       "violations": 1,
-      "p0Violations": 1
+      "p0Violations": 0
     },
     {
       "file": "src/application/services/DocumentValidationService.ts",
-      "score": 20,
+      "score": 45,
       "type": "SERVICE",
       "layer": "APPLICATION",
-      "violations": 5,
-      "p0Violations": 1
+      "violations": 4,
+      "p0Violations": 0
     },
     {
       "file": "src/application/services/EmployeeService.ts",
@@ -88856,11 +88132,11 @@
     },
     {
       "file": "src/application/services/InspectionActionService.ts",
-      "score": 10,
+      "score": 35,
       "type": "SERVICE",
       "layer": "APPLICATION",
-      "violations": 7,
-      "p0Violations": 2
+      "violations": 6,
+      "p0Violations": 1
     },
     {
       "file": "src/application/services/InspectionApprovalSyncService.ts",
@@ -88944,11 +88220,11 @@
     },
     {
       "file": "src/application/services/InsuranceActionService.ts",
-      "score": 10,
+      "score": 35,
       "type": "SERVICE",
       "layer": "APPLICATION",
-      "violations": 7,
-      "p0Violations": 2
+      "violations": 6,
+      "p0Violations": 1
     },
     {
       "file": "src/application/services/InsuranceCertificatesService.ts",
@@ -90391,6 +89667,14 @@
       "p0Violations": 0
     },
     {
+      "file": "src/domain/repositories/IDocumentValidationLogRepository.ts",
+      "score": 100,
+      "type": "REPOSITORY_INTERFACE",
+      "layer": "DOMAIN",
+      "violations": 0,
+      "p0Violations": 0
+    },
+    {
       "file": "src/domain/repositories/IEmployeeRepository.ts",
       "score": 100,
       "type": "REPOSITORY_INTERFACE",
@@ -91223,6 +90507,14 @@
       "p0Violations": 2
     },
     {
+      "file": "src/infrastructure/supabase/adapters/SupabaseDocumentValidationLogAdapter.ts",
+      "score": 97.5,
+      "type": "ADAPTER",
+      "layer": "INFRASTRUCTURE",
+      "violations": 0,
+      "p0Violations": 0
+    },
+    {
       "file": "src/infrastructure/supabase/adapters/SupabaseEmployeeAdapter.ts",
       "score": 92.5,
       "type": "ADAPTER",
@@ -91296,10 +90588,10 @@
     },
     {
       "file": "src/infrastructure/supabase/adapters/SupabaseMaterialAdapter.ts",
-      "score": 32.5,
+      "score": 92.5,
       "type": "ADAPTER",
       "layer": "INFRASTRUCTURE",
-      "violations": 6,
+      "violations": 0,
       "p0Violations": 0
     },
     {
@@ -91475,8 +90767,8 @@
       "score": 0,
       "type": "ADAPTER",
       "layer": "INFRASTRUCTURE",
-      "violations": 9,
-      "p0Violations": 9
+      "violations": 13,
+      "p0Violations": 13
     },
     {
       "file": "src/infrastructure/supabase/adapters/SupabaseRiskAdapter.ts",
@@ -91768,26 +91060,26 @@
     },
     {
       "file": "src/dtos/entities/CheckpointDTO.ts",
-      "score": 0,
+      "score": 100,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 20,
+      "violations": 0,
       "p0Violations": 0
     },
     {
       "file": "src/dtos/entities/CheckpointVerificationDTO.ts",
-      "score": 80,
+      "score": 100,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 3,
+      "violations": 0,
       "p0Violations": 0
     },
     {
       "file": "src/dtos/entities/CheckpointVerificationResultDTO.ts",
-      "score": 10,
+      "score": 100,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 17,
+      "violations": 0,
       "p0Violations": 0
     },
     {
@@ -91847,6 +91139,14 @@
       "p0Violations": 0
     },
     {
+      "file": "src/dtos/entities/DocumentValidationLogDTO.ts",
+      "score": 100,
+      "type": "DTO",
+      "layer": "DTOS",
+      "violations": 0,
+      "p0Violations": 0
+    },
+    {
       "file": "src/dtos/entities/EmployeeDTO.ts",
       "score": 60,
       "type": "DTO",
@@ -91875,7 +91175,7 @@
       "score": 0,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 24,
+      "violations": 23,
       "p0Violations": 0
     },
     {
@@ -91944,10 +91244,10 @@
     },
     {
       "file": "src/dtos/entities/MilestoneDTO.ts",
-      "score": 35,
+      "score": 0,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 8,
+      "violations": 46,
       "p0Violations": 0
     },
     {
@@ -92304,10 +91604,10 @@
     },
     {
       "file": "src/dtos/entities/VerificationItemDTO.ts",
-      "score": 0,
+      "score": 30,
       "type": "DTO",
       "layer": "DTOS",
-      "violations": 19,
+      "violations": 13,
       "p0Violations": 0
     },
     {
@@ -92875,7 +92175,7 @@
       "score": 0,
       "type": "UTILITY",
       "layer": "DTOS",
-      "violations": 125,
+      "violations": 71,
       "p0Violations": 0
     },
     {
@@ -95019,7 +94319,7 @@
       "score": 0,
       "type": "UTILITY",
       "layer": "UNKNOWN",
-      "violations": 6,
+      "violations": 4,
       "p0Violations": 4
     },
     {
