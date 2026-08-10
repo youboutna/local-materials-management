@@ -1,31 +1,16 @@
 /**
- * VerificationItemDTO
- * 
- * Item de vérification individuel pour les checkpoints
+ * @deprecated pour les types de vérification : ré-export de compatibilité.
+ * `VerificationItemDTO`, `VerificationStatus` et `CheckpointCategory` sont
+ * définis dans `./MilestoneDTO` (le checkpoint est une action de jalon).
+ *
+ * Ce fichier conserve uniquement les règles métier Mauritanie.
  */
 
-export type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
-export type CheckpointCategory = 'inspection' | 'resource' | 'document' | 'service_fait' | 'approval' | 'material' | 'payment' | 'pv';
-
-/**
- * Item de vérification individuel
- */
-export interface VerificationItemDTO {
-  id: string;
-  name?: string; // Optional name field for flexibility
-  category: CheckpointCategory;
-  title: string;
-  description?: string;
-  status: VerificationStatus;
-  required: boolean;
-  weight: number; // Poids dans le calcul global (0-1)
-  reference_id?: string; // ID de l'inspection, document, etc.
-  reference_type?: 'inspection' | 'document' | 'material' | 'payment' | 'pv';
-  verified_by?: string;
-  verified_at?: string;
-  notes?: string;
-  evidence_urls?: string[];
-}
+export type {
+  CheckpointCategory,
+  VerificationItemDTO,
+  VerificationStatus,
+} from './MilestoneDTO';
 
 // Mauritania Business Rules interface
 export interface MauritaniaBusinessRulesDTO {
