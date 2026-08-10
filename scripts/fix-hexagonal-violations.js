@@ -169,7 +169,10 @@ const RULES = {
     isAutoFixable: false,
     exclude: ['src/test/', 'src/__tests__/', '.spec.', '.test.'],
     check: (content) => {
-      const emptyFuncs = (content.match(/(?:function|const|let|var)\s+\w+\s*=\s*(?:\([^)]*\)|[^=]+)\s*=>\s*{\s*}/g) || []).length;
+      // Fonctions nommées dont le corps est vide (on ignore les callbacks inline `(() => {})`)
+      const emptyFuncs = (
+        content.match(/(?:^|\n)\s*(?:export\s+)?(?:async\s+)?(?:function\s+\w+\s*\([^)]*\)|(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\([^)]*\)\s*(?::\s*[^=]+)?=>)\s*{\s*}/g) || []
+      ).length;
       const todoComments = (content.match(/\/\/\s*TODO\s*[:=]/gi) || []).length;
       const notImpl = (content.match(/throw\s+new\s+Error\(['"`](?:Not implemented|TODO|Not implemented yet).*?['"`]\)/gi) || []).length;
       return {
@@ -179,6 +182,7 @@ const RULES = {
         total: emptyFuncs + todoComments + notImpl
       };
     }
+
   },
 
   // ============================================================
@@ -189,7 +193,7 @@ const RULES = {
     priority: -1, 
     severity: 'ERROR', 
     target: 'UI',
-    pattern: /(?:await\s+)?(?:supabase|db|database)\.\w+\(/g,
+    pattern: /(?:await\s+)?(?:supabase|db|database)\.(?:from|rpc|select|insert|update|upsert|delete|channel|storage|auth|schema|functions)\s*\(/g,
     message: '🚨 [P0-DB001] Appel base de données direct dans composant UI ! Utiliser repository pattern via service + hook.',
     isAutoFixable: false,
     exclude: ['src/hooks/', 'src/application/', 'src/infrastructure/', 'src/dtos/', 'src/domain/'],
