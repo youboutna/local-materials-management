@@ -47,7 +47,6 @@ import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO"
 import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
