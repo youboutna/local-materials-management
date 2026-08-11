@@ -86,7 +86,43 @@ interface HierarchyNodeRow {
   updated_at?: string;
 }
 
+/** Table réelle des nœuds de hiérarchie projet (schéma btp). */
+const NODES_TABLE = 'project_hierarchy_nodes';
+
+/** Ligne DB de btp.project_hierarchy_nodes (metadata en jsonb). */
+interface NodeRow {
+  id: string;
+  project_id: string;
+  name: string;
+  type: string;
+  parent_id: string | null;
+  order_index: number | null;
+  level: number | null;
+  path: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+/** DB (snake_case) -> DTO (camelCase). */
+function mapNodeRow(row: NodeRow): HierarchyNode {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    name: row.name,
+    type: (row.type as HierarchyNode['type']) || 'task',
+    parentId: row.parent_id ?? undefined,
+    orderIndex: row.order_index ?? 0,
+    level: row.level ?? 1,
+    path: row.path ?? row.name,
+    metadata: (row.metadata ?? {}) as HierarchyNode['metadata'],
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? new Date().toISOString(),
+  };
+}
+
 export class SupabaseHierarchyAdapter implements IHierarchyRepository {
+
   // ============= Core CRUD Operations =============
 
   async getMembers(projectId: string): Promise<HierarchyMember[]> {
