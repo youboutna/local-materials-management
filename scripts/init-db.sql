@@ -180,7 +180,7 @@ BEGIN
     -- 6.1 USERS
     EXECUTE format('
         CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             email VARCHAR UNIQUE,
             role %I.user_role,
             created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -211,7 +211,7 @@ BEGIN
     -- 6.3 USER ROLES
     EXECUTE format('
         CREATE TABLE IF NOT EXISTS %I.user_roles (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id UUID NOT NULL REFERENCES %I.users(id) ON DELETE CASCADE,
             role_name %I.user_role NOT NULL,
             assigned_at TIMESTAMPTZ DEFAULT NOW(),

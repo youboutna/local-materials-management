@@ -45,7 +45,7 @@ CREATE TYPE document_status AS ENUM (
 
 -- USERS
 CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   instance_id UUID,
   aud VARCHAR,
   role VARCHAR,
@@ -125,7 +125,7 @@ CREATE POLICY manage_profiles_admin_director ON profiles
 
 -- USER ROLES
 CREATE TABLE user_roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role_name user_role NOT NULL,
   assigned_at TIMESTAMPTZ DEFAULT NOW(),
@@ -155,7 +155,7 @@ UPDATE user_roles SET role_name = 'manager' WHERE role_name = 'project_manager';
 
 -- PROJECTS
 CREATE TABLE projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
   location TEXT,
@@ -193,7 +193,7 @@ CREATE POLICY manage_projects_admin_director_manager ON projects
 
 -- PAYMENTS
 CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   amount NUMERIC(12, 2) NOT NULL,
   payment_date DATE NOT NULL,
@@ -222,7 +222,7 @@ CREATE POLICY manage_payments_admin_director_manager ON payments
 
 -- INSPECTIONS
 CREATE TABLE inspections (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   status inspection_status NOT NULL,
@@ -251,7 +251,7 @@ CREATE POLICY manage_inspections_admin_director_manager ON inspections
 
 -- PROJECT MATERIALS
 CREATE TABLE project_materials (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   material_id UUID NOT NULL,
   quantity NUMERIC(10, 2),
@@ -278,7 +278,7 @@ CREATE POLICY manage_project_materials_admin_director_manager ON project_materia
 
 -- TASK ASSIGNMENTS
 CREATE TABLE task_assignments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
@@ -313,7 +313,7 @@ CREATE POLICY manage_tasks_admin_director_manager ON task_assignments
 
 -- NOTIFICATIONS
 CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   recipient_id TEXT NOT NULL,
   title TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -345,7 +345,7 @@ CREATE POLICY manage_notifications_admin_director ON notifications
 
 -- MATERIALS
 CREATE TABLE materials (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   category TEXT,
@@ -383,7 +383,7 @@ CREATE POLICY manage_materials_admin_director_manager ON materials
 
 -- SUPPLIERS
 CREATE TABLE suppliers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   address TEXT,
   phone TEXT,
@@ -415,7 +415,7 @@ CREATE POLICY manage_suppliers_admin_director ON suppliers
 
 -- WORKSPACES
 CREATE TABLE workspaces (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   location TEXT,
   contact_manager TEXT,
@@ -445,7 +445,7 @@ CREATE POLICY manage_workspaces_admin_director_manager ON workspaces
 
 -- DOCUMENTS
 CREATE TABLE documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
@@ -487,7 +487,7 @@ CREATE POLICY manage_documents_admin_director_manager ON documents
 
 -- TENDER DOCUMENTS
 CREATE TABLE tender_documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   document_id UUID REFERENCES documents(id) NOT NULL,
   category TEXT,
