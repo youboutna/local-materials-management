@@ -672,3 +672,24 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 | Suite `EnhancedValidationIntegration.test.ts` dépend de `@jest/globals` | Bloque Vitest | À assigner | Migrer la suite vers Vitest ou l’exclure de la configuration Vitest documentée | Avant GO |
 | `RepositoryFactory.providers.test.ts` attend `SupabaseStorageProvider`, mais reçoit `SupabaseStorageAdapter` | 1 test en échec | À assigner | Aligner le test et le contrat sur l’implémentation retenue | Avant GO |
 | `npm run lint` est bloqué par les permissions de `supabase/docker/volumes/db/data` | Lint non qualifié | Environnement | Exclure le volume de la portée ESLint ou corriger ses permissions, puis relancer | Avant GO |
+
+## 🔁 Itération — Nettoyage priorisé UI (COMPONENT/UI par p0Violations)
+
+Généré par `scripts/generate-refactor-plan.cjs` (tri : COMPONENT/UI d'abord, puis `p0Violations` décroissant, puis `score`).
+
+### Fait
+- [x] `scripts/generate-refactor-plan.cjs` : exploite `p0Violations`, `violations`, `score`, `layer`, `type` du rapport ; nouveau tri UI-first ; table « Top UI/COMPONENT par p0Violations ».
+- [x] `scripts/fix-hexagonal-violations.js` : faux positifs supprimés (P0-DB001 limité aux vraies méthodes Supabase, P0-M001 ignore les callbacks inline `() => {}`).
+- [x] Hiérarchie projet persistée réellement : table `btp.project_hierarchy_nodes` (niveau/chemin calculés par trigger) + `SupabaseHierarchyAdapter` réécrit — CRUD, arbre (move/reorder/duplicate récursif), recherche à facettes, statistiques, chemin critique, validation d'intégrité (cycles, parent invalide, ordre dupliqué). Plus aucun mock.
+- [x] Imports morts `RepositoryFactory` supprimés dans `ProjectExporter`, `ProjectDetailByDTO`, `ProjectFileImporter`, `AdvancedProjectImporter` (ces écrans passent déjà par les services).
+
+### Reste à traiter (ordre d'attaque)
+1. `ProjectExporter.tsx` (21 p0) — typer les collections `any[]` en DTOs (`PhaseDTO`, `TaskAssignmentDTO`, `PaymentDTO`, `RiskDTO`, `MilestoneDTO`, `DocumentDTO`) et retirer les accès `phase_name`, `start_date`, `payment_date`, `contractor_name` (fallbacks legacy).
+2. `ProjectDetailByDTO.tsx` (19 p0) — supprimer les casts `as any` sur `interventionZones`, `coordinates`, `inspections`, `documents` (déjà typés), clarifier `entityCode` vs `referentialCode`, typer les `queryFn` (Gantt/PERT/compliance).
+3. `ProjectFileImporter.tsx` / `AdvancedProjectImporter.tsx` (8 et 4 p0) — lignes brutes en `Record<string, unknown>`, sorties en `Partial<CreateProjectDTO>`/`UpdateProjectDTO`, mapping camelCase (`startDate`, `endDate`, `financingSource`, `marketType`, `selectionMode`, `projectReference`).
+4. PDF/reports (`ProjectPDFDocument`, `CompactProjectPDFDocument`, `InspectionReportGenerator`) — mêmes DTOs, aucun accès snake_case.
+5. Workflows de phases (`PhaseWorkflowOrchestrator`, `PhaseWorkflowContainer`, les deux `UnifiedPhaseWorkflow`, `PhasePlanificationStep`) — combler les trous de persistance (états locaux non écrits en base) et dédupliquer les variantes mortes.
+
+### Points à clarifier (métier)
+- `projectManagerId` vs `projectResponsableId` dans l'import avancé (sémantique différente, pas un simple problème de casse).
+- Existence de DTOs dédiés pour garanties bancaires / attestations d'assurance côté détail projet.

@@ -11,7 +11,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { CreateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
 import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {
     AlertTriangle,
     Calendar,

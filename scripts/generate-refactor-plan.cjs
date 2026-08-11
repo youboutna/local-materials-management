@@ -101,13 +101,19 @@ const files = (report.violations || []).map((entry) => {
   };
 });
 
+// Ordre d'attaque demandé : d'abord les COMPONENT/UI (round-trip UI -> DB),
+// classés par p0Violations décroissant, puis le reste.
+const isUiComponent = (f) => f.type === 'COMPONENT' || f.layer === 'UI';
+
 files.sort(
   (a, b) =>
-    ORDER[a.priority] - ORDER[b.priority] ||
+    Number(isUiComponent(b)) - Number(isUiComponent(a)) ||
+    b.p0Violations - a.p0Violations ||
     b.blockingViolations - a.blockingViolations ||
     b.rankScore - a.rankScore ||
     (a.score ?? 100) - (b.score ?? 100)
 );
+
 
 const byPriority = {};
 const byLot = {};
@@ -162,6 +168,13 @@ fs.writeFileSync('scripts/plan-refactor.json', JSON.stringify(plan, null, 2));
 console.log('plan-refactor.json écrit :', files.length, 'fichiers');
 console.table(Object.entries(byPriority).map(([p, c]) => ({ priorite: p, fichiers: c })));
 console.table(Object.entries(byLot).map(([lot, c]) => ({ lot, fichiers: c })));
+console.log('\nTop UI/COMPONENT par p0Violations :');
+console.table(
+  files
+    .filter(isUiComponent)
+    .slice(0, 30)
+    .map((f) => ({ file: f.file, type: f.type, p0: f.p0Violations, score: f.score, lots: f.lots.join(',') }))
+);
 console.log('\nFichiers bloquants (P0 réels) :');
 console.table(
   files
@@ -169,5 +182,6 @@ console.table(
     .slice(0, 30)
     .map((f) => ({ file: f.file, score: f.score, blocking: f.blockingViolations, lots: f.lots.join(',') }))
 );
+
 console.log('\nPires scores :');
 console.table(worstScores.slice(0, 15));
