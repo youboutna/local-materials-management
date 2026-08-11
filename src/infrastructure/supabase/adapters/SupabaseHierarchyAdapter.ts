@@ -191,295 +191,365 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
     return member?.canApprovePayments ?? false;
   }
 
-  // ============= Core CRUD Operations =============
+  // ============= Core CRUD Operations (btp.project_hierarchy_nodes) =============
+
+  /** Accès typé-souple à la table (types générés indisponibles pour le schéma btp). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private table(): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (supabase as any).from(NODES_TABLE);
+  }
+
+  private toRow(
+    data: CreateHierarchyNodeDTO | UpdateHierarchyNodeDTO,
+  ): Record<string, unknown> {
+    const row: Record<string, unknown> = {};
+    if ('projectId' in data && data.projectId) row.project_id = data.projectId;
+    if (data.name !== undefined) row.name = data.name;
+    if (data.type !== undefined) row.type = data.type;
+    if (data.parentId !== undefined) row.parent_id = data.parentId ?? null;
+    if (data.orderIndex !== undefined) row.order_index = data.orderIndex;
+    if (data.metadata !== undefined) row.metadata = data.metadata ?? {};
+    return row;
+  }
 
   async createHierarchyNode(nodeData: CreateHierarchyNodeDTO): Promise<HierarchyNode> {
-    // Implementation would create a new hierarchy node in database
-    // For now, return a mock node
-    return {
-      id: crypto.randomUUID(),
-      projectId: nodeData.projectId,
-      name: nodeData.name,
-      type: nodeData.type,
-      parentId: nodeData.parentId,
-      orderIndex: nodeData.orderIndex || 0,
-      level: nodeData.parentId ? 2 : 1, // Mock level calculation
-      path: nodeData.parentId ? `root.${nodeData.name}` : nodeData.name, // Mock path
-      metadata: {
-        status: 'active',
-        ...nodeData.metadata
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const { data, error } = await this.table()
+      .insert({ ...this.toRow(nodeData), metadata: nodeData.metadata ?? { status: 'active' } })
+      .select('*')
+      .single();
+    if (error) throw new Error(error.message);
+    return mapNodeRow(data as NodeRow);
   }
 
   async updateHierarchyNode(id: string, updateData: UpdateHierarchyNodeDTO): Promise<HierarchyNode> {
-    // Implementation would update hierarchy node in database
-    // For now, return a mock updated node
-    return {
-      id,
-      projectId: '', // Would get from database
-      name: updateData.name || 'Updated Node',
-      type: updateData.type || 'task',
-      parentId: updateData.parentId,
-      orderIndex: updateData.orderIndex || 0,
-      level: updateData.parentId ? 2 : 1, // Mock level calculation
-      path: updateData.parentId ? `root.${updateData.name || 'Updated'}` : (updateData.name || 'Updated'), // Mock path
-      metadata: {
-        status: 'active',
-        ...updateData.metadata
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const existing = await this.getHierarchyNode(id);
+    const patch = this.toRow(updateData);
+    if (updateData.metadata !== undefined) {
+      patch.metadata = { ...(existing?.metadata ?? {}), ...updateData.metadata };
+    }
+    const { data, error } = await this.table().update(patch).eq('id', id).select('*').single();
+    if (error) throw new Error(error.message);
+    return mapNodeRow(data as NodeRow);
   }
 
   async deleteHierarchyNode(id: string): Promise<boolean> {
-    // Implementation would delete hierarchy node from database
-    // For now, return true
+    const { error } = await this.table().delete().eq('id', id);
+    if (error) throw new Error(error.message);
     return true;
   }
 
   // ============= Hierarchy-specific Operations =============
 
   async getHierarchyNode(id: string): Promise<HierarchyNode | null> {
-    // Implementation would fetch hierarchy node by ID
-    // For now, return null
-    return null;
+    const { data, error } = await this.table().select('*').eq('id', id).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? mapNodeRow(data as NodeRow) : null;
   }
 
   async getChildNodes(parentId: string): Promise<HierarchyNode[]> {
-    // Implementation would fetch child nodes
-    // For now, return empty array
-    return [];
+    const { data, error } = await this.table()
+      .select('*')
+      .eq('parent_id', parentId)
+      .order('order_index', { ascending: true });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as NodeRow[]).map(mapNodeRow);
   }
 
   async getParentNode(nodeId: string): Promise<HierarchyNode | null> {
-    // Implementation would fetch parent node
-    // For now, return null
-    return null;
+    const node = await this.getHierarchyNode(nodeId);
+    if (!node?.parentId) return null;
+    return this.getHierarchyNode(node.parentId);
   }
 
   async getRootNodes(projectId: string): Promise<HierarchyNode[]> {
-    // Implementation would fetch root nodes (nodes with no parent)
-    // For now, return empty array
-    return [];
+    const { data, error } = await this.table()
+      .select('*')
+      .eq('project_id', projectId)
+      .is('parent_id', null)
+      .order('order_index', { ascending: true });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as NodeRow[]).map(mapNodeRow);
+  }
+
+  /** Tous les nœuds d'un projet (à plat, ordonnés niveau puis index). */
+  async listNodes(projectId: string): Promise<HierarchyNode[]> {
+    const { data, error } = await this.table()
+      .select('*')
+      .eq('project_id', projectId)
+      .order('level', { ascending: true })
+      .order('order_index', { ascending: true });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as NodeRow[]).map(mapNodeRow);
   }
 
   async getHierarchyPath(nodeId: string): Promise<string> {
-    // Implementation would build path string from root to node
-    // For now, return empty string
-    return '';
+    const node = await this.getHierarchyNode(nodeId);
+    return node?.path ?? '';
   }
 
   // ============= Validation and Integrity =============
 
   async hasChildNodes(nodeId: string): Promise<boolean> {
-    // Implementation would check if node has children
-    // For now, return false
-    return false;
+    const { count, error } = await this.table()
+      .select('id', { count: 'exact', head: true })
+      .eq('parent_id', nodeId);
+    if (error) throw new Error(error.message);
+    return (count ?? 0) > 0;
   }
 
   async validateHierarchyIntegrity(projectId: string): Promise<HierarchyValidationDTO> {
-    // Implementation would validate hierarchy integrity
-    // For now, return valid result
-    return {
-      isValid: true,
-      errors: [],
-      warnings: []
-    };
+    const nodes = await this.listNodes(projectId);
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const errors: HierarchyValidationDTO['errors'] = [];
+    const warnings: HierarchyValidationDTO['warnings'] = [];
+
+    for (const node of nodes) {
+      if (node.parentId && !byId.has(node.parentId)) {
+        errors.push({
+          nodeId: node.id,
+          type: 'invalid_parent',
+          message: `Parent introuvable (${node.parentId})`,
+          severity: 'error',
+        });
+      }
+      // Détection de cycle par remontée
+      let cursor = node.parentId;
+      const seen = new Set<string>([node.id]);
+      while (cursor) {
+        if (seen.has(cursor)) {
+          errors.push({
+            nodeId: node.id,
+            type: 'circular_reference',
+            message: 'Référence circulaire détectée dans la hiérarchie',
+            severity: 'error',
+          });
+          break;
+        }
+        seen.add(cursor);
+        cursor = byId.get(cursor)?.parentId;
+      }
+      if (node.level > 6) {
+        warnings.push({ nodeId: node.id, type: 'deep_nesting', message: `Profondeur ${node.level} > 6` });
+      }
+    }
+
+    // Doublons d'ordre entre frères
+    const siblings = new Map<string, Set<number>>();
+    for (const node of nodes) {
+      const key = node.parentId ?? 'root';
+      const set = siblings.get(key) ?? new Set<number>();
+      const order = node.orderIndex ?? 0;
+      if (set.has(order)) {
+        errors.push({
+          nodeId: node.id,
+          type: 'duplicate_order',
+          message: `Index d'ordre dupliqué (${order})`,
+          severity: 'warning',
+        });
+      }
+      set.add(order);
+      siblings.set(key, set);
+    }
+
+    return { isValid: errors.filter((e) => e.severity === 'error').length === 0, errors, warnings };
   }
 
   async detectCircularReference(nodeId: string, parentId?: string): Promise<boolean> {
-    // Implementation would detect circular references
-    // For now, return false
+    let cursor = parentId;
+    const seen = new Set<string>([nodeId]);
+    while (cursor) {
+      if (seen.has(cursor)) return true;
+      seen.add(cursor);
+      const parent = await this.getHierarchyNode(cursor);
+      cursor = parent?.parentId;
+    }
     return false;
   }
 
   // ============= Search and Filtering =============
 
   async searchHierarchy(criteria: HierarchySearchCriteriaDTO): Promise<HierarchySearchResultDTO> {
-    // Implementation would search hierarchy nodes
-    // For now, return empty result
+    let query = this.table().select('*').eq('project_id', criteria.projectId);
+    if (criteria.nodeType) query = query.eq('type', criteria.nodeType);
+    if (criteria.searchText) query = query.ilike('name', `%${criteria.searchText}%`);
+    if (criteria.maxDepth) query = query.lte('level', criteria.maxDepth);
+
+    const { data, error } = await query.order('level', { ascending: true });
+    if (error) throw new Error(error.message);
+
+    let nodes = ((data ?? []) as NodeRow[]).map(mapNodeRow);
+    if (criteria.status) nodes = nodes.filter((n) => n.metadata?.status === criteria.status);
+    if (criteria.assignedTo) nodes = nodes.filter((n) => n.metadata?.assignedTo === criteria.assignedTo);
+    if (criteria.priority) nodes = nodes.filter((n) => n.metadata?.priority === criteria.priority);
+    if (criteria.tags?.length) {
+      nodes = nodes.filter((n) => criteria.tags!.every((t) => n.metadata?.tags?.includes(t)));
+    }
+
+    const facet = (values: Array<string | undefined>): Record<string, number> =>
+      values.reduce<Record<string, number>>((acc, v) => {
+        if (!v) return acc;
+        acc[v] = (acc[v] || 0) + 1;
+        return acc;
+      }, {});
+
     return {
-      nodes: [],
-      totalCount: 0,
+      nodes,
+      totalCount: nodes.length,
       facets: {
-        nodeTypes: {},
-        statuses: {},
-        priorities: {},
-        assignees: {}
-      }
+        nodeTypes: facet(nodes.map((n) => n.type)),
+        statuses: facet(nodes.map((n) => n.metadata?.status)),
+        priorities: facet(nodes.map((n) => n.metadata?.priority)),
+        assignees: facet(nodes.map((n) => n.metadata?.assignedTo)),
+      },
     };
   }
 
   async filterByType(projectId: string, nodeType: HierarchyNode['type']): Promise<HierarchyNode[]> {
-    // Implementation would filter nodes by type
-    // For now, return empty array
-    return [];
+    const { data, error } = await this.table()
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('type', nodeType)
+      .order('order_index', { ascending: true });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as NodeRow[]).map(mapNodeRow);
   }
 
   async filterByStatus(projectId: string, status: string): Promise<HierarchyNode[]> {
-    // Implementation would filter nodes by status
-    // For now, return empty array
-    return [];
+    const nodes = await this.listNodes(projectId);
+    return nodes.filter((n) => n.metadata?.status === status);
   }
 
   // ============= Statistics and Analytics =============
 
   async getHierarchyStatistics(projectId: string): Promise<HierarchyStatisticsDTO> {
-    // Implementation would calculate hierarchy statistics
-    // For now, return default stats
+    const nodes = await this.listNodes(projectId);
+    const tasks = nodes.filter((n) => n.type === 'task' || n.type === 'subtask');
+    const completedTasks = tasks.filter((n) => n.metadata?.status === 'completed').length;
+    const totalBudget = nodes.reduce((s, n) => s + (n.metadata?.budget ?? 0), 0);
+    const actualCost = nodes.reduce((s, n) => s + (n.metadata?.actualCost ?? 0), 0);
+
     return {
       projectId,
-      totalNodes: 0,
-      maxDepth: 0,
-      nodeTypes: {},
-      totalTasks: 0,
-      completedTasks: 0,
-      totalBudget: 0,
-      actualCost: 0,
-      overallProgress: 0
+      totalNodes: nodes.length,
+      maxDepth: nodes.reduce((m, n) => Math.max(m, n.level), 0),
+      nodeTypes: nodes.reduce<Record<string, number>>((acc, n) => {
+        acc[n.type] = (acc[n.type] || 0) + 1;
+        return acc;
+      }, {}),
+      totalTasks: tasks.length,
+      completedTasks,
+      totalBudget,
+      actualCost,
+      overallProgress: tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0,
     };
   }
 
   async getCriticalPath(projectId: string): Promise<string[]> {
-    // Implementation would calculate critical path
-    // For now, return empty array
-    return [];
+    const nodes = await this.listNodes(projectId);
+    const childrenOf = new Map<string, HierarchyNode[]>();
+    for (const n of nodes) {
+      const key = n.parentId ?? 'root';
+      childrenOf.set(key, [...(childrenOf.get(key) ?? []), n]);
+    }
+    // Chemin de plus grande charge (heures estimées) depuis les racines.
+    const walk = (node: HierarchyNode): { path: string[]; weight: number } => {
+      const children = childrenOf.get(node.id) ?? [];
+      const weight = node.metadata?.estimatedHours ?? 0;
+      if (!children.length) return { path: [node.id], weight };
+      const best = children
+        .map(walk)
+        .sort((a, b) => b.weight - a.weight)[0];
+      return { path: [node.id, ...best.path], weight: weight + best.weight };
+    };
+    const roots = childrenOf.get('root') ?? [];
+    if (!roots.length) return [];
+    return roots.map(walk).sort((a, b) => b.weight - a.weight)[0].path;
   }
 
   async calculateProgress(nodeId: string): Promise<number> {
-    // Implementation would calculate progress for node
-    // For now, return 0
-    return 0;
+    const node = await this.getHierarchyNode(nodeId);
+    if (!node) return 0;
+    const children = await this.getChildNodes(nodeId);
+    if (!children.length) return node.metadata?.status === 'completed' ? 100 : 0;
+    const done = children.filter((c) => c.metadata?.status === 'completed').length;
+    return Math.round((done / children.length) * 100);
   }
 
   // ============= Bulk Operations =============
 
   async bulkCreate(nodes: CreateHierarchyNodeDTO[]): Promise<HierarchyNode[]> {
-    // Implementation would create multiple nodes
-    // For now, return mock nodes
-    return nodes.map(node => ({
-      id: crypto.randomUUID(),
-      projectId: node.projectId,
-      name: node.name,
-      type: node.type,
-      parentId: node.parentId,
-      orderIndex: node.orderIndex || 0,
-      level: node.parentId ? 2 : 1,
-      path: node.parentId ? `root.${node.name}` : node.name,
-      metadata: {
-        status: 'active',
-        ...node.metadata
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
+    if (!nodes.length) return [];
+    const { data, error } = await this.table()
+      .insert(nodes.map((n) => ({ ...this.toRow(n), metadata: n.metadata ?? { status: 'active' } })))
+      .select('*');
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as NodeRow[]).map(mapNodeRow);
   }
 
   async bulkUpdate(updates: Array<{ id: string; data: UpdateHierarchyNodeDTO }>): Promise<HierarchyNode[]> {
-    // Implementation would update multiple nodes
-    // For now, return mock updated nodes
-    return updates.map(update => ({
-      id: update.id,
-      projectId: '', // Would get from database
-      name: update.data.name || 'Updated Node',
-      type: update.data.type || 'task',
-      parentId: update.data.parentId,
-      orderIndex: update.data.orderIndex || 0,
-      level: update.data.parentId ? 2 : 1,
-      path: update.data.parentId ? `root.${update.data.name || 'Updated'}` : (update.data.name || 'Updated'),
-      metadata: {
-        status: 'active',
-        ...update.data.metadata
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
+    const results: HierarchyNode[] = [];
+    for (const update of updates) {
+      results.push(await this.updateHierarchyNode(update.id, update.data));
+    }
+    return results;
   }
 
   async bulkDelete(nodeIds: string[]): Promise<boolean> {
-    // Implementation would delete multiple nodes
-    // For now, return true
+    if (!nodeIds.length) return true;
+    const { error } = await this.table().delete().in('id', nodeIds);
+    if (error) throw new Error(error.message);
     return true;
   }
 
   // ============= Tree Operations =============
 
   async moveNode(nodeId: string, newParentId?: string, newOrderIndex?: number): Promise<HierarchyNode> {
-    // Implementation would move node to new parent
-    // For now, return mock moved node
-    return {
-      id: nodeId,
-      projectId: '',
-      name: 'Moved Node',
-      type: 'task',
+    if (newParentId && (await this.detectCircularReference(nodeId, newParentId))) {
+      throw new Error('Déplacement impossible : référence circulaire détectée');
+    }
+    return this.updateHierarchyNode(nodeId, {
       parentId: newParentId,
-      orderIndex: newOrderIndex || 0,
-      level: newParentId ? 2 : 1,
-      path: newParentId ? `root.Moved` : 'Moved',
-      metadata: {
-        status: 'active'
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+      ...(newOrderIndex !== undefined ? { orderIndex: newOrderIndex } : {}),
+    });
   }
 
-  async reorderNodes(parentId: string, nodeOrders: Array<{ id: string; orderIndex: number }>): Promise<HierarchyNode[]> {
-    // Implementation would reorder child nodes
-    // For now, return mock reordered nodes
-    return nodeOrders.map(order => ({
-      id: order.id,
-      projectId: '',
-      name: 'Reordered Node',
-      type: 'task',
-      parentId: parentId,
-      orderIndex: order.orderIndex,
-      level: parentId ? 2 : 1,
-      path: parentId ? `root.Reordered` : 'Reordered',
-      metadata: {
-        status: 'active'
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
+  async reorderNodes(
+    parentId: string,
+    nodeOrders: Array<{ id: string; orderIndex: number }>,
+  ): Promise<HierarchyNode[]> {
+    return this.bulkUpdate(nodeOrders.map((o) => ({ id: o.id, data: { orderIndex: o.orderIndex } })));
   }
 
   async duplicateNode(nodeId: string, newParentId?: string): Promise<HierarchyNode> {
-    // Implementation would duplicate node
-    // For now, return mock duplicated node
-    return {
-      id: crypto.randomUUID(),
-      projectId: '',
-      name: 'Duplicated Node',
-      type: 'task',
-      parentId: newParentId,
-      orderIndex: 0,
-      level: newParentId ? 2 : 1,
-      path: newParentId ? `root.Duplicated` : 'Duplicated',
-      metadata: {
-        status: 'active'
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    const source = await this.getHierarchyNode(nodeId);
+    if (!source) throw new Error('Nœud source introuvable');
+    const copy = await this.createHierarchyNode({
+      projectId: source.projectId,
+      name: `${source.name} (copie)`,
+      type: source.type,
+      parentId: newParentId ?? source.parentId,
+      orderIndex: (source.orderIndex ?? 0) + 1,
+      metadata: source.metadata as CreateHierarchyNodeDTO['metadata'],
+    });
+    // Duplication récursive des enfants
+    const children = await this.getChildNodes(nodeId);
+    for (const child of children) {
+      await this.duplicateNode(child.id, copy.id);
+    }
+    return copy;
   }
 
   // ============= Caching and Performance =============
 
-  async invalidateCache(projectId: string): Promise<void> {
-    // Implementation would invalidate cache for project
-    // For now, do nothing
+  async invalidateCache(_projectId: string): Promise<void> {
+    // Le cache est géré côté TanStack Query (invalidateQueries dans les hooks).
   }
 
   async preloadHierarchy(projectId: string): Promise<HierarchyNode[]> {
-    // Implementation would preload hierarchy into cache
-    // For now, return empty array
-    return [];
+    return this.listNodes(projectId);
   }
+
 
   // ============= Private Mappers =============
 
