@@ -101,13 +101,19 @@ const files = (report.violations || []).map((entry) => {
   };
 });
 
+// Ordre d'attaque demandé : d'abord les COMPONENT/UI (round-trip UI -> DB),
+// classés par p0Violations décroissant, puis le reste.
+const isUiComponent = (f) => f.type === 'COMPONENT' || f.layer === 'UI';
+
 files.sort(
   (a, b) =>
-    ORDER[a.priority] - ORDER[b.priority] ||
+    Number(isUiComponent(b)) - Number(isUiComponent(a)) ||
+    b.p0Violations - a.p0Violations ||
     b.blockingViolations - a.blockingViolations ||
     b.rankScore - a.rankScore ||
     (a.score ?? 100) - (b.score ?? 100)
 );
+
 
 const byPriority = {};
 const byLot = {};
