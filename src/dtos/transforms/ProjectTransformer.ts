@@ -451,7 +451,7 @@ export class ProjectTransformer {
       id: project.id,
       title: project.title,
       description: project.description,
-      status: project.status as ProjectStatus,
+      status: ProjectTransformer.toUiStatus(project.status),
       progress: project.progress,
       location: project.location || '',
       latitude: displayCenter?.lat,
