@@ -70,6 +70,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
+import { PROJECT_WORKFLOW_STEPS } from '@/config/referentials/projects/project-workflow-steps.referential';
 
 // ============================================================
 // Types exportés
@@ -540,6 +541,14 @@ export class ProjectWorkflowService {
         const start = new Date(data.projectData.startDate);
         const end = new Date(data.projectData.endDate);
         if (end < start) errors.push('La date de fin doit être après la date de début');
+      }
+    }
+    if (stepNumber === 3) {
+      const pd = (data.projectData ?? {}) as Record<string, unknown>;
+      const hasCoordinates = Boolean(pd.latitude && pd.longitude);
+      const hasAddress = Boolean((pd.address as string)?.trim() || (pd.location as string)?.trim());
+      if (!hasCoordinates && !hasAddress) {
+        errors.push('Renseignez une adresse ou des coordonnées (latitude / longitude) pour localiser le projet');
       }
     }
     if (stepNumber === 4 && (!data.relatedData?.phases || data.relatedData.phases.length === 0)) {
