@@ -333,6 +333,15 @@ function App() {
                         }
                       />
                       <Route
+                        path="/organizations"
+                        element={
+                          <RoleBasedRoute allowedRoles={["admin", "director", "manager"]}>
+                            <Organizations />
+                          </RoleBasedRoute>
+                        }
+                      />
+
+                      <Route
                         path="/users"
                         element={
                           <RoleBasedRoute allowedRoles={["admin", "director"]}>
