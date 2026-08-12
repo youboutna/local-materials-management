@@ -489,7 +489,16 @@ export class DashboardService {
         severity: 'high',
         title: 'High Risk Projects Detected',
         message: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
+        projectId: '',
+        timestamp: new Date().toISOString(),
+        triggerDate: new Date().toISOString(),
+        acknowledged: false,
+        actionRequired: true,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        escalationLevel: 0,
+        availableActions: [],
+        actionProof: [],
         status: 'pending',
         actions: ['Review project risk assessment', 'Implement mitigation strategies']
       });
@@ -499,11 +508,20 @@ export class DashboardService {
     if (stats.riskMetrics.overduePayments > 0) {
       alerts.push({
         id: `alert-${Date.now()}-${alertId++}`,
-        type: 'financial',
+        type: 'financial' as Alert['type'],
         severity: 'critical',
         title: 'Overdue Payments',
         message: `${stats.riskMetrics.overduePayments} payments are overdue`,
+        projectId: '',
+        timestamp: new Date().toISOString(),
+        triggerDate: new Date().toISOString(),
+        acknowledged: false,
+        actionRequired: true,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        escalationLevel: 0,
+        availableActions: [],
+        actionProof: [],
         status: 'pending',
         actions: ['Contact suppliers', 'Update payment schedules']
       });
@@ -517,7 +535,16 @@ export class DashboardService {
         severity: 'high',
         title: 'Critical Inspections Overdue',
         message: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
+        projectId: '',
+        timestamp: new Date().toISOString(),
+        triggerDate: new Date().toISOString(),
+        acknowledged: false,
+        actionRequired: true,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        escalationLevel: 0,
+        availableActions: [],
+        actionProof: [],
         status: 'pending',
         actions: ['Schedule inspections', 'Review inspection reports']
       });

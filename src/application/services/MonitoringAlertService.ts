@@ -53,7 +53,7 @@ function transformToAlertData(dto: MonitoringAlertDTO): AlertData {
     status: dto.status as AlertData['status'],
     escalationLevel: 0,
     availableActions: [],
-    actionProof: undefined,
+    actionProof: [],
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt ?? dto.createdAt,
   };

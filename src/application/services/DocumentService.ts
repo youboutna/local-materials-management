@@ -253,7 +253,7 @@ export class DocumentService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid document type: ${type}`);
       }
 
-      const documents = await this.documentRepository.findByType(type);
+      const documents = await this.documentRepository.findByType(type as unknown as Parameters<typeof this.documentRepository.findByType>[0]);
       return DocumentTransformer.toDTOList(documents);
     } catch (error) {
       console.error('DocumentService.getDocumentsByType failed:', error);
