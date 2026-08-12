@@ -201,6 +201,9 @@ const BankGuaranteeMonitorPage = () => {
         endDate: toISOStringSafe(activeProject.endDate),
         teamSize: 0,
         thumbnail: undefined,
+        currency: 'MRU',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       setSelectedProject(projectData);
