@@ -64,6 +64,7 @@ export enum DocumentType {
   PAYMENT = 'payment',
   PAYMENT_RECEIPT = 'payment_receipt',
   SUPPLIER_UPLOAD = 'supplier_upload',
+  DELIVERY_NOTE = 'delivery_note',
   OTHER = 'other'
 }
 
