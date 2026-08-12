@@ -99,7 +99,7 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
   certificateUrl?: string;
   lastVerified?: string;
   verifiedBy?: string;
-  documents?: string[] | DocumentDTO[];
+  documents?: string[] | Record<string, unknown>[];
   
   // Audit
   createdAt: string;
