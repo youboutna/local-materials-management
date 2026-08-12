@@ -11,7 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Users, Clock, DollarSign, Settings, User, Wrench, Package, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectResourcesCrudHex } from '@/hooks/hexagonal/useProjectResourcesCrudHex';
+import { useProjectPhasesForTasks } from '@/hooks/hexagonal/useEnhancedTasksHex';
 
 interface TeamOverviewProps {
   resources?: any[];
@@ -76,92 +77,23 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
   
   const queryClient = useQueryClient();
 
-  // Use provided resources or fetch from database
-  const { data: fetchedResources, isLoading } = useQuery({
-    queryKey: ['project-resources', projectId],
-    queryFn: async (): Promise<ProjectResource[]> => {
-      const { data, error } = await supabase
-        .from('project_resources')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!projectId && !propResources,
-  });
+  // Hexagonal: hook -> service -> adapter -> DB
+  const {
+    resources: fetchedResources,
+    isLoading,
+    createResources,
+    deleteResource,
+  } = useProjectResourcesCrudHex(projectId, !propResources);
 
   // Use props or fallback to fetched data
   const currentResources = propResources || fetchedResources || [];
 
-  // Fetch project phases (required for resource creation)
-  const { data: phases = [] } = useQuery({
-    queryKey: ['project-phases', projectId],
-    queryFn: async (): Promise<ProjectPhase[]> => {
-      console.log('🔍 Fetching phases for project (TeamOverview):', projectId);
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status, construction_phase, description, start_date, end_date')
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
-      
-      if (error) {
-        console.error('❌ Error fetching phases (TeamOverview):', error);
-        throw error;
-      }
-      
-      console.log('✅ Phases fetched (TeamOverview):', data);
-      return (data || []).filter(p => p.id).map(phase => ({
-        ...phase,
-        id: phase.id!,
-        phase_name: phase.phase_name || '',
-        status: phase.status || 'planned',
-        construction_phase: phase.construction_phase || undefined
-      })) as any[];
-    },
-    enabled: !!projectId && !propPhases,
-  });
+  // Fetch project phases via hexagonal hook (required for resource creation)
+  const { data: phases = [] } = useProjectPhasesForTasks(projectId);
 
   // Use props or fallback to fetched data
   const currentPhases = propPhases || phases || [];
   console.log('📋 Current phases in TeamOverview:', currentPhases);
-
-  // Create resource mutation
-  const createResourceMutation = useMutation({
-    mutationFn: async (data: { name: string; project_id: string; type: string; notes?: string | null; cost_per_unit?: number | null; quantity?: number | null; unit?: string | null; }) => {
-      const { error } = await supabase
-        .from('project_resources')
-        .insert([{
-          name: data.name || 'Untitled Resource',
-          project_id: data.project_id,
-          type: data.type,
-          notes: data.notes,
-          cost_per_unit: data.cost_per_unit,
-          quantity: data.quantity,
-          unit: data.unit
-        }]);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-resources'] });
-      setIsCreating(false);
-      resetForm();
-      toast({
-        title: "Ressource créée",
-        description: "La ressource a été créée avec succès.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error creating resource:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la ressource.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const resetForm = () => {
     setFormData({
@@ -228,15 +160,18 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
       }
 
       if (resourcesToCreate.length > 0) {
-        const { data, error } = await supabase
-          .from('project_resources')
-          .insert(resourcesToCreate)
-          .select();
+        await createResources(
+          resourcesToCreate.map(r => ({
+            projectId: r.project_id,
+            name: r.name,
+            type: r.type,
+            notes: r.notes ?? null,
+            costPerUnit: r.cost_per_unit ?? null,
+            quantity: r.quantity ?? null,
+            unit: r.unit ?? null,
+          }))
+        );
 
-        if (error) throw error;
-
-        // Refresh resources
-        queryClient.invalidateQueries({ queryKey: ['project-resources'] });
         setIsCreating(false);
         resetForm();
 
