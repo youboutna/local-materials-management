@@ -488,7 +488,7 @@ export class DashboardService {
         type: 'quality',
         severity: 'high',
         title: 'High Risk Projects Detected',
-        description: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
+        message: `${stats.riskMetrics.highRiskProjects} projects require immediate attention`,
         createdAt: new Date().toISOString(),
         status: 'pending',
         actions: ['Review project risk assessment', 'Implement mitigation strategies']
@@ -502,7 +502,7 @@ export class DashboardService {
         type: 'financial',
         severity: 'critical',
         title: 'Overdue Payments',
-        description: `${stats.riskMetrics.overduePayments} payments are overdue`,
+        message: `${stats.riskMetrics.overduePayments} payments are overdue`,
         createdAt: new Date().toISOString(),
         status: 'pending',
         actions: ['Contact suppliers', 'Update payment schedules']
@@ -516,7 +516,7 @@ export class DashboardService {
         type: 'inspection',
         severity: 'high',
         title: 'Critical Inspections Overdue',
-        description: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
+        message: `${stats.riskMetrics.criticalInspections} inspections require immediate attention`,
         createdAt: new Date().toISOString(),
         status: 'pending',
         actions: ['Schedule inspections', 'Review inspection reports']

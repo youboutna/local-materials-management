@@ -158,7 +158,7 @@ const BankGuaranteeContent = () => {
 // Page principale avec Provider
 // ============================================================
 const BankGuaranteeMonitorPage = () => {
-  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectDTO | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   

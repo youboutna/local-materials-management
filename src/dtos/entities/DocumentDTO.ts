@@ -575,7 +575,8 @@ export function getDocumentTypeLabel(type: DocumentTypeUnion): string {
     [DocumentType.TENDER_DOCUMENT]: 'Document d\'appel d\'offres',
     [DocumentType.SUPPORTING_DOCUMENT]: 'Document justificatif',
     [DocumentType.CORRESPONDENCE]: 'Correspondance',
-    [DocumentType.INSURANCE]: 'Assurance',
+    [DocumentType.WARRANTY]: 'Garantie',
+  [DocumentType.INSURANCE]: 'Assurance',
     [DocumentType.BANK_GUARANTEE]: 'Garantie bancaire',
     [DocumentType.OTHER]: 'Autre',
   };
@@ -643,7 +644,8 @@ export function getDocumentTypeIcon(type: DocumentTypeUnion): string {
     [DocumentType.TENDER_DOCUMENT]: 'FileText',
     [DocumentType.SUPPORTING_DOCUMENT]: 'File',
     [DocumentType.CORRESPONDENCE]: 'Mail',
-    [DocumentType.INSURANCE]: 'Shield',
+    [DocumentType.WARRANTY]: 'Garantie',
+  [DocumentType.INSURANCE]: 'Shield',
     [DocumentType.BANK_GUARANTEE]: 'Shield',
     [DocumentType.OTHER]: 'File',
   };

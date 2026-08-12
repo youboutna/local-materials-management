@@ -747,7 +747,6 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({
       startDate: data.startDate || new Date().toISOString().split('T')[0],
       endDate: data.endDate,
       status: (data.status || 'draft') as ProjectDTO['status'],
-      progress: data.progress || 0,
       teamSize: data.teamSize || 1,
       projectReference: data.projectReference,
       category: data.category,

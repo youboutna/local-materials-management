@@ -364,7 +364,7 @@ const PaymentControlContent = () => {
 // ============================================================
 const PaymentControlPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
-  const [projectHierarchy, setProjectHierarchy] = useState<Array<{id: string, name: string, level: number}>>([]);
+  const [projectHierarchy, setProjectHierarchy] = useState<Array<{ id: string; name: string; level: number; positionTitle?: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // ✅ Utiliser les hooks hexagonaux
