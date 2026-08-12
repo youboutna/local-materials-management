@@ -1,63 +1,37 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Mail, Plus, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { useAdminEmailsHex } from '@/hooks/hexagonal/useSystemSettingsHex';
 
 export const AdminEmailsSettings = () => {
   const [newEmail, setNewEmail] = useState('');
-  const queryClient = useQueryClient();
 
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ['system-settings', 'admin_notification_emails'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('*')
-        .eq('key', 'admin_notification_emails')
-        .single();
+  const {
+    emails: currentEmails,
+    isLoading,
+    saveEmailsAsync,
+    isSaving,
+  } = useAdminEmailsHex();
 
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const updateEmailsMutation = useMutation({
-    mutationFn: async (emails: string[]) => {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .update({ 
-          configuration: { emails },
-          updated_at: new Date().toISOString()
-        })
-        .eq('key', 'admin_notification_emails')
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['system-settings', 'admin_notification_emails'] });
+  const persistEmails = async (emails: string[]) => {
+    try {
+      await saveEmailsAsync(emails);
       toast({
         title: "Paramètres mis à jour",
         description: "Les emails administrateurs ont été mis à jour avec succès.",
       });
-    },
-    onError: (error: Error) => {
+    } catch (error) {
       toast({
         title: "Erreur",
-        description: `Impossible de mettre à jour les emails: ${error.message}`,
+        description: `Impossible de mettre à jour les emails: ${(error as Error).message}`,
         variant: "destructive",
       });
-    },
-  });
-
-  const currentEmails = ((settings?.configuration as { emails?: string[] })?.emails) || [];
+    }
+  };
 
   const handleAddEmail = () => {
     const trimmedEmail = newEmail.trim();
@@ -91,12 +65,12 @@ export const AdminEmailsSettings = () => {
       return;
     }
 
-    updateEmailsMutation.mutate([...currentEmails, trimmedEmail]);
+    void persistEmails([...currentEmails, trimmedEmail]);
     setNewEmail('');
   };
 
   const handleRemoveEmail = (emailToRemove: string) => {
-    updateEmailsMutation.mutate(currentEmails.filter(email => email !== emailToRemove));
+    void persistEmails(currentEmails.filter(email => email !== emailToRemove));
   };
 
   if (isLoading) {
@@ -131,9 +105,9 @@ export const AdminEmailsSettings = () => {
           />
           <Button
             onClick={handleAddEmail}
-            disabled={updateEmailsMutation.isPending}
+            disabled={isSaving}
           >
-            {updateEmailsMutation.isPending ? (
+            {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
@@ -163,7 +137,7 @@ export const AdminEmailsSettings = () => {
                     size="sm"
                     className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                     onClick={() => handleRemoveEmail(email)}
-                    disabled={updateEmailsMutation.isPending}
+                    disabled={isSaving}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

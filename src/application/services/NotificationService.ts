@@ -97,12 +97,15 @@ export class NotificationService {
   /**
    * Get all notifications (system admin only)
    */
-  async getAllNotifications(): Promise<NotificationDTO[]> {
+  async getAllNotifications(limit = 200): Promise<NotificationDTO[]> {
     try {
-      // In a project management app, only system admins can see all notifications
-      // For now, we'll return an empty array as this requires admin privileges
-      console.warn('NotificationService.getAllNotifications: Admin privileges required');
-      return [];
+      if (!this.notificationRepository.listAllNotifications) {
+        console.warn('NotificationService.getAllNotifications: repository does not support listing all notifications');
+        return [];
+      }
+      const result = await this.notificationRepository.listAllNotifications(limit);
+      if (result.error) throw result.error;
+      return (result.notifications || []).map(n => this.mapToDTO(n));
     } catch (error) {
       console.error('NotificationService.getAllNotifications failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all notifications');

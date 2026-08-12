@@ -156,6 +156,14 @@ import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectSta
 import { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
+import { IProjectResourceRepository } from '@/domain/repositories/IProjectResourceRepository';
+import { ITaskDependencyRepository } from '@/domain/repositories/ITaskDependencyRepository';
+import { ISystemSettingsRepository } from '@/domain/repositories/ISystemSettingsRepository';
+import { IEscalationThresholdRepository } from '@/domain/repositories/IEscalationThresholdRepository';
+import { SupabaseProjectResourceAdapter } from './adapters/supabase/SupabaseProjectResourceAdapter';
+import { SupabaseTaskDependencyAdapter } from './adapters/supabase/SupabaseTaskDependencyAdapter';
+import { SupabaseSystemSettingsAdapter } from './adapters/supabase/SupabaseSystemSettingsAdapter';
+import { SupabaseEscalationThresholdAdapter } from './adapters/supabase/SupabaseEscalationThresholdAdapter';
 import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
@@ -230,6 +238,10 @@ interface RepositoryRegistry {
   organizationHierarchy?: IOrganizationHierarchyRepository;
   inspectionScheduling?: IInspectionSchedulingRepository;
   quantityTakeoff?: IQuantityTakeoffRepository;
+  projectResource?: IProjectResourceRepository;
+  taskDependency?: ITaskDependencyRepository;
+  systemSettings?: ISystemSettingsRepository;
+  escalationThreshold?: IEscalationThresholdRepository;
   inspectionExecution?: IInspectionExecutionRepository;
   inspectionPaymentValidation?: IInspectionPaymentValidationRepository;
   loadData?: ILoadDataRepository;
@@ -665,6 +677,30 @@ export class RepositoryFactory {
     if (registry.loadData) return registry.loadData;
     registry.loadData = new SupabaseLoadDataAdapter();
     return registry.loadData;
+  }
+
+  static getProjectResourceRepository(): IProjectResourceRepository {
+    if (registry.projectResource) return registry.projectResource;
+    registry.projectResource = new SupabaseProjectResourceAdapter();
+    return registry.projectResource;
+  }
+
+  static getTaskDependencyRepository(): ITaskDependencyRepository {
+    if (registry.taskDependency) return registry.taskDependency;
+    registry.taskDependency = new SupabaseTaskDependencyAdapter();
+    return registry.taskDependency;
+  }
+
+  static getSystemSettingsRepository(): ISystemSettingsRepository {
+    if (registry.systemSettings) return registry.systemSettings;
+    registry.systemSettings = new SupabaseSystemSettingsAdapter();
+    return registry.systemSettings;
+  }
+
+  static getEscalationThresholdRepository(): IEscalationThresholdRepository {
+    if (registry.escalationThreshold) return registry.escalationThreshold;
+    registry.escalationThreshold = new SupabaseEscalationThresholdAdapter();
+    return registry.escalationThreshold;
   }
 
   static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
