@@ -90,7 +90,8 @@ export function useUnifiedProjectWorkflow(
     isValid: false,
     isLoading: false,
     lastSavedAt: undefined,
-    lastValidationErrors: []
+    lastValidationErrors: [],
+    completedSteps: []
   });
 
   const [formData, setFormData] = useState<ProjectWorkflowData | null>(() =>
@@ -215,10 +216,17 @@ export function useUnifiedProjectWorkflow(
       return { success: false, message: 'No data' } as SaveResult;
     }
     try {
-      return await saveStepMutation.mutateAsync({
-        data: dataToSave,
-        stepNumber: stepNumber ?? workflowState.currentStep,
-      });
+      const step = stepNumber ?? workflowState.currentStep;
+      const result = await saveStepMutation.mutateAsync({ data: dataToSave, stepNumber: step });
+      if (result?.success) {
+        setWorkflowState(prev => ({
+          ...prev,
+          completedSteps: prev.completedSteps.includes(step)
+            ? prev.completedSteps
+            : [...prev.completedSteps, step].sort((a, b) => a - b),
+        }));
+      }
+      return result;
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, message: errMsg };
