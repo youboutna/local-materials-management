@@ -313,22 +313,22 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
           
           {/* Alert Stats Summary */}
           <div className="flex items-center gap-3">
-            {stats.criticalAlerts > 0 && (
+            {(stats.criticalAlerts ?? 0) > 0 && (
               <Badge variant="destructive" className="flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                {stats.criticalAlerts} critique(s)
+                {stats.criticalAlerts ?? 0} critique(s)
               </Badge>
             )}
-            {stats.highAlerts > 0 && (
+            {(stats.highAlerts ?? 0) > 0 && (
               <Badge variant="destructive" className="bg-orange-500 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                {stats.highAlerts} élevée(s)
+                {stats.highAlerts ?? 0} élevée(s)
               </Badge>
             )}
-            {stats.openAlerts > 0 && (
+            {(stats.openAlerts ?? 0) > 0 && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                {stats.openAlerts} ouverte(s)
+                {stats.openAlerts ?? 0} ouverte(s)
               </Badge>
             )}
             <Button 

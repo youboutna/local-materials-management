@@ -35,7 +35,7 @@ export type AlertType =
   | 'payment';
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type AlertStatus = 'open' | 'acknowledged' | 'resolved' | 'closed' | 'escalated';
+export type AlertStatus = 'open' | 'acknowledged' | 'resolved' | 'closed' | 'escalated' | 'pending' | 'active';
 export type AlertSource =
   | 'insurance'
   | 'bank_guarantee'
@@ -52,7 +52,9 @@ export type AlertSource =
   | 'user'
   | 'phase'
   | 'milestone'
-  | 'monitoring';
+  | 'monitoring'
+  | 'financial'
+  | 'guarantee';
 
 // ===== Action Proof =====
 export type ActionProofType = 'email' | 'sms' | 'document' | 'call' | 'meeting';

@@ -140,6 +140,8 @@ export interface UpdatePhaseData {
 export interface UsePhasesHexResult {
   phases: Phase[];
   loading: boolean;
+  /** Alias de `loading` (compatibilité UI) */
+  isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
   createPhase: (data: CreatePhaseData) => Promise<Phase | null>;

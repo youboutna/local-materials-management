@@ -46,6 +46,7 @@ export enum DocumentType {
   SUPPORTING_DOCUMENT = 'supporting_document',
   CORRESPONDENCE = 'correspondence',
   INSURANCE = 'insurance',
+  WARRANTY = 'warranty',
   BANK_GUARANTEE = 'bank_guarantee',
   OTHER = 'other'
 }
