@@ -7,7 +7,8 @@
  */
 
 import type { EscalationRoles } from "@/dtos/entities/ProjectAggregateDTO";
-import { ProjectManager, type ActionLabels } from "./projectManagerWithActions";
+import { ProjectManager, type ActionLabels, type ProjectManagerState } from "./projectManagerWithActions";
+import type { AlertSeverity, AlertType } from "@/domain/entities/Alert";
 
 // ===== Types exportés =====
 export type { ProjectManagerState } from "./projectManagerWithActions";
@@ -109,7 +110,7 @@ export class ProjectManagerService implements IProjectManagerService {
 
   async getAlertsByType(type: string): Promise<any[]> {
     try {
-      return this.manager.getAlertsByType(type);
+      return this.manager.getAlertsByType(type as AlertType);
     } catch (error) {
       console.error(`[ProjectManagerService] Erreur lors de la récupération des alertes de type ${type}:`, error);
       return [];
@@ -118,7 +119,7 @@ export class ProjectManagerService implements IProjectManagerService {
 
   async getAlertsBySeverity(severity: string): Promise<any[]> {
     try {
-      return this.manager.getAlertsBySeverity(severity);
+      return this.manager.getAlertsBySeverity(severity as AlertSeverity);
     } catch (error) {
       console.error(`[ProjectManagerService] Erreur lors de la récupération des alertes de sévérité ${severity}:`, error);
       return [];
@@ -172,7 +173,7 @@ export class ProjectManagerService implements IProjectManagerService {
 
   getActionLabel(alertType: string): string {
     try {
-      return this.manager.getActionLabel(alertType);
+      return this.manager.getActionLabel(alertType as AlertType);
     } catch (error) {
       console.error('[ProjectManagerService] Erreur lors de la récupération du label:', error);
       return 'Action';

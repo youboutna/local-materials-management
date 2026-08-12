@@ -80,10 +80,12 @@ export interface CreateAlertData {
   availableActions?: string[];
   deadline?: string;
   recurrence?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateAlertData {
   severity?: AlertSeverity;
+  status?: AlertStatus;
   title?: string;
   message?: string;
   acknowledged?: boolean;
@@ -94,7 +96,14 @@ export interface UpdateAlertData {
   availableActions?: string[];
   actionProof?: ActionProof[];
   deadline?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolution?: string;
 }
+
+/** Alias historique utilisé par les hooks/UI monitoring. */
+export type AlertData = AlertDTO;
+
 
 // ===== Notification Preferences =====
 export interface NotificationPreferences {

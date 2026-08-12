@@ -24,6 +24,16 @@ import {
 import { AlertTransformer } from '@/dtos/transforms/AlertTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
+/** Libellés d'action par type d'alerte. */
+export type ActionLabels = Partial<Record<AlertType, string>> & Record<string, string>;
+
+/** Alerte enrichie côté pilotage projet (description libre + journal d'actions). */
+export interface ManagedAlert extends Alert {
+  description?: string;
+  createdBy?: string;
+  actions: string[];
+}
+
 export interface ProjectManagerState {
   alerts: Alert[];
   lastCheck: string;
@@ -97,7 +107,7 @@ export class ProjectManager {
   private project: ProjectWithCost;
   private roles: EscalationRoles;
   private actionLabels: ActionLabels;
-  private alerts: Alert[] = [];
+  private alerts: ManagedAlert[] = [];
   private state: ProjectManagerState;
 
   constructor(project: ProjectWithCost, roles: EscalationRoles, actionLabels: ActionLabels) {
@@ -289,12 +299,13 @@ export class ProjectManager {
   /**
    * Add an alert
    */
-  private addAlert(alert: Omit<Alert, 'id' | 'createdAt'>): void {
-    const newAlert: Alert = {
+  private addAlert(alert: Partial<ManagedAlert>): void {
+    const newAlert = {
       ...alert,
       id: `alert_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
-      createdAt: new Date().toISOString()
-    };
+      createdAt: new Date().toISOString(),
+      actions: alert.actions ?? []
+    } as ManagedAlert;
     
     this.alerts.push(newAlert);
   }
