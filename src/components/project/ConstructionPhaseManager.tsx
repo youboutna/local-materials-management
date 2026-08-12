@@ -68,6 +68,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { toDateInput } from '@/lib/utils';
 
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
@@ -2052,7 +2053,11 @@ const PhaseEditDialog: React.FC<{
 
 }> = ({ phase, onSave, onClose, isSaving = false, saveError, onViewDetails }) => {
 
-  const [editedPhase, setEditedPhase] = useState<PhaseData>(phase);
+  const [editedPhase, setEditedPhase] = useState<PhaseData>(() => ({
+    ...phase,
+    startDate: toDateInput(phase.startDate),
+    endDate: toDateInput(phase.endDate),
+  }));
 
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -2143,7 +2148,7 @@ const PhaseEditDialog: React.FC<{
 
                 type="date"
 
-                value={editedPhase.startDate}
+                value={toDateInput(editedPhase.startDate)}
 
                 onChange={(e) => setEditedPhase({ ...editedPhase, startDate: e.target.value })}
 
@@ -2159,7 +2164,7 @@ const PhaseEditDialog: React.FC<{
 
                 type="date"
 
-                value={editedPhase.endDate}
+                value={toDateInput(editedPhase.endDate)}
 
                 onChange={(e) => setEditedPhase({ ...editedPhase, endDate: e.target.value })}
 

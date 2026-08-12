@@ -125,14 +125,12 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   const { data: payments = [] } = useQuery({
     queryKey: ['phase-payments-workflow', phaseId],
     queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('payment_date', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const { getPaymentService } = await import('@/application/services/PaymentService');
+      const service = getPaymentService();
+      const result = await service.getPaymentsByPhase(phaseId);
+      return (result.data || []).sort((a: any, b: any) =>
+        new Date(b.paymentDate || 0).getTime() - new Date(a.paymentDate || 0).getTime()
+      );
     },
   });
 

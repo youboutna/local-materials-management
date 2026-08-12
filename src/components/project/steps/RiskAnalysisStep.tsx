@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../../ui/badge';
 import { Progress } from '../../ui/progress';
 import { useToast } from '../../../hooks/use-toast';
+import { toDateInput } from '@/lib/utils';
 
 // Import entity DTOs (following "similitude des voisins le plus proche")
 import { ProjectDTO, } from "@/dtos/entities/ProjectDTO";
@@ -335,7 +336,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                         <input
                           type="date"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                          value={risk.reviewDate || ''}
+                          value={toDateInput(risk.reviewDate)}
                           onChange={(e) => updateRisk(risk.id, { reviewDate: e.target.value })}
                         />
                       </div>

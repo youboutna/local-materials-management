@@ -289,7 +289,7 @@ export class ProjectWorkflowService {
   }
 
   private createAlertBackground(projectId: string, type: string, data: any): void {
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         const config = getAlertConfig(type);
         if (!config.enabled) return;
