@@ -23,7 +23,7 @@ const Materials: React.FC = () => {
   const { t } = useLanguage();
   
   // Use hexagonal architecture hook
-  const { materials: hexMaterials, isLoading, error } = useMaterialsHex();
+  const { materials: hexMaterials, isLoading, error, deleteMaterial } = useMaterialsHex();
 
   // Use materials directly from hook (already MaterialUIDTO[])
   const materials: MaterialUIDTO[] = hexMaterials;
@@ -176,6 +176,7 @@ const Materials: React.FC = () => {
               onMaterialClick={(material) =>
                 navigate(`/materials/${material.id}`)
               }
+              onMaterialDelete={(materialId) => deleteMaterial(materialId)}
             />
           </TabsContent>
 

@@ -115,6 +115,21 @@ export class TenderService {
   }
 
   /**
+   * Transition a tender's status (e.g. workflow status changes)
+   */
+  async transitionStatus(tenderId: string, status: string): Promise<void> {
+    try {
+      if (!tenderId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+      await this.tenderRepository.update(tenderId, { status } as any);
+    } catch (error) {
+      console.error('TenderService.transitionStatus failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to transition tender status');
+    }
+  }
+
+  /**
    * Create a tender document
    */
   async createTenderDocument(request: CreateTenderDocumentRequestDto): Promise<TenderDocumentDTO> {

@@ -217,6 +217,22 @@ export function useDeleteTender() {
   });
 }
 
+// Hook: Transition tender status via service (no direct RepositoryFactory access from UI)
+export function useTransitionTenderStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tenderId, status }: { tenderId: string; status: string }) => {
+      const tenderService = getTenderService();
+      await tenderService.transitionStatus(tenderId, status);
+      return { tenderId, status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenders'] });
+    },
+  });
+}
+
 // ============= SHARING SECRETS (LOT 5) =============
 
 export function useTenderSharingSecrets(tenderId?: string) {

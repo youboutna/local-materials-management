@@ -17,6 +17,7 @@ import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } fro
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AppLayout } from '@/components/layout';
+import type { Database } from '@/integrations/supabase/types';
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 type SupplierCategory = 'materials' | 'services' | 'equipment' | 'subcontractor' | 'consultant' | 'other';

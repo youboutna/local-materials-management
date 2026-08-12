@@ -16,11 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TenderStatusCode } from "@/config/referentials/tender/tender-workflow.referential";
-import { useTenders } from "@/hooks/hexagonal";
+import { useTenders, useTransitionTenderStatus } from "@/hooks/hexagonal";
 import { useTenderLotDocuments } from "@/hooks/hexagonal/useTenderLotDocumentsHex";
 import { useTenderLots } from "@/hooks/hexagonal/useTenderLotsHex";
 import { useToast } from "@/hooks/use-toast";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
+// NOTE: RepositoryFactory is still used below for a read-only document count query;
+// no dedicated service method exists for that yet.
 import { useQuery } from "@tanstack/react-query";
 import {
   FileText,
@@ -63,6 +65,7 @@ const TenderManagement = () => {
   const { toast } = useToast();
 
   const { data: tenders = [] } = useTenders();
+  const transitionTenderStatus = useTransitionTenderStatus();
 
   // Honor ?tenderId= from URL
   useEffect(() => {
@@ -138,8 +141,7 @@ const TenderManagement = () => {
   const handleTransition = async (to: TenderStatusCode) => {
     if (!selectedTender) return;
     try {
-      const repo = RepositoryFactory.getTenderRepository();
-      await repo.update(selectedTender.id, { status: to } as any);
+      await transitionTenderStatus.mutateAsync({ tenderId: selectedTender.id, status: to });
       toast({ title: "Statut mis à jour", description: `Nouveau statut: ${to}` });
       setSelectedTender((s) => (s ? { ...s, status: to } : s));
     } catch (e: any) {

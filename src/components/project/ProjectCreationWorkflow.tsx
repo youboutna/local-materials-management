@@ -34,6 +34,7 @@ import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 
 // Import unified workflow hook
 import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProjectWorkflow";
+import { useWorkflowContext } from "@/contexts/ProjectWorkflowContext";
 
 // Import ProjectWorkflowService and RepositoryFactory
 
@@ -121,6 +122,47 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     setCurrentStep(currentStep + 1);
     onStepChange?.(currentStep);
   }, [currentStep, setCurrentStep, onStepChange]);
+
+  // ============================================================
+  // 🔌 Bridge Application Layer (useUnifiedProjectWorkflow) → WorkflowContext
+  // Les étapes (EnhancedComplianceStep, …) consomment useWorkflowContext().
+  // On y réplique projectData / relatedData / projectId / step / persistance.
+  // ============================================================
+  const {
+    setProjectData: ctxSetProjectData,
+    setRelatedData: ctxSetRelatedData,
+    setProjectId: ctxSetProjectId,
+    setPersisted: ctxSetPersisted,
+    setCurrentStep: ctxSetCurrentStep,
+    setMode: ctxSetMode,
+  } = useWorkflowContext();
+
+  useEffect(() => {
+    ctxSetMode(mode === "edit" ? "edit" : "create");
+  }, [mode, ctxSetMode]);
+
+  useEffect(() => {
+    const pd = formData?.projectData;
+    if (pd) ctxSetProjectData(pd as never);
+  }, [formData?.projectData, ctxSetProjectData]);
+
+  useEffect(() => {
+    const rd = formData?.relatedData;
+    if (rd) ctxSetRelatedData(rd as never);
+  }, [formData?.relatedData, ctxSetRelatedData]);
+
+  useEffect(() => {
+    const resolvedId = projectId || formData?.projectId || formData?.projectData?.id;
+    if (resolvedId) {
+      ctxSetProjectId(resolvedId as string);
+      ctxSetPersisted(true);
+    }
+  }, [projectId, formData?.projectId, formData?.projectData?.id, ctxSetProjectId, ctxSetPersisted]);
+
+  useEffect(() => {
+    ctxSetCurrentStep(currentStep + 1);
+  }, [currentStep, ctxSetCurrentStep]);
+
 
   // 🎨 UI Layer - Use unified workflow data (Rule #5: UI Layer Separation)
   const projectData = formData?.projectData;

@@ -30,7 +30,7 @@ const MaterialEdit = () => {
   const safeId = id || '';
 
   const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);
-  const { workspaces } = useMaterialsHex();
+  const { workspaces } = useWorkspacesHex();
   const { suppliers } = useSuppliersHex();
 
   // Transform DTO → Form data (material is already in DTO format)

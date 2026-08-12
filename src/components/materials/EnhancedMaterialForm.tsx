@@ -265,10 +265,15 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     }));
   };
 
-  const handleSupplierChange = (supplier: { name: string; contact: string; leadTime: number }) => {
+  const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({
       ...prev,
-      supplier
+      supplier: {
+        name: supplier.name,
+        contact: supplier.contact,
+        leadTime: supplier.leadTime,
+        supplierId: supplier.id
+      }
     }));
   };
 

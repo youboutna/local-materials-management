@@ -11,13 +11,23 @@ import ProjectExporter from "@/components/projects/ProjectExporter";
 import { Database, FileSpreadsheet, Upload, Download } from "lucide-react";
 import type { ImportResult as ReportImportResult } from "@/dtos/entities/ProjectReportDTO";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const ProjectImport = () => {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
 
   const handleImportComplete = (result: ReportImportResult) => {
-    console.log("Import completed:", result);
-    // You can add additional logic here like refreshing project lists
+    queryClient.invalidateQueries({ queryKey: ["projects"] });
+    queryClient.invalidateQueries({ queryKey: ["projects-hex"] });
+    const successCount = (result as { successCount?: number; imported?: number })?.successCount
+      ?? (result as { imported?: number })?.imported;
+    toast.success(
+      successCount != null
+        ? `Import terminé : ${successCount} projet(s) importé(s)`
+        : "Import terminé avec succès"
+    );
   };
 
   return (

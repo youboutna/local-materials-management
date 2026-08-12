@@ -492,6 +492,10 @@ export function useTaskAssignmentsHex(filters?: {
     blockTask: blockTaskMutation.mutate,
     addNote: addNoteMutation.mutate,
     reassignTask: reassignTaskMutation.mutate,
+
+    startTaskAsync: startTaskMutation.mutateAsync,
+    completeTaskAsync: completeTaskMutation.mutateAsync,
+    addNoteAsync: addNoteMutation.mutateAsync,
     
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

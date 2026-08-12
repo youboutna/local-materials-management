@@ -11,7 +11,6 @@ import { useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexag
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -104,16 +103,12 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         }
 
         // Update profile information
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.full_name,
-            phone: formData.phone,
-            national_id: formData.national_id
-          })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
+        await updateUserMutation.mutateAsync({
+          userId: user.id,
+          full_name: formData.full_name,
+          phone: formData.phone,
+          national_id: formData.national_id
+        });
 
         // Note: Email and password updates require admin privileges that aren't available with the anon key
         // These would need to be handled by a server-side function or edge function with service role access
