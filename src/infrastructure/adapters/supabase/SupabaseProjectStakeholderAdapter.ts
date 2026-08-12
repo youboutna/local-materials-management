@@ -105,7 +105,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .eq('stakeholder_type', stakeholderType)
       .order('created_at', { ascending: true });
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return (data || []).map(this.mapToEntity);
   }
@@ -117,7 +117,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .eq('employee_id', employeeId)
       .order('created_at', { ascending: true });
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return (data || []).map(this.mapToEntity);
   }
@@ -129,7 +129,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .eq('supplier_id', supplierId)
       .order('created_at', { ascending: true });
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return (data || []).map(this.mapToEntity);
   }
@@ -143,7 +143,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return this.mapToEntity(data);
   }
@@ -162,7 +162,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return this.mapToEntity(data);
   }
@@ -177,7 +177,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
   }
 
   async findAll(filters?: {
@@ -202,7 +202,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
 
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return (data || []).map(this.mapToEntity);
   }
@@ -239,7 +239,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
 
     const { data, error, count } = await query;
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return {
       stakeholders: (data || []).map(this.mapToEntity),
@@ -276,7 +276,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
       .select('id', { count: 'exact' })
       .eq('project_id', projectId);
 
-    if (error) throw error;
+    if (error) throw normalizePostgrestError(error);
 
     return data?.length || 0;
   }
