@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, Edit, Trash2, Search, Settings } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
+import OrganizationsManager from '@/components/admin/OrganizationsManager';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import {
@@ -315,7 +316,10 @@ const EmployeeManagement = () => {
                   <DialogHeader>
                     <DialogTitle>Gestion de la Hiérarchie Organisationnelle</DialogTitle>
                   </DialogHeader>
-                  <OrganizationalHierarchyManager />
+                  <div className="space-y-6">
+                    <OrganizationsManager />
+                    <OrganizationalHierarchyManager />
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
