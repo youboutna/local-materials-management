@@ -18,11 +18,41 @@ export type AlertType =
   | 'compliance_violation' 
   | 'delivery' 
   | 'deadline' 
-  | 'quality';
+  | 'quality'
+  // Types transverses (monitoring, pilotage projet)
+  | 'budget'
+  | 'timeline'
+  | 'resource'
+  | 'risk'
+  | 'compliance'
+  | 'system'
+  | 'security'
+  | 'document'
+  | 'insurance'
+  | 'phase'
+  | 'milestone'
+  | 'inspection'
+  | 'payment';
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type AlertStatus = 'open' | 'acknowledged' | 'resolved' | 'closed' | 'escalated';
-export type AlertSource = 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification' | 'project';
+export type AlertSource =
+  | 'insurance'
+  | 'bank_guarantee'
+  | 'inspection'
+  | 'payment'
+  | 'notification'
+  | 'project'
+  | 'deadline'
+  | 'budget'
+  | 'resource'
+  | 'risk'
+  | 'compliance'
+  | 'system'
+  | 'user'
+  | 'phase'
+  | 'milestone'
+  | 'monitoring';
 
 // ===== Action Proof =====
 export type ActionProofType = 'email' | 'sms' | 'document' | 'call' | 'meeting';
@@ -64,43 +94,82 @@ export interface Alert {
   status: AlertStatus;
   createdAt: string;
   updatedAt: string;
+  /** Résolution (optionnel : renseigné quand status === 'resolved') */
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolution?: string;
+  /** Actions métier attachées à l'alerte (labels ou descripteurs) */
+  actions?: Array<Record<string, unknown> | string>;
 }
 
 // ===== UNIQUE Statistics Interface =====
 export interface AlertStatistics {
   // Totaux
-  total: number;
-  
+  total?: number;
+
   // Par sévérité
-  critical: number;
-  high: number;
-  medium: number;
-  low: number;
-  
+  critical?: number;
+  high?: number;
+  medium?: number;
+  low?: number;
+
   // Par statut
-  open: number;
-  acknowledged: number;
-  resolved: number;
-  closed: number;
-  escalated: number;
-  
+  open?: number;
+  acknowledged?: number;
+  resolved?: number;
+  closed?: number;
+  escalated?: number;
+
   // Métriques avancées
-  unacknowledged: number;
-  overdue: number;
-  avgResolutionTime: number; // hours
-  
+  unacknowledged?: number;
+  overdue?: number;
+  avgResolutionTime?: number; // hours
+
   // Répartition
-  byType: Record<string, number>;
-  bySource: Record<string, number>;
-  bySeverity: Record<string, number>;
-  byStatus: Record<string, number>;
-  
+  byType?: Record<string, number>;
+  bySource?: Record<string, number>;
+  bySeverity?: Record<string, number>;
+  byStatus?: Record<string, number>;
+
   // Tendance
-  trend: Array<{
+  trend?: Array<{
     date: string;
     count: number;
     severity: AlertSeverity;
   }>;
+
+  // ===== Alias UI (tableaux de bord / pilotage) =====
+  totalAlerts?: number;
+  criticalAlerts?: number;
+  highAlerts?: number;
+  mediumAlerts?: number;
+  lowAlerts?: number;
+  openAlerts?: number;
+  acknowledgedAlerts?: number;
+  resolvedAlerts?: number;
+  closedAlerts?: number;
+  escalatedAlerts?: number;
+  pendingActions?: number | string[];
+  activeRisks?: number;
+  overdueTasks?: number;
+}
+
+/**
+ * État agrégé exposé par le pilotage projet (ProjectManager / AlertService).
+ */
+export interface ProjectManagerState {
+  alerts: Alert[];
+  stats: AlertStatistics;
+  lastUpdated?: string;
+  lastCheck?: string;
+  progress?: number;
+  totalAlerts?: number;
+  criticalAlerts?: number;
+  resolvedAlerts?: number;
+  pendingActions?: string[] | number;
+  evmData?: unknown;
+  ganttData?: unknown;
+  pertData?: unknown;
 }
 
 // ===== Escalation Rule =====
