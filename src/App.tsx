@@ -30,6 +30,8 @@ import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import Employees from "./pages/Employees";
 import Users from "./pages/Users";
+import Organizations from "./pages/Organizations";
+
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -330,6 +332,15 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
+                      <Route
+                        path="/organizations"
+                        element={
+                          <RoleBasedRoute allowedRoles={["admin", "director", "manager"]}>
+                            <Organizations />
+                          </RoleBasedRoute>
+                        }
+                      />
+
                       <Route
                         path="/users"
                         element={

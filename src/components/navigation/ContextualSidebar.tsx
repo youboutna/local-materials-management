@@ -94,7 +94,9 @@ const navigationItems: NavItem[] = [
     icon: Users,
     children: [
       { label: "Employés", href: "/employees" },
+      { label: "Organisations", href: "/organizations", roles: ["admin", "director", "manager"] },
       { label: "Utilisateurs", href: "/users", roles: ["admin", "director"] },
+
     ],
   },
   {
