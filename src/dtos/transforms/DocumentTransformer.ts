@@ -27,6 +27,23 @@ import {
 } from '@/dtos/entities/DocumentDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
+
+/** Sérialisation ISO tolérante : accepte Date, string ISO, timestamp ou null. */
+function toIso(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  }
+  if (typeof value === 'number') return new Date(value).toISOString();
+  return new Date().toISOString();
+}
+
+function toIsoOrNull(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  return toIso(value);
+}
+
 export class DocumentTransformer implements EntityToDTOMapper<Document, DocumentDTO> {
   // ============================================================================
   // DOMAIN → DTO
@@ -54,12 +71,12 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       tags: entity.tags,
       isInternalOnly: entity.isInternalOnly,
       isSharedWithSuppliers: entity.isSharedWithSuppliers,
-      deadlineDate: entity.deadlineDate ? entity.deadlineDate.toISOString() : null,
+      deadlineDate: toIsoOrNull(entity.deadlineDate),
       assignedTo: entity.assignedTo,
       uploadedBy: entity.uploadedBy,
       metadata: entity.metadata,
-      createdAt: entity.createdAt.toISOString(),
-      updatedAt: entity.updatedAt.toISOString(),
+      createdAt: toIso(entity.createdAt),
+      updatedAt: toIso(entity.updatedAt),
     };
   }
 
@@ -72,7 +89,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       title: entity.title,
       documentType: entity.documentType,
       status: entity.status,
-      createdAt: entity.createdAt.toISOString(),
+      createdAt: toIso(entity.createdAt),
       fileSize: entity.fileSize,
       projectId: entity.projectId,
       phaseId: entity.phaseId,
@@ -125,7 +142,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       fileSize: entity.fileSize || 0,
       fileUrl: entity.fileUrl || '',
       documentType: entity.documentType,
-      createdAt: entity.createdAt.toISOString(),
+      createdAt: toIso(entity.createdAt),
     };
   }
 
@@ -289,14 +306,14 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       tags: entity.tags,
       is_internal_only: entity.isInternalOnly,
       is_shared_with_suppliers: entity.isSharedWithSuppliers,
-      deadline_date: entity.deadlineDate ? entity.deadlineDate.toISOString() : null,
+      deadline_date: toIsoOrNull(entity.deadlineDate),
       assigned_to: entity.assignedTo,
       uploaded_by: entity.uploadedBy,
       metadata: entity.metadata || null,
       category: null,
       subcategory: null,
-      created_at: entity.createdAt.toISOString(),
-      updated_at: entity.updatedAt.toISOString(),
+      created_at: toIso(entity.createdAt),
+      updated_at: toIso(entity.updatedAt),
     };
   }
 
