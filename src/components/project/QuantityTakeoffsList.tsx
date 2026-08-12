@@ -8,6 +8,7 @@ import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
 import { useQuantityTakeoffsHex } from '@/hooks/hexagonal';
+import { TAKEOFF_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 interface QuantityTakeoffsListProps {
   projectId: string;

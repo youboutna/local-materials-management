@@ -12,6 +12,7 @@ import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
+import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 interface Props {
   lines: BoqLineDTO[];
