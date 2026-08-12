@@ -13,8 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAllNotificationsHex } from '@/hooks/hexagonal/useAllNotificationsHex';
 
 interface Notification {
   id: string;
@@ -38,59 +37,34 @@ interface NotificationFormData {
 }
 
 const NotificationCrud: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
+  // Hexagonal: hook -> NotificationService -> repository -> DB
+  const {
+    notifications: notificationDtos,
+    isLoading: loading,
+    createNotification,
+    updateNotification,
+    markAsRead: markNotificationAsRead,
+    deleteNotification,
+  } = useAllNotificationsHex();
 
-  const loadNotifications = async () => {
-    try {
-      console.log('Loading notifications...');
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
-      console.log('Raw notifications data:', data);
-      
-      const transformedNotifications = (data || []).map(notif => ({
-        ...notif,
-        related_id: notif.related_id || undefined
-      }));
-      
-      console.log('Transformed notifications:', transformedNotifications);
-      setNotifications(transformedNotifications);
-      
-      toast({
-        title: 'Succès',
-        description: `${transformedNotifications.length} notification(s) chargée(s)`,
-      });
-      
-    } catch (error: any) {
-      console.error('Error loading notifications:', error);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de charger les notifications: ${error?.message || 'Erreur inconnue'}`,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const notifications: Notification[] = notificationDtos.map(dto => ({
+    id: dto.id,
+    recipient_id: dto.recipientId,
+    title: dto.title,
+    message: dto.message,
+    type: dto.type,
+    read: dto.read,
+    related_id: (dto.metadata?.relatedId as string) ?? null,
+    metadata: dto.metadata,
+    created_at: dto.createdAt,
+    updated_at: dto.updatedAt,
+  }));
 
   const [formData, setFormData] = useState<NotificationFormData>({
     recipient_id: '',
@@ -168,48 +142,37 @@ const NotificationCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedNotification) {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('notifications')
-          .update({
-            recipient_id: formData.recipient_id,
+        await updateNotification({
+          id: selectedNotification.id,
+          data: {
             title: formData.title,
             message: formData.message,
-            type: formData.type,
-            related_id: formData.related_id || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedNotification.id);
+            type: formData.type as 'info' | 'success' | 'warning' | 'error' | 'system',
+            metadata: { relatedId: formData.related_id || null },
+          },
+        });
 
-        if (error) throw error;
-
-        await loadNotifications();
         toast({
           title: "Succès",
           description: "Notification mise à jour avec succès",
         });
       } else {
-        // Insert in Supabase
-        const { error } = await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: formData.recipient_id,
-            title: formData.title,
-            message: formData.message,
-            type: formData.type,
-            related_id: formData.related_id || null,
-            read: false
-          });
+        await createNotification({
+          recipientId: formData.recipient_id,
+          title: formData.title,
+          message: formData.message,
+          type: formData.type as 'info' | 'success' | 'warning' | 'error' | 'system',
+          read: false,
+          relatedId: formData.related_id || undefined,
+          metadata: { relatedId: formData.related_id || null },
+        });
 
-        if (error) throw error;
-
-        await loadNotifications();
         toast({
           title: "Succès",
           description: "Notification créée avec succès",
         });
       }
-      
+
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
@@ -225,14 +188,7 @@ const NotificationCrud: React.FC = () => {
   const handleDelete = async (notificationId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette notification ?')) {
       try {
-        const { error } = await supabase
-          .from('notifications')
-          .delete()
-          .eq('id', notificationId);
-
-        if (error) throw error;
-
-        await loadNotifications();
+        await deleteNotification(notificationId);
         toast({
           title: "Succès",
           description: "Notification supprimée avec succès",
@@ -250,14 +206,7 @@ const NotificationCrud: React.FC = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
-      await loadNotifications();
+      await markNotificationAsRead(notificationId);
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
