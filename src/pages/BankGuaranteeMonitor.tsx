@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Alert } from '@/domain/entities/Alert';
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import type { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { useBankGuaranteesHex, useProjectsHex } from '@/hooks/hexagonal';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
