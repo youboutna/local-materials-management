@@ -198,32 +198,26 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     projectId, 
     isNewProject, 
     mode, 
-    isPersistedEffective,
-    contextComplianceItems,
-    contextBankGuarantees,
-    contextInsurancePolicies,
-    contextDocuments,
-    bankGuaranteeService, 
-    insuranceService, 
-    documentService, 
-    complianceService, 
-    toast,
-    setRelatedData,
-    state.relatedData.compliance
+    isPersistedEffective
   ]);
 
   // ============================================================
   // Effets
   // ============================================================
   
-  // Chargement initial
+  // Chargement initial (une seule fois par projet/mode, évite la boucle infinie)
+  const loadedKeyRef = React.useRef<string | null>(null);
   useEffect(() => {
+    const key = `${projectId ?? 'new'}|${mode}|${isPersistedEffective ? 1 : 0}`;
+    if (loadedKeyRef.current === key) return;
+    loadedKeyRef.current = key;
     loadComplianceData();
-  }, [loadComplianceData]);
+  }, [projectId, mode, isPersistedEffective, loadComplianceData]);
 
   // Mise à jour du parent quand les données changent
   useEffect(() => {
