@@ -137,6 +137,14 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
 
   async create(stakeholder: Omit<ProjectStakeholderEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProjectStakeholderEntity> {
     const entityData = this.mapToSupabase(stakeholder);
+    // Colonnes NOT NULL en base : on garantit des valeurs par défaut cohérentes.
+    if (!entityData.stakeholder_entity_type) {
+      entityData.stakeholder_entity_type = (stakeholder as any)?.employeeId ? 'employee' : 'supplier';
+    }
+    if (!entityData.stakeholder_type) {
+      entityData.stakeholder_type = 'other';
+    }
+
 
     const { data, error } = await supabase
       .from('project_stakeholders')
