@@ -428,6 +428,10 @@ export interface InspectionExecutionDataDTO {
   stepId?: string;
   inspector?: string;
   date?: string;
+  /** Type de paiement rattaché (jalon, avance, décompte…) — colonne btp.inspections.payment_type */
+  paymentType?: string;
+  /** Observations de terrain persistées en JSON (btp.inspections.observations) */
+  observations?: unknown[];
 }
 
 // Add payment validation interface from InspectionService
