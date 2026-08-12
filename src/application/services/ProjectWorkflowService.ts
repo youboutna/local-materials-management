@@ -698,11 +698,23 @@ export class ProjectWorkflowService {
         progress: projectData.progress,
         location: projectData.location,
         budget: projectData.budget,
+        currency: projectData.currency,
         startDate: projectData.startDate,
         endDate: projectData.endDate,
         teamSize: projectData.teamSize,
         thumbnail: projectData.thumbnail,
         projectReference: projectData.projectReference,
+        // Cadre de passation (étape 1) — sans ces champs, la saisie était perdue.
+        marketType: projectData.marketType,
+        selectionMode: projectData.selectionMode,
+        financingSource: projectData.financingSource,
+        mainContractor: typeof projectData.mainContractor === 'string' ? projectData.mainContractor : undefined,
+        projectManagerId: projectData.projectManagerId,
+        allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
+        initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
+        currentPhase: projectData.currentPhase,
+        currentStage: projectData.currentStage,
+        organizationId: projectData.organizationId,
       };
       await this.projectRepository.update(existingId, ProjectTransformer.fromUpdateDTOToEntity(updateRequest) as any);
       return existingId;
@@ -715,12 +727,24 @@ export class ProjectWorkflowService {
       budget: projectData.budget || 0,
       startDate: projectData.startDate || new Date().toISOString().split('T')[0],
       endDate: projectData.endDate,
-      status: ProjectStatus.PLANIFIE,
+      status: projectData.status || ProjectStatus.PLANIFIE,
+      progress: projectData.progress,
       thumbnail: projectData.thumbnail || '',
       teamSize: projectData.teamSize || 1,
+      currency: projectData.currency,
       projectReference: projectData.projectReference,
+      marketType: projectData.marketType,
+      selectionMode: projectData.selectionMode,
+      financingSource: projectData.financingSource,
+      mainContractor: typeof projectData.mainContractor === 'string' ? projectData.mainContractor : undefined,
+      projectManagerId: projectData.projectManagerId,
+      allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
+      initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
+      currentPhase: projectData.currentPhase,
+      currentStage: projectData.currentStage,
       organizationId: await this.resolveOwnerOrganizationId(projectData.organizationId as string | undefined),
-    };
+    } as CreateProjectDTO;
+
     const created = await this.projectRepository.create(ProjectTransformer.fromCreateDTOToEntity(createRequest));
     return created.id;
   }
