@@ -794,19 +794,72 @@ export class ProjectWorkflowService {
     }
   }
 
+  /**
+   * Les étapes UI produisent des formes hétérogènes (StakeholderDTO avec
+   * `stakeholderType: 'employee' | 'external' | …`, ou entité
+   * `ProjectStakeholder` hydratée). La table `project_stakeholders` impose
+   * `stakeholder_entity_type` NOT NULL → on normalise systématiquement ici.
+   */
+  private normalizeStakeholderPayload(projectId: string, s: any): Record<string, unknown> {
+    const entityRaw = String(s.stakeholderEntityType ?? s.entityType ?? '').toLowerCase();
+    const typeRaw = String(s.stakeholderType ?? s.type ?? '').toLowerCase();
+    const isEmployee =
+      entityRaw === 'employee' ||
+      typeRaw === 'employee' ||
+      s.isInternal === true ||
+      !!s.employeeId;
+    const stakeholderEntityType: 'employee' | 'supplier' =
+      entityRaw === 'employee' || entityRaw === 'supplier'
+        ? (entityRaw as 'employee' | 'supplier')
+        : isEmployee
+        ? 'employee'
+        : 'supplier';
+
+    // `stakeholder_type` porte le rôle métier (client, consultant, contractor…)
+    const businessType =
+      (typeRaw && typeRaw !== 'employee' && typeRaw !== 'external' ? typeRaw : '') ||
+      String(s.role ?? '').toLowerCase() ||
+      'other';
+
+    const supplierId = s.supplierId ?? (isEmployee ? null : s.organizationId ?? null);
+
+    return {
+      projectId,
+      stakeholderType: businessType,
+      stakeholderEntityType,
+      employeeId: s.employeeId ?? null,
+      supplierId,
+      externalName: s.externalName ?? s.name ?? s.organization ?? null,
+      externalEmail: s.externalEmail ?? s.email ?? null,
+      externalPhone: s.externalPhone ?? s.phone ?? null,
+      roleDescription: s.roleDescription ?? s.role ?? null,
+      isActive: s.isActive ?? true,
+    };
+  }
+
   private async upsertStakeholders(projectId: string, stakeholders: any[]): Promise<void> {
     if (!stakeholders.length) return;
+    const isUuid = (v: unknown) =>
+      typeof v === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
     const existing = await this.stakeholderRepository.findByProjectId(projectId).catch(() => []);
     for (const s of stakeholders) {
-      const payload = { projectId, ...s };
-      const existingStakeholder = existing.find((e: any) => e.id === s.id || e.externalName === s.externalName);
+      const payload = this.normalizeStakeholderPayload(projectId, s);
+      const existingStakeholder = existing.find(
+        (e: any) =>
+          (isUuid(s.id) && e.id === s.id) ||
+          (payload.employeeId && e.employeeId === payload.employeeId) ||
+          (payload.supplierId && e.supplierId === payload.supplierId) ||
+          (payload.externalName && e.externalName === payload.externalName)
+      );
       if (existingStakeholder) {
-        await this.stakeholderRepository.update(existingStakeholder.id, payload);
+        await this.stakeholderRepository.update(existingStakeholder.id, payload as any);
       } else {
         await this.stakeholderRepository.create(payload as any);
       }
     }
   }
+
 
   private async upsertStrategyAndBudgetLinks(projectId: string, strategyLinks: any[], budgetLinks: any[]): Promise<void> {
     try {
