@@ -160,7 +160,8 @@ export function useUnifiedProjectWorkflow(
         }
         queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] });
       } else {
-        const errs = result.errors && result.errors.length > 0 ? result.errors : [result.message || "Une erreur est survenue."];
+        const cleaned = (result.errors || []).filter((e) => typeof e === 'string' && e.trim().length > 0);
+        const errs = cleaned.length > 0 ? cleaned : [result.message || "Une erreur est survenue."];
         setWorkflowState(prev => ({ ...prev, lastValidationErrors: errs }));
         toast({ title: "Erreur de sauvegarde", description: errs.join(', '), variant: "destructive" });
       }
@@ -228,7 +229,7 @@ export function useUnifiedProjectWorkflow(
       }
       return result;
     } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errMsg = (error instanceof Error && error.message.trim()) ? error.message : 'Une erreur est survenue.';
       return { success: false, message: errMsg };
     }
   }, [formData, saveStepMutation, workflowState.currentStep]);
@@ -243,7 +244,7 @@ export function useUnifiedProjectWorkflow(
       setWorkflowState(prev => ({ ...prev, isValid: validation.isValid }));
       return validation;
     } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errMsg = (error instanceof Error && error.message.trim()) ? error.message : 'Une erreur est survenue.';
       return { isValid: false, errors: [errMsg] };
     }
   }, [formData, validateStepMutation, workflowState.currentStep]);

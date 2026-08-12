@@ -573,7 +573,7 @@ export class ProjectWorkflowService {
 
       return { success: true, projectId, warnings: validation.warnings };
     } catch (error) {
-      return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
+      return { success: false, errors: [(error instanceof Error && error.message.trim()) ? error.message : 'Erreur inattendue lors de la sauvegarde de l\'étape'] };
     }
   }
 
