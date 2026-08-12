@@ -26,6 +26,17 @@ export interface FindRecipientsCriteria {
   department?: string;
 }
 
+export interface ProjectOrganization {
+  id: string;
+  project_id: string;
+  organization_id: string;
+  role: string | null;
+  is_primary: boolean | null;
+  contract_amount: number | null;
+  contract_start_date: string | null;
+  contract_end_date: string | null;
+}
+
 const POSITION_TO_LEVEL: Array<{ match: RegExp; level: HierarchyLevel }> = [
   { match: /directeur|director|dg/i, level: 'director' },
   { match: /manager|responsable|chef de projet/i, level: 'manager' },
@@ -99,7 +110,26 @@ export class OrganizationalHierarchyService {
         position_title: row.position,
         hierarchy_level: inferLevel(row.position),
       }));
+
+  /**
+   * Organisations rattachées à un projet (btp.project_organizations).
+   * Utilisé par les actions de contrôle pour identifier le maître d'ouvrage principal.
+   */
+  static async getProjectOrganizations(projectId: string): Promise<ProjectOrganization[]> {
+    if (!projectId) return [];
+    const { btpClient } = await import('@/integrations/supabase/schema-clients');
+    const { data, error } = await (btpClient as any)
+      .from('project_organizations')
+      .select('id, project_id, organization_id, role, is_primary, contract_amount, contract_start_date, contract_end_date')
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('OrganizationalHierarchyService.getProjectOrganizations', error);
+      return [];
+    }
+    return (data ?? []) as ProjectOrganization[];
   }
 }
 
 export default OrganizationalHierarchyService;
+
