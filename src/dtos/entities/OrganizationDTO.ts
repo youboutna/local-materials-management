@@ -10,6 +10,11 @@ export interface OrganizationDTO {
   email?: string;
   website?: string;
   logoUrl?: string;
+  /** Organisation parente (hiérarchie des organisations). */
+  parentId?: string;
+  /** Organisation propriétaire par défaut des nouveaux projets. */
+  isDefault?: boolean;
+
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
