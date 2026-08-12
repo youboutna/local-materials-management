@@ -48,6 +48,18 @@ export enum DocumentType {
   INSURANCE = 'insurance',
   WARRANTY = 'warranty',
   BANK_GUARANTEE = 'bank_guarantee',
+  // Valeurs natives du type enum DB `document_type` (compatibilité round-trip)
+  INSPECTION_REPORT = 'inspection_report',
+  LOCATION_PHOTO = 'location_photo',
+  PROJECT_REPORT = 'project_report',
+  SUPPLIER_INFO = 'supplier_info',
+  SUPPLIER_CATALOG = 'supplier_catalog',
+  TASK_ASSIGNMENT = 'task_assignment',
+  EMPLOYEE_RECORD = 'employee_record',
+  TENDER = 'tender',
+  // Regroupements métier utilisés par l'UI projet
+  ADMINISTRATIVE = 'administrative',
+  TECHNICAL = 'technical',
   OTHER = 'other'
 }
 
