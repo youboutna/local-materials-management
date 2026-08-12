@@ -12,6 +12,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Calculator, FileText, Plus, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { getUnitOptions, METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 // Local Material interface for UI usage
 interface LocalMaterial {
