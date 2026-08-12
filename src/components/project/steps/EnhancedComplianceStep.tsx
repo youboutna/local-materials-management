@@ -410,7 +410,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const stats = useMemo(() => ({
     total: complianceItems.length,
     approved: complianceItems.filter(i => i.status === 'approved').length,
-    pending: complianceItems.filter(i => i.status === 'pending' || i.status === 'in_review').length,
+    pending: complianceItems.filter(i => String(i.status) === 'pending' || String(i.status) === 'in_review').length,
     rejected: complianceItems.filter(i => i.status === 'rejected').length,
   }), [complianceItems]);
 
