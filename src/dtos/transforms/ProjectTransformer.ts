@@ -51,6 +51,52 @@ interface ProjectDTOWithCollections extends ProjectDTO {
 
 export class ProjectTransformer {
 
+  // =================== STATUT (DB legacy → enum UI) ===================
+
+  /**
+   * La colonne `projects.status` stocke des valeurs legacy contraintes
+   * (« en cours », « en attente », « terminé », …) alors que l'UI travaille
+   * avec l'enum `ProjectStatus` (`en_cours_v2`, `en_attente`, …).
+   * Sans cette normalisation, le `Select` « Statut » n'affiche rien en édition.
+   */
+  static toUiStatus(raw: unknown): ProjectStatus {
+    if (raw === undefined || raw === null || raw === '') return ProjectStatus.EN_ATTENTE;
+    const value = String(raw);
+    // Valeur déjà conforme à l'enum → on la conserve.
+    if ((Object.values(ProjectStatus) as string[]).includes(value)) {
+      return value as ProjectStatus;
+    }
+    const key = value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s_-]/g, '')
+      .replace(/v2$/, '');
+    const map: Record<string, ProjectStatus> = {
+      encours: ProjectStatus.EN_COURS,
+      enconstruction: ProjectStatus.EN_CONSTRUCTION,
+      attribue: ProjectStatus.ATTRIBUE,
+      planifie: ProjectStatus.PLANIFIE,
+      planned: ProjectStatus.PLANNED,
+      enconception: ProjectStatus.EN_CONCEPTION,
+      enretard: ProjectStatus.EN_RETARD,
+      eninspection: ProjectStatus.EN_INSPECTION,
+      enreview: ProjectStatus.EN_REVIEW,
+      enattente: ProjectStatus.EN_ATTENTE,
+      draft: ProjectStatus.DRAFT,
+      brouillon: ProjectStatus.DRAFT,
+      prequalification: ProjectStatus.PRE_QUALIFICATION,
+      termine: ProjectStatus.TERMINE,
+      completed: ProjectStatus.COMPLETED,
+      encloture: ProjectStatus.EN_CLOTURE,
+      suspendu: ProjectStatus.SUSPENDU,
+      annule: ProjectStatus.ANNULE,
+      cancelled: ProjectStatus.ANNULE,
+    };
+    return map[key] ?? ProjectStatus.EN_ATTENTE;
+  }
+
+
   // =================== DOMAIN HELPERS (Localisation v3) ===================
 
   /** Un couple lat/lng est exploitable seulement s'il est fini, borné et non (0,0). */
@@ -405,7 +451,7 @@ export class ProjectTransformer {
       id: project.id,
       title: project.title,
       description: project.description,
-      status: project.status as ProjectStatus,
+      status: ProjectTransformer.toUiStatus(project.status),
       progress: project.progress,
       location: project.location || '',
       latitude: displayCenter?.lat,
@@ -876,6 +922,13 @@ export class ProjectTransformer {
     if (dto.closureNotes !== undefined) entityData.closureNotes = dto.closureNotes;
     if (dto.checkScheduleLastRun !== undefined) entityData.checkScheduleLastRun = dto.checkScheduleLastRun;
     if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
+    // Cadre de passation & pilotage (manquants → perte de saisie à la création)
+    if (dto.marketType !== undefined) entityData.marketType = dto.marketType;
+    if (dto.selectionMode !== undefined) entityData.selectionMode = dto.selectionMode;
+    if ((dto as any).projectManagerId !== undefined) entityData.projectManagerId = (dto as any).projectManagerId;
+    if ((dto as any).technicalManagerId !== undefined) entityData.technicalManagerId = (dto as any).technicalManagerId;
+    if ((dto as any).supervisorId !== undefined) entityData.supervisorId = (dto as any).supervisorId;
+
 
     // === Zones d'intervention (multi-polygones) → localisation v3 ===
     const zonesBuild = ProjectTransformer.buildLocalisationFromZones(

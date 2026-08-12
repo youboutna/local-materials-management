@@ -429,16 +429,17 @@ export class ProjectWorkflowTransforms {
       progress: formData.progress as number,
       thumbnail: formData.thumbnail as string,
       teamSize: formData.teamSize as number,
-      financingSource: formData.financing_source as string,
-      marketType: formData.market_type as string,
-      selectionMode: formData.selection_mode as string,
-      projectReference: formData.project_reference as string,
-      mainContractor: formData.main_contractor as string,
-      allowsInitialPayment: formData.allows_initial_payment as boolean,
-      initialPaymentPercentage: formData.initial_payment_percentage as number,
-      currentPhase: formData.current_phase as string,
-      currentStage: formData.current_stage as ConstructionStage | undefined,
+      financingSource: (formData.financingSource ?? formData.financing_source) as string,
+      marketType: (formData.marketType ?? formData.market_type) as string,
+      selectionMode: (formData.selectionMode ?? formData.selection_mode) as string,
+      projectReference: (formData.projectReference ?? formData.project_reference) as string,
+      mainContractor: (formData.mainContractor ?? formData.main_contractor) as string,
+      allowsInitialPayment: (formData.allowsInitialPayment ?? formData.allows_initial_payment) as boolean,
+      initialPaymentPercentage: (formData.initialPaymentPercentage ?? formData.initial_payment_percentage) as number,
+      currentPhase: (formData.currentPhase ?? formData.current_phase) as string,
+      currentStage: (formData.currentStage ?? formData.current_stage) as ConstructionStage | undefined,
       coordinates: formData.coordinates as { latitude: number; longitude: number }
+
     };
   }
 
