@@ -55,12 +55,12 @@ export interface UserSecurityReport {
 /**
  * AuthUser (provider) -> UserDTO (UI)
  */
-function toUserDTO(authUser: AuthUser | null): UserDTO | null {
+function toUserDTO(authUser: (Partial<AuthUser> & { id: string }) | null): UserDTO | null {
   if (!authUser) return null;
   return {
     id: authUser.id,
-    email: authUser.email,
-    fullName: authUser.full_name || authUser.name || authUser.email,
+    email: authUser.email ?? '',
+    fullName: authUser.full_name || authUser.name || authUser.email || '',
     primaryRole: authUser.role || 'user',
     phone: authUser.phone,
     nationalId: authUser.national_id,
@@ -74,8 +74,8 @@ function toUserDTO(authUser: AuthUser | null): UserDTO | null {
     emailVerified: authUser.email_verified,
     phoneVerified: authUser.phone_verified,
     userRoles: [],
-    createdAt: authUser.created_at,
-    updatedAt: authUser.updated_at,
+    createdAt: authUser.created_at ?? new Date().toISOString(),
+    updatedAt: authUser.updated_at ?? new Date().toISOString(),
   };
 }
 

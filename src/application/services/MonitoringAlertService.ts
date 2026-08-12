@@ -50,7 +50,7 @@ function transformToAlertData(dto: MonitoringAlertDTO): AlertData {
     actionTaken: dto.resolutionNotes || undefined,
     actionTakenBy: dto.resolvedBy || undefined,
     actionTakenAt: dto.resolvedAt || undefined,
-    status: dto.status
+    status: dto.status as AlertData['status']
   };
 }
 

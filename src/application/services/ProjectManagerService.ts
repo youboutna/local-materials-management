@@ -147,8 +147,12 @@ export class ProjectManagerService implements IProjectManagerService {
       console.error('[ProjectManagerService] Erreur lors de la récupération de l\'état:', error);
       return {
         alerts: [],
-        stats: { totalAlerts: 0, criticalAlerts: 0, activeRisks: 0, overdueTasks: 0 },
-        lastCheck: new Date().toISOString()
+        lastCheck: new Date().toISOString(),
+        totalAlerts: 0,
+        criticalAlerts: 0,
+        resolvedAlerts: 0,
+        pendingActions: [],
+        progress: 0
       };
     }
   }

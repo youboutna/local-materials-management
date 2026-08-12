@@ -10,8 +10,8 @@
  */
 
 import { InspectionStatus } from '@/domain/entities/Inspection';
+import { Alert } from '@/domain/entities/Alert';
 import {
-  Alert,
   DashboardStats,
   MonitoringConfiguration,
   MonitoringMetrics

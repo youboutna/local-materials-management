@@ -59,7 +59,6 @@ export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLin
 
 // Missing adapters
 export { LocationRepository } from './LocationRepository';
-export { SupabaseAlertAdapter } from './SupabaseAlertAdapter';
 export { SupabaseMissionExpenseAdapter } from './SupabaseMissionExpenseAdapter';
 export { SupabaseTenderSharingAdapter } from './SupabaseTenderSharingAdapter';
 export { SupabaseWorkspaceAdapter } from './SupabaseWorkspaceAdapter';
