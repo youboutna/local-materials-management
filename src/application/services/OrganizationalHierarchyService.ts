@@ -110,6 +110,9 @@ export class OrganizationalHierarchyService {
         position_title: row.position,
         hierarchy_level: inferLevel(row.position),
       }));
+  }
+
+
 
   /**
    * Organisations rattachées à un projet (btp.project_organizations).
