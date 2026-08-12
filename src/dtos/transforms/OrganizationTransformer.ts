@@ -20,6 +20,8 @@ export class OrganizationTransformer {
       email: row.email as string | undefined,
       website: row.website as string | undefined,
       logoUrl: row.logo_url as string | undefined,
+      parentId: (row.parent_id as string | null) ?? undefined,
+      isDefault: row.is_default === true,
       isActive: row.is_active !== false,
       createdAt: row.created_at as string | undefined,
       updatedAt: row.updated_at as string | undefined,
@@ -39,6 +41,8 @@ export class OrganizationTransformer {
     if (data.email !== undefined) row.email = data.email;
     if (data.website !== undefined) row.website = data.website;
     if (data.logoUrl !== undefined) row.logo_url = data.logoUrl;
+    if (data.parentId !== undefined) row.parent_id = data.parentId || null;
+    if (data.isDefault !== undefined) row.is_default = data.isDefault;
     if (data.isActive !== undefined) row.is_active = data.isActive;
     return row;
   }

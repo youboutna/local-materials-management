@@ -31,6 +31,26 @@ export class SupabaseOrganizationAdapter implements IOrganizationRepository {
     return (data ?? []).map(toDTO);
   }
 
+  async findDefault(): Promise<OrganizationDTO | null> {
+    const { data, error } = await (supabase as any)
+      .from(TABLE)
+      .select('*')
+      .eq('is_default', true)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? toDTO(data) : null;
+  }
+
+  async setDefault(id: string): Promise<OrganizationDTO> {
+    const { error: clearError } = await (supabase as any)
+      .from(TABLE)
+      .update({ is_default: false })
+      .eq('is_default', true)
+      .neq('id', id);
+    if (clearError) throw new Error(clearError.message);
+    return this.update(id, { isDefault: true });
+  }
+
   async create(data: CreateOrganizationDTO): Promise<OrganizationDTO> {
     const { data: row, error } = await (supabase as any).from(TABLE).insert(toRow(data)).select().single();
     if (error) throw new Error(error.message);

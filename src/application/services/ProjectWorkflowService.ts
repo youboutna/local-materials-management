@@ -632,6 +632,7 @@ export class ProjectWorkflowService {
           initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
           currentPhase: projectData.currentPhase,
           currentStage: projectData.currentStage,
+          organizationId: await this.resolveOwnerOrganizationId(projectData.organizationId as string | undefined),
         };
         const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
         const createdProject = await this.projectRepository.create(projectEntity);
@@ -672,6 +673,17 @@ export class ProjectWorkflowService {
   // PRIVATE HELPERS
   // ============================================================
 
+  /** Organisation propriétaire par défaut (configurée dans l'administration). */
+  private async resolveOwnerOrganizationId(explicit?: string): Promise<string | undefined> {
+    if (explicit) return explicit;
+    try {
+      const { getOrganizationService } = await import('@/application/services/OrganizationService');
+      return await getOrganizationService().resolveOwnerOrganizationId();
+    } catch {
+      return undefined;
+    }
+  }
+
   private async upsertProjectFromWorkflow(data: ProjectWorkflowData): Promise<string> {
     const projectData = data.projectData;
     if (!projectData) throw new AppError(ErrorCode.VALIDATION_ERROR, 'projectData manquant');
@@ -707,6 +719,7 @@ export class ProjectWorkflowService {
       thumbnail: projectData.thumbnail || '',
       teamSize: projectData.teamSize || 1,
       projectReference: projectData.projectReference,
+      organizationId: await this.resolveOwnerOrganizationId(projectData.organizationId as string | undefined),
     };
     const created = await this.projectRepository.create(ProjectTransformer.fromCreateDTOToEntity(createRequest));
     return created.id;

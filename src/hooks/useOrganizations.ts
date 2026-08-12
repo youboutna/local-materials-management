@@ -10,6 +10,7 @@ export function useOrganizations() {
   const create = useMutation({ mutationFn: (data: CreateOrganizationDTO) => service.create(data), onSuccess: () => queryClient.invalidateQueries({ queryKey }) });
   const update = useMutation({ mutationFn: ({ id, data }: { id: string; data: UpdateOrganizationDTO }) => service.update(id, data), onSuccess: () => queryClient.invalidateQueries({ queryKey }) });
   const upsert = useMutation({ mutationFn: (data: CreateOrganizationDTO) => service.upsert(data), onSuccess: () => queryClient.invalidateQueries({ queryKey }) });
+  const setDefault = useMutation({ mutationFn: (id: string) => service.setDefault(id), onSuccess: () => queryClient.invalidateQueries({ queryKey }) });
   const remove = useMutation({ mutationFn: (id: string) => service.delete(id), onSuccess: () => queryClient.invalidateQueries({ queryKey }) });
-  return { ...query, create: create.mutateAsync, update: update.mutateAsync, upsert: upsert.mutateAsync, remove: remove.mutateAsync, isMutating: create.isPending || update.isPending || upsert.isPending || remove.isPending };
+  return { ...query, create: create.mutateAsync, update: update.mutateAsync, upsert: upsert.mutateAsync, setDefault: setDefault.mutateAsync, remove: remove.mutateAsync, defaultOrganization: (query.data ?? []).find((o) => o.isDefault), isMutating: create.isPending || update.isPending || upsert.isPending || setDefault.isPending || remove.isPending };
 }
