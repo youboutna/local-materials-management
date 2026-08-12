@@ -337,7 +337,7 @@ export interface DocumentStatisticsDTO {
   expiredDocuments: number;
   totalSize: number;
   averageFileSize: number;
-  byType: Record<DocumentTypeUnion, number>;
+  byType: Partial<Record<DocumentTypeUnion, number>>;
   byStatus: Record<DocumentStatusUnion, number>;
   byPriority: Record<DocumentPriorityUnion, number>;
   byCategory: Record<string, number>;
