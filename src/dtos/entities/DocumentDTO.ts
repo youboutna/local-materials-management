@@ -60,6 +60,10 @@ export enum DocumentType {
   // Regroupements métier utilisés par l'UI projet
   ADMINISTRATIVE = 'administrative',
   TECHNICAL = 'technical',
+  INSPECTION = 'inspection',
+  PAYMENT = 'payment',
+  PAYMENT_RECEIPT = 'payment_receipt',
+  SUPPLIER_UPLOAD = 'supplier_upload',
   OTHER = 'other'
 }
 
@@ -562,7 +566,7 @@ export function normalizeDocumentPriority(value: string): DocumentPriorityUnion 
  * Obtient le libellé d'un type de document
  */
 export function getDocumentTypeLabel(type: DocumentTypeUnion): string {
-  const labels: Record<DocumentTypeUnion, string> = {
+  const labels: Partial<Record<DocumentTypeUnion, string>> = {
     [DocumentType.CONTRACT]: 'Contrat',
     [DocumentType.PLAN]: 'Plan',
     [DocumentType.SPECIFICATION]: 'Spécification',
@@ -631,7 +635,7 @@ export function getDocumentStatusColor(status: DocumentStatusUnion): string {
  * Obtient l'icône d'un type de document
  */
 export function getDocumentTypeIcon(type: DocumentTypeUnion): string {
-  const icons: Record<DocumentTypeUnion, string> = {
+  const icons: Partial<Record<DocumentTypeUnion, string>> = {
     [DocumentType.CONTRACT]: 'FileText',
     [DocumentType.PLAN]: 'Clipboard',
     [DocumentType.SPECIFICATION]: 'FileText',
