@@ -19,36 +19,42 @@ import { BaseEntityDTO } from '../shared';
 
 /**
  * Insurance certificate status
+ * Const-object + union type: les littéraux string restent assignables
+ * tout en conservant l'usage `InsuranceCertificateStatus.ACTIVE`.
  */
-export enum InsuranceCertificateStatus {
-  ACTIVE = 'active',
-  EXPIRED = 'expired',
-  EXPIRING_SOON = 'expiring_soon',
-  MISSING = 'missing',
-  PENDING = 'pending',
-  VERIFIED = 'verified',
-  NEW = 'new',
-  IN_PROGRESS = 'in_progress',
-  CANCELLED = 'cancelled',
-  ARCHIVED = 'archived',
-  REJECTED = 'rejected',
-  APPROVED = 'approved',
-  SENT = 'sent',
-  RECEIVED = 'received',
-  TEST = 'test',
-  AWAITING_APPROVAL = 'awaiting_approval'
-}
+export const InsuranceCertificateStatus = {
+  ACTIVE: 'active',
+  EXPIRED: 'expired',
+  EXPIRING_SOON: 'expiring_soon',
+  MISSING: 'missing',
+  PENDING: 'pending',
+  VERIFIED: 'verified',
+  NEW: 'new',
+  IN_PROGRESS: 'in_progress',
+  CANCELLED: 'cancelled',
+  ARCHIVED: 'archived',
+  REJECTED: 'rejected',
+  APPROVED: 'approved',
+  SENT: 'sent',
+  RECEIVED: 'received',
+  TEST: 'test',
+  AWAITING_APPROVAL: 'awaiting_approval',
+} as const;
+export type InsuranceCertificateStatus =
+  (typeof InsuranceCertificateStatus)[keyof typeof InsuranceCertificateStatus];
 
 /**
  * Insurance type
  */
-export enum InsuranceType {
-  RESPONSABILITE_CIVILE = 'responsabilite_civile',
-  DECENNALE = 'decennale',
-  VEHICULES = 'vehicules',
-  MATERIEL = 'materiel',
-  TOUS_RISQUES = 'tous_risques'
-}
+export const InsuranceType = {
+  RESPONSABILITE_CIVILE: 'responsabilite_civile',
+  DECENNALE: 'decennale',
+  VEHICULES: 'vehicules',
+  MATERIEL: 'materiel',
+  TOUS_RISQUES: 'tous_risques',
+} as const;
+export type InsuranceType = (typeof InsuranceType)[keyof typeof InsuranceType];
+
 
 // ============================================================
 // Type Aliases (for backward compatibility)
