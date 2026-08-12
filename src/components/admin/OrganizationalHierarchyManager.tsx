@@ -240,6 +240,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
         externalRef: 'ORG-DEFAULT-BTP',
         orgType: 'owner',
         description: 'Organisation propriétaire par défaut des projets',
+        isDefault: true,
         isActive: true,
       });
 
