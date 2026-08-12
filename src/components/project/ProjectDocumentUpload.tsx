@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
+import { getDocumentService } from '@/application/services/DocumentService';
 import type { DocumentType } from '@/dtos/types/document';
 
 interface ProjectDocumentUploadProps {
@@ -203,41 +204,28 @@ const ProjectDocumentUpload = ({
         }
       }
 
-      // Map camelCase form data to snake_case DB columns
-      const documentInsert = {
+      // ✅ Hexagonal: UI → Service → Repository → Adapter → DB
+      return await getDocumentService().createDocument({
         title: uploadData.title,
-        description: uploadData.description,
-        document_type: uploadData.documentType,
-        project_id: projectId,
-        phase_id: phaseId,
-        inspection_id: inspectionId,
+        description: uploadData.description || null,
+        documentType: uploadData.documentType,
+        projectId: projectId ?? null,
+        phaseId: phaseId ?? null,
+        inspectionId: inspectionId ?? null,
         status: uploadData.status,
-        file_url: fileUrl,
-        file_name: uploadedFileName,
-        file_size: fileSize,
-        mime_type: mimeType,
-        uploaded_by: user.id,
+        fileUrl,
+        fileName: uploadedFileName,
+        fileSize,
+        mimeType,
+        uploadedBy: user.id,
         metadata: {
           context,
           stakeholder_id: stakeholderId,
           task_id: taskId,
           step_id: stepId,
-          upload_context: contextLabel
-        }
-      };
-
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('documents')
-        .insert(documentInsert as any)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      return data;
+          upload_context: contextLabel,
+        },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });

@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
+import { getDocumentService } from '@/application/services/DocumentService';
 import { Calendar, FileText, Search } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -42,24 +43,21 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents', searchTerm, documentType],
     queryFn: async (): Promise<Document[]> => {
-      // Use dynamic import to avoid top-level supabase import
-      const { supabase } = await import('@/integrations/supabase/client');
-      let query = supabase
-        .from('documents')
-        .select('id, title, description, document_type, file_name, file_size, status, created_at, uploaded_by')
-        .order('created_at', { ascending: false });
-
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,file_name.ilike.%${searchTerm}%`);
-      }
-
-      if (documentType) {
-        query = query.eq('document_type', documentType);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []).filter(d => d.id) as any[];
+      // ✅ Hexagonal: UI → Service → Repository → Adapter → DB
+      const docs = await getDocumentService().searchDocuments(searchTerm, documentType);
+      return docs
+        .filter((d) => !!d.id)
+        .map((d) => ({
+          id: d.id,
+          title: d.title,
+          description: d.description ?? null,
+          document_type: d.documentType,
+          file_name: d.fileName ?? null,
+          file_size: d.fileSize ?? null,
+          status: d.status ?? null,
+          created_at: d.createdAt ?? null,
+          uploaded_by: d.uploadedBy ?? null,
+        }));
     },
   });
 

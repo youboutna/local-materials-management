@@ -39,7 +39,16 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   }
 
   async save(document: Document): Promise<void> {
-    const dbType = document.documentType === 'pv' ? 'inspection_report' : document.documentType === 'photo' ? 'location_photo' : 'project_report';
+    // Mapping domaine → enum DB `document_type` (valeurs autorisées uniquement)
+    const toDbType: Record<string, string> = {
+      pv: 'inspection_report', inspection_report: 'inspection_report',
+      photo: 'location_photo', location_photo: 'location_photo',
+      contract: 'contract', administrative: 'contract',
+      tender: 'tender', tender_document: 'tender',
+      supplier_catalog: 'supplier_catalog', supplier_info: 'supplier_info',
+      task_assignment: 'task_assignment', employee_record: 'employee_record',
+    };
+    const dbType = toDbType[document.documentType] || 'project_report';
     const dbStatus = document.status === 'approved' ? 'validated' : document.status === 'pending_review' ? 'pending' : document.status;
     const { error } = await supabase.from('documents').insert({
       id: document.id, title: document.title, description: document.description,

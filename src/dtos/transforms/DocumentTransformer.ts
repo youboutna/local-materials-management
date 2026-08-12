@@ -555,7 +555,7 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
       expiredDocuments,
       totalSize,
       averageFileSize,
-      byType: byType as Record<DocumentType, number>,
+      byType: byType as unknown as Record<DocumentType, number>,
       byStatus,
       byPriority,
       byCategory,

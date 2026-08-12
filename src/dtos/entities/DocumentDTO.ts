@@ -48,6 +48,23 @@ export enum DocumentType {
   INSURANCE = 'insurance',
   WARRANTY = 'warranty',
   BANK_GUARANTEE = 'bank_guarantee',
+  // Valeurs natives du type enum DB `document_type` (compatibilité round-trip)
+  INSPECTION_REPORT = 'inspection_report',
+  LOCATION_PHOTO = 'location_photo',
+  PROJECT_REPORT = 'project_report',
+  SUPPLIER_INFO = 'supplier_info',
+  SUPPLIER_CATALOG = 'supplier_catalog',
+  TASK_ASSIGNMENT = 'task_assignment',
+  EMPLOYEE_RECORD = 'employee_record',
+  TENDER = 'tender',
+  // Regroupements métier utilisés par l'UI projet
+  ADMINISTRATIVE = 'administrative',
+  TECHNICAL = 'technical',
+  INSPECTION = 'inspection',
+  PAYMENT = 'payment',
+  PAYMENT_RECEIPT = 'payment_receipt',
+  SUPPLIER_UPLOAD = 'supplier_upload',
+  DELIVERY_NOTE = 'delivery_note',
   OTHER = 'other'
 }
 
@@ -320,7 +337,7 @@ export interface DocumentStatisticsDTO {
   expiredDocuments: number;
   totalSize: number;
   averageFileSize: number;
-  byType: Record<DocumentTypeUnion, number>;
+  byType: Partial<Record<DocumentTypeUnion, number>>;
   byStatus: Record<DocumentStatusUnion, number>;
   byPriority: Record<DocumentPriorityUnion, number>;
   byCategory: Record<string, number>;
@@ -550,7 +567,7 @@ export function normalizeDocumentPriority(value: string): DocumentPriorityUnion 
  * Obtient le libellé d'un type de document
  */
 export function getDocumentTypeLabel(type: DocumentTypeUnion): string {
-  const labels: Record<DocumentTypeUnion, string> = {
+  const labels: Partial<Record<DocumentTypeUnion, string>> = {
     [DocumentType.CONTRACT]: 'Contrat',
     [DocumentType.PLAN]: 'Plan',
     [DocumentType.SPECIFICATION]: 'Spécification',
@@ -619,7 +636,7 @@ export function getDocumentStatusColor(status: DocumentStatusUnion): string {
  * Obtient l'icône d'un type de document
  */
 export function getDocumentTypeIcon(type: DocumentTypeUnion): string {
-  const icons: Record<DocumentTypeUnion, string> = {
+  const icons: Partial<Record<DocumentTypeUnion, string>> = {
     [DocumentType.CONTRACT]: 'FileText',
     [DocumentType.PLAN]: 'Clipboard',
     [DocumentType.SPECIFICATION]: 'FileText',

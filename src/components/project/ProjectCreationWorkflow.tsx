@@ -114,14 +114,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
-  const [internalStep, setCurrentStepUi] = useState(controlledStep ?? 0);
-  const currentStep = controlledStep ?? internalStep;
+  // ⚠️ `controlledStep` (prop parent) est 1-indexé (Étape 1..8) alors que l'index
+  // interne de rendu est 0-indexé. On convertit à la frontière pour que l'onglet
+  // cliqué affiche bien le contenu correspondant.
+  const [internalStep, setCurrentStepUi] = useState(
+    controlledStep != null ? Math.max(0, controlledStep - 1) : 0
+  );
+  const currentStep = controlledStep != null ? Math.max(0, controlledStep - 1) : internalStep;
+
+  // Navigation unique : met à jour l'état interne ET remonte au parent (1-indexé)
+  const goToStep = useCallback(
+    (idx: number) => {
+      const next = Math.min(Math.max(0, idx), PROJECT_WORKFLOW_STEPS.length - 1);
+      setCurrentStepUi(next);
+      onStepChange?.(next + 1);
+    },
+    [onStepChange]
+  );
 
   // Keep the application layer in sync with UI tab selection (1-indexed in hook).
   useEffect(() => {
     setCurrentStep(currentStep + 1);
-    onStepChange?.(currentStep);
-  }, [currentStep, setCurrentStep, onStepChange]);
+  }, [currentStep, setCurrentStep]);
+
 
   // ============================================================
   // 🔌 Bridge Application Layer (useUnifiedProjectWorkflow) → WorkflowContext
@@ -172,7 +187,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
     const validation = await validateCurrentStep(currentStep + 1);
-    onStepValidation?.(currentStep, validation.isValid);
+    onStepValidation?.(currentStep + 1, validation.isValid);
     return { isValid: validation.isValid, errors: validation.errors };
   }, [formData, validateCurrentStep, currentStep, onStepValidation]);
 
@@ -209,7 +224,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       // Mutation already emitted a destructive toast — just stop here.
       return;
     }
-    setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
+    goToStep(currentStep + 1);
   };
 
   // 🎨 UI Layer - Save all workflow data using unified workflow (Rule #5)
@@ -352,7 +367,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           return (
             <motion.button
               key={step.id}
-              onClick={() => setCurrentStepUi(idx)}
+              onClick={() => goToStep(idx)}
               title={`${idx + 1}. ${step.title}${done ? ' ✓' : ''}`}
               aria-label={step.title}
               aria-current={active ? 'step' : undefined}
@@ -582,7 +597,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => setCurrentStepUi((prev) => Math.max(0, prev - 1))}
+          onClick={() => goToStep(currentStep - 1)}
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
