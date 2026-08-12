@@ -27,10 +27,10 @@ const emptyForm: CreateOrganizationDTO = {
 };
 
 const ORG_TYPES = [
-  { value: 'owner', label: 'MaÃ®tre d’ouvrage (propriÃ©taire)' },
-  { value: 'delegate', label: 'MaÃ®tre d’ouvrage dÃ©lÃ©guÃ©' },
+  { value: 'owner', label: 'Maître d’ouvrage (propriétaire)' },
+  { value: 'delegate', label: 'Maître d’ouvrage délégué' },
   { value: 'contractor', label: 'Entreprise / Contractant' },
-  { value: 'consultant', label: 'Bureau d’Ã©tudes / Consultant' },
+  { value: 'consultant', label: 'Bureau d’études / Consultant' },
   { value: 'donor', label: 'Bailleur / Financeur' },
   { value: 'other', label: 'Autre' },
 ];
@@ -132,7 +132,7 @@ const OrganizationsManager: React.FC = () => {
             {editingId ? 'Modifier l’organisation' : 'Nouvelle organisation'}
           </CardTitle>
           <CardDescription>
-            DÃ©finissez les organisations et leur hiÃ©rarchie. L’organisation par dÃ©faut est rattachÃ©e
+            Définissez les organisations et leur hiérarchie. L’organisation par défaut est rattachée
             automatiquement aux nouveaux projets.
           </CardDescription>
         </CardHeader>
