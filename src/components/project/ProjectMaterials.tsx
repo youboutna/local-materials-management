@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Package, MapPin, Edit2, Trash2, Calculator } from 'lucide-react';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
+import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MaterialSelector from '@/components/MaterialSelector';
@@ -79,25 +80,21 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
     try {
       console.log('Creating quantity takeoffs for materials:', materials);
       
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      const takeoffsToCreate = materials.map(material => ({
-        project_id: projectId,
-        material_id: material.materialId,
-        element_type: 'Standard Element',
-        unit: 'unité',
-        length: material.quantity,
-        width: null,
-        height: null,
-        note: 'Auto-généré lors de l\'ajout du matériau'
-      }));
+      const service = getQuantityTakeoffService();
+      await service.createMany(
+        materials.map((material) => ({
+          projectId,
+          materialId: material.materialId,
+          elementType: 'Standard Element',
+          unit: 'unité',
+          quantity: material.quantity,
+          length: material.quantity,
+          width: null,
+          height: null,
+          note: "Auto-généré lors de l'ajout du matériau",
+        })),
+      );
 
-      const { error } = await supabase
-        .from('quantity_takeoffs')
-        .insert(takeoffsToCreate);
-
-      if (error) throw error;
-      
       console.log('Quantity takeoffs created successfully');
       
       toast({

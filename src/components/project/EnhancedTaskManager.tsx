@@ -172,21 +172,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Use props or fallback to fetched data
   const currentTasks = propTasks || fetchedTasks || [];
 
-  // Fetch task dependencies
-  const { data: dependencies = [] } = useQuery({
-    queryKey: ['task-dependencies', projectId],
-    queryFn: async (): Promise<TaskDependency[]> => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('task_dependencies')
-        .select('*')
-        .in('task_id', (currentTasks || []).map(t => t.id));
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!currentTasks && currentTasks.length > 0,
-  });
+  // Fetch task dependencies (hexagonal: hook -> service -> adapter)
+  const { dependencies } = useProjectTaskDependenciesHex(
+    projectId,
+    (currentTasks || []).map(t => t.id)
+  );
 
   // Fetch project phases using hexagonal hook
   const { data: phases = [] } = useProjectPhasesForTasks(projectId);

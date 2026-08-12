@@ -1,109 +1,115 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { QuantityTakeoffService, QuantityTakeoffWithDetails, getQuantityTakeoffService} from '@/application/services/QuantityTakeoffService';
+/**
+ * Hexagonal hook for btp.quantity_takeoffs CRUD (UI -> Service -> Repository -> DB)
+ */
 
-export function useQuantityTakeoffsHex(projectId: string) {
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  getQuantityTakeoffService,
+  type QuantityTakeoffInput,
+} from '@/application/services/QuantityTakeoffService';
+import type { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
+
+export function useQuantityTakeoffsHex(projectId?: string) {
+  const service = getQuantityTakeoffService();
   const queryClient = useQueryClient();
+  const queryKey = ['quantity-takeoffs', projectId];
 
-  // Quantity takeoff service instance (uses default repos from constructor)
-  const quantityTakeoffService = getQuantityTakeoffService();
-
-  // Fetch quantity takeoffs
-  const { data: quantityTakeoffs, isLoading } = useQuery({
-    queryKey: ['quantity-takeoffs', projectId],
-    queryFn: async () => {
-      const result = await quantityTakeoffService.getQuantityTakeoffsByProject(projectId);
-      return result;
-    },
+  const query = useQuery<QuantityTakeoffWithDetails[]>({
+    queryKey,
+    queryFn: () => service.getByProject(projectId as string),
     enabled: !!projectId,
+    staleTime: 60 * 1000,
   });
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await quantityTakeoffService.deleteQuantityTakeoff(id);
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });
-      toast({
-        title: "Métré supprimé",
-        description: "Le métré a été supprimé avec succès.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting quantity takeoff:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le métré.",
-        variant: "destructive",
-      });
-    },
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] });
+
+  const createMutation = useMutation({
+    mutationFn: (input: QuantityTakeoffInput) => service.create(input),
+    onSuccess: invalidate,
   });
 
-  // Update mutation (inline edit quantity / unit_price)
+  const createManyMutation = useMutation({
+    mutationFn: (inputs: QuantityTakeoffInput[]) => service.createMany(inputs),
+    onSuccess: invalidate,
+  });
+
   const updateMutation = useMutation({
-    mutationFn: async ({ id, quantity, unit_price }: { id: string; quantity?: number; unit_price?: number }) => {
-      await quantityTakeoffService.updateQuantityTakeoff(id, {
-        ...(quantity !== undefined ? { quantity } : {}),
-        ...(unit_price !== undefined ? { unit_price } : {}),
-        // service uses project_id to locate the existing takeoff
-        ...( { project_id: projectId } as unknown as { project_id: string }),
-      } as never);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });
-      toast({ title: 'Métré mis à jour', description: 'La ligne a été enregistrée.' });
-    },
-    onError: (error) => {
-      console.error('Error updating quantity takeoff:', error);
-      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la ligne.', variant: 'destructive' });
-    },
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<QuantityTakeoffInput> }) =>
+      service.update(id, updates),
+    onSuccess: invalidate,
   });
 
-  // Helper functions using local data (synchronous)
-  const getTotalQuantityByUnit = (unit: string): number => {
-    if (!quantityTakeoffs) return 0;
-    return quantityTakeoffs
-      .filter(qt => qt.material?.unit === unit)
-      .reduce((sum, qt) => sum + qt.quantity, 0) || 0;
-  };
+  const updateRawMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Record<string, unknown> }) =>
+      service.updateRaw(id, updates),
+    onSuccess: invalidate,
+  });
 
-  const getTotalValue = (): number => {
-    if (!quantityTakeoffs) return 0;
-    return quantityTakeoffs?.reduce((sum, qt) => {
-      const pu = (qt as { unit_price?: number }).unit_price ?? qt.material?.price_per_unit ?? 0;
-      return sum + (qt.quantity * pu);
-    }, 0) || 0;
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => service.remove(id),
+    onSuccess: invalidate,
+  });
 
-  // Service-based helper functions
-  const getTotalQuantityByUnitFromService = async (unit: string): Promise<number> => {
-    try {
-      return await quantityTakeoffService.getTotalQuantityByUnit(projectId, unit);
-    } catch (error) {
-      console.error('Error getting total quantity by unit:', error);
-      return 0;
-    }
-  };
+  const replaceMutation = useMutation({
+    mutationFn: (inputs: QuantityTakeoffInput[]) =>
+      service.replaceForProject(projectId as string, inputs),
+    onSuccess: invalidate,
+  });
 
-  const getTotalValueFromService = async (): Promise<number> => {
-    try {
-      return await quantityTakeoffService.getTotalValue(projectId);
-    } catch (error) {
-      console.error('Error getting total value:', error);
-      return 0;
-    }
-  };
+  const rows = (query.data ?? []) as (QuantityTakeoffWithDetails & {
+    unit?: string;
+    quantity?: number;
+    unit_price?: number;
+  })[];
+
+  const getTotalQuantityByUnit = (unit: string) =>
+    rows
+      .filter((r) => r.unit === unit)
+      .reduce((sum, r) => sum + Number(r.quantity ?? 0), 0);
+
+  const getTotalValue = () =>
+    rows.reduce(
+      (sum, r) =>
+        sum +
+        Number(r.quantity ?? 0) *
+          Number(r.unit_price ?? (r as { material?: { price_per_unit?: number } }).material?.price_per_unit ?? 0),
+      0,
+    );
 
   return {
-    quantityTakeoffs,
-    isLoading,
+    takeoffs: query.data ?? [],
+    // Back-compat surface used by QuantityTakeoffsList
+    quantityTakeoffs: rows,
     deleteMutation,
-    updateMutation,
+    updateMutation: {
+      ...updateMutation,
+      mutate: (
+        payload: { id: string } & Record<string, unknown>,
+        options?: { onSuccess?: () => void; onError?: (e: unknown) => void },
+      ) => {
+        const { id, ...rest } = payload;
+        updateRawMutation.mutate({ id, updates: rest }, options as never);
+      },
+      mutateAsync: (payload: { id: string } & Record<string, unknown>) => {
+        const { id, ...rest } = payload;
+        return updateRawMutation.mutateAsync({ id, updates: rest });
+      },
+    },
     getTotalQuantityByUnit,
     getTotalValue,
-    getTotalQuantityByUnitFromService,
-    getTotalValueFromService
+    isLoading: query.isLoading,
+    error: query.error as Error | null,
+    refetch: query.refetch,
+    createTakeoff: createMutation.mutateAsync,
+    createTakeoffs: createManyMutation.mutateAsync,
+    updateTakeoff: updateMutation.mutateAsync,
+    deleteTakeoff: deleteMutation.mutateAsync,
+    replaceTakeoffs: replaceMutation.mutateAsync,
+    isSaving:
+      createMutation.isPending ||
+      createManyMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending ||
+      replaceMutation.isPending,
   };
 }

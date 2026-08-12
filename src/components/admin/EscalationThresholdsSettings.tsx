@@ -8,25 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useEscalationThresholdsHex } from '@/hooks/hexagonal/useEscalationThresholdsHex';
+import type { EscalationThresholdRow } from '@/domain/repositories/IEscalationThresholdRepository';
 
-interface EscalationThreshold {
-  id: string;
-  threshold_type: string;
-  threshold_name: string;
-  threshold_value: number;
-  threshold_unit: string;
-  severity_level: string;
-  escalation_level: number;
-  description: string | null;
-  is_active: boolean;
-}
+type EscalationThreshold = EscalationThresholdRow;
 
 const EscalationThresholdsSettings: React.FC = () => {
   const [thresholds, setThresholds] = useState<EscalationThreshold[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const {
+    thresholds: loadedThresholds,
+    isLoading: loading,
+    updateThresholds,
+    isSaving: saving,
+  } = useEscalationThresholdsHex();
 
   const thresholdTypes = [
     { key: 'project_delay', label: 'Retards de Projet', icon: Clock },
@@ -38,31 +33,8 @@ const EscalationThresholdsSettings: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadThresholds();
-  }, []);
-
-  const loadThresholds = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('escalation_thresholds')
-        .select('*')
-        .order('threshold_type', { ascending: true })
-        .order('threshold_value', { ascending: true });
-
-      if (error) throw error;
-      setThresholds((data || []).filter(d => d.id) as EscalationThreshold[]);
-    } catch (error) {
-      console.error('Error loading thresholds:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les seuils d\'escalade',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    setThresholds(loadedThresholds);
+  }, [loadedThresholds]);
 
   const updateThreshold = (id: string, field: keyof EscalationThreshold, value: any) => {
     setThresholds(prev => prev.map(threshold =>
@@ -72,26 +44,18 @@ const EscalationThresholdsSettings: React.FC = () => {
 
   const saveThresholds = async () => {
     try {
-      setSaving(true);
-      
-      const updates = thresholds.map(threshold => ({
-        id: threshold.id,
-        threshold_value: threshold.threshold_value,
-        severity_level: threshold.severity_level,
-        escalation_level: threshold.escalation_level,
-        description: threshold.description,
-        is_active: threshold.is_active,
-        updated_at: new Date().toISOString()
-      }));
-
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('escalation_thresholds')
-          .update(update)
-          .eq('id', update.id);
-
-        if (error) throw error;
-      }
+      await updateThresholds(
+        thresholds.map(threshold => ({
+          id: threshold.id,
+          updates: {
+            threshold_value: threshold.threshold_value,
+            severity_level: threshold.severity_level,
+            escalation_level: threshold.escalation_level,
+            description: threshold.description,
+            is_active: threshold.is_active,
+          },
+        }))
+      );
 
       toast({
         title: 'Succès',
@@ -104,8 +68,6 @@ const EscalationThresholdsSettings: React.FC = () => {
         description: 'Impossible de sauvegarder les seuils',
         variant: 'destructive'
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -254,7 +216,7 @@ const EscalationThresholdsSettings: React.FC = () => {
                             <TableCell>
                               <input
                                 type="checkbox"
-                                checked={threshold.is_active}
+                                checked={!!threshold.is_active}
                                 onChange={(e) => updateThreshold(threshold.id, 'is_active', e.target.checked)}
                                 className="rounded"
                               />

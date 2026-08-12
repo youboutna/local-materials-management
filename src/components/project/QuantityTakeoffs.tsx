@@ -10,6 +10,8 @@ import QuantityTakeoffForm from './QuantityTakeoffForm';
 import QuantityTakeoffsList from './QuantityTakeoffsList';
 import AdvancedQuantityCalculator from './AdvancedQuantityCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { getMaterialService } from '@/application/services/MaterialService';
 
 interface QuantityTakeoff {
   id: string;
@@ -42,37 +44,12 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
   const fetchQuantityTakeoffs = async () => {
     try {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data, error } = await btpClient
-        .from('quantity_takeoffs')
-        .select(`
-          id,
-          element_type,
-          unit,
-          length,
-          width,
-          height,
-          quantity,
-          unit_price,
-          total_value,
-          note,
-          material:materials(
-            id,
-            name,
-            unit,
-            price_per_unit
-          )
-        `)
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform the data to match our interface
-      const transformedTakeoffs: QuantityTakeoff[] = (data || []).filter(item => item.id).map(item => {
-        const mat = item.material as any;
-        return {
-          id: item.id!,
+      const service = getQuantityTakeoffService();
+      const rows = await service.getByProject(projectId);
+      const transformedTakeoffs: QuantityTakeoff[] = (rows || [])
+        .filter((item: any) => item?.id)
+        .map((item: any) => ({
+          id: item.id,
           element_type: item.element_type || '',
           unit: item.unit || '',
           length: item.length || 0,
@@ -83,14 +60,12 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           total_value: item.total_value || undefined,
           note: item.note || undefined,
           material: {
-            id: mat?.id || '',
-            name: mat?.name || '',
-            unit: mat?.unit || '',
-            price_per_unit: mat?.price_per_unit || 0
-          }
-        };
-      });
-      
+            id: item.material?.id || '',
+            name: item.material?.name || '',
+            unit: item.material?.unit || '',
+            price_per_unit: item.material?.price_per_unit || 0,
+          },
+        }));
       setTakeoffs(transformedTakeoffs);
     } catch (error) {
       console.error('Error fetching quantity takeoffs:', error);
@@ -104,64 +79,42 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
     }
   };
 
-  // Fetch project materials and automatically generate takeoffs
+  // Generate takeoffs from project materials (through services only)
   const fetchProjectMaterials = async () => {
     try {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data: projectMaterials, error } = await btpClient
-        .from('project_materials')
-        .select(`
-          quantity,
-          material:materials(
-            id,
-            name,
-            unit,
-            price_per_unit,
-            category
-          )
-        `)
-        .eq('project_id', projectId);
+      const projectMaterials = await getMaterialService().getProjectMaterials(projectId);
+      if (!projectMaterials?.length) return;
 
-      if (error) throw error;
+      const service = getQuantityTakeoffService();
+      const existing = await service.getByProject(projectId);
+      const existingMaterialIds = new Set(
+        (existing || []).map((t: any) => t.material_id).filter(Boolean),
+      );
 
-      // Auto-generate takeoffs for project materials
-      if (projectMaterials && projectMaterials.length > 0) {
-        const autoTakeoffs = projectMaterials.map(pm => {
-          const mat = pm.material as any;
+      const newTakeoffs = projectMaterials
+        .map((pm: any) => {
+          const mat = pm.material ?? pm;
+          const unit = mat?.unit || 'unité';
           return {
-            project_id: projectId,
-            material_id: mat?.id || '',
-            element_type: mat?.category || 'Material',
-            unit: mat?.unit || '',
+            projectId,
+            materialId: mat?.id || pm.materialId || pm.material_id || '',
+            elementType: mat?.category || 'Material',
+            unit,
             length: 1,
-            width: mat?.unit === 'm²' || mat?.unit === 'm³' ? 1 : undefined,
-            height: mat?.unit === 'm³' ? 1 : undefined,
-            quantity: pm.quantity,
-            note: `Auto-généré depuis les matériaux du projet`
+            width: unit === 'm²' || unit === 'm³' ? 1 : null,
+            height: unit === 'm³' ? 1 : null,
+            quantity: Number(pm.quantity ?? 0),
+            note: 'Auto-généré depuis les matériaux du projet',
           };
+        })
+        .filter((t) => t.materialId && !existingMaterialIds.has(t.materialId));
+
+      if (newTakeoffs.length > 0) {
+        await service.createMany(newTakeoffs);
+        toast({
+          title: "Métrés générés",
+          description: `${newTakeoffs.length} métrés automatiques créés depuis les matériaux du projet.`,
         });
-
-        // Check if auto-takeoffs already exist to avoid duplicates
-        const { data: existingTakeoffs } = await btpClient
-          .from('quantity_takeoffs')
-          .select('material_id')
-          .eq('project_id', projectId);
-
-        const existingMaterialIds = existingTakeoffs?.map(t => t.material_id) || [];
-        const newTakeoffs = autoTakeoffs.filter(t => !existingMaterialIds.includes(t.material_id));
-
-        if (newTakeoffs.length > 0) {
-          const { error: insertError } = await btpClient
-            .from('quantity_takeoffs')
-            .insert(newTakeoffs);
-
-          if (!insertError) {
-            toast({
-              title: "Métrés générés",
-              description: `${newTakeoffs.length} métrés automatiques créés depuis les matériaux du projet.`,
-            });
-          }
-        }
       }
     } catch (error) {
       console.error('Error generating automatic takeoffs:', error);

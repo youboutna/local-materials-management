@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Calculator, FileText, Plus, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 
 // Local Material interface for UI usage
 interface LocalMaterial {
@@ -105,14 +106,8 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
   const fetchExistingCalculations = async () => {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('quantity_takeoffs')
-        .select('*')
-        .eq('project_id', projectId);
-      
-      if (error) throw error;
-      
+      const data = await getQuantityTakeoffService().getByProject(projectId);
+
       const formattedCalculations: QuantityCalculation[] = (data || []).map((item: any) => ({
         id: item.id,
         materialId: item.material_id,
@@ -170,32 +165,20 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const saveCalculations = async () => {
     setLoading(true);
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      await supabase
-        .from('quantity_takeoffs')
-        .delete()
-        .eq('project_id', projectId);
-
-      // Then insert the new calculations
-      const calculationsToSave = calculations.map(calc => ({
-        project_id: projectId,
-        material_id: calc.materialId,
-        element_type: calc.elementType,
-        unit: calc.unit,
-        length: calc.length,
-        width: calc.width || null,
-        height: calc.height || null,
-        quantity: calc.quantity,
-        note: calc.note || null
-      }));
-
-      if (calculationsToSave.length > 0) {
-        const { error } = await supabase
-          .from('quantity_takeoffs')
-          .insert(calculationsToSave);
-        
-        if (error) throw error;
-      }
+      await getQuantityTakeoffService().replaceForProject(
+        projectId,
+        calculations.map((calc) => ({
+          projectId,
+          materialId: calc.materialId,
+          elementType: calc.elementType,
+          unit: calc.unit,
+          length: calc.length,
+          width: calc.width ?? null,
+          height: calc.height ?? null,
+          quantity: calc.quantity,
+          note: calc.note ?? null,
+        })),
+      );
 
       toast({
         title: "Métrés sauvegardés",
