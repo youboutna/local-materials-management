@@ -1,17 +1,59 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { MapPin, Package, Trash2 } from 'lucide-react';
 import { MaterialUIDTO } from '@/dtos/transforms';
 
 interface MaterialCardProps {
   material: MaterialUIDTO;
   onClick: () => void;
+  onDelete?: (materialId: string) => void;
 }
 
-const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
+const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete }) => {
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-1">
+    <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-1 relative">
+      {onDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 z-10 h-8 w-8"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Supprimer le matériau"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer ce matériau ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Le matériau "{material.name}" sera définitivement supprimé.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(material.id)}>
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       <CardContent className="p-4" onClick={onClick}>
         <div className="space-y-3">
           <div className="relative overflow-hidden rounded-md">

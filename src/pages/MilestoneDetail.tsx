@@ -107,7 +107,7 @@ const MilestoneDetail: React.FC = () => {
     try {
       const ok = await deleteMilestone(milestone.id);
       if (ok) {
-        milestoneToasts.deleteSuccess(milestone.title);
+        milestoneToasts.deleteSuccess();
         navigate(projectId ? `/projects/${projectId}` : -1 as unknown as string);
       } else {
         milestoneToasts.deleteError();
