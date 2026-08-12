@@ -5,7 +5,7 @@
  * Pattern: Hook → Service → Adapter → Supabase
  */
 
-import { AlertEntity } from '@/dtos/entities/Alert';
+import type { AlertData } from '@/dtos/entities/AlertDTO';
 import {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,

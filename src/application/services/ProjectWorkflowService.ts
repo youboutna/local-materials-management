@@ -25,6 +25,21 @@ import { TaskAssignmentService } from '@/application/services/TaskAssignmentServ
 import { getAlertService } from '@/application/services/AlertService';
 import { ReferentialType, getPhasesForReferential, getReferential } from '@/config/referentials';
 
+// Repository Ports
+import type { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
+import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
+import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import type { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
+import type { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import type { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
+import type { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
+import type { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import type { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
+import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
+
 // Domain Entities
 import { Phase } from '@/domain/entities/Phase';
 import { Project } from '@/domain/entities/Project';
@@ -453,7 +468,7 @@ export class ProjectWorkflowService {
     if (!step) return { isValid: false, errors: ['Invalid step number'], warnings: [] };
 
     for (const field of step.validation?.requiredFields || []) {
-      const value = field.split('.').reduce((acc, part) => acc && acc[part], data);
+      const value = field.split('.').reduce<any>((acc, part) => acc && (acc as any)[part], data as any);
       if (value === undefined || value === null || value === '') {
         errors.push(`Le champ "${field}" est obligatoire`);
       }
@@ -625,7 +640,6 @@ export class ProjectWorkflowService {
       startDate: projectData.startDate || new Date().toISOString().split('T')[0],
       endDate: projectData.endDate,
       status: ProjectStatus.PLANIFIE,
-      progress: 0,
       thumbnail: projectData.thumbnail || '',
       teamSize: projectData.teamSize || 1,
       projectReference: projectData.projectReference,

@@ -80,6 +80,7 @@ export interface CreateAlertData {
   availableActions?: string[];
   deadline?: string;
   recurrence?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateAlertData {
