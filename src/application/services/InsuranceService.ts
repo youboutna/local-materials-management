@@ -133,9 +133,11 @@ export class InsuranceService {
         activeCertificates,
         expiredCertificates,
         expiringSoonCertificates,
+        missingCertificates: 0,
         totalCoverageAmount,
         byType,
-        byStatus
+        byStatus,
+        byProject: {}
       };
     } catch (error) {
       console.error('InsuranceService.getInsuranceStatistics failed:', error);

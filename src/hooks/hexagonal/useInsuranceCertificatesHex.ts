@@ -3,6 +3,7 @@
  * Replaces direct supabase calls in UnifiedInsuranceManager.tsx
  */
 
+import type { InsuranceCertificateFormData } from '@/dtos/entities/InsuranceDTO';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { InsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
@@ -30,7 +31,10 @@ export function useInsuranceCertificatesHex(projectId?: string) {
   // Create certificate
   const createMutation = useMutation({
     mutationFn: async (data: InsuranceCertificateCreateData) => {
-      return await insuranceService.createCertificate(data);
+      return await insuranceService.createCertificate({
+        ...data,
+        coverageType: data.coverageType ?? data.insuranceType ?? 'responsabilite_civile',
+      } as InsuranceCertificateFormData);
     },
     onSuccess: () => {
       toast({
