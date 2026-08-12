@@ -10,7 +10,7 @@ import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
-import { supabase } from '@/integrations/supabase/client';
+import { getDocumentService } from '@/application/services/DocumentService';
 
 interface SupplierDocumentUploadProps {
   supplier: Supplier;
@@ -54,30 +54,19 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
         mimeType = uploadData.file.type;
       }
 
-      const documentInsert = {
+      // ✅ Hexagonal: UI → Service → Repository → Adapter → DB
+      return await getDocumentService().createDocument({
         title: uploadData.title,
-        description: uploadData.description,
-        document_type: uploadData.document_type,
-        supplier_id: supplier.id,
+        description: uploadData.description || null,
+        documentType: uploadData.document_type,
+        supplierId: supplier.id,
         status: uploadData.status,
-        file_url: fileUrl,
-        file_name: uploadedFileName,
-        file_size: fileSize,
-        mime_type: mimeType,
-        uploaded_by: user.id
-      };
-
-      const { data, error } = await supabase
-        .from('documents')
-        .insert(documentInsert as any)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      return data;
+        fileUrl,
+        fileName: uploadedFileName,
+        fileSize,
+        mimeType,
+        uploadedBy: user.id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-documents', supplier.id] });
