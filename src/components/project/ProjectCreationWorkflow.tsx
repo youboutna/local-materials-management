@@ -71,6 +71,14 @@ interface ProjectCreationWorkflowProps {
   initialData?: ProjectWorkflowData;
   mode?: "create" | "edit";
   projectId?: string;
+  /** Étape courante pilotée par la page (0-indexée) */
+  currentStep?: number;
+  /** Notifie la page du changement d'étape (0-indexé) */
+  onStepChange?: (step: number) => void;
+  /** Notifie la page du résultat de validation d'une étape */
+  onStepValidation?: (step: number, isValid: boolean) => void;
+  /** Soumission en cours pilotée par la page */
+  isSubmitting?: boolean;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -80,6 +88,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   initialData,
   mode = "create",
   projectId,
+  currentStep: controlledStep,
+  onStepChange,
+  onStepValidation,
+  isSubmitting,
 }) => {
 
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
@@ -101,12 +113,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
-  const [currentStep, setCurrentStepUi] = useState(0);
+  const [internalStep, setCurrentStepUi] = useState(controlledStep ?? 0);
+  const currentStep = controlledStep ?? internalStep;
 
   // Keep the application layer in sync with UI tab selection (1-indexed in hook).
   useEffect(() => {
     setCurrentStep(currentStep + 1);
-  }, [currentStep, setCurrentStep]);
+    onStepChange?.(currentStep);
+  }, [currentStep, setCurrentStep, onStepChange]);
 
   // 🎨 UI Layer - Use unified workflow data (Rule #5: UI Layer Separation)
   const projectData = formData?.projectData;
@@ -116,8 +130,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
     const validation = await validateCurrentStep(currentStep + 1);
+    onStepValidation?.(currentStep, validation.isValid);
     return { isValid: validation.isValid, errors: validation.errors };
-  }, [formData, validateCurrentStep, currentStep]);
+  }, [formData, validateCurrentStep, currentStep, onStepValidation]);
 
   // ✅ Steps from centralized referential (ARCHITECTURE_REFERENTIELS)
   // — labels/validation/icones centralisés ; pas de hardcoding UI.
