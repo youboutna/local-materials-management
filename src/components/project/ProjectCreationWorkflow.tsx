@@ -187,7 +187,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
     if (!formData) return { isValid: false, errors: ['No form data available'] };
     const validation = await validateCurrentStep(currentStep + 1);
-    onStepValidation?.(currentStep, validation.isValid);
+    onStepValidation?.(currentStep + 1, validation.isValid);
     return { isValid: validation.isValid, errors: validation.errors };
   }, [formData, validateCurrentStep, currentStep, onStepValidation]);
 
@@ -224,7 +224,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       // Mutation already emitted a destructive toast — just stop here.
       return;
     }
-    setCurrentStepUi((prev) => Math.min(prev + 1, steps.length - 1));
+    goToStep(currentStep + 1);
   };
 
   // 🎨 UI Layer - Save all workflow data using unified workflow (Rule #5)
@@ -367,7 +367,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           return (
             <motion.button
               key={step.id}
-              onClick={() => setCurrentStepUi(idx)}
+              onClick={() => goToStep(idx)}
               title={`${idx + 1}. ${step.title}${done ? ' ✓' : ''}`}
               aria-label={step.title}
               aria-current={active ? 'step' : undefined}
@@ -597,7 +597,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => setCurrentStepUi((prev) => Math.max(0, prev - 1))}
+          onClick={() => goToStep(currentStep - 1)}
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
