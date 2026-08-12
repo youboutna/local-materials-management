@@ -542,6 +542,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
            {currentStep === 5 && (
              <EnhancedComplianceStep
+               mode={mode === "edit" ? "edit" : "create"}
+               isEditing={mode === "edit"}
                workflowData={formData}
                onStepComplete={(stepData) => {
                  updateFormData({ 
