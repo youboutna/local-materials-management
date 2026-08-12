@@ -144,7 +144,7 @@ export interface CreateInsuranceCertificateDTO {
   notes?: string;
   certificateUrl?: string;
   uploadedBy?: string;
-  documents?: string[];
+  documents?: string[] | Record<string, unknown>[];
   
   // Legacy snake_case
   project_id?: string;
@@ -176,7 +176,7 @@ export interface UpdateInsuranceCertificateDTO {
   notes?: string;
   certificateUrl?: string;
   updatedBy?: string;
-  documents?: string[];
+  documents?: string[] | Record<string, unknown>[];
   
   // Legacy snake_case
   contractor_name?: string;
@@ -392,3 +392,6 @@ export type UpdateInsuranceData = UpdateInsuranceCertificateDTO;
 export type InsuranceFilter = InsuranceFilterDTO;
 export type InsuranceStatistics = InsuranceStatisticsDTO;
 export type InsuranceAlert = InsuranceAlertDTO;
+// Aliases "Request" historiques (UI / hooks)
+export type CreateInsuranceRequestDTO = CreateInsuranceCertificateDTO;
+export type UpdateInsuranceRequestDTO = UpdateInsuranceCertificateDTO;

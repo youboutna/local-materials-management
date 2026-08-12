@@ -19,8 +19,8 @@ interface Alert {
   resolved?: boolean;
   resolvedAt?: Date;
   resolvedBy?: string;
-  assignedActions?: unknown;
-  actionProofs?: unknown;
+  assignedActions?: string[];
+  actionProofs?: Record<string, unknown>[];
   metadata?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;

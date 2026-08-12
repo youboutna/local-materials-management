@@ -6,7 +6,8 @@
  * Pure business logic - NO external dependencies
  */
 
-import { AlertSeverity, AlertType } from '@/domain/entities/Alert';
+import { Alert, AlertSeverity, AlertType } from '@/domain/entities/Alert';
+import { Project } from '@/domain/entities/Project';
 
 export interface IProjectManagerRepository {
   getAlerts(): Promise<Alert[]>;
