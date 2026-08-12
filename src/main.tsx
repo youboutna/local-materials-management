@@ -6,7 +6,7 @@ import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DEV_MODE } from './config/constants';
 import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
-import { SupabaseAlignmentRepository } from '@/infrastructure/supabase/adapters/SupabaseAlignmentRepository';
+import { SupabaseAlignmentRepository } from '@/infrastructure/adapters/supabase/SupabaseAlignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateAppConfig } from '@/config/app-validate';
 
