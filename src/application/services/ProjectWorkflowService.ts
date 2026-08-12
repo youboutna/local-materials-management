@@ -385,18 +385,39 @@ export class ProjectWorkflowService {
   // WORKFLOW
   // ============================================================
 
+  /**
+   * Étapes du workflow — dérivées du référentiel unique
+   * `src/config/referentials/projects/project-workflow-steps.referential.ts`
+   * afin que l'UI (stepper) et la validation applicative partagent la même vérité.
+   */
   getWorkflowSteps(): WorkflowStep[] {
-    return [
-      { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['projectData.title'] } },
-      { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectData.location'] } },
-      { id: 'phases', name: 'phases', title: 'Planification WBS', description: 'Phase → Step → Task', order: 4, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } },
-      { id: 'risks', name: 'risks', title: 'Risques', description: 'Analyse et gestion des risques', order: 5, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'compliance', name: 'compliance', title: 'Conformité', description: 'Standards et réglementations', order: 6, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'strategy', name: 'strategy', title: 'Liens stratégiques', description: 'Stratégies & budget', order: 7, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 8, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
-    ];
+    const REQUIRED_FIELDS: Record<string, string[]> = {
+      project_info: ['projectData.title'],
+      stakeholders: [],
+      location: [],
+      wbs: [],
+      risks: [],
+      compliance: [],
+      strategic_linkage: [],
+      validation: [],
+    };
+    const MANDATORY_CODES = new Set(['project_info', 'location', 'wbs', 'validation']);
+
+    return PROJECT_WORKFLOW_STEPS.map((step) => ({
+      id: step.code.replace(/_/g, '-'),
+      name: step.code,
+      title: step.title,
+      description: step.description,
+      order: step.id,
+      isCompleted: false,
+      isRequired: MANDATORY_CODES.has(step.code),
+      validation: {
+        rules: step.code === 'project_info' ? ['title_required', 'budget_positive'] : [],
+        requiredFields: REQUIRED_FIELDS[step.code] ?? [],
+      },
+    })) as WorkflowStep[];
   }
+
 
   getEditWorkflowSteps(): WorkflowStep[] {
     return this.getWorkflowSteps();
