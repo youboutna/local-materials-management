@@ -202,7 +202,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     projectId, 
     isNewProject, 
     mode, 
-    isPersisted,
+    isPersistedEffective,
     contextComplianceItems,
     contextBankGuarantees,
     contextInsurancePolicies,
@@ -258,7 +258,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Document ajouté avec succès",
     });
-  }, [canManageSubObjects, addDocument, setDirty, toast]);
+  }, [canPersistSubObjects, addDocument, setDirty, toast]);
 
   const handleAddInsurance = useCallback((policy: InsuranceCertificateDTO) => {
     if (!canPersistSubObjects) {
@@ -275,7 +275,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Assurance ajoutée avec succès",
     });
-  }, [canManageSubObjects, addInsurance, setDirty, toast]);
+  }, [canPersistSubObjects, addInsurance, setDirty, toast]);
 
   const handleAddBankGuarantee = useCallback((guarantee: BankGuaranteeDTO) => {
     if (!canPersistSubObjects) {
@@ -292,7 +292,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Garantie ajoutée avec succès",
     });
-  }, [canManageSubObjects, addBankGuarantee, setDirty, toast]);
+  }, [canPersistSubObjects, addBankGuarantee, setDirty, toast]);
 
   const handleRemoveDocument = useCallback((id: string) => {
     if (!canPersistSubObjects) return;
@@ -303,7 +303,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Document supprimé",
     });
-  }, [canManageSubObjects, removeDocument, setDirty, toast]);
+  }, [canPersistSubObjects, removeDocument, setDirty, toast]);
 
   const handleRemoveInsurance = useCallback((id: string) => {
     if (!canPersistSubObjects) return;
@@ -314,7 +314,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Assurance supprimée",
     });
-  }, [canManageSubObjects, removeInsurance, setDirty, toast]);
+  }, [canPersistSubObjects, removeInsurance, setDirty, toast]);
 
   const handleRemoveBankGuarantee = useCallback((id: string) => {
     if (!canPersistSubObjects) return;
@@ -325,7 +325,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Garantie supprimée",
     });
-  }, [canManageSubObjects, removeBankGuarantee, setDirty, toast]);
+  }, [canPersistSubObjects, removeBankGuarantee, setDirty, toast]);
 
   // ============================================================
   // Navigation Handlers
@@ -434,7 +434,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     );
   }
 
-  if (loadError && !isNewProject && isPersisted) {
+  if (loadError && !isNewProject && isPersistedEffective) {
     return (
       <div className="py-8">
         <Alert variant="destructive">
