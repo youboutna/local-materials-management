@@ -308,9 +308,43 @@ export class DocumentService {
     }
   }
 
+  /**
+   * Get documents attached to a supplier
+   */
+  async getSupplierDocuments(supplierId: string): Promise<DocumentDTO[]> {
+    try {
+      if (!supplierId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Supplier ID is required');
+      }
+      const documents = await this.documentRepository.findBySupplierId(supplierId);
+      return DocumentTransformer.toDTOList(documents);
+    } catch (error) {
+      console.error('DocumentService.getSupplierDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get supplier documents');
+    }
+  }
+
+  /**
+   * Free-text search, optionally filtered by document type
+   */
+  async searchDocuments(query: string, documentType?: string): Promise<DocumentDTO[]> {
+    try {
+      const term = (query || '').trim();
+      const documents = term
+        ? await this.documentRepository.search(term)
+        : await this.documentRepository.findAll();
+      const dtos = DocumentTransformer.toDTOList(documents);
+      return documentType ? dtos.filter((d) => d.documentType === documentType) : dtos;
+    } catch (error) {
+      console.error('DocumentService.searchDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to search documents');
+    }
+  }
+
   // ============================================================================
   // MUTATION METHODS
   // ============================================================================
+
 
   /**
    * Create document
