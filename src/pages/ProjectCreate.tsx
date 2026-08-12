@@ -31,6 +31,7 @@ import { AppLayout } from "@/components/layout";
 import type { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { WorkflowProvider } from "@/contexts/ProjectWorkflowContext";
 
 interface SelectedMaterial {
   materialId: string;
@@ -293,4 +294,15 @@ const ProjectCreate = () => {
   );
 };
 
-export default ProjectCreate;
+/**
+ * Page exportée : le WorkflowProvider enveloppe l'écran de création afin que
+ * toutes les étapes partagent le même contexte (mode="create" →
+ * canManageSubObjects = false jusqu'à la persistance du projet).
+ */
+const ProjectCreatePage = () => (
+  <WorkflowProvider mode="create">
+    <ProjectCreate />
+  </WorkflowProvider>
+);
+
+export default ProjectCreatePage;

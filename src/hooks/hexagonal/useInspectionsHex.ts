@@ -60,6 +60,7 @@ export interface UseInspectionsHexResult {
   refetch: () => void;
   createInspection: (data: CreateInspectionRequestDto) => void;
   updateInspection: ({ id, data }: { id: string; data: UpdateInspectionRequestDto }) => void;
+  updateInspectionAsync: ({ id, data }: { id: string; data: UpdateInspectionRequestDto }) => Promise<unknown>;
   deleteInspection: (id: string) => void;
   isCreating: boolean;
   isUpdating: boolean;
@@ -459,6 +460,7 @@ export const useInspectionsHex = (projectId?: string): UseInspectionsHexResult =
     refetch,
     createInspection: createInspectionMutation.mutate,
     updateInspection: updateInspectionMutation.mutate,
+    updateInspectionAsync: updateInspectionMutation.mutateAsync,
     deleteInspection: deleteInspectionMutation.mutate,
     isCreating: createInspectionMutation.isPending,
     isUpdating: updateInspectionMutation.isPending,

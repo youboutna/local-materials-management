@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
+import { PhaseStatus } from '@/dtos/entities/PhaseDTO';
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
@@ -41,7 +42,7 @@ const PhaseDetail: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   useLanguage();
 
-  const { phase, isLoading: loading, error } = usePhaseDetails(phaseId);
+  const { phase, isLoading: loading, error, updatePhaseAsync, isUpdatingPhase } = usePhaseDetails(phaseId);
 
   const vm = useMemo(() => (phase ? toPhaseViewModel(phase as unknown as Record<string, unknown>) : null), [phase]);
 
@@ -83,6 +84,16 @@ const PhaseDetail: React.FC = () => {
   }
 
   const { title, description, progress, budget, estimatedDuration, startDate, endDate, location } = vm;
+
+  const isClosed = vm.status === PhaseStatus.COMPLETED;
+
+  const handleClosePhase = async () => {
+    try {
+      await updatePhaseAsync({ status: PhaseStatus.COMPLETED });
+    } catch (e) {
+      // Toast d'erreur déjà géré par usePhaseDetails
+    }
+  };
 
 
   return (
@@ -266,6 +277,16 @@ const PhaseDetail: React.FC = () => {
                   </div>
                 )}
                 <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={handleClosePhase}
+                    disabled={isClosed || isUpdatingPhase}
+                    aria-label="Clôturer la phase"
+                  >
+                    <Flag className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {isClosed ? 'Phase clôturée' : isUpdatingPhase ? 'Clôture en cours…' : 'Clôturer la phase'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

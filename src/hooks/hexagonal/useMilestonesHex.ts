@@ -3,6 +3,7 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getMilestoneService } from '@/application/services/MilestoneService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
@@ -104,6 +105,20 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     }
   }, [fetchMilestones]);
 
+  const deleteMilestone = useCallback(async (
+    milestoneId: string
+  ): Promise<boolean> => {
+    try {
+      const milestoneService = getMilestoneService();
+      await milestoneService.deleteMilestone(milestoneId);
+      await fetchMilestones();
+      return true;
+    } catch (err) {
+      console.error('Error deleting milestone:', err);
+      return false;
+    }
+  }, [fetchMilestones]);
+
   const toggleMilestoneStatus = useCallback(async (
     id: string,
     currentStatus: string
@@ -144,6 +159,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     refetch,
     createMilestone,
     updateMilestone,
+    deleteMilestone,
     toggleMilestoneStatus,
     progress: calculateProgress(),
     stats: {

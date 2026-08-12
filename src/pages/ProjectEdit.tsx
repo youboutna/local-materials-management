@@ -30,6 +30,7 @@ import { AppLayout } from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { useUnifiedProjectWorkflow } from "@/hooks/hexagonal/useUnifiedProjectWorkflow";
+import { WorkflowProvider } from "@/contexts/ProjectWorkflowContext";
 
 interface SelectedMaterial {
   materialId: string;
@@ -446,4 +447,15 @@ const ProjectEdit = () => {
   );
 };
 
-export default ProjectEdit;
+/**
+ * Page exportée : le WorkflowProvider enveloppe l'écran d'édition afin que
+ * toutes les étapes (dont EnhancedComplianceStep) partagent le même contexte.
+ * mode="edit" → canManageSubObjects = true dès que le projet est persisté.
+ */
+const ProjectEditPage = () => (
+  <WorkflowProvider mode="edit">
+    <ProjectEdit />
+  </WorkflowProvider>
+);
+
+export default ProjectEditPage;
