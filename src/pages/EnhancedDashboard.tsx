@@ -204,9 +204,9 @@ const EnhancedDashboardContent = () => {
                               {alert.severity}
                             </Badge>
                           </div>
-                          {alert.description && (
+                          {alert.message && (
                             <p className="text-sm text-muted-foreground mb-2">
-                              {alert.description}
+                              {alert.message}
                             </p>
                           )}
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
