@@ -92,6 +92,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const projectData = workflowData?.projectData || {} as ProjectDTO;
   const projectId = projectData.id || state.projectId;
   const isNewProject = !projectId || projectId === 'new-project' || projectId === '';
+  // ✅ En mode EDIT sur un projet existant, la persistance est acquise même si le
+  // contexte n'a pas encore reçu setPersisted(true) (hydratation asynchrone).
+  const isEditable = mode === 'edit' && !isNewProject;
+  const canPersistSubObjects = canManageSubObjects || isEditable;
+  const isPersistedEffective = isPersisted || isEditable;
   
   // Données du contexte
   const contextDocuments = state.relatedData.documents || [];
@@ -144,7 +149,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   // ============================================================
   const loadComplianceData = useCallback(async () => {
     // ⚠️ En mode CREATE ou si c'est un nouveau projet, ne pas charger depuis la DB
-    if (isNewProject || mode === 'create' || !isPersisted) {
+    if (isNewProject || mode === 'create' || !isPersistedEffective) {
       // Utiliser les données du contexte
       setComplianceItems(contextComplianceItems);
       setBankGuarantees(contextBankGuarantees);
@@ -197,7 +202,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     projectId, 
     isNewProject, 
     mode, 
-    isPersisted,
+    isPersistedEffective,
     contextComplianceItems,
     contextBankGuarantees,
     contextInsurancePolicies,
@@ -239,7 +244,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   // ============================================================
 
   const handleAddDocument = useCallback((doc: DocumentDTO) => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour ajouter des documents",
@@ -253,10 +258,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Document ajouté avec succès",
     });
-  }, [canManageSubObjects, addDocument, setDirty, toast]);
+  }, [canPersistSubObjects, addDocument, setDirty, toast]);
 
   const handleAddInsurance = useCallback((policy: InsuranceCertificateDTO) => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour ajouter des assurances",
@@ -270,10 +275,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Assurance ajoutée avec succès",
     });
-  }, [canManageSubObjects, addInsurance, setDirty, toast]);
+  }, [canPersistSubObjects, addInsurance, setDirty, toast]);
 
   const handleAddBankGuarantee = useCallback((guarantee: BankGuaranteeDTO) => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour ajouter des garanties",
@@ -287,10 +292,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Garantie ajoutée avec succès",
     });
-  }, [canManageSubObjects, addBankGuarantee, setDirty, toast]);
+  }, [canPersistSubObjects, addBankGuarantee, setDirty, toast]);
 
   const handleRemoveDocument = useCallback((id: string) => {
-    if (!canManageSubObjects) return;
+    if (!canPersistSubObjects) return;
     removeDocument(id);
     setDocuments(prev => prev.filter(d => d.id !== id));
     setDirty(true);
@@ -298,10 +303,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Document supprimé",
     });
-  }, [canManageSubObjects, removeDocument, setDirty, toast]);
+  }, [canPersistSubObjects, removeDocument, setDirty, toast]);
 
   const handleRemoveInsurance = useCallback((id: string) => {
-    if (!canManageSubObjects) return;
+    if (!canPersistSubObjects) return;
     removeInsurance(id);
     setInsurancePolicies(prev => prev.filter(p => p.id !== id));
     setDirty(true);
@@ -309,10 +314,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Assurance supprimée",
     });
-  }, [canManageSubObjects, removeInsurance, setDirty, toast]);
+  }, [canPersistSubObjects, removeInsurance, setDirty, toast]);
 
   const handleRemoveBankGuarantee = useCallback((id: string) => {
-    if (!canManageSubObjects) return;
+    if (!canPersistSubObjects) return;
     removeBankGuarantee(id);
     setBankGuarantees(prev => prev.filter(g => g.id !== id));
     setDirty(true);
@@ -320,14 +325,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       title: "Succès",
       description: "Garantie supprimée",
     });
-  }, [canManageSubObjects, removeBankGuarantee, setDirty, toast]);
+  }, [canPersistSubObjects, removeBankGuarantee, setDirty, toast]);
 
   // ============================================================
   // Navigation Handlers
   // ============================================================
 
   const navigateToDocumentPage = useCallback(() => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour accéder à la gestion des documents",
@@ -338,7 +343,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   }, [navigate, projectId, canManageSubObjects, toast]);
 
   const navigateToInsurancePage = useCallback(() => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour accéder à la gestion des assurances",
@@ -349,7 +354,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   }, [navigate, projectId, canManageSubObjects, toast]);
 
   const navigateToBankGuaranteePage = useCallback(() => {
-    if (!canManageSubObjects) {
+    if (!canPersistSubObjects) {
       toast({
         title: "Information",
         description: "Veuillez d'abord sauvegarder le projet pour accéder à la gestion des garanties",
@@ -429,7 +434,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     );
   }
 
-  if (loadError && !isNewProject && isPersisted) {
+  if (loadError && !isNewProject && isPersistedEffective) {
     return (
       <div className="py-8">
         <Alert variant="destructive">
@@ -448,7 +453,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   // Mode CREATE - Aperçu uniquement
   // ============================================================
   
-  if (isNewProject || mode === 'create' || !isPersisted) {
+  if (isNewProject || mode === 'create' || !isPersistedEffective) {
     return (
       <div className="space-y-6">
         <Card>
