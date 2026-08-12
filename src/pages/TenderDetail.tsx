@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTenderHex, useTenderSharingSecrets } from '@/hooks/hexagonal';
+// NOTE: RepositoryFactory is used below for a read-only document count query;
+// no dedicated tender-document-count service method exists yet.
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, DollarSign, ExternalLink, FileSignature, FileText, KeyRound, Users } from 'lucide-react';

@@ -20,7 +20,7 @@ const InspectionEdit = () => {
   const [saving, setSaving] = useState(false);
 
   const { inspection, isLoading } = useInspectionHex(id);
-  const { updateInspection } = useInspectionsHex();
+  const { updateInspectionAsync } = useInspectionsHex();
 
   const [formData, setFormData] = useState({
     projectId: '',
@@ -70,7 +70,7 @@ const InspectionEdit = () => {
     try {
       setSaving(true);
       
-      await updateInspection({
+      await updateInspectionAsync({
         id,
         data: {
           inspector: formData.inspector,
