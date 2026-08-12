@@ -178,7 +178,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
             <div>
               <h5 className="font-medium">Total par unité</h5>
               <div className="space-y-2">
-                {['m', 'm²', 'm³', 'kg', 't', 'ml'].map((unit) => {
+                {TAKEOFF_UNIT_CODES.map((unit) => {
                   const quantity = getTotalQuantityByUnit(unit);
                   return (
                     <div key={unit} className="flex justify-between">
