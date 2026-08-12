@@ -257,7 +257,17 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       supabase.from('project_milestones').select('*').eq('project_id', id),
       supabase.from('project_stakeholders').select('*').eq('project_id', id),
       supabase.from('project_resources').select('*').eq('project_id', id),
-      supabase.from('project_contacts').select('*').eq('project_id', id),
+      // `project_contacts` est optionnelle selon les déploiements (42P01 sinon) :
+      // on la traite en best-effort pour ne pas casser l'hydratation du projet.
+      supabase
+        .from('project_contacts')
+        .select('*')
+        .eq('project_id', id)
+        .then(
+          (res) => (res.error ? { data: [], error: null } : res),
+          () => ({ data: [], error: null })
+        ),
+
       supabase.from('project_materials').select('*').eq('project_id', id),
     ]);
 
