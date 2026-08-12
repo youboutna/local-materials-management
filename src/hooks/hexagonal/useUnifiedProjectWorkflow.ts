@@ -21,6 +21,8 @@ export interface UnifiedWorkflowState {
   error?: string;
   lastSavedAt?: string;
   lastValidationErrors?: string[];
+  /** Numéros d'étapes déjà complétées (1-indexé) */
+  completedSteps: number[];
 }
 
 export interface SaveResult {
@@ -103,7 +105,7 @@ export function useUnifiedProjectWorkflow(
     staleTime: 60_000
   });
 
-  const { data: loadedData, isLoading: dataLoading, error: dataError } = useQuery({
+  const { data: loadedData, isLoading: dataLoading, error: dataError, refetch: refetchProjectData } = useQuery({
     queryKey: ['project-workflow-data', projectId],
     queryFn: async () => {
       if (mode === 'edit' && projectId) {
@@ -249,7 +251,16 @@ export function useUnifiedProjectWorkflow(
     isStepCompleted,
     progressPercentage,
     isLoading: dataLoading || saveStepMutation.isPending || validateStepMutation.isPending,
-    error: dataError,
+    error: dataError instanceof Error ? dataError.message : (dataError ? String(dataError) : null),
+    /** Recharge les données projet depuis la base (round-trip DB -> UI) */
+    loadProjectData: async () => {
+      const result = await refetchProjectData();
+      if (result.data) {
+        setFormData(result.data as unknown as ProjectWorkflowData);
+        setOriginalData(result.data as unknown as ProjectWorkflowData);
+      }
+      return result.data as unknown as ProjectWorkflowData | null;
+    },
     updateFormData,
     nextStep,
     previousStep,
