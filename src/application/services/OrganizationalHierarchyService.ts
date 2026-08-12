@@ -35,6 +35,7 @@ export interface ProjectOrganization {
   contract_amount: number | null;
   contract_start_date: string | null;
   contract_end_date: string | null;
+  organization_name?: string | null;
 }
 
 const POSITION_TO_LEVEL: Array<{ match: RegExp; level: HierarchyLevel }> = [
@@ -123,16 +124,27 @@ export class OrganizationalHierarchyService {
     const { btpClient } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await (btpClient as any)
       .from('project_organizations')
-      .select('id, project_id, organization_id, role, is_primary, contract_amount, contract_start_date, contract_end_date')
+      .select('id, project_id, organization_id, role, is_primary, contract_amount, contract_start_date, contract_end_date, organizations:organization_id(name)')
       .eq('project_id', projectId);
 
     if (error) {
       console.error('OrganizationalHierarchyService.getProjectOrganizations', error);
       return [];
     }
-    return (data ?? []) as ProjectOrganization[];
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      project_id: row.project_id,
+      organization_id: row.organization_id,
+      role: row.role ?? null,
+      is_primary: row.is_primary ?? null,
+      contract_amount: row.contract_amount ?? null,
+      contract_start_date: row.contract_start_date ?? null,
+      contract_end_date: row.contract_end_date ?? null,
+      organization_name: row.organizations?.name ?? null,
+    }));
   }
 }
+
 
 export default OrganizationalHierarchyService;
 

@@ -221,7 +221,7 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
 ${action.message}
 
 DÉTAILS HIÉRARCHIQUES:
-- Organisation: ${primaryOrg?.organizations?.name || 'N/A'}
+- Organisation: ${primaryOrg?.organization_name || 'N/A'}
 - Niveau d'escalade: ${action.escalationLevel?.toUpperCase() || 'ÉQUIPE'}
 - Position destinataire: ${target.position_title}
 - Département: ${(target as any).department}
@@ -247,7 +247,7 @@ CONTEXTE PROJET:
           contractorId: action.contractorId,
           priority: action.priority,
           hierarchyLevel: target.hierarchy_level,
-          organizationName: primaryOrg?.organizations?.name,
+          organizationName: primaryOrg?.organization_name,
           targetPosition: target.position_title,
           targetDepartment: (target as any).department
         }
