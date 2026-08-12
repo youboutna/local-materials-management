@@ -26,7 +26,9 @@ const CATEGORIES: { value: TenderCategory; label: string }[] = [
   { value: 'overhead', label: 'Frais généraux' },
 ];
 
-const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff'];
+import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+
+const UNITS = DQE_UNIT_CODES.filter((code) => code !== 'ens' && code !== 'lot');
 
 interface Props {
   tenderId: string;

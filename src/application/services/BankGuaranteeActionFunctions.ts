@@ -212,15 +212,16 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
     };
 
     // Get project organizations for context
-    const projectOrgs = await (OrganizationalHierarchyService as any).getProjectOrganizations?.(action.projectId) ?? [];
-    const primaryOrg = projectOrgs.find((org: any) => org.is_primary) || projectOrgs[0];
+    const projectOrgs = await OrganizationalHierarchyService.getProjectOrganizations(action.projectId);
+    const primaryOrg = projectOrgs.find((org) => org.is_primary) || projectOrgs[0];
+
 
     for (const target of escalationTargets) {
       const hierarchyMessage = `
 ${action.message}
 
 DÉTAILS HIÉRARCHIQUES:
-- Organisation: ${primaryOrg?.organizations?.name || 'N/A'}
+- Organisation: ${primaryOrg?.organization_name || 'N/A'}
 - Niveau d'escalade: ${action.escalationLevel?.toUpperCase() || 'ÉQUIPE'}
 - Position destinataire: ${target.position_title}
 - Département: ${(target as any).department}
@@ -246,7 +247,7 @@ CONTEXTE PROJET:
           contractorId: action.contractorId,
           priority: action.priority,
           hierarchyLevel: target.hierarchy_level,
-          organizationName: primaryOrg?.organizations?.name,
+          organizationName: primaryOrg?.organization_name,
           targetPosition: target.position_title,
           targetDepartment: (target as any).department
         }

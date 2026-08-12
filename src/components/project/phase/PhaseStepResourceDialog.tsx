@@ -42,6 +42,7 @@ import { usePhaseEmployeesHex } from "@/hooks/hexagonal/usePhaseEmployeesHex";
 import { calculateQuantity } from "@/dtos/types/quantityTakeoff";
 import EmployeeSelector from "@/components/selectors/EmployeeSelector";
 import SimpleSupplierSelector from "@/components/selectors/SimpleSupplierSelector";
+import { METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 interface PhaseStepResourceDialogProps {
   projectId: string;
@@ -51,7 +52,7 @@ interface PhaseStepResourceDialogProps {
   trigger?: React.ReactNode;
 }
 
-const UNITS: Array<"m³" | "m²" | "m" | "unité"> = ["m³", "m²", "m", "unité"];
+const UNITS = METRE_UNIT_CODES as Array<"m³" | "m²" | "m" | "unité">;
 
 const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
   projectId,

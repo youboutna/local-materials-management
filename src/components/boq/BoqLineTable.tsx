@@ -12,6 +12,7 @@ import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
+import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 interface Props {
   lines: BoqLineDTO[];
@@ -27,7 +28,7 @@ interface Props {
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
-const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff', 'ens', 'lot'];
+const UNITS = DQE_UNIT_CODES;
 const DATA_COLS = 15;
 
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, onChange, onRemove, pageSize = 10 }: Props) {

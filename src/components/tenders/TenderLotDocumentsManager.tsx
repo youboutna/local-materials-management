@@ -37,12 +37,9 @@ import {
   TenderLotDocumentRecord,
 } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
 
-const CATEGORIES = [
-  { value: 'administrative', label: 'Administratif' },
-  { value: 'technical', label: 'Technique' },
-  { value: 'financial', label: 'Financier' },
-  { value: 'other', label: 'Autre' },
-];
+import { TENDER_DOCUMENT_CATEGORIES } from '@/config/referentials/tender/document-categories.referential';
+
+const CATEGORIES = TENDER_DOCUMENT_CATEGORIES;
 
 export interface LotOption {
   id: string;

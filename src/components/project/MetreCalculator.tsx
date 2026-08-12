@@ -12,6 +12,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Calculator, FileText, Plus, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { getUnitOptions, METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 // Local Material interface for UI usage
 interface LocalMaterial {
@@ -64,13 +65,12 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
     'Autre'
   ];
 
-  // Units available
-  const units: Array<{ value: 'm³' | 'm²' | 'm' | 'unité'; label: string }> = [
-    { value: 'm³', label: 'Mètre cube (m³)' },
-    { value: 'm²', label: 'Mètre carré (m²)' },
-    { value: 'm', label: 'Mètre linéaire (m)' },
-    { value: 'unité', label: 'Unité' }
-  ];
+  // Units available (référentiel central — jamais codées en dur ici)
+  const units: Array<{ value: 'm³' | 'm²' | 'm' | 'unité'; label: string }> =
+    getUnitOptions(METRE_UNIT_CODES).map((entry) => ({
+      value: entry.code as 'm³' | 'm²' | 'm' | 'unité',
+      label: entry.longLabel,
+    }));
 
   useEffect(() => {
     fetchMaterials();

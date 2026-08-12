@@ -35,6 +35,7 @@ import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -44,7 +45,7 @@ import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
   c === 'labour' ? 'labor' : c === 'equipment' ? 'equipment' : 'material';
-const UNITS = ['u', 'ml', 'm2', 'm3', 'kg', 'h', 'j', 'ff', 'ens', 'lot'];
+const UNITS = DQE_UNIT_CODES;
 const LABOUR_TIME_UNITS = new Set(['h', 'j', 'hj', 'homme/jour']);
 
 
