@@ -11,10 +11,10 @@
  *   3. Default → 'supabase'
  */
 
-import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { DEV_MODE } from '@/config/constants';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
-import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
+import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
+import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
+import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 
 export type AuthAdapterKind = 'local' | 'supabase' | 'keycloak';
 

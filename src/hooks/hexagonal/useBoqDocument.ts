@@ -2,10 +2,10 @@
  * useBoqDocument — TanStack v5 hook. Reads BOQ lines by source+context and
  * exposes create/bulkCreate/update/delete mutations.
  */
-import { useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 export function useBoqDocument(filter: BoqLineFilter) {
   const qc = useQueryClient();

@@ -1,71 +1,126 @@
+// ============================================================
+// src/domain/repositories/IAlertRepository.ts
+// ============================================================
 /**
- * Interface for Alert Repository
- * Handles data access for project alerts
+ * Alert Repository Interface (Port)
+ * Pure business logic - NO external dependencies
  */
 
-export interface ProjectAlertDTO {
-  id: string;
-  project_id: string;
-  type: string;
-  severity: string;
-  title: string;
-  description?: string;
-  created_at: string;
-  updated_at?: string;
+import { Alert, AlertStatistics, AlertStatus, AlertType, AlertSeverity, AlertSource } from '@/domain/entities/Alert';
+
+// ===== Filter Interface =====
+export interface AlertFilter {
+  severity?: AlertSeverity;
+  type?: AlertType;
+  status?: AlertStatus;
+  source?: AlertSource;
+  projectId?: string;
   acknowledged?: boolean;
-  acknowledged_at?: string;
-  acknowledged_by?: string;
-  resolved?: boolean;
-  resolved_at?: string;
-  resolved_by?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
 }
 
-export interface CreateProjectAlertRequestDto {
-  project_id: string;
-  type: string;
-  severity: string;
-  title: string;
-  description?: string;
-}
-
-export interface UpdateProjectAlertRequestDto {
-  type?: string;
-  severity?: string;
-  title?: string;
-  description?: string;
-  acknowledged?: boolean;
-  resolved?: boolean;
-}
-
-export interface AlertStatistics {
-  total: number;
-  active: number;
-  resolved: number;
-  acknowledged: number;
-  byType: Record<string, number>;
-  bySeverity: Record<string, number>;
-}
-
+// ===== Repository Interface =====
 export interface IAlertRepository {
-  // Basic CRUD operations
-  findById(id: string): Promise<ProjectAlertDTO | null>;
-  findByProjectId(projectId: string): Promise<ProjectAlertDTO[]>;
-  findAll(): Promise<ProjectAlertDTO[]>;
-  create(alertData: CreateProjectAlertRequestDto): Promise<ProjectAlertDTO>;
-  update(id: string, updateData: UpdateProjectAlertRequestDto): Promise<ProjectAlertDTO>;
+  /**
+   * Crée une nouvelle alerte
+   */
+  create(alert: Alert): Promise<Alert>;
+
+  /**
+   * Récupère une alerte par son ID
+   */
+  findById(id: string): Promise<Alert | null>;
+
+  /**
+   * Récupère toutes les alertes avec filtres optionnels
+   */
+  find(filters?: AlertFilter): Promise<Alert[]>;
+
+  /**
+   * Récupère toutes les alertes d'un projet
+   */
+  findByProjectId(projectId: string): Promise<Alert[]>;
+
+  /**
+   * Récupère toutes les alertes actives (open + acknowledged)
+   */
+  findActive(): Promise<Alert[]>;
+
+  /**
+   * Récupère les alertes par type
+   */
+  findByType(type: AlertType): Promise<Alert[]>;
+
+  /**
+   * Récupère les alertes par sévérité
+   */
+  findBySeverity(severity: AlertSeverity): Promise<Alert[]>;
+
+  /**
+   * Récupère les alertes par source
+   */
+  findBySource(source: AlertSource): Promise<Alert[]>;
+
+  /**
+   * Récupère les alertes par statut
+   */
+  findByStatus(status: AlertStatus): Promise<Alert[]>;
+
+  /**
+   * Met à jour une alerte
+   */
+  update(id: string, alert: Partial<Alert>): Promise<Alert>;
+
+  /**
+   * Supprime une alerte
+   */
   delete(id: string): Promise<void>;
 
-  // Alert-specific operations
-  findActive(): Promise<ProjectAlertDTO[]>;
-  findByType(type: string): Promise<ProjectAlertDTO[]>;
-  findBySeverity(severity: string): Promise<ProjectAlertDTO[]>;
-  acknowledge(id: string, userId: string): Promise<ProjectAlertDTO>;
-  resolve(id: string, userId: string): Promise<ProjectAlertDTO>;
+  /**
+   * Accuse réception d'une alerte
+   */
+  acknowledge(id: string, userId: string): Promise<Alert>;
 
-  // Statistics and analytics
+  /**
+   * Résout une alerte
+   */
+  resolve(id: string, userId: string): Promise<Alert>;
+
+  /**
+   * Escalade une alerte
+   */
+  escalate(id: string): Promise<Alert>;
+
+  /**
+   * Accuse réception de plusieurs alertes
+   */
+  acknowledgeBatch(ids: string[], userId: string): Promise<Alert[]>;
+
+  /**
+   * Résout plusieurs alertes
+   */
+  resolveBatch(ids: string[], userId: string): Promise<Alert[]>;
+
+  /**
+   * Récupère les statistiques des alertes
+   */
   getStatistics(projectId?: string): Promise<AlertStatistics>;
-  
-  // Batch operations
-  acknowledgeBatch(alertIds: string[], userId: string): Promise<ProjectAlertDTO[]>;
-  resolveBatch(alertIds: string[], userId: string): Promise<ProjectAlertDTO[]>;
+
+  /**
+   * Compte le nombre d'alertes
+   */
+  count(filters?: AlertFilter): Promise<number>;
+
+  /**
+   * Vérifie si une alerte existe
+   */
+  exists(id: string): Promise<boolean>;
+
+  /**
+   * Supprime toutes les alertes d'un projet
+   */
+  deleteByProjectId(projectId: string): Promise<number>;
 }

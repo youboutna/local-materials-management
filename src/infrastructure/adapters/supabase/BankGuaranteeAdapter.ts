@@ -1,13 +1,12 @@
-// @ts-nocheck
+
 /**
  * Bank Guarantee Adapter - Supabase Implementation
  * Implements IBankGuaranteeRepository using Supabase
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
+import { BankGuaranteeQueryOptions, IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
 import { BankGuaranteeDTO, CreateBankGuaranteeDTO, UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees';
-import { BankGuaranteeQueryOptions } from '@/domain/repositories/IBankGuaranteeRepository';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 interface SupabaseBankGuarantee {

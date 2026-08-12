@@ -6,54 +6,54 @@
  * New hooks are automatically available without manual export updates.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { getPaymentService } from '@/application/services/PaymentService';
+import { useQuery } from '@tanstack/react-query';
 
 // ==================== CORE HOOKS ====================
 // Authentication
 export {
-  useAuthHex,
-  useLoginHex,
-  useRegisterHex
+    useAuthHex,
+    useLoginHex,
+    useRegisterHex
 } from './useAuthHex';
 export { useAuth } from './useAuthSimple';
 export { useAuthUserHex } from './useAuthUserHex';
 
 // Configuration
 export {
-  useConfiguration
+    useConfiguration
 } from './useConfigurationHex';
 export {
-  useOAuthConfig
+    useOAuthConfig
 } from './useOAuthConfigHex';
 
 // Projects
 export {
-  useProjectById, useProjectHex, useProjects, useProjectsByStatus, useProjectsHex
+    useProjectById, useProjectHex, useProjects, useProjectsByStatus, useProjectsHex
 } from './useProjectsHex';
 
 export { useProjectEditHex } from './useProjectEditHex';
 export { useProjectMaterialsHex } from './useProjectMaterialsHex';
 export { useProjectPhasesHex } from './useProjectPhasesHex';
 export {
-  useProjectCalculations,
-  useProjectsEnhanced
+    useProjectCalculations,
+    useProjectsEnhanced
 } from './useProjectsEnhanced';
 export { useProjectsFull } from './useProjectsFull';
 
 // Suppliers
 export { useActiveSuppliersHex } from './useActiveSuppliersHex';
 export {
-  useSupplierHex, useSuppliersBySpecialization, useSuppliersHex
+    useSupplierHex, useSuppliersBySpecialization, useSuppliersHex
 } from './useSuppliersHex';
 
 // Materials
 export {
-  useMaterialCalculations, useMaterialsEnhanced
+    useMaterialCalculations, useMaterialsEnhanced
 } from './useMaterialsEnhanced';
 export {
-  useAddMaterialToProjectHex, useLowStockMaterials, useMaterialById, useMaterialHex,
-  useMaterialsByCategory, useMaterialsHex
+    useAddMaterialToProjectHex, useLowStockMaterials, useMaterialById, useMaterialHex,
+    useMaterialsByCategory, useMaterialsHex
 } from './useMaterialsHex';
 
 // Workspaces
@@ -63,13 +63,13 @@ export { useWorkspaceById, useWorkspacesByStatus, useWorkspacesHex } from './use
 export { useEnhancedInspectionCrudHex } from './useEnhancedInspectionCrudHex';
 export { useInspectionExecutionHex } from './useInspectionExecutionHex';
 export {
-  useInspectionHex, useInspectionsHex
+    useInspectionHex, useInspectionsHex
 } from './useInspectionsHex';
 
 // Real-time
 export {
-  useRealtimeHex,
-  type UseRealtimeOptions
+    useRealtimeHex,
+    type UseRealtimeOptions
 } from './useRealtimeHex';
 
 // Users
@@ -81,27 +81,27 @@ export { useUsersHex } from './useUsersHex';
 export { useKanbanTasks } from './useKanbanBoardHex';
 export { useTaskDependenciesHex } from './useTaskDependenciesHex';
 export {
-  useTaskHex, useTasksHex
+    useTaskHex, useTasksHex
 } from './useTasksHex';
 
 // Documents
 export {
-  useDocumentById, useDocumentCreate, useDocumentDelete, useDocumentsByProject, useDocumentsHex, useDocumentsList, useDocumentUpdate, useTenderDocuments,
-  useWorkflowStepDocuments
+    useDocumentById, useDocumentCreate, useDocumentDelete, useDocumentsByProject, useDocumentsHex, useDocumentsList, useDocumentUpdate, useTenderDocuments,
+    useWorkflowStepDocuments
 } from './useDocumentsHex';
 
 // ==================== MANAGEMENT HOOKS ====================
 // Task & Project Management
 export {
-  useCreateProjectTask, useDeleteProjectTask,
-  useProjectPhasesForTasks, useProjectTasks, useUpdateProjectTask
+    useCreateProjectTask, useDeleteProjectTask,
+    useProjectPhasesForTasks, useProjectTasks, useUpdateProjectTask
 } from './useEnhancedTasksHex';
 export {
-  usePhaseHex,
-  usePhasesHex
+    usePhaseHex,
+    usePhasesHex
 } from './usePhasesHex';
 export {
-  useTaskAssignmentHex, useTaskAssignmentsHex, type TaskAssignment
+    useTaskAssignmentHex, useTaskAssignmentsHex, type TaskAssignment
 } from './useTaskAssignmentsHex';
 
 // Phase Management
@@ -109,8 +109,8 @@ export { usePhaseDocuments } from './usePhaseDocumentsHex';
 export { usePhaseInspectionsHex } from './usePhaseInspectionsHex';
 export { usePhaseMonitoringSummaryHex } from './usePhaseMonitoringSummaryHex';
 export {
-  useAddPhasePayment,
-  useDeletePhasePayment, usePhasePayments
+    useAddPhasePayment,
+    useDeletePhasePayment, usePhasePayments
 } from './usePhasePaymentsHex';
 
 // Monitoring & Compliance
@@ -118,21 +118,21 @@ export { useAlertsHex } from './useAlertsHex';
 export { useComplianceHex } from './useComplianceHex';
 export { useInspectionMonitoringHex, type MonitoringInspection } from './useInspectionMonitoringHex';
 export {
-  useBankGuaranteesHex,
-  useInsurancesHex,
-  usePaymentBlocksHex
+    useBankGuaranteesHex,
+    useInsurancesHex,
+    usePaymentBlocksHex
 } from './useMonitoringHex';
 
 // Tenders & Documents
 export {
-  useDeleteTender, useDeleteTenderSecret, useProjectsForTenders, useRevokeTenderSecret, useTenderMutation, useTenders, useTenderSharingSecrets
+    useDeleteTender, useDeleteTenderSecret, useProjectsForTenders, useRevokeTenderSecret, useTenderMutation, useTenders, useTenderSharingSecrets
 } from './useTenderCrudHex';
 export {
-  useTenderDocumentsList, useUploadTenderDocument, useWorkflowStepDocumentsList
+    useTenderDocumentsList, useUploadTenderDocument, useWorkflowStepDocumentsList
 } from './useTenderDocumentsHex';
 export { useTenderEvaluationHex } from './useTenderEvaluationHex';
 export {
-  useProjectPhasesForLots, useProjectPhasesForTender, useSaveSubmissionEvaluation, useSubmissionDocuments, useTenderHex, useTendersHex, useTenderSubmission
+    useProjectPhasesForLots, useProjectPhasesForTender, useSaveSubmissionEvaluation, useSubmissionDocuments, useTenderHex, useTendersHex, useTenderSubmission
 } from './useTendersHex';
 
 // ==================== ENHANCED FEATURES ====================
@@ -140,7 +140,7 @@ export {
 export { useKPIMetricsHex } from './useKPIMetricsHex';
 export { useMonitoringStatsHex } from './useMonitoringStatsHex';
 export {
-  useProjectAnalytics, useProjectCompliance, useProjectKPIs
+    useProjectAnalytics, useProjectCompliance, useProjectKPIs
 } from './useProjectAnalyticsHex';
 
 // Payment Management
@@ -148,7 +148,7 @@ export { useInspectionPaymentValidationHex } from './useInspectionPaymentValidat
 export { usePaymentActionsHex } from './usePaymentActionsHex';
 export { usePaymentCrud, type Payment, type PaymentFormData } from './usePaymentCrudHex';
 export {
-  usePaymentRequests, usePaymentRequestsByProject, usePaymentRequestsBySupplier
+    usePaymentRequests, usePaymentRequestsByProject, usePaymentRequestsBySupplier
 } from './usePaymentRequestsHexNew';
 export { usePaymentsHex } from './usePaymentsHex';
 export { usePaymentStatsHex } from './usePaymentStatsHex';
@@ -157,15 +157,15 @@ export { usePaymentWorkflowHex } from './usePaymentWorkflowHex';
 
 // Quantity Takeoff
 export {
-  useCreateQuantityTakeoff, useMaterialsForTakeoff
+    useCreateQuantityTakeoff, useMaterialsForTakeoff
 } from './useQuantityTakeoffHex';
 export { useQuantityTakeoffsHex } from './useQuantityTakeoffsHex';
 
 // Inspection Management
 export {
-  useCreateInspection, useDeleteInspection, useInspectionsList,
-  useInspectionsList as useInspectionsListCrud, useUpdateInspection, type InspectionFormData,
-  type InspectionRow
+    useCreateInspection, useDeleteInspection, useInspectionsList,
+    useInspectionsList as useInspectionsListCrud, useUpdateInspection, type InspectionFormData,
+    type InspectionRow
 } from './useInspectionsCrudHex';
 export { useInspectionsListHex } from './useInspectionsListHex';
 export { useInspectionWorkflowHex } from './useInspectionWorkflowHex';
@@ -175,36 +175,36 @@ export type { InspectionRow as Inspection } from './useInspectionsCrudHex';
 
 // ==================== SUPPLIER PORTAL ====================
 export {
-  useAddTaskCommentHex,
-  useMarkTaskCompletedHex, useSupplierAuthHex, useSupplierDocumentsHex, useSupplierNotificationsHex, useSupplierParsedInvoicesHex, useSupplierPaymentRequestsHex, useSupplierProfileHex, useSupplierSharedDocumentsHex,
-  useSupplierTasksHex, useUploadSupplierDocumentHex
+    useAddTaskCommentHex,
+    useMarkTaskCompletedHex, useSupplierAuthHex, useSupplierDocumentsHex, useSupplierNotificationsHex, useSupplierParsedInvoicesHex, useSupplierPaymentRequestsHex, useSupplierProfileHex, useSupplierSharedDocumentsHex,
+    useSupplierTasksHex, useUploadSupplierDocumentHex
 } from './useSupplierPortalCompleteHex';
 export { useSupplierPortalHex } from './useSupplierPortalHex';
 // Legacy SupplierDashboard hooks removed — page deleted (use UnifiedSupplierPortal).
 export { useSupplierInfo } from './usePhasePaymentsHex';
 export {
-  useSubmissionActivityLogs, useSubmissionDocumentsHex,
-  useSubmissionDocumentsList, useSubmissionStatsHex, useSupplierSubmissionsHex
+    useSubmissionActivityLogs, useSubmissionDocumentsHex,
+    useSubmissionDocumentsList, useSubmissionStatsHex, useSupplierSubmissionsHex
 } from './useSupplierSubmissionsHex';
 
 // Unified Supplier Portal
 export {
-  useCreateTaskCommentHex as useAddSupplierTaskCommentHex, useFetchSupplierProfileHex,
-  useSupplierLoginHex, useSupplierLogoutHex, useSupplierPortalAuthHex, useSupplierPortalDocumentsHex,
-  useSupplierNotificationsHex as useSupplierPortalNotificationsHex, useSupplierPortalPaymentRequestsHex, useSupplierSignUpHex
+    useCreateTaskCommentHex as useAddSupplierTaskCommentHex, useFetchSupplierProfileHex,
+    useSupplierLoginHex, useSupplierLogoutHex, useSupplierPortalAuthHex, useSupplierPortalDocumentsHex,
+    useSupplierNotificationsHex as useSupplierPortalNotificationsHex, useSupplierPortalPaymentRequestsHex, useSupplierSignUpHex
 } from './useUnifiedSupplierPortalHex';
 
 // ==================== UTILITY & SELECTORS ====================
 export {
-  useEmployeesSelector,
-  useInspectorsSelector, useMaterialsSelector, useProjectsSelector, useProjectTenders, useSuppliersSelector,
-  useUsersSelector
+    useEmployeesSelector,
+    useInspectorsSelector, useMaterialsSelector, useProjectsSelector, useProjectTenders, useSuppliersSelector,
+    useUsersSelector
 } from './useSelectorsHex';
 
 // Employees
 export { useActiveEmployeesHex } from './useActiveEmployeesHex';
 export {
-  useCreateEmployee, useDeleteEmployee, useEmployeesList, useUpdateEmployee
+    useCreateEmployee, useDeleteEmployee, useEmployeesList, useUpdateEmployee
 } from './useEmployeeManagementHex';
 export { useEmployeesHex } from './useEmployeesHex';
 
@@ -219,8 +219,8 @@ export { useDashboardHex } from './useDashboardHex';
 
 // ==================== DEV & TESTING ====================
 export {
-  useDevModeCreate, useDevModeData, useDevModeDelete,
-  useDevModeManagement, useDevModeUpdate
+    useDevModeCreate, useDevModeData, useDevModeDelete,
+    useDevModeManagement, useDevModeUpdate
 } from './useDevModeHex';
 export { useLoadDataButtonHex } from './useLoadDataButtonHex';
 
@@ -228,8 +228,8 @@ export { useLoadDataButtonHex } from './useLoadDataButtonHex';
 // Bank Guarantees
 export { useBankGuaranteeForProjectHex } from './useBankGuaranteeForProjectHex';
 export {
-  useBankGuaranteesList,
-  useCreateBankGuarantee, useDeleteBankGuarantee, useUpdateBankGuarantee
+    useBankGuaranteesList,
+    useCreateBankGuarantee, useDeleteBankGuarantee, useUpdateBankGuarantee
 } from './useBankGuaranteesHex';
 
 // Insurance
@@ -241,10 +241,10 @@ export { useMilestonesHex } from './useMilestonesHex';
 
 // Project Structure & Details
 export {
-  useProjectDetail,
-  useProjectAnalytics as useProjectDetailAnalytics,
-  useMilestones as useProjectDetailMilestones,
-  useToastNotifications
+    useProjectDetail,
+    useProjectAnalytics as useProjectDetailAnalytics,
+    useMilestones as useProjectDetailMilestones,
+    useToastNotifications
 } from './useProjectDetailHex';
 export { useProjectStructureHex } from './useProjectStructureHex';
 
@@ -256,20 +256,20 @@ export { useTaskListHex } from './useTaskListHex';
 
 // User Management Dialog
 export {
-  useCreateUserHex, useUpdateUserProfileHex, useCreateUserHex as useUserCreate, useUpdateUserProfileHex as useUserUpdate
+    useCreateUserHex, useUpdateUserProfileHex, useCreateUserHex as useUserCreate, useUpdateUserProfileHex as useUserUpdate
 } from './useUserManagementDialogHex';
 // Tender Estimate
 export {
-  useAddEstimateItemHex,
-  useCreateInvoiceHex, useEstimateItemsHex,
-  useMaterialsForEstimateHex,
-  useParsedInvoicesHex, useTenderEstimatesHex
+    useAddEstimateItemHex,
+    useCreateInvoiceHex, useEstimateItemsHex,
+    useMaterialsForEstimateHex,
+    useParsedInvoicesHex, useTenderEstimatesHex
 } from './useTenderEstimateHex';
 
 
 // Document Sharing
 export {
-  useShareDocuments, useTenderDocumentsForShare
+    useShareDocuments, useTenderDocumentsForShare
 } from './useDocumentShareHex';
 
 // Tender Document Upload
@@ -278,25 +278,25 @@ export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
 // Contact Form
 export { useSubmitContactFormHex } from './useContactFormHex';
 export {
-  useContactMessageActionsHex, useContactMessagesHex,
-  useContactMessageStatsHex,
-  useSubmitContactMessageHex
+    useContactMessageActionsHex, useContactMessagesHex,
+    useContactMessageStatsHex,
+    useSubmitContactMessageHex
 } from './useContactMessagesHex';
 
 // Users Admin
 export {
-  useToggleUserStatusHex, useUserProfilesHex,
-  useToggleUserStatusHex as useUserToggleStatus
+    useToggleUserStatusHex, useUserProfilesHex,
+    useToggleUserStatusHex as useUserToggleStatus
 } from './useUsersAdminHex';
 
 // Assignee Details
 export {
-  useAssigneeDetailsHex as useAssigneeDetails, useAssigneeDetailsHex
+    useAssigneeDetailsHex as useAssigneeDetails, useAssigneeDetailsHex
 } from './useAssigneeDetailsHex';
 
 // Phase Materials
 export {
-  useAvailableMaterials, usePhaseMaterialsHex
+    useAvailableMaterials, usePhaseMaterialsHex
 } from './usePhaseMaterialsHex';
 
 // Management Actions
@@ -307,14 +307,14 @@ export { useRunAlertsProcessorHex } from './useAlertsProcessorHex';
 
 // Phase Monitoring Summary Components
 export {
-  useInspectionsSummaryHex,
-  usePaymentsSummaryHex, useTasksSummaryHex
+    useInspectionsSummaryHex,
+    usePaymentsSummaryHex, useTasksSummaryHex
 } from './usePhaseMonitoringSummaryHex';
 
 // Inspection Dialog
 export {
-  useCreateInspectionHex,
-  useUpdateProjectStatusHex
+    useCreateInspectionHex,
+    useUpdateProjectStatusHex
 } from './useInspectionDialogHex';
 export { useProjectWithPaymentsHex } from './useProjectWithPaymentsHex';
 
@@ -323,7 +323,7 @@ export { useImportProjectsHex } from './useProjectImporterHex';
 
 // Dashboard Access
 export {
-  useCheckAuthHex, useDashboardAccessHex
+    useCheckAuthHex, useDashboardAccessHex
 } from './useDashboardAccessHex';
 
 // Risk Management
@@ -331,7 +331,7 @@ export { useEnhancedRiskManagerHex } from './useEnhancedRiskManagerHex';
 
 // Payment Control
 export {
-  actionFormSchema, usePaymentControlActionsHex, type PaymentControlActionsProps
+    actionFormSchema, usePaymentControlActionsHex, type PaymentControlActionsProps
 } from './usePaymentControlActionsHex';
 export { usePaymentControlHex } from './usePaymentControlHex';
 
@@ -339,8 +339,8 @@ export { usePaymentControlHex } from './usePaymentControlHex';
 export { useNotificationsHex } from './useNotificationsHex';
 
 export type {
-  ActionFormData,
-  ActionMetadata
+    ActionFormData,
+    ActionMetadata
 } from '@/application/services/PaymentControlActionsService';
 
 // Phase Employees
@@ -356,24 +356,24 @@ export type { InvoiceFormData, WorkflowRequirements } from './useProgressInvoice
 // ==================== TYPE EXPORTS ====================
 // Export commonly used types
 export type {
-  ApiError, MutationResult, PaginatedResult,
-  QueryResult, UseAuthHexResult, UseDocumentsHexResult, UseInspectionsHexResult, UseMaterialsHexResult, UseProjectsHexResult, UseSuppliersHexResult, UseTaskAssignmentsHexResult, UseUsersHexResult
+    ApiError, MutationResult, PaginatedResult,
+    QueryResult, UseAuthHexResult, UseDocumentsHexResult, UseInspectionsHexResult, UseMaterialsHexResult, UseProjectsHexResult, UseSuppliersHexResult, UseTaskAssignmentsHexResult, UseUsersHexResult
 } from '@/dtos/types/hooks';
 
 // Export commonly used DTOs
-export type { BaseEntityDTO } from '@/dtos/entities/BaseEntityDTO';
 export type {
-  CreateMaterialDTO, EmployeeDTO, InspectionDTO, MaterialDTO,
-  MaterialFormDataDTO, PhaseDTO, ProjectDTO, UpdateMaterialDTO
+    CreateMaterialDTO, EmployeeDTO, InspectionDTO, MaterialDTO,
+    MaterialFormDataDTO, PhaseDTO, ProjectDTO, UpdateMaterialDTO
 } from '@/dtos/entities';
+export type { BaseEntityDTO } from '@/dtos/entities/BaseEntityDTO';
 
 // Export commonly used DTOs
 export type {
-  CreateEmployeeRequestDTO as CreateEmployeeRequestDto, CreateInsuranceRequestDTO as CreateInsuranceRequestDto, CreatePaymentRequestDTO as CreatePaymentRequestDto, CreateProjectRequestDTO as CreateProjectRequestDto, CreateStakeholderRequestDTO as CreateStakeholderRequestDto, UpdateEmployeeRequestDTO as UpdateEmployeeRequestDto, UpdateInsuranceRequestDTO as UpdateInsuranceRequestDto, UpdatePaymentRequestDTO as UpdatePaymentRequestDto, UpdateStakeholderRequestDTO as UpdateStakeholderRequestDto
+    CreateEmployeeRequestDTO as CreateEmployeeRequestDto, CreateInsuranceRequestDTO as CreateInsuranceRequestDto, CreatePaymentRequestDTO as CreatePaymentRequestDto, CreateProjectRequestDTO as CreateProjectRequestDto, CreateStakeholderRequestDTO as CreateStakeholderRequestDto, UpdateEmployeeRequestDTO as UpdateEmployeeRequestDto, UpdateInsuranceRequestDTO as UpdateInsuranceRequestDto, UpdatePaymentRequestDTO as UpdatePaymentRequestDto, UpdateStakeholderRequestDTO as UpdateStakeholderRequestDto
 } from '@/dtos/entities';
 
 export type {
-  AuthResponse as AuthResponseDto, DocumentResponseDTO as DocumentResponseDto, UserResponseDto
+    AuthResponse as AuthResponseDto, DocumentResponseDTO as DocumentResponseDto, UserResponseDto
 } from '@/dtos/entities';
 
 // Specialized type exports
@@ -547,8 +547,8 @@ export const usePaymentSchedule = (projectId: string) => {
 
 // Re-export types from useBankGuaranteesHex to ensure consistency
 export type {
-  BankGuaranteeFormData,
-  BankGuaranteeRow
+    BankGuaranteeFormData,
+    BankGuaranteeRow
 } from './useBankGuaranteesHex';
 
 // Alert types for dashboard - re-export from hooks
@@ -573,22 +573,22 @@ export interface EmployeeFormData {
 
 // Supplier management types
 export {
-  useCreateSupplier, useDeleteSupplier, useSuppliersList, useUpdateSupplier, type SupplierMgmtFormData
+    useCreateSupplier, useDeleteSupplier, useSuppliersList, useUpdateSupplier, type SupplierMgmtFormData
 } from './useSuppliersCrudHex';
 
 // Infrastructure adapters - re-export for accessibility
 export {
-  SupabaseAlertRepository,
-  SupabaseMilestoneAdapter,
-  SupabaseSupplierPaymentAdapter
-} from '@/infrastructure/supabase/adapters';
+    SupabaseAlertRepository,
+    SupabaseMilestoneAdapter,
+    SupabaseSupplierPaymentAdapter
+} from '@/infrastructure/adapters/supabase';
 
 // Application services - re-export for accessibility
 export {
-  MilestoneService
+    MilestoneService
 } from '@/application/services/MilestoneService';
 export {
-  ProjectAnalyticsService
+    ProjectAnalyticsService
 } from '@/application/services/ProjectAnalyticsService';
 
 // Re-export Tender types for TenderCrud component

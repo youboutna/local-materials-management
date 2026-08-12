@@ -1,12 +1,17 @@
+// ============================================================
+// src/hooks/hexagonal/useAuthHex.ts
+// ============================================================
 /**
  * Authentication Hook - Enhanced with Domain Transformers Integration
  * Uses authentication services with advanced calculations and analytics
  * Following hexagonal architecture principles with UI-specific enhancements
+ * 
+ * Path: src/hooks/hexagonal/useAuthHex.ts
  */
 
 import { AuthService } from "@/application/services/AuthService";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LoginData, RegisterData, UserDTO } from "@/dtos/entities";
+import { LoginData, RegisterData, UserDTO } from "@/dtos/entities/UserDTO";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';
@@ -66,13 +71,13 @@ export function useAuthHex(): UseAuthHexResult {
     refetch
   } = useQuery({
     queryKey: ['auth', 'user'],
-    queryFn: async (): Promise<any> => {
+    queryFn: async (): Promise<UserDTO | null> => {
       try {
         const currentUser = await authService.getCurrentUser();
         return currentUser;
       } catch (err) {
         console.error('Error fetching current user:', err);
-        throw err;
+        return null;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -92,7 +97,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      const userName = data.user?.full_name || data.user?.email || 'Utilisateur';
+      const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
       toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
@@ -115,7 +120,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      const userName = data?.full_name || data?.email || 'Utilisateur';
+      const userName = data?.fullName || data?.email || 'Utilisateur';
       toast.success(`Compte créé avec succès! Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
@@ -147,12 +152,11 @@ export function useAuthHex(): UseAuthHexResult {
     }
   });
 
-  // Update profile mutation (placeholder - not implemented in AuthService)
+  // Update profile mutation (placeholder)
   const updateProfileMutation = useMutation({
-    mutationFn: async (profileData: any) => {
+    mutationFn: async (profileData: Partial<UserDTO>) => {
       try {
         // AuthService doesn't have updateProfile method yet
-        // This is a placeholder for future implementation
         console.log('Profile update not yet implemented:', profileData);
         return null;
       } catch (error) {
@@ -190,8 +194,11 @@ export function useAuthHex(): UseAuthHexResult {
     }
   });
 
-  // Enhanced UI functions
-  const getUserSecurityLevel = (targetUser: any): 'low' | 'medium' | 'high' => {
+  // ============================================================
+  // Enhanced UI Functions
+  // ============================================================
+
+  const getUserSecurityLevel = (targetUser: UserDTO): 'low' | 'medium' | 'high' => {
     const hasTwoFactor = targetUser?.hasTwoFactor || false;
     const lastPasswordChange = targetUser?.lastPasswordChange ? new Date(targetUser.lastPasswordChange) : new Date(0);
     const daysSincePasswordChange = Math.floor((new Date().getTime() - lastPasswordChange.getTime()) / (1000 * 60 * 60 * 24));
@@ -202,7 +209,7 @@ export function useAuthHex(): UseAuthHexResult {
     return 'low';
   };
 
-  const getUserActivityScore = (targetUser: any): number => {
+  const getUserActivityScore = (targetUser: UserDTO): number => {
     const lastLogin = targetUser?.lastLoginAt ? new Date(targetUser.lastLoginAt) : new Date(0);
     const daysSinceLastLogin = Math.floor((new Date().getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
     const totalLogins = targetUser?.totalLogins || 1;
@@ -211,12 +218,12 @@ export function useAuthHex(): UseAuthHexResult {
     // Score based on recent activity and engagement
     const activityScore = Math.max(0, 100 - daysSinceLastLogin * 2);
     const engagementScore = Math.min(100, totalLogins * 5);
-    const durationScore = Math.min(100, avgSessionDuration / 60 * 10); // 10 points per hour
+    const durationScore = Math.min(100, avgSessionDuration / 60 * 10);
     
     return Math.round((activityScore * 0.4 + engagementScore * 0.3 + durationScore * 0.3));
   };
 
-  const getUserTrustLevel = (targetUser: any): 'trusted' | 'verified' | 'unverified' => {
+  const getUserTrustLevel = (targetUser: UserDTO): 'trusted' | 'verified' | 'unverified' => {
     const isEmailVerified = targetUser?.emailVerified || false;
     const isPhoneVerified = targetUser?.phoneVerified || false;
     const hasCompletedProfile = targetUser?.hasCompletedProfile || false;
@@ -227,22 +234,24 @@ export function useAuthHex(): UseAuthHexResult {
     return 'unverified';
   };
 
-  const getUserLastLoginDays = (targetUser: any): number => {
-    if (!targetUser?.lastLoginAt) return -1; // Never logged in
+  const getUserLastLoginDays = (targetUser: UserDTO): number => {
+    if (!targetUser?.lastLoginAt) return -1;
     const lastLogin = new Date(targetUser.lastLoginAt);
     const now = new Date();
     return Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   const getUserAnalytics = () => {
-    if (!user) return {
-      securityLevel: 'low' as const,
-      activityScore: 0,
-      trustLevel: 'unverified' as const,
-      daysSinceLastLogin: -1,
-      loginFrequency: 0,
-      accountAge: 0
-    };
+    if (!user) {
+      return {
+        securityLevel: 'low' as const,
+        activityScore: 0,
+        trustLevel: 'unverified' as const,
+        daysSinceLastLogin: -1,
+        loginFrequency: 0,
+        accountAge: 0
+      };
+    }
     
     const securityLevel = getUserSecurityLevel(user);
     const activityScore = getUserActivityScore(user);
@@ -261,7 +270,10 @@ export function useAuthHex(): UseAuthHexResult {
     };
   };
 
-  // Validation functions for different referential types
+  // ============================================================
+  // Referential Validation Functions
+  // ============================================================
+
   const validateSecurityReferential = (targetUser: any) => {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -342,7 +354,10 @@ export function useAuthHex(): UseAuthHexResult {
     return { isValid: errors.length === 0, errors, warnings, compliance: 'access' };
   };
 
-  // Generate user recommendations based on analysis
+  // ============================================================
+  // Report Generation
+  // ============================================================
+
   const generateUserRecommendations = (targetUser: any, securityLevel: string, activityScore: number) => {
     const recommendations: string[] = [];
     
@@ -379,6 +394,10 @@ export function useAuthHex(): UseAuthHexResult {
     
     return recommendations;
   };
+
+  // ============================================================
+  // Return
+  // ============================================================
 
   return {
     user,
@@ -417,6 +436,7 @@ export function useAuthHex(): UseAuthHexResult {
         return { isValid: false, errors: ['Validation failed'], warnings: [] };
       }
     },
+    
     generateUserReport: (targetUser: UserDTO): UserSecurityReport => {
       try {
         const securityLevel = getUserSecurityLevel(targetUser);
@@ -445,7 +465,10 @@ export function useAuthHex(): UseAuthHexResult {
   };
 }
 
+// ============================================================
 // Simple login/register hooks for Auth page
+// ============================================================
+
 export function useLoginHex() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();

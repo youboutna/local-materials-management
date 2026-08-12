@@ -102,3 +102,4 @@ export * from './UnifiedWorkflowDTO';
 // src/dtos/entities/index.ts
 export * from './OAuthProviderDTO';
 
+export * from './AlertDTO';

@@ -1,90 +1,107 @@
-// @ts-nocheck
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// ============================================================
+// src/pages/PaymentControl.tsx
+// ============================================================
+/**
+ * Payment Control Page
+ * UI Layer - Contrôle des paiements avec ProjectManager
+ * Updated to use AlertService via useProjectManager hook
+ */
+
+import { actionLabels } from '@/application/services/ProjectManagerService';
+import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
+import PaymentControlActions from '@/components/payments/PaymentControlActions';
+import PaymentCrud from '@/components/payments/PaymentCrud';
+import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Bell, 
-  CreditCard, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle,
-  Eye,
-  ExternalLink
-} from 'lucide-react';
-import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
-import PaymentCrud from '@/components/payments/PaymentCrud';
-import PaymentControlActions from '@/components/payments/PaymentControlActions';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useToast } from '@/hooks/use-toast';
-import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
-import { useProjectManager } from '@/hooks/useProjectManager';
-import { actionLabels } from '@/application/services/ProjectManagerService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Alert as AlertEntity } from '@/domain/entities/Alert';
 import { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
-import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { useProjectsHex, usePaymentControlHex, useNotificationsHex, usePaymentBlocksHex } from '@/hooks/hexagonal';
+import { useNotificationsHex, usePaymentBlocksHex, usePaymentControlHex, useProjectsHex } from '@/hooks/hexagonal';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
+import { useToast } from '@/hooks/use-toast';
+import { useProjectManager } from '@/hooks/useProjectManager';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import {
+    AlertTriangle,
+    Bell,
+    CheckCircle,
+    Clock,
+    CreditCard,
+    ExternalLink,
+    Eye
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-interface NotificationData {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
-  metadata: Record<string, unknown>;
-}
-
-// Component to render payment control actions with real data
+// ============================================================
+// Composant des actions de contrôle des paiements
+// ============================================================
 const PaymentControlActionsContainer = () => {
   const { userId } = useAuthUserHex();
-  const { data } = useProjectManager();
+  const { state, alerts, loading } = useProjectManager();
   const { dashboard, blockPayment, approvePayment, rejectPayment } = usePaymentControlHex(userId || 'default-user');
 
-  // Get blocking reasons from project manager alerts
-  const getBlockingReasons = (paymentId: string) => {
-    if (!data?.alerts) return [];
+  // Utiliser state ou alerts
+  const allAlerts = state?.alerts || alerts || [];
+
+  // Obtenir les raisons de blocage depuis les alertes du ProjectManager
+  const getBlockingReasons = useCallback((paymentId: string) => {
+    if (!allAlerts.length) return [];
     
-    return data.alerts
-      .filter(alert => alert.severity === 'critical' || alert.severity === 'high')
+    return allAlerts
+      .filter((alert: AlertEntity) => alert.severity === 'critical' || alert.severity === 'high')
       .slice(0, 2)
-      .map(alert => ({
+      .map((alert: AlertEntity) => ({
         reason: alert.type,
-        description: alert.message,
+        description: alert.message || alert.title || 'Alerte',
         severity: alert.severity === 'critical' ? 'blocking' as const : 'warning' as const
       }));
-  };
+  }, [allAlerts]);
+
+  // Filtrer les paiements en attente
+  const pendingPayments = useMemo(() => {
+    if (!dashboard?.payments) return [];
+    return dashboard.payments.filter((p: any) => !p.resolvedAt).slice(0, 3);
+  }, [dashboard?.payments]);
+
+  if (loading) {
+    return <div className="text-center py-4">Chargement des paiements...</div>;
+  }
 
   return (
     <div className="space-y-4">
-        {dashboard?.payments.filter(p => !p.resolvedAt).slice(0, 3).map((payment) => (
-          <PaymentControlActions
-            key={payment.id}
-            paymentId={payment.id}
-            projectId={payment.projectId}
-            contractorId={payment.contractorId || 'unknown'}
-            amount={payment.amount || 0}
-            blockingReasons={getBlockingReasons(payment.id)}
-          />
-        ))}
-        {(!dashboard || dashboard.payments.length === 0) && (
-          <div className="text-center py-8 text-muted-foreground">
-            <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun paiement en attente de validation</p>
-          </div>
-        )}
+      {pendingPayments.map((payment: any) => (
+        <PaymentControlActions
+          key={payment.id}
+          paymentId={payment.id}
+          projectId={payment.projectId}
+          contractorId={payment.contractorId || 'unknown'}
+          amount={payment.amount || 0}
+          blockingReasons={getBlockingReasons(payment.id)}
+        />
+      ))}
+      {pendingPayments.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Aucun paiement en attente de validation</p>
+        </div>
+      )}
     </div>
   );
 };
 
-// Main content component
+// ============================================================
+// Contenu principal
+// ============================================================
 const PaymentControlContent = () => {
   const { toast } = useToast();
   const { hasAnyRole } = useCurrentUserRoles();
+  const { userId } = useAuthUserHex();
   
-  // Use hexagonal notifications hook instead of direct Supabase calls
+  // ✅ Utiliser les hooks hexagonaux
   const { 
     notifications: allNotifications, 
     isLoading, 
@@ -93,25 +110,41 @@ const PaymentControlContent = () => {
     getUnreadCount
   } = useNotificationsHex();
   
-  // Get unread count
-  const [unreadCount, setUnreadCount] = useState(0);
-  
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      const count = await getUnreadCount();
-      setUnreadCount(count);
-    };
-    fetchUnreadCount();
-  }, [allNotifications, getUnreadCount]);
-  
-  // Filter payment notifications
-  const paymentNotifications = allNotifications.filter(n => 
-    ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'].includes(n.type)
-  ).slice(0, 10);
+  // Récupérer les alertes du ProjectManager
+  const { state, alerts, getSummaryStats, loading, runChecks, acknowledgeAlert } = useProjectManager();
+  const allAlerts = state?.alerts || alerts || [];
+  const stats = getSummaryStats();
 
-  // Check if user has permission to access payment control
+  // Filtrer les notifications de paiement
+  const paymentNotifications = useMemo(() => {
+    return allNotifications
+      .filter((n: any) => 
+        ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'].includes(n.type)
+      )
+      .slice(0, 10);
+  }, [allNotifications]);
+
+  // Compter les non lues
+  const unreadCount = useMemo(() => {
+    return paymentNotifications.filter((n: any) => !n.read).length;
+  }, [paymentNotifications]);
+
+  // Vérifier les permissions
   const canAccessPaymentControl = hasAnyRole(['admin', 'director', 'manager', 'agent']);
 
+  // Gestion de l'acquittement
+  const handleAcknowledge = useCallback(async (alertId: string) => {
+    try {
+      await acknowledgeAlert(alertId, userId || 'current-user', 'Traité depuis le contrôle des paiements');
+      await runChecks();
+    } catch (error) {
+      console.error('Erreur lors de l\'acquittement:', error);
+    }
+  }, [acknowledgeAlert, runChecks, userId]);
+
+  // ============================================================
+  // Fonctions utilitaires
+  // ============================================================
   const getPaymentStatusIcon = (type: string) => {
     switch (type) {
       case 'payment_completed':
@@ -142,6 +175,9 @@ const PaymentControlContent = () => {
     }
   };
 
+  // ============================================================
+  // Gestion des permissions
+  // ============================================================
   if (!canAccessPaymentControl) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -155,11 +191,26 @@ const PaymentControlContent = () => {
     );
   }
 
+  // ============================================================
+  // Render
+  // ============================================================
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-6xl mx-auto">
-          {/* Header with notifications summary */}
+          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
@@ -171,19 +222,53 @@ const PaymentControlContent = () => {
                   <Bell className="h-5 w-5 text-gray-500" />
                   <span className="text-sm text-gray-600">Notifications: {unreadCount}</span>
                 </div>
+                <Badge variant="outline" className="text-sm">
+                  Alertes: {stats.criticalAlerts}
+                </Badge>
+                <Button variant="outline" onClick={runChecks}>
+                  Actualiser
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* Payment Notifications Panel */}
+          {/* Statistiques rapides */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
+                <p className="text-sm text-muted-foreground">Alertes critiques</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-orange-500">{stats.highAlerts || 0}</div>
+                <p className="text-sm text-muted-foreground">Alertes élevées</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-blue-500">{stats.openAlerts || 0}</div>
+                <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-green-500">{stats.totalAlerts}</div>
+                <p className="text-sm text-muted-foreground">Total alertes</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Notifications Panel */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
                 Notifications de Paiement Récentes
-                {paymentNotifications.filter(n => !n.read).length > 0 && (
+                {unreadCount > 0 && (
                   <Badge variant="destructive" className="ml-2">
-                    {paymentNotifications.filter(n => !n.read).length} nouveau(x)
+                    {unreadCount} nouveau(x)
                   </Badge>
                 )}
               </CardTitle>
@@ -200,7 +285,7 @@ const PaymentControlContent = () => {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {paymentNotifications.map((notification) => (
+                  {paymentNotifications.map((notification: any) => (
                     <div
                       key={notification.id}
                       className={`p-4 rounded-lg border ${!notification.read ? 'border-l-4 border-l-primary bg-blue-50' : 'bg-white'} hover:shadow-md transition-shadow`}
@@ -258,10 +343,10 @@ const PaymentControlContent = () => {
             </CardContent>
           </Card>
 
-          {/* Payment Control Actions - Using real data from database */}
+          {/* Payment Control Actions */}
           <PaymentControlActionsContainer />
 
-          {/* Payment Control Interface */}
+          {/* Payment Blocking Interface */}
           <EnhancedPaymentBlockingInterface />
           
           {/* Payment CRUD */}
@@ -274,56 +359,62 @@ const PaymentControlContent = () => {
   );
 };
 
-// Main component with ProjectManager provider
+// ============================================================
+// Page principale avec Provider
+// ============================================================
 const PaymentControlPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<Array<{id: string, name: string, level: number}>>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Use hexagonal hooks
+  // ✅ Utiliser les hooks hexagonaux
   const { projects, isLoading: projectsLoading } = useProjectsHex();
-  // Conformité : passe l'id du projet sélectionné (sinon le hook log
-  // "No projectId provided" et `stats` reste vide).
   const { stats: paymentStats } = usePaymentBlocksHex(selectedProject?.id);
 
-  // Helper function to safely convert date to ISO string
-  const toISOStringSafe = (date: string | Date | undefined | null): string => {
+  // Helper function
+  const toISOStringSafe = useCallback((date: string | Date | undefined | null): string => {
     if (!date) return new Date().toISOString();
     if (typeof date === 'string') return date;
     return date.toISOString();
-  };
+  }, []);
 
+  // ✅ Charger la hiérarchie via RepositoryFactory
+  const loadProjectHierarchy = useCallback(async (projectId: string) => {
+    try {
+      const hierarchyRepository = RepositoryFactory.getHierarchyRepository();
+      const hierarchy = await hierarchyRepository.getProjectHierarchy(projectId);
+      setProjectHierarchy(hierarchy || []);
+    } catch (error) {
+      console.warn('[PaymentControlPage] Erreur chargement hiérarchie:', error);
+      setProjectHierarchy([]);
+    }
+  }, []);
+
+  // Sélectionner le projet
   useEffect(() => {
-    // Select first active project when projects are loaded
     if (projects.length > 0 && !selectedProject) {
       const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
       const projectData = {
         id: activeProject.id,
         title: activeProject.title,
         status: activeProject.status,
-        progress: activeProject.progress,
-        budget: activeProject.budget,
+        progress: activeProject.progress || 0,
+        budget: activeProject.budget || 0,
         startDate: toISOStringSafe(activeProject.startDate),
         endDate: toISOStringSafe(activeProject.endDate),
         teamSize: 0,
-        description: activeProject.description,
-        location: activeProject.location,
+        description: activeProject.description || '',
+        location: activeProject.location || '',
       } as unknown as ProjectData;
       
       setSelectedProject(projectData);
-      
-      // Load organizational hierarchy for this project (still needs supabase for RPC)
-      import('@/integrations/supabase/client').then(({ supabase }) => {
-        supabase
-          .rpc('get_project_hierarchy', { project_id_param: activeProject.id })
-          .then(({ data: hierarchy }) => {
-            setProjectHierarchy(hierarchy || []);
-          });
-      });
+      loadProjectHierarchy(activeProject.id);
+      setIsLoading(false);
     }
-  }, [projects, selectedProject]);
+  }, [projects, selectedProject, toISOStringSafe, loadProjectHierarchy]);
 
-  // Build dynamic escalation roles from project hierarchy
-  const buildEscalationRoles = (): EscalationRoles => {
+  // Build dynamic escalation roles
+  const buildEscalationRoles = useCallback((): EscalationRoles => {
     if (projectHierarchy.length === 0) {
       return {
         level1: 'employee',
@@ -343,7 +434,6 @@ const PaymentControlPage = () => {
       level4: 'director'
     };
 
-    // Map actual hierarchy positions to escalation levels
     if (levels.length >= 1) {
       const highestLevel = sortedHierarchy.filter(h => h.level === levels[0]);
       roles.level4 = highestLevel[0]?.position_title || 'director';
@@ -360,19 +450,21 @@ const PaymentControlPage = () => {
     }
 
     return roles;
-  };
+  }, [projectHierarchy]);
 
-  if (!selectedProject) {
+  // États de chargement
+  if (isLoading || projectsLoading || !selectedProject) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement du projet et de l'organisation...</p>
+          <p className="text-muted-foreground">Chargement du projet...</p>
         </div>
       </div>
     );
   }
 
+  // Render avec Provider
   return (
     <ProjectManagerProvider 
       project={selectedProject} 

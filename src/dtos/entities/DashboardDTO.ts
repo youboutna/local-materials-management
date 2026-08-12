@@ -19,21 +19,6 @@ export interface MonitoringMetrics {
   alertsPending: number;
 }
 
-export interface Alert {
-  id: string;
-  type: 'insurance' | 'delay' | 'inspection' | 'financial' | 'quality' | 'safety';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  projectId?: string;
-  createdAt: string;
-  acknowledgedAt?: string;
-  resolvedAt?: string;
-  assignedTo?: string;
-  status: 'pending' | 'acknowledged' | 'resolved' | 'escalated';
-  actions: string[];
-}
-
 export interface DashboardStats {
   activeProjects: number;
   totalProjects: number;

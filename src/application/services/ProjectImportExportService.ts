@@ -13,37 +13,37 @@
  *   en incluant la zone d'intervention (interventionZone) lorsqu'elle existe.
  */
 
-import { AuthService, getAuthService} from '@/application/services/AuthService';
-import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
-import { OrganizationService, getOrganizationService} from '@/application/services/OrganizationService';
-import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
-import { ProjectStakeholderService, getProjectStakeholderService} from '@/application/services/ProjectStakeholderService';
-import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
-import { TaskAssignmentService, getTaskAssignmentService} from '@/application/services/TaskAssignmentService';
+import { AuthService, getAuthService } from '@/application/services/AuthService';
+import { getMilestoneService } from '@/application/services/MilestoneService';
+import { getOrganizationService } from '@/application/services/OrganizationService';
+import { getPhaseService } from '@/application/services/PhaseService';
+import { ProjectService, getProjectService } from '@/application/services/ProjectService';
+import { getProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import {
-  CreateTaskAssignmentDTO,
-  TaskPriority,
-  TaskStatus,
-  normalizeTaskPriority,
-  normalizeTaskStatus
+    CreateTaskAssignmentDTO,
+    TaskPriority,
+    TaskStatus,
+    normalizeTaskPriority,
+    normalizeTaskStatus
 } from '@/dtos/entities/TaskAssignmentDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 
 import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
 import type {
-  CreateProjectDTO,
-  ProjectDTO,
+    CreateProjectDTO,
+    ProjectDTO,
 } from '@/dtos/entities/ProjectDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 

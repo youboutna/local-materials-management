@@ -5,7 +5,7 @@
  */
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { BoqPdfRenderer, type BoqPdfContext } from './BoqPdfRenderer';
 
 export interface DocumentContext {

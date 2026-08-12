@@ -2,7 +2,7 @@
  * useTenderLotsHex - CRUD hooks for persisted tender lots.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTenderLotService, TenderLotRecord } from '@/application/services/tender/TenderLotService';
+import { getTenderLotService, TenderLotRecord } from '@/application/services/TenderLotService';
 import { toast } from '@/hooks/use-toast';
 
 export type { TenderLotRecord };

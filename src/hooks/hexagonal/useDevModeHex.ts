@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DEV_CONFIG, shouldUseMockData, simulateApiDelay } from '@/config/dev';
-import { LocalStorageAdapter } from '@/infrastructure/localStorage/LocalStorageAdapter';
+import { LocalStorageAdapter } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
 import { toast } from '@/hooks/use-toast';
 
 /**

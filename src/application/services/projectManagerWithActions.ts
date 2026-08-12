@@ -1,35 +1,31 @@
 import { ProjectData, EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
 
-// Define ActionLabels locally to avoid circular import
-export interface ActionLabels {
-  budget: string;
-  timeline: string;
-  quality: string;
-  resource: string;
-  risk: string;
-  compliance: string;
-  [key: string]: string;
-}
-
-export interface ProjectAlert {
-  id: string;
-  type: 'budget' | 'timeline' | 'quality' | 'resource' | 'risk' | 'compliance';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  projectId: string;
-  createdBy: string;
-  createdAt: string;
-  acknowledgedBy?: string;
-  acknowledgedAt?: string;
-  resolvedBy?: string;
-  resolvedAt?: string;
-  status: 'open' | 'acknowledged' | 'in_progress' | 'resolved' | 'closed';
-  actions: string[];
-}
+import { 
+  Alert, 
+  AlertStatistics, 
+  AlertStatus, 
+  AlertType, 
+  AlertSeverity, 
+  AlertSource,
+  AlertEntity
+} from '@/domain/entities/Alert';
+import { 
+  IAlertRepository, 
+  AlertFilter 
+} from '@/domain/repositories/IAlertRepository';
+import { 
+  AlertDTO, 
+  AlertStatisticsDTO, 
+  AlertStateDTO,
+  CreateAlertData,
+  UpdateAlertData,
+  AlertFilter as AlertFilterDTO
+} from '@/dtos/entities/AlertDTO';
+import { AlertTransformer } from '@/dtos/transforms/AlertTransformer';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface ProjectManagerState {
-  alerts: ProjectAlert[];
+  alerts: Alert[];
   lastCheck: string;
   totalAlerts: number;
   criticalAlerts: number;
@@ -101,7 +97,7 @@ export class ProjectManager {
   private project: ProjectWithCost;
   private roles: EscalationRoles;
   private actionLabels: ActionLabels;
-  private alerts: ProjectAlert[] = [];
+  private alerts: Alert[] = [];
   private state: ProjectManagerState;
 
   constructor(project: ProjectWithCost, roles: EscalationRoles, actionLabels: ActionLabels) {
@@ -293,8 +289,8 @@ export class ProjectManager {
   /**
    * Add an alert
    */
-  private addAlert(alert: Omit<ProjectAlert, 'id' | 'createdAt'>): void {
-    const newAlert: ProjectAlert = {
+  private addAlert(alert: Omit<Alert, 'id' | 'createdAt'>): void {
+    const newAlert: Alert = {
       ...alert,
       id: `alert_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`,
       createdAt: new Date().toISOString()
@@ -313,21 +309,21 @@ export class ProjectManager {
   /**
    * Get all alerts
    */
-  getAlerts(): ProjectAlert[] {
+  getAlerts(): Alert[] {
     return this.alerts;
   }
 
   /**
    * Get alerts by type
    */
-  getAlertsByType(type: ProjectAlert['type']): ProjectAlert[] {
+  getAlertsByType(type: Alert['type']): Alert[] {
     return this.alerts.filter(alert => alert.type === type);
   }
 
   /**
    * Get alerts by severity
    */
-  getAlertsBySeverity(severity: ProjectAlert['severity']): ProjectAlert[] {
+  getAlertsBySeverity(severity: Alert['severity']): Alert[] {
     return this.alerts.filter(alert => alert.severity === severity);
   }
 
@@ -363,7 +359,7 @@ export class ProjectManager {
   /**
    * Get escalation path for alert
    */
-  getEscalationPath(alert: ProjectAlert): string[] {
+  getEscalationPath(alert: Alert): string[] {
     const path: string[] = [];
     
     switch (alert.severity) {
@@ -386,14 +382,14 @@ export class ProjectManager {
   /**
    * Get action label for alert type
    */
-  getActionLabel(alertType: ProjectAlert['type']): string {
+  getActionLabel(alertType: Alert['type']): string {
     return this.actionLabels[alertType] || 'Review';
   }
 
   /**
    * Check if escalation is needed
    */
-  needsEscalation(alert: ProjectAlert): boolean {
+  needsEscalation(alert: Alert): boolean {
     return alert.severity === 'critical' || 
            (alert.severity === 'high' && alert.status === 'open' && 
             this.getTimeSince(alert.createdAt) > 24);

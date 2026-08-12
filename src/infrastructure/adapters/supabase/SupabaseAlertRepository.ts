@@ -6,7 +6,7 @@
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import type { 
   IAlertRepository, 
-  ProjectAlertDTO, 
+  AlertDTO, 
   CreateProjectAlertRequestDto, 
   UpdateProjectAlertRequestDto,
   AlertStatistics 
@@ -30,7 +30,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     return this.supabase;
   }
 
-  async findById(id: string): Promise<ProjectAlertDTO | null> {
+  async findById(id: string): Promise<AlertDTO | null> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -53,7 +53,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async findByProjectId(projectId: string): Promise<ProjectAlertDTO[]> {
+  async findByProjectId(projectId: string): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -73,7 +73,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async findAll(): Promise<ProjectAlertDTO[]> {
+  async findAll(): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -92,7 +92,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async create(alertData: CreateProjectAlertRequestDto): Promise<ProjectAlertDTO> {
+  async create(alertData: CreateProjectAlertRequestDto): Promise<AlertDTO> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -120,7 +120,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async update(id: string, updateData: UpdateProjectAlertRequestDto): Promise<ProjectAlertDTO> {
+  async update(id: string, updateData: UpdateProjectAlertRequestDto): Promise<AlertDTO> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -164,7 +164,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async findActive(): Promise<ProjectAlertDTO[]> {
+  async findActive(): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -184,7 +184,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async findByType(type: string): Promise<ProjectAlertDTO[]> {
+  async findByType(type: string): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -204,7 +204,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async findBySeverity(severity: string): Promise<ProjectAlertDTO[]> {
+  async findBySeverity(severity: string): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -224,7 +224,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async acknowledge(id: string, userId: string): Promise<ProjectAlertDTO> {
+  async acknowledge(id: string, userId: string): Promise<AlertDTO> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -253,7 +253,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async resolve(id: string, userId: string): Promise<ProjectAlertDTO> {
+  async resolve(id: string, userId: string): Promise<AlertDTO> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -321,7 +321,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async acknowledgeBatch(alertIds: string[], userId: string): Promise<ProjectAlertDTO[]> {
+  async acknowledgeBatch(alertIds: string[], userId: string): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -346,7 +346,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  async resolveBatch(alertIds: string[], userId: string): Promise<ProjectAlertDTO[]> {
+  async resolveBatch(alertIds: string[], userId: string): Promise<AlertDTO[]> {
     try {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
@@ -371,7 +371,7 @@ export class SupabaseAlertRepository implements IAlertRepository {
     }
   }
 
-  private mapToDTO(data: Record<string, unknown>): ProjectAlertDTO {
+  private mapToDTO(data: Record<string, unknown>): AlertDTO {
     return {
       id: data.id as string,
       project_id: data.project_id as string,

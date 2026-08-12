@@ -5,7 +5,7 @@ import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { AuthSession as DomainAuthSession } from '@/domain/repositories/IAuthRepository';
 import { useToast } from '@/hooks/use-toast';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { ReactNode, useCallback, useEffect, useState } from 'react';

@@ -1,10 +1,10 @@
+// ============================================================
+// src/application/services/ProjectWorkflowService.ts
+// ============================================================
 /**
  * Service: ProjectWorkflowService
  * Gère les workflows de création et modification de projets
- * Following hexagonal architecture and PROMPT.md rules
- * 
- * Hexagonal Flow:
- * UI Component → Transformer → DTO (camelCase) → Service → Domain ← API(call supabase)(snake_case) → DB
+ * Following hexagonal architecture
  */
 
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
@@ -16,45 +16,49 @@ import { MaterialService } from '@/application/services/MaterialService';
 import { MilestoneService } from '@/application/services/MilestoneService';
 import { PaymentService } from '@/application/services/PaymentService';
 import { PhaseService } from '@/application/services/PhaseService';
+import { getProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
+import { getProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
 import { ReceptionService } from '@/application/services/ReceptionService';
 import { ReferentialService } from '@/application/services/ReferentialService';
 import { SupplierService } from '@/application/services/SupplierService';
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { getAlertService } from '@/application/services/AlertService';
 import { ReferentialType, getPhasesForReferential, getReferential } from '@/config/referentials';
+
+// Domain Entities
 import { Phase } from '@/domain/entities/Phase';
 import { Project } from '@/domain/entities/Project';
 import { Risk } from '@/domain/entities/Risk';
-import type { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
-import type { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import type { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
-import type { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
-import type { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
-import type { IProjectRepository } from '@/domain/repositories/IProjectRepository';
-import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
-import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
-import type { IRiskRepository } from '@/domain/repositories/IRiskRepository';
-import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
-import type { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+
+// DTOs
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BankGuaranteeDTO } from '@/dtos/entities/BankGuaranteeDTO';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
-import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceCertificateDTO';
+import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { PhaseDTO, PhasePriority, PhaseStatus, PhaseType } from '@/dtos/entities/PhaseDTO';
 import { CreateProjectDTO, ProjectDTO, ProjectStatus, UpdateProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO, RiskStatus } from '@/dtos/entities/RiskDTO';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
-import { ProjectWorkflowData, SaveResult, StepRelatedDataDTO, ValidationResult, WorkflowStep, WorkflowTransition } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import {
+  ProjectWorkflowData,
+  SaveResult,
+  StepRelatedDataDTO,
+  ValidationResult,
+  WorkflowStep,
+  WorkflowTransition,
+  WorkflowMetadataDTO,
+  ComplianceDataDTO,
+} from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
-import { getProjectStrategyLinkService } from '@/application/services/ProjectStrategyLinkService';
-import { getProjectBudgetLinkService } from '@/application/services/ProjectBudgetLinkService';
 
+// ============================================================
+// Types exportés
+// ============================================================
 export enum WorkflowMode {
   CREATE = 'create',
   EDIT = 'edit',
@@ -62,13 +66,6 @@ export enum WorkflowMode {
   CANCEL = 'cancel'
 }
 
-// Export types for hooks
-export interface ProjectCreationWorkflowData extends ProjectWorkflowData {
-  referentialCode?: ReferentialType;
-  generateMilestones?: boolean;
-}
-
-// Phase generation interfaces (from PhaseGeneratorService)
 export interface GeneratedPhaseData {
   id: string;
   phaseCode: string;
@@ -143,7 +140,36 @@ export interface WorkflowResult {
   warnings?: string[];
 }
 
-/** Déduplique une collection de sous-objets par `id` (fallback: référence). */
+// ============================================================
+// Configuration des alertes
+// ============================================================
+interface AlertConfig {
+  enabled: boolean;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  priority: number;
+  debounceMs: number;
+  rateLimit: number;
+  actions: string[];
+  recipients?: string[];
+}
+
+const ALERT_CONFIGS: Record<string, AlertConfig> = {
+  'project.creation': { enabled: true, severity: 'low', priority: 1, debounceMs: 0, rateLimit: 10, actions: ['view', 'edit'] },
+  'project.status_change': { enabled: true, severity: 'medium', priority: 2, debounceMs: 5000, rateLimit: 20, actions: ['view', 'acknowledge'] },
+  'project.completion': { enabled: true, severity: 'high', priority: 3, debounceMs: 10000, rateLimit: 5, actions: ['view', 'acknowledge', 'report'] },
+  'progress.milestone': { enabled: true, severity: 'low', priority: 1, debounceMs: 10000, rateLimit: 5, actions: ['view'] },
+  'progress.delay': { enabled: true, severity: 'high', priority: 3, debounceMs: 30000, rateLimit: 3, actions: ['view', 'acknowledge', 'assign', 'escalate'], recipients: ['project_manager', 'director'] },
+  'progress.critical': { enabled: true, severity: 'critical', priority: 4, debounceMs: 60000, rateLimit: 2, actions: ['view', 'acknowledge', 'assign', 'escalate', 'notify'], recipients: ['project_manager', 'director', 'ceo'] },
+  'risk.detection': { enabled: true, severity: 'high', priority: 3, debounceMs: 30000, rateLimit: 5, actions: ['view', 'acknowledge', 'mitigate'] },
+  'risk.escalation': { enabled: true, severity: 'critical', priority: 4, debounceMs: 60000, rateLimit: 2, actions: ['view', 'acknowledge', 'escalate'], recipients: ['director', 'ceo'] },
+  'phase.completion': { enabled: true, severity: 'medium', priority: 2, debounceMs: 10000, rateLimit: 10, actions: ['view', 'acknowledge'] },
+};
+
+function getAlertConfig(type: string): AlertConfig {
+  return ALERT_CONFIGS[type] || { enabled: true, severity: 'medium', priority: 2, debounceMs: 5000, rateLimit: 10, actions: ['view'] };
+}
+
+/** Déduplique une collection par `id` */
 function dedupeById<T extends { id?: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   const out: T[] = [];
@@ -156,11 +182,16 @@ function dedupeById<T extends { id?: string }>(items: T[]): T[] {
   return out;
 }
 
+// ============================================================
+// Service
+// ============================================================
 export class ProjectWorkflowService {
-
   private referentialService: ReferentialService;
-  
-  // Additional services for comprehensive project management (optional)
+  private alertService = getAlertService();
+  private alertCache = new Map<string, { timestamp: number; count: number }>();
+  private readonly CACHE_TTL = 60000;
+  private readonly MAX_ALERTS_PER_MINUTE = 10;
+
   private phaseService: PhaseService;
   private milestoneService?: MilestoneService;
   private taskAssignmentService?: TaskAssignmentService;
@@ -190,8 +221,6 @@ export class ProjectWorkflowService {
     private receptionRepository?: IReceptionRepository
   ) {
     this.referentialService = ReferentialService.getInstance();
-    
-    // Initialize additional services
     this.phaseService = new PhaseService(phaseRepository);
     this.milestoneService = milestoneRepository ? new MilestoneService(milestoneRepository) : undefined;
     this.taskAssignmentService = taskAssignmentRepository ? new TaskAssignmentService(taskAssignmentRepository) : undefined;
@@ -223,25 +252,132 @@ export class ProjectWorkflowService {
     );
   }
 
-  // =================== WORKFLOW INITIALIZATION ===================
+  // ============================================================
+  // ALERTES
+  // ============================================================
 
-  initializeWorkflow(mode: 'creation' | 'edit'): { mode: string; currentStep: number; totalSteps: number } {
-    return {
-      mode,
-      currentStep: 1,
-      totalSteps: this.getWorkflowSteps().length,
-    };
+  private canCreateAlert(key: string): boolean {
+    const now = Date.now();
+    const cached = this.alertCache.get(key);
+    if (cached) {
+      if (now - cached.timestamp < this.CACHE_TTL) {
+        if (cached.count >= this.MAX_ALERTS_PER_MINUTE) return false;
+        this.alertCache.set(key, { timestamp: now, count: cached.count + 1 });
+      } else {
+        this.alertCache.set(key, { timestamp: now, count: 1 });
+      }
+    } else {
+      this.alertCache.set(key, { timestamp: now, count: 1 });
+    }
+    return true;
   }
 
+  private createAlertBackground(projectId: string, type: string, data: any): void {
+    setImmediate(async () => {
+      try {
+        const config = getAlertConfig(type);
+        if (!config.enabled) return;
+
+        const cacheKey = `${projectId}-${type}`;
+        if (!this.canCreateAlert(cacheKey)) return;
+
+        const existing = await this.checkExistingAlert(projectId, type, data);
+        if (existing) return;
+
+        await this.alertService.createAlert({
+          projectId,
+          projectTitle: data.projectTitle || 'Projet',
+          type: 'system' as any,
+          severity: config.severity,
+          title: this.getAlertTitle(type, data),
+          message: this.getAlertMessage(type, data),
+          source: 'system' as any,
+          delayDays: data.delayPercentage || 0,
+          actionRequired: this.isActionRequired(type, data),
+          availableActions: config.actions,
+          deadline: data.deadline,
+          metadata: { workflowType: type, triggeredAt: new Date().toISOString(), data },
+        });
+      } catch (error) {
+        console.warn('[Alert] Background creation failed:', error);
+      }
+    });
+  }
+
+  private async checkExistingAlert(projectId: string, type: string, data: any): Promise<boolean> {
+    try {
+      const alerts = await this.alertService.getAlertsByProjectId(projectId);
+      const now = new Date();
+      const recent = alerts.filter(a => {
+        const created = new Date(a.createdAt);
+        return (now.getTime() - created.getTime()) / (1000 * 60 * 60) < 24 && a.type === type;
+      });
+      const message = this.getAlertMessage(type, data);
+      return recent.some(a => a.message === message);
+    } catch { return false; }
+  }
+
+  private getAlertTitle(type: string, data: any): string {
+    const titles: Record<string, string> = {
+      'project.creation': `Nouveau projet: ${data.projectTitle}`,
+      'project.status_change': `Statut modifié: ${data.projectTitle}`,
+      'project.completion': `Projet complété: ${data.projectTitle}`,
+      'progress.milestone': `Jalon atteint: ${data.progress}%`,
+      'progress.delay': `Retard détecté: ${data.delayPercentage}%`,
+      'progress.critical': `⚠️ Retard critique: ${data.delayPercentage}%`,
+      'risk.detection': `Risque détecté: ${data.riskTitle}`,
+      'risk.escalation': `⚠️ Risque escaladé: ${data.riskTitle}`,
+      'phase.completion': `Phase terminée: ${data.phaseTitle}`,
+    };
+    return titles[type] || `Alerte: ${data.projectTitle}`;
+  }
+
+  private getAlertMessage(type: string, data: any): string {
+    const messages: Record<string, string> = {
+      'project.creation': `Le projet "${data.projectTitle}" a été créé avec succès.`,
+      'project.status_change': `Le projet "${data.projectTitle}" est passé de "${data.oldStatus}" à "${data.newStatus}".`,
+      'project.completion': `Le projet "${data.projectTitle}" est terminé à 100%.`,
+      'progress.milestone': `Le projet "${data.projectTitle}" a atteint ${data.progress}% de progression.`,
+      'progress.delay': `Le projet "${data.projectTitle}" accuse un retard de ${data.delayPercentage}%.`,
+      'progress.critical': `⚠️ Le projet "${data.projectTitle}" accuse un retard critique de ${data.delayPercentage}%.`,
+      'risk.detection': `Un risque "${data.riskTitle}" a été détecté sur le projet "${data.projectTitle}".`,
+      'risk.escalation': `⚠️ Le risque "${data.riskTitle}" a été escaladé sur le projet "${data.projectTitle}".`,
+      'phase.completion': `La phase "${data.phaseTitle}" du projet "${data.projectTitle}" est terminée.`,
+    };
+    return messages[type] || `Alerte pour le projet "${data.projectTitle}"`;
+  }
+
+  private isActionRequired(type: string, data: any): boolean {
+    return type.includes('critical') || type.includes('delay') || type.includes('risk') || type.includes('completion');
+  }
+
+  private getSignificantChanges(current: any, updated: any): Array<{ type: string; data: any }> {
+    const changes: Array<{ type: string; data: any }> = [];
+    if (current.status !== updated.status) {
+      changes.push({ type: 'project.status_change', data: { oldStatus: current.status, newStatus: updated.status, projectTitle: updated.title } });
+    }
+    const progressDelta = Math.floor(updated.progress / 25) - Math.floor((current.progress || 0) / 25);
+    if (progressDelta > 0) {
+      changes.push({ type: 'progress.milestone', data: { progress: updated.progress, previousProgress: current.progress || 0, projectTitle: updated.title } });
+    }
+    if (updated.progress >= 100 && (current.progress || 0) < 100) {
+      changes.push({ type: 'project.completion', data: { progress: updated.progress, projectTitle: updated.title } });
+    }
+    return changes;
+  }
+
+  // ============================================================
+  // WORKFLOW
+  // ============================================================
+
   getWorkflowSteps(): WorkflowStep[] {
-    // ⚠️ requiredFields use dotted paths consumed by getNestedValue → must match ProjectWorkflowData shape.
     return [
       { id: 'project-info', name: 'project_info', title: 'Informations du projet', description: 'Type, budget, dates, référence', order: 1, isCompleted: false, isRequired: true, validation: { rules: ['title_required', 'budget_positive'], requiredFields: ['projectData.title'] } },
       { id: 'stakeholders', name: 'stakeholders', title: 'Parties prenantes', description: 'Bailleurs, Ministères, Entreprises', order: 2, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
       { id: 'location', name: 'location', title: 'Localisation', description: 'Géolocalisation interactive', order: 3, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: ['projectData.location'] } },
       { id: 'phases', name: 'phases', title: 'Planification WBS', description: 'Phase → Step → Task', order: 4, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } },
       { id: 'risks', name: 'risks', title: 'Risques', description: 'Analyse et gestion des risques', order: 5, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
-      { id: 'compliance', name: 'compliance', title: 'Conformité', description: 'Standards SOMELEC et bailleurs', order: 6, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
+      { id: 'compliance', name: 'compliance', title: 'Conformité', description: 'Standards et réglementations', order: 6, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
       { id: 'strategy', name: 'strategy', title: 'Liens stratégiques', description: 'Stratégies & budget', order: 7, isCompleted: false, isRequired: false, validation: { rules: [], requiredFields: [] } },
       { id: 'review', name: 'review', title: 'Validation', description: 'Réception définitive et clôture', order: 8, isCompleted: false, isRequired: true, validation: { rules: [], requiredFields: [] } }
     ];
@@ -255,59 +391,40 @@ export class ProjectWorkflowService {
     return this.getWorkflowSteps().find(s => s.order === order);
   }
 
-  // =================== WORKFLOW STATE MANAGEMENT ===================
-
   async initializeEditWorkflow(projectId: string): Promise<ProjectWorkflowData> {
     try {
       const project = await this.projectRepository.findById(projectId);
-      if (!project) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
-      }
+      if (!project) throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
 
-      // Load project DTO
       const projectDTO = ProjectTransformer.toDTO(project);
-
-      // Load related data in parallel
-      const [phases, risks, stakeholders, projectMilestones, projectTasks] = await Promise.all([
-        this.phaseRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
-        this.riskRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
-        this.stakeholderRepository?.findByProjectId(projectId).catch(() => []) || Promise.resolve([]),
-        this.milestoneService?.getProjectMilestonesDTO(projectId).catch(() => []) || Promise.resolve([]),
-        this.taskAssignmentService?.getByProject(projectId).catch(() => []) || Promise.resolve([]),
+      const [phases, risks, stakeholders] = await Promise.all([
+        this.phaseRepository.findByProjectId(projectId).catch(() => []),
+        this.riskRepository.findByProjectId(projectId).catch(() => []),
+        this.stakeholderRepository.findByProjectId(projectId).catch(() => []),
       ]);
 
-      // Build complete workflow data
       const phaseData = await Promise.all((phases || []).map(async (phase: any) => ({
         id: phase.id,
         projectId: phase.projectId || projectId,
         name: phase.name || phase.phaseName || '',
-        phaseCode: phase.phaseCode || phase.phase_code || phase.customPhaseData?.phaseCode,
+        phaseCode: phase.phaseCode || phase.phase_code,
         description: phase.description || '',
         startDate: phase.startDate,
         endDate: phase.endDate,
         progress: phase.progress || 0,
         status: phase.status || 'not_started',
-        type: phase.type || phase.phaseType || 'custom',
+        type: phase.type || 'custom',
         priority: phase.priority || 'medium',
         orderIndex: phase.orderIndex ?? phase.order ?? 0,
         estimatedCost: phase.estimatedCost || 0,
         estimatedDuration: phase.estimatedDuration || 0,
         constructionStage: phase.constructionStage || '',
-        milestones: this.milestoneService
-          ? await this.milestoneService.getPhaseMilestones(projectId, phase.id).catch(() => [])
-          : [],
-        tasks: this.taskAssignmentService
-          ? await this.taskAssignmentService.getByPhase(phase.id).catch(() => [])
-          : [],
-        dqeLines: await boqRepository.list({
-          source: 'dqe',
-          contextId: projectId,
-          projectId,
-          phaseId: phase.id,
-        }).catch(() => []),
+        milestones: this.milestoneService ? await this.milestoneService.getPhaseMilestones(projectId, phase.id).catch(() => []) : [],
+        tasks: this.taskAssignmentService ? await this.taskAssignmentService.getByPhase(phase.id).catch(() => []) : [],
+        dqeLines: await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: phase.id }).catch(() => []),
       }))) as unknown as PhaseDTO[];
 
-      const workflowData: ProjectWorkflowData = {
+      return {
         projectId,
         currentStep: 1,
         isDraft: false,
@@ -315,620 +432,101 @@ export class ProjectWorkflowService {
         projectData: projectDTO,
         relatedData: {
           phases: phaseData,
-          // Jalons/tâches : union des sous-objets rattachés aux phases + ceux au niveau projet
-          milestones: dedupeById([
-            ...phaseData.flatMap((phase) => phase.milestones ?? []),
-            ...((projectMilestones || []) as any[]),
-          ]),
-          tasks: dedupeById([
-            ...phaseData.flatMap((phase: any) => phase.tasks ?? []),
-            ...((projectTasks || []) as any[]),
-          ]),
-          dqeLines: phaseData.flatMap((phase) => phase.dqeLines ?? []) as BoqLineDTO[],
-          risks: (risks || []).map((r: any) => ({
-            id: r.id,
-            projectId: r.projectId || projectId,
-            title: r.title || r.riskTitle || '',
-            description: r.description || r.riskDescription || '',
-            probability: r.probability || 0,
-            impact: r.impact || 0,
-            riskScore: r.riskScore || 0,
-            status: r.status || 'identified',
-            mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '',
-          })) as RiskDTO[],
-          stakeholders: (stakeholders || []) as NonNullable<ProjectWorkflowData['relatedData']>['stakeholders'],
+          milestones: dedupeById([...phaseData.flatMap(p => p.milestones ?? []), ...(projectDTO as any).milestones || []]),
+          tasks: dedupeById([...phaseData.flatMap((p: any) => p.tasks ?? []), ...(projectDTO as any).tasks || []]),
+          dqeLines: phaseData.flatMap(p => p.dqeLines ?? []) as BoqLineDTO[],
+          risks: (risks || []).map((r: any) => ({ id: r.id, projectId: r.projectId || projectId, title: r.title || r.riskTitle || '', description: r.description || r.riskDescription || '', probability: r.probability || 0, impact: r.impact || 0, riskScore: r.riskScore || 0, status: r.status || 'identified', mitigationPlan: r.mitigationPlan || r.mitigationStrategy || '' })) as RiskDTO[],
+          stakeholders: (stakeholders || []) as any,
         },
-
-        metadata: {
-          lastSavedAt: projectDTO.updatedAt || new Date().toISOString(),
-          totalSteps: this.getWorkflowSteps().length,
-          completedSteps: 1,
-          progressPercentage: Math.round(100 / this.getWorkflowSteps().length),
-        },
+        metadata: { lastSavedAt: projectDTO.updatedAt || new Date().toISOString(), totalSteps: 8, completedSteps: 1, progressPercentage: 12.5 },
       };
-
-      return workflowData;
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to initialize workflow');
     }
   }
 
-  // =================== STEP VALIDATION ===================
-
   async validateStep(stepNumber: number, data: Partial<ProjectWorkflowData>): Promise<ValidationResult & { warnings?: string[] }> {
     const errors: string[] = [];
     const warnings: string[] = [];
     const step = this.getWorkflowStep(stepNumber);
+    if (!step) return { isValid: false, errors: ['Invalid step number'], warnings: [] };
 
-    if (!step) {
-      return { isValid: false, errors: ['Invalid step number'], warnings: [] };
-    }
-
-    // Validate required fields
-    const requiredFields = step.validation?.requiredFields || [];
-    for (const field of requiredFields) {
-      const value = this.getNestedValue(data, field);
+    for (const field of step.validation?.requiredFields || []) {
+      const value = field.split('.').reduce((acc, part) => acc && acc[part], data);
       if (value === undefined || value === null || value === '') {
         errors.push(`Le champ "${field}" est obligatoire`);
       }
     }
 
-    // Validate referential if specified
     if (data.projectData?.projectReference) {
-      const referential = await this.referentialService.getReferential(
-        data.projectData.projectReference as ReferentialType
-      );
-      if (!referential) {
-        warnings.push(`Le référentiel "${data.projectData.projectReference}" n'existe pas. Utilisation des paramètres par défaut.`);
-      }
+      const ref = await this.referentialService.getReferential(data.projectData.projectReference as ReferentialType);
+      if (!ref) warnings.push(`Le référentiel "${data.projectData.projectReference}" n'existe pas.`);
     }
 
-    // Step-specific validations
-    switch (stepNumber) {
-      case 1: // Project Info
-        if (data.projectData?.budget && data.projectData.budget <= 0) {
-          warnings.push('Le budget devrait être supérieur à 0');
-        }
-        if (data.projectData?.startDate && data.projectData?.endDate) {
-          const start = new Date(data.projectData.startDate);
-          const end = new Date(data.projectData.endDate);
-          if (end < start) {
-            errors.push('La date de fin doit être après la date de début');
-          }
-        }
-        break;
-      case 4: // Phases
-        if (!data.relatedData?.phases || data.relatedData.phases.length === 0) {
-          warnings.push('Aucune phase définie. Considérez d\'utiliser un référentiel pour générer les phases.');
-        }
-        break;
+    if (stepNumber === 1) {
+      if (data.projectData?.budget && data.projectData.budget <= 0) warnings.push('Le budget devrait être supérieur à 0');
+      if (data.projectData?.startDate && data.projectData?.endDate) {
+        const start = new Date(data.projectData.startDate);
+        const end = new Date(data.projectData.endDate);
+        if (end < start) errors.push('La date de fin doit être après la date de début');
+      }
+    }
+    if (stepNumber === 4 && (!data.relatedData?.phases || data.relatedData.phases.length === 0)) {
+      warnings.push('Aucune phase définie. Utilisez un référentiel pour générer les phases.');
     }
 
     return { isValid: errors.length === 0, errors, warnings };
   }
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-  }
-
-  // =================== STEP SAVE ===================
-
-  /**
-   * Per-step dispatcher. Each UI step only persists the slice it owns.
-   * - 1 Project Info → projects (create or update)
-   * - 2 Stakeholders → project_stakeholders (upsert)
-   * - 3 Location    → projects.update (location + coords)
-   * - 4 Phases      → project_phases (upsert)
-   * - 5 Risks       → project_risks (upsert)
-   * - 6 Compliance  → (no DB target yet — referential-only)
-   * - 7 Strategy    → handled by StrategicLinkageStep hooks (no-op here)
-   * - 8 Review      → completeWorkflow
-   */
   async saveStep(stepNumber: number, data: ProjectWorkflowData, context: any): Promise<SaveResult & { projectId?: string }> {
     try {
       const validation = await this.validateStep(stepNumber, data);
-      if (!validation.isValid) {
-        return { success: false, errors: validation.errors, warnings: validation.warnings };
-      }
+      if (!validation.isValid) return { success: false, errors: validation.errors, warnings: validation.warnings };
 
-      // Resolve / ensure projectId (step 1 may create the project)
       let projectId = data.projectId || data.projectData?.id;
 
       switch (stepNumber) {
-        case 1: {
+        case 1:
           projectId = await this.upsertProjectFromWorkflow(data);
+          this.createAlertBackground(projectId, 'project.creation', { projectTitle: data.projectData?.title });
           break;
-        }
-        case 2: {
-          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+        case 2:
+          if (!projectId) return { success: false, errors: ['Projet non créé'] };
           await this.upsertStakeholders(projectId, data.relatedData?.stakeholders || []);
-          // promote project manager if provided
-          if (data.projectData?.projectManagerId) {
-            await this.projectRepository.update(projectId, { projectManagerId: data.projectData.projectManagerId } as any);
-          }
           break;
-        }
-        case 3: {
-          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
-          const pd = data.projectData as any;
-          const locUpdate: UpdateProjectDTO = {
-            id: projectId,
-            location: pd?.location,
-            latitude: pd?.latitude,
-            longitude: pd?.longitude,
-            geographicZone: pd?.geographicZone,
-            terrainType: pd?.terrainType,
-            interventionZones: pd?.interventionZones,
-            interventionZone: pd?.interventionZone,
-          };
-          const locEntity = ProjectTransformer.fromUpdateDTOToEntity(locUpdate);
-          console.debug('[ProjectWorkflowService] saveStep(3) location payload', {
-            hasZones: Array.isArray(pd?.interventionZones) && pd.interventionZones.length > 0,
-            zonesCount: pd?.interventionZones?.length ?? 0,
-          });
-          await this.projectRepository.update(projectId, locEntity as any);
+        case 3:
+          if (!projectId) return { success: false, errors: ['Projet non créé'] };
+          const locUpdate: UpdateProjectDTO = { id: projectId, location: data.projectData?.location, latitude: data.projectData?.latitude, longitude: data.projectData?.longitude };
+          await this.projectRepository.update(projectId, ProjectTransformer.fromUpdateDTOToEntity(locUpdate) as any);
           break;
-        }
-        case 4: {
-          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+        case 4:
+          if (!projectId) return { success: false, errors: ['Projet non créé'] };
           await this.upsertPhases(projectId, data.relatedData?.phases || []);
           await this.upsertPhaseRelations(projectId, data.relatedData?.phases || [], data.relatedData?.dqeLines || []);
           break;
-        }
-        case 5: {
-          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
+        case 5:
+          if (!projectId) return { success: false, errors: ['Projet non créé'] };
           await this.upsertRisks(projectId, data.relatedData?.risks || []);
           break;
-        }
-        case 6: {
-          // Compliance step is a read-only aggregation view (bank guarantees,
-          // insurance, documents). Nothing to persist here.
+        case 6:
           break;
-        }
-        case 7: {
-          if (!projectId) return { success: false, errors: ['Projet non créé — complétez l\'étape 1 d\'abord.'] };
-          await this.upsertStrategyAndBudgetLinks(
-            projectId,
-            (data.relatedData as any)?.strategyLinks || [],
-            (data.relatedData as any)?.budgetLinks || []
-          );
+        case 7:
+          if (!projectId) return { success: false, errors: ['Projet non créé'] };
+          await this.upsertStrategyAndBudgetLinks(projectId, (data.relatedData as any)?.strategyLinks || [], (data.relatedData as any)?.budgetLinks || []);
           break;
-        }
-        case 8: {
+        case 8:
           if (projectId) await this.completeWorkflow({ projectId });
           break;
-        }
         default:
           return { success: false, errors: [`Étape inconnue: ${stepNumber}`] };
       }
 
       return { success: true, projectId, warnings: validation.warnings };
     } catch (error) {
-      console.error('Step save error:', error);
-      return {
-        success: false,
-        errors: [error instanceof Error ? error.message : 'Unknown error']
-      };
+      return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
     }
   }
-
-  // =================== STEP-SCOPED PERSISTENCE HELPERS ===================
-
-  private async upsertProjectFromWorkflow(data: ProjectWorkflowData): Promise<string> {
-    const projectData = data.projectData;
-    if (!projectData) throw new AppError(ErrorCode.VALIDATION_ERROR, 'projectData manquant');
-    const existingId = data.projectId || projectData.id;
-
-    const mainContractor = typeof projectData.mainContractor === 'string'
-      ? projectData.mainContractor
-      : (projectData.mainContractor && typeof projectData.mainContractor === 'object' && 'name' in projectData.mainContractor
-          ? String((projectData.mainContractor as { name: string }).name)
-          : undefined);
-
-    const coords = projectData.coordinates && typeof projectData.coordinates === 'object'
-      ? { latitude: (projectData.coordinates as any).latitude, longitude: (projectData.coordinates as any).longitude }
-      : { latitude: projectData.latitude, longitude: projectData.longitude };
-
-    // Zones d'intervention (multi-polygones) — propagées jusqu'aux transforms
-    // qui les traduisent en `projects.localisation` v3.
-    const pdAny = projectData as any;
-    const interventionZones = Array.isArray(pdAny?.interventionZones)
-      ? pdAny.interventionZones
-      : undefined;
-    const interventionZone = pdAny?.interventionZone;
-
-    if (existingId) {
-      const updateRequest: UpdateProjectDTO = {
-        id: existingId,
-        title: projectData.title,
-        description: projectData.description,
-        status: projectData.status,
-        progress: projectData.progress,
-        location: projectData.location,
-        budget: projectData.budget,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
-        teamSize: projectData.teamSize,
-        thumbnail: projectData.thumbnail,
-        financingSource: projectData.financingSource,
-        marketType: projectData.marketType,
-        selectionMode: projectData.selectionMode,
-        projectReference: projectData.projectReference,
-        referentialCode: projectData.referentialCode,
-        organizationId: projectData.organizationId,
-        externalRef: projectData.externalRef,
-        projectType: projectData.subCategory,
-        category: projectData.category,
-        methodology: projectData.methodology,
-        priorityLevel: projectData.priorityLevel,
-        geographicZone: projectData.geographicZone,
-        terrainType: projectData.terrainType,
-        requiresPermits: projectData.requiresPermits,
-        permitNumber: projectData.permitNumber,
-        hasUtilities: projectData.hasUtilities,
-        areaSqm: projectData.areaSqm,
-        insuranceRequired: projectData.insuranceRequired,
-        bankGuaranteeRequired: projectData.bankGuaranteeRequired,
-        bankGuaranteeAmount: projectData.bankGuaranteeAmount,
-        launchDate: projectData.launchDate,
-        attributionDate: projectData.attributionDate,
-        completionDate: projectData.completionDate,
-        currentPhase: projectData.currentPhase,
-        currentStage: projectData.currentStage,
-        mainContractor,
-        allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
-        initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
-        projectManagerId: projectData.projectManagerId,
-        interventionZones,
-        interventionZone,
-        ...(coords.latitude != null && coords.longitude != null
-          ? { latitude: coords.latitude, longitude: coords.longitude }
-          : {}),
-      };
-      const entity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
-      await this.projectRepository.update(existingId, entity);
-      return existingId;
-    }
-
-    const createRequest: CreateProjectDTO = {
-      title: projectData.title || 'Nouveau projet',
-      description: projectData.description || '',
-      location: projectData.location || '',
-      budget: projectData.budget || 0,
-      startDate: projectData.startDate || new Date().toISOString().split('T')[0],
-      endDate: projectData.endDate,
-      status: projectData.status || ProjectStatus.PLANIFIE,
-      progress: projectData.progress ?? 0,
-      thumbnail: projectData.thumbnail || '',
-      teamSize: projectData.teamSize || 1,
-      financingSource: projectData.financingSource,
-      marketType: projectData.marketType,
-      selectionMode: projectData.selectionMode,
-      projectReference: projectData.projectReference,
-      referentialCode: projectData.referentialCode,
-      organizationId: projectData.organizationId,
-      externalRef: projectData.externalRef,
-      projectType: projectData.subCategory,
-      category: projectData.category,
-      methodology: projectData.methodology,
-      priorityLevel: projectData.priorityLevel,
-      geographicZone: projectData.geographicZone,
-      terrainType: projectData.terrainType,
-      requiresPermits: projectData.requiresPermits,
-      permitNumber: projectData.permitNumber,
-      hasUtilities: projectData.hasUtilities,
-      areaSqm: projectData.areaSqm,
-      insuranceRequired: projectData.insuranceRequired,
-      bankGuaranteeRequired: projectData.bankGuaranteeRequired,
-      bankGuaranteeAmount: projectData.bankGuaranteeAmount,
-      launchDate: projectData.launchDate,
-      attributionDate: projectData.attributionDate,
-      completionDate: projectData.completionDate,
-      mainContractor,
-      allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
-      initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
-      currentPhase: projectData.currentPhase,
-      currentStage: projectData.currentStage,
-      interventionZones,
-      interventionZone,
-      ...(coords.latitude != null && coords.longitude != null ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
-    } as CreateProjectDTO;
-    const entity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
-    const created = await this.projectRepository.create(entity);
-
-    // Generate referential phases only at first creation
-    if (projectData.projectReference) {
-      const config: ProjectGenerationConfig = {
-        referentialType: projectData.projectReference as ReferentialType,
-        projectStartDate: projectData.startDate || new Date().toISOString().split('T')[0],
-        projectBudget: projectData.budget || 0,
-        projectId: created.id,
-        generateMilestones: true,
-      };
-      const generated = await this.generateCompleteProjectStructure(config);
-      await this.saveGeneratedPhases(created.id, generated);
-    }
-    return created.id;
-  }
-
-  private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
-    if (!phases.length) return;
-    const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => [] as any[]);
-    for (const phase of phases) {
-      const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
-      const existingPhase = existing.find((candidate: any) =>
-        (phase.id && candidate.id === phase.id) ||
-        (phase.phaseCode && (candidate.phaseCode === phase.phaseCode || candidate.customPhaseData?.phaseCode === phase.phaseCode)) ||
-        (!phase.phaseCode && candidate.name === phase.name),
-      );
-      if (existingPhase) {
-        await this.phaseRepository.update(existingPhase.id, payload as unknown as Partial<Phase>);
-      } else {
-        const { id: _omit, ...toCreate } = payload as any;
-        await this.phaseRepository.create(toCreate as unknown as Phase);
-      }
-    }
-  }
-
-  private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
-    const persistedPhases = await this.phaseRepository.findByProjectId(projectId);
-    const existingDqeByPhase = new Map<string, BoqLineDTO[]>();
-    await Promise.all(persistedPhases.map(async (phase) => {
-      const lines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: phase.id }).catch(() => []);
-      existingDqeByPhase.set(phase.id, lines);
-    }));
-    for (const phase of phases) {
-      const persisted = persistedPhases.find((candidate: any) =>
-        (phase.id && candidate.id === phase.id) ||
-        (phase.phaseCode && candidate.phaseCode === phase.phaseCode) ||
-        candidate.name === phase.name,
-      );
-      if (!persisted) continue;
-      for (const milestone of phase.milestones ?? []) {
-        if (!this.milestoneService) continue;
-        const existing = await this.milestoneService.getPhaseMilestones(projectId, persisted.id).catch(() => []);
-        const match = existing.find((candidate) => candidate.title === milestone.title);
-        const payload = {
-          project_id: projectId,
-          phase_id: persisted.id,
-          title: milestone.title,
-          description: milestone.description,
-          target_date: milestone.targetDate || new Date().toISOString(),
-          status: milestone.status,
-          progress: (milestone as { progress?: number }).progress ?? 0,
-        };
-        if (match) await this.milestoneService.updateMilestone(match.id, payload);
-        else await this.milestoneService.createMilestone(payload);
-      }
-
-      if (this.taskAssignmentService) {
-        const existingTasks = await this.taskAssignmentService.getByPhase(persisted.id).catch(() => []);
-        for (const task of phase.tasks ?? []) {
-          const taskName = task.title ?? task.name ?? 'Tâche importée';
-          const existingTask = existingTasks.find((candidate) => candidate.name === taskName);
-          
-          // Create task assignment data
-          const taskData = {
-            projectId,
-            phaseId: persisted.id,
-            name: taskName,
-            title: (task.title ?? task.name ?? name) as string,
-            description: task.description as string | undefined,
-            status: task.status as any || 'PENDING',
-            priority: task.priority as any || 'MEDIUM',
-            dueDate: (task.dueDate ?? task.due_date) as string | undefined,
-            assigneeId: task.assignedTo as string | undefined,
-          };
-          
-          if (existingTask) {
-            await this.taskAssignmentService.update(existingTask.id, taskData);
-          } else {
-            await this.taskAssignmentService.create(taskData);
-          }
-        }
-      }
-
-      const lines = [
-        ...(phase.dqeLines ?? []),
-        ...dqeLines.filter((line) => line.phaseId === phase.id || line.phaseId === persisted.id),
-      ];
-      const existingPhaseLines = existingDqeByPhase.get(persisted.id) ?? [];
-      for (const line of lines) {
-        const existing = existingPhaseLines.find((candidate) => candidate.btpCode === line.btpCode);
-        const payload = { ...line, phaseId: persisted.id, projectId, source: 'dqe' as const };
-        if (existing) await boqRepository.update(existing.id as string, payload);
-        else await boqRepository.create(payload);
-      }
-    }
-  }
-
-  private async upsertRisks(projectId: string, risks: RiskDTO[]): Promise<void> {
-    if (!risks.length) return;
-    const existing = await this.riskRepository.findByProjectId(projectId).catch(() => [] as any[]);
-    const existingIds = new Set(existing.map((r: any) => r.id));
-    for (const risk of risks) {
-      const payload = { ...risk, projectId, status: risk.status || RiskStatus.IDENTIFIED } as unknown as Risk;
-      if (risk.id && existingIds.has(risk.id)) {
-        await this.riskRepository.update(risk.id, payload);
-      } else {
-        await this.riskRepository.save(payload);
-      }
-    }
-  }
-
-  private async upsertStakeholders(projectId: string, stakeholders: any[]): Promise<void> {
-    if (!stakeholders.length) return;
-    const existing = await this.stakeholderRepository.findByProjectId(projectId).catch(() => [] as any[]);
-    const existingIds = new Set(existing.map((s: any) => s.id));
-
-    /**
-     * Normalize incoming stakeholder (UI/DTO/Entity shape) to the
-     * project_stakeholders DB constraints:
-     * - stakeholder_entity_type ∈ {'employee','supplier'} (NOT NULL)
-     * - employee_id required when 'employee' (and supplier_id NULL)
-     * - supplier_id required when 'supplier' (and employee_id NULL)
-     * - stakeholder_type NOT NULL
-     */
-    const normalize = (s: any): any => {
-      const employeeId = s.employeeId ?? s.employee_id ?? null;
-      const supplierId =
-        s.supplierId ?? s.supplier_id ?? s.organizationId ?? s.organization_id ?? null;
-
-      // Resolve entity type from any incoming convention
-      let entityType: 'employee' | 'supplier' | 'external' | null =
-        (s.stakeholderEntityType ?? s.stakeholder_entity_type ?? s.entityType ?? null) as any;
-      if (typeof entityType === 'string') {
-        const v = entityType.toLowerCase();
-        entityType =
-          v === 'employee' || v === 'person' || v === 'team' || v === 'department' ? 'employee'
-          : v === 'supplier' || v === 'organization' || v === 'organisation' || v === 'vendor' || v === 'contractor' ? 'supplier'
-          : v === 'external' ? 'external'
-          : null;
-      }
-      // Infer from available IDs / external info
-      const externalName = s.externalName ?? s.external_name ?? s.name ?? s.contact?.name ?? null;
-      const externalEmail = s.externalEmail ?? s.external_email ?? s.email ?? s.contact?.email ?? null;
-      const externalPhone = s.externalPhone ?? s.external_phone ?? s.phone ?? s.contact?.phone ?? null;
-      if (!entityType) {
-        entityType = employeeId ? 'employee'
-                   : supplierId ? 'supplier'
-                   : (externalName || externalEmail || externalPhone) ? 'external'
-                   : null;
-      }
-
-      const stakeholderType: string = (
-        s.stakeholderType ?? s.stakeholder_type ?? s.type ?? s.role ?? 'external'
-      ).toString();
-
-      return {
-        projectId,
-        stakeholderType,
-        stakeholderEntityType: entityType,
-        employeeId: entityType === 'employee' ? employeeId : null,
-        supplierId: entityType === 'supplier' ? supplierId : null,
-        externalName,
-        externalEmail,
-        externalPhone,
-        roleDescription: s.roleDescription ?? s.role_description ?? s.role ?? null,
-        responsibilities: s.responsibilities ?? null,
-        isActive: s.isActive ?? true,
-        startDate: s.startDate ?? s.start_date ?? null,
-        endDate: s.endDate ?? s.end_date ?? null,
-        hourlyRate: s.hourlyRate ?? s.hourly_rate ?? null,
-        contractType: s.contractType ?? s.contract_type ?? null,
-        notes: s.notes ?? null,
-      };
-    };
-
-    for (const s of stakeholders) {
-      const payload = normalize(s);
-      if (!payload.stakeholderEntityType) {
-        console.warn('[upsertStakeholders] skipped: missing entity type', s);
-        continue;
-      }
-      if (payload.stakeholderEntityType === 'employee' && !payload.employeeId) {
-        console.warn('[upsertStakeholders] skipped: employee without employeeId', s);
-        continue;
-      }
-      if (payload.stakeholderEntityType === 'supplier' && !payload.supplierId) {
-        console.warn('[upsertStakeholders] skipped: supplier without supplierId', s);
-        continue;
-      }
-      if (
-        payload.stakeholderEntityType === 'external' &&
-        !payload.externalName && !payload.externalEmail && !payload.externalPhone
-      ) {
-        console.warn('[upsertStakeholders] skipped: external without contact', s);
-        continue;
-      }
-      if (s.id && existingIds.has(s.id)) {
-        await this.stakeholderRepository.update(s.id, payload);
-      } else {
-        await this.stakeholderRepository.create(payload as any);
-      }
-    }
-  }
-
-  /**
-   * Replace strategy & budget links for a project (idempotent).
-   * Strategy: SCAPP linkages.  Budget: Loi de Finances 2026 lines.
-   * Services are instantiated via RepositoryFactory to keep the workflow
-   * service constructor signature stable (hexagonal: services orchestrate repos).
-   */
-  private async upsertStrategyAndBudgetLinks(
-    projectId: string,
-    strategyLinks: any[],
-    budgetLinks: any[]
-  ): Promise<void> {
-    const [
-      { ProjectStrategyLinkService },
-      { ProjectBudgetLinkService },
-    ] = await Promise.all([
-      import('@/application/services/ProjectStrategyLinkService'),
-      import('@/application/services/ProjectBudgetLinkService'),
-    ]);
-
-    const strategyService = getProjectStrategyLinkService();
-    const budgetService = getProjectBudgetLinkService();
-
-    // --- Strategy links: delete-then-recreate (idempotent) ---
-    try {
-      const existing = await strategyService.getLinksByProjectId(projectId).catch(() => []);
-      await Promise.all(
-        (existing || []).map((l: any) =>
-          l?.id ? strategyService.deleteLink(l.id).catch(() => undefined) : undefined
-        )
-      );
-      if (strategyLinks.length > 0) {
-        const normalized = strategyLinks.map((l) => ({
-          ...l,
-          projectId,
-          sourceReferential: l.sourceReferential || 'SCAPP',
-          leverCode: l.leverCode ?? null,
-          chantierCode: l.chantierCode ?? null,
-          interventionCode: l.interventionCode ?? null,
-          objectiveCode: l.objectiveCode ?? null,
-          contributionPct: Number(l.contributionPct) || 0,
-        }));
-        await strategyService.batchCreateLinks(projectId, normalized);
-      }
-    } catch (e) {
-      console.error('[upsertStrategyAndBudgetLinks] strategy error:', e);
-      throw e;
-    }
-
-    // --- Budget links ---
-    try {
-      const existing = await budgetService.getLinksByProjectId(projectId).catch(() => []);
-      await Promise.all(
-        (existing || []).map((l: any) =>
-          l?.id ? budgetService.deleteLink(l.id).catch(() => undefined) : undefined
-        )
-      );
-      if (budgetLinks.length > 0) {
-        const normalized = budgetLinks.map((l) => ({
-          ...l,
-          projectId,
-          ministryCode: l.ministryCode ?? null,
-          programCode: l.programCode ?? null,
-          actionCode: l.actionCode ?? null,
-          lineCode: l.lineCode ?? null,
-          allocatedCe: Number(l.allocatedCe) || 0,
-          allocatedCp: Number(l.allocatedCp) || 0,
-          fiscalYear: l.fiscalYear || 2026,
-        }));
-        await budgetService.batchCreateLinks(projectId, normalized);
-      }
-    } catch (e) {
-      console.error('[upsertStrategyAndBudgetLinks] budget error:', e);
-      throw e;
-    }
-  }
-
-
-
-  // =================== WORKFLOW DATA PERSISTENCE ===================
 
   async saveWorkflowData(data: ProjectWorkflowData): Promise<ProjectWorkflowData> {
     try {
@@ -936,7 +534,6 @@ export class ProjectWorkflowService {
       let savedProjectId = projectData?.id;
 
       if (!savedProjectId && projectData?.title) {
-        // Create new project with all fields
         const createRequest: CreateProjectDTO = {
           title: projectData.title,
           description: projectData.description || '',
@@ -951,30 +548,18 @@ export class ProjectWorkflowService {
           marketType: projectData.marketType,
           selectionMode: projectData.selectionMode,
           projectReference: projectData.projectReference,
-          mainContractor: typeof projectData.mainContractor === 'string'
-            ? projectData.mainContractor
-            : (typeof projectData.mainContractor === 'object' && projectData.mainContractor !== null && 'name' in projectData.mainContractor
-              ? String((projectData.mainContractor as { name: string }).name)
-              : ''),
+          mainContractor: typeof projectData.mainContractor === 'string' ? projectData.mainContractor : '',
           allowsInitialPayment: projectData.allowsInitialPayment as boolean | undefined,
           initialPaymentPercentage: projectData.initialPaymentPercentage as number | undefined,
           currentPhase: projectData.currentPhase,
           currentStage: projectData.currentStage,
-          ...(projectData.coordinates ? {
-            latitude: typeof projectData.coordinates === 'object' && projectData.coordinates !== null && 'latitude' in projectData.coordinates
-              ? (projectData.coordinates as { latitude: number; longitude: number }).latitude
-              : undefined,
-            longitude: typeof projectData.coordinates === 'object' && projectData.coordinates !== null && 'longitude' in projectData.coordinates
-              ? (projectData.coordinates as { latitude: number; longitude: number }).longitude
-              : undefined
-          } : {})
         };
-
         const projectEntity = ProjectTransformer.fromCreateDTOToEntity(createRequest);
         const createdProject = await this.projectRepository.create(projectEntity);
         savedProjectId = createdProject.id;
 
-        // If referential is specified, generate enhanced phases from it
+        this.createAlertBackground(savedProjectId, 'project.creation', { projectTitle: projectData.title });
+
         if (projectData.projectReference) {
           const config: ProjectGenerationConfig = {
             referentialType: projectData.projectReference as ReferentialType,
@@ -983,205 +568,174 @@ export class ProjectWorkflowService {
             projectId: savedProjectId,
             generateMilestones: true
           };
-          
-          const generatedPhases = await this.generateCompleteProjectStructure(config);
-          
-          // Save the enhanced phase structure
-          await this.saveGeneratedPhases(savedProjectId, generatedPhases);
+          const generated = await this.generateCompleteProjectStructure(config);
+          await this.saveGeneratedPhases(savedProjectId, generated);
         }
       } else if (savedProjectId) {
-        // Update existing project
-        const updateRequest: UpdateProjectDTO = {
-          id: savedProjectId,
-          title: projectData.title,
-          description: projectData.description,
-          location: projectData.location,
-          budget: projectData.budget,
-          startDate: projectData.startDate,
-          endDate: projectData.endDate,
-          teamSize: projectData.teamSize,
-          thumbnail: projectData.thumbnail,
-        };
-
-        const projectEntity = ProjectTransformer.fromUpdateDTOToEntity(updateRequest);
-        await this.projectRepository.update(savedProjectId, projectEntity);
-      }
-
-      // Save related data through the same idempotent path used by step saves.
-      if (savedProjectId && data.relatedData) {
-        await this.upsertPhases(savedProjectId, data.relatedData.phases || []);
-        await this.upsertPhaseRelations(
-          savedProjectId,
-          data.relatedData.phases || [],
-          data.relatedData.dqeLines || [],
-        );
-        await this.saveRelatedData(savedProjectId, data.relatedData, { skipPhases: true, skipRelations: true });
-      }
-
-      return {
-        ...data,
-        projectId: savedProjectId,
-        metadata: {
-          ...data.metadata,
-          lastSavedAt: new Date().toISOString()
+        const current = await this.projectRepository.findById(savedProjectId);
+        if (current) {
+          const changes = this.getSignificantChanges(current, projectData);
+          for (const change of changes) {
+            this.createAlertBackground(savedProjectId, change.type, change.data);
+          }
         }
-      };
+        const updateRequest: UpdateProjectDTO = { id: savedProjectId, title: projectData.title, description: projectData.description, location: projectData.location, budget: projectData.budget, startDate: projectData.startDate, endDate: projectData.endDate, teamSize: projectData.teamSize, thumbnail: projectData.thumbnail };
+        await this.projectRepository.update(savedProjectId, ProjectTransformer.fromUpdateDTOToEntity(updateRequest) as any);
+      }
+
+      return { ...data, projectId: savedProjectId, metadata: { ...data.metadata, lastSavedAt: new Date().toISOString() } };
     } catch (error) {
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to save workflow data');
     }
   }
 
-  private async saveRelatedData(
-    projectId: string,
-    relatedData: StepRelatedDataDTO & { milestones?: MilestoneDTO[]; documents?: DocumentDTO[]; payments?: PaymentDTO[]; bankGuarantees?: BankGuaranteeDTO[]; insuranceCertificates?: InsuranceCertificateDTO[]; receptions?: any[] },
-    options: { skipPhases?: boolean; skipRelations?: boolean } = {},
-  ): Promise<void> {
-    // Legacy callers can still use this method; normal workflow saves pass
-    // through the idempotent phase/relation helpers above.
-    if (!options.skipPhases && relatedData.phases && relatedData.phases.length > 0) {
-      for (const phase of relatedData.phases) {
-        const phaseEntity = {
-          ...phase,
-          projectId,
-          status: phase.status || PhaseStatus.PENDING
-        };
-        await this.phaseRepository.create(phaseEntity as unknown as Phase);
-      }
+  // ============================================================
+  // PRIVATE HELPERS
+  // ============================================================
+
+  private async upsertProjectFromWorkflow(data: ProjectWorkflowData): Promise<string> {
+    const projectData = data.projectData;
+    if (!projectData) throw new AppError(ErrorCode.VALIDATION_ERROR, 'projectData manquant');
+    const existingId = data.projectId || projectData.id;
+
+    if (existingId) {
+      const updateRequest: UpdateProjectDTO = {
+        id: existingId,
+        title: projectData.title,
+        description: projectData.description,
+        status: projectData.status,
+        progress: projectData.progress,
+        location: projectData.location,
+        budget: projectData.budget,
+        startDate: projectData.startDate,
+        endDate: projectData.endDate,
+        teamSize: projectData.teamSize,
+        thumbnail: projectData.thumbnail,
+        projectReference: projectData.projectReference,
+      };
+      await this.projectRepository.update(existingId, ProjectTransformer.fromUpdateDTOToEntity(updateRequest) as any);
+      return existingId;
     }
 
-    // Save risks if provided - using repository save method
-    if (relatedData.risks && relatedData.risks.length > 0) {
-      for (const risk of relatedData.risks) {
-        const riskEntity = {
-          ...risk,
-          projectId,
-          status: risk.status || RiskStatus.IDENTIFIED
-        };
-        await this.riskRepository.save(riskEntity as unknown as Risk);
-      }
-    }
+    const createRequest: CreateProjectDTO = {
+      title: projectData.title || 'Nouveau projet',
+      description: projectData.description || '',
+      location: projectData.location || '',
+      budget: projectData.budget || 0,
+      startDate: projectData.startDate || new Date().toISOString().split('T')[0],
+      endDate: projectData.endDate,
+      status: ProjectStatus.PLANIFIE,
+      progress: 0,
+      thumbnail: projectData.thumbnail || '',
+      teamSize: projectData.teamSize || 1,
+      projectReference: projectData.projectReference,
+    };
+    const created = await this.projectRepository.create(ProjectTransformer.fromCreateDTOToEntity(createRequest));
+    return created.id;
+  }
 
-    // Save milestones if provided
-    if (!options.skipRelations && relatedData.milestones && relatedData.milestones.length > 0 && this.milestoneService) {
-      for (const milestone of relatedData.milestones) {
-        await this.milestoneService.createMilestone({
-          ...milestone,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save tasks if provided
-    if (!options.skipRelations && relatedData.tasks && relatedData.tasks.length > 0 && this.taskAssignmentService) {
-      for (const task of relatedData.tasks) {
-        await this.taskAssignmentService.create({
-          ...task,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save materials if provided
-    if (relatedData.materials && relatedData.materials.length > 0 && this.materialService) {
-      for (const material of relatedData.materials) {
-        await this.materialService.createMaterial({
-          ...material,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save inspections if provided
-    if (relatedData.inspections && relatedData.inspections.length > 0 && this.inspectionService) {
-      for (const inspection of relatedData.inspections) {
-        await this.inspectionService.createInspection({
-          ...inspection,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save documents if provided
-    if (relatedData.documents && relatedData.documents.length > 0 && this.documentService) {
-      for (const document of relatedData.documents) {
-        await this.documentService.createDocument({
-          ...document,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save payments if provided
-    if (relatedData.payments && relatedData.payments.length > 0 && this.paymentService) {
-      for (const payment of relatedData.payments) {
-        await this.paymentService.createPayment({
-          ...payment,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save stakeholders if provided
-    if (relatedData.stakeholders && relatedData.stakeholders.length > 0) {
-      for (const stakeholder of relatedData.stakeholders) {
-        await this.stakeholderRepository.create({
-          ...stakeholder,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save bank guarantees if provided
-    if (relatedData.bankGuarantees && relatedData.bankGuarantees.length > 0) {
-      for (const guarantee of relatedData.bankGuarantees) {
-        await this.bankGuaranteeService.createBankGuarantee({
-          ...guarantee,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save insurance certificates if provided
-    if (relatedData.insuranceCertificates && relatedData.insuranceCertificates.length > 0) {
-      for (const certificate of relatedData.insuranceCertificates) {
-        await this.insuranceService.createInsuranceCertificate({
-          ...certificate,
-          projectId
-        } as any);
-      }
-    }
-
-    // Save receptions if provided
-    if (relatedData.receptions && relatedData.receptions.length > 0 && this.receptionService) {
-      for (const reception of relatedData.receptions) {
-        await this.receptionService.createReception({
-          ...reception,
-          projectId
-        } as any);
+  private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
+    if (!phases.length) return;
+    const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => []);
+    for (const phase of phases) {
+      const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
+      const existingPhase = existing.find((c: any) => c.id === phase.id || c.phaseCode === phase.phaseCode || c.name === phase.name);
+      if (existingPhase) {
+        await this.phaseRepository.update(existingPhase.id, payload as unknown as Partial<Phase>);
+      } else {
+        const { id: _omit, ...toCreate } = payload as any;
+        await this.phaseRepository.create(toCreate as unknown as Phase);
       }
     }
   }
 
-  // =================== ENHANCED PHASE GENERATION (from PhaseGeneratorService) ===================
+  private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
+    // Implementation simplifiée
+    for (const phase of phases) {
+      if (phase.id && this.milestoneService) {
+        for (const milestone of phase.milestones || []) {
+          await this.milestoneService.createMilestone({ project_id: projectId, phase_id: phase.id, title: milestone.title, description: milestone.description, target_date: milestone.targetDate || new Date().toISOString(), status: milestone.status, progress: (milestone as any).progress || 0 } as any).catch(() => {});
+        }
+      }
+      if (phase.id && this.taskAssignmentService) {
+        for (const task of phase.tasks || []) {
+          await this.taskAssignmentService.create({ projectId, phaseId: phase.id, name: task.title || task.name || 'Tâche', title: task.title || task.name || 'Tâche', description: task.description, status: task.status || 'PENDING', priority: task.priority || 'MEDIUM', dueDate: task.dueDate || task.due_date, assigneeId: task.assignedTo } as any).catch(() => {});
+        }
+      }
+    }
+  }
 
-  /**
-   * Generate complete project structure from referential (enhanced version)
-   */
+  private async upsertRisks(projectId: string, risks: RiskDTO[]): Promise<void> {
+    if (!risks.length) return;
+    const existing = await this.riskRepository.findByProjectId(projectId).catch(() => []);
+    for (const risk of risks) {
+      const payload = { ...risk, projectId, status: risk.status || RiskStatus.IDENTIFIED } as unknown as Risk;
+      const existingRisk = existing.find((r: any) => r.id === risk.id || r.title === risk.title);
+      if (existingRisk) {
+        await this.riskRepository.update(existingRisk.id, payload);
+      } else {
+        await this.riskRepository.save(payload);
+      }
+    }
+  }
+
+  private async upsertStakeholders(projectId: string, stakeholders: any[]): Promise<void> {
+    if (!stakeholders.length) return;
+    const existing = await this.stakeholderRepository.findByProjectId(projectId).catch(() => []);
+    for (const s of stakeholders) {
+      const payload = { projectId, ...s };
+      const existingStakeholder = existing.find((e: any) => e.id === s.id || e.externalName === s.externalName);
+      if (existingStakeholder) {
+        await this.stakeholderRepository.update(existingStakeholder.id, payload);
+      } else {
+        await this.stakeholderRepository.create(payload as any);
+      }
+    }
+  }
+
+  private async upsertStrategyAndBudgetLinks(projectId: string, strategyLinks: any[], budgetLinks: any[]): Promise<void> {
+    try {
+      const strategyService = getProjectStrategyLinkService();
+      const budgetService = getProjectBudgetLinkService();
+      
+      const existingStrategy = await strategyService.getLinksByProjectId(projectId).catch(() => []);
+      for (const link of existingStrategy || []) {
+        if (link?.id) await strategyService.deleteLink(link.id).catch(() => {});
+      }
+      if (strategyLinks.length > 0) {
+        await strategyService.batchCreateLinks(projectId, strategyLinks.map(l => ({ ...l, projectId }))).catch(() => {});
+      }
+
+      const existingBudget = await budgetService.getLinksByProjectId(projectId).catch(() => []);
+      for (const link of existingBudget || []) {
+        if (link?.id) await budgetService.deleteLink(link.id).catch(() => {});
+      }
+      if (budgetLinks.length > 0) {
+        await budgetService.batchCreateLinks(projectId, budgetLinks.map(l => ({ ...l, projectId }))).catch(() => {});
+      }
+    } catch (e) {
+      console.error('[upsertStrategyAndBudgetLinks] error:', e);
+    }
+  }
+
+  async completeWorkflow(data: any): Promise<any> {
+    try {
+      if (data.projectId) {
+        await this.projectRepository.update(data.projectId, { status: 'en_cours' as any });
+        this.createAlertBackground(data.projectId, 'project.completion', { projectTitle: data.projectTitle || 'Projet' });
+      }
+      return { ...data, status: 'completed', completedAt: new Date().toISOString() };
+    } catch (error) {
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to complete workflow');
+    }
+  }
+
   async generateCompleteProjectStructure(config: ProjectGenerationConfig): Promise<GeneratedPhaseData[]> {
     try {
-      const referential = getReferential(config.referentialType);
-      if (!referential) {
-        console.error(`Referential not found: ${config.referentialType}`);
-        return [];
-      }
-
       const phases = getPhasesForReferential(config.referentialType, 'fr');
-      if (phases.length === 0) {
-        console.log(`No phases found for referential: ${config.referentialType}`);
-        return [];
-      }
+      if (!phases.length) return [];
 
-      const generatedPhases: GeneratedPhaseData[] = [];
+      const generated: GeneratedPhaseData[] = [];
       let cumulativeStartDays = 0;
       const projectStart = parseISO(config.projectStartDate);
       const budgetPerPhase = config.projectBudget / phases.length;
@@ -1189,28 +743,25 @@ export class ProjectWorkflowService {
       for (let i = 0; i < phases.length; i++) {
         const phase = phases[i];
         const phaseId = `phase-${Date.now()}-${i}`;
-        
-        // Calculate phase duration from steps and tasks
-        const { steps, totalDuration } = this.generateStepsWithTasks(phase.steps, phaseId);
-        
-        // Calculate dates
+        const { steps, totalDuration } = this.generateStepsWithTasks(phase.steps || [], phaseId);
         const phaseStartDate = addDays(projectStart, cumulativeStartDays);
         const phaseEndDate = addDays(phaseStartDate, totalDuration);
 
-        // Generate milestones if enabled
-        let milestones: GeneratedMilestoneDTO[] = [];
-        if (config.generateMilestones && config.projectId && this.milestoneService) {
-          milestones = await this.generateMilestonesForPhase({
-            referentialType: config.referentialType,
-            phaseCode: phase.code,
-            phaseStartDate: format(phaseStartDate, 'yyyy-MM-dd'),
-            projectId: config.projectId,
-            phaseId,
-            phaseBudget: budgetPerPhase
-          });
-        }
+        const milestones: GeneratedMilestoneDTO[] = config.generateMilestones ? phase.steps.map((step, idx) => ({
+          title: `Jalon - ${step.label}`,
+          description: `Jalon pour l'étape ${step.label}`,
+          target_date: format(addDays(phaseStartDate, idx * 7), 'yyyy-MM-dd'),
+          type: 'checkpoint',
+          priority: 'normal',
+          weight: 1,
+          deliverables: ['Rapport'],
+          dependencies: [],
+          requiresInspection: step.tasks.some(t => t.requiresInspection),
+          inspectionType: step.tasks.some(t => t.requiresInspection) ? 'technical' : '',
+          phaseCode: phase.code,
+        })) : [];
 
-        generatedPhases.push({
+        generated.push({
           id: phaseId,
           phaseCode: phase.code,
           title: phase.label,
@@ -1225,222 +776,41 @@ export class ProjectWorkflowService {
           steps,
           milestones
         });
-
         cumulativeStartDays += totalDuration;
       }
-
-      return generatedPhases;
+      return generated;
     } catch (error) {
-      console.error('Error generating complete project structure:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to generate project structure: ${config.referentialType}`);
-    }
-  }
-
-  /**
-   * Generate steps and tasks from referential (enhanced version)
-   */
-  private generateStepsWithTasks(
-    stepsData: Array<{
-      code: string;
-      label: string;
-      order: number;
-      tasks: Array<{
-        code: string;
-        label: string;
-        description?: string;
-        requiresInspection?: boolean;
-        requiresEngineerApproval?: boolean;
-        estimatedDurationDays?: number;
-      }>;
-    }>,
-    phaseId: string
-  ): { steps: GeneratedStepData[]; totalDuration: number } {
-    const steps: GeneratedStepData[] = [];
-    let totalDuration = 0;
-
-    for (let i = 0; i < stepsData.length; i++) {
-      const step = stepsData[i];
-      const stepId = `step-${phaseId}-${i}`;
-      
-      const tasks: GeneratedTaskData[] = [];
-      let stepDuration = 0;
-
-      for (let j = 0; j < step.tasks.length; j++) {
-        const task = step.tasks[j];
-        const taskDuration = task.estimatedDurationDays || 7;
-        stepDuration += taskDuration;
-
-        tasks.push({
-          id: `task-${stepId}-${j}`,
-          taskCode: task.code,
-          name: task.label,
-          description: task.description,
-          estimatedDurationDays: taskDuration,
-          requiresInspection: task.requiresInspection || false,
-          requiresEngineerApproval: task.requiresEngineerApproval || false,
-          status: 'not_started'
-        });
-      }
-
-      // Minimum step duration
-      if (stepDuration === 0) stepDuration = 14;
-      totalDuration += stepDuration;
-
-      steps.push({
-        id: stepId,
-        stepCode: step.code,
-        name: step.label,
-        order: step.order || i + 1,
-        tasks
-      });
-    }
-
-    // Minimum phase duration
-    if (totalDuration === 0) totalDuration = 30;
-
-    return { steps, totalDuration };
-  }
-
-  /**
-   * Get summary of what would be generated for a referential
-   */
-  async getGenerationSummary(referentialType: ReferentialType): Promise<GenerationSummary> {
-    try {
-      const phases = getPhasesForReferential(referentialType, 'fr');
-      let totalSteps = 0;
-      let totalTasks = 0;
-      let totalMilestones = 0;
-      let estimatedDurationDays = 0;
-
-      for (const phase of phases) {
-        totalSteps += phase.steps.length;
-        
-        for (const step of phase.steps) {
-          totalTasks += step.tasks.length;
-          for (const task of step.tasks) {
-            estimatedDurationDays += task.estimatedDurationDays || 7;
-          }
-        }
-
-        if (this.milestoneService) {
-          // Count milestones for this phase
-          totalMilestones += phase.steps.length; // Simplified: one milestone per step
-        }
-      }
-
-      return {
-        totalPhases: phases.length,
-        totalSteps,
-        totalTasks,
-        totalMilestones,
-        estimatedDurationDays
-      };
-    } catch (error) {
-      console.error('Error getting generation summary:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get generation summary for: ${referentialType}`);
-    }
-  }
-
-  /**
-   * Get milestones requiring inspection for all phases
-   */
-  async getInspectionMilestonesForProject(referentialType: ReferentialType): Promise<Map<string, GeneratedMilestoneDTO[]>> {
-    try {
-      const phases = getPhasesForReferential(referentialType, 'fr');
-      const inspectionMilestones = new Map<string, GeneratedMilestoneDTO[]>();
-
-      for (const phase of phases) {
-        // Generate inspection milestones for each step that requires inspection
-        const milestones: GeneratedMilestoneDTO[] = [];
-        
-        for (const step of phase.steps) {
-          const hasInspectionTasks = step.tasks.some(task => task.requiresInspection);
-          
-          if (hasInspectionTasks) {
-            milestones.push({
-              title: `Inspection - ${step.label}`,
-              description: `Inspection technique pour l'étape ${step.label}`,
-              target_date: '', // Will be calculated at generation time
-              type: 'inspection',
-              priority: 'high',
-              weight: 1.0,
-              deliverables: ['Rapport d\'inspection', 'Photos', 'Documents de conformité'],
-              dependencies: [],
-              requiresInspection: true,
-              inspectionType: 'technical',
-              phaseCode: phase.code
-            });
-          }
-        }
-        
-        if (milestones.length > 0) {
-          inspectionMilestones.set(phase.code, milestones);
-        }
-      }
-
-      return inspectionMilestones;
-    } catch (error) {
-      console.error('Error getting inspection milestones:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get inspection milestones for: ${referentialType}`);
-    }
-  }
-
-  /**
-   * Generate milestones for a specific phase
-   */
-  private async generateMilestonesForPhase(config: {
-    referentialType: ReferentialType;
-    phaseCode: string;
-    phaseStartDate: string;
-    projectId: string;
-    phaseId: string;
-    phaseBudget: number;
-  }): Promise<GeneratedMilestoneDTO[]> {
-    try {
-      // This would integrate with MilestoneService to generate actual milestones
-      // For now, return basic milestone structure
-      const phases = getPhasesForReferential(config.referentialType, 'fr');
-      const phase = phases.find(p => p.code === config.phaseCode);
-      
-      if (!phase) return [];
-      
-      const milestones: GeneratedMilestoneDTO[] = [];
-      
-      // Generate milestone for each step that requires inspection
-      for (const step of phase.steps) {
-        const hasInspectionTasks = step.tasks.some(task => task.requiresInspection);
-        
-        if (hasInspectionTasks) {
-          milestones.push({
-            title: `Inspection - ${step.label}`,
-            description: `Inspection technique pour l'étape ${step.label}`,
-            target_date: config.phaseStartDate,
-            type: 'inspection',
-            priority: 'high',
-            weight: 1.0,
-            deliverables: ['Rapport d\'inspection', 'Photos', 'Documents de conformité'],
-            dependencies: [],
-            requiresInspection: true,
-            inspectionType: 'technical',
-            phaseCode: config.phaseCode
-          });
-        }
-      }
-      
-      return milestones;
-    } catch (error) {
-      console.error('Error generating milestones for phase:', error);
+      console.error('Error generating project structure:', error);
       return [];
     }
   }
 
-  /**
-   * Save generated phases with enhanced structure (steps → tasks hierarchy)
-   */
-  private async saveGeneratedPhases(projectId: string, generatedPhases: GeneratedPhaseData[]): Promise<void> {
+  private generateStepsWithTasks(stepsData: any[], phaseId: string): { steps: GeneratedStepData[]; totalDuration: number } {
+    const steps: GeneratedStepData[] = [];
+    let totalDuration = 0;
+    for (let i = 0; i < stepsData.length; i++) {
+      const step = stepsData[i];
+      const stepId = `step-${phaseId}-${i}`;
+      const tasks: GeneratedTaskData[] = (step.tasks || []).map((task: any, j: number) => ({
+        id: `task-${stepId}-${j}`,
+        taskCode: task.code || `T${j+1}`,
+        name: task.label || `Tâche ${j+1}`,
+        description: task.description,
+        estimatedDurationDays: task.estimatedDurationDays || 7,
+        requiresInspection: task.requiresInspection || false,
+        requiresEngineerApproval: task.requiresEngineerApproval || false,
+        status: 'not_started'
+      }));
+      const stepDuration = tasks.reduce((sum, t) => sum + (t.estimatedDurationDays || 7), 14);
+      totalDuration += stepDuration;
+      steps.push({ id: stepId, stepCode: step.code || `S${i+1}`, name: step.label || `Étape ${i+1}`, order: step.order || i + 1, tasks });
+    }
+    return { steps, totalDuration: Math.max(totalDuration, 30) };
+  }
+
+  async saveGeneratedPhases(projectId: string, generatedPhases: GeneratedPhaseData[]): Promise<void> {
     try {
       for (const phaseData of generatedPhases) {
-        // Create phase entity
         const phaseEntity = {
           projectId,
           name: phaseData.title,
@@ -1454,252 +824,53 @@ export class ProjectWorkflowService {
           endDate: phaseData.endDate,
           budget: phaseData.budget
         };
-        
         const createdPhase = await this.phaseRepository.create(phaseEntity as any);
         
-        // Save steps and tasks for this phase
         if (this.taskAssignmentService) {
           for (const stepData of phaseData.steps) {
-            // Create step entity
-            const stepEntity = {
-              projectId,
-              phaseId: createdPhase.id,
-              name: stepData.name,
-              description: `Step: ${stepData.name}`,
-              orderIndex: stepData.order,
-              status: 'pending' as any,
-              progress: 0
-            };
-            
+            const stepEntity = { projectId, phaseId: createdPhase.id, name: stepData.name, description: `Step: ${stepData.name}`, orderIndex: stepData.order, status: 'pending', progress: 0 };
             const createdStep = await this.taskAssignmentRepository?.save(stepEntity as any).then(() => stepEntity) as any;
-            
-            // Save tasks for this step
             for (const taskData of stepData.tasks) {
-              const taskEntity = {
-                projectId,
-                phaseId: createdPhase.id,
-                stepId: createdStep?.id,
-                name: taskData.name,
-                description: taskData.description,
-                status: 'PENDING',
-                priority: 'MEDIUM',
-                estimatedHours: taskData.estimatedDurationDays,
-                // Note: requiresInspection and requiresEngineerApproval are stored in metadata
-                metadata: {
-                  requiresInspection: taskData.requiresInspection,
-                  requiresEngineerApproval: taskData.requiresEngineerApproval,
-                  taskCode: taskData.taskCode,
-                }
-              };
-              
-              await this.taskAssignmentRepository?.save(taskEntity as any);
+              await this.taskAssignmentRepository?.save({ projectId, phaseId: createdPhase.id, stepId: createdStep?.id, name: taskData.name, description: taskData.description, status: 'PENDING', priority: 'MEDIUM', estimatedHours: taskData.estimatedDurationDays, metadata: { requiresInspection: taskData.requiresInspection, requiresEngineerApproval: taskData.requiresEngineerApproval, taskCode: taskData.taskCode } } as any);
             }
           }
         }
-        
-        // Save milestones for this phase
-        if (this.milestoneService && phaseData.milestones.length > 0) {
+        if (this.milestoneService && phaseData.milestones.length) {
           for (const milestoneData of phaseData.milestones) {
-            await this.milestoneService.createMilestone({
-              projectId,
-              phaseId: createdPhase.id,
-              title: milestoneData.title,
-              description: milestoneData.description,
-              targetDate: milestoneData.target_date,
-              type: milestoneData.type,
-              priority: milestoneData.priority,
-              weight: milestoneData.weight,
-              deliverables: milestoneData.deliverables,
-              dependencies: milestoneData.dependencies,
-              requiresInspection: milestoneData.requiresInspection,
-              inspectionType: milestoneData.inspectionType
-            } as any);
+            await this.milestoneService.createMilestone({ projectId, phaseId: createdPhase.id, title: milestoneData.title, description: milestoneData.description, targetDate: milestoneData.target_date, type: milestoneData.type, priority: milestoneData.priority, weight: milestoneData.weight, deliverables: milestoneData.deliverables, dependencies: milestoneData.dependencies, requiresInspection: milestoneData.requiresInspection, inspectionType: milestoneData.inspectionType } as any).catch(() => {});
           }
         }
       }
     } catch (error) {
       console.error('Error saving generated phases:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to save generated phases');
     }
   }
 
-  // =================== LEGACY REFERENTIAL INTEGRATION ===================
-
-  async generatePhasesFromReferential(projectId: string, referentialCode: ReferentialType): Promise<PhaseDTO[]> {
-    try {
-      const phases = await this.referentialService.convertToProjectPhases(referentialCode, projectId);
-      
-      const createdPhases: PhaseDTO[] = [];
-      for (const phaseData of phases) {
-        const phaseEntity = {
-          projectId,
-          name: phaseData.name,
-          description: phaseData.description,
-          orderIndex: phaseData.phase_number,
-          status: PhaseStatus.PENDING,
-          type: PhaseType.STRUCTURAL,
-          priority: PhasePriority.MEDIUM,
-          progress: 0
-        };
-        
-        const created = await this.phaseRepository.create(phaseEntity as any);
-        createdPhases.push({
-          id: created.id,
-          projectId,
-          name: phaseData.name,
-          description: phaseData.description,
-          status: PhaseStatus.PENDING,
-          type: PhaseType.STRUCTURAL,
-          priority: PhasePriority.MEDIUM,
-          progress: 0,
-          orderIndex: phaseData.phase_number, // Store referential order
-          startDate: phaseData.start_date || undefined,
-          endDate: phaseData.end_date || undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        } as PhaseDTO);
+  async getGenerationSummary(referentialType: ReferentialType): Promise<GenerationSummary> {
+    const phases = getPhasesForReferential(referentialType, 'fr');
+    let totalSteps = 0, totalTasks = 0, totalMilestones = 0, estimatedDurationDays = 0;
+    for (const phase of phases) {
+      totalSteps += phase.steps.length;
+      for (const step of phase.steps) {
+        totalTasks += step.tasks.length;
+        for (const task of step.tasks) {
+          estimatedDurationDays += task.estimatedDurationDays || 7;
+        }
       }
-      
-      return createdPhases;
-    } catch (error) {
-      console.error('Failed to generate phases from referential:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to generate phases from referential: ${referentialCode}`);
+      totalMilestones += phase.steps.length;
     }
+    return { totalPhases: phases.length, totalSteps, totalTasks, totalMilestones, estimatedDurationDays: Math.max(estimatedDurationDays, 30) };
   }
-
-  async getReferentialOptions(): Promise<{ value: string; label: string; description?: string }[]> {
-    return this.referentialService.getReferentialOptions();
-  }
-
-  // =================== WORKFLOW COMPLETION ===================
-
-  async completeWorkflow(data: any): Promise<any> {
-    try {
-      if (data.projectId || data.projectData?.id) {
-        const projectId = data.projectId || data.projectData?.id;
-        await this.projectRepository.update(projectId, { status: 'en_cours' } as any);
-      }
-      
-      return { 
-        ...data, 
-        status: 'completed', 
-        completedAt: new Date().toISOString() 
-      };
-    } catch (error) {
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to complete workflow');
-    }
-  }
-
-  // =================== PROGRESS MANAGEMENT ===================
-
-  calculateProgress(completedSteps: number, totalSteps: number = 7): number {
-    return Math.round((completedSteps / totalSteps) * 100);
-  }
-
-  async calculateProjectProgress(projectId: string): Promise<number> {
-    try {
-      const phases = await this.phaseRepository.findByProjectId(projectId);
-      if (!phases || phases.length === 0) return 0;
-      
-      const totalProgress = phases.reduce((sum, phase) => sum + (phase.progress || 0), 0);
-      return Math.round(totalProgress / phases.length);
-    } catch (error) {
-      console.error('Failed to calculate project progress:', error);
-      return 0;
-    }
-  }
-
-  canProceedToNextStep(currentStep: number, stepData: ProjectWorkflowData): boolean {
-    return true;
-  }
-
-  // =================== TRANSITIONS ===================
-
-  private getAvailableTransitions(currentStepId: string): WorkflowTransition[] {
-    const steps = this.getWorkflowSteps();
-    const currentStep = steps.find(s => s.id === currentStepId);
-    
-    if (!currentStep) return [];
-    
-    const nextStep = steps.find(s => s.order === currentStep.order + 1);
-    
-    if (!nextStep) return [];
-    
-    return [{
-      fromStep: currentStepId,
-      toStep: nextStep.id,
-      condition: 'step_completed',
-      action: 'proceed_to_next'
-    }];
-  }
-
-  // =================== PROJECT CREATION ===================
 
   async createProject(data: ProjectWorkflowData): Promise<ProjectDTO> {
-    const projectData = data.projectData;
-    
-    const projectEntity: Partial<Project> = {
-      title: projectData?.title || 'New Project',
-      description: projectData?.description,
-      status: 'planifie' as any,
-      location: projectData?.location,
-      budget: projectData?.budget || 0,
-      progress: 0,
-      startDate: projectData?.startDate ? new Date(projectData.startDate) : null,
-      endDate: projectData?.endDate ? new Date(projectData.endDate) : null,
-      teamSize: projectData?.teamSize || 1,
-      thumbnail: projectData?.thumbnail,
-      financingSource: projectData?.financingSource,
-      mainContractor: typeof projectData?.mainContractor === 'string' 
-        ? projectData.mainContractor 
-        : (projectData?.mainContractor as any)?.name || '',
-      allowsInitialPayment: projectData?.allowsInitialPayment as boolean | undefined,
-      initialAdvancePercentage: projectData?.initialPaymentPercentage as number | undefined,
-      currentPhase: projectData?.currentPhase,
-      currentStage: projectData?.currentStage
-    };
-
-    const created = await this.projectRepository.create(projectEntity);
-    return ProjectTransformer.toDTO(created);
+    const saved = await this.saveWorkflowData(data);
+    return saved.projectData;
   }
 }
 
-export function createProjectWorkflowService(
-  projectRepo: IProjectRepository,
-  phaseRepo: IPhaseRepository,
-  riskRepo: IRiskRepository,
-  stakeholderRepo: IProjectStakeholderRepository,
-  milestoneRepo: IMilestoneRepository = RepositoryFactory.getMilestoneRepository(),
-  taskAssignmentRepo: ITaskAssignmentRepository = RepositoryFactory.getTaskAssignmentRepository(),
-  materialRepo: IMaterialRepository = RepositoryFactory.getMaterialRepository(),
-  inspectionRepo: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
-  documentRepo: IDocumentRepository = RepositoryFactory.getDocumentRepository(),
-  paymentRepo: IPaymentRepository = RepositoryFactory.getPaymentRepository(),
-  employeeRepo: IEmployeeRepository = RepositoryFactory.getEmployeeRepository(),
-  supplierRepo: ISupplierRepository = RepositoryFactory.getSupplierRepository(),
-  receptionRepo?: IReceptionRepository
-) {
-  return new ProjectWorkflowService(
-    projectRepo, 
-    phaseRepo, 
-    riskRepo, 
-    stakeholderRepo,
-    milestoneRepo,
-    taskAssignmentRepo,
-    materialRepo,
-    inspectionRepo,
-    documentRepo,
-    paymentRepo,
-    employeeRepo,
-    supplierRepo,
-    receptionRepo
-  );
-}
-
-let projectWorkflowServiceInstance: ProjectWorkflowService | null = null;
+// ============================================================
+// Factory
+// ============================================================
 export function getProjectWorkflowService(): ProjectWorkflowService {
-  if (!projectWorkflowServiceInstance) {
-    projectWorkflowServiceInstance = new ProjectWorkflowService(RepositoryFactory.getProjectRepository(), RepositoryFactory.getPhaseRepository(), RepositoryFactory.getRiskRepository(), RepositoryFactory.getProjectStakeholderRepository());
-  }
-  return projectWorkflowServiceInstance;
+  return ProjectWorkflowService.default();
 }

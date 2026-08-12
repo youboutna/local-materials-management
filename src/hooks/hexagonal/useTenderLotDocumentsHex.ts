@@ -6,7 +6,7 @@ import {
   getTenderLotDocumentService,
   TenderLotDocumentRecord,
   CreateTenderLotDocumentInput,
-} from '@/application/services/tender/TenderLotDocumentService';
+} from '@/application/services/TenderLotDocumentService';
 import { toast } from '@/hooks/use-toast';
 
 export type { TenderLotDocumentRecord };

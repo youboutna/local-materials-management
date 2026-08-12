@@ -5,17 +5,17 @@
  * Pattern: Hook → Service → Adapter → Supabase
  */
 
-import { 
-  SupabaseMonitoringAlertAdapter, 
-  MonitoringAlertDTO, 
-  CreateMonitoringAlertDTO,
-  UpdateMonitoringAlertDTO,
-  IMonitoringAlertRepository 
-} from '@/infrastructure/supabase/adapters/SupabaseMonitoringAlertAdapter';
-import { AlertData } from '@/dtos/entities';
+import { AlertEntity } from '@/dtos/entities/Alert';
+import {
+    CreateMonitoringAlertDTO,
+    IMonitoringAlertRepository,
+    MonitoringAlertDTO,
+    SupabaseMonitoringAlertAdapter,
+    UpdateMonitoringAlertDTO
+} from '@/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter';
 
 // Re-export types for consumers
-export type { MonitoringAlertDTO, CreateMonitoringAlertDTO, UpdateMonitoringAlertDTO };
+export type { CreateMonitoringAlertDTO, MonitoringAlertDTO, UpdateMonitoringAlertDTO };
 
 // Statistics interface
 export interface MonitoringAlertStats {

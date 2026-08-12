@@ -11,9 +11,9 @@
  * Consumer (UI): <AwardedTenderPreviewDialog> "Convertir en projet planifié" button.
  */
 
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
-import { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 export interface TenderToPlanningInput {
   estimateId: string;

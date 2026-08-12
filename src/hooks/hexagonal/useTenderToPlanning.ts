@@ -6,7 +6,7 @@ import {
   tenderToPlanningService,
   type TenderToPlanningInput,
   type TenderToPlanningResult,
-} from '@/application/services/tender/TenderToPlanningService';
+} from '@/application/services/TenderToPlanningService';
 
 export function useTenderToPlanning() {
   const qc = useQueryClient();

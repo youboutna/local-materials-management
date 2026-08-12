@@ -3,7 +3,7 @@
  * Provides localStorage-based storage implementation for development and testing
  * Used when mock data is enabled or for offline functionality
  */
-
+//context : path: src/infrastructure/localStorage/LocalStorageAdapter.ts
 export class LocalStorageAdapter {
   private prefix: string;
 
@@ -84,7 +84,7 @@ export class LocalStorageAdapter {
    */
   getStorageSize(): number {
     let total = 0;
-    for (let key in localStorage) {
+    for (const key in localStorage) {
       if (localStorage.hasOwnProperty(key)) {
         total += localStorage[key].length + key.length;
       }

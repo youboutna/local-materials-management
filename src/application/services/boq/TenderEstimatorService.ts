@@ -12,7 +12,7 @@
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
 
 export type TenderCategory = 'material' | 'labour' | 'equipment' | 'overhead';

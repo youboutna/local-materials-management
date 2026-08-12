@@ -247,7 +247,7 @@ export type ConstructionStage =
   | "handoverComplete";
 
 // Project Alert type (using NotificationDTO for notifications)
-export type ProjectAlert = NotificationDTO & {
+export type Alert = NotificationDTO & {
   projectId: string;
   relatedEntityId?: string;
   acknowledged?: boolean;
@@ -505,7 +505,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
   payments: PaymentDTO[];
   materials: MaterialDTO[];
   stakeholders: StakeholderDTO[];
-  alerts: ProjectAlert[];
+  alerts: Alert[];
   inspections: InspectionDTO[];
   
   // Insurance related collections

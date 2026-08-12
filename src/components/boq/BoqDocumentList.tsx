@@ -13,7 +13,7 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
 import { useToast } from '@/hooks/use-toast';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 

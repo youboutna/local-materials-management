@@ -1,3 +1,13 @@
+// ============================================================
+// src/components/alerts/BankGuaranteeMonitor.tsx
+// ============================================================
+/**
+ * Bank Guarantee Monitor
+ * ---------------------
+ * Surveillance des garanties bancaires avec intégration AlertService
+ * Utilise ProjectManagerProvider pour les alertes
+ */
+
 import { ActionsDropdown } from "@/components/actions/ActionsDropdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +20,18 @@ import { usePagination } from "@/hooks/usePagination";
 import { useBankGuaranteeForProjectHex, useAuthUserHex } from "@/hooks/hexagonal";
 import { BankGuaranteeActionService } from '@/application/services/BankGuaranteeActionService';
 import { BankGuaranteeService } from '@/application/services/BankGuaranteeService';
+import { useProjectManager } from '@/hooks/useProjectManager';
 import {
   AlertTriangle,
   Clock,
   DollarSign,
   Send,
   ExternalLink,
+  CheckCircle,
+  Eye,
+  Bell,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DELAY_THRESHOLDS } from "../../dtos/entities/ProjectDTO";
 
@@ -82,6 +96,17 @@ const BankGuaranteeMonitor: React.FC = () => {
   const { t } = useLanguage();
   const { userId } = useAuthUserHex();
 
+  // ✅ Use ProjectManager for alerts
+  const { 
+    alerts, 
+    state, 
+    acknowledgeAlert, 
+    resolveAlert, 
+    getSummaryStats,
+    loading: alertsLoading,
+    runChecks 
+  } = useProjectManager();
+
   const {
     currentData: paginatedDelays,
     currentPage,
@@ -94,6 +119,70 @@ const BankGuaranteeMonitor: React.FC = () => {
     itemsPerPage: 10,
   });
 
+  // Get all alerts from context
+  const allAlerts = state?.alerts || alerts || [];
+  const stats = getSummaryStats();
+
+  // Filter alerts related to bank guarantees
+  const bankGuaranteeAlerts = useMemo(() => {
+    return allAlerts.filter((alert: any) => 
+      alert.type === 'bank_guarantee' || 
+      alert.type === 'guarantee' ||
+      alert.source === 'bank_guarantee' ||
+      alert.title?.toLowerCase().includes('garantie') ||
+      alert.title?.toLowerCase().includes('bank')
+    );
+  }, [allAlerts]);
+
+  // Get critical alerts count
+  const criticalAlerts = useMemo(() => {
+    return bankGuaranteeAlerts.filter((alert: any) => 
+      alert.severity === 'critical' || alert.severity === 'high'
+    );
+  }, [bankGuaranteeAlerts]);
+
+  // ============================================================
+  // Alert Handlers
+  // ============================================================
+  const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
+    try {
+      await acknowledgeAlert(alertId, userId || 'system-user', 'Traité depuis BankGuaranteeMonitor');
+      await runChecks();
+      toast({
+        title: t('common.success'),
+        description: t('bank_guarantee.alert_acknowledged'),
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'acquittement:', error);
+      toast({
+        title: t('common.error'),
+        description: t('bank_guarantee.alert_acknowledge_error'),
+        variant: "destructive",
+      });
+    }
+  }, [acknowledgeAlert, runChecks, userId, toast, t]);
+
+  const handleResolveAlert = useCallback(async (alertId: string) => {
+    try {
+      await resolveAlert(alertId, userId || 'system-user', 'Garantie traitée');
+      await runChecks();
+      toast({
+        title: t('common.success'),
+        description: t('bank_guarantee.alert_resolved'),
+      });
+    } catch (error) {
+      console.error('Erreur lors de la résolution:', error);
+      toast({
+        title: t('common.error'),
+        description: t('bank_guarantee.alert_resolve_error'),
+        variant: "destructive",
+      });
+    }
+  }, [resolveAlert, runChecks, userId, toast, t]);
+
+  // ============================================================
+  // Load Delays
+  // ============================================================
   useEffect(() => {
     loadDelays();
     // Check for delays every hour
@@ -120,6 +209,9 @@ const BankGuaranteeMonitor: React.FC = () => {
     }
   };
 
+  // ============================================================
+  // Bank Guarantee Handlers
+  // ============================================================
   const handleTriggerBankNotification = async (delay: ProjectDelay) => {
     setProcessing(delay.projectId);
     try {
@@ -161,6 +253,9 @@ const BankGuaranteeMonitor: React.FC = () => {
 
       // Remove from current delays list
       setDelays((prev) => prev.filter((d) => d.projectId !== delay.projectId));
+      
+      // Refresh alerts
+      await runChecks();
     } catch (error) {
       console.error("Error triggering bank notification:", error);
       toast({
@@ -245,6 +340,9 @@ const BankGuaranteeMonitor: React.FC = () => {
         title: t('common.success'),
         description: t('bank_guarantee.action_created_success', { title }),
       });
+      
+      // Refresh alerts after action
+      await runChecks();
     } catch (error: any) {
       console.error("Error creating bank guarantee action:", error);
       toast({
@@ -272,7 +370,10 @@ const BankGuaranteeMonitor: React.FC = () => {
     return t('bank_guarantee.severity_labels.delay_alert');
   };
 
-  if (loading) {
+  // ============================================================
+  // Loading States
+  // ============================================================
+  if (loading || alertsLoading) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -284,17 +385,102 @@ const BankGuaranteeMonitor: React.FC = () => {
     );
   }
 
+  // ============================================================
+  // Render
+  // ============================================================
   return (
     <div className="space-y-4">
+      {/* Alert Stats Summary */}
+      {bankGuaranteeAlerts.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center gap-2 text-lg">
+              <Bell className="h-5 w-5" />
+              {t('bank_guarantee.alerts_title')}
+              <Badge variant="destructive">{bankGuaranteeAlerts.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {bankGuaranteeAlerts.map((alert: any) => (
+                <div 
+                  key={alert.id} 
+                  className={`p-3 bg-white border rounded-lg flex items-center justify-between ${
+                    alert.severity === 'critical' ? 'border-red-300' :
+                    alert.severity === 'high' ? 'border-orange-300' :
+                    'border-yellow-300'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className={`h-4 w-4 ${
+                        alert.severity === 'critical' ? 'text-red-500' :
+                        alert.severity === 'high' ? 'text-orange-500' :
+                        'text-yellow-500'
+                      }`} />
+                      <p className="font-medium text-sm">{alert.title || alert.message}</p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {alert.type}
+                      </Badge>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          alert.severity === 'critical' ? 'text-red-600 border-red-200' :
+                          alert.severity === 'high' ? 'text-orange-600 border-orange-200' :
+                          'text-yellow-600 border-yellow-200'
+                        }`}
+                      >
+                        {alert.severity}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(alert.createdAt).toLocaleString('fr-FR')}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {alert.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {alert.status === 'open' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAcknowledgeAlert(alert.id)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        {t('common.acknowledge')}
+                      </Button>
+                    )}
+                    {(alert.status === 'open' || alert.status === 'acknowledged') && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleResolveAlert(alert.id)}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        {t('common.resolve')}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              {t('bank_guarantee.title')}
-            </CardTitle>
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            {t('bank_guarantee.title')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {delays.length === 0 ? (
+          {delays.length === 0 && bankGuaranteeAlerts.length === 0 ? (
             <Alert>
               <AlertTitle>{t('bank_guarantee.no_critical_delays_title')}</AlertTitle>
               <AlertDescription>
@@ -303,15 +489,17 @@ const BankGuaranteeMonitor: React.FC = () => {
             </Alert>
           ) : (
             <div className="space-y-4">
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>
-                  {`⚠️ ${delays.length} ${t('bank_guarantee.critical_projects')}`}
-                </AlertTitle>
-                <AlertDescription>
-                  {t('bank_guarantee.critical_alerts_desc')}
-                </AlertDescription>
-              </Alert>
+              {delays.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>
+                    {`⚠️ ${delays.length} ${t('bank_guarantee.critical_projects')}`}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {t('bank_guarantee.critical_alerts_desc')}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {paginatedDelays.map((delay) => (
                 <Card
@@ -322,7 +510,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">
+                          <h3 className="font-semibold text-lg">
                             {delay.projectName}
                           </h3>
                           <Badge

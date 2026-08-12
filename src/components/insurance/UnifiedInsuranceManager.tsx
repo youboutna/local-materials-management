@@ -1,12 +1,24 @@
+// ============================================================
+// src/components/insurance/UnifiedInsuranceManager.tsx
+// ============================================================
+/**
+ * Unified Insurance Manager
+ * Gestion unifiée des assurances avec architecture hexagonale
+ * - Utilise InsuranceService pour les opérations
+ * - Utilise DocumentService pour les documents
+ * - Utilise EnhancedActionService pour les actions
+ */
+
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
-import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
+import { getInsuranceService, InsuranceService } from '@/application/services/InsuranceService';
+import { getDocumentService } from '@/application/services/DocumentService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -16,24 +28,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { CreateEnhancedActionRequestDTO as CreateEnhancedActionRequest } from '@/dtos/entities/ActionDTO';
-import { InsuranceAlertDTO } from '@/dtos/entities/InsuranceDTO';
+import { CreateEnhancedActionRequestDTO } from '@/dtos/entities/ActionDTO';
+import { InsuranceCertificateDTO, InsuranceCertificateStatus, InsuranceAlertDTO } from '@/dtos/entities/InsuranceDTO';
+import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { usePagination } from '@/hooks/usePagination';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertTriangle, Bell, Calendar, CheckCircle, Download, Edit, Eye, FileText, Mail, MessageSquare, Phone, Plus, Settings, Shield, Trash2, Upload, Users } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
+// ============================================================
+// Validation Schema
+// ============================================================
 const insuranceFormSchema = z.object({
-  projectId: z.string().min(1, 'Project ID requis'),
-  contractorId: z.string().min(1, 'Contractor ID requis'),
+  projectId: z.string().min(1, 'Projet requis'),
+  contractorId: z.string().optional(),
   contractorName: z.string().min(1, 'Nom du contractant requis'),
   insuranceCompany: z.string().min(1, 'Compagnie d\'assurance requise'),
   policyNumber: z.string().min(1, 'Numéro de police requis'),
@@ -44,60 +59,63 @@ const insuranceFormSchema = z.object({
   notes: z.string().optional()
 });
 
-interface LocalInsuranceCertificate {
-  id?: string;
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  insuranceCompany: string;
-  policyNumber: string;
-  coverageAmount: number;
-  coverageType: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
-  validFrom: string;
-  validUntil: string;
-  certificateUrl?: string;
-  status: 'active' | 'expired' | 'expiring_soon' | 'missing';
-  lastVerified?: string;
-  verifiedBy?: string;
-  notes?: string;
-  project_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
-  certificate_url?: string;
-  documents?: Array<{
-    id: string;
-    title: string;
-    file_url?: string;
-    file_name?: string;
-    mime_type?: string;
-  }>;
+type InsuranceFormValues = z.infer<typeof insuranceFormSchema>;
+
+// ============================================================
+// Types
+// ============================================================
+interface InsuranceStats {
+  total: number;
+  active: number;
+  expiring: number;
+  expired: number;
+  missing: number;
+  coverageTotal: number;
 }
 
+// ============================================================
+// Coverage Types Configuration
+// ============================================================
+const COVERAGE_TYPES = [
+  { value: 'responsabilite_civile', label: 'Responsabilité Civile' },
+  { value: 'decennale', label: 'Assurance Décennale' },
+  { value: 'vehicules', label: 'Assurance Véhicules' },
+  { value: 'materiel', label: 'Assurance Matériel' },
+  { value: 'tous_risques', label: 'Tous Risques Chantier' }
+];
+
+const STATUS_OPTIONS = [
+  { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
+  { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
+  { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
+  { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' },
+  { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' }
+];
+
+// ============================================================
+// Main Component
+// ============================================================
 const UnifiedInsuranceManager = () => {
   const { toast } = useToast();
   const { uploadFile, downloading, deleteFile } = useDocumentStorage();
   const { getUser } = useAuth();
   
-  // Initialize services
-  const documentService = RepositoryFactory.getDocumentRepository() as any;
+  // Services
+  const insuranceService = useMemo(() => getInsuranceService(), []);
+  const documentService = useMemo(() => getDocumentService(), []);
   
+  // State
   const [alerts, setAlerts] = useState<InsuranceAlertDTO[]>([]);
-  const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
+  const [certificates, setCertificates] = useState<InsuranceCertificateDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
+  const [selectedCertificate, setSelectedCertificate] = useState<InsuranceCertificateDTO | null>(null);
   const [activeTab, setActiveTab] = useState('alerts');
   const [uploadingFile, setUploadingFile] = useState(false);
 
-  // Pagination for alerts
+  // Pagination
   const {
     currentData: paginatedAlerts,
     currentPage: alertsPage,
@@ -110,7 +128,6 @@ const UnifiedInsuranceManager = () => {
     itemsPerPage: 10
   });
 
-  // Pagination for certificates
   const {
     currentData: paginatedCertificates,
     currentPage: certificatesPage,
@@ -123,7 +140,8 @@ const UnifiedInsuranceManager = () => {
     itemsPerPage: 10
   });
 
-  const form = useForm<z.infer<typeof insuranceFormSchema>>({
+  // Form
+  const form = useForm<InsuranceFormValues>({
     resolver: zodResolver(insuranceFormSchema),
     defaultValues: {
       projectId: '',
@@ -139,117 +157,95 @@ const UnifiedInsuranceManager = () => {
     }
   });
 
-  const coverageTypes = [
-    { value: 'responsabilite_civile', label: 'Responsabilité Civile' },
-    { value: 'decennale', label: 'Assurance Décennale' },
-    { value: 'vehicules', label: 'Assurance Véhicules' },
-    { value: 'materiel', label: 'Assurance Matériel' },
-    { value: 'tous_risques', label: 'Tous Risques Chantier' }
-  ];
+  // ============================================================
+  // Statistics
+  // ============================================================
+  const stats = useMemo((): InsuranceStats => {
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
-    { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
-    { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
-    { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' },
-    { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'verified', label: 'Vérifié', color: 'bg-blue-100 text-blue-800' },
-    { value: 'new', label: 'Nouveau', color: 'bg-purple-100 text-purple-800' },
-    { value: 'in_progress', label: 'En cours', color: 'bg-blue-200 text-blue-800' },
-    { value: 'cancelled', label: 'Annulé', color: 'bg-red-200 text-red-800' },
-    { value: 'archived', label: 'Archivé', color: 'bg-gray-200 text-gray-800' },
-    { value: 'rejected', label: 'Rejeté', color: 'bg-red-300 text-red-800' },
-    { value: 'approved', label: 'Approuvé', color: 'bg-green-200 text-green-800' },
-    { value: 'sent', label: 'Envoyé', color: 'bg-blue-300 text-blue-800' },
-    { value: 'received', label: 'Reçu', color: 'bg-green-300 text-green-800' },
-    { value: 'test', label: 'Test', color: 'bg-red-400 text-red-800' },
-    { value: 'awaiting_approval', label: 'En attente d\'approbation', color: 'bg-yellow-200 text-yellow-800' },
-  ];
+    const active = certificates.filter(c => 
+      c.status === InsuranceCertificateStatus.ACTIVE
+    );
+    const expiring = certificates.filter(c => 
+      c.status === InsuranceCertificateStatus.ACTIVE &&
+      c.validUntil &&
+      new Date(c.validUntil) <= thirtyDaysFromNow &&
+      new Date(c.validUntil) >= now
+    );
+    const expired = certificates.filter(c => 
+      c.status === InsuranceCertificateStatus.EXPIRED ||
+      (c.validUntil && new Date(c.validUntil) < now)
+    );
+    const missing = certificates.filter(c => 
+      c.status === InsuranceCertificateStatus.MISSING
+    );
+    const coverageTotal = certificates.reduce((sum, c) => sum + (c.coverageAmount || 0), 0);
 
-  const loadInsuranceDataCallback = useCallback(async () => {
+    return {
+      total: certificates.length,
+      active: active.length,
+      expiring: expiring.length,
+      expired: expired.length,
+      missing: missing.length,
+      coverageTotal
+    };
+  }, [certificates]);
+
+  // ============================================================
+  // Data Loading
+  // ============================================================
+  const loadInsuranceData = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const insuranceService = getInsuranceService();
+      // Charger les alertes
       const expiringAlerts = await insuranceService.detectExpiringInsurance?.() || [];
       setAlerts(expiringAlerts);
+
+      // Charger les certificats
+      const certs = await insuranceService.getInsuranceCertificates();
+      setCertificates(certs);
+
+      toast({
+        title: 'Succès',
+        description: `${certs.length} certificat(s) chargé(s)`,
+      });
     } catch (error) {
       console.error('Error loading insurance data:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les données d'assurance",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de charger les données d\'assurance',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  const loadCertificatesCallback = useCallback(async () => {
-    setLoading(true);
-    try {
-      console.log('Loading insurance certificates...');
-      
-      // Use InsuranceService instance instead of static call
-      const insuranceService = getInsuranceService();
-      const data = await insuranceService.getInsuranceCertificates();
-
-      console.log('Raw certificates data:', data);
-
-      const transformedCertificates: LocalInsuranceCertificate[] = (data || []).map((cert: any) => ({
-        id: cert.id,
-        projectId: cert.projectId || cert.project_id || '',
-        contractorId: cert.contractorId || cert.contractor_id || '',
-        contractorName: cert.contractorName || cert.contractor_name || cert.insuranceCompany || cert.insurance_company || '',
-        insuranceCompany: cert.insuranceCompany || cert.insurance_company || '',
-        policyNumber: cert.policyNumber || cert.policy_number || '',
-        coverageAmount: cert.coverageAmount || cert.coverage_amount || 0,
-        coverageType: (cert.coverageType || cert.coverage_type || cert.insuranceType || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-        validFrom: cert.validFrom || cert.valid_from || cert.startDate || '',
-        validUntil: cert.validUntil || cert.valid_until || cert.endDate || '',
-        status: (cert.status || 'active') as 'active' | 'expired' | 'expiring_soon' | 'missing',
-        lastVerified: undefined,
-        verifiedBy: undefined,
-        notes: cert.notes,
-        certificateUrl: undefined,
-        documents: cert.documents ? (cert.documents as string[]).map((doc: string, index: number) => ({
-          id: index.toString(),
-          title: doc,
-          file_url: doc,
-          file_name: doc
-        })) : []
-      }));
-
-      console.log('Transformed certificates:', transformedCertificates);
-      setCertificates(transformedCertificates);
-      
-      toast({
-        title: 'Succès',
-        description: `${transformedCertificates.length} certificat(s) chargé(s)`,
-      });
-    } catch (error) {
-      console.error('Error loading certificates:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les certificats",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  }, [insuranceService, toast]);
 
   useEffect(() => {
-    loadInsuranceDataCallback();
-    loadCertificatesCallback();
-  }, [loadInsuranceDataCallback, loadCertificatesCallback]);
+    loadInsuranceData();
+  }, [loadInsuranceData]);
 
+  // ============================================================
+  // Handlers
+  // ============================================================
   const handleSendAlerts = async () => {
     setLoading(true);
     try {
       await checkAndSendInsuranceAlerts();
-      await loadInsuranceDataCallback(); // Refresh alerts
+      await loadInsuranceData();
+      toast({
+        title: 'Succès',
+        description: 'Alertes envoyées avec succès',
+      });
     } catch (error) {
       console.error('Error sending alerts:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'envoi des alertes',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -263,182 +259,119 @@ const UnifiedInsuranceManager = () => {
       const uploadResult = await uploadFile(file, `insurance-certificates/${Date.now()}-${file.name}`);
       
       if (uploadResult.success && uploadResult.url) {
-        // Create document record using DocumentService
         const documentData = {
           title: `Certificat d'assurance - ${file.name}`,
           projectId: form.getValues('projectId'),
-          description: `Document pour certificat d'assurance - ${form.getValues('contractorName')}`,
-          fileUrl: uploadResult.url
-        } as any;
+          description: `Document pour certificat d'assurance`,
+          fileUrl: uploadResult.url,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          documentType: 'certificate'
+        };
 
-        const document = await documentService.createDocument(documentData);
+        await documentService.createDocument(documentData as any);
 
         toast({
-          title: "Succès",
-          description: "Document téléchargé avec succès"
+          title: 'Succès',
+          description: 'Document téléchargé avec succès'
         });
 
-        return document;
+        await loadInsuranceData();
+        return uploadResult;
       }
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: "Erreur",
-        description: "Erreur lors du téléchargement du fichier",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Erreur lors du téléchargement du fichier',
+        variant: 'destructive'
       });
     } finally {
       setUploadingFile(false);
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof insuranceFormSchema>) => {
+  const onSubmit = async (values: InsuranceFormValues) => {
     try {
-      console.log('Creating/updating insurance certificate:', values);
-      
-      // Get current user
       const user = await getUser();
       const currentUserId = user?.id;
-      
+
+      const certificateData: Partial<InsuranceCertificateDTO> = {
+        projectId: values.projectId,
+        contractorId: values.contractorId,
+        contractorName: values.contractorName,
+        insuranceCompany: values.insuranceCompany,
+        policyNumber: values.policyNumber,
+        coverageAmount: values.coverageAmount,
+        coverageType: values.coverageType,
+        validFrom: values.validFrom,
+        validUntil: values.validUntil,
+        status: InsuranceCertificateStatus.ACTIVE,
+        lastVerified: new Date().toISOString(),
+        verifiedBy: currentUserId,
+        notes: values.notes
+      };
+
       if (isEditing && selectedCertificate) {
-        // Update existing certificate in Supabase
-        const { error } = await supabase
-          .from('insurance_certificates')
-          .update({
-            project_id: values.projectId,
-            contractor_id: values.contractorId,
-            contractor_name: values.contractorName,
-            insurance_company: values.insuranceCompany,
-            policy_number: values.policyNumber,
-            coverage_amount: values.coverageAmount,
-            coverage_type: values.coverageType,
-            valid_from: values.validFrom,
-            valid_until: values.validUntil,
-            last_verified: new Date().toISOString(),
-            verified_by: currentUserId,
-            notes: values.notes
-          })
-          .eq('id', selectedCertificate.id || '');
-
-        if (error) throw error;
-
-        await loadCertificatesCallback();
-        
-        toast({
-          title: "Succès",
-          description: "Certificat d'assurance mis à jour avec succès"
-        });
+        await insuranceService.updateInsuranceCertificate(selectedCertificate.id!, certificateData);
+        toast({ title: 'Succès', description: 'Certificat mis à jour' });
       } else {
-        // Create new certificate in Supabase
-        const { data, error } = await supabase
-          .from('insurance_certificates')
-          .insert({
-            project_id: values.projectId,
-            contractor_id: values.contractorId,
-            contractor_name: values.contractorName,
-            insurance_company: values.insuranceCompany,
-            policy_number: values.policyNumber,
-            coverage_amount: values.coverageAmount,
-            coverage_type: values.coverageType,
-            valid_from: values.validFrom,
-            valid_until: values.validUntil,
-            status: 'active',
-            last_verified: new Date().toISOString(),
-            verified_by: currentUserId,
-            notes: values.notes
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        await loadCertificatesCallback();
-        
-        toast({
-          title: "Succès",
-          description: "Certificat d'assurance créé avec succès"
-        });
+        await insuranceService.createInsuranceCertificate(certificateData as any);
+        toast({ title: 'Succès', description: 'Certificat créé' });
       }
-      
+
       setIsDialogOpen(false);
       form.reset();
       setIsEditing(false);
       setSelectedCertificate(null);
-      
+      await loadInsuranceData();
     } catch (error) {
-      console.error('Error creating insurance certificate:', error);
+      console.error('Error saving insurance certificate:', error);
       toast({
-        title: "Erreur",
-        description: "Erreur lors de la création du certificat",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Erreur lors de la sauvegarde',
+        variant: 'destructive'
       });
     }
   };
 
-  const openCreateForm = () => {
-    form.reset();
-    setIsEditing(false);
-    setIsViewMode(false);
-    setSelectedCertificate(null);
-    setIsDialogOpen(true);
+  const handleDelete = async (certificateId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce certificat ?')) return;
+
+    try {
+      await insuranceService.deleteInsuranceCertificate(certificateId);
+      toast({ title: 'Succès', description: 'Certificat supprimé' });
+      await loadInsuranceData();
+    } catch (error) {
+      console.error('Error deleting certificate:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la suppression',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const openEditForm = (certificate: LocalInsuranceCertificate) => {
-    form.reset({
-      projectId: certificate.projectId || certificate.project_id || '',
-      contractorId: certificate.contractorId || certificate.contractor_id || '',
-      contractorName: certificate.contractorName || certificate.contractor_name || '',
-      insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
-      policyNumber: certificate.policyNumber || certificate.policy_number || '',
-      coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-      validFrom: certificate.validFrom || certificate.valid_from || '',
-      validUntil: certificate.validUntil || certificate.valid_until || '',
-      notes: certificate.notes || ''
-    });
-    setSelectedCertificate(certificate);
-    setIsEditing(true);
-    setIsViewMode(false);
-    setIsDialogOpen(true);
-  };
-
-  const openViewForm = (certificate: LocalInsuranceCertificate) => {
-    form.reset({
-      projectId: certificate.projectId || certificate.project_id || '',
-      contractorId: certificate.contractorId || certificate.contractor_id || '',
-      contractorName: certificate.contractorName || certificate.contractor_name || '',
-      insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
-      policyNumber: certificate.policyNumber || certificate.policy_number || '',
-      coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-      validFrom: certificate.validFrom || certificate.valid_from || '',
-      validUntil: certificate.validUntil || certificate.valid_until || '',
-      notes: certificate.notes || ''
-    });
-    setSelectedCertificate(certificate);
-    setIsViewMode(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleRenewCertificate = (certificate: LocalInsuranceCertificate) => {
+  const handleRenewCertificate = (certificate: InsuranceCertificateDTO) => {
     const today = new Date();
-    const currentExpiry = new Date(certificate.validUntil || certificate.valid_until || '');
+    const currentExpiry = new Date(certificate.validUntil || '');
     const newValidFrom = new Date(currentExpiry);
     newValidFrom.setDate(newValidFrom.getDate() + 1);
     const newValidUntil = new Date(newValidFrom);
     newValidUntil.setFullYear(newValidUntil.getFullYear() + 1);
 
     form.reset({
-      projectId: certificate.projectId || certificate.project_id || '',
-      contractorId: certificate.contractorId || certificate.contractor_id || '',
-      contractorName: certificate.contractorName || certificate.contractor_name || '',
-      insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
-      policyNumber: `${certificate.policyNumber || certificate.policy_number}-REN${new Date().getFullYear()}`,
-      coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
-      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
+      projectId: certificate.projectId || '',
+      contractorId: certificate.contractorId || '',
+      contractorName: certificate.contractorName || '',
+      insuranceCompany: certificate.insuranceCompany || '',
+      policyNumber: `${certificate.policyNumber}-REN${new Date().getFullYear()}`,
+      coverageAmount: certificate.coverageAmount || 0,
+      coverageType: certificate.coverageType || 'responsabilite_civile',
       validFrom: newValidFrom.toISOString().split('T')[0],
       validUntil: newValidUntil.toISOString().split('T')[0],
-      notes: `Renouvellement du certificat ${certificate.policyNumber || certificate.policy_number}`
+      notes: `Renouvellement du certificat ${certificate.policyNumber}`
     });
     setSelectedCertificate(null);
     setIsEditing(false);
@@ -446,30 +379,72 @@ const UnifiedInsuranceManager = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (certificateId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce certificat d\'assurance ?')) {
-      try {
-        const { error } = await supabase
-          .from('insurance_certificates')
-          .delete()
-          .eq('id', certificateId);
-
-        if (error) throw error;
-
-        await loadCertificatesCallback();
-        toast({
-          title: "Succès",
-          description: "Certificat d'assurance supprimé avec succès"
-        });
-      } catch (error) {
-        console.error('Error deleting certificate:', error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de la suppression",
-          variant: "destructive"
-        });
+  const handleInsuranceAction = async (certificateId: string, actionType: string) => {
+    try {
+      const certificate = certificates.find(c => c.id === certificateId);
+      if (!certificate) {
+        toast({ title: 'Erreur', description: 'Certificat introuvable', variant: 'destructive' });
+        return;
       }
+
+      const user = await getUser();
+      const currentUserId = user?.id || 'system-user';
+
+      const actionTitles: Record<string, string> = {
+        task_assignment: 'Renouvellement assurance',
+        hierarchy_notification: 'Alerte assurance',
+        sms: 'SMS assurance',
+        call: 'Appel assurance',
+        email: 'Email assurance',
+        mail: 'Courrier assurance'
+      };
+
+      const actionMessages: Record<string, string> = {
+        task_assignment: `Veuillez traiter le renouvellement de l'assurance ${certificate.policyNumber}`,
+        hierarchy_notification: `L'assurance ${certificate.policyNumber} nécessite une attention particulière`,
+        sms: `SMS: Assurance ${certificate.policyNumber} - Action requise`,
+        call: `Appel concernant l'assurance ${certificate.policyNumber}`,
+        email: `Email concernant l'assurance ${certificate.policyNumber}`,
+        mail: `Courrier concernant l'assurance ${certificate.policyNumber}`
+      };
+
+      await createInsuranceAction({
+        insuranceId: certificateId,
+        projectId: certificate.projectId || '',
+        contractorId: certificate.contractorId || '',
+        actionType: actionType as CreateEnhancedActionRequestDTO['actionType'],
+        title: actionTitles[actionType] || 'Action assurance',
+        message: actionMessages[actionType] || 'Action requise',
+        priority: 'high',
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
+        metadata: { certificateData: certificate }
+      });
+
+      toast({ title: 'Action créée', description: `${actionTitles[actionType]} créée avec succès` });
+    } catch (error) {
+      console.error('Error creating insurance action:', error);
+      toast({
+        title: 'Erreur',
+        description: `Impossible de créer l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        variant: 'destructive'
+      });
     }
+  };
+
+  // ============================================================
+  // UI Helpers
+  // ============================================================
+  const getCoverageTypeLabel = (type: string) => {
+    return COVERAGE_TYPES.find(t => t.value === type)?.label || type;
+  };
+
+  const getStatusColor = (status: string) => {
+    return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusLabel = (status: string) => {
+    return STATUS_OPTIONS.find(s => s.value === status)?.label || status;
   };
 
   const getAlertBadgeVariant = (alertLevel: string) => {
@@ -481,94 +456,6 @@ const UnifiedInsuranceManager = () => {
     }
   };
 
-  const getCoverageTypeLabel = (type: string) => {
-    return coverageTypes.find(t => t.value === type)?.label || type;
-  };
-
-  const getStatusColor = (status: string) => {
-    return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
-  };
-
-  const handleInsuranceAction = async (certificateId: string, actionType: string) => {
-    try {
-      const certificate = certificates.find(c => c.id === certificateId);
-      if (!certificate) {
-        toast({
-          title: 'Erreur',
-          description: 'Certificat introuvable',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      // Get current user or use a fallback
-      const user = await getUser();
-      const currentUserId = user?.id || 'system-user';
-
-      let title = '';
-      let message = '';
-      
-      switch (actionType) {
-        case 'task_assignment':
-          title = 'Renouvellement assurance';
-          message = `Veuillez traiter le renouvellement de l'assurance ${certificate.policyNumber || certificate.policy_number}`;
-          break;
-        case 'hierarchy_notification':
-          title = 'Alerte assurance';
-          message = `L'assurance ${certificate.policyNumber || certificate.policy_number} nécessite une attention particulière`;
-          break;
-        case 'sms':
-          title = 'SMS assurance';
-          message = `SMS: Assurance ${certificate.policyNumber || certificate.policy_number} - Action requise`;
-          break;
-        case 'call':
-          title = 'Appel assurance';
-          message = `Appel concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
-          break;
-        case 'email':
-          title = 'Email assurance';
-          message = `Email concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
-          break;
-        case 'mail':
-          title = 'Courrier assurance';
-          message = `Courrier concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
-          break;
-        default:
-          toast({
-            title: 'Erreur',
-            description: 'Type d\'action non reconnu',
-            variant: 'destructive'
-          });
-          return;
-      }
-
-      await createInsuranceAction({
-        insuranceId: certificateId,
-        projectId: certificate.projectId || certificate.project_id || '',
-        contractorId: certificate.contractorId || certificate.contractor_id || '',
-        actionType: actionType as CreateEnhancedActionRequest['actionType'],
-        title,
-        message,
-        priority: 'high',
-        assigneeId: currentUserId,
-        recipientIds: [currentUserId],
-        metadata: { certificateData: certificate as unknown as Record<string, unknown> }
-      });
-
-      toast({
-        title: 'Action créée',
-        description: `${title} créée avec succès`,
-      });
-    } catch (error: unknown) {
-      console.error('Error creating insurance action:', error);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de créer l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive'
-      });
-    }
-  };
-
   const isExpiringSoon = (expiryDate: string) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
@@ -577,9 +464,9 @@ const UnifiedInsuranceManager = () => {
     return diffDays <= 30 && diffDays >= 0;
   };
 
-  const getActiveCertificates = () => certificates.filter(c => c.status === 'active' || c.status === 'expiring_soon');
-  const getExpiredCertificates = () => certificates.filter(c => c.status === 'expired');
-
+  // ============================================================
+  // Render
+  // ============================================================
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -593,9 +480,13 @@ const UnifiedInsuranceManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">🛡️ Gestion des Assurances</h2>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            Gestion des Assurances
+          </h2>
           <p className="text-muted-foreground">
             Surveillance automatique des expirations et gestion unifiée des certificats
           </p>
@@ -607,307 +498,89 @@ const UnifiedInsuranceManager = () => {
               Envoyer Alertes ({alerts.length})
             </Button>
           )}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau Certificat
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {isViewMode ? 'Détails du Certificat' : isEditing ? 'Modifier le Certificat' : 'Nouveau Certificat d\'Assurance'}
-                </DialogTitle>
-                <DialogDescription>
-                  {isViewMode ? 'Consulter les détails' : isEditing ? 'Modifier les informations' : 'Ajouter un nouveau certificat d\'assurance'}
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="projectId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Projet</FormLabel>
-                          <FormControl>
-                            <ProjectSelector
-                              value={field.value}
-                              onChange={field.onChange}
-                              label=""
-                              required
-                              disabled={isViewMode}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contractorName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contracteur</FormLabel>
-                          <FormControl>
-                            <SupplierSelector
-                              value={{ 
-                                id: form.watch('contractorId') || '',
-                                name: field.value || '',
-                                contact: '',
-                                leadTime: 0
-                              }}
-                              onChange={(supplier) => {
-                                form.setValue('contractorId', supplier.id || '');
-                                field.onChange(supplier.name || '');
-                              }}
-                              allowCustom={true}
-                              disabled={isViewMode}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="insuranceCompany"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Compagnie d'Assurance</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Assurances Générales..." {...field} disabled={isViewMode} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="policyNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Numéro de Police</FormLabel>
-                          <FormControl>
-                            <Input placeholder="POL-789..." {...field} disabled={isViewMode} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="coverageType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Type de Couverture</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isViewMode}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Sélectionner le type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {coverageTypes.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="coverageAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Montant Couverture (MRU)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1000000" 
-                              {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                              disabled={isViewMode}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="validFrom"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date de Début</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} disabled={isViewMode} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="validUntil"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date d'Expiration</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} disabled={isViewMode} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <Label>Documents du Certificat</Label>
-                    {!isViewMode && (
-                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                        <input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload(file, selectedCertificate?.id);
-                            }
-                          }}
-                          className="hidden"
-                          id="certificate-upload"
-                        />
-                        <label 
-                          htmlFor="certificate-upload" 
-                          className="flex flex-col items-center justify-center cursor-pointer"
-                        >
-                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                          <span className="text-sm text-muted-foreground">
-                            {uploadingFile ? 'Téléchargement...' : 'Cliquez pour télécharger un document'}
-                          </span>
-                          <span className="text-xs text-muted-foreground mt-1">
-                            PDF, Images, Documents acceptés
-                          </span>
-                        </label>
-                      </div>
-                    )}
-                    
-                    {selectedCertificate?.documents && selectedCertificate.documents.length > 0 && (
-                      <div className="space-y-2">
-                        <Label>Documents attachés:</Label>
-                        {selectedCertificate.documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4" />
-                              <span className="text-sm">{doc.title}</span>
-                            </div>
-                            <div className="flex gap-2">
-                              {doc.file_url && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => window.open(doc.file_url, '_blank')}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {!isViewMode && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    if (doc.file_url) {
-                                      deleteFile(doc.file_url);
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes (optionnel)</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Notes additionnelles..." {...field} disabled={isViewMode} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {!isViewMode && (
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Annuler
-                      </Button>
-                      <Button type="submit">
-                        {isEditing ? 'Mettre à jour' : 'Créer Certificat'}
-                      </Button>
-                    </div>
-                  )}
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => {
+            form.reset();
+            setIsEditing(false);
+            setIsViewMode(false);
+            setSelectedCertificate(null);
+            setIsDialogOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Certificat
+          </Button>
         </div>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-primary">{stats.total}</div>
+            <p className="text-sm text-muted-foreground">Total</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <p className="text-sm text-muted-foreground">Actifs</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-orange-500">{stats.expiring}</div>
+            <p className="text-sm text-muted-foreground">Expire bientôt</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
+            <p className="text-sm text-muted-foreground">Expirés</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-gray-600">{stats.missing}</div>
+            <p className="text-sm text-muted-foreground">Manquants</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.coverageTotal.toLocaleString()} MRU
+            </div>
+            <p className="text-sm text-muted-foreground">Couverture totale</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="alerts">
-            Alertes ({alerts.length})
-          </TabsTrigger>
-          <TabsTrigger value="active">
-            Actifs ({getActiveCertificates().length})
-          </TabsTrigger>
-          <TabsTrigger value="expired">
-            Expirés ({getExpiredCertificates().length})
-          </TabsTrigger>
-          <TabsTrigger value="all">
-            Tous ({certificates.length})
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="alerts">Alertes ({alerts.length})</TabsTrigger>
+          <TabsTrigger value="active">Actifs ({stats.active})</TabsTrigger>
+          <TabsTrigger value="expired">Expirés ({stats.expired})</TabsTrigger>
+          <TabsTrigger value="all">Tous ({stats.total})</TabsTrigger>
         </TabsList>
 
+        {/* Alerts Tab */}
         <TabsContent value="alerts" className="space-y-4">
           {alerts.length === 0 ? (
             <Card>
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
                   <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Aucune alerte d'expiration d'assurance</p>
+                  <p className="text-sm text-muted-foreground">Aucune alerte d'expiration</p>
                 </div>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4">
               {paginatedAlerts.map((alert, index) => (
-                <Card key={index} className={`${alert.alertLevel === 'expired' ? 'border-red-200' : alert.alertLevel === 'critical' ? 'border-orange-200' : 'border-yellow-200'}`}>
+                <Card key={index} className={`
+                  ${alert.alertLevel === 'expired' ? 'border-red-200' : 
+                    alert.alertLevel === 'critical' ? 'border-orange-200' : 
+                    'border-yellow-200'}
+                `}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -926,55 +599,46 @@ const UnifiedInsuranceManager = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="space-y-1">
-                        <p className="text-sm text-gray-600">
-                          <strong>Expiration:</strong> {alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString() : 'N/A'}
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Expiration:</strong> {alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString('fr-FR') : 'N/A'}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           <strong>Jours restants:</strong> {(alert.daysRemaining ?? 0) < 0 ? 'Expirée' : alert.daysRemaining ?? 'N/A'}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" onClick={() => {
-                          const certificate = certificates.find(c => 
-                            (c.policyNumber || c.policy_number) === alert.policyNumber
-                          );
-                          if (certificate) openViewForm(certificate);
+                          const cert = certificates.find(c => c.policyNumber === alert.policyNumber);
+                          if (cert) {
+                            setSelectedCertificate(cert);
+                            setIsViewMode(true);
+                            setIsDialogOpen(true);
+                          }
                         }}>
-                          <FileText className="h-4 w-4 mr-1" />
-                          Voir Certificat
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
                         </Button>
                         <Button size="sm" onClick={() => {
-                          const certificate = certificates.find(c => 
-                            (c.policyNumber || c.policy_number) === alert.policyNumber
-                          );
-                          if (certificate) handleRenewCertificate(certificate);
+                          const cert = certificates.find(c => c.policyNumber === alert.policyNumber);
+                          if (cert) handleRenewCertificate(cert);
                         }}>
                           Renouveler
                         </Button>
-                        {(() => {
-                          const certificate = certificates.find(c => 
-                            (c.policyNumber || c.policy_number) === alert.policyNumber
-                          );
-                          if (!certificate) return null;
-                          return (
-                            <ActionsDropdown
-                              entityType="insurance"
-                              entityId={certificate.id!}
-                              projectId={certificate.projectId || certificate.project_id}
-                              contractorId={certificate.contractorId || certificate.contractor_id}
-                              onActionComplete={loadCertificatesCallback}
-                            />
-                          );
-                        })()}
+                        <ActionsDropdown
+                          entityType="insurance"
+                          entityId={alert.id || ''}
+                          projectId={alert.projectId}
+                          contractorId={alert.contractorId}
+                          onActionComplete={loadInsuranceData}
+                        />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
               
-              {/* Pagination for Alerts */}
               {alerts.length > 10 && (
                 <PaginationControls
                   currentPage={alertsPage}
@@ -989,10 +653,11 @@ const UnifiedInsuranceManager = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="active" className="space-y-4">
+        {/* Active Tab */}
+        <TabsContent value="active">
           <Card>
             <CardHeader>
-              <CardTitle>Certificats Actifs</CardTitle>
+              <CardTitle>Certificats Actifs ({stats.active})</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -1004,86 +669,64 @@ const UnifiedInsuranceManager = () => {
                     <TableHead>Police</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Expiration</TableHead>
-                    <TableHead>Statut</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {getActiveCertificates().slice(0, 10).map((certificate) => (
-                    <TableRow key={certificate.id}>
-                      <TableCell className="font-medium">
-                        {certificate.projectId || certificate.project_id}
-                      </TableCell>
-                      <TableCell>{certificate.contractorName || certificate.contractor_name}</TableCell>
-                      <TableCell>
-                        {getCoverageTypeLabel(certificate.coverageType || certificate.coverage_type || '')}
-                      </TableCell>
-                      <TableCell>{certificate.policyNumber || certificate.policy_number}</TableCell>
-                      <TableCell>
-                        {((certificate.coverageAmount || certificate.coverage_amount || 0)).toLocaleString()} MRU
-                      </TableCell>
+                  {certificates.filter(c => c.status === InsuranceCertificateStatus.ACTIVE).slice(0, 10).map((cert) => (
+                    <TableRow key={cert.id}>
+                      <TableCell>{cert.projectId}</TableCell>
+                      <TableCell>{cert.contractorName}</TableCell>
+                      <TableCell>{getCoverageTypeLabel(cert.coverageType || '')}</TableCell>
+                      <TableCell>{cert.policyNumber}</TableCell>
+                      <TableCell>{(cert.coverageAmount || 0).toLocaleString()} MRU</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {new Date(certificate.validUntil || certificate.valid_until || '').toLocaleDateString('fr-FR')}
-                          {isExpiringSoon(certificate.validUntil || certificate.valid_until || '') && (
+                          {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
+                          {isExpiringSoon(cert.validUntil || '') && (
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(certificate.status || 'active')}>
-                          {statusOptions.find(s => s.value === certificate.status)?.label || 'Active'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedCertificate(cert);
+                            setIsViewMode(true);
+                            setIsDialogOpen(true);
+                          }}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedCertificate(cert);
+                            setIsEditing(true);
+                            setIsViewMode(false);
+                            form.reset({
+                              projectId: cert.projectId || '',
+                              contractorId: cert.contractorId || '',
+                              contractorName: cert.contractorName || '',
+                              insuranceCompany: cert.insuranceCompany || '',
+                              policyNumber: cert.policyNumber || '',
+                              coverageAmount: cert.coverageAmount || 0,
+                              coverageType: cert.coverageType || 'responsabilite_civile',
+                              validFrom: cert.validFrom || '',
+                              validUntil: cert.validUntil || '',
+                              notes: cert.notes || ''
+                            });
+                            setIsDialogOpen(true);
+                          }}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
+                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline" className="gap-2">
-                                <Settings className="h-4 w-4" />
-                                <span className="hidden sm:inline">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Assigner une tâche
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
-                                <Users className="h-4 w-4 mr-2" />
-                                Notifier la hiérarchie
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Envoyer SMS
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
-                                <Phone className="h-4 w-4 mr-2" />
-                                Programmer appel
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Envoyer email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
-                                <FileText className="h-4 w-4 mr-2" />
-                                Courrier postal
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <ActionsDropdown
+                            entityType="insurance"
+                            entityId={cert.id!}
+                            projectId={cert.projectId}
+                            contractorId={cert.contractorId}
+                            onActionComplete={loadInsuranceData}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1094,10 +737,11 @@ const UnifiedInsuranceManager = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="expired" className="space-y-4">
+        {/* Expired Tab */}
+        <TabsContent value="expired">
           <Card>
             <CardHeader>
-              <CardTitle>Certificats Expirés</CardTitle>
+              <CardTitle>Certificats Expirés ({stats.expired})</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -1113,65 +757,35 @@ const UnifiedInsuranceManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {getExpiredCertificates().slice(0, 10).map((certificate) => (
-                    <TableRow key={certificate.id}>
-                      <TableCell className="font-medium">
-                        {certificate.projectId || certificate.project_id}
-                      </TableCell>
-                      <TableCell>{certificate.contractorName || certificate.contractor_name}</TableCell>
-                      <TableCell>
-                        {getCoverageTypeLabel(certificate.coverageType || certificate.coverage_type || '')}
-                      </TableCell>
-                      <TableCell>{certificate.policyNumber || certificate.policy_number}</TableCell>
-                      <TableCell>
-                        {((certificate.coverageAmount || certificate.coverage_amount || 0)).toLocaleString()} MRU
-                      </TableCell>
+                  {certificates.filter(c => c.status === InsuranceCertificateStatus.EXPIRED).slice(0, 10).map((cert) => (
+                    <TableRow key={cert.id}>
+                      <TableCell>{cert.projectId}</TableCell>
+                      <TableCell>{cert.contractorName}</TableCell>
+                      <TableCell>{getCoverageTypeLabel(cert.coverageType || '')}</TableCell>
+                      <TableCell>{cert.policyNumber}</TableCell>
+                      <TableCell>{(cert.coverageAmount || 0).toLocaleString()} MRU</TableCell>
                       <TableCell className="text-red-600">
-                        {new Date(certificate.validUntil || certificate.valid_until || '').toLocaleDateString('fr-FR')}
+                        {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedCertificate(cert);
+                            setIsViewMode(true);
+                            setIsDialogOpen(true);
+                          }}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" onClick={() => handleRenewCertificate(certificate)}>
+                          <Button size="sm" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline" className="gap-2">
-                                <Settings className="h-4 w-4" />
-                                <span className="hidden sm:inline">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Assigner une tâche
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
-                                <Users className="h-4 w-4 mr-2" />
-                                Notifier la hiérarchie
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Envoyer SMS
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
-                                <Phone className="h-4 w-4 mr-2" />
-                                Programmer appel
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Envoyer email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
-                                <FileText className="h-4 w-4 mr-2" />
-                                Courrier postal
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <ActionsDropdown
+                            entityType="insurance"
+                            entityId={cert.id!}
+                            projectId={cert.projectId}
+                            contractorId={cert.contractorId}
+                            onActionComplete={loadInsuranceData}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1182,10 +796,11 @@ const UnifiedInsuranceManager = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="all" className="space-y-4">
+        {/* All Tab */}
+        <TabsContent value="all">
           <Card>
             <CardHeader>
-              <CardTitle>Tous les Certificats</CardTitle>
+              <CardTitle>Tous les Certificats ({stats.total})</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -1202,89 +817,75 @@ const UnifiedInsuranceManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedCertificates.map((certificate) => (
-                    <TableRow key={certificate.id}>
-                      <TableCell className="font-medium">
-                        {certificate.projectId || certificate.project_id}
-                      </TableCell>
-                      <TableCell>{certificate.contractorName || certificate.contractor_name}</TableCell>
-                      <TableCell>
-                        {getCoverageTypeLabel(certificate.coverageType || certificate.coverage_type || '')}
-                      </TableCell>
-                      <TableCell>{certificate.policyNumber || certificate.policy_number}</TableCell>
-                      <TableCell>
-                        {((certificate.coverageAmount || certificate.coverage_amount || 0)).toLocaleString()} MRU
-                      </TableCell>
+                  {paginatedCertificates.map((cert) => (
+                    <TableRow key={cert.id}>
+                      <TableCell>{cert.projectId}</TableCell>
+                      <TableCell>{cert.contractorName}</TableCell>
+                      <TableCell>{getCoverageTypeLabel(cert.coverageType || '')}</TableCell>
+                      <TableCell>{cert.policyNumber}</TableCell>
+                      <TableCell>{(cert.coverageAmount || 0).toLocaleString()} MRU</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {new Date(certificate.validUntil || certificate.valid_until || '').toLocaleDateString('fr-FR')}
-                          {isExpiringSoon(certificate.validUntil || certificate.valid_until || '') && (
+                          {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
+                          {isExpiringSoon(cert.validUntil || '') && (
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(certificate.status || 'active')}>
-                          {statusOptions.find(s => s.value === certificate.status)?.label || 'Active'}
+                        <Badge className={getStatusColor(cert.status || '')}>
+                          {getStatusLabel(cert.status || '')}
                         </Badge>
                       </TableCell>
-                       <TableCell>
-                          <div className="flex flex-wrap gap-2">
-                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
-                             <Eye className="h-4 w-4" />
-                           </Button>
-                           <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
-                             <Edit className="h-4 w-4" />
-                           </Button>
-                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
-                             Renouveler
-                           </Button>
-                           <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
-                             <Trash2 className="h-4 w-4" />
-                           </Button>
-                           <DropdownMenu>
-                             <DropdownMenuTrigger asChild>
-                               <Button size="sm" variant="outline" className="gap-2">
-                                 <Shield className="h-4 w-4" />
-                                 Actions
-                               </Button>
-                             </DropdownMenuTrigger>
-                             <DropdownMenuContent align="end" className="w-56">
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
-                                 <Calendar className="h-4 w-4 mr-2" />
-                                 Assigner une tâche
-                               </DropdownMenuItem>
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
-                                 <Users className="h-4 w-4 mr-2" />
-                                 Notifier la hiérarchie
-                               </DropdownMenuItem>
-                               <DropdownMenuSeparator />
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
-                                 <MessageSquare className="h-4 w-4 mr-2" />
-                                 Envoyer SMS
-                               </DropdownMenuItem>
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
-                                 <Phone className="h-4 w-4 mr-2" />
-                                 Programmer appel
-                               </DropdownMenuItem>
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
-                                 <Mail className="h-4 w-4 mr-2" />
-                                 Envoyer email
-                               </DropdownMenuItem>
-                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
-                                 <FileText className="h-4 w-4 mr-2" />
-                                 Courrier postal
-                               </DropdownMenuItem>
-                             </DropdownMenuContent>
-                           </DropdownMenu>
-                         </div>
-                       </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedCertificate(cert);
+                            setIsViewMode(true);
+                            setIsDialogOpen(true);
+                          }}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => {
+                            setSelectedCertificate(cert);
+                            setIsEditing(true);
+                            setIsViewMode(false);
+                            form.reset({
+                              projectId: cert.projectId || '',
+                              contractorId: cert.contractorId || '',
+                              contractorName: cert.contractorName || '',
+                              insuranceCompany: cert.insuranceCompany || '',
+                              policyNumber: cert.policyNumber || '',
+                              coverageAmount: cert.coverageAmount || 0,
+                              coverageType: cert.coverageType || 'responsabilite_civile',
+                              validFrom: cert.validFrom || '',
+                              validUntil: cert.validUntil || '',
+                              notes: cert.notes || ''
+                            });
+                            setIsDialogOpen(true);
+                          }}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
+                            Renouveler
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(cert.id!)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <ActionsDropdown
+                            entityType="insurance"
+                            entityId={cert.id!}
+                            projectId={cert.projectId}
+                            contractorId={cert.contractorId}
+                            onActionComplete={loadInsuranceData}
+                          />
+                        </div>
+                      </TableCell>
                     </TableRow>
-                   ))}
+                  ))}
                 </TableBody>
               </Table>
               
-              {/* Pagination for Certificates */}
               {certificates.length > 10 && (
                 <PaginationControls
                   currentPage={certificatesPage}
@@ -1299,6 +900,205 @@ const UnifiedInsuranceManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for Create/Edit/View */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {isViewMode ? 'Détails du Certificat' : 
+               isEditing ? 'Modifier le Certificat' : 
+               'Nouveau Certificat d\'Assurance'}
+            </DialogTitle>
+            <DialogDescription>
+              {isViewMode ? 'Consulter les détails du certificat' : 
+               isEditing ? 'Modifier les informations du certificat' : 
+               'Ajouter un nouveau certificat d\'assurance'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Projet</FormLabel>
+                      <FormControl>
+                        <ProjectSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                          label=""
+                          required
+                          disabled={isViewMode}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contractorName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contractant</FormLabel>
+                      <FormControl>
+                        <SupplierSelector
+                          value={{
+                            id: form.watch('contractorId') || '',
+                            name: field.value || '',
+                            contact: '',
+                            leadTime: 0
+                          }}
+                          onChange={(supplier) => {
+                            form.setValue('contractorId', supplier.id || '');
+                            field.onChange(supplier.name || '');
+                          }}
+                          allowCustom={true}
+                          disabled={isViewMode}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="insuranceCompany"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Compagnie d'Assurance</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Assurances Générales..." {...field} disabled={isViewMode} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="policyNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Numéro de Police</FormLabel>
+                      <FormControl>
+                        <Input placeholder="POL-789..." {...field} disabled={isViewMode} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="coverageType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type de Couverture</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isViewMode}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner le type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {COVERAGE_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="coverageAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Montant Couverture (MRU)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="1000000" 
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          disabled={isViewMode}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="validFrom"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date de Début</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={isViewMode} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="validUntil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date d'Expiration</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={isViewMode} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (optionnel)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Notes additionnelles..." {...field} disabled={isViewMode} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {!isViewMode && (
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    {isEditing ? 'Mettre à jour' : 'Créer Certificat'}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

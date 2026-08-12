@@ -16,7 +16,7 @@ import type { BoqResourceType } from "@/domain/entities/boq/BoqLine";
 import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 import { toast } from "@/hooks/use-toast";
-import { boqRepository } from "@/infrastructure/supabase/adapters/SupabaseBoqRepository";
+import { boqRepository } from "@/infrastructure/adapters/supabase/SupabaseBoqRepository";
 import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
 import { getRecommendationItems } from "@/utils/recommendations";
 import { CalculationParams, CalculationResult, elementTypes, InvoiceLine, mapToElementType, Opening, STANDARD_OPENINGS } from "@/utils/types";

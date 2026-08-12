@@ -14,7 +14,7 @@ import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from
 
 // ✅ IMPORT des modules locaux (correction)
 import { DEV_MODE } from "@/config/constants";
-import { LocalAuthAdapter } from "@/infrastructure/local/LocalAuthAdapter";
+import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
 
 // Use existing DTOs for AuthManager internal operations
 export type AuthCredentials = LoginData;

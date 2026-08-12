@@ -1,4 +1,6 @@
+// ============================================================
 // src/infrastructure/RepositoryFactory.ts
+// ============================================================
 /**
  * Unified RepositoryFactory
  * Single switch for auth / data / storage providers.
@@ -12,7 +14,7 @@
 import { getAppConfig } from '@/config/app';
 import { validateProviders } from '@/config/app-validate';
 import { DEV_MODE } from '@/config/constants';
-import { NotificationGatewayAdapter, notificationGatewayAdapter } from '@/infrastructure/supabase/adapters/NotificationGatewayAdapter';
+import { NotificationGatewayAdapter, notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
 
 // ================================================================
 // 1. TYPES
@@ -27,90 +29,91 @@ export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
 // ================================================================
 
 import {
-    SupabaseAlertAdapter,
-    SupabaseAuthAdapter,
-    SupabaseComplianceAdapter,
-    SupabaseContactMessageAdapter,
-    SupabaseDocumentAdapter,
-    SupabaseEmployeeAdapter,
-    SupabaseHierarchyAdapter,
-    SupabaseInspectionAdapter,
-    SupabaseInspectionExecutionAdapter,
-    SupabaseInspectionPaymentValidationAdapter,
-    SupabaseInspectionPermissionAdapter,
-    SupabaseInsuranceAdapter,
-    SupabaseLoadDataAdapter,
-    SupabaseMaterialAdapter,
-    SupabaseMilestoneAdapter,
-    SupabaseMissionExpenseAdapter,
-    SupabaseMonitoringAdapter,
-    SupabaseNotificationAdapter,
-    SupabaseParsedInvoiceAdapter,
-    SupabasePaymentAdapter,
-    SupabasePaymentBlockAdapter,
-    SupabasePaymentControlActionAdapter,
-    SupabasePhaseAdapter,
-    SupabaseProjectAdapter,
-    SupabaseProjectBudgetLinkAdapter,
-    SupabaseProjectFormAdapter,
-    SupabaseProjectStakeholderAdapter,
-    SupabaseProjectStrategyLinkAdapter,
-    SupabaseQuantityTakeoffAdapter,
-    SupabaseReportDataTransformerAdapter,
-    SupabaseReportingAdapter,
-    SupabaseRiskAdapter,
-    SupabaseRiskTaskRelationAdapter,
-    SupabaseStakeholderAdapter,
-    SupabaseSupplierAdapter,
-    SupabaseTenderAdapter,
-    SupabaseTenderDocumentAdapter,
-    SupabaseTenderSharingAdapter,
-    SupabaseUserAdapter,
-    SupabaseWorkspaceAdapter,
-} from '@/infrastructure/supabase/adapters';
+  SupabaseAlertAdapter,
+  SupabaseAuthAdapter,
+  SupabaseComplianceAdapter,
+  SupabaseContactMessageAdapter,
+  SupabaseDocumentAdapter,
+  SupabaseEmployeeAdapter,
+  SupabaseHierarchyAdapter,
+  SupabaseInspectionAdapter,
+  SupabaseInspectionExecutionAdapter,
+  SupabaseInspectionPaymentValidationAdapter,
+  SupabaseInspectionPermissionAdapter,
+  SupabaseInsuranceAdapter,
+  SupabaseLoadDataAdapter,
+  SupabaseMaterialAdapter,
+  SupabaseMilestoneAdapter,
+  SupabaseMissionExpenseAdapter,
+  SupabaseMonitoringAdapter,
+  SupabaseNotificationAdapter,
+  SupabaseParsedInvoiceAdapter,
+  SupabasePaymentAdapter,
+  SupabasePaymentBlockAdapter,
+  SupabasePaymentControlActionAdapter,
+  SupabasePhaseAdapter,
+  SupabaseProjectAdapter,
+  SupabaseProjectBudgetLinkAdapter,
+  SupabaseProjectFormAdapter,
+  SupabaseProjectStakeholderAdapter,
+  SupabaseProjectStrategyLinkAdapter,
+  SupabaseQuantityTakeoffAdapter,
+  SupabaseReportDataTransformerAdapter,
+  SupabaseReportingAdapter,
+  SupabaseRiskAdapter,
+  SupabaseRiskTaskRelationAdapter,
+  SupabaseStakeholderAdapter,
+  SupabaseSupplierAdapter,
+  SupabaseTenderAdapter,
+  SupabaseTenderDocumentAdapter,
+  SupabaseTenderSharingAdapter,
+  SupabaseUserAdapter,
+  SupabaseWorkspaceAdapter,
+} from '@/infrastructure/adapters/supabase';
 
 import {
-    BankGuaranteeAdapter,
-    InspectionSchedulingAdapter,
-    LocationRepository,
-    PaymentBlockingAdapter,
-    PVGeneratorAdapter,
-    TaskAssignmentAdapter,
-    TenderEstimateAdapter
-} from '@/infrastructure/supabase/adapters';
-import { SupabaseOAuthProviderAdapter } from '@/infrastructure/supabase/adapters/SupabaseOAuthProviderAdapter';
-import { SupabaseRealtimeAdapter } from '@/infrastructure/supabase/adapters/SupabaseRealtimeAdapter';
-import { SupabaseStorageAdapter } from '@/infrastructure/supabase/adapters/SupabaseStorageAdapter';
+  BankGuaranteeAdapter,
+  InspectionSchedulingAdapter,
+  LocationRepository,
+  PaymentBlockingAdapter,
+  PVGeneratorAdapter,
+  TaskAssignmentAdapter,
+  TenderEstimateAdapter
+} from '@/infrastructure/adapters/supabase';
+import { SupabaseOAuthProviderAdapter } from '@/infrastructure/adapters/supabase/SupabaseOAuthProviderAdapter';
+import { SupabaseRealtimeAdapter } from '@/infrastructure/adapters/supabase/SupabaseRealtimeAdapter';
+import { SupabaseStorageAdapter } from '@/infrastructure/adapters/supabase/SupabaseStorageAdapter';
 
 // ================================================================
 // 3. IMPORTS – AUTH ADAPTERS
 // ================================================================
 
-import { GoTrueAuthAdapter } from '@/infrastructure/auth/GoTrueAuthAdapter';
-import { KeycloakAuthAdapter } from '@/infrastructure/auth/KeycloakAuthAdapter';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
+import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
+import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
+import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
 
 // ================================================================
-// 4. IMPORTS – LOCAL ADAPTERS (mocks)
+// 4. IMPORTS – LOCAL ADAPTERS
 // ================================================================
 
 import {
-    LocalNotificationAdapter,
-    LocalOAuthProviderAdapter,
-    LocalStorageAdapter,
-} from '@/infrastructure/local';
+  LocalNotificationAdapter,
+  LocalOAuthProviderAdapter,
+  LocalAlertAdapter,
+  LocalStorageAdapter,
+} from '@/infrastructure/adapters/local';
 
 // ================================================================
 // 5. IMPORTS – STORAGE ADAPTERS
 // ================================================================
 
-import { S3StorageAdapter } from '@/infrastructure/storage/S3StorageAdapter';
+import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
 
 // ================================================================
 // 6. IMPORTS – CLIENTS
 // ================================================================
 
-import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
+import { PostgrestClient } from '@/infrastructure/adapters/postgrest/PostgrestClient';
 
 // ================================================================
 // 7. IMPORTS – INTERFACES
@@ -152,8 +155,8 @@ import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
-import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
+import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
@@ -169,11 +172,19 @@ import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRe
 import { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { StorageProviderToRepositoryAdapter } from '@/infrastructure/storage/StorageProviderToRepositoryAdapter';
-import { SupabaseOrganizationAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationAdapter';
-import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/supabase/adapters/SupabaseOrganizationHierarchyAdapter';
+import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
+import { SupabaseOrganizationAdapter } from '@/infrastructure/adapters/supabase/SupabaseOrganizationAdapter';
+import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/adapters/supabase/SupabaseOrganizationHierarchyAdapter';
+
 // ================================================================
-// 8. RESOLVE FUNCTIONS
+// 8. IMPORTS – DOCUMENT VALIDATION LOGS
+// ================================================================
+
+import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
+import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentValidationLogAdapter';
+
+// ================================================================
+// 9. RESOLVE FUNCTIONS
 // ================================================================
 
 function resolveAuth(): AuthProviderKind {
@@ -192,11 +203,8 @@ function resolveStorage(): StorageProviderKind {
 }
 
 // ================================================================
-// 9. REGISTRY (lazy loading)
+// 10. REGISTRY (lazy loading)
 // ================================================================
-
-import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
-import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/supabase/adapters/SupabaseDocumentValidationLogAdapter';
 
 interface RepositoryRegistry {
   auth?: IAuthRepository;
@@ -244,7 +252,7 @@ interface RepositoryRegistry {
   compliance?: IComplianceRepository;
   monitoring?: IMonitoringRepository;
   workspace?: IWorkspaceRepository;
-  alert?: IAlertRepository;
+  alert?: IAlertRepository; // ✅ Unified alert repository (replaces IProjectAlertRepository)
   tenderSharing?: ITenderSharingRepository;
   projectStrategyLink?: IProjectStrategyLinkRepository;
   projectBudgetLink?: IProjectBudgetLinkRepository;
@@ -258,7 +266,7 @@ interface RepositoryRegistry {
 const registry: RepositoryRegistry = {};
 
 // ================================================================
-// 10. REPOSITORY FACTORY
+// 11. REPOSITORY FACTORY
 // ================================================================
 
 export class RepositoryFactory {
@@ -334,6 +342,27 @@ export class RepositoryFactory {
       registry.documentValidationLog = new SupabaseDocumentValidationLogAdapter();
     }
     return registry.documentValidationLog;
+  }
+
+  // ================================================================
+  // ALERT REPOSITORY (Unified - replaces IProjectAlertRepository)
+  // ================================================================
+  
+  /**
+   * Get the unified Alert Repository
+   * Uses IAlertRepository interface for all alert operations
+   * Resolves to Supabase or Local based on configuration
+   */
+  static getAlertRepository(): IAlertRepository {
+    if (registry.alert) return registry.alert;
+
+    const dataKind = resolveData();
+    if (dataKind === 'local' || DEV_MODE) {
+      registry.alert = new LocalAlertAdapter();
+    } else {
+      registry.alert = new SupabaseAlertAdapter();
+    }
+    return registry.alert;
   }
 
   // ---------- NOTIFICATIONS ----------
@@ -417,28 +446,17 @@ export class RepositoryFactory {
     return registry.organizationHierarchy;
   }
 
-  // ---------- TASK ASSIGNMENT (SOURCE UNIQUE) ----------
-  /**
-   * Récupère le repository pour les assignations de tâches.
-   * La table `task_assignments` est la source unique pour toutes les tâches.
-   */
+  // ---------- TASK ASSIGNMENT ----------
   static getTaskAssignmentRepository(): ITaskAssignmentRepository {
     if (registry.taskAssignment) return registry.taskAssignment;
     registry.taskAssignment = new TaskAssignmentAdapter();
     return registry.taskAssignment;
   }
 
-  /**
-   * Alias pour getTaskAssignmentRepository() - maintient la compatibilité
-   * avec le nommage hexagonal standard.
-   */
   static getUnifiedTaskAssignmentRepository(): ITaskAssignmentRepository {
     return RepositoryFactory.getTaskAssignmentRepository();
   }
 
-  /**
-   * Alias historique `getTaskRepository()` — Task et TaskAssignment sont fusionnés.
-   */
   static getTaskRepository(): ITaskAssignmentRepository {
     return RepositoryFactory.getTaskAssignmentRepository();
   }
@@ -678,14 +696,8 @@ export class RepositoryFactory {
   }
 
   // ================================================================
-  // ALERTS & COMPLIANCE
+  // COMPLIANCE & MONITORING
   // ================================================================
-
-  static getAlertRepository(): IAlertRepository {
-    if (registry.alert) return registry.alert;
-    registry.alert = new SupabaseAlertAdapter();
-    return registry.alert;
-  }
 
   static getComplianceRepository(): IComplianceRepository {
     if (registry.compliance) return registry.compliance;
@@ -748,6 +760,16 @@ export class RepositoryFactory {
   }
 
   // ================================================================
+  // REALTIME
+  // ================================================================
+
+  static getRealtimeRepository(): IRealtimeRepository {
+    if (registry.realtime) return registry.realtime;
+    registry.realtime = new SupabaseRealtimeAdapter();
+    return registry.realtime;
+  }
+
+  // ================================================================
   // UTILITAIRES
   // ================================================================
 
@@ -756,13 +778,6 @@ export class RepositoryFactory {
       delete registry[key as keyof RepositoryRegistry];
     });
     this.postgrestClient = undefined;
-  }
-
-  // ---------- REALTIME ----------
-  static getRealtimeRepository(): IRealtimeRepository {
-    if (registry.realtime) return registry.realtime;
-    registry.realtime = new SupabaseRealtimeAdapter();
-    return registry.realtime;
   }
 
   static getDataKind(): DataProviderKind {

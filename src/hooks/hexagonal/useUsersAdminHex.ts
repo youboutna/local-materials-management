@@ -2,10 +2,10 @@
  * Hexagonal hook for user administration
  * Provides admin-level user management through UserAdminService
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserAdminService } from '@/application/services/UserAdminService';
-import { UserAdminAdapter } from '@/infrastructure/supabase/adapters/UserAdminAdapter';
 import { toast } from '@/hooks/use-toast';
+import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAdapter';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UserProfile {
   id: string;

@@ -1,29 +1,28 @@
+// ============================================================
+// src/components/project/DocumentsListPaginated.tsx
+// ============================================================
+/**
+ * Documents List Paginated
+ * Affichage paginé des documents avec filtrage
+ */
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Calendar, User, Eye } from 'lucide-react';
-
-interface Document {
-  id: string;
-  title: string;
-  description?: string;
-  document_type: string;
-  status: string;
-  file_name?: string;
-  uploaded_by?: string;
-  created_at: string;
-  file_size?: number;
-}
+import { FileText, Calendar, User, Eye, Download, Trash2 } from 'lucide-react';
+import { DocumentDTO, DocumentStatus } from '@/dtos/entities/DocumentDTO';
 
 interface DocumentsListPaginatedProps {
-  documents: Document[];
+  documents: DocumentDTO[];
   currentPage: number;
   totalPages: number;
   totalItems: number;
   onPageChange: (page: number) => void;
-  onDocumentSelect: (document: Document) => void;
+  onDocumentSelect: (document: DocumentDTO) => void;
+  onDocumentDownload?: (document: DocumentDTO) => void;
+  onDocumentDelete?: (document: DocumentDTO) => void;
   isLoading?: boolean;
 }
 
@@ -34,6 +33,8 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
   totalItems,
   onPageChange,
   onDocumentSelect,
+  onDocumentDownload,
+  onDocumentDelete,
   isLoading = false
 }) => {
   const generateVisiblePages = () => {
@@ -73,32 +74,47 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
 
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      'inspection_report': 'Rapport d\'inspection',
-      'location_photo': 'Photo de localisation',
-      'project_report': 'Rapport de projet',
       'contract': 'Contrat',
-      'supplier_info': 'Info fournisseur',
-      'task_assignment': 'Assignation de tâche',
-      'employee_record': 'Dossier employé',
-      'tender_document': 'Document d\'appel d\'offres'
+      'invoice': 'Facture',
+      'report': 'Rapport',
+      'certificate': 'Certificat',
+      'permit': 'Permis',
+      'insurance': 'Assurance',
+      'photo': 'Photo',
+      'manual': 'Manuel',
+      'warranty': 'Garantie',
+      'other': 'Autre'
     };
     return labels[type] || type;
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'approved': return 'default';
-      case 'draft': return 'secondary';
-      case 'pending': return 'outline';
-      case 'rejected': return 'destructive';
+      case DocumentStatus.APPROVED: return 'default';
+      case DocumentStatus.DRAFT: return 'secondary';
+      case DocumentStatus.PENDING_APPROVAL: return 'outline';
+      case DocumentStatus.REJECTED: return 'destructive';
       default: return 'secondary';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'draft': 'Brouillon',
+      'pending_approval': 'En attente',
+      'approved': 'Approuvé',
+      'rejected': 'Rejeté',
+      'archived': 'Archivé',
+      'expired': 'Expiré',
+      'deprecated': 'Déprécié'
+    };
+    return labels[status] || status;
   };
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(4)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -169,45 +185,79 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
 
                   <div className="flex flex-wrap gap-2">
                     <Badge variant={getStatusBadgeVariant(document.status)}>
-                      {document.status}
+                      {getStatusLabel(document.status)}
                     </Badge>
                     <Badge variant="outline">
-                      {getDocumentTypeLabel(document.document_type)}
+                      {getDocumentTypeLabel(document.documentType)}
                     </Badge>
+                    {document.isInternalOnly && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        Interne
+                      </Badge>
+                    )}
+                    {document.isSharedWithSuppliers && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Partagé
+                      </Badge>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{new Date(document.created_at).toLocaleDateString('fr-FR')}</span>
+                      <span>{new Date(document.createdAt || '').toLocaleDateString('fr-FR')}</span>
                     </div>
-                    {document.file_name && (
+                    {document.fileName && (
                       <div className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
-                        <span>{document.file_name}</span>
-                        {document.file_size && (
-                          <span className="text-xs">({formatFileSize(document.file_size)})</span>
+                        <span>{document.fileName}</span>
+                        {document.fileSize && (
+                          <span className="text-xs">({formatFileSize(document.fileSize)})</span>
                         )}
                       </div>
                     )}
-                    {document.uploaded_by && (
+                    {document.uploadedBy && (
                       <div className="flex items-center gap-1">
                         <User className="h-4 w-4" />
-                        <span>{document.uploaded_by}</span>
+                        <span>{document.uploadedBy}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onDocumentSelect(document)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Voir
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => onDocumentSelect(document)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Voir
+                  </Button>
+                  
+                  {onDocumentDownload && document.fileUrl && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => onDocumentDownload(document)}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
+                  {onDocumentDelete && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => onDocumentDelete(document)}
+                      className="flex items-center gap-2 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

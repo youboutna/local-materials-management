@@ -1,9 +1,9 @@
-import { Workspace, ProjectAlert, Action, OperationalStatus } from '@/domain/entities/Workspace';
+import { Workspace, Alert, Action, OperationalStatus } from '@/domain/entities/Workspace';
 import { 
   WorkspaceDTO, 
   CreateWorkspaceRequestDto, 
   UpdateWorkspaceRequestDto,
-  ProjectAlertDTO,
+  AlertDTO,
   CreateProjectAlertRequestDto,
   UpdateProjectAlertRequestDto,
   ActionDTO,
@@ -99,7 +99,7 @@ export class WorkspaceDomainTransformer {
 
 export class ProjectAlertDomainTransformer {
   
-  toDTO(entity: ProjectAlert): ProjectAlertDTO {
+  toDTO(entity: Alert): AlertDTO {
     return {
       id: entity.id,
       project_id: entity.projectId,
@@ -123,7 +123,7 @@ export class ProjectAlertDomainTransformer {
     };
   }
 
-  fromDTO(dto: ProjectAlertDTO): any {
+  fromDTO(dto: AlertDTO): any {
     return {
       id: dto.id,
       projectId: dto.project_id,
@@ -177,19 +177,19 @@ export class ProjectAlertDomainTransformer {
     };
   }
 
-  fromEntityToDTO(entity: ProjectAlert): ProjectAlertDTO {
+  fromEntityToDTO(entity: Alert): AlertDTO {
     return this.toDTO(entity);
   }
 
-  fromDtosToAdapter(dtos: ProjectAlertDTO[]): ProjectAlertDTO[] {
+  fromDtosToAdapter(dtos: AlertDTO[]): AlertDTO[] {
     return dtos;
   }
 
-  toResponseDto(entity: ProjectAlert): ProjectAlertDTO {
+  toResponseDto(entity: Alert): AlertDTO {
     return this.toDTO(entity);
   }
 
-  toRequestDto(dto: any): ProjectAlertDTO {
+  toRequestDto(dto: any): AlertDTO {
     return dto;
   }
 
@@ -197,7 +197,7 @@ export class ProjectAlertDomainTransformer {
     return dto;
   }
 
-  validate(dto: ProjectAlertDTO): { isValid: boolean; errors: string[]; fieldErrors?: Record<string, string[]> } {
+  validate(dto: AlertDTO): { isValid: boolean; errors: string[]; fieldErrors?: Record<string, string[]> } {
     const errors: string[] = [];
     if (!dto.title) errors.push('Title is required');
     return { isValid: errors.length === 0, errors };

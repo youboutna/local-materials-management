@@ -110,3 +110,4 @@ export type { IRiskRepository } from './IRiskRepository';
 // EXPORTS DES IMPLÉMENTATIONS
 // ============================================================================
 
+export * from './IProjectAlertRepository';

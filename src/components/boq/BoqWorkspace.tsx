@@ -30,7 +30,7 @@ import { WbsSelector, type WbsValue } from './WbsSelector';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
-import { tenderToPlanningService } from '@/application/services/tender/TenderToPlanningService';
+import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';

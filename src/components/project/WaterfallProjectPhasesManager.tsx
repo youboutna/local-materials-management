@@ -1,11 +1,17 @@
+// ============================================================
+// src/components/project/WaterfallProjectPhasesManager.tsx
+// ============================================================
 /**
  * WaterfallProjectPhasesManager
  * -----------------------------
  * Hexagonal: aucune dépendance directe à Supabase ni à `ProjectAggregateDTO`.
  * Hydratation via `usePhasesHex` + `useMilestonesHex`. Mapping camelCase ↔ snake_case
  * réalisé dans les hooks/transformers.
+ * 
+ * Updated to integrate with ProjectManagerProvider and AlertService
  */
-import React, { useMemo, useState } from 'react';
+
+import React, { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -17,6 +23,11 @@ import {
   AlertCircle,
   Plus,
   TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Eye,
+  ExternalLink,
 } from 'lucide-react';
 import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
@@ -24,6 +35,9 @@ import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
+import { useProjectManager } from '@/hooks/useProjectManager';
+import { Badge } from '@/components/ui/badge';
+import { Alert } from '@/domain/entities/Alert';
 
 /**
  * Vue projet minimale consommée par ce composant. Camelcase strict.
@@ -62,6 +76,17 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
   const { projects, isLoading: loading } = useProjects();
   const projectId = selectedProject?.id;
 
+  // ✅ Use ProjectManager for alerts
+  const { 
+    alerts, 
+    state, 
+    acknowledgeAlert, 
+    resolveAlert, 
+    getSummaryStats,
+    loading: alertsLoading,
+    runChecks 
+  } = useProjectManager();
+
   const {
     phases: phasesEntities,
     createPhase,
@@ -75,6 +100,20 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
 
   const [isEditingPhase, setIsEditingPhase] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<PhaseFormState | null>(null);
+
+  // Get all alerts from context
+  const allAlerts = state?.alerts || alerts || [];
+  const stats = getSummaryStats();
+
+  // Filter alerts related to phases
+  const phaseAlerts = useMemo(() => {
+    return allAlerts.filter((alert: Alert) => 
+      alert.type === 'phase' || 
+      alert.type === 'deadline' ||
+      alert.type === 'milestone' ||
+      alert.source === 'phase'
+    );
+  }, [allAlerts]);
 
   // Map domain Phase → ViewModel camelCase pour l'UI
   const phases = useMemo(
@@ -136,6 +175,9 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     };
   }, [phases, selectedProject]);
 
+  // ============================================================
+  // Handlers
+  // ============================================================
   const handleProjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (!onProjectChange) return;
     const id = event.target.value;
@@ -190,17 +232,45 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     }
     setIsEditingPhase(false);
     setCurrentPhase(null);
+    // Refresh alerts after phase update
+    await runChecks();
   };
 
   const handleDeletePhase = async (phaseId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette phase ?')) return;
     await deletePhase(phaseId);
+    // Refresh alerts after phase deletion
+    await runChecks();
   };
 
-  if (loading) {
+  const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
+    try {
+      await acknowledgeAlert(alertId, 'current-user', 'Traité depuis la gestion des phases');
+      await runChecks();
+    } catch (error) {
+      console.error('Erreur lors de l\'acquittement:', error);
+    }
+  }, [acknowledgeAlert, runChecks]);
+
+  const handleResolveAlert = useCallback(async (alertId: string) => {
+    try {
+      await resolveAlert(alertId, 'current-user', 'Phase mise à jour');
+      await runChecks();
+    } catch (error) {
+      console.error('Erreur lors de la résolution:', error);
+    }
+  }, [resolveAlert, runChecks]);
+
+  // ============================================================
+  // Loading States
+  // ============================================================
+  if (loading || alertsLoading) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-        <div className="text-center">Chargement des projets...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement des projets et alertes...</p>
+        </div>
       </div>
     );
   }
@@ -219,33 +289,146 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     );
   }
 
+  // ============================================================
+  // Render
+  // ============================================================
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <select
-            value={selectedProject.id}
-            onChange={handleProjectChange}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            {projects.map((project: any) => (
-              <option key={project.id} value={project.id}>
-                {project.title}
-              </option>
-            ))}
-          </select>
+        {/* Header with project selector and alert stats */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <select
+              value={selectedProject.id}
+              onChange={handleProjectChange}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {projects.map((project: any) => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Alert Stats Summary */}
+          <div className="flex items-center gap-3">
+            {stats.criticalAlerts > 0 && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {stats.criticalAlerts} critique(s)
+              </Badge>
+            )}
+            {stats.highAlerts > 0 && (
+              <Badge variant="destructive" className="bg-orange-500 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {stats.highAlerts} élevée(s)
+              </Badge>
+            )}
+            {stats.openAlerts > 0 && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {stats.openAlerts} ouverte(s)
+              </Badge>
+            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={runChecks}
+              className="text-xs"
+            >
+              Actualiser
+            </Button>
+          </div>
         </div>
 
+        {/* Project Info & Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex items-center gap-2">
             <Building className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-bold truncate">{selectedProject.title}</p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Jalons: {milestones.length}
-          </p>
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm">Progression: {selectedProject.progress || 0}%</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm">Jalons: {milestones.length}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm">Alertes phases: {phaseAlerts.length}</p>
+          </div>
         </div>
 
+        {/* Phase Alerts Section */}
+        {phaseAlerts.length > 0 && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-yellow-800 flex items-center gap-2 text-lg">
+                <AlertTriangle className="h-5 w-5" />
+                Alertes des Phases
+                <Badge variant="outline" className="ml-2">
+                  {phaseAlerts.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {phaseAlerts.map((alert: Alert) => (
+                  <div key={alert.id} className="p-3 bg-white border border-yellow-200 rounded-lg flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{alert.title || alert.message}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {alert.type}
+                        </Badge>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            alert.severity === 'critical' ? 'text-red-600 border-red-200' :
+                            alert.severity === 'high' ? 'text-orange-600 border-orange-200' :
+                            'text-yellow-600 border-yellow-200'
+                          }`}
+                        >
+                          {alert.severity}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(alert.createdAt).toLocaleString('fr-FR')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {alert.status === 'open' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAcknowledgeAlert(alert.id)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Acquitter
+                        </Button>
+                      )}
+                      {(alert.status === 'open' || alert.status === 'acknowledged') && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => handleResolveAlert(alert.id)}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Résoudre
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="waterfall">Waterfall</TabsTrigger>
@@ -269,11 +452,24 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  SPI: {metrics.schedulePerformanceIndex.toFixed(2)} · CPI:{' '}
-                  {metrics.costPerformanceIndex.toFixed(2)} · BAC:{' '}
-                  {metrics.budgetAtCompletion.toLocaleString()}
-                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">SPI</p>
+                    <p className="text-lg font-semibold">{metrics.schedulePerformanceIndex.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">CPI</p>
+                    <p className="text-lg font-semibold">{metrics.costPerformanceIndex.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">BAC</p>
+                    <p className="text-lg font-semibold">{metrics.budgetAtCompletion.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">EVM</p>
+                    <p className="text-lg font-semibold">{metrics.earnedValue.toLocaleString()}</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -418,7 +614,8 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
               phases={phases as any}
               projectId={projectId}
               onStepComplete={() => {
-                /* hex hooks invalident automatiquement le cache */
+                // hex hooks invalident automatiquement le cache
+                runChecks();
               }}
               projectBudget={selectedProject.budget ?? 0}
             />
@@ -467,7 +664,11 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
           <TabsContent value="analytics" className="space-y-4">
             <WaterfallProjectKPIs />
             {phases.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => handleDeletePhase(phases[0].id)}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleDeletePhase(phases[0].id)}
+              >
                 (debug) supprimer 1ère phase
               </Button>
             )}

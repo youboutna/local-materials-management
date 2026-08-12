@@ -1,86 +1,56 @@
+// ============================================================
+// src/dtos/entities/AlertDTO.ts
+// ============================================================
 /**
  * Alert DTO - Hexagonal Architecture
- * Data Transfer Object for alerts and notifications
+ * Data Transfer Object for alerts
  */
 
-export interface AlertData {
-  id: string;
-  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk' | 'bank_guarantee' | 'inspection_overdue' | 'payment_blocked' | 'compliance_violation' | 'delivery' | 'deadline' | 'quality';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  message: string;
-  projectId: string;
-  relatedEntityId?: string;
-  source?: 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification';
-  projectTitle?: string;
-  delayDays?: number;
-  timestamp: string;
-  triggerDate: string;
-  acknowledged: boolean;
-  acknowledgedBy?: string;
-  acknowledgedAt?: string;
-  actionRequired: boolean;
-  actionTaken?: string;
-  actionTakenBy?: string;
-  actionTakenAt?: string;
-  escalationLevel?: number;
-  availableActions?: string[];
-  actionProof?: ActionProofData[];
-  deadline?: string;
-  recurrence?: number;
-  // Status from monitoring_alerts table
-  status?: string;
+import {
+  Alert,
+  AlertType,
+  AlertSeverity,
+  AlertStatus,
+  AlertSource,
+  AlertStatistics,
+  ActionProof,
+  ActionProofType
+} from '@/domain/entities/Alert';
+
+// ===== DTO spécifiques à l'UI =====
+export interface AlertDTO extends Alert {
+  displayName?: string;
+  formattedDate?: string;
+  formattedTriggerDate?: string;
+  formattedDeadline?: string;
+  icon?: string;
+  color?: string;
+  severityLabel?: string;
+  statusLabel?: string;
+  isOverdue?: boolean;
+  daysUntilDeadline?: number;
 }
 
-export interface ActionProofData {
-  type: 'email' | 'sms' | 'document' | 'call' | 'meeting';
-  timestamp: string;
-  performedBy: string;
-  details: string;
-  documentUrl?: string;
+export interface AlertStatisticsDTO extends AlertStatistics {
+  formattedAvgResolutionTime?: string;
+  criticalPercentage?: number;
+  resolutionRate?: number;
+  formattedTotal?: string;
 }
 
-export interface NotificationPreferences {
-  email: boolean;
-  sms: boolean;
-  inApp: boolean;
-  escalationEmail: boolean;
-  weeklyDigest: boolean;
-  criticalOnly: boolean;
+export interface AlertStateDTO {
+  alerts: AlertDTO[];
+  stats: AlertStatisticsDTO;
+  lastUpdated: string;
+  progress?: number;
 }
 
-export interface EscalationRule {
-  id: string;
-  alertType: string;
-  severityLevel: 'low' | 'medium' | 'high' | 'critical';
-  timeThreshold: number; // minutes
-  escalationLevel: number;
-  targetRole: string;
-  actionRequired: string[];
-  autoAssign: boolean;
-}
-
-export interface AlertMetrics {
-  totalAlerts: number;
-  criticalAlerts: number;
-  highAlerts: number;
-  mediumAlerts: number;
-  lowAlerts: number;
-  acknowledgedAlerts: number;
-  unacknowledgedAlerts: number;
-  overdue: number;
-  avgResolutionTime: number; // hours
-  alertsByType: { [type: string]: number };
-  alertsTrend: Array<{
-    date: string;
-    count: number;
-    severity: string;
-  }>;
-}
-
+// ===== Filtres et actions =====
 export interface AlertFilter {
-  severity?: 'low' | 'medium' | 'high' | 'critical';
-  type?: string;
+  severity?: AlertSeverity;
+  type?: AlertType;
+  status?: AlertStatus;
+  source?: AlertSource;
   acknowledged?: boolean;
   projectId?: string;
   dateRange?: {
@@ -97,14 +67,14 @@ export interface BulkAlertAction {
 }
 
 export interface CreateAlertData {
-  type: AlertData['type'];
-  severity: AlertData['severity'];
+  type: AlertType;
+  severity: AlertSeverity;
   title: string;
   message: string;
   projectId: string;
-  relatedEntityId?: string;
-  source?: AlertData['source'];
   projectTitle?: string;
+  relatedEntityId?: string;
+  source?: AlertSource;
   delayDays?: number;
   actionRequired?: boolean;
   availableActions?: string[];
@@ -113,7 +83,7 @@ export interface CreateAlertData {
 }
 
 export interface UpdateAlertData {
-  severity?: AlertData['severity'];
+  severity?: AlertSeverity;
   title?: string;
   message?: string;
   acknowledged?: boolean;
@@ -122,6 +92,16 @@ export interface UpdateAlertData {
   actionTakenBy?: string;
   escalationLevel?: number;
   availableActions?: string[];
-  actionProof?: ActionProofData[];
+  actionProof?: ActionProof[];
   deadline?: string;
+}
+
+// ===== Notification Preferences =====
+export interface NotificationPreferences {
+  email: boolean;
+  sms: boolean;
+  inApp: boolean;
+  escalationEmail: boolean;
+  weeklyDigest: boolean;
+  criticalOnly: boolean;
 }

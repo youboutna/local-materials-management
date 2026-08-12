@@ -1,78 +1,51 @@
-import { ProjectAlert } from '@/domain/entities/Workspace';
+// ============================================================
+// src/domain/repositories/IProjectAlertRepository.ts
+// ============================================================
+/**
+ * Project Alert Repository Interface (Port)
+ * Pure business logic - NO external dependencies
+ */
+
+import { AlertSeverity, AlertType, Alert } from '@/domain/entities/Alert';
 
 export interface IProjectAlertRepository {
   /**
-   * Create a new project alert
-   * @param alert The alert entity
-   * @returns The created alert
+   * Récupère toutes les alertes
    */
-  create(alert: Omit<ProjectAlert, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProjectAlert>;
-
+  findAll(): Promise<Alert[]>;
+  
   /**
-   * Get an alert by ID
-   * @param id The alert ID
-   * @returns The alert or null
+   * Récupère une alerte par son ID
    */
-  findById(id: string): Promise<ProjectAlert | null>;
-
+  findById(id: string): Promise<Alert | null>;
+  
   /**
-   * Get all alerts for a project
-   * @param projectId The project ID
-   * @returns Array of alerts
+   * Récupère les alertes par type
    */
-  findByProjectId(projectId: string): Promise<ProjectAlert[]>;
-
+  findByType(type: AlertType): Promise<Alert[]>;
+  
   /**
-   * Get all alerts
-   * @returns Array of alerts
+   * Récupère les alertes par sévérité
    */
-  findAll(): Promise<ProjectAlert[]>;
-
+  findBySeverity(severity: AlertSeverity): Promise<Alert[]>;
+  
   /**
-   * Update an alert
-   * @param id The alert ID
-   * @param updates The updates to apply
-   * @returns The updated alert
+   * Récupère les alertes ouvertes
    */
-  update(id: string, updates: Partial<ProjectAlert>): Promise<ProjectAlert>;
-
+  findOpen(): Promise<Alert[]>;
+  
   /**
-   * Delete an alert
-   * @param id The alert ID
+   * Sauvegarde une alerte
+   */
+  save(alert: Alert): Promise<void>;
+  
+  /**
+   * Sauvegarde plusieurs alertes
+   */
+  saveAll(alerts: Alert[]): Promise<void>;
+  
+  /**
+   * Supprime une alerte
    */
   delete(id: string): Promise<void>;
-
-  /**
-   * Get alerts by severity
-   * @param severity The severity filter
-   * @returns Array of alerts
-   */
-  findBySeverity(severity: string): Promise<ProjectAlert[]>;
-
-  /**
-   * Get alerts by type
-   * @param type The type filter
-   * @returns Array of alerts
-   */
-  findByType(type: string): Promise<ProjectAlert[]>;
-
-  /**
-   * Get unresolved alerts for a project
-   * @param projectId The project ID
-   * @returns Array of unresolved alerts
-   */
-  findUnresolvedByProjectId(projectId: string): Promise<ProjectAlert[]>;
-
-  /**
-   * Get alerts that need escalation
-   * @returns Array of alerts needing escalation
-   */
-  findNeedingEscalation(): Promise<ProjectAlert[]>;
-
-  /**
-   * Get alerts assigned to a user
-   * @param userId The user ID
-   * @returns Array of assigned alerts
-   */
-  findByAssignedUser(userId: string): Promise<ProjectAlert[]>;
 }

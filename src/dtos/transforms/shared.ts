@@ -990,7 +990,7 @@ export interface UpdateWorkspaceRequestDto {
 }
 
 // Project Alert DTOs
-export interface ProjectAlertDTO {
+export interface AlertDTO {
   id: string;
   project_id: string;
   title: string;

@@ -29,38 +29,3 @@ export interface TimeLine {
   end: Date;
   estimatedDuration?: number; // In days
 }
-
-export interface ProjectAlert {
-  id: string;
-  projectId: string;
-  title: string;
-  description?: string;
-  type: string;
-  severity: string;
-  source?: string;
-  escalationLevel?: number;
-  acknowledged?: boolean;
-  acknowledgedAt?: Date;
-  acknowledgedBy?: string;
-  resolved?: boolean;
-  resolvedAt?: Date;
-  resolvedBy?: string;
-  assignedActions?: string[];
-  actionProofs?: Record<string, {
-    documentId?: string;
-    timestamp?: string;
-    userId?: string;
-    notes?: string;
-  }>;
-  metadata?: Record<string, unknown>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Action {
-  id: string;
-  actionType: string;
-  message: string;
-  createdAt: Date;
-  updatedAt: Date;
-}

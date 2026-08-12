@@ -8,46 +8,42 @@
 // CORE PROJECT ENTITIES
 // ============================================================================
 
-export { Project, type ProjectStatus, type ProjectCoordinates, type ProjectStakeholder } from './Project';
-export { Phase, type PhaseStatus, type PhaseStep, type PhaseTask, type PhaseResources } from './Phase';
+export { Phase, type PhaseResources, type PhaseStatus, type PhaseStep, type PhaseTask } from './Phase';
+export { Project, type ProjectCoordinates, type ProjectStakeholder, type ProjectStatus } from './Project';
 // SUPPRIMÉ: export { Task } from './Task';
 // Les tâches sont maintenant gérées via TaskAssignment
 // SUPPRIMÉ: export type { TaskStatus, TaskPriority } from '../types/TaskTypes';
-export { Milestone, type MaterialUsage, type MilestoneDependency, type MilestoneDeliverable, type MilestoneConfiguration } from './Milestone';
+export { Milestone, type MaterialUsage, type MilestoneConfiguration, type MilestoneDeliverable, type MilestoneDependency } from './Milestone';
 
 // ============================================================================
 // ORGANIZATIONAL ENTITIES
 // ============================================================================
 
 export { Employee } from './Employee';
-export type { EmployeeRole, Department, Permission, EmployeeProps } from './Employee';
-export { User, type UserRoleType, type AuthSession, type UserProfile } from './User';
-export { UserRole } from './UserRole';
-export { Position, type PositionPermissions } from './Position';
-export { 
-  ProjectHierarchy, 
-  type HierarchyMember, 
-  type EscalationTarget, 
-  type EscalationRoles,
-  type EscalationLevel 
+export type { Department, EmployeeProps, EmployeeRole, Permission } from './Employee';
+export {
+    ProjectHierarchy, type EscalationLevel, type EscalationRoles, type EscalationTarget, type HierarchyMember
 } from './Hierarchy';
-export { Stakeholder, type StakeholderType, type StakeholderContact, type StakeholderOrganization } from './Stakeholder';
+export { Position, type PositionPermissions } from './Position';
 export { ProjectStakeholderEntity as DomainProjectStakeholder, type StakeholderType as DomainStakeholderType } from './ProjectStakeholder';
+export { Stakeholder, type StakeholderContact, type StakeholderOrganization, type StakeholderType } from './Stakeholder';
+export { User, type AuthSession, type UserProfile, type UserRoleType } from './User';
+export { UserRole } from './UserRole';
 
 // ============================================================================
 // BUSINESS ENTITIES
 // ============================================================================
 
-export { Tender, type EvaluationCriteria } from './Tender';
-export type { TenderStatus, SelectionMode, MarketType } from './Tender';
-export { TenderEstimate, type ITenderEstimateItem as TenderEstimateItemInterface, type TenderEstimateRisk, type TenderEstimateMetrics, type CurrencyCode } from './TenderEstimate';
-export { TenderEstimateItem as TenderEstimateItemEntity, type TenderEstimateItemData } from './TenderEstimateItem';
-export { TenderSubmission } from './TenderSubmission';
-export { Supplier, type SupplierStatus, type SupplierCategory, type SupplierContact, type SupplierRating, type SupplierProps } from './Supplier';
 export { Material, type MaterialCategory } from './Material';
 export { Risk } from './Risk';
-export type { RiskStatus, RiskLevel, RiskCategory } from './RiskTypesExport';
-export type { IProject, IEmployee } from './Risk';
+export type { IEmployee, IProject } from './Risk';
+export type { RiskCategory, RiskLevel, RiskStatus } from './RiskTypesExport';
+export { Supplier, type SupplierCategory, type SupplierContact, type SupplierProps, type SupplierRating, type SupplierStatus } from './Supplier';
+export { Tender, type EvaluationCriteria } from './Tender';
+export type { MarketType, SelectionMode, TenderStatus } from './Tender';
+export { TenderEstimate, type CurrencyCode, type ITenderEstimateItem as TenderEstimateItemInterface, type TenderEstimateMetrics, type TenderEstimateRisk } from './TenderEstimate';
+export { TenderEstimateItem as TenderEstimateItemEntity, type TenderEstimateItemData } from './TenderEstimateItem';
+export { TenderSubmission } from './TenderSubmission';
 
 // ============================================================================
 // PROJECT MANAGEMENT INTERFACES
@@ -111,10 +107,10 @@ export interface PERTAnalysis {
 // FINANCIAL & DOCUMENT ENTITIES
 // ============================================================================
 
-export { Payment, type PaymentStatus, type PaymentMethod } from './Payment';
-export { ParsedInvoiceEntity as ParsedInvoice, type InvoiceType } from './ParsedInvoice';
-export { Document, type DocumentType, type DocumentStatus } from './Document';
 export { Certification } from './Certification';
+export { Document, type DocumentStatus, type DocumentType } from './Document';
+export { ParsedInvoiceEntity as ParsedInvoice, type InvoiceType } from './ParsedInvoice';
+export { Payment, type PaymentMethod, type PaymentStatus } from './Payment';
 
 // ============================================================================
 // INSPECTION & QUALITY ENTITIES
@@ -128,23 +124,25 @@ export type { PaymentDocument as PaymentDocumentType } from './Payment';
 // TEMPLATES & WORKFLOW ENTITIES
 // ============================================================================
 
+export { SubmissionSecret } from './SubmissionSecret';
 export { TemplatePhase } from './Template';
 export type { TemplateMetadata, ValidationResult } from './Template';
-export { SubmissionSecret } from './SubmissionSecret';
 
 // ============================================================================
 // MONITORING & PERFORMANCE ENTITIES
 // ============================================================================
 
 export type { DatabaseMetrics, PerformanceMetrics } from './PerformanceMonitoring';
-export type { Workspace, ProjectAlert, Action } from './Workspace';
 export { TaskAssignment } from './TaskAssignment';
 export type { TaskAssignmentProps } from './TaskAssignment';
+export type { Action, Alert, Workspace } from './Workspace';
 
 // ============================================================================
 // LEGACY COMPATIBILITY EXPORTS
 // ============================================================================
 
 // Re-export for backward compatibility
-export type { ProjectCoordinates as Coordinates } from './Project';
+export * from './Alert';
 export type { PhaseResources as Resources } from './Phase';
+export type { ProjectCoordinates as Coordinates } from './Project';
+

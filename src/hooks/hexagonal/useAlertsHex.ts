@@ -3,16 +3,16 @@
  * Following pattern: Hook → Service → Adapter → Supabase
  */
 
+import { getMonitoringAlertService, MonitoringAlertStats } from "@/application/services/MonitoringAlertService";
+import { AlertData } from "@/dtos/entities";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MonitoringAlertService, getMonitoringAlertService, MonitoringAlertStats } from "@/application/services/MonitoringAlertService";
 
 // Re-export AlertData type for compatibility
 export type { AlertData } from "@/dtos/entities";
-import { AlertData } from "@/dtos/entities";
 
 // Stats interface for dashboard (re-export for backward compatibility)
-export type AlertStats = MonitoringAlertStats;
+export type AlertMetrics = MonitoringAlertStats;
 
 // Enhanced result type with all needed properties
 export interface AlertError extends Error {
@@ -52,7 +52,7 @@ export interface UseAlertsHexResult {
   isLoading: boolean;
   loading: boolean; // Alias for isLoading for compatibility
   error: AlertError | null;
-  stats: AlertStats;
+  stats: AlertMetrics;
   refetch: () => void;
   createAlert: (data: Partial<AlertData>) => void;
   updateAlert: ({ id, data }: { id: string; data: Partial<AlertData> }) => void;

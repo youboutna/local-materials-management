@@ -9,15 +9,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { validateProviders } from '@/config/app-validate';
-import { GoTrueAuthAdapter } from '@/infrastructure/auth/GoTrueAuthAdapter';
-import { KeycloakAuthAdapter } from '@/infrastructure/auth/KeycloakAuthAdapter';
-import { LocalAuthAdapter } from '@/infrastructure/local/LocalAuthAdapter';
-import { LocalStorageAdapter } from '@/infrastructure/local/LocalStorageAdapter';
-import { PostgrestClient } from '@/infrastructure/postgrest/PostgrestClient';
+import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
+import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
+import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
+import { LocalStorageAdapter } from '@/infrastructure/adapters/local/LocalStorageAdapter';
+import { PostgrestClient } from '@/infrastructure/adapters/postgrest/PostgrestClient';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { S3StorageAdapter } from '@/infrastructure/storage/S3StorageAdapter';
-import { SupabaseStorageProvider } from '@/infrastructure/storage/SupabaseStorageProvider';
-import { SupabaseAuthAdapter } from '@/infrastructure/supabase/adapters/SupabaseAuthAdapter';
+import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
+import { SupabaseStorageProvider } from '@/infrastructure/adapters/storage/SupabaseStorageProvider';
+import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 
 function stubProviders(vars: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(vars)) {

@@ -1,5 +1,5 @@
 import { IPaymentInitiationRepository } from '@/domain/repositories/IPaymentInitiationRepository';
-import { SupabasePaymentInitiationAdapter } from '@/infrastructure/supabase/SupabasePaymentInitiationAdapter';
+import { SupabasePaymentInitiationAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter';
 import {
   ApprovalActionDTO,
   ApprovalChainStep,

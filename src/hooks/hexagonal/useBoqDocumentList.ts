@@ -5,7 +5,7 @@
  */
 import type { BoqStatus } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary, BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 

@@ -31554,7 +31554,7 @@
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
           "line": 9,
-          "match": "\n\nexport interface ProjectAlert"
+          "match": "\n\nexport interface Alert"
         },
         {
           "ruleId": "P1-TYP001",
@@ -31562,7 +31562,7 @@
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
           "line": 18,
-          "match": "\n\nexport interface ProjectStats"
+          "match": "\n\nexport interface AlertStatistics"
         },
         {
           "ruleId": "P1-TYP001",
@@ -37297,7 +37297,7 @@
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
           "line": 12,
-          "match": "\n\r\nexport interface ProjectAlert"
+          "match": "\n\r\nexport interface Alert"
         },
         {
           "ruleId": "P1-TYP001",
@@ -38339,7 +38339,7 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
           "line": 6,
-          "match": "interface ProjectAlertDTO {\n  id: string;\n  project_id"
+          "match": "interface AlertDTO {\n  id: string;\n  project_id"
         },
         {
           "ruleId": "P2-CAS001",
@@ -49201,7 +49201,7 @@
           "severity": "ERROR",
           "message": "❌ [P2-CAS002] Snake_case dans DTO ! Utiliser camelCase.",
           "line": 993,
-          "match": "interface ProjectAlertDTO {\n  id: string;\n  project_id"
+          "match": "interface AlertDTO {\n  id: string;\n  project_id"
         },
         {
           "ruleId": "P2-CAS002",
@@ -56268,7 +56268,7 @@
           "severity": "ERROR",
           "message": "❌ [P1-TYP001] Type défini hors domain/dtos ! Déplacer vers src/dtos/entities/ ou src/domain/entities/.",
           "line": 14,
-          "match": "\nexport type AlertStats"
+          "match": "\nexport type AlertMetrics"
         },
         {
           "ruleId": "P1-TYP001",
@@ -74750,9 +74750,9 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ProjectAlert\" trouvé dans 4 emplacements: src/application/services/ProjectManagerContext.ts:11, src/application/services/projectManagerWithActions.ts:14, src/domain/entities/Workspace.ts:33, src/dtos/entities/ProjectDTO.ts:250",
+          "message": "❌ [D001] Type dupliqué \"Alert\" trouvé dans 4 emplacements: src/application/services/ProjectManagerContext.ts:11, src/application/services/projectManagerWithActions.ts:14, src/domain/entities/Workspace.ts:33, src/dtos/entities/ProjectDTO.ts:250",
           "line": 11,
-          "match": "ProjectAlert"
+          "match": "Alert"
         }
       ]
     },
@@ -75686,9 +75686,9 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ProjectAlertDTO\" trouvé dans 2 emplacements: src/domain/repositories/IAlertRepository.ts:6, src/dtos/transforms/shared.ts:993",
+          "message": "❌ [D001] Type dupliqué \"AlertDTO\" trouvé dans 2 emplacements: src/domain/repositories/IAlertRepository.ts:6, src/dtos/transforms/shared.ts:993",
           "line": 6,
-          "match": "ProjectAlertDTO"
+          "match": "AlertDTO"
         }
       ]
     },
@@ -79343,7 +79343,7 @@
       ]
     },
     {
-      "typeName": "ProjectAlert",
+      "typeName": "Alert",
       "locations": [
         {
           "file": "src/application/services/ProjectManagerContext.ts",
@@ -80451,7 +80451,7 @@
       ]
     },
     {
-      "typeName": "ProjectAlertDTO",
+      "typeName": "AlertDTO",
       "locations": [
         {
           "file": "src/domain/repositories/IAlertRepository.ts",

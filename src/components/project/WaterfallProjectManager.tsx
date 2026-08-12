@@ -1,35 +1,66 @@
+// ============================================================
+// src/components/project/WaterfallProjectManager.tsx
+// ============================================================
 /**
  * WaterfallProjectManager
  * -----------------------
  * Hexagonal: hydrate phases/milestones via hooks hex (`usePhasesHex`,
  * `useMilestonesHex`). Aucun appel direct Supabase. Le `ProjectManagerProvider`
  * conserve son contrat existant via cast structurel.
+ * 
+ * Updated to use AlertService and ProjectManagerProvider
  */
-import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Calendar,
-  BarChart3,
-  Target,
-  Clock,
-  CheckCircle2,
-  DollarSign,
-  MapPin,
-  User,
-  Building,
-  AlertCircle,
-} from 'lucide-react';
-import WaterfallGanttChart from './WaterfallGanttChart';
-import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
-import { ReportCalculations } from '@/utils/reportCalculations';
-import WaterfallProjectKPIs from './WaterfallProjectKPIs';
-import { useProjects } from '@/hooks/projects/useProjects';
-import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
+
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
+import { useProjects } from '@/hooks/projects/useProjects';
+import { ReportCalculations } from '@/utils/reportCalculations';
+import {
+    AlertCircle,
+    BarChart3,
+    Building,
+    Calendar,
+    CheckCircle2,
+    Clock,
+    DollarSign,
+    MapPin,
+    Target,
+    User,
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
+import WaterfallGanttChart from './WaterfallGanttChart';
+import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 
-// Roles & action labels par défaut (shape conservée pour le provider).
+// ============================================================
+// Types
+// ============================================================
+interface PhaseData {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  actualProgress: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'paused' | 'cancelled';
+  budget: number;
+  actualCost: number;
+}
+
+interface ProjectMetrics {
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  totalPhases: number;
+  completedPhases: number;
+  inProgressPhases: number;
+  notStartedPhases: number;
+}
+
+// ============================================================
+// Rôles et labels (shape conservée pour le provider)
+// ============================================================
 const defaultRoles = {
   level1: 'Chef de projet',
   level2: 'Directeur Technique',
@@ -58,20 +89,26 @@ const actionLabels = {
   legal_consultation: 'Consultation juridique',
 };
 
+// ============================================================
+// Composant principal
+// ============================================================
 const WaterfallProjectManager = () => {
   const [activeTab, setActiveTab] = useState('gantt');
   const { projects, isLoading: loading } = useProjects();
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
+  // Sélectionner le premier projet
   useEffect(() => {
     if (projects && projects.length > 0 && !selectedProject) {
       setSelectedProject(projects[0]);
     }
   }, [projects, selectedProject]);
 
-  const { phases: phasesEntities } = usePhasesHex(selectedProject?.id);
+  // Récupérer les phases via le hook hexagonal
+  const { phases: phasesEntities, isLoading: phasesLoading } = usePhasesHex(selectedProject?.id);
 
-  const phases = useMemo(
+  // Transformer les phases pour l'UI
+  const phases = useMemo<PhaseData[]>(
     () =>
       phasesEntities.map((p: any) => ({
         id: p.id,
@@ -86,26 +123,64 @@ const WaterfallProjectManager = () => {
     [phasesEntities]
   );
 
-  const metrics = useMemo(() => {
-    if (!phases.length || !selectedProject) {
-      return { schedulePerformanceIndex: 1, costPerformanceIndex: 1 };
+  // Calculer les métriques
+  const metrics = useMemo<ProjectMetrics>(() => {
+    if (!phases.length) {
+      return {
+        schedulePerformanceIndex: 1,
+        costPerformanceIndex: 1,
+        totalPhases: 0,
+        completedPhases: 0,
+        inProgressPhases: 0,
+        notStartedPhases: 0,
+      };
     }
+
     const earnedValue = phases.reduce(
       (sum, p) => sum + ((p.actualProgress || 0) / 100) * (p.budget || 0),
       0
     );
     const actualCost = phases.reduce((sum, p) => sum + (p.actualCost || 0), 0);
+    
+    const completedPhases = phases.filter(p => p.status === 'completed').length;
+    const inProgressPhases = phases.filter(p => p.status === 'in_progress').length;
+    const notStartedPhases = phases.filter(p => p.status === 'not_started').length;
+
     return {
       schedulePerformanceIndex: 1,
       costPerformanceIndex: actualCost > 0 ? earnedValue / actualCost : 1,
+      totalPhases: phases.length,
+      completedPhases,
+      inProgressPhases,
+      notStartedPhases,
     };
-  }, [phases, selectedProject]);
+  }, [phases]);
 
+  // ============================================================
+  // Fonctions utilitaires
+  // ============================================================
+  const parseDate = useCallback((value: any): Date | null => {
+    if (!value) return null;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }, []);
 
-  if (loading) {
+  const getProjectPeriod = useCallback(() => {
+    const start = parseDate(selectedProject?.startDate) || new Date();
+    const end = parseDate(selectedProject?.endDate) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    return { start, end };
+  }, [selectedProject, parseDate]);
+
+  // ============================================================
+  // États de chargement
+  // ============================================================
+  if (loading || phasesLoading) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-        <div className="text-center">Chargement des projets...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement des projets...</p>
+        </div>
       </div>
     );
   }
@@ -122,12 +197,16 @@ const WaterfallProjectManager = () => {
     );
   }
 
+  // ============================================================
+  // Render
+  // ============================================================
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* En-tête avec sélecteur de projet */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
+            <h1 className="text-2xl font-bold">Gestion de Projet en Cascade</h1>
             <p className="text-muted-foreground">
               Méthodologie cascade avec diagramme de Gantt et workflow des marchés publics mauritaniens
             </p>
@@ -136,7 +215,7 @@ const WaterfallProjectManager = () => {
           <select 
             value={selectedProject.id} 
             onChange={(e) => setSelectedProject(projects.find(p => p.id === e.target.value) || null)}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm min-w-[200px]"
           >
             {projects.map(project => (
               <option key={project.id} value={project.id}>
@@ -147,7 +226,7 @@ const WaterfallProjectManager = () => {
         </div>
 
         {/* Informations du projet sélectionné */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center">
@@ -170,7 +249,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Localisation
                   </p>
-                  <p className="text-sm font-bold">{selectedProject.location}</p>
+                  <p className="text-sm font-bold">{selectedProject.location || 'Non spécifiée'}</p>
                 </div>
               </div>
             </CardContent>
@@ -184,7 +263,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Équipe
                   </p>
-                  <p className="text-sm font-bold">{selectedProject.teamSize} personnes</p>
+                  <p className="text-sm font-bold">{selectedProject.teamSize || 0} personnes</p>
                 </div>
               </div>
             </CardContent>
@@ -198,7 +277,9 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Budget
                   </p>
-                  <p className="text-sm font-bold">{(selectedProject.budget / 1000000).toFixed(1)}M MRU</p>
+                  <p className="text-sm font-bold">
+                    {selectedProject.budget ? `${(selectedProject.budget / 1000000).toFixed(1)}M MRU` : 'Non défini'}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -206,7 +287,7 @@ const WaterfallProjectManager = () => {
         </div>
 
         {/* Métriques de performance */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center">
@@ -215,7 +296,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Progression
                   </p>
-                  <p className="text-2xl font-bold">{selectedProject.progress}%</p>
+                  <p className="text-2xl font-bold">{selectedProject.progress || 0}%</p>
                 </div>
               </div>
             </CardContent>
@@ -229,7 +310,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Phases Terminées
                   </p>
-                  <p className="text-2xl font-bold">{phases.filter(p => p.status === 'completed').length}</p>
+                  <p className="text-2xl font-bold">{metrics.completedPhases}</p>
                 </div>
               </div>
             </CardContent>
@@ -239,6 +320,20 @@ const WaterfallProjectManager = () => {
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <Clock className="h-4 w-4 text-yellow-600" />
+                <div className="ml-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    En Cours
+                  </p>
+                  <p className="text-2xl font-bold">{metrics.inProgressPhases}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <Target className="h-4 w-4 text-blue-600" />
                 <div className="ml-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     SPI
@@ -264,10 +359,16 @@ const WaterfallProjectManager = () => {
           </Card>
         </div>
 
-        {/* Wrap the tabs with ProjectManagerProvider */}
-        <ProjectManagerProvider project={selectedProject} roles={defaultRoles} actionLabels={actionLabels}>
+        {/* ============================================================
+            Wrap des tabs avec ProjectManagerProvider
+            ============================================================ */}
+        <ProjectManagerProvider 
+          project={selectedProject} 
+          roles={defaultRoles} 
+          actionLabels={actionLabels}
+        >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="gantt" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Gantt & KPIs
@@ -282,76 +383,86 @@ const WaterfallProjectManager = () => {
               </TabsTrigger>
             </TabsList>
 
+            {/* Tab Gantt & KPIs */}
             <TabsContent value="gantt" className="space-y-4">
-              {(() => {
-                const parse = (v: any) => {
-                  if (!v) return null;
-                  const d = new Date(v);
-                  return isNaN(d.getTime()) ? null : d;
-                };
-                const ganttTasks = phases
-                  .map(p => ({
-                    id: p.id,
-                    name: p.title,
-                    startDate: parse(p.startDate),
-                    endDate: parse(p.endDate),
-                    progress: p.actualProgress,
-                    phase: p.title,
-                    status: p.status,
-                    procurementStep: 1,
-                    assignedTo: '',
-                    budget: p.budget
-                  }))
-                  .filter(t => t.startDate && t.endDate) as any[];
-                const starts = ganttTasks.map(t => t.startDate.getTime());
-                const ends = ganttTasks.map(t => t.endDate.getTime());
-                return (
-                  <WaterfallGanttChart
-                    tasks={ganttTasks}
-                    projectStartDate={starts.length ? new Date(Math.min(...starts)) : undefined}
-                    projectEndDate={ends.length ? new Date(Math.max(...ends)) : undefined}
-                    ProjectTitle={selectedProject.title}
-                    ProjectDescription={selectedProject.description}
-                    ProjectLocation={selectedProject.location}
-                    ProjectStatus={selectedProject.status}
-                    ProjectProgress={selectedProject.progress}
-                    projectBudget={selectedProject.budget}
-                    ProjectTeamSize={selectedProject.teamSize}
-                  />
-                );
-              })()}
+              <ErrorBoundary fallback={
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <h3 className="text-lg font-medium text-yellow-800">Erreur de chargement</h3>
+                  <p className="text-yellow-600">Impossible de charger le diagramme de Gantt.</p>
+                </div>
+              }>
+                {(() => {
+                  const ganttTasks = phases
+                    .map(p => ({
+                      id: p.id,
+                      name: p.title,
+                      startDate: parseDate(p.startDate),
+                      endDate: parseDate(p.endDate),
+                      progress: p.actualProgress,
+                      phase: p.title,
+                      status: p.status,
+                      procurementStep: 1,
+                      assignedTo: '',
+                      budget: p.budget
+                    }))
+                    .filter(t => t.startDate && t.endDate) as any[];
+
+                  const starts = ganttTasks.map(t => t.startDate.getTime());
+                  const ends = ganttTasks.map(t => t.endDate.getTime());
+
+                  return (
+                    <WaterfallGanttChart
+                      tasks={ganttTasks}
+                      projectStartDate={starts.length ? new Date(Math.min(...starts)) : undefined}
+                      projectEndDate={ends.length ? new Date(Math.max(...ends)) : undefined}
+                      ProjectTitle={selectedProject.title}
+                      ProjectDescription={selectedProject.description}
+                      ProjectLocation={selectedProject.location}
+                      ProjectStatus={selectedProject.status}
+                      ProjectProgress={selectedProject.progress}
+                      projectBudget={selectedProject.budget}
+                      ProjectTeamSize={selectedProject.teamSize}
+                    />
+                  );
+                })()}
+              </ErrorBoundary>
             </TabsContent>
 
+            {/* Tab Diagramme de Gantt */}
             <TabsContent value="gantt-diagram" className="space-y-4">
-              {(() => {
-                const parse = (v: any) => {
-                  if (!v) return null;
-                  const d = new Date(v);
-                  return isNaN(d.getTime()) ? null : d;
-                };
-                const projStart = parse(selectedProject?.startDate) || new Date();
-                const projEnd = parse(selectedProject?.endDate) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-                const diagramPhases = phases
-                  .map(p => ({
-                    id: p.id,
-                    name: p.title,
-                    startDate: parse(p.startDate),
-                    endDate: parse(p.endDate),
-                    progress: p.actualProgress || 0,
-                    status: p.status === 'completed' ? 'completed' : p.status === 'in_progress' ? 'in_progress' : 'planned'
-                  }))
-                  .filter(p => p.startDate && p.endDate) as any[];
-                return (
-                  <GanttDiagramWithMilestones
-                    projectTitle={selectedProject?.title || 'Projet sans nom'}
-                    projectPeriod={{ start: projStart, end: projEnd }}
-                    phases={diagramPhases}
-                    milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
-                  />
-                );
-              })()}
+              <ErrorBoundary fallback={
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <h3 className="text-lg font-medium text-yellow-800">Erreur de chargement</h3>
+                  <p className="text-yellow-600">Impossible de charger le diagramme de Gantt détaillé.</p>
+                </div>
+              }>
+                {(() => {
+                  const { start: projStart, end: projEnd } = getProjectPeriod();
+                  const diagramPhases = phases
+                    .map(p => ({
+                      id: p.id,
+                      name: p.title,
+                      startDate: parseDate(p.startDate),
+                      endDate: parseDate(p.endDate),
+                      progress: p.actualProgress || 0,
+                      status: p.status === 'completed' ? 'completed' : 
+                              p.status === 'in_progress' ? 'in_progress' : 'planned'
+                    }))
+                    .filter(p => p.startDate && p.endDate) as any[];
+
+                  return (
+                    <GanttDiagramWithMilestones
+                      projectTitle={selectedProject?.title || 'Projet sans nom'}
+                      projectPeriod={{ start: projStart, end: projEnd }}
+                      phases={diagramPhases}
+                      milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
+                    />
+                  );
+                })()}
+              </ErrorBoundary>
             </TabsContent>
 
+            {/* Tab Analytics EVM */}
             <TabsContent value="analytics" className="space-y-4">
               <ErrorBoundary fallback={
                 <div className="p-4 bg-red-50 border border-red-200 rounded-md">

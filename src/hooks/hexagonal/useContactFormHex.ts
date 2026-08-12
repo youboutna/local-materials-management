@@ -2,9 +2,9 @@
  * Hexagonal hook for contact form / authorization request submission
  * Delegates persistence to AuthorizationRequestAdapter (no direct Supabase calls).
  */
-import { useMutation } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getAuthorizationRequestRepository } from '@/infrastructure/supabase/adapters/AuthorizationRequestAdapter';
+import { getAuthorizationRequestRepository } from '@/infrastructure/adapters/supabase/AuthorizationRequestAdapter';
+import { useMutation } from '@tanstack/react-query';
 
 export interface ContactFormData {
   applicant_type: string;

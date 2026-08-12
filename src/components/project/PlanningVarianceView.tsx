@@ -5,15 +5,15 @@
  * source réalisé = supplier_bid awarded) puis expose totaux, tableau, export
  * PDF (window.print) et CSV.
  */
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, FileText, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
-import { boqRepository } from '@/infrastructure/supabase/adapters/SupabaseBoqRepository';
 import { VarianceService, type VarianceGroupKey } from '@/application/services/boq/VarianceService';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { useQuery } from '@tanstack/react-query';
+import { Download, FileText, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface Props {
   projectId: string;
