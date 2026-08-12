@@ -266,7 +266,7 @@ export class AlertService {
    * Create alert asynchronously (non-blocking)
    */
   createAlertBackground(data: CreateAlertData): void {
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         await this.createAlert(data);
       } catch (error) {

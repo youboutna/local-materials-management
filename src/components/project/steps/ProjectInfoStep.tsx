@@ -277,7 +277,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <Input
               id="project-start"
               type="date"
-              value={String(projectData.startDate || "")}
+              value={toDateInput(projectData.startDate)}
               onChange={(e) => handleUpdate({ startDate: e.target.value })}
             />
           </div>
@@ -286,7 +286,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <Input
               id="project-end"
               type="date"
-              value={String(projectData.endDate || "")}
+              value={toDateInput(projectData.endDate)}
               onChange={(e) => handleUpdate({ endDate: e.target.value })}
             />
           </div>
