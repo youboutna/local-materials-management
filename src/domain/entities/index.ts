@@ -135,7 +135,7 @@ export type { TemplateMetadata, ValidationResult } from './Template';
 export type { DatabaseMetrics, PerformanceMetrics } from './PerformanceMonitoring';
 export { TaskAssignment } from './TaskAssignment';
 export type { TaskAssignmentProps } from './TaskAssignment';
-export type { Action, Alert, Workspace } from './Workspace';
+export type { Workspace } from './Workspace';
 
 // ============================================================================
 // LEGACY COMPATIBILITY EXPORTS
