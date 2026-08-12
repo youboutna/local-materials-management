@@ -156,14 +156,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     ctxSetMode(mode === "edit" ? "edit" : "create");
   }, [mode, ctxSetMode]);
 
+  // ⚠️ `formData` peut être recréé à chaque render par la couche application.
+  // On compare par signature pour éviter une boucle infinie de dispatch.
+  const lastProjectDataSig = React.useRef<string>('');
+  const lastRelatedDataSig = React.useRef<string>('');
+
   useEffect(() => {
     const pd = formData?.projectData;
-    if (pd) ctxSetProjectData(pd as never);
+    if (!pd) return;
+    let sig = '';
+    try { sig = JSON.stringify(pd); } catch { sig = String(Date.now()); }
+    if (sig === lastProjectDataSig.current) return;
+    lastProjectDataSig.current = sig;
+    ctxSetProjectData(pd as never);
   }, [formData?.projectData, ctxSetProjectData]);
 
   useEffect(() => {
     const rd = formData?.relatedData;
-    if (rd) ctxSetRelatedData(rd as never);
+    if (!rd) return;
+    let sig = '';
+    try { sig = JSON.stringify(rd); } catch { sig = String(Date.now()); }
+    if (sig === lastRelatedDataSig.current) return;
+    lastRelatedDataSig.current = sig;
+    ctxSetRelatedData(rd as never);
   }, [formData?.relatedData, ctxSetRelatedData]);
 
   useEffect(() => {
