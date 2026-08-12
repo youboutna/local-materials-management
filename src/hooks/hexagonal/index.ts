@@ -578,7 +578,7 @@ export {
 
 // Infrastructure adapters - re-export for accessibility
 export {
-    SupabaseAlertRepository,
+    SupabaseAlertAdapter,
     SupabaseMilestoneAdapter,
     SupabaseSupplierPaymentAdapter
 } from '@/infrastructure/adapters/supabase';

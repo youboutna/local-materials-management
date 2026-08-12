@@ -42,7 +42,7 @@ export { TenderEstimateAdapter } from './TenderEstimateAdapter';
 export { BankGuaranteeAdapter } from './BankGuaranteeAdapter';
 export { InspectionSchedulingAdapter } from './InspectionSchedulingAdapter';
 export { PVGeneratorAdapter } from './PVGeneratorAdapter';
-export { SupabaseAlertRepository } from './SupabaseAlertRepository';
+export { SupabaseAlertAdapter } from './SupabaseAlertAdapter';
 export { SupabaseContactMessageAdapter } from './SupabaseContactMessageAdapter';
 export { SupabaseInspectionPermissionAdapter } from './SupabaseInspectionPermissionAdapter';
 export { SupabaseMilestoneAdapter } from './SupabaseMilestoneAdapter';
