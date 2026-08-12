@@ -25,6 +25,7 @@ import {
   ProjectTask,
   ProjectPhase as TaskProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
+import { useProjectTaskDependenciesHex } from '@/hooks/hexagonal/useProjectTaskDependenciesHex';
 // supabase removed - using hexagonal hooks
 
 interface Task {
