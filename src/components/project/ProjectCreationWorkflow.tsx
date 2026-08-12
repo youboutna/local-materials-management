@@ -114,14 +114,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   } = useUnifiedProjectWorkflow(mode === "edit" ? "edit" : "creation", projectId);
 
   // 🎨 UI Layer - Only UI-specific state (Rule #5)
-  const [internalStep, setCurrentStepUi] = useState(controlledStep ?? 0);
-  const currentStep = controlledStep ?? internalStep;
+  // ⚠️ `controlledStep` (prop parent) est 1-indexé (Étape 1..8) alors que l'index
+  // interne de rendu est 0-indexé. On convertit à la frontière pour que l'onglet
+  // cliqué affiche bien le contenu correspondant.
+  const [internalStep, setCurrentStepUi] = useState(
+    controlledStep != null ? Math.max(0, controlledStep - 1) : 0
+  );
+  const currentStep = controlledStep != null ? Math.max(0, controlledStep - 1) : internalStep;
+
+  // Navigation unique : met à jour l'état interne ET remonte au parent (1-indexé)
+  const goToStep = useCallback(
+    (idx: number) => {
+      const next = Math.min(Math.max(0, idx), PROJECT_WORKFLOW_STEPS.length - 1);
+      setCurrentStepUi(next);
+      onStepChange?.(next + 1);
+    },
+    [onStepChange]
+  );
 
   // Keep the application layer in sync with UI tab selection (1-indexed in hook).
   useEffect(() => {
     setCurrentStep(currentStep + 1);
-    onStepChange?.(currentStep);
-  }, [currentStep, setCurrentStep, onStepChange]);
+  }, [currentStep, setCurrentStep]);
+
 
   // ============================================================
   // 🔌 Bridge Application Layer (useUnifiedProjectWorkflow) → WorkflowContext
