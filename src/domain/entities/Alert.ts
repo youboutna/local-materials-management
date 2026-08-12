@@ -100,6 +100,8 @@ export interface Alert {
   resolution?: string;
   /** Actions métier attachées à l'alerte (labels ou descripteurs) */
   actions?: Array<Record<string, unknown> | string>;
+  /** Données brutes additionnelles persistées côté base */
+  metadata?: Record<string, unknown>;
 }
 
 // ===== UNIQUE Statistics Interface =====
@@ -152,6 +154,7 @@ export interface AlertStatistics {
   pendingActions?: number | string[];
   activeRisks?: number;
   overdueTasks?: number;
+  resolutionRate?: number;
 }
 
 /**
