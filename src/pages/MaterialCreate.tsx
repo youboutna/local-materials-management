@@ -121,11 +121,11 @@ const MaterialCreate = () => {
       supplier: formData.supplier
     } as CreateMaterialRequestDto);
 
-    // Add supplier ID if supplier info is provided (map from form supplier object)
-    if (completeFormData.supplier?.name) {
-      // In a real implementation, you'd look up supplier by name or create if not exists
-      // For now, we'll use a placeholder approach
-      createDto.supplierId = `supplier-${completeFormData.supplier.name.toLowerCase().replace(/\s+/g, '-')}`;
+    // Add supplier ID if a real supplier was selected from the list
+    if (completeFormData.supplier?.supplierId) {
+      createDto.supplierId = completeFormData.supplier.supplierId;
+      createDto.supplierName = completeFormData.supplier.name;
+    } else if (completeFormData.supplier?.name) {
       createDto.supplierName = completeFormData.supplier.name;
     }
 
