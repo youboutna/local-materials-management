@@ -27,10 +27,10 @@ const emptyForm: CreateOrganizationDTO = {
 };
 
 const ORG_TYPES = [
-  { value: 'owner', label: 'Maître d\u2019ouvrage (propriétaire)' },
-  { value: 'delegate', label: 'Maître d\u2019ouvrage délégué' },
+  { value: 'owner', label: 'MaÃ®tre d’ouvrage (propriÃ©taire)' },
+  { value: 'delegate', label: 'MaÃ®tre d’ouvrage dÃ©lÃ©guÃ©' },
   { value: 'contractor', label: 'Entreprise / Contractant' },
-  { value: 'consultant', label: 'Bureau d\u2019études / Consultant' },
+  { value: 'consultant', label: 'Bureau d’Ã©tudes / Consultant' },
   { value: 'donor', label: 'Bailleur / Financeur' },
   { value: 'other', label: 'Autre' },
 ];
@@ -55,7 +55,7 @@ const OrganizationsManager: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.name?.trim()) {
-      toast({ title: 'Nom requis', description: 'Renseignez le nom de l\u2019organisation', variant: 'destructive' });
+      toast({ title: 'Nom requis', description: 'Renseignez le nom de l’organisation', variant: 'destructive' });
       return;
     }
     try {
@@ -129,10 +129,10 @@ const OrganizationsManager: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {editingId ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-            {editingId ? 'Modifier l\u2019organisation' : 'Nouvelle organisation'}
+            {editingId ? 'Modifier l’organisation' : 'Nouvelle organisation'}
           </CardTitle>
           <CardDescription>
-            Définissez les organisations et leur hiérarchie. L\u2019organisation par défaut est rattachée
+            DÃ©finissez les organisations et leur hiÃ©rarchie. L’organisation par dÃ©faut est rattachÃ©e
             automatiquement aux nouveaux projets.
           </CardDescription>
         </CardHeader>
@@ -167,7 +167,7 @@ const OrganizationsManager: React.FC = () => {
                   onValueChange={(value) => setForm((prev) => ({ ...prev, orgType: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Type d\u2019organisation" />
+                    <SelectValue placeholder="Type d’organisation" />
                   </SelectTrigger>
                   <SelectContent>
                     {ORG_TYPES.map((type) => (
@@ -256,7 +256,7 @@ const OrganizationsManager: React.FC = () => {
             <div className="flex gap-2">
               <Button type="submit" disabled={isMutating}>
                 {editingId ? <Check className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-                {editingId ? 'Enregistrer' : 'Ajouter l\u2019organisation'}
+                {editingId ? 'Enregistrer' : 'Ajouter l’organisation'}
               </Button>
               {editingId && (
                 <Button type="button" variant="outline" onClick={resetForm}>
