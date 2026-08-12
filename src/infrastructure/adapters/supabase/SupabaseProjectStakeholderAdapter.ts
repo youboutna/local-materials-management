@@ -7,6 +7,7 @@
 import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { normalizePostgrestError } from './postgrestError';
 
 // Database row interface for project_stakeholders table
 interface ProjectStakeholderRow {
