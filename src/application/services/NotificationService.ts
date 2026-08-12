@@ -105,7 +105,7 @@ export class NotificationService {
       }
       const result = await this.notificationRepository.listAllNotifications(limit);
       if (result.error) throw result.error;
-      return (result.notifications || []).map(n => NotificationTransformer.toDTO(n));
+      return (result.notifications || []).map(n => this.mapToDTO(n));
     } catch (error) {
       console.error('NotificationService.getAllNotifications failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get all notifications');
