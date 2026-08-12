@@ -20,6 +20,7 @@ interface InspectionRow {
   comments?: string;
   observations?: InspectionObservation[]; // Store as JSON array
   documents: unknown[];
+  payment_type?: string;
   created_at: string;
   updated_at: string;
 }
@@ -52,25 +53,32 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
       progressAtInspection: data.progress_at_inspection || 0,
       comments: data.comments || undefined,
       progress: data.progress_at_inspection || 0,
-      observations: Array.isArray(data.observations) ? data.observations : []
+      observations: Array.isArray(data.observations) ? data.observations : [],
+      documents: Array.isArray(data.documents) ? (data.documents as Document[]) : [],
+      paymentType: data.payment_type || undefined
     });
   }
 
   private mapToRow(inspection: Inspection): Omit<InspectionRow, 'created_at' | 'updated_at'> {
+    const inspectorName = typeof inspection.inspector === 'string'
+      ? inspection.inspector
+      : inspection.inspector?.name ?? '';
     return {
       id: inspection.id,
       project_id: inspection.projectId || '',
       phase_id: inspection.phaseId || undefined,
       step_id: inspection.stepId || undefined,
-      inspector: inspection.inspector.name, // Extract name from Inspector object
+      inspector: inspectorName, // Extract name from Inspector object
       date: inspection.date,
       status: inspection.status.toString().toLowerCase(), // Convert enum to string
       progress_at_inspection: inspection.progressAtInspection,
       comments: inspection.comments || undefined,
       observations: inspection.observations || [], // Store observations as JSON array
-      documents: inspection.documents || []
+      documents: inspection.documents || [],
+      payment_type: inspection.paymentType || undefined
     };
   }
+
 
   async findById(id: string): Promise<Inspection | null> {
     const { data, error } = await supabase
@@ -105,11 +113,16 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
 
   async update(id: string, data: Partial<Inspection>): Promise<void> {
     const updateData: Record<string, unknown> = {};
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.status = String(data.status).toLowerCase();
     if (data.progressAtInspection !== undefined) updateData.progress_at_inspection = data.progressAtInspection;
     if (data.comments !== undefined) updateData.comments = data.comments;
     if (data.documents !== undefined) updateData.documents = data.documents;
     if (data.observations !== undefined) updateData.observations = data.observations;
+    if ((data as { paymentType?: string }).paymentType !== undefined) {
+      updateData.payment_type = (data as { paymentType?: string }).paymentType;
+    }
+    if (data.stepId !== undefined) updateData.step_id = data.stepId;
+
 
     const { error } = await supabase
       .from('inspections')

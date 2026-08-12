@@ -45,12 +45,21 @@ export class InspectionService {
         stepId: data.stepId,
         inspector: data.inspector || '',
         date: data.date || new Date().toISOString(),
+        status: data.status ? Inspection.mapStringToStatus(data.status) : undefined,
+        progressAtInspection: data.progressAtInspection ?? 0,
+        observations: (data.observations ?? []) as never,
+        paymentType: data.paymentType,
         comments: data.comments
       });
+      // create() renvoie l'entité persistée (round-trip DB) quand le repo le supporte
+      if (typeof (this.repository as { create?: unknown }).create === 'function') {
+        return await (this.repository as { create: (d: Partial<Inspection>) => Promise<Inspection> }).create(newInspection);
+      }
       await this.repository.save(newInspection);
       return newInspection;
     } catch (error) { ErrorLogger.log(error as Error, 'InspectionService.createInspection'); throw error; }
   }
+
 
   async updateInspection(id: string, updates: Partial<InspectionExecutionDataDTO>): Promise<Inspection> {
     try {
