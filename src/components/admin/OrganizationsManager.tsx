@@ -265,6 +265,20 @@ const OrganizationsManager: React.FC = () => {
               </Label>
             </div>
 
+            <div className="flex items-center gap-2">
+              <input
+                id="org-active"
+                type="checkbox"
+                className="h-4 w-4"
+                checked={form.isActive !== false}
+                onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
+              />
+              <Label htmlFor="org-active" className="font-normal">
+                Organisation active
+              </Label>
+            </div>
+
+
             <div className="flex gap-2">
               <Button type="submit" disabled={isMutating}>
                 {editingId ? <Check className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
