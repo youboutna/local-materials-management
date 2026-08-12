@@ -25,7 +25,7 @@ const TaskDetail = () => {
   
   // Use hexagonal hook
   const { task, isLoading: loading, refetch, updateTask } = useTaskAssignmentHex(taskId);
-  const { startTask, completeTask, addNote } = useTaskAssignmentsHex();
+  const { startTaskAsync, completeTaskAsync, addNoteAsync } = useTaskAssignmentsHex();
   const [updating, setUpdating] = useState(false);
 
   // Check access
@@ -38,7 +38,7 @@ const TaskDetail = () => {
 
     setUpdating(true);
     try {
-      await addNote({ id: task.id, note: newNote });
+      await addNoteAsync({ id: task.id, note: newNote });
       setNewNote('');
       refetch();
     } catch (error: any) {
@@ -58,9 +58,9 @@ const TaskDetail = () => {
     setUpdating(true);
     try {
       if (newStatus === 'in_progress') {
-        await startTask(task.id);
+        await startTaskAsync(task.id);
       } else {
-        await completeTask(task.id);
+        await completeTaskAsync(task.id);
       }
 
       toast({

@@ -104,13 +104,11 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
         // Update profile information
         await updateUserMutation.mutateAsync({
-          id: user.id,
-          data: {
-            fullName: formData.full_name,
-            phone: formData.phone,
-            nationalId: formData.national_id
-          }
-        } as any);
+          userId: user.id,
+          full_name: formData.full_name,
+          phone: formData.phone,
+          national_id: formData.national_id
+        });
 
         // Note: Email and password updates require admin privileges that aren't available with the anon key
         // These would need to be handled by a server-side function or edge function with service role access

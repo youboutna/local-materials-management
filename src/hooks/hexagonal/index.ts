@@ -125,7 +125,7 @@ export {
 
 // Tenders & Documents
 export {
-    useDeleteTender, useDeleteTenderSecret, useProjectsForTenders, useRevokeTenderSecret, useTenderMutation, useTenders, useTenderSharingSecrets
+    useDeleteTender, useDeleteTenderSecret, useProjectsForTenders, useRevokeTenderSecret, useTenderMutation, useTenders, useTenderSharingSecrets, useTransitionTenderStatus
 } from './useTenderCrudHex';
 export {
     useTenderDocumentsList, useUploadTenderDocument, useWorkflowStepDocumentsList

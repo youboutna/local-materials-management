@@ -34,6 +34,7 @@ import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 
 // Import unified workflow hook
 import { useUnifiedProjectWorkflow } from "../../hooks/hexagonal/useUnifiedProjectWorkflow";
+import { useWorkflowContext } from "@/contexts/ProjectWorkflowContext";
 
 // Import ProjectWorkflowService and RepositoryFactory
 
