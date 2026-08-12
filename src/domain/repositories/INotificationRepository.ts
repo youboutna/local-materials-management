@@ -66,6 +66,11 @@ export interface INotificationRepository {
   getUserNotifications(userId: string, limit?: number): Promise<{ notifications: NotificationData[]; error: Error | null }>;
 
   /**
+   * List every notification (administration)
+   */
+  listAllNotifications?(limit?: number): Promise<{ notifications: NotificationData[]; error: Error | null }>;
+
+  /**
    * Mark notification as read
    */
   markAsRead(notificationId: string): Promise<{ error: Error | null }>;
