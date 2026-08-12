@@ -77,7 +77,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   // ✅ Utilisation du contexte pour l'état
   const { 
     state,
-    isPersistedEffective,
+    isPersisted,
     canManageSubObjects,
     addDocument,
     addInsurance,
