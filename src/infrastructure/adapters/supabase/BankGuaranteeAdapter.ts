@@ -155,24 +155,38 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
   }
 
   private toDto(data: SupabaseBankGuarantee): BankGuaranteeDTO {
+    const type = data.guarantee_type as BankGuaranteeDTO['type'];
+    const status = data.status as BankGuaranteeDTO['status'];
     return {
       id: data.id,
+      projectId: data.project_id,
       project_id: data.project_id,
+      contractorId: data.contractor_id,
       contractor_id: data.contractor_id,
-      guarantee_type: data.guarantee_type as 'performance' | 'payment' | 'advance_payment' | 'warranty' | 'retention',
-      guarantee_amount: data.guarantee_amount,
+      type,
+      guaranteeType: type,
+      guarantee_type: data.guarantee_type,
+      number: data.guarantee_number,
+      guaranteeNumber: data.guarantee_number,
+      guarantee_number: data.guarantee_number,
+      issuingBank: data.bank_name,
       issuing_bank: data.bank_name,
       bank_name: data.bank_name,
-      guarantee_number: data.guarantee_number,
+      issueDate: data.issue_date,
       issue_date: data.issue_date,
+      expiryDate: data.expiry_date,
       expiry_date: data.expiry_date,
-      status: data.status as 'active' | 'expired' | 'cancelled' | 'claimed' | 'pending',
+      amount: data.guarantee_amount,
+      guaranteeAmount: data.guarantee_amount,
+      guarantee_amount: data.guarantee_amount,
+      currency: data.currency || 'MRU',
+      status,
       conditions: data.conditions || [],
       documents: data.documents || [],
-      currency: data.currency,
-      exchange_rate: data.exchange_rate,
+      createdAt: data.created_at,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updatedAt: data.updated_at,
+      updated_at: data.updated_at,
     };
   }
 }

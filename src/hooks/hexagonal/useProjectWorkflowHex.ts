@@ -64,12 +64,7 @@ export function useProjectWorkflowHex(projectId?: string) {
   
   // Create service instance with repositories
   const getWorkflowService = () => {
-    return createProjectWorkflowService(
-      RepositoryFactory.getProjectRepository(),
-      RepositoryFactory.getPhaseRepository(),
-      RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getProjectStakeholderRepository(),
-    );
+    return createProjectWorkflowService();
   };
 
   // =================== STEP 1: UI Form → CreateDTO (via Transformer) ===================

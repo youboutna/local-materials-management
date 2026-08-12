@@ -467,6 +467,93 @@ export class AlertService {
   }
 
   /**
+   * Update an alert (statut, assignation, résolution...)
+   */
+  async updateAlert(id: string, updates: Partial<AlertDTO>): Promise<AlertActionResult> {
+    try {
+      if (!id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Alert ID is required');
+      }
+      const updated = await this.alertRepository.update(id, updates as Partial<Alert>);
+      return { success: true, alert: AlertTransformer.toDTO(updated) };
+    } catch (error) {
+      console.error('AlertService.updateAlert failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update alert',
+      };
+    }
+  }
+
+  /**
+   * Statistiques agrégées pour le pilotage projet (ProjectManagerProvider)
+   */
+  async getSummaryStats(projectId?: string): Promise<AlertStatistics> {
+    try {
+      const stats = await this.alertRepository.getStatistics(projectId);
+      return {
+        ...stats,
+        totalAlerts: stats.total ?? 0,
+        criticalAlerts: stats.critical ?? 0,
+        highAlerts: stats.high ?? 0,
+        mediumAlerts: stats.medium ?? 0,
+        lowAlerts: stats.low ?? 0,
+        openAlerts: stats.open ?? 0,
+        acknowledgedAlerts: stats.acknowledged ?? 0,
+        resolvedAlerts: stats.resolved ?? 0,
+        pendingActions: stats.open ?? 0,
+      };
+    } catch (error) {
+      console.error('AlertService.getSummaryStats failed:', error);
+      throw this.handleError(error, 'Failed to fetch summary statistics');
+    }
+  }
+
+  /**
+   * Chaîne d'escalade en fonction de la sévérité
+   */
+  getEscalationPath(alert: Pick<AlertDTO, 'severity'>): string[] {
+    const paths: Record<string, string[]> = {
+      critical: ['Chef de projet', 'Directeur', 'Direction générale'],
+      high: ['Chef de projet', 'Directeur'],
+      medium: ['Chef de projet'],
+      low: ['Chef de projet'],
+    };
+    return paths[String(alert.severity)] || paths.low;
+  }
+
+  /**
+   * Détermine si une alerte doit être escaladée
+   */
+  needsEscalation(alert: Pick<AlertDTO, 'severity' | 'createdAt' | 'status'>): boolean {
+    if (alert.status === 'resolved' || alert.status === 'closed') return false;
+    const createdAt = new Date(alert.createdAt as string);
+    if (Number.isNaN(createdAt.getTime())) return false;
+    const hoursOpen = (Date.now() - createdAt.getTime()) / 3_600_000;
+    if (alert.severity === 'critical' && hoursOpen > 1) return true;
+    if (alert.severity === 'high' && hoursOpen > 4) return true;
+    return hoursOpen > 24;
+  }
+
+  /**
+   * Libellé d'action métier par type d'alerte
+   */
+  getActionLabel(alertType: string): string {
+    const labels: Record<string, string> = {
+      budget: 'Revoir le budget',
+      deadline: 'Replanifier',
+      resource: 'Réaffecter des ressources',
+      risk: 'Traiter le risque',
+      compliance: 'Vérifier la conformité',
+      system: 'Vérifier le système',
+      payment: 'Contrôler le paiement',
+      quality: 'Contrôle qualité',
+    };
+    return labels[alertType] || 'Traiter';
+  }
+
+
+  /**
    * Handle errors
    */
   private handleError(error: unknown, defaultMessage: string): AppError {

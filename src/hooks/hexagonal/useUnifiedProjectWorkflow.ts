@@ -21,6 +21,8 @@ export interface UnifiedWorkflowState {
   error?: string;
   lastSavedAt?: string;
   lastValidationErrors?: string[];
+  /** Numéros d'étapes déjà complétées (1-indexé) */
+  completedSteps: number[];
 }
 
 export interface SaveResult {
@@ -88,7 +90,8 @@ export function useUnifiedProjectWorkflow(
     isValid: false,
     isLoading: false,
     lastSavedAt: undefined,
-    lastValidationErrors: []
+    lastValidationErrors: [],
+    completedSteps: []
   });
 
   const [formData, setFormData] = useState<ProjectWorkflowData | null>(() =>
@@ -103,7 +106,7 @@ export function useUnifiedProjectWorkflow(
     staleTime: 60_000
   });
 
-  const { data: loadedData, isLoading: dataLoading, error: dataError } = useQuery({
+  const { data: loadedData, isLoading: dataLoading, error: dataError, refetch: refetchProjectData } = useQuery({
     queryKey: ['project-workflow-data', projectId],
     queryFn: async () => {
       if (mode === 'edit' && projectId) {
@@ -213,10 +216,17 @@ export function useUnifiedProjectWorkflow(
       return { success: false, message: 'No data' } as SaveResult;
     }
     try {
-      return await saveStepMutation.mutateAsync({
-        data: dataToSave,
-        stepNumber: stepNumber ?? workflowState.currentStep,
-      });
+      const step = stepNumber ?? workflowState.currentStep;
+      const result = await saveStepMutation.mutateAsync({ data: dataToSave, stepNumber: step });
+      if (result?.success) {
+        setWorkflowState(prev => ({
+          ...prev,
+          completedSteps: prev.completedSteps.includes(step)
+            ? prev.completedSteps
+            : [...prev.completedSteps, step].sort((a, b) => a - b),
+        }));
+      }
+      return result;
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, message: errMsg };
@@ -249,7 +259,16 @@ export function useUnifiedProjectWorkflow(
     isStepCompleted,
     progressPercentage,
     isLoading: dataLoading || saveStepMutation.isPending || validateStepMutation.isPending,
-    error: dataError,
+    error: dataError instanceof Error ? dataError.message : (dataError ? String(dataError) : null),
+    /** Recharge les données projet depuis la base (round-trip DB -> UI) */
+    loadProjectData: async () => {
+      const result = await refetchProjectData();
+      if (result.data) {
+        setFormData(result.data as unknown as ProjectWorkflowData);
+        setOriginalData(result.data as unknown as ProjectWorkflowData);
+      }
+      return result.data as unknown as ProjectWorkflowData | null;
+    },
     updateFormData,
     nextStep,
     previousStep,

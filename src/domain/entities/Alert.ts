@@ -35,7 +35,7 @@ export type AlertType =
   | 'payment';
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type AlertStatus = 'open' | 'acknowledged' | 'resolved' | 'closed' | 'escalated';
+export type AlertStatus = 'open' | 'acknowledged' | 'resolved' | 'closed' | 'escalated' | 'pending' | 'active';
 export type AlertSource =
   | 'insurance'
   | 'bank_guarantee'
@@ -52,7 +52,9 @@ export type AlertSource =
   | 'user'
   | 'phase'
   | 'milestone'
-  | 'monitoring';
+  | 'monitoring'
+  | 'financial'
+  | 'guarantee';
 
 // ===== Action Proof =====
 export type ActionProofType = 'email' | 'sms' | 'document' | 'call' | 'meeting';
@@ -100,6 +102,8 @@ export interface Alert {
   resolution?: string;
   /** Actions métier attachées à l'alerte (labels ou descripteurs) */
   actions?: Array<Record<string, unknown> | string>;
+  /** Données brutes additionnelles persistées côté base */
+  metadata?: Record<string, unknown>;
 }
 
 // ===== UNIQUE Statistics Interface =====
@@ -152,6 +156,7 @@ export interface AlertStatistics {
   pendingActions?: number | string[];
   activeRisks?: number;
   overdueTasks?: number;
+  resolutionRate?: number;
 }
 
 /**

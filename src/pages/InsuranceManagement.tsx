@@ -376,10 +376,7 @@ const InsuranceContent = () => {
           )}
 
           {/* Composant principal - UnifiedInsuranceManager */}
-          <UnifiedInsuranceManager 
-            insurancePolicies={insurancePolicies}
-            onRefresh={loadInsurancePolicies}
-          />
+          <UnifiedInsuranceManager />
         </div>
       </div>
     </div>

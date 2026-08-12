@@ -364,7 +364,7 @@ const PaymentControlContent = () => {
 // ============================================================
 const PaymentControlPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
-  const [projectHierarchy, setProjectHierarchy] = useState<Array<{id: string, name: string, level: number}>>([]);
+  const [projectHierarchy, setProjectHierarchy] = useState<Array<{ id: string; name: string; level: number; positionTitle?: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // ✅ Utiliser les hooks hexagonaux
@@ -393,7 +393,7 @@ const PaymentControlPage = () => {
   // Sélectionner le projet
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
-      const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
+      const activeProject = projects.find(p => String(p.status) === 'en cours') || projects[0];
       const projectData = {
         id: activeProject.id,
         title: activeProject.title,
@@ -436,17 +436,17 @@ const PaymentControlPage = () => {
 
     if (levels.length >= 1) {
       const highestLevel = sortedHierarchy.filter(h => h.level === levels[0]);
-      roles.level4 = highestLevel[0]?.position_title || 'director';
+      roles.level4 = highestLevel[0]?.positionTitle || 'director';
     }
     
     if (levels.length >= 2) {
       const secondLevel = sortedHierarchy.filter(h => h.level === levels[1]);
-      roles.level3 = secondLevel[0]?.position_title || 'manager';
+      roles.level3 = secondLevel[0]?.positionTitle || 'manager';
     }
     
     if (levels.length >= 3) {
       const thirdLevel = sortedHierarchy.filter(h => h.level === levels[2]);
-      roles.level2 = thirdLevel[0]?.position_title || 'supervisor';
+      roles.level2 = thirdLevel[0]?.positionTitle || 'supervisor';
     }
 
     return roles;

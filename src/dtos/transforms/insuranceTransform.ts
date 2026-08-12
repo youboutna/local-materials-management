@@ -201,6 +201,35 @@ export const insuranceTransform = {
   },
 
   /**
+   * Form Data → Entity (persistance directe via repository)
+   */
+  formDataToEntity: (
+    formData: InsuranceCertificateFormData,
+    userId = 'system'
+  ): InsuranceCertificateEntity => {
+    const now = new Date().toISOString();
+    return {
+      id: '',
+      project_id: formData.projectId,
+      contractor_id: formData.contractorId,
+      contractor_name: formData.contractorName,
+      insurance_company: formData.insuranceCompany,
+      policy_number: formData.policyNumber,
+      coverage_amount: formData.coverageAmount,
+      coverage_type: formData.coverageType,
+      insurance_type: formData.coverageType,
+      valid_from: formData.validFrom,
+      valid_until: formData.validUntil,
+      status: formData.status,
+      notes: formData.notes,
+      created_at: now,
+      updated_at: now,
+      created_by: userId,
+      updated_by: userId,
+    };
+  },
+
+  /**
    * Form Data → Create Data
    */
   formDataToCreateData: (

@@ -746,8 +746,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({
       budget: data.budget || 0,
       startDate: data.startDate || new Date().toISOString().split('T')[0],
       endDate: data.endDate,
-      status: data.status || 'draft',
-      progress: data.progress || 0,
+      status: (data.status || 'draft') as ProjectDTO['status'],
       teamSize: data.teamSize || 1,
       projectReference: data.projectReference,
       category: data.category,
@@ -779,7 +778,7 @@ export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({
       isDraft: state.isDraft,
       isComplete: state.isComplete,
       projectData: state.projectData as ProjectDTO,
-      relatedData: state.relatedData,
+      relatedData: state.relatedData as unknown as ProjectWorkflowData['relatedData'],
       metadata: {
         lastSavedAt: state.lastSavedAt || new Date().toISOString(),
         totalSteps: state.metadata.totalSteps,

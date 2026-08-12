@@ -50,7 +50,7 @@ interface DBAlert {
   timestamp: string;
   trigger_date: string;
   deadline?: string | null;
-  recurrence?: string | null;
+  recurrence?: number | null;
   created_at: string;
   updated_at: string;
   
@@ -139,7 +139,7 @@ const mapAlertToDB = (alert: Alert): Omit<DBAlert, 'created_at' | 'updated_at'> 
     
     type: alert.type,
     severity: alert.severity,
-    source: alert.source,
+    source: alert.source || 'system',
     status: alert.status || 'open',
     
     title: alert.title,
@@ -188,27 +188,27 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       message: dbAlert.message,
       projectId: dbAlert.project_id,
       projectTitle: dbAlert.project_title,
-      relatedEntityId: dbAlert.related_entity_id,
+      relatedEntityId: dbAlert.related_entity_id ?? undefined,
       source: dbAlert.source as AlertSource,
-      delayDays: dbAlert.delay_days,
+      delayDays: dbAlert.delay_days ?? undefined,
       timestamp: dbAlert.timestamp,
       triggerDate: dbAlert.trigger_date,
       acknowledged: dbAlert.acknowledged,
-      acknowledgedBy: dbAlert.acknowledged_by,
-      acknowledgedAt: dbAlert.acknowledged_at,
+      acknowledgedBy: dbAlert.acknowledged_by ?? undefined,
+      acknowledgedAt: dbAlert.acknowledged_at ?? undefined,
       actionRequired: dbAlert.action_required,
-      actionTaken: dbAlert.action_taken,
-      actionTakenBy: dbAlert.action_taken_by,
-      actionTakenAt: dbAlert.action_taken_at,
+      actionTaken: dbAlert.action_taken ?? undefined,
+      actionTakenBy: dbAlert.action_taken_by ?? undefined,
+      actionTakenAt: dbAlert.action_taken_at ?? undefined,
       escalationLevel: dbAlert.escalation_level,
       availableActions: dbAlert.available_actions,
       actionProof: dbAlert.action_proof,
-      deadline: dbAlert.deadline,
-      recurrence: dbAlert.recurrence,
+      deadline: dbAlert.deadline ?? undefined,
+      recurrence: dbAlert.recurrence ?? undefined,
       status: dbAlert.status as AlertStatus,
       createdAt: dbAlert.created_at,
       updatedAt: dbAlert.updated_at,
-      resolvedAt: dbAlert.resolved_at,
+      resolvedAt: dbAlert.resolved_at ?? undefined,
     };
   }
 
@@ -224,25 +224,25 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       message: alert.message,
       project_id: alert.projectId,
       project_title: alert.projectTitle || '',
-      related_entity_id: alert.relatedEntityId,
-      source: alert.source,
-      delay_days: alert.delayDays,
+      related_entity_id: alert.relatedEntityId ?? null,
+      source: alert.source || 'system',
+      delay_days: alert.delayDays ?? null,
       timestamp: alert.timestamp || new Date().toISOString(),
       trigger_date: alert.triggerDate || new Date().toISOString(),
       acknowledged: alert.acknowledged || false,
-      acknowledged_by: alert.acknowledgedBy,
-      acknowledged_at: alert.acknowledgedAt,
+      acknowledged_by: alert.acknowledgedBy ?? null,
+      acknowledged_at: alert.acknowledgedAt ?? null,
       action_required: alert.actionRequired || false,
-      action_taken: alert.actionTaken,
-      action_taken_by: alert.actionTakenBy,
-      action_taken_at: alert.actionTakenAt,
+      action_taken: alert.actionTaken ?? null,
+      action_taken_by: alert.actionTakenBy ?? null,
+      action_taken_at: alert.actionTakenAt ?? null,
       escalation_level: alert.escalationLevel || 0,
       available_actions: alert.availableActions || [],
       action_proof: alert.actionProof || [],
-      deadline: alert.deadline,
-      recurrence: alert.recurrence,
+      deadline: alert.deadline ?? null,
+      recurrence: alert.recurrence ?? null,
       status: alert.status || 'open',
-      resolved_at: alert.resolvedAt,
+      resolved_at: alert.resolvedAt ?? null,
     };
   }
 

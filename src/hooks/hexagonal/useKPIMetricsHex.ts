@@ -51,7 +51,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
       projectRepo.findAll(),
       paymentRepo.findAll(),
       milestoneRepo.findByProjectId('').catch(() => []),
-      alertRepo.findAll().then((all: any[]) => 
+      (alertRepo.findAll ? alertRepo.findAll() : alertRepo.find()).then((all: any[]) => 
         (all || []).filter((a: any) => !a.resolved && !a.acknowledged).slice(0, 5)
       ).catch(() => []),
     ]);

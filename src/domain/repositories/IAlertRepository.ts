@@ -8,6 +8,12 @@
 
 import { Alert, AlertStatistics, AlertStatus, AlertType, AlertSeverity, AlertSource } from '@/domain/entities/Alert';
 
+// Ré-exports de compatibilité pour les adapters d'infrastructure
+export type { AlertStatistics, AlertStatus, AlertType, AlertSeverity, AlertSource };
+export type AlertDTO = Alert;
+export type CreateProjectAlertRequestDto = Partial<Alert> & { projectId: string; title: string };
+export type UpdateProjectAlertRequestDto = Partial<Alert>;
+
 // ===== Filter Interface =====
 export interface AlertFilter {
   severity?: AlertSeverity;
@@ -38,6 +44,11 @@ export interface IAlertRepository {
    * Récupère toutes les alertes avec filtres optionnels
    */
   find(filters?: AlertFilter): Promise<Alert[]>;
+
+  /**
+   * Récupère toutes les alertes (sans filtre)
+   */
+  findAll?(): Promise<Alert[]>;
 
   /**
    * Récupère toutes les alertes d'un projet

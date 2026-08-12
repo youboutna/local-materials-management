@@ -1,4 +1,39 @@
-import { Workspace, Alert, Action, OperationalStatus } from '@/domain/entities/Workspace';
+import { Workspace, OperationalStatus } from '@/domain/entities/Workspace';
+
+/**
+ * Formes legacy utilisées par les transformers d'alertes/actions de workspace.
+ * Elles restent locales : l'entité canonique du domaine est `@/domain/entities/Alert`.
+ */
+interface Alert {
+  id: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  type: string;
+  severity: string;
+  source?: string;
+  escalationLevel?: number;
+  acknowledged?: boolean;
+  acknowledgedAt?: Date;
+  acknowledgedBy?: string;
+  resolved?: boolean;
+  resolvedAt?: Date;
+  resolvedBy?: string;
+  assignedActions?: string[];
+  actionProofs?: Record<string, unknown>[];
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Action {
+  id: string;
+  actionType: string;
+  message: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 import { 
   WorkspaceDTO, 
   CreateWorkspaceRequestDto, 

@@ -418,7 +418,7 @@ const UnifiedInsuranceManager = () => {
         priority: 'high',
         assigneeId: currentUserId,
         recipientIds: [currentUserId],
-        metadata: { certificateData: certificate }
+        metadata: { certificateData: certificate as unknown as Record<string, unknown> }
       });
 
       toast({ title: 'Action créée', description: `${actionTitles[actionType]} créée avec succès` });

@@ -16,7 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Alert } from '@/domain/entities/Alert';
-import { EscalationRoles, ProjectData } from '@/dtos/entities/ProjectDTO';
+import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import type { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { useBankGuaranteesHex, useProjectsHex } from '@/hooks/hexagonal';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -36,7 +37,7 @@ const BankGuaranteeContent = () => {
   // Filtrer les alertes de garanties bancaires
   const bankGuaranteeAlerts = allAlerts.filter((alert: Alert) => 
     alert.type === 'bank_guarantee' || 
-    alert.type === 'guarantee' ||
+    String(alert.type) === 'guarantee' ||
     alert.source === 'bank_guarantee'
   );
 
@@ -157,7 +158,7 @@ const BankGuaranteeContent = () => {
 // Page principale avec Provider
 // ============================================================
 const BankGuaranteeMonitorPage = () => {
-  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectDTO | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -187,8 +188,8 @@ const BankGuaranteeMonitorPage = () => {
   // Sélectionner le projet
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
-      const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
-      const projectData: ProjectData = {
+      const activeProject = projects.find(p => String(p.status) === 'en cours') || projects[0];
+      const projectData: ProjectDTO = {
         id: activeProject.id,
         title: activeProject.title,
         description: activeProject.description || '',
@@ -200,6 +201,9 @@ const BankGuaranteeMonitorPage = () => {
         endDate: toISOStringSafe(activeProject.endDate),
         teamSize: 0,
         thumbnail: undefined,
+        currency: 'MRU',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       setSelectedProject(projectData);

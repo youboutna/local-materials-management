@@ -52,6 +52,20 @@ export class BankGuaranteeService {
   }
 
   /**
+   * Libère (statut `released`) les garanties rattachées à une phase.
+   */
+  async releasePhaseGuarantees(phaseId: string): Promise<void> {
+    await this.bankGuaranteeRepository.releasePhaseGuarantees(phaseId);
+  }
+
+  /**
+   * Libère (statut `released`) toutes les garanties d'un projet.
+   */
+  async releaseProjectGuarantees(projectId: string): Promise<void> {
+    await this.bankGuaranteeRepository.releaseProjectGuarantees(projectId);
+  }
+
+  /**
    * Get bank guarantees by project ID (instance method)
    */
   async getByProjectId(projectId: string): Promise<BankGuaranteeDTO[]> {

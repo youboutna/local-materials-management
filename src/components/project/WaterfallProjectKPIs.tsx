@@ -19,6 +19,36 @@ import { useProjectManager } from "@/hooks/useProjectManager";
 
 interface WaterfallProjectKPIsProps {}
 
+/** Vues typées des indicateurs calculés exposés par le pilotage projet */
+interface EvmView {
+  costPerformanceIndex: number;
+  schedulePerformanceIndex: number;
+  earnedValue: number;
+  plannedValue: number;
+  actualCost: number;
+  estimateAtCompletion: number;
+  varianceAtCompletion: number;
+  estimateToComplete: number;
+}
+interface PertView {
+  totalExpectedDuration: number;
+  criticalPath: unknown[];
+}
+interface GanttView {
+  tasks: Array<{ text: string; progress: number }>;
+}
+
+const EMPTY_EVM: EvmView = {
+  costPerformanceIndex: 0,
+  schedulePerformanceIndex: 0,
+  earnedValue: 0,
+  plannedValue: 0,
+  actualCost: 0,
+  estimateAtCompletion: 0,
+  varianceAtCompletion: 0,
+  estimateToComplete: 0,
+};
+
 const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = () => {
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
   const { data, runChecks, acknowledgeAlert } = useProjectManager();
@@ -35,7 +65,15 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = () => {
     );
   }
 
-  const { progress, evmData, alerts, pertData, ganttData } = data;
+  const { alerts } = data;
+  const progress: number = data.progress ?? 0;
+  const evmData: EvmView = { ...EMPTY_EVM, ...((data.evmData as Partial<EvmView>) ?? {}) };
+  const pertData: PertView = {
+    totalExpectedDuration: 0,
+    criticalPath: [],
+    ...((data.pertData as Partial<PertView>) ?? {}),
+  };
+  const ganttData: GanttView = { tasks: [], ...((data.ganttData as Partial<GanttView>) ?? {}) };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

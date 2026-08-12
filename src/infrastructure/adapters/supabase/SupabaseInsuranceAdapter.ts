@@ -104,7 +104,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       insurance_company: entity.insurance_company,
       policy_number: entity.policy_number,
       coverage_amount: entity.coverage_amount,
-      coverage_type: entity.coverage_type || entity.insurance_type,
+      coverage_type: entity.coverage_type || entity.insurance_type || 'responsabilite_civile',
       valid_from: entity.valid_from,
       valid_until: entity.valid_until,
       certificate_url: entity.certificate_url,

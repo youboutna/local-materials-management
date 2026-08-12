@@ -1,7 +1,6 @@
 /**
  * Infrastructure Layer Index
- * Export all adapters and infrastructure services
+ * Les adapters sont importés explicitement par chemin (pas de barrel global)
+ * afin d'éviter les cycles et le chargement inutile de tous les providers.
  */
-
-export * from './adapters';
-
+export { RepositoryFactory } from './RepositoryFactory';

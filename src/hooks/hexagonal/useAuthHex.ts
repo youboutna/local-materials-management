@@ -12,6 +12,7 @@
 import { AuthService } from "@/application/services/AuthService";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LoginData, RegisterData, UserDTO } from "@/dtos/entities/UserDTO";
+import type { AuthUser } from "@/dtos/entities/AuthDTO";
 import { RepositoryFactory } from "@/infrastructure/RepositoryFactory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from 'react-router-dom';
@@ -52,6 +53,33 @@ export interface UserSecurityReport {
 }
 
 /**
+ * AuthUser (provider) -> UserDTO (UI)
+ */
+function toUserDTO(authUser: (Partial<AuthUser> & { id: string }) | null): UserDTO | null {
+  if (!authUser) return null;
+  return {
+    id: authUser.id,
+    email: authUser.email ?? '',
+    fullName: authUser.full_name || authUser.name || authUser.email || '',
+    primaryRole: authUser.role || 'user',
+    phone: authUser.phone,
+    nationalId: authUser.national_id,
+    avatarUrl: authUser.avatar_url,
+    isActive: true,
+    lastLogin: authUser.last_login,
+    lastLoginAt: authUser.last_login,
+    lastPasswordChange: authUser.last_password_change,
+    failedLoginAttempts: authUser.failed_login_attempts,
+    hasTwoFactor: authUser.two_factor_enabled,
+    emailVerified: authUser.email_verified,
+    phoneVerified: authUser.phone_verified,
+    userRoles: [],
+    createdAt: authUser.created_at ?? new Date().toISOString(),
+    updatedAt: authUser.updated_at ?? new Date().toISOString(),
+  };
+}
+
+/**
  * Enhanced hook for authentication management with UI-specific features
  */
 export function useAuthHex(): UseAuthHexResult {
@@ -74,7 +102,7 @@ export function useAuthHex(): UseAuthHexResult {
     queryFn: async (): Promise<UserDTO | null> => {
       try {
         const currentUser = await authService.getCurrentUser();
-        return currentUser;
+        return toUserDTO(currentUser);
       } catch (err) {
         console.error('Error fetching current user:', err);
         return null;
@@ -97,7 +125,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
+      const userName = data.user?.full_name || data.user?.email || 'Utilisateur';
       toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
@@ -120,7 +148,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      const userName = data?.fullName || data?.email || 'Utilisateur';
+      const userName = (data as { full_name?: string })?.full_name || data?.email || 'Utilisateur';
       toast.success(`Compte créé avec succès! Bienvenue ${userName}!`);
       navigate('/dashboard');
     },
@@ -400,7 +428,7 @@ export function useAuthHex(): UseAuthHexResult {
   // ============================================================
 
   return {
-    user,
+    user: user ?? null,
     isLoading,
     error: error ? (error as Error).message : null,
     refetch,

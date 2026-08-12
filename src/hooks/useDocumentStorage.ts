@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { StorageFactory } from '@/application/services/StorageFactory';
-import { UploadResult, DownloadResult, DeleteResult } from '@/application/services/storage/StorageProvider';
+import { UploadResult, DownloadResult, DeleteResult } from '@/infrastructure/adapters/storage/storage/StorageProvider';
 
 export const useDocumentStorage = () => {
   const [uploading, setUploading] = useState(false);

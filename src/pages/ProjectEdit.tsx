@@ -206,7 +206,7 @@ const ProjectEdit = () => {
    */
   const handleRefresh = useCallback(async () => {
     if (id) {
-      await loadProjectData(id);
+      await loadProjectData();
       toast({
         title: "Rafraîchi",
         description: "Les données du projet ont été mises à jour",

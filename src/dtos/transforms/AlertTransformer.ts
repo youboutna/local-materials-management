@@ -58,6 +58,8 @@ const STATUS_LABELS: Record<AlertStatus, string> = {
   'acknowledged': 'Accusé',
   'resolved': 'Résolu',
   'closed': 'Fermé',
+  'active': 'Active',
+  'pending': 'En attente',
   'escalated': 'Escaladé'
 };
 
