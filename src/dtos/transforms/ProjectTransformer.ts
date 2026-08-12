@@ -922,6 +922,13 @@ export class ProjectTransformer {
     if (dto.closureNotes !== undefined) entityData.closureNotes = dto.closureNotes;
     if (dto.checkScheduleLastRun !== undefined) entityData.checkScheduleLastRun = dto.checkScheduleLastRun;
     if (dto.paymentWorkflowConfig !== undefined) entityData.paymentWorkflowConfig = dto.paymentWorkflowConfig;
+    // Cadre de passation & pilotage (manquants → perte de saisie à la création)
+    if (dto.marketType !== undefined) entityData.marketType = dto.marketType;
+    if (dto.selectionMode !== undefined) entityData.selectionMode = dto.selectionMode;
+    if ((dto as any).projectManagerId !== undefined) entityData.projectManagerId = (dto as any).projectManagerId;
+    if ((dto as any).technicalManagerId !== undefined) entityData.technicalManagerId = (dto as any).technicalManagerId;
+    if ((dto as any).supervisorId !== undefined) entityData.supervisorId = (dto as any).supervisorId;
+
 
     // === Zones d'intervention (multi-polygones) → localisation v3 ===
     const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
