@@ -27,9 +27,22 @@ export interface UserDTO extends BaseEntityDTO {
   isActive: boolean;
   lastLogin?: string;
   userRoles: UserRoleDTO[];
+  // Champs sécurité / activité (optionnels, alimentés par le provider d'auth)
+  hasTwoFactor?: boolean;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  hasCompletedProfile?: boolean;
+  lastPasswordChange?: string;
+  failedLoginAttempts?: number;
+  lastLoginAt?: string;
+  totalLogins?: number;
+  avgSessionDuration?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateUserDTO extends Omit<UserDTO, 'id' | 'createdAt' | 'updatedAt'> {}
 export interface UpdateUserDTO extends Partial<CreateUserDTO> {}
+
+// Ré-exports de compatibilité : les payloads d'authentification vivent dans AuthDTO
+export type { LoginData, RegisterData } from './AuthDTO';
