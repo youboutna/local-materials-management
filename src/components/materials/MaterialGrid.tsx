@@ -12,6 +12,7 @@ interface MaterialGridProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onMaterialClick: (material: MaterialUIDTO) => void;
+  onMaterialDelete?: (materialId: string) => void;
 }
 
 const MaterialGrid: React.FC<MaterialGridProps> = ({
@@ -20,7 +21,8 @@ const MaterialGrid: React.FC<MaterialGridProps> = ({
   totalPages,
   totalItems,
   onPageChange,
-  onMaterialClick
+  onMaterialClick,
+  onMaterialDelete
 }) => {
   const generateVisiblePages = () => {
     const delta = 2;
@@ -87,6 +89,7 @@ const MaterialGrid: React.FC<MaterialGridProps> = ({
             key={material.id}
             material={material}
             onClick={() => onMaterialClick(material)}
+            onDelete={onMaterialDelete}
           />
         ))}
       </div>
