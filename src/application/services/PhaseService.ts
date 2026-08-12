@@ -54,7 +54,7 @@ export class PhaseService {
       const phase = PhaseTransformer.fromCreateDTO({
         ...phaseData,
         name: resolvedName,
-        phaseName: resolvedName,
+        phase_name: resolvedName,
         projectId,
         status: PhaseStatus.PENDING,
         progress: 0,
