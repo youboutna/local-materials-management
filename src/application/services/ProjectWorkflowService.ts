@@ -406,6 +406,40 @@ export class ProjectWorkflowService {
     return this.getWorkflowSteps().find(s => s.order === order);
   }
 
+  /**
+   * Initialise un contexte de workflow (création ou édition).
+   * Retourne le contexte passé à `saveStep`.
+   */
+  initializeWorkflow(workflowType: 'creation' | 'edit' = 'creation', projectId?: string): {
+    workflowType: 'creation' | 'edit';
+    projectId?: string;
+    currentStep: number;
+    totalSteps: number;
+    startedAt: string;
+  } {
+    return {
+      workflowType,
+      projectId,
+      currentStep: 1,
+      totalSteps: this.getWorkflowSteps().length,
+      startedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Progression consolidée du projet (recalculée depuis les phases/tâches).
+   */
+  async calculateProjectProgress(projectId: string): Promise<number> {
+    if (!projectId) return 0;
+    try {
+      return await this.projectRepository.synchronizeProgress(projectId);
+    } catch (error) {
+      console.error('ProjectWorkflowService.calculateProjectProgress failed:', error);
+      const project = await this.projectRepository.findById(projectId);
+      return project?.progress ?? 0;
+    }
+  }
+
   async initializeEditWorkflow(projectId: string): Promise<ProjectWorkflowData> {
     try {
       const project = await this.projectRepository.findById(projectId);
@@ -886,5 +920,10 @@ export class ProjectWorkflowService {
 // Factory
 // ============================================================
 export function getProjectWorkflowService(): ProjectWorkflowService {
+  return ProjectWorkflowService.default();
+}
+
+/** Alias historique : crée/retourne une instance du service workflow */
+export function createProjectWorkflowService(): ProjectWorkflowService {
   return ProjectWorkflowService.default();
 }
