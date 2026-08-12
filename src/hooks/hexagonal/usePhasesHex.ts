@@ -256,6 +256,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
   return {
     phases,
     loading,
+    isLoading: loading,
     error,
     refetch: fetchPhases,
     createPhase,
