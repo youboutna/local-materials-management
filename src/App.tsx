@@ -528,6 +528,24 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
+                      {/* Alias historique — évite un 404 sur /comprehensive-monitoring */}
+                      <Route
+                        path="/comprehensive-monitoring"
+                        element={
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                              "engineering_consultant",
+                            ]}
+                          >
+                            <ComprehensiveMonitoringPage />
+                          </RoleBasedRoute>
+                        }
+                      />
+
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
