@@ -26,7 +26,10 @@ import {
   ProjectPhase as TaskProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
 import { useProjectTaskDependenciesHex } from '@/hooks/hexagonal/useProjectTaskDependenciesHex';
-// supabase removed - using hexagonal hooks
+import { getEmployeeService } from '@/application/services/EmployeeService';
+import { getSupplierService } from '@/application/services/SupplierService';
+import { getProjectService } from '@/application/services/ProjectService';
+// supabase removed - using hexagonal hooks and services
 
 interface Task {
   id: string;
@@ -190,14 +193,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async (): Promise<Employee[]> => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name, position')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-      return (data || []).filter(d => d.id && d.full_name).map(d => ({ id: d.id!, fullName: d.full_name!, position: d.position || '' }));
+      const activeEmployees = await getEmployeeService().getActiveEmployees();
+      return activeEmployees
+        .filter((emp) => !!emp.id && !!emp.fullName)
+        .map((emp) => ({ id: emp.id, fullName: emp.fullName, position: emp.position || '' }));
     },
   });
 
@@ -205,18 +204,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: suppliers = [] } = useQuery({
     queryKey: ['suppliers-active'],
     queryFn: async (): Promise<Supplier[]> => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name, contact_person')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-      return (data || []).filter(d => d.id && d.name).map(supplier => ({
-        id: supplier.id!,
-        name: supplier.name!,
-        contact_person: supplier.contact_person || undefined
-      }));
+      const activeSuppliers = await getSupplierService().getActiveSuppliers();
+      return activeSuppliers
+        .filter((supplier) => !!supplier.id && !!supplier.name)
+        .map((supplier) => ({
+          id: supplier.id,
+          name: supplier.name,
+          contact_person: supplier.contacts?.[0]?.name || undefined,
+          type: supplier.category === 'consultant' ? 'consultant' : supplier.category === 'subcontractor' ? 'contractor' : undefined,
+        }));
     },
   });
 
@@ -224,111 +220,16 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: projectData } = useQuery({
     queryKey: ['project-contractor', projectId],
     queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('projects')
-        .select('main_contractor')
-        .eq('id', projectId)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      const summary = await getProjectService().getProjectSummary(projectId);
+      return summary ? { mainContractor: summary.mainContractor } : null;
     },
     enabled: !!projectId,
   });
 
-  // Create task mutation
-  const createTaskMutation = useMutation({
-    mutationFn: async (data: Partial<TaskAssignmentExtended>) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('task_assignments')
-        .insert([{
-          ...data,
-          title: data.title || 'Untitled Task'
-        }]);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
-      setIsCreating(false);
-      resetForm();
-      toast({
-        title: "Tâche créée",
-        description: "La tâche a été créée avec succès.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la tâche.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update task mutation
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<TaskAssignmentExtended> & { id: string }) => {
-      const updateData: any = {
-        ...data,
-        title: data.title || undefined,
-      };
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(updateData)
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
-      setEditingId(null);
-      resetForm();
-      toast({
-        title: "Tâche mise à jour",
-        description: "La tâche a été mise à jour avec succès.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating task:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour la tâche.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete task mutation
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
-      toast({
-        title: "Tâche supprimée",
-        description: "La tâche a été supprimée avec succès.",
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting task:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la tâche.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Task CRUD via hooks hexagonaux (TaskAssignmentService)
+  const createProjectTask = useCreateProjectTask(projectId);
+  const updateProjectTask = useUpdateProjectTask(projectId);
+  const deleteProjectTask = useDeleteProjectTask(projectId);
 
   const resetForm = () => {
     setFormData({
@@ -424,6 +325,35 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     };
   };
 
+  const buildTaskPayload = (phaseId: string, titleSuffix?: string): ProjectTaskFormData => {
+    const assigneeInfo = getAssigneeInfo(formData.assignedTo || null);
+    return {
+      title: titleSuffix ? `${formData.title} - ${titleSuffix}` : formData.title,
+      description: formData.description || undefined,
+      projectId,
+      phaseId,
+      assignedTo: formData.assignedTo || undefined,
+      assigneeType: assigneeInfo.assignee_type || undefined,
+      assigneeName: assigneeInfo.assignee_name || undefined,
+      assigneeEmail: assigneeInfo.assignee_email || undefined,
+      dueDate: formData.dueDate || undefined,
+      priority: formData.priority,
+      status: formData.status,
+      notes: formData.notes || undefined,
+      estimatedDuration: formData.estimated_duration ? parseInt(formData.estimated_duration) : undefined,
+      startDate: formData.startDate || undefined,
+      endDate: formData.endDate || undefined,
+      estimatedCost: formData.cost_estimate ? parseFloat(formData.cost_estimate) : undefined,
+      metadata: {
+        weight: formData.weight ? parseFloat(formData.weight) : 1,
+        optimisticEstimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : undefined,
+        pessimisticEstimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : undefined,
+        mostLikelyEstimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : undefined,
+        criticalPath: formData.critical_path,
+      },
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -446,110 +376,47 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     }
 
     try {
-      const tasksToCreate: any[] = [];
-
-      if (formData.applyToAllPhases) {
-        // Create task for each phase
-        currentPhases.forEach(phase => {
-          const assigneeInfo = getAssigneeInfo(formData.assignedTo || null);
-          tasksToCreate.push({
-            title: `${formData.title} - ${phase.name}`,
-            description: formData.description || null,
-            projectId: projectId,
-            phaseId: phase.id,
-            assignedTo: formData.assignedTo || null,
-            assigned_by: null,
-            ...assigneeInfo,
-            dueDate: formData.dueDate || null,
-            priority: formData.priority,
-            status: formData.status,
-            notes: formData.notes || null,
-            estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
-            startDate: formData.startDate || null,
-            endDate: formData.endDate || null,
-            weight: formData.weight ? parseFloat(formData.weight) : 1,
-            cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
-            optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
-            pessimistic_estimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : null,
-            most_likely_estimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : null,
-            critical_path: formData.critical_path,
-          });
-        });
+      if (editingId) {
+        const payload = buildTaskPayload(formData.phaseId);
+        await updateProjectTask.mutateAsync({ id: editingId, data: payload });
+      } else if (formData.applyToAllPhases) {
+        await Promise.all(
+          currentPhases.map((phase) =>
+            createProjectTask.mutateAsync(buildTaskPayload(phase.id, phase.name))
+          )
+        );
       } else {
-        // Create single task for selected phase
-        const assigneeInfo = getAssigneeInfo(formData.assignedTo || null);
-        tasksToCreate.push({
-          title: formData.title,
-          description: formData.description || null,
-          projectId: projectId,
-          phaseId: formData.phaseId,
-          assignedTo: formData.assignedTo || null,
-          assigned_by: null,
-          ...assigneeInfo,
-          dueDate: formData.dueDate || null,
-          priority: formData.priority,
-          status: formData.status,
-          notes: formData.notes || null,
-          estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
-          startDate: formData.startDate || null,
-          endDate: formData.endDate || null,
-          weight: formData.weight ? parseFloat(formData.weight) : 1,
-          cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
-          optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
-          pessimistic_estimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : null,
-          most_likely_estimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : null,
-          critical_path: formData.critical_path,
-        });
+        await createProjectTask.mutateAsync(buildTaskPayload(formData.phaseId));
       }
 
-      if (tasksToCreate.length > 0) {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data, error } = await supabase
-          .from('task_assignments')
-          .insert(tasksToCreate as any)
-          .select();
-
-        if (error) throw error;
-
-        // Refresh tasks
-        queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
-        setIsCreating(false);
-        resetForm();
-
-        toast({
-          title: "Tâche créée",
-          description: `${tasksToCreate.length} tâche(s) créée(s) avec succès.`,
-        });
-      }
+      setIsCreating(false);
+      setEditingId(null);
+      resetForm();
     } catch (error) {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la tâche.",
-        variant: "destructive",
-      });
+      console.error('Error saving task:', error);
     }
   };
 
-  const handleEdit = (task: TaskAssignmentExtended) => {
+  const handleEdit = (task: ProjectTask) => {
+    const metadata = (task.metadata || {}) as Record<string, unknown>;
     setFormData({
       title: task.title || '',
       description: task.description || '',
       phaseId: task.phaseId || '',
-      assignedTo: task.assignedTo || '',
+      assignedTo: task.assigneeId || (Array.isArray(task.assignedTo) ? task.assignedTo[0] : '') || '',
       dueDate: task.dueDate || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
       notes: task.notes || '',
-      estimated_duration: task.estimated_duration?.toString() || '',
+      estimated_duration: task.estimatedDuration?.toString() || '',
       startDate: task.startDate || '',
       endDate: task.endDate || '',
-      weight: task.weight?.toString() || '1',
-      cost_estimate: task.cost_estimate?.toString() || '',
-      optimistic_estimate: task.optimistic_estimate?.toString() || '',
-      pessimistic_estimate: task.pessimistic_estimate?.toString() || '',
-      most_likely_estimate: task.most_likely_estimate?.toString() || '',
-      critical_path: task.critical_path || false,
+      weight: (metadata.weight as number | undefined)?.toString() || '1',
+      cost_estimate: task.estimatedCost?.toString() || '',
+      optimistic_estimate: (metadata.optimisticEstimate as number | undefined)?.toString() || '',
+      pessimistic_estimate: (metadata.pessimisticEstimate as number | undefined)?.toString() || '',
+      most_likely_estimate: (metadata.mostLikelyEstimate as number | undefined)?.toString() || '',
+      critical_path: (metadata.criticalPath as boolean) || false,
       applyToAllPhases: false,
     });
     setEditingId(task.id);
@@ -808,11 +675,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                           </SelectItem>
                         ))}
                       </SelectGroup>
-                      {projectData?.main_contractor && (
+                      {projectData?.mainContractor && (
                         <SelectGroup>
                           <SelectLabel>Contractant principal</SelectLabel>
-                          <SelectItem value={projectData.main_contractor}>
-                            {projectData.main_contractor}
+                          <SelectItem value={projectData.mainContractor}>
+                            {projectData.mainContractor}
                           </SelectItem>
                         </SelectGroup>
                       )}
@@ -892,7 +759,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     {task.dueDate && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(task.dueDate).toLocaleDateString()}
+                        {(() => {
+                          const d = new Date(task.dueDate);
+                          return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+                        })()}
                       </span>
                     )}
                   </div>
@@ -919,7 +789,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => deleteTaskMutation.mutate(task.id)}
+                    onClick={() => deleteProjectTask.mutate(task.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
