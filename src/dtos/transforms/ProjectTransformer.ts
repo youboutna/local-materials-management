@@ -51,6 +51,52 @@ interface ProjectDTOWithCollections extends ProjectDTO {
 
 export class ProjectTransformer {
 
+  // =================== STATUT (DB legacy → enum UI) ===================
+
+  /**
+   * La colonne `projects.status` stocke des valeurs legacy contraintes
+   * (« en cours », « en attente », « terminé », …) alors que l'UI travaille
+   * avec l'enum `ProjectStatus` (`en_cours_v2`, `en_attente`, …).
+   * Sans cette normalisation, le `Select` « Statut » n'affiche rien en édition.
+   */
+  static toUiStatus(raw: unknown): ProjectStatus {
+    if (raw === undefined || raw === null || raw === '') return ProjectStatus.EN_ATTENTE;
+    const value = String(raw);
+    // Valeur déjà conforme à l'enum → on la conserve.
+    if ((Object.values(ProjectStatus) as string[]).includes(value)) {
+      return value as ProjectStatus;
+    }
+    const key = value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s_-]/g, '')
+      .replace(/v2$/, '');
+    const map: Record<string, ProjectStatus> = {
+      encours: ProjectStatus.EN_COURS,
+      enconstruction: ProjectStatus.EN_CONSTRUCTION,
+      attribue: ProjectStatus.ATTRIBUE,
+      planifie: ProjectStatus.PLANIFIE,
+      planned: ProjectStatus.PLANNED,
+      enconception: ProjectStatus.EN_CONCEPTION,
+      enretard: ProjectStatus.EN_RETARD,
+      eninspection: ProjectStatus.EN_INSPECTION,
+      enreview: ProjectStatus.EN_REVIEW,
+      enattente: ProjectStatus.EN_ATTENTE,
+      draft: ProjectStatus.DRAFT,
+      brouillon: ProjectStatus.DRAFT,
+      prequalification: ProjectStatus.PRE_QUALIFICATION,
+      termine: ProjectStatus.TERMINE,
+      completed: ProjectStatus.COMPLETED,
+      encloture: ProjectStatus.EN_CLOTURE,
+      suspendu: ProjectStatus.SUSPENDU,
+      annule: ProjectStatus.ANNULE,
+      cancelled: ProjectStatus.ANNULE,
+    };
+    return map[key] ?? ProjectStatus.EN_ATTENTE;
+  }
+
+
   // =================== DOMAIN HELPERS (Localisation v3) ===================
 
   /** Un couple lat/lng est exploitable seulement s'il est fini, borné et non (0,0). */
