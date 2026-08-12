@@ -36,7 +36,13 @@ export class PhaseService {
    */
   async createPhase(phaseData: PhaseDTO, projectId: string): Promise<Phase> {
     try {
-      if (!phaseData.name) {
+      // L'UI produit des formes hétérogènes (`title`, `phaseName`, `name`).
+      const raw = phaseData as unknown as Record<string, unknown>;
+      const resolvedName = String(
+        (raw.name as string) || (raw.phaseName as string) || (raw.title as string) || ''
+      ).trim();
+
+      if (!resolvedName) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase name is required');
       }
 
@@ -47,6 +53,8 @@ export class PhaseService {
       // Create phase entity
       const phase = PhaseTransformer.fromCreateDTO({
         ...phaseData,
+        name: resolvedName,
+        phase_name: resolvedName,
         projectId,
         status: PhaseStatus.PENDING,
         progress: 0,
