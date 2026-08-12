@@ -42,10 +42,22 @@ const OrganizationsManager: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const organizations = useMemo<OrganizationDTO[]>(() => data ?? [], [data]);
-  const parentOptions = useMemo(
-    () => organizations.filter((o) => o.id !== editingId),
-    [organizations, editingId]
-  );
+  const parentOptions = useMemo(() => {
+    if (!editingId) return organizations;
+    const descendants = new Set<string>([editingId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      organizations.forEach((o) => {
+        if (o.parentId && descendants.has(o.parentId) && !descendants.has(o.id)) {
+          descendants.add(o.id);
+          changed = true;
+        }
+      });
+    }
+    return organizations.filter((o) => !descendants.has(o.id));
+  }, [organizations, editingId]);
+
 
   const resetForm = () => {
     setForm(emptyForm);
