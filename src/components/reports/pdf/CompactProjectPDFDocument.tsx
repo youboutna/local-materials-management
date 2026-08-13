@@ -826,7 +826,9 @@ export function CompactProjectPDFDocument({
                 </View>
 
                 {/* Dépenses Engagées */}
+                {activeSections.financial && (
                 <View style={styles.section}>
+
                   <Text style={styles.sectionTitle}>Dépenses Engagées</Text>
                   <View style={styles.table}>
                     <View style={styles.tableHeader}>
@@ -860,12 +862,16 @@ export function CompactProjectPDFDocument({
                     )}
                   </View>
                 </View>
+                )}
+
               </View>
 
               {/* Right Column */}
               <View style={styles.column}>
                 {/* Risques Identifiés */}
+                {activeSections.risks && (
                 <View style={styles.section}>
+
                   <Text style={styles.sectionTitle}>Risques Identifiés</Text>
                   <View style={styles.table}>
                     <View style={styles.tableHeader}>
@@ -898,39 +904,81 @@ export function CompactProjectPDFDocument({
                     )}
                   </View>
                 </View>
+                )}
 
-                {/* Conformité & Validation */}
+                {/* Conformité & Validation — indicateurs issus des données réelles */}
+                {(activeSections.inspections || activeSections.documents) && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Conformité & Validation</Text>
-                  <View style={styles.conformityGrid}>
-                    <View style={styles.conformityItem}>
-                      <Text style={styles.conformityLabel}>Standards</Text>
-                      <View style={[styles.conformityBadge, { backgroundColor: '#dcfce7' }]}>
-                        <Text style={{ fontSize: 6, color: colors.success }}>conforme</Text>
-                      </View>
-                    </View>
-                    <View style={styles.conformityItem}>
-                      <Text style={styles.conformityLabel}>Bailleurs</Text>
-                      <View style={[styles.conformityBadge, { backgroundColor: '#dcfce7' }]}>
-                        <Text style={{ fontSize: 6, color: colors.success }}>conforme</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.conformityGrid}>
-                    <View style={styles.conformityItem}>
-                      <Text style={styles.conformityLabel}>Inspections</Text>
-                      <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
-                        {enrichedData?.tasks?.length || 0}
-                      </Text>
-                    </View>
-                    <View style={styles.conformityItem}>
-                      <Text style={styles.conformityLabel}>Documents</Text>
-                      <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
-                        {phases.length * 3 || 0}
-                      </Text>
-                    </View>
-                  </View>
+                  <Text style={styles.sectionTitle}>Conformité &amp; Validation</Text>
+                  {(() => {
+                    const inspectionsList = Array.isArray((enrichedData as any)?.inspections)
+                      ? (enrichedData as any).inspections
+                      : [];
+                    const documentsList = Array.isArray((enrichedData as any)?.documents)
+                      ? (enrichedData as any).documents
+                      : [];
+                    const approvedDocs = documentsList.filter((d: any) =>
+                      ['approved', 'validated', 'approuve'].includes(String(d?.status ?? '').toLowerCase()),
+                    ).length;
+                    const compliantInspections = inspectionsList.filter((i: any) =>
+                      ['completed', 'compliant', 'conforme', 'validated'].includes(
+                        String(i?.status ?? '').toLowerCase(),
+                      ),
+                    ).length;
+                    const docRate = documentsList.length
+                      ? (approvedDocs / documentsList.length) * 100
+                      : 0;
+                    const inspRate = inspectionsList.length
+                      ? (compliantInspections / inspectionsList.length) * 100
+                      : 0;
+                    const badge = (rate: number, total: number) => {
+                      if (total === 0) return { bg: '#f3f4f6', color: colors.muted, label: 'non évalué' };
+                      if (rate >= 80) return { bg: '#dcfce7', color: colors.success, label: 'conforme' };
+                      if (rate >= 50) return { bg: '#fef9c3', color: colors.warning, label: 'partiel' };
+                      return { bg: '#fee2e2', color: colors.danger, label: 'non conforme' };
+                    };
+                    const docBadge = badge(docRate, documentsList.length);
+                    const inspBadge = badge(inspRate, inspectionsList.length);
+                    return (
+                      <>
+                        <View style={styles.conformityGrid}>
+                          <View style={styles.conformityItem}>
+                            <Text style={styles.conformityLabel}>Documents validés</Text>
+                            <View style={[styles.conformityBadge, { backgroundColor: docBadge.bg }]}>
+                              <Text style={{ fontSize: 6, color: docBadge.color }}>
+                                {docBadge.label} ({formatDecimal(docRate)}%)
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={styles.conformityItem}>
+                            <Text style={styles.conformityLabel}>Inspections conformes</Text>
+                            <View style={[styles.conformityBadge, { backgroundColor: inspBadge.bg }]}>
+                              <Text style={{ fontSize: 6, color: inspBadge.color }}>
+                                {inspBadge.label} ({formatDecimal(inspRate)}%)
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <View style={styles.conformityGrid}>
+                          <View style={styles.conformityItem}>
+                            <Text style={styles.conformityLabel}>Inspections</Text>
+                            <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
+                              {inspectionsList.length}
+                            </Text>
+                          </View>
+                          <View style={styles.conformityItem}>
+                            <Text style={styles.conformityLabel}>Documents</Text>
+                            <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
+                              {documentsList.length}
+                            </Text>
+                          </View>
+                        </View>
+                      </>
+                    );
+                  })()}
                 </View>
+                )}
+
               </View>
             </View>
 
