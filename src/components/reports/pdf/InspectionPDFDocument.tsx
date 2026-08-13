@@ -105,12 +105,12 @@ export function InspectionPDFDocument({
             />
             <PDFMetricCard
               title="Taux de Conformité"
-              value={`${metrics.complianceRate.toFixed(1)}%`}
+              value={`${metrics.complianceRate.toFixed(2)}%`}
               color="#059669"
             />
             <PDFMetricCard
               title="Score Moyen"
-              value={`${metrics.averageScore.toFixed(1)}%`}
+              value={`${metrics.averageScore.toFixed(2)}%`}
               color="#8b5cf6"
             />
           </PDFRow>
@@ -177,7 +177,7 @@ export function InspectionPDFDocument({
               photo.title || photo.file_name || 'Document',
               photo.document_type || 'Photo',
               photo.created_at ? format(new Date(photo.created_at), 'dd/MM/yyyy') : 'N/A',
-              photo.file_size ? `${(photo.file_size / 1024).toFixed(1)} KB` : 'N/A'
+              photo.file_size ? `${(photo.file_size / 1024).toFixed(2)} KB` : 'N/A'
             ])}
             columnWidths={['40%', '20%', '20%', '20%']}
           />

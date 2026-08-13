@@ -168,7 +168,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="text-align: center; margin-bottom: 20px;">
               <div style="display: inline-block; padding: 20px; background: white; border-radius: 50%; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                <span style="font-size: 32px; font-weight: bold; color: #059669;">${qualityScore.score.toFixed(1)}%</span>
+                <span style="font-size: 32px; font-weight: bold; color: #059669;">${qualityScore.score.toFixed(2)}%</span>
               </div>
               <p style="margin: 10px 0 5px 0; font-size: 18px; font-weight: 600; color: #065f46;">${qualityScore.grade}</p>
               <p style="margin: 0; color: #374151; line-height: 1.5;">${qualityScore.interpretation}</p>
@@ -241,7 +241,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             { label: 'Document', render: (item: any) => item.name || item.title || item.file_name || '', width: '40%' },
             { label: 'Type', render: (item: any) => item.type || item.document_type || 'Photo', width: '20%' },
             { label: 'Date', render: (item: any) => (item.uploadedAt || item.created_at) ? format(new Date(item.uploadedAt || item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
-            { label: 'Taille', render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
+            { label: 'Taille', render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(2)} KB` : 'N/A', width: '20%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Photos et Documents'
@@ -489,11 +489,11 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Taux de Conformité</p>
-              <p className="font-bold text-lg text-blue-600">{metrics.complianceRate.toFixed(1)}%</p>
+              <p className="font-bold text-lg text-blue-600">{metrics.complianceRate.toFixed(2)}%</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Score Moyen</p>
-              <p className="font-bold text-lg text-purple-600">{metrics.averageScore.toFixed(1)}%</p>
+              <p className="font-bold text-lg text-purple-600">{metrics.averageScore.toFixed(2)}%</p>
             </div>
           </div>
         )}
