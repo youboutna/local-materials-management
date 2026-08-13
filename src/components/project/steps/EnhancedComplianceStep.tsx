@@ -408,6 +408,24 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     return (completed / complianceItems.length) * 100;
   };
 
+  // Documents rattachés à la conformité réglementaire (contexte d'upload = compliance)
+  const regulatoryDocuments = useMemo(
+    () =>
+      documents.filter((doc) => {
+        const meta = (doc.metadata ?? {}) as Record<string, unknown>;
+        return (
+          meta.context === 'compliance' ||
+          String(doc.documentType ?? '').startsWith('regulatory') ||
+          String(doc.documentType ?? '').includes('permit') ||
+          String(doc.documentType ?? '').includes('authorization')
+        );
+      }),
+    [documents]
+  );
+
+  // Nombre d'éléments réglementaires (contrôles + pièces justificatives)
+  const regulatoryCount = complianceItems.length + regulatoryDocuments.length;
+
   // Calculate stats
   const stats = useMemo(() => ({
     total: complianceItems.length,
@@ -415,6 +433,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     pending: complianceItems.filter(i => String(i.status) === 'pending' || String(i.status) === 'in_review').length,
     rejected: complianceItems.filter(i => i.status === 'rejected').length,
   }), [complianceItems]);
+
 
   // ============================================================
   // Render
