@@ -354,46 +354,30 @@ export class ProjectCalculationService {
     };
   }
 
-  // ============= EVM Calculations =============
+  // ============= EVM Calculations (délégation moteur unique) =============
 
+  /**
+   * @deprecated Utiliser `ProjectMetricsOrchestrator.compute().evm`.
+   * Conservé pour compatibilité : délègue intégralement à `EvmService`
+   * (moteur EVM UNIQUE) — plus aucun calcul local.
+   */
   static calculateEVMMetrics(project: ProjectDetailDTO): EVMCalculations {
-    const tasks = project.tasks || [];
-    const currentDate = new Date();
-    const projectStartDate = new Date(project.startDate);
-    const projectEndDate = project.endDate ? new Date(project.endDate) : new Date();
-    
-    const totalDuration = Math.max(1, (projectEndDate.getTime() - projectStartDate.getTime()) / (1000 * 60 * 60 * 24));
-    const elapsedDuration = Math.max(0, (currentDate.getTime() - projectStartDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    const plannedValue = project.budget * Math.min(1, elapsedDuration / totalDuration);
-    const earnedValue = project.budget * (project.progress / 100);
-    const actualCost = tasks.reduce((sum, task) => sum + (task.actualCost || 0), 0);
-    
-    const scheduleVariance = earnedValue - plannedValue;
-    const costVariance = earnedValue - actualCost;
-    
-    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 0;
-    const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 0;
-    
-    const budgetAtCompletion = project.budget;
-    const estimateAtCompletion = costPerformanceIndex > 0 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
-    const estimateToComplete = estimateAtCompletion - actualCost;
-    const varianceAtCompletion = budgetAtCompletion - estimateAtCompletion;
-
-    return {
-      plannedValue,
-      earnedValue,
-      actualCost,
-      scheduleVariance,
-      costVariance,
-      schedulePerformanceIndex,
-      costPerformanceIndex,
-      budgetAtCompletion,
-      estimateAtCompletion,
-      estimateToComplete,
-      varianceAtCompletion
-    };
+    const tasks = (project.tasks || []) as Array<{ actualCost?: number }>;
+    const metrics = ProjectMetricsOrchestrator.compute({
+      project: {
+        id: project.id,
+        title: project.title,
+        budget: project.budget,
+        progress: project.progress,
+        startDate: project.startDate,
+        endDate: project.endDate,
+      },
+      phases: ((project as any).phases || []) as any[],
+      actualCost: tasks.reduce((sum, task) => sum + (Number(task.actualCost) || 0), 0),
+    });
+    return EvmService.toLegacyMetrics(metrics.evm) as unknown as EVMCalculations;
   }
+
 
   // ============= Health Score Calculation =============
 
