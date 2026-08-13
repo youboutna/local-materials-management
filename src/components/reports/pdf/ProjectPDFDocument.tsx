@@ -168,6 +168,32 @@ export function ProjectPDFDocument({
     constructionMilestones: reportData?.constructionMilestones || []
   };
 
+  // --- Cohérence EVM : indices indéterminés → « N/A », jamais « sous budget » ---
+  const hasActualCost = (evmMetrics as any)?.hasActualCost ?? ((evmMetrics?.actualCost ?? 0) > 0);
+  const hasPlannedValue = (evmMetrics as any)?.hasPlannedValue ?? ((evmMetrics?.plannedValue ?? 0) > 0);
+
+  // Avancement unifié : TEP pondéré des phases (source unique) sinon avancement projet.
+  const weightedPhases = (enrichedData?.phases?.length ? enrichedData.phases : safeReportData.phases) as any[];
+  const weighted = PhaseWeightingService.computeWeightedProgress(
+    (weightedPhases || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      weight: p.weight ?? p.weight_percentage,
+      budget: p.budget ?? p.estimatedCost ?? p.estimated_cost,
+      startDate: p.startDate ?? p.start_date,
+      endDate: p.endDate ?? p.end_date,
+      progress: p.actualProgress ?? p.progress ?? 0,
+    })),
+  );
+  const unifiedProgress = weighted.isEmpty
+    ? Number((evmMetrics as any)?.progress ?? project.progress ?? 0)
+    : weighted.progress;
+  const plannedProgress =
+    (evmMetrics as any)?.plannedProgress ??
+    EvmService.plannedProgress(project.startDate as any, project.endDate as any);
+
+
+
   return (
     <PDFDocument
       title={reportConfig.title}
