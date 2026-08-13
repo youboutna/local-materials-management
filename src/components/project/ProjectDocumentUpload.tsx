@@ -43,10 +43,8 @@ const ProjectDocumentUpload = ({
   contextLabel,
   onDocumentUploaded 
 }: ProjectDocumentUploadProps) => {
-  const DOCUMENT_CATEGORIES = getDocumentCategoriesByContext(context);
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof DOCUMENT_CATEGORIES>(
-    Object.keys(DOCUMENT_CATEGORIES)[0] as keyof typeof DOCUMENT_CATEGORIES
-  );
+  const documentCategories = React.useMemo(() => getDocumentCategoriesForContext(context), [context]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(documentCategories[0]?.key ?? 'other');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -144,7 +142,7 @@ const ProjectDocumentUpload = ({
     }
   });
 
-  const handleCategoryChange = (category: keyof typeof DOCUMENT_CATEGORIES) => {
+  const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setFormData(prev => ({ ...prev, documentType: '' as DocumentType }));
   };
@@ -179,7 +177,7 @@ const ProjectDocumentUpload = ({
     }
   };
 
-  const availableTypes = DOCUMENT_CATEGORIES[selectedCategory]?.types || [];
+  const availableTypes = documentCategories.find((c) => c.key === selectedCategory)?.types ?? [];
 
   return (
     <Card>
@@ -212,12 +210,12 @@ const ProjectDocumentUpload = ({
           <div className="space-y-2">
             <Label>Catégorie de Document *</Label>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(DOCUMENT_CATEGORIES).map(([key, category]) => (
+              {documentCategories.map((category) => (
                 <Badge
-                  key={key}
-                  variant={selectedCategory === key ? "default" : "outline"}
+                  key={category.key}
+                  variant={selectedCategory === category.key ? "default" : "outline"}
                   className="cursor-pointer hover:bg-primary/20"
-                  onClick={() => handleCategoryChange(key as keyof typeof DOCUMENT_CATEGORIES)}
+                  onClick={() => handleCategoryChange(category.key)}
                 >
                   {category.label}
                 </Badge>
