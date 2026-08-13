@@ -79,15 +79,20 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
   );
   const [radius, setRadius] = useState<number>(zone?.radiusMeters ?? 500);
 
-  // Reset when zone changes
+  // Reset when zone changes — comparaison par signature : le parent peut
+  // recréer l'objet `zone` à chaque render (mémo instable), ce qui provoquait
+  // une boucle « Maximum update depth exceeded ».
+  const zoneSignature = zone ? JSON.stringify(zone) : '';
+  const lastZoneSignature = useRef<string>('');
   React.useEffect(() => {
-    if (zone) {
-      setLabel(zone.label ?? '');
-      setAddress(zone.address ?? '');
-      setCoords(zone.coordinates ?? []);
-      setRadius(zone.radiusMeters ?? 500);
-    }
-  }, [zone]);
+    if (!zone || zoneSignature === lastZoneSignature.current) return;
+    lastZoneSignature.current = zoneSignature;
+    setLabel(zone.label ?? '');
+    setAddress(zone.address ?? '');
+    setCoords(zone.coordinates ?? []);
+    setRadius(zone.radiusMeters ?? 500);
+  }, [zone, zoneSignature]);
+
 
   const center = useMemo(() => centroid(coords), [coords]);
 
