@@ -30,6 +30,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 /**
  * Composant de détail d'un matériau
@@ -212,7 +213,7 @@ const MaterialDetail = () => {
                 <div>
                   <p className="text-sm text-gray-600">Prix unitaire</p>
                   <p className="font-medium">
-                    {material.pricePerUnit.toLocaleString("fr-FR")} MRU/
+                    {formatAmount2(material.pricePerUnit)}/
                     {material.unit}
                   </p>
                 </div>

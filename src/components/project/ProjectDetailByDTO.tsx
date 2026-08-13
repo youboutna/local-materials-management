@@ -47,6 +47,7 @@ import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import { useProjectMetrics } from "@/hooks/useProjectMetrics";
 import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
+import { formatAmount2 } from "@/utils/reportNumbers";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -705,6 +706,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return { total, completed, inProgress };
   }, [computedPhases, project?.phasesCount, project?.status, project?.progress]);
 
+  // ============ Métriques projet — SOURCE UNIQUE (ProjectMetricsOrchestrator) ============
+  const totalPaymentsSpent = useMemo(
+    () => paymentsSource.reduce((sum, p: any) => sum + (p.amount || 0), 0),
+    [paymentsSource],
+  );
+
+  const initialPaymentAmount = useMemo(
+    () => (((project as ProjectSummaryDTO)?.budget || 0) * ((project as ProjectSummaryDTO)?.initialPaymentPercentage || 0)) / 100,
+    [project],
+  );
+
+  const metricsInput = useMemo(() => {
+    if (!project) return null;
+    return {
+      project: {
+        id: project.id,
+        title: project.title,
+        budget: project.budget ?? 0,
+        progress: project.progress ?? 0,
+        startDate: project.startDate ?? null,
+        endDate: project.endDate ?? null,
+        interventionZones: interventionZones,
+        currency: "MRU",
+      },
+      phases: computedPhases.map((p: any) => ({
+        id: p.id,
+        name: p.phase ?? p.phase_name,
+        budget: p.budget,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        progress: p.progress ?? 0,
+        status: p.status,
+      })),
+      actualCost: totalPaymentsSpent || (project as any)?.actualCost || 0,
+      inspectionsCount: inspectionsSource.length,
+      documentsCount: documentsData.length,
+      risks: risksSource as any[],
+      milestones: ((projectDetail as any)?.milestones ?? []).map((m: any) => ({
+        id: m.id,
+        name: m.title,
+        status: m.status,
+        progress: m.progress,
+        dueDate: m.targetDate,
+      })),
+    };
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent]);
+
+  const metrics = useProjectMetrics(metricsInput);
+
   // ============ Suppression ============
   const handleDelete = async (projectIdToDelete: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.`)) {
@@ -1029,10 +1079,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {typeof milestoneProgress === 'number' ? milestoneProgress : 0}
+                      {metrics?.milestoneProgress.completed ?? 0} / {metrics?.milestoneProgress.total ?? 0}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Progression: {typeof milestoneProgress === 'number' ? milestoneProgress : 0}%
+                      Progression: {metrics?.formatted.milestoneProgress ?? '0,00 %'}
                     </p>
                   </div>
                 </div>
@@ -1056,7 +1106,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview
             budget={project.budget || 0}
-            spent={paymentsSource.reduce((sum, p) => sum + (p.amount || 0), 0)}
+            spent={metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
             financialMetrics={{}}
           />
@@ -1097,11 +1147,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       {(project as ProjectSummaryDTO).initialPaymentPercentage}% du montant total
                     </p>
                     <p className="font-semibold text-green-700">
-                      {(
-                        (((project as ProjectSummaryDTO).budget || 0) *
-                          ((project as ProjectSummaryDTO).initialPaymentPercentage || 0)) /
-                        100
-                      ).toLocaleString()} MRU
+                      {formatAmount2(initialPaymentAmount, "MRU")}
                     </p>
                   </div>
                 )}
@@ -1239,7 +1285,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 </TabsList>
 
                 <TabsContent value="gantt">
-                  <GanttChart projectId={projectId!} />
+                  {metrics ? (
+                    <ProjectGanttTimeline gantt={metrics.gantt} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="pert">

@@ -18,6 +18,7 @@ import { fr } from 'date-fns/locale';
 import { CheckCircle, FileDown, Loader2, Mail, Upload } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
+import { formatNumber2 } from '@/utils/reportNumbers';
 
 // Mapping functions for type compatibility
 const mapTenderEstimateToEstimateData = (tenderEstimate: TenderEstimateDTO): EstimateData => {
@@ -276,8 +277,8 @@ export function QuantitativeEstimateExporter({
                                    padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.item_type || 'autre'}</span>
                     </td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">${item.quantity || 0}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; vertical-align: top;">${(item.unit_price || 0).toLocaleString('fr-FR')}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${(item.total_price || 0).toLocaleString('fr-FR')}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; vertical-align: top;">${formatNumber2((item.unit_price || 0))}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${formatNumber2((item.total_price || 0))}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -294,41 +295,41 @@ export function QuantitativeEstimateExporter({
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Matériaux:</strong></td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.materialsCost.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.materialsCost)} ${estimate.currency}</td>
               </tr>
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Main-d'œuvre:</strong></td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.laborCost.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.laborCost)} ${estimate.currency}</td>
               </tr>
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Équipement:</strong></td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.equipmentCost.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.equipmentCost)} ${estimate.currency}</td>
               </tr>
               ${totals.otherCost > 0 ? `
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Autres:</strong></td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.otherCost.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.otherCost)} ${estimate.currency}</td>
               </tr>
               ` : ''}
               <tr style="background: #f8f9fa;">
                 <td style="padding: 8px 0; font-weight: bold;"><strong>Sous-total HT:</strong></td>
-                <td style="padding: 8px 0; text-align: right; font-weight: bold;">${totals.subtotal.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: bold;">${formatNumber2(totals.subtotal)} ${estimate.currency}</td>
               </tr>
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">TVA (${estimate.tax_rate}%):</td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.taxAmount.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.taxAmount)} ${estimate.currency}</td>
               </tr>
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">Frais généraux (${estimate.overhead_percentage}%):</td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${totals.overheadAmount.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.overheadAmount)} ${estimate.currency}</td>
               </tr>
               <tr>
                 <td style="padding: 5px 0; border-bottom: 2px solid #333;">Marge bénéficiaire (${estimate.profit_margin_percentage}%):</td>
-                <td style="padding: 5px 0; text-align: right; border-bottom: 2px solid #333;">${totals.profitAmount.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 5px 0; text-align: right; border-bottom: 2px solid #333;">${formatNumber2(totals.profitAmount)} ${estimate.currency}</td>
               </tr>
               <tr style="background: #dbeafe;">
                 <td style="padding: 12px 0; font-weight: bold; font-size: 16px; color: #2563eb;"><strong>TOTAL GÉNÉRAL TTC:</strong></td>
-                <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px; color: #2563eb;">${totals.finalTotal.toLocaleString('fr-FR')} ${estimate.currency}</td>
+                <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px; color: #2563eb;">${formatNumber2(totals.finalTotal)} ${estimate.currency}</td>
               </tr>
             </table>
           </div>
@@ -463,7 +464,7 @@ export function QuantitativeEstimateExporter({
           <p><strong>Référence:</strong> ${tender?.projectReference || 'N/A'}</p>
           <p><strong>Date de génération:</strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
           <p><strong>Validité:</strong> ${exportConfig.validityPeriod} jours (jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')})</p>
-          <p><strong>Montant total:</strong> ${calculateTotals().finalTotal.toLocaleString('fr-FR')} MRU</p>
+          <p><strong>Montant total:</strong> ${formatNumber2(calculateTotals().finalTotal)} MRU</p>
           <p>Ce devis a été généré automatiquement par le système.</p>
           <br>
           <p>Cordialement,</p>

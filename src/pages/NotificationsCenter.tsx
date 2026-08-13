@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 interface NotificationData {
   id: string;
@@ -661,7 +662,7 @@ const NotificationsCenterPage = () => {
                                 {notification.metadata?.payment_amount && (
                                   <div className="flex items-center gap-2 mb-2">
                                     <Badge variant="outline" className="text-green-600">
-                                      {notification.metadata.payment_amount.toLocaleString('fr-FR')} €
+                                      {formatAmount2(notification.metadata.payment_amount, '€')}
                                     </Badge>
                                     {notification.metadata?.payment_method && (
                                       <Badge variant="outline">{notification.metadata.payment_method}</Badge>

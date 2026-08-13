@@ -18,6 +18,7 @@ import { fr } from 'date-fns/locale';
 import { CheckCircle, Download, Loader2, Mail } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
+import { formatPercent2 } from '@/utils/reportNumbers';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;
@@ -168,7 +169,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="text-align: center; margin-bottom: 20px;">
               <div style="display: inline-block; padding: 20px; background: white; border-radius: 50%; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                <span style="font-size: 32px; font-weight: bold; color: #059669;">${qualityScore.score.toFixed(2)}%</span>
+                <span style="font-size: 32px; font-weight: bold; color: #059669;">${formatPercent2(qualityScore.score)}</span>
               </div>
               <p style="margin: 10px 0 5px 0; font-size: 18px; font-weight: 600; color: #065f46;">${qualityScore.grade}</p>
               <p style="margin: 0; color: #374151; line-height: 1.5;">${qualityScore.interpretation}</p>
@@ -489,11 +490,11 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Taux de Conformité</p>
-              <p className="font-bold text-lg text-blue-600">{metrics.complianceRate.toFixed(2)}%</p>
+              <p className="font-bold text-lg text-blue-600">{formatPercent2(metrics.complianceRate)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Score Moyen</p>
-              <p className="font-bold text-lg text-purple-600">{metrics.averageScore.toFixed(2)}%</p>
+              <p className="font-bold text-lg text-purple-600">{formatPercent2(metrics.averageScore)}</p>
             </div>
           </div>
         )}

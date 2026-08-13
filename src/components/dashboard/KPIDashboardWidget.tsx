@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useKPIMetricsHex, CriticalAlert } from '@/hooks/hexagonal';
+import { formatNumber2, formatAmount2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
 
 interface KPIDashboardWidgetProps {
   onAlertClick?: (alert: CriticalAlert) => void;
@@ -115,7 +116,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               )}
             </div>
             <div className={cn("text-3xl font-bold", getSPIColor(kpiMetrics.spi))}>
-              {kpiMetrics.spi.toFixed(2)}
+              {formatRatio2(kpiMetrics.spi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Schedule Performance Index
@@ -133,7 +134,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               )}
             </div>
             <div className={cn("text-3xl font-bold", getCPIColor(kpiMetrics.cpi))}>
-              {kpiMetrics.cpi.toFixed(2)}
+              {formatRatio2(kpiMetrics.cpi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Cost Performance Index
@@ -221,7 +222,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium">Budget Global</span>
               <span className="text-xs text-muted-foreground">
-                {((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100).toFixed(1)}% consommé
+                {formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100)} consommé
               </span>
             </div>
             <Progress 
@@ -231,11 +232,11 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex justify-between text-sm">
               <div>
                 <span className="text-muted-foreground">Dépensé: </span>
-                <span className="font-medium">{(kpiMetrics.totalSpent / 1000000).toFixed(1)}M</span>
+                <span className="font-medium">{formatNumber2(kpiMetrics.totalSpent / 1000000)}M</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Budget: </span>
-                <span className="font-medium">{(kpiMetrics.totalBudget / 1000000).toFixed(1)}M</span>
+                <span className="font-medium">{formatNumber2(kpiMetrics.totalBudget / 1000000)}M</span>
               </div>
             </div>
           </div>

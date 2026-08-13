@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, DollarSign, ExternalLink, FileSignature, FileText, KeyRound, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
@@ -97,11 +98,11 @@ const TenderDetail: React.FC = () => {
               />
               <Field
                 label="Budget min"
-                value={tender.budgetMin ? <span><DollarSign className="inline h-3 w-3 mr-1" />{tender.budgetMin.toLocaleString('fr-FR')} MRU</span> : null}
+                value={tender.budgetMin ? <span><DollarSign className="inline h-3 w-3 mr-1" />{formatAmount2(tender.budgetMin)}</span> : null}
               />
               <Field
                 label="Budget max"
-                value={tender.budgetMax ? <span><DollarSign className="inline h-3 w-3 mr-1" />{tender.budgetMax.toLocaleString('fr-FR')} MRU</span> : null}
+                value={tender.budgetMax ? <span><DollarSign className="inline h-3 w-3 mr-1" />{formatAmount2(tender.budgetMax)}</span> : null}
               />
 
               <div className="md:col-span-2 flex flex-wrap gap-2 pt-2">

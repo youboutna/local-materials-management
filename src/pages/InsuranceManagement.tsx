@@ -34,6 +34,7 @@ import type { EscalationRoles } from '@/dtos/entities/ProjectAggregateDTO';
 import type { ProjectData } from '@/dtos/entities/ProjectDTO';
 import type { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { InsuranceCertificateStatus } from '@/dtos/entities/InsuranceDTO';
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 // ============================================================
 // Types
@@ -260,7 +261,7 @@ const InsuranceContent = () => {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-blue-600">
-                  {insuranceStats.coverageTotal.toLocaleString()} MRU
+                  {formatAmount2(insuranceStats.coverageTotal)}
                 </div>
                 <p className="text-sm text-muted-foreground">Couverture totale</p>
               </CardContent>

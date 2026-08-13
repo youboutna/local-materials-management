@@ -69,6 +69,7 @@ import {
 } from '@/dtos/entities/ProjectDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
+import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 
 interface ProjectDashboardProps {
   projectId?: string;
@@ -357,7 +358,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${formatPercent2((percent || 0) * 100)}`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -490,7 +491,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                             </span>
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                               <DollarSign className="h-3 w-3" />
-                              {project.budget?.toLocaleString()}
+                              {formatAmount2(project.budget)}
                             </span>
                           </div>
                         </div>

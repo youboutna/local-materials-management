@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PDFMetricCard } from './PDFDocument';
 import { InspectionMetrics } from '@/application/services/InspectionReportingService';
+import { formatPercent2 } from '@/utils/reportNumbers';
 
 interface InspectionPDFDocumentProps {
   inspection: any;
@@ -105,12 +106,12 @@ export function InspectionPDFDocument({
             />
             <PDFMetricCard
               title="Taux de Conformité"
-              value={`${metrics.complianceRate.toFixed(2)}%`}
+              value={formatPercent2(metrics.complianceRate)}
               color="#059669"
             />
             <PDFMetricCard
               title="Score Moyen"
-              value={`${metrics.averageScore.toFixed(2)}%`}
+              value={formatPercent2(metrics.averageScore)}
               color="#8b5cf6"
             />
           </PDFRow>

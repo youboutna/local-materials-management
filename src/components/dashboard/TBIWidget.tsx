@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
+import { formatNumber2, formatAmount2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
   INDICATOR_TEMPLATES,
   IndicatorStatus,
   IndicatorTemplate,
@@ -105,15 +106,15 @@ function formatValue(indicator: IndicatorTemplate, value: number | null): string
   if (value === null || Number.isNaN(value)) return '—';
   switch (indicator.unit) {
     case '%':
-      return `${value.toFixed(1)} %`;
+      return formatPercent2(value);
     case 'ratio':
-      return value.toFixed(2);
+      return formatRatio2(value);
     case 'days':
       return `${value > 0 ? '+' : ''}${Math.round(value)} j`;
     case 'pts':
-      return `${value.toFixed(1)} pts`;
+      return `${formatNumber2(value)} pts`;
     case 'MRU':
-      return `${value.toLocaleString('fr-FR')} MRU`;
+      return formatAmount2(value);
     default:
       return String(value);
   }

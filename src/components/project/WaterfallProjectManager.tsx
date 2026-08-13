@@ -17,7 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { useProjects } from '@/hooks/projects/useProjects';
-import { ReportCalculations } from '@/utils/reportCalculations';
+import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
+import { ProjectGanttTimeline } from '@/components/project/ProjectGanttTimeline';
 import {
     AlertCircle,
     BarChart3,
@@ -31,9 +32,7 @@ import {
     User,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
 import WaterfallGanttChart from './WaterfallGanttChart';
-import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 
 // ============================================================
 // Types
@@ -155,6 +154,32 @@ const WaterfallProjectManager = () => {
       notStartedPhases,
     };
   }, [phases]);
+
+  // Modèle Gantt UNIQUE, alimenté par l'orchestrateur (GanttModel)
+  const ganttModel = useMemo(
+    () =>
+      ProjectMetricsOrchestrator.compute({
+        project: {
+          id: selectedProject?.id,
+          title: selectedProject?.title,
+          budget: selectedProject?.budget,
+          progress: selectedProject?.progress,
+          startDate: selectedProject?.startDate,
+          endDate: selectedProject?.endDate,
+        },
+        phases: phases.map((p) => ({
+          id: p.id,
+          name: p.title,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          progress: p.actualProgress,
+          status: p.status,
+          budget: p.budget,
+          actualCost: p.actualCost,
+        })),
+      }).gantt,
+    [selectedProject, phases]
+  );
 
   // ============================================================
   // Fonctions utilitaires
@@ -428,7 +453,7 @@ const WaterfallProjectManager = () => {
               </ErrorBoundary>
             </TabsContent>
 
-            {/* Tab Diagramme de Gantt */}
+            {/* Tab Diagramme de Gantt — vue UNIQUE (GanttModel de l'orchestrateur) */}
             <TabsContent value="gantt-diagram" className="space-y-4">
               <ErrorBoundary fallback={
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -436,29 +461,11 @@ const WaterfallProjectManager = () => {
                   <p className="text-yellow-600">Impossible de charger le diagramme de Gantt détaillé.</p>
                 </div>
               }>
-                {(() => {
-                  const { start: projStart, end: projEnd } = getProjectPeriod();
-                  const diagramPhases = phases
-                    .map(p => ({
-                      id: p.id,
-                      name: p.title,
-                      startDate: parseDate(p.startDate),
-                      endDate: parseDate(p.endDate),
-                      progress: p.actualProgress || 0,
-                      status: p.status === 'completed' ? 'completed' : 
-                              p.status === 'in_progress' ? 'in_progress' : 'planned'
-                    }))
-                    .filter(p => p.startDate && p.endDate) as any[];
-
-                  return (
-                    <GanttDiagramWithMilestones
-                      projectTitle={selectedProject?.title || 'Projet sans nom'}
-                      projectPeriod={{ start: projStart, end: projEnd }}
-                      phases={diagramPhases}
-                      milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
-                    />
-                  );
-                })()}
+                <Card>
+                  <CardContent className="pt-6">
+                    <ProjectGanttTimeline gantt={ganttModel} />
+                  </CardContent>
+                </Card>
               </ErrorBoundary>
             </TabsContent>
 
@@ -470,7 +477,20 @@ const WaterfallProjectManager = () => {
                   <p className="text-red-600">Impossible de charger les indicateurs de performance.</p>
                 </div>
               }>
-                <WaterfallProjectKPIs />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">SPI (Schedule Performance Index)</p>
+                      <p className="text-2xl font-bold">{metrics.schedulePerformanceIndex.toFixed(2)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPI (Cost Performance Index)</p>
+                      <p className="text-2xl font-bold">{metrics.costPerformanceIndex.toFixed(2)}</p>
+                    </CardContent>
+                  </Card>
+                </div>
               </ErrorBoundary>
             </TabsContent>
           </Tabs>
