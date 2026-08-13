@@ -1,6 +1,6 @@
-import React from 'react';
-import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
-import { ReportCalculations } from '@/utils/reportCalculations';
+import React, { useMemo } from 'react';
+import ProjectGanttTimeline from './ProjectGanttTimeline';
+import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 
 interface ProjectGanttProps {
@@ -9,53 +9,42 @@ interface ProjectGanttProps {
   compact?: boolean;
 }
 
+/**
+ * ProjectGantt — enveloppe du composant Gantt UNIQUE.
+ * Aucune phase simulée : les données proviennent de l'orchestrateur central
+ * (calendrier réel, poids et sa source, jalons 0/25/50/75/100).
+ */
 const ProjectGantt: React.FC<ProjectGanttProps> = ({ project, phases, compact = false }) => {
-  // Use provided phases or generate sample phases based on project data
-  const startDate = project.startDate || new Date().toISOString().split('T')[0];
-  const endDate = project.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  
-  const projectPhases = phases || [
-    {
-      id: 'phase-1',
-      name: 'Phase 1 - Préparation',
-      startDate: new Date(startDate),
-      endDate: new Date(new Date(startDate).getTime() + 60 * 24 * 60 * 60 * 1000), // +60 days
-      progress: project.progress > 80 ? 100 : project.progress > 60 ? 100 : project.progress * 1.5,
-      status: project.progress > 20 ? 'completed' : project.progress > 10 ? 'in_progress' : 'planned'
-    },
-    {
-      id: 'phase-2', 
-      name: 'Phase 2 - Exécution',
-      startDate: new Date(new Date(startDate).getTime() + 60 * 24 * 60 * 60 * 1000),
-      endDate: new Date(new Date(startDate).getTime() + 150 * 24 * 60 * 60 * 1000), // +150 days
-      progress: project.progress > 50 ? Math.min(100, (project.progress - 20) * 1.2) : 0,
-      status: project.progress > 60 ? 'completed' : project.progress > 30 ? 'in_progress' : 'planned'
-    },
-    {
-      id: 'phase-3',
-      name: 'Phase 3 - Finalisation', 
-      startDate: new Date(new Date(startDate).getTime() + 150 * 24 * 60 * 60 * 1000),
-      endDate: new Date(endDate),
-      progress: project.progress > 80 ? Math.min(100, (project.progress - 80) * 5) : 0,
-      status: project.progress > 90 ? 'completed' : project.progress > 80 ? 'in_progress' : 'planned'
-    }
-  ];
-
-  // Generate milestones based on real project data
-  const milestones = ReportCalculations.calculateMilestoneStatus(project.progress);
+  const gantt = useMemo(
+    () =>
+      ProjectMetricsOrchestrator.compute({
+        project: {
+          id: (project as any)?.id,
+          title: project?.title,
+          budget: (project as any)?.budget ?? 0,
+          progress: project?.progress ?? 0,
+          startDate: project?.startDate ?? null,
+          endDate: project?.endDate ?? null,
+          interventionZones: (project as any)?.interventionZones ?? [],
+        },
+        phases: (phases || []).map((p: any) => ({
+          id: p.id,
+          name: p.name ?? p.phase ?? p.phase_name,
+          weight: p.weight ?? p.weight_percentage,
+          budget: p.budget ?? p.estimatedCost ?? p.estimated_cost,
+          startDate: p.startDate ?? p.start_date,
+          endDate: p.endDate ?? p.end_date,
+          progress: p.progress ?? p.actualProgress ?? 0,
+          actualCost: p.actualCost ?? p.actual_cost,
+          status: p.status,
+        })),
+      }).gantt,
+    [project, phases],
+  );
 
   return (
-    <div className={compact ? "space-y-4" : "p-6"}>
-      <GanttDiagramWithMilestones
-        projectTitle={project.title}
-        projectPeriod={{
-          start: new Date(startDate),
-          end: new Date(endDate)
-        }}
-        phases={projectPhases}
-        milestones={milestones}
-        compact={compact}
-      />
+    <div className={compact ? 'space-y-4' : 'p-6'}>
+      <ProjectGanttTimeline gantt={gantt} showAsciiBars={!compact} />
     </div>
   );
 };
