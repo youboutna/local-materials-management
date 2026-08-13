@@ -4,7 +4,7 @@
  * Ouvert depuis la liste des zones dans `GeoZoneEditor` via un bouton crayon.
  * Aucun appel Supabase : mute la zone puis remonte au parent qui persiste.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
