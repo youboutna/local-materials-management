@@ -155,7 +155,7 @@ export class EnhancedReportingService {
 
         return {
           id: phase.id,
-          name: phase.phase_name || phase.title || phase.name || '—',
+          name: phase.phase_name || '—',
           plannedProgress: Math.round(plannedProgress),
           actualProgress: phase.progress || 0,
           budget: phase.estimated_cost || 0,

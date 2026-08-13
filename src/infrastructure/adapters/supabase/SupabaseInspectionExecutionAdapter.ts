@@ -37,14 +37,10 @@ export class SupabaseInspectionExecutionAdapter implements IInspectionExecutionR
     const userId = userData.user?.id;
 
     for (const doc of documents) {
-      const file = documents.find(d => d.name === doc.name);
-      
       const { error: insertError } = await supabase.from('documents').insert({
         title: `Service Fait - ${doc.name}`,
         file_name: doc.name,
         file_url: doc.url,
-        file_size: file?.size,
-        mime_type: file?.type,
         document_type: 'inspection_validation' as const,
         project_id: inspectionId,
         inspection_id: inspectionId,

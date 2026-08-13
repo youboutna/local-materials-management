@@ -5,7 +5,7 @@
  */
 
 import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
-import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneDTO, MaterialUsageDTO } from '@/dtos/entities/MilestoneDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 export class SupabaseMilestoneAdapter implements IMilestoneRepository {
@@ -147,7 +147,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         dependencies: data.dependencies || [],
         notes: data.notes || null,
         stage_type: data.stage_type || data.type || null,
-        material_usage: data.material_usage || [],
+        material_usage: (data.material_usage as unknown as MaterialUsageDTO[]) || [],
         material_cost_estimate: data.material_cost_estimate || null,
         actual_material_cost: data.actual_material_cost || null,
         created_at: now,
@@ -179,6 +179,9 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
     try {
       const updateData = {
         ...data,
+        material_usage: data.material_usage !== undefined
+          ? (data.material_usage as unknown as import('@/integrations/supabase/types').Json)
+          : undefined,
         updated_at: new Date().toISOString()
       };
 
@@ -228,10 +231,9 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
    */
   async markAsCompleted(id: string, completionDate?: string): Promise<MilestoneDTO | null> {
     try {
-      const updateData = {
+      const updateData: UpdateMilestoneData = {
         status: 'completed',
         completion_date: completionDate || new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
 
       return await this.update(id, updateData);
@@ -324,6 +326,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       description: data.description,
       targetDate: data.target_date,
       completionDate: data.completion_date,
+      completedate: data.completion_date,
       status: data.status,
       type: data.type || 'checkpoint', // Default to checkpoint if not specified
       priority: data.priority || 'normal', // Default to normal priority

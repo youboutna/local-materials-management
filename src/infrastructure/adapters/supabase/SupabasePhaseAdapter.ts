@@ -5,7 +5,8 @@
  */
 
 import { Phase, PhaseStatus, PhaseStep, PhaseTask } from '@/domain/entities';
-import { IPhaseRepository, PhaseMetrics } from '@/domain/repositories';
+import { IPhaseRepository } from '@/domain/repositories';
+import type { PhaseMetrics } from '@/domain/repositories/IPhaseRepository';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
@@ -416,7 +417,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
     const { error } = await supabase
       .from('project_phases')
-      .update({ custom_phase_data: customPhaseData as PhaseUpdate['custom_phase_data'] })
+      .update({ custom_phase_data: customPhaseData as unknown as PhaseUpdate['custom_phase_data'] })
       .eq('id', phaseId);
 
     if (error) throw error;
