@@ -18,6 +18,15 @@ interface Props {
   documentsCount?: number;
   risks?: any[];
   pertExpectedDuration?: number | null;
+  /**
+   * 'full'    → KPI + alertes + 7 axes + Gantt (détail projet, phases, monitoring)
+   * 'compact' → KPI + alertes (workflows création/édition, sous-objets)
+   */
+  variant?: 'full' | 'compact';
+  showAxes?: boolean;
+  showAlerts?: boolean;
+  showGantt?: boolean;
+  className?: string;
 }
 
 const APPRECIATION_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -35,7 +44,17 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
   documentsCount = 0,
   risks = [],
   pertExpectedDuration = null,
+  variant = 'full',
+  showAxes,
+  showAlerts,
+  showGantt,
+  className,
 }) => {
+  const isCompact = variant === 'compact';
+  const withAxes = showAxes ?? !isCompact;
+  const withAlerts = showAlerts ?? true;
+  const withGantt = showGantt ?? !isCompact;
+
   const metrics = useMemo(() => {
     const input: ProjectMetricsInput = {
       project: {
