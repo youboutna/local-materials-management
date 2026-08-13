@@ -69,6 +69,11 @@ export function DocumentViewerProvider({ children }: { children: ReactNode }) {
             : undefined
         }
       />
+    </DocumentViewerContext.Provider>
+  );
+}
+
+
 
 
 export function useDocumentViewer(): DocumentViewerContextValue {
