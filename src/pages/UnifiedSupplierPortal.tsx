@@ -82,6 +82,7 @@ import {
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
+  const { openDocument } = useDocumentViewer();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(true);
