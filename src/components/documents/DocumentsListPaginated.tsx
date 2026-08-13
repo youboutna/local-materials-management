@@ -206,9 +206,10 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant={getStatusBadgeVariant(document.status)}>
-                      {getStatusLabel(document.status)}
+                    <Badge variant={getStatusBadgeVariant(resolveStatus(document))}>
+                      {getStatusLabel(resolveStatus(document))}
                     </Badge>
+
                     <Badge variant="outline">
                       {getDocumentTypeLabel(document.documentType)}
                     </Badge>
