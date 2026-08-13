@@ -20,6 +20,20 @@ export interface IEmployee {
   };
 }
 
+/**
+ * Détails opérationnels d'un risque (plans, coûts, échéances).
+ * Optionnels: ne participent pas aux invariants du risque.
+ */
+export interface RiskDetails {
+  mitigationPlan?: string | null;
+  contingencyPlan?: string | null;
+  costs?: number | null;
+  timelineImpact?: number | null;
+  reviewDate?: string | null;
+  ownerId?: string | null;
+  dueDate?: string | null;
+}
+
 export class Risk {
   // Private fields for encapsulation
   private _id: string;
@@ -36,6 +50,8 @@ export class Risk {
   private _relatedTasks: string[];
   private _createdAt: string;
   private _updatedAt: string;
+  private _details: RiskDetails;
+
 
   constructor(
     id: string,
