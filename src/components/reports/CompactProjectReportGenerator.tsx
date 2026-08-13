@@ -395,6 +395,10 @@ export function CompactProjectReportGenerator({
             <Badge variant="outline">
               {isSingleProject ? '1 projet sélectionné' : `${projectList.length} projets sélectionnés`}
             </Badge>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              {ownerOrganization?.name || 'Organisation propriétaire non définie'}
+            </div>
             {isSingleProject && project && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
