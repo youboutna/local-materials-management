@@ -1,153 +1,171 @@
+src/application/services/EnhancedReportingService.ts(158,43): error TS2339: Property 'title' does not exist on type '{ actual_cost: number | null; actual_duration: number | null; construction_phase: string | null; construction_stage: string | null; created_at: string; created_by: string | null; ... 24 more ...; weight: number; }'.
+src/application/services/EnhancedReportingService.ts(158,58): error TS2339: Property 'name' does not exist on type '{ actual_cost: number | null; actual_duration: number | null; construction_phase: string | null; construction_stage: string | null; created_at: string; created_by: string | null; ... 24 more ...; weight: number; }'.
+src/application/services/TenderSubmissionNotificationService.ts(18,140): error TS2345: Argument of type 'TenderSubmissionNotificationData' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'TenderSubmissionNotificationData'.
+src/components/tenders/TenderDocumentManager.tsx(325,19): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'estimate_type' does not exist in type '{ created_at?: string | undefined; description?: string | null | undefined; id?: string | undefined; overhead_amount?: number | null | undefined; overhead_percentage?: number | null | undefined; ... 15 more ...; updated_at?: string | undefined; }'.
+src/components/workspace/WorkspaceCreateDialog.tsx(44,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'name' does not exist in type '{ capacity?: number | null | undefined; contact_manager?: string | null | undefined; contact_phone?: string | null | undefined; created_at?: string | null | undefined; description?: string | ... 1 more ... | undefined; ... 8 more ...; updated_at?: string | ... 1 more ... | undefined; }[]'.
 src/infrastructure/adapters/storage/SupabaseStorageProvider.ts(201,22): error TS2339: Property 'size' does not exist on type 'FileObject'.
 src/infrastructure/adapters/storage/SupabaseStorageProvider.ts(222,10): error TS2339: Property 'getMetadata' does not exist on type 'StorageFileApi'.
+src/infrastructure/adapters/supabase/BankGuaranteeAdapter.ts(52,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ project_id: string | undefined; guarantee_type: string | undefined; guarantee_amount: number | undefined; bank_name: string | undefined; guarantee_number: string | undefined; ... 7 more ...; updated_at: string; }' is missing the following properties from type '{ bank_name: string; contractor_id: string; created_at?: string | undefined; expiry_date: string; guarantee_amount: number; guarantee_type: string; id?: string | undefined; issue_date: string; project_id: string; released_at?: string | ... 1 more ... | undefined; status?: string | undefined; updated_at?: string | un...': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/BankGuaranteeAdapter.ts(57,23): error TS2352: Conversion of type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' to type 'SupabaseBankGuarantee' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'guarantee_number' is missing in type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' but required in type 'SupabaseBankGuarantee'.
+src/infrastructure/adapters/supabase/BankGuaranteeAdapter.ts(74,13): error TS2352: Conversion of type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }[]' to type 'SupabaseBankGuarantee[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'guarantee_number' is missing in type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' but required in type 'SupabaseBankGuarantee'.
+src/infrastructure/adapters/supabase/BankGuaranteeAdapter.ts(120,23): error TS2352: Conversion of type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' to type 'SupabaseBankGuarantee' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'guarantee_number' is missing in type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' but required in type 'SupabaseBankGuarantee'.
+src/infrastructure/adapters/supabase/BankGuaranteeAdapter.ts(145,23): error TS2352: Conversion of type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' to type 'SupabaseBankGuarantee' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'guarantee_number' is missing in type '{ bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; issue_date: string; project_id: string; released_at: string | null; status: string; updated_at: string; }' but required in type 'SupabaseBankGuarantee'.
 src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(15,14): error TS2420: Class 'InspectionPermissionAdapter' incorrectly implements interface 'IInspectionPermissionRepository'.
   Property 'validateCertifications' is private in type 'InspectionPermissionAdapter' but not in type 'IInspectionPermissionRepository'.
 src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(28,39): error TS2339: Property 'hasBasicInspectionPermission' does not exist on type 'InspectionPermissionAdapter'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(324,19): error TS2769: No overload matches this call.
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(54,32): error TS2345: Argument of type 'string' is not assignable to parameter of type 'readonly string[][]'.
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(57,7): error TS2322: Type '{ certifications: string[]; created_at: string; email: string | null; full_name: string; id: string; phone: string | null; specializations: string[]; status: string; updated_at: string; user_id: string | null; }[]' is not assignable to type 'AssignableInspector[]'.
+  Type '{ certifications: string[]; created_at: string; email: string | null; full_name: string; id: string; phone: string | null; specializations: string[]; status: string; updated_at: string; user_id: string | null; }' is missing the following properties from type 'AssignableInspector': name, role, maxConcurrentInspections, currentInspections
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(108,15): error TS2769: No overload matches this call.
   The last overload gave the following error.
-    Type 'Record<string, unknown>' is missing the following properties from type '{ code: string; created_at?: string | null | undefined; economic_importance?: string | null | undefined; id?: string | undefined; latitude?: number | null | undefined; longitude?: number | null | undefined; ... 5 more ...; updated_at?: string | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
-src/infrastructure/adapters/supabase/LocationRepository.ts(420,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(421,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(422,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(423,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(424,7): error TS2322: Type 'string' is not assignable to type 'LocationType'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(425,7): error TS2322: Type '{ lat: {}; lng: {}; } | undefined' is not assignable to type 'Coordinates | undefined'.
-  Type '{ lat: {}; lng: {}; }' is not assignable to type 'Coordinates'.
-    Types of property 'lat' are incompatible.
-      Type '{}' is not assignable to type 'number'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(429,7): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(430,7): error TS2322: Type 'unknown' is not assignable to type 'EconomicImportance | undefined'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(432,44): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '{}' is not assignable to parameter of type 'string | number'.
-src/infrastructure/adapters/supabase/LocationRepository.ts(433,44): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '{}' is not assignable to parameter of type 'string | number'.
-src/infrastructure/adapters/supabase/NotificationGatewayAdapter.ts(15,69): error TS2322: Type 'unknown' is not assignable to type 'string | ArrayBuffer | Blob | File | FormData | ReadableStream<Uint8Array<ArrayBufferLike>> | Record<...> | undefined'.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(51,13): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"inspection_pvs"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(52,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Type 'Record<string, unknown>' is missing the following properties from type '({ access_token?: string | null | undefined; created_at?: string | null | undefined; expires_at?: string | null | undefined; id?: string | undefined; metadata?: Json | undefined; ... 4 more ...; user_id: string; } | ... 5 more ... | { ...; })[]': length, pop, push, concat, and 29 more.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(62,13): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"inspection_pvs"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(73,13): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"inspection_pvs"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(84,13): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"inspection_pvs"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PVGeneratorAdapter.ts(90,18): error TS2339: Property 'content' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'content' does not exist on type 'SelectQueryError<"column 'content' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(16,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
+    Argument of type '"user_profiles"' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(114,20): error TS2339: Property 'role' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 83 more ... | SelectQueryError<...>'.
+  Property 'role' does not exist on type 'SelectQueryError<"column 'role' does not exist on 'bank_guarantees'.">'.
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(150,32): error TS2345: Argument of type 'string' is not assignable to parameter of type 'readonly string[][]'.
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(154,7): error TS2322: Type '{ certifications: string[]; created_at: string; email: string | null; full_name: string; id: string; phone: string | null; specializations: string[]; status: string; updated_at: string; user_id: string | null; }[]' is not assignable to type 'AssignableInspector[]'.
+  Type '{ certifications: string[]; created_at: string; email: string | null; full_name: string; id: string; phone: string | null; specializations: string[]; status: string; updated_at: string; user_id: string | null; }' is missing the following properties from type 'AssignableInspector': name, role, maxConcurrentInspections, currentInspections
+src/infrastructure/adapters/supabase/InspectionPermissionAdapter.ts(173,7): error TS2739: Type '{ certifications: string[]; created_at: string; email: string | null; full_name: string; id: string; phone: string | null; specializations: string[]; status: string; updated_at: string; user_id: string | null; }' is missing the following properties from type 'AssignableInspector': name, role, maxConcurrentInspections, currentInspections
+src/infrastructure/adapters/supabase/InspectionSchedulingAdapter.ts(171,7): error TS2322: Type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; ... 5 more ...; projects: { ...; }; }[]' is not assignable to type '{ id: string; date: string; inspector: string; status: string; comments: string | null; progress_at_inspection: number; project_id: string; phase_id: string | null; created_at: string; updated_at: string; projects?: { ...; } | ... 1 more ... | undefined; project_phases?: { ...; } | ... 1 more ... | undefined; }[]'.
+  Type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; ... 5 more ...; projects: { ...; }; }' is not assignable to type '{ id: string; date: string; inspector: string; status: string; comments: string | null; progress_at_inspection: number; project_id: string; phase_id: string | null; created_at: string; updated_at: string; projects?: { ...; } | ... 1 more ... | undefined; project_phases?: { ...; } | ... 1 more ... | undefined; }'.
+    Types of property 'date' are incompatible.
+      Type 'string | null' is not assignable to type 'string'.
+        Type 'null' is not assignable to type 'string'.
 src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(18,11): error TS2769: No overload matches this call.
   The last overload gave the following error.
-    Object literal may only specify known properties, and 'payment_request_id' does not exist in type '({ access_token?: string | null | undefined; created_at?: string | null | undefined; expires_at?: string | null | undefined; id?: string | undefined; metadata?: Json | undefined; ... 4 more ...; user_id: string; } | ... 5 more ... | { ...; })[]'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(47,15): error TS2769: No overload matches this call.
+    Object literal may only specify known properties, and 'payment_request_id' does not exist in type '{ amount: number; blocked_at?: string | undefined; blocked_by?: string | null | undefined; blocking_reasons: Json; contractor_id: string; id?: string | undefined; notes?: string | null | undefined; project_id: string; resolved_at?: string | ... 1 more ... | undefined; resolved_by?: string | ... 1 more ... | undefine...'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(165,11): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '{ amount?: number | undefined; blocked_at?: string | undefined; blocked_by?: string | null | undefined; blocking_reasons?: Json | undefined; contractor_id?: string | undefined; ... 4 more ...; resolved_by?: string | ... 1 more ... | undefined; }'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(222,50): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'payment_blocks'.">'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(223,52): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'payment_blocks'.">'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(224,53): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'payment_blocks'.">'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(225,70): error TS2339: Property 'blocked_amount' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'payment_blocks'.">'.
+src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(227,30): error TS2339: Property 'block_type' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'payment_blocks'.">'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(307,16): error TS2769: No overload matches this call.
   The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(67,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(87,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(115,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(136,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(163,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(187,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(215,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_blocks"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(222,50): error TS2339: Property 'status' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(223,52): error TS2339: Property 'status' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(224,53): error TS2339: Property 'status' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'status' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(225,70): error TS2339: Property 'blocked_amount' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'blocked_amount' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(227,30): error TS2339: Property 'block_type' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'block_type' does not exist on type 'SelectQueryError<"column 'status' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(246,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(248,11): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Object literal may only specify known properties, and 'payment_block_id' does not exist in type '({ access_token?: string | null | undefined; created_at?: string | null | undefined; expires_at?: string | null | undefined; id?: string | undefined; metadata?: Json | undefined; ... 4 more ...; user_id: string; } | ... 5 more ... | { ...; })[]'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(276,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(296,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(321,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(342,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/PaymentBlockingAdapter.ts(367,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"payment_control_actions"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(151,41): error TS2551: Property 'documentToSupabase' does not exist on type 'typeof ComplianceTransformer'. Did you mean 'documentFromSupabase'?
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(172,36): error TS2339: Property 'update' does not exist on type 'ComplianceDocument'.
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(173,41): error TS2551: Property 'documentToSupabase' does not exist on type 'typeof ComplianceTransformer'. Did you mean 'documentFromSupabase'?
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(233,41): error TS2551: Property 'noteToSupabase' does not exist on type 'typeof ComplianceTransformer'. Did you mean 'toSupabase'?
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(254,38): error TS2339: Property 'update' does not exist on type 'ComplianceNote'.
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(255,41): error TS2551: Property 'noteToSupabase' does not exist on type 'typeof ComplianceTransformer'. Did you mean 'toSupabase'?
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(300,41): error TS2551: Property 'auditToSupabase' does not exist on type 'typeof ComplianceTransformer'. Did you mean 'auditFromSupabase'?
-src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(340,44): error TS2345: Argument of type '{ projectId: string; }' is not assignable to parameter of type 'string'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(38,34): error TS2339: Property 'retentionAmount' does not exist on type 'Payment'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(39,48): error TS2339: Property 'retentionAmount' does not exist on type 'Payment'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(64,64): error TS2551: Property 'phaseId' does not exist on type 'Payment'. Did you mean 'phase'?
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(109,5): error TS2322: Type '{ id: string; title: string; description: string; weight: number; targetDate: string; status: MilestoneStatus; completionDate: string | undefined; phaseId: string; progress: any; }[]' is not assignable to type 'MilestoneDTO[]'.
-  Type '{ id: string; title: string; description: string; weight: number; targetDate: string; status: MilestoneStatus; completionDate: string | undefined; phaseId: string; progress: any; }' is missing the following properties from type 'MilestoneDTO': assignedTo, createdBy, completedate, projectId, and 5 more.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(118,27): error TS2339: Property 'progress' does not exist on type 'MilestoneDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(175,15): error TS2304: Cannot find name 'DecompteStatus'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(207,7): error TS2367: This comparison appears to be unintentional because the types 'InspectionStatus' and '"approved"' have no overlap.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(232,9): error TS2322: Type '"milestone"' is not assignable to type '"materials" | "other" | "services" | "works"'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(242,44): error TS2339: Property 'retentionPercentage' does not exist on type 'MauritaniaBusinessRulesDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(248,7): error TS2561: Object literal may only specify known properties, but 'projectId' does not exist in type 'AutomaticDecompteDTO'. Did you mean to write 'project_id'?
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(251,15): error TS2304: Cannot find name 'DecompteStatus'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(266,16): error TS2339: Property 'totalAmount' does not exist on type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(268,16): error TS2339: Property 'progressAtPayment' does not exist on type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(269,16): error TS2339: Property 'progressAtPayment' does not exist on type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(280,45): error TS2339: Property 'create' does not exist on type 'IPaymentRepository'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(281,27): error TS2551: Property 'projectId' does not exist on type 'AutomaticDecompteDTO'. Did you mean 'project_id'?
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(282,25): error TS2551: Property 'phaseId' does not exist on type 'AutomaticDecompteDTO'. Did you mean 'phase_id'?
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(283,24): error TS2339: Property 'netAmount' does not exist on type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(284,33): error TS2551: Property 'retentionAmount' does not exist on type 'AutomaticDecompteDTO'. Did you mean 'retention_amount'?
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(285,35): error TS2339: Property 'progressAtPayment' does not exist on type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(295,7): error TS2353: Object literal may only specify known properties, and 'updatedAt' does not exist in type 'AutomaticDecompteDTO'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(30,7): error TS2322: Type '"contract"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(30,31): error TS2322: Type '"pv"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(30,58): error TS2322: Type '"photo"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(31,7): error TS2322: Type '"report"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(31,35): error TS2322: Type '"specification"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(31,62): error TS2322: Type '"other"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(32,7): error TS2322: Type '"specification"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(32,44): error TS2322: Type '"other"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(32,70): error TS2322: Type '"other"' is not assignable to type 'DocumentType'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(35,7): error TS2322: Type '"pending_review"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(35,36): error TS2322: Type '"pending_review"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(35,72): error TS2322: Type '"approved"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(36,7): error TS2322: Type '"approved"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(36,31): error TS2322: Type '"rejected"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(36,55): error TS2322: Type '"archived"' is not assignable to type 'DocumentStatus'.
-src/infrastructure/adapters/supabase/SupabaseDocumentAdapter.ts(36,79): error TS2322: Type '"draft"' is not assignable to type 'DocumentStatus'.
+    Type 'Omit<DBAlert, "created_at" | "updated_at">' is not assignable to type '{ acknowledged?: boolean | null | undefined; acknowledged_at?: string | null | undefined; acknowledged_by?: string | null | undefined; action_proof?: Json | undefined; action_required?: boolean | ... 1 more ... | undefined; ... 23 more ...; updated_at?: string | undefined; }'.
+      Types of property 'recurrence' are incompatible.
+        Type 'number | null | undefined' is not assignable to type 'string | null | undefined'.
+          Type 'number' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(349,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(366,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(383,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(400,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(417,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(434,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(451,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(605,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(629,29): error TS2345: Argument of type '(item: DBAlert) => Alert' is not assignable to parameter of type '(value: { acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }, index: number, array: { ...; }[]) => Alert'.
+  Types of parameters 'item' and 'value' are incompatible.
+    Type '{ acknowledged: boolean | null; acknowledged_at: string | null; acknowledged_by: string | null; action_proof: Json; action_required: boolean | null; action_taken: string | null; ... 22 more ...; updated_at: string; }' is not assignable to type 'DBAlert'.
+      Types of property 'project_title' are incompatible.
+        Type 'string | null' is not assignable to type 'string'.
+          Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseAlertAdapter.ts(701,54): error TS2554: Expected 0-1 arguments, but got 2.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(25,54): error TS2345: Argument of type '{ bank_guarantee_id: string | null; created_at: string | null; created_by: string; deadline: string | null; description: string | null; id: string; priority: string; project_id: string; ... 5 more ...; updated_by: string | null; }' is not assignable to parameter of type 'DatabaseComplianceRow'.
+  Types of property 'description' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(40,65): error TS2345: Argument of type '{ bank_guarantee_id: string | null; created_at: string | null; created_by: string; deadline: string | null; description: string | null; id: string; priority: string; project_id: string; ... 5 more ...; updated_by: string | null; }' is not assignable to parameter of type 'DatabaseComplianceRow'.
+  Types of property 'description' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(86,65): error TS2345: Argument of type '{ bank_guarantee_id: string | null; created_at: string | null; created_by: string; deadline: string | null; description: string | null; id: string; priority: string; project_id: string; ... 5 more ...; updated_by: string | null; }' is not assignable to parameter of type 'DatabaseComplianceRow'.
+  Types of property 'description' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(102,47): error TS2345: Argument of type '{ bank_guarantee_id: string | null; created_at: string | null; created_by: string; deadline: string | null; description: string | null; id: string; priority: string; project_id: string; ... 5 more ...; updated_by: string | null; }' is not assignable to parameter of type 'DatabaseComplianceRow'.
+  Types of property 'description' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(119,47): error TS2345: Argument of type '{ bank_guarantee_id: string | null; created_at: string | null; created_by: string; deadline: string | null; description: string | null; id: string; priority: string; project_id: string; ... 5 more ...; updated_by: string | null; }' is not assignable to parameter of type 'DatabaseComplianceRow'.
+  Types of property 'description' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(147,72): error TS2741: Property 'uploaded_at' is missing in type '{ category: string; compliance_item_id: string; created_at: string | null; document_id: string; id: string; is_required: boolean | null; subcategory: string | null; uploaded_by: string | null; }' but required in type 'DatabaseComplianceDocumentRow'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(163,55): error TS2741: Property 'uploaded_at' is missing in type '{ category: string; compliance_item_id: string; created_at: string | null; document_id: string; id: string; is_required: boolean | null; subcategory: string | null; uploaded_by: string | null; }' but required in type 'DatabaseComplianceDocumentRow'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(198,55): error TS2741: Property 'uploaded_at' is missing in type '{ category: string; compliance_item_id: string; created_at: string | null; document_id: string; id: string; is_required: boolean | null; subcategory: string | null; uploaded_by: string | null; }' but required in type 'DatabaseComplianceDocumentRow'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(240,62): error TS2741: Property 'uploaded_at' is missing in type '{ category: string; compliance_item_id: string; created_at: string | null; document_id: string; id: string; is_required: boolean | null; subcategory: string | null; uploaded_by: string | null; }' but required in type 'DatabaseComplianceDocumentRow'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(256,69): error TS2345: Argument of type '{ compliance_item_id: string; created_at: string | null; created_by: string; id: string; note: string; }' is not assignable to parameter of type 'DatabaseComplianceNoteRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(272,51): error TS2345: Argument of type '{ compliance_item_id: string; created_at: string | null; created_by: string; id: string; note: string; }' is not assignable to parameter of type 'DatabaseComplianceNoteRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(302,51): error TS2345: Argument of type '{ compliance_item_id: string; created_at: string | null; created_by: string; id: string; note: string; }' is not assignable to parameter of type 'DatabaseComplianceNoteRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(339,58): error TS2345: Argument of type '{ compliance_item_id: string; created_at: string | null; created_by: string; id: string; note: string; }' is not assignable to parameter of type 'DatabaseComplianceNoteRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(364,52): error TS2345: Argument of type '{ changed_at: string | null; changed_by: string; compliance_item_id: string; field_name: string; id: string; new_value: string | null; old_value: string | null; }' is not assignable to parameter of type 'DatabaseComplianceAuditRow'.
+  Types of property 'old_value' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseComplianceAdapter.ts(379,71): error TS2345: Argument of type '{ changed_at: string | null; changed_by: string; compliance_item_id: string; field_name: string; id: string; new_value: string | null; old_value: string | null; }' is not assignable to parameter of type 'DatabaseComplianceAuditRow'.
+  Types of property 'old_value' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(113,67): error TS2740: Type 'MilestoneDTO' is missing the following properties from type 'Milestone': progressPercentage, configuration, isCompleted, isOverdue, and 25 more.
+src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(131,33): error TS2339: Property 'configuration' does not exist on type 'MilestoneDTO'.
+src/infrastructure/adapters/supabase/SupabaseDecompteAdapter.ts(138,29): error TS2339: Property 'configuration' does not exist on type 'MilestoneDTO'.
+src/infrastructure/adapters/supabase/SupabaseEscalationThresholdAdapter.ts(29,15): error TS2345: Argument of type '{ id?: string | undefined; threshold_type?: string | undefined; threshold_name?: string | undefined; threshold_value?: number | undefined; threshold_unit?: string | undefined; severity_level?: string | undefined; escalation_level?: number | undefined; description?: string | ... 1 more ... | undefined; is_active?: bo...' is not assignable to parameter of type '{ created_at?: string | undefined; created_by?: string | null | undefined; description?: string | null | undefined; escalation_level?: number | undefined; id?: string | undefined; ... 7 more ...; updated_by?: string | ... 1 more ... | undefined; }'.
+  Types of property 'is_active' are incompatible.
+    Type 'boolean | null | undefined' is not assignable to type 'boolean | undefined'.
+      Type 'null' is not assignable to type 'boolean | undefined'.
 src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(35,22): error TS2552: Cannot find name 'Inspector'. Did you mean 'Inspection'?
 src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(55,7): error TS2322: Type 'import("/dev-server/src/dtos/entities/InspectionDTO").InspectionObservation[]' is not assignable to type 'import("/dev-server/src/domain/repositories/IInspectionRepository").InspectionObservation[]'.
   Type 'import("/dev-server/src/dtos/entities/InspectionDTO").InspectionObservation' is missing the following properties from type 'import("/dev-server/src/domain/repositories/IInspectionRepository").InspectionObservation': inspectionId, updatedAt
@@ -155,6 +173,58 @@ src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(75,7): error T
   Type 'import("/dev-server/src/domain/repositories/IInspectionRepository").InspectionObservation' is not assignable to type 'import("/dev-server/src/dtos/entities/InspectionDTO").InspectionObservation'.
     Types of property 'status' are incompatible.
       Type 'string' is not assignable to type '"open" | "resolved"'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(90,29): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(100,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(108,16): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Omit<InspectionRow, "created_at" | "updated_at">' is not assignable to type '{ comments?: string | null | undefined; created_at?: string | null | undefined; date?: string | null | undefined; documents?: Json | undefined; id?: string | undefined; inspector?: string | ... 1 more ... | undefined; ... 5 more ...; updated_at?: string | ... 1 more ... | undefined; }'.
+      Types of property 'documents' are incompatible.
+        Type 'unknown[]' is not assignable to type 'Json | undefined'.
+          Type 'unknown[]' is not assignable to type 'Json[]'.
+            Type 'unknown' is not assignable to type 'Json'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(151,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(162,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(179,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(190,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(202,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(218,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(232,43): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(247,14): error TS2538: Type 'null' cannot be used as an index type.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(247,34): error TS2538: Type 'null' cannot be used as an index type.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(263,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Omit<InspectionRow, "created_at" | "updated_at">' is missing the following properties from type '{ comments?: string | null | undefined; created_at?: string | null | undefined; date?: string | null | undefined; documents?: Json | undefined; id?: string | undefined; inspector?: string | ... 1 more ... | undefined; ... 5 more ...; updated_at?: string | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseInspectionAdapter.ts(268,29): error TS2345: Argument of type '{ comments: string | null; created_at: string | null; date: string | null; documents: Json; id: string; inspector: string | null; payment_type: string | null; phase_id: string | null; progress_at_inspection: number | null; project_id: string; status: string | null; updated_at: string | null; }' is not assignable to parameter of type 'InspectionRow'.
+  Types of property 'phase_id' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
 src/infrastructure/adapters/supabase/SupabaseInspectionExecutionAdapter.ts(46,26): error TS2339: Property 'size' does not exist on type 'InspectionDocument'.
 src/infrastructure/adapters/supabase/SupabaseInspectionExecutionAdapter.ts(47,26): error TS2339: Property 'type' does not exist on type 'InspectionDocument'.
 src/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter.ts(92,34): error TS2339: Property 'project_stakeholders' does not exist on type 'ProjectDetails'.
@@ -163,11 +233,188 @@ src/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter.
 src/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter.ts(109,34): error TS2339: Property 'project_stakeholders' does not exist on type 'ProjectDetails'.
 src/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter.ts(114,53): error TS2339: Property 'employees' does not exist on type 'ProjectDetails'.
 src/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter.ts(115,32): error TS2339: Property 'employees' does not exist on type 'ProjectDetails'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(132,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(148,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(164,31): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(184,31): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(210,31): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(244,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(260,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(278,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseInsuranceAdapter.ts(324,49): error TS2345: Argument of type '{ certificate_url: string | null; contractor_id: string; contractor_name: string; coverage_amount: number; coverage_type: string; created_at: string; id: string; insurance_company: string; ... 8 more ...; verified_by: string | null; }' is not assignable to parameter of type 'InsuranceCertificateDB'.
+  Types of property 'certificate_url' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseLoadDataAdapter.ts(42,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ id: string; title: string; description: string; status: string; created_at: string; }[]' is not assignable to parameter of type '{ allows_initial_payment?: boolean | null | undefined; area_sqm?: number | null | undefined; attribution_date?: string | null | undefined; budget?: number | undefined; budget_sources?: Json | undefined; ... 60 more ...; workspace_id?: string | ... 1 more ... | undefined; }[]'.
+      Property 'location' is missing in type '{ id: string; title: string; description: string; status: string; created_at: string; }' but required in type '{ allows_initial_payment?: boolean | null | undefined; area_sqm?: number | null | undefined; attribution_date?: string | null | undefined; budget?: number | undefined; budget_sources?: Json | undefined; ... 60 more ...; workspace_id?: string | ... 1 more ... | undefined; }'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(39,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(58,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(96,37): error TS2589: Type instantiation is excessively deep and possibly infinite.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(97,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(114,37): error TS2589: Type instantiation is excessively deep and possibly infinite.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(115,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(130,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(146,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(191,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(205,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(223,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(239,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(255,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(271,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(287,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(303,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(319,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(336,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(352,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(354,48): error TS2345: Argument of type '"min"' is not assignable to parameter of type '"admin_update_user_email" | "approve_supplier_payment_request" | "can_import_full_dataset" | "create_supplier_payment_request" | "generate_supplier_reset_token" | "generate_tender_secret_code" | ... 16 more ... | "verify_supplier_reset_token"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(368,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(384,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(404,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(429,40): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(545,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(583,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(604,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(638,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(664,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(684,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(719,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(743,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(877,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(892,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(907,17): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMaterialAdapter.ts(928,40): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseMilestoneAdapter.ts(159,17): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ project_id: string; phase_id: string | null; title: string; description: string | null; target_date: string; completion_date: string | null; status: string; priority: MilestonePriority; ... 9 more ...; updated_at: string; }' is missing the following properties from type '{ actual_material_cost?: number | null | undefined; approval_requirements?: string[] | null | undefined; assigned_to?: string | null | undefined; completion_date?: string | null | undefined; ... 26 more ...; weight?: number | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseMilestoneAdapter.ts(187,17): error TS2345: Argument of type '{ title?: string | undefined; description?: string | undefined; target_date?: string | undefined; completion_date?: string | undefined; status?: string | undefined; priority?: MilestonePriority | undefined; ... 8 more ...; updated_at: string; }' is not assignable to parameter of type '{ actual_material_cost?: number | null | undefined; approval_requirements?: string[] | null | undefined; assigned_to?: string | null | undefined; completion_date?: string | null | undefined; ... 26 more ...; weight?: number | ... 1 more ... | undefined; }'.
+  Types of property 'material_usage' are incompatible.
+    Type 'MaterialUsageDTO[] | undefined' is not assignable to type 'Json | undefined'.
+      Type 'MaterialUsageDTO[]' is not assignable to type 'Json | undefined'.
+        Type 'MaterialUsageDTO[]' is not assignable to type 'Json[]'.
+          Type 'MaterialUsageDTO' is not assignable to type 'Json'.
+            Type 'MaterialUsageDTO' is not assignable to type '{ [key: string]: Json | undefined; }'.
+              Index signature for type 'string' is missing in type 'MaterialUsageDTO'.
+src/infrastructure/adapters/supabase/SupabaseMilestoneAdapter.ts(298,56): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
 src/infrastructure/adapters/supabase/SupabaseMilestoneAdapter.ts(319,5): error TS2741: Property 'completedate' is missing in type '{ id: any; projectId: any; phaseId: any; title: any; description: any; targetDate: any; completionDate: any; status: any; type: any; priority: any; weight: any; isFromTemplate: any; dependencies: any; notes: any; ... 7 more ...; actualMaterialCost: any; }' but required in type 'MilestoneDTO'.
-src/infrastructure/adapters/supabase/SupabaseMissionExpenseAdapter.ts(56,7): error TS2740: Type '{ id: any; missionId: any; recordedBy: any; recordedAt: any; updatedAt: any; amount: any; category: any; description: any; receiptUrl: any; receiptNumber: any; status: any; approvedAt: any; approvedBy: any; ... 7 more ...; projectPhase: any; }' is missing the following properties from type 'MissionExpense': isPending, isApproved, isPaid, isRejected, and 4 more.
-src/infrastructure/adapters/supabase/SupabaseMissionExpenseAdapter.ts(104,7): error TS2740: Type '{ id: any; missionId: any; recordedBy: any; recordedAt: any; updatedAt: any; amount: any; category: any; description: any; receiptUrl: any; receiptNumber: any; status: any; approvedAt: any; approvedBy: any; ... 7 more ...; projectPhase: any; }' is missing the following properties from type 'MissionExpense': isPending, isApproved, isPaid, isRejected, and 4 more.
-src/infrastructure/adapters/supabase/SupabasePaymentAdapter.ts(64,29): error TS2551: Property 'projectId' does not exist on type 'Payment'. Did you mean 'project'?
-src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(64,35): error TS2347: Untyped function calls may not accept type arguments.
+src/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter.ts(139,9): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'title' does not exist in type '{ acknowledged?: boolean | null | undefined; acknowledged_at?: string | null | undefined; acknowledged_by?: string | null | undefined; action_proof?: Json | undefined; action_required?: boolean | ... 1 more ... | undefined; ... 23 more ...; updated_at?: string | undefined; }[]'.
+src/infrastructure/adapters/supabase/SupabaseParsedInvoiceAdapter.ts(121,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'created_at' does not exist in type '{ created_at?: string | undefined; document_id?: string | null | undefined; file_name?: string | null | undefined; id?: string | undefined; invoice_date?: string | null | undefined; ... 9 more ...; updated_at?: string | undefined; }[]'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(106,7): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(107,7): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(108,7): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(129,9): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'metadata' does not exist in type '{ created_at?: string | null | undefined; data?: Json | undefined; expires_at?: string | null | undefined; id?: string | undefined; is_read?: boolean | null | undefined; message: string; ... 5 more ...; user_id: string; }'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(166,9): error TS2353: Object literal may only specify known properties, and 'metadata' does not exist in type '{ created_at?: string | null | undefined; data?: Json | undefined; expires_at?: string | null | undefined; id?: string | undefined; is_read?: boolean | null | undefined; message?: string | undefined; ... 5 more ...; user_id?: string | undefined; }'.
+src/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter.ts(180,9): error TS2353: Object literal may only specify known properties, and 'metadata' does not exist in type '{ created_at?: string | null | undefined; data?: Json | undefined; expires_at?: string | null | undefined; id?: string | undefined; is_read?: boolean | null | undefined; message?: string | undefined; ... 5 more ...; user_id?: string | undefined; }'.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(65,13): error TS2558: Expected 2 type arguments, but got 1.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(67,17): error TS2345: Argument of type 'string' is not assignable to parameter of type '("id" extends keyof { bank_guarantees: { Row: { bank_name: string; contractor_id: string; created_at: string; expiry_date: string; guarantee_amount: number; guarantee_type: string; id: string; ... 4 more ...; updated_at: string; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 83 more ...; workspa...'.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(144,7): error TS2739: Type 'PostgrestBuilder<{ actual_cost: number | null; actual_duration: number | null; construction_phase: string | null; construction_stage: string | null; created_at: string; created_by: string | null; ... 24 more ...; weight: number; }, false>' is missing the following properties from type 'Promise<{ data: unknown; error: any; }>': catch, [Symbol.toStringTag], finally
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(144,46): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ actual_cost?: number | null | undefined; actual_duration?: number | null | undefined; construction_phase?: string | null | undefined; construction_stage?: string | null | undefined; ... 26 more ...; weight?: number | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(154,7): error TS2739: Type 'PostgrestBuilder<{ actual_cost: number | null; actual_duration: number | null; construction_phase: string | null; construction_stage: string | null; created_at: string; created_by: string | null; ... 24 more ...; weight: number; }, false>' is missing the following properties from type 'Promise<{ data: unknown; error: any; }>': catch, [Symbol.toStringTag], finally
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(184,27): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(273,14): error TS2304: Cannot find name 'defaultMetrics'.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(288,36): error TS2339: Property 'steps' does not exist on type 'Phase'.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(298,32): error TS2339: Property 'steps' does not exist on type 'Phase'.
@@ -179,52 +426,138 @@ src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(381,83): error TS23
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(404,25): error TS2339: Property 'steps' does not exist on type 'Phase'.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(406,34): error TS2339: Property 'steps' does not exist on type 'Phase'.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(407,46): error TS2339: Property 'steps' does not exist on type 'Phase'.
-src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(448,35): error TS2347: Untyped function calls may not accept type arguments.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(437,15): error TS2345: Argument of type 'Partial<PhaseDB>' is not assignable to parameter of type '{ actual_cost?: number | null | undefined; actual_duration?: number | null | undefined; construction_phase?: string | null | undefined; construction_stage?: string | null | undefined; ... 26 more ...; weight?: number | undefined; }'.
+  Types of property 'custom_phase_data' are incompatible.
+    Type 'Record<string, unknown> | null | undefined' is not assignable to type 'Json | undefined'.
+      Type 'Record<string, unknown>' is not assignable to type 'Json | undefined'.
+        Type 'Record<string, unknown>' is missing the following properties from type 'Json[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(449,13): error TS2558: Expected 2 type arguments, but got 1.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(458,7): error TS2393: Duplicate function implementation.
 src/infrastructure/adapters/supabase/SupabasePhaseAdapter.ts(479,7): error TS2393: Duplicate function implementation.
 src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(9,30): error TS2305: Module '"@/domain/repositories"' has no exported member 'ProjectSummary'.
 src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(9,46): error TS2305: Module '"@/domain/repositories"' has no exported member 'ProjectWithRelatedData'.
 src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(136,56): error TS2740: Type 'Partial<Project>' is missing the following properties from type 'Project': _id, _title, _description, _status, and 4 more.
+src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(144,7): error TS2739: Type 'PostgrestBuilder<{ allows_initial_payment: boolean | null; area_sqm: number | null; attribution_date: string | null; budget: number; budget_sources: Json; check_schedule: Json; check_schedule_last_run: Json; ... 58 more ...; workspace_id: string | null; }, false>' is missing the following properties from type 'Promise<{ data: unknown; error: { code?: string | undefined; message?: string | undefined; } | null; }>': catch, [Symbol.toStringTag], finally
+src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(144,40): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ allows_initial_payment?: boolean | null | undefined; area_sqm?: number | null | undefined; attribution_date?: string | null | undefined; budget?: number | undefined; budget_sources?: Json | undefined; ... 60 more ...; workspace_id?: string | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseProjectAdapter.ts(162,7): error TS2739: Type 'PostgrestBuilder<{ allows_initial_payment: boolean | null; area_sqm: number | null; attribution_date: string | null; budget: number; budget_sources: Json; check_schedule: Json; check_schedule_last_run: Json; ... 58 more ...; workspace_id: string | null; }, false>' is missing the following properties from type 'Promise<{ data: unknown; error: { code?: string | undefined; message?: string | undefined; } | null; }>': catch, [Symbol.toStringTag], finally
+src/infrastructure/adapters/supabase/SupabaseProjectFormAdapter.ts(245,19): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ allows_initial_payment?: boolean | null | undefined; area_sqm?: number | null | undefined; attribution_date?: string | null | undefined; budget?: number | undefined; budget_sources?: Json | undefined; ... 60 more ...; workspace_id?: string | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseProjectResourceAdapter.ts(26,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Partial<ProjectResourceRow>' is missing the following properties from type '{ allocation_date?: string | null | undefined; cost_per_unit?: number | null | undefined; created_at?: string | undefined; id?: string | undefined; name: string; notes?: string | null | undefined; ... 5 more ...; updated_at?: string | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseProjectResourceAdapter.ts(38,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'Partial<ProjectResourceRow>[]' is not assignable to parameter of type '{ allocation_date?: string | null | undefined; cost_per_unit?: number | null | undefined; created_at?: string | undefined; id?: string | undefined; name: string; notes?: string | null | undefined; ... 5 more ...; updated_at?: string | undefined; }[]'.
+      Type 'Partial<ProjectResourceRow>' is not assignable to type '{ allocation_date?: string | null | undefined; cost_per_unit?: number | null | undefined; created_at?: string | undefined; id?: string | undefined; name: string; notes?: string | null | undefined; ... 5 more ...; updated_at?: string | undefined; }'.
+        Types of property 'created_at' are incompatible.
+          Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+            Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseProjectResourceAdapter.ts(48,15): error TS2345: Argument of type 'Partial<ProjectResourceRow>' is not assignable to parameter of type '{ allocation_date?: string | null | undefined; cost_per_unit?: number | null | undefined; created_at?: string | undefined; id?: string | undefined; name?: string | undefined; notes?: string | ... 1 more ... | undefined; ... 5 more ...; updated_at?: string | undefined; }'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/infrastructure/adapters/supabase/SupabaseProjectStakeholderAdapter.ts(150,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'ProjectStakeholderInsertData' is missing the following properties from type '{ contract_type?: string | null | undefined; created_at?: string | undefined; employee_id?: string | null | undefined; end_date?: string | null | undefined; external_email?: string | null | undefined; ... 16 more ...; updated_at?: string | undefined; }[]': length, pop, push, concat, and 29 more.
 src/infrastructure/adapters/supabase/SupabaseProjectStakeholderAdapter.ts(298,7): error TS2322: Type 'string' is not assignable to type 'StakeholderType'.
 src/infrastructure/adapters/supabase/SupabaseProjectStakeholderAdapter.ts(299,7): error TS2322: Type 'string' is not assignable to type 'StakeholderEntityType'.
 src/infrastructure/adapters/supabase/SupabaseQuantityTakeoffAdapter.ts(7,10): error TS2305: Module '"@/dtos/entities/ProjectDTO"' has no exported member 'QuantityTakeoffWithDetails'.
-src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(61,65): error TS2345: Argument of type 'Project' is not assignable to parameter of type 'ProjectData'.
+src/infrastructure/adapters/supabase/SupabaseQuantityTakeoffAdapter.ts(110,21): error TS18047: 'item.quantity' is possibly 'null'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(62,65): error TS2345: Argument of type 'Project' is not assignable to parameter of type 'ProjectData'.
   Types of property 'location' are incompatible.
     Type 'string | undefined' is not assignable to type 'string'.
       Type 'undefined' is not assignable to type 'string'.
-src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(104,7): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'number'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(105,7): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'number'.
   Type 'undefined' is not assignable to type 'number'.
-src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(141,19): error TS2339: Property 'completed' does not exist on type '{ actual_material_cost: number | null; approval_requirements: string[] | null; assigned_to: string | null; completion_date: string | null; created_at: string | null; created_by: string | null; ... 24 more ...; weight: number | null; }'.
-src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(276,65): error TS2345: Argument of type 'ProjectDTO' is not assignable to parameter of type 'ProjectData'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(142,19): error TS2339: Property 'completed' does not exist on type '{ actual_material_cost: number | null; approval_requirements: string[] | null; assigned_to: string | null; completion_date: string | null; created_at: string | null; created_by: string | null; ... 24 more ...; weight: number | null; }'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(277,65): error TS2345: Argument of type 'ProjectDTO' is not assignable to parameter of type 'ProjectData'.
   Types of property 'status' are incompatible.
     Type 'import("/dev-server/src/dtos/entities/ProjectDTO").ProjectStatus' is not assignable to type 'import("/dev-server/src/dtos/entities/ProjectAggregateDTO").ProjectStatus'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(316,23): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '"mission_expenses"' is not assignable to parameter of type '"compliance_items_with_details" | "v_boq_estimates" | "v_boq_invoices" | "v_boq_quantity_takeoffs"'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(325,70): error TS2339: Property 'amount' does not exist on type 'ResultOne'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(335,9): error TS2322: Type '{ id: string; amount: number | null; dueDate: Date; paidDate: Date; status: "paid"; description: string; }[]' is not assignable to type 'PaymentMilestoneDTO[]'.
+  Type '{ id: string; amount: number | null; dueDate: Date; paidDate: Date; status: "paid"; description: string; }' is not assignable to type 'PaymentMilestoneDTO'.
+    Types of property 'amount' are incompatible.
+      Type 'number | null' is not assignable to type 'number'.
+        Type 'null' is not assignable to type 'number'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(338,29): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+      Type 'null' is not assignable to type 'string | number'.
+src/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter.ts(339,30): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+      Type 'null' is not assignable to type 'string | number'.
+src/infrastructure/adapters/supabase/SupabaseReportingAdapter.ts(52,5): error TS2322: Type '{ id: string; name: string; status: string; progress: number; startDate: string | undefined; endDate: string | undefined; actualStartDate: string | undefined; actualEndDate: string | undefined; ... 9 more ...; version: number; }[]' is not assignable to type 'EnhancedPhaseDTO[]'.
+  Type '{ id: string; name: string; status: string; progress: number; startDate: string | undefined; endDate: string | undefined; actualStartDate: string | undefined; actualEndDate: string | undefined; ... 9 more ...; version: number; }' is not assignable to type 'EnhancedPhaseDTO'.
+    Types of property 'startDate' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseStakeholderAdapter.ts(27,64): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ contract_type?: string | null | undefined; created_at?: string | undefined; employee_id?: string | null | undefined; end_date?: string | null | undefined; external_email?: string | null | undefined; ... 16 more ...; updated_at?: string | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseSystemSettingsAdapter.ts(38,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, but 'key' does not exist in type '{ category: string; configuration?: Json | undefined; created_at?: string | undefined; id?: string | undefined; key: string; updated_at?: string | undefined; }[]'. Did you mean to write 'keys'?
+src/infrastructure/adapters/supabase/SupabaseTaskDependencyAdapter.ts(26,15): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Partial<TaskDependencyRow>' is missing the following properties from type '{ created_at?: string | null | undefined; dependency_type?: string | null | undefined; depends_on_task_id: string; id?: string | undefined; lag_days?: number | null | undefined; task_id: string; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseTenderAdapter.ts(49,68): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, any>' is missing the following properties from type '{ attribution_date?: string | null | undefined; award_criteria?: string | null | undefined; budget_max?: number | null | undefined; budget_min?: number | null | undefined; contract_duration?: number | ... 1 more ... | undefined; ... 23 more ...; updated_at?: string | undefined; }': description, title
+src/infrastructure/adapters/supabase/SupabaseTenderAdapter.ts(130,92): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+src/infrastructure/adapters/supabase/SupabaseTenderDocumentAdapter.ts(432,13): error TS18047: 'item.status' is possibly 'null'.
 src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(249,25): error TS2322: Type 'true' is not assignable to type '"estimated" | "exact" | "planned" | undefined'.
-src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(443,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"employees"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(450,15): error TS2769: No overload matches this call.
-  The last overload gave the following error.
-    Argument of type '"employees"' is not assignable to parameter of type '"compliance_items_with_details" | "document_validation_logs" | "user_profiles"'.
-src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(488,29): error TS2339: Property 'department' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'department' does not exist on type 'SelectQueryError<"column 'department' does not exist on 'auth_sessions'.">'.
-src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(498,28): error TS2339: Property 'position' does not exist on type 'SelectQueryError<...> | SelectQueryError<...> | ... 4 more ... | SelectQueryError<...>'.
-  Property 'position' does not exist on type 'SelectQueryError<"column 'position' does not exist on 'auth_sessions'.">'.
 src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(816,66): error TS2339: Property 'email' does not exist on type 'UserProfile'.
-src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(868,22): error TS2345: Argument of type '"inactive"' is not assignable to parameter of type '"admin" | "agent" | "director" | "manager" | "supplier" | "user" | null'.
+src/infrastructure/adapters/supabase/SupabaseUserProfileAdapter.ts(868,22): error TS2345: Argument of type '"inactive"' is not assignable to parameter of type '"admin" | "agent" | "director" | "insurance_company" | "manager" | "patient" | "practitioner" | "supplier" | null'.
 src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(36,100): error TS2339: Property 'name' does not exist on type 'never'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(48,17): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ id: string; name: string; description: string | undefined; location: any; capacity: number | undefined; status: OperationalStatus | undefined; contact_manager: string | undefined; contact_phone: string | undefined; facilities: string[] | undefined; created_at: string; updated_at: string; }' is missing the following properties from type '{ capacity?: number | null | undefined; contact_manager?: string | null | undefined; contact_phone?: string | null | undefined; created_at?: string | null | undefined; description?: string | ... 1 more ... | undefined; ... 8 more ...; updated_at?: string | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(56,31): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(81,31): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(102,45): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
 src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(118,106): error TS2339: Property 'name' does not exist on type 'never'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(138,31): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(179,45): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(201,45): error TS2345: Argument of type '{ capacity: number | null; contact_manager: string | null; contact_phone: string | null; created_at: string | null; description: string | null; facilities: string[] | null; id: string; ... 6 more ...; updated_at: string | null; }' is not assignable to parameter of type 'WorkspaceRow'.
+  Types of property 'created_at' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
 src/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter.ts(224,7): error TS2322: Type 'Json[] | undefined' is not assignable to type 'string[] | undefined'.
   Type 'Json[]' is not assignable to type 'string[]'.
     Type 'Json' is not assignable to type 'string'.
       Type 'null' is not assignable to type 'string'.
-src/pages/InspectionDetail.tsx(229,19): error TS2322: Type '{ id: string; project_id: string | null; phase_id: string | null; date: string; inspector: any; status: string; progress_at_inspection: number; comments: string; }' is not assignable to type '{ id: string; projectId?: string | undefined; project_id?: string | undefined; phaseId?: string | null | undefined; phase_id?: string | null | undefined; date: string; inspector: string; status: string; progressAtInspection?: number | undefined; progress_at_inspection?: number | undefined; comments?: string | ... 1 ...'.
-  Types of property 'project_id' are incompatible.
-    Type 'string | null' is not assignable to type 'string | undefined'.
-      Type 'null' is not assignable to type 'string | undefined'.
-src/pages/InspectionDetail.tsx(242,17): error TS2322: Type '{ id: string; project_id: string | null; phase_id: string | null; date: string; inspector: any; status: string; progress_at_inspection: number; comments: string; }' is not assignable to type '{ id: string; project_id: string; phase_id?: string | null | undefined; date: string; inspector: string; status: string; progress_at_inspection: number; comments?: string | null | undefined; }'.
-  Types of property 'project_id' are incompatible.
-    Type 'string | null' is not assignable to type 'string'.
-      Type 'null' is not assignable to type 'string'.
+src/infrastructure/adapters/supabase/TaskAssignmentAdapter.ts(45,35): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ action_type: string; actual_cost?: number | null | undefined; actual_duration?: number | null | undefined; assigned_by?: string | null | undefined; assigned_to?: string[] | null | undefined; ... 28 more ...; weight?: number | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/infrastructure/adapters/supabase/TenderEstimateAdapter.ts(20,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'tender_id' does not exist in type '{ created_at?: string | undefined; description?: string | null | undefined; id?: string | undefined; overhead_amount?: number | null | undefined; overhead_percentage?: number | null | undefined; ... 15 more ...; updated_at?: string | undefined; }[]'.
+src/infrastructure/adapters/supabase/TenderEstimateAdapter.ts(369,61): error TS2339: Property 'final_total' does not exist on type 'SelectQueryError<"column 'final_total' does not exist on 'tender_estimates'.">'.
+src/infrastructure/adapters/supabase/TenderEstimateAdapter.ts(370,81): error TS2339: Property 'final_total' does not exist on type 'SelectQueryError<"column 'final_total' does not exist on 'tender_estimates'.">'.
+src/infrastructure/adapters/supabase/TenderEstimateAdapter.ts(372,20): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'final_total' does not exist on 'tender_estimates'.">'.
+src/infrastructure/adapters/supabase/TenderEstimateAdapter.ts(372,40): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'final_total' does not exist on 'tender_estimates'.">'.
 src/pages/MaterialEdit.tsx(135,13): error TS2322: Type '{ id: string; workspaceId: string; workspaceCode: string; name: string; location: { code: string; name: string; nameAr: string; type: "city"; coordinates: undefined; parentCode: undefined; population: undefined; }; ... 6 more ...; updatedAt: Date | undefined; }[]' is not assignable to type 'WorkspaceDTO[]'.
   Type '{ id: string; workspaceId: string; workspaceCode: string; name: string; location: { code: string; name: string; nameAr: string; type: "city"; coordinates: undefined; parentCode: undefined; population: undefined; }; ... 6 more ...; updatedAt: Date | undefined; }' is not assignable to type 'WorkspaceDTO'.
     Types of property 'contact' are incompatible.
@@ -233,81 +566,51 @@ src/pages/MaterialEdit.tsx(135,13): error TS2322: Type '{ id: string; workspaceI
           Types of property 'manager' are incompatible.
             Type 'string | undefined' is not assignable to type 'string'.
               Type 'undefined' is not assignable to type 'string'.
-src/pages/NotificationsCenter.tsx(89,5): error TS2339: Property 'loading' does not exist on type 'UseNotificationsHexResult'.
-src/pages/NotificationsCenter.tsx(91,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/NotificationsCenter.tsx(96,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/NotificationsCenter.tsx(101,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/NotificationsCenter.tsx(106,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/NotificationsCenter.tsx(111,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/NotificationsCenter.tsx(116,5): error TS2339: Property 'markAllAsRead' does not exist on type 'UseNotificationsHexResult'.
-src/pages/NotificationsCenter.tsx(117,27): error TS2554: Expected 0 arguments, but got 2.
-src/pages/SupplierPasswordReset.tsx(42,41): error TS2339: Property 'invokeRPC' does not exist on type 'IAuthRepository'.
-src/pages/SupplierPasswordReset.tsx(105,49): error TS2339: Property 'invokeRPC' does not exist on type 'IAuthRepository'.
-src/pages/SupplierPasswordReset.tsx(117,9): error TS2353: Object literal may only specify known properties, and 'options' does not exist in type 'RegisterData'.
-src/pages/SupplierPasswordReset.tsx(126,11): error TS2353: Object literal may only specify known properties, and 'user_id' does not exist in type 'Partial<Supplier>'.
-src/pages/SupplierPasswordReset.tsx(132,28): error TS2339: Property 'invokeRPC' does not exist on type 'IAuthRepository'.
-src/pages/Suppliers.tsx(21,49): error TS2339: Property 'suppliers' does not exist on type '{ auth_sessions: { Row: { access_token: string | null; created_at: string | null; expires_at: string | null; id: string; metadata: Json; provider: string; provider_session_id: string | null; refresh_token: string | null; updated_at: string | null; user_id: string; }; Insert: { ...; }; Update: { ...; }; Relationships...'.
-src/pages/Suppliers.tsx(48,5): error TS2339: Property 'loading' does not exist on type 'UseSuppliersHexResult'.
-src/pages/Suppliers.tsx(78,13): error TS1345: An expression of type 'void' cannot be tested for truthiness.
-src/pages/UnifiedSupplierPortal.tsx(52,3): error TS2305: Module '"@/dtos/entities/SupplierDTO"' has no exported member 'Supplier'.
-src/pages/UnifiedSupplierPortal.tsx(53,3): error TS2305: Module '"@/dtos/entities/SupplierDTO"' has no exported member 'SupplierNotification'.
-src/pages/UnifiedSupplierPortal.tsx(54,3): error TS2305: Module '"@/dtos/entities/SupplierDTO"' has no exported member 'DocumentWithViewStatus'.
-src/pages/UnifiedSupplierPortal.tsx(150,74): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-src/pages/UnifiedSupplierPortal.tsx(151,111): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-src/pages/UnifiedSupplierPortal.tsx(152,76): error TS2554: Expected 1 arguments, but got 3.
-src/pages/UnifiedSupplierPortal.tsx(274,7): error TS2353: Object literal may only specify known properties, and 'fileUrl' does not exist in type '{ file: File; title: string; description?: string | undefined; documentType: string; userId: string; supplierId?: string | undefined; }'.
-src/pages/UnifiedSupplierPortal.tsx(291,7): error TS2353: Object literal may only specify known properties, and 'supplierId' does not exist in type '{ taskId: string; email: string; comment: string; }'.
-src/pages/UnifiedSupplierPortal.tsx(305,7): error TS2353: Object literal may only specify known properties, and 'supplierId' does not exist in type '{ taskId: string; projectManagerId: string; }'.
-src/pages/UnifiedSupplierPortal.tsx(317,35): error TS2551: Property 'document_type' does not exist on type 'DocumentDTO'. Did you mean 'documentType'?
-src/pages/UnifiedSupplierPortal.tsx(329,62): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(333,14): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(333,63): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(680,47): error TS2551: Property 'document_type' does not exist on type 'DocumentDTO'. Did you mean 'documentType'?
-src/pages/UnifiedSupplierPortal.tsx(682,45): error TS2551: Property 'projects' does not exist on type 'DocumentDTO'. Did you mean 'projectId'?
-src/pages/UnifiedSupplierPortal.tsx(687,49): error TS2551: Property 'projects' does not exist on type 'DocumentDTO'. Did you mean 'projectId'?
-src/pages/UnifiedSupplierPortal.tsx(692,45): error TS2551: Property 'created_at' does not exist on type 'DocumentDTO'. Did you mean 'createdAt'?
-src/pages/UnifiedSupplierPortal.tsx(694,50): error TS2551: Property 'created_at' does not exist on type 'DocumentDTO'. Did you mean 'createdAt'?
-src/pages/UnifiedSupplierPortal.tsx(717,41): error TS2551: Property 'file_url' does not exist on type 'DocumentDTO'. Did you mean 'fileUrl'?
-src/pages/UnifiedSupplierPortal.tsx(894,40): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(896,55): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(899,47): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(901,44): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(913,50): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(932,57): error TS2339: Property 'sent_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(933,61): error TS2339: Property 'sent_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(937,46): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(953,40): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(956,45): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(958,42): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(966,47): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(969,54): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(970,46): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(971,59): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(972,57): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(976,47): error TS2339: Property 'sent_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(978,52): error TS2339: Property 'sent_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(983,44): error TS2339: Property 'used_at' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1017,25): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1020,42): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1023,39): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1029,41): error TS2339: Property 'notification_type' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1032,48): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1033,40): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1034,52): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1035,51): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1041,46): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1042,38): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1043,51): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1044,49): error TS2339: Property 'metadata' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1054,63): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1056,48): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1065,76): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1072,56): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1084,75): error TS2339: Property 'id' does not exist on type 'never'.
-src/pages/UnifiedSupplierPortal.tsx(1108,17): error TS2322: Type 'Inspection[]' is not assignable to type 'InspectionDTO[]'.
-  Type 'Inspection' is missing the following properties from type 'InspectionDTO': title, type, priority
+src/pages/UnifiedSupplierPortal.tsx(53,39): error TS2344: Type '{ schema: "btp"; }' does not satisfy the constraint '"auth_sessions" | "authorization_documents" | "authorization_requests" | "authorization_reviews" | "bank_guarantees" | "blocked_senders" | "boq_alignment_history" | "brand_managers" | ... 132 more ... | { ...; }'.
+  Type '{ schema: "btp"; }' is not assignable to type '{ schema: "public"; }'.
+    Types of property 'schema' are incompatible.
+      Type '"btp"' is not assignable to type '"public"'.
+src/pages/UnifiedSupplierPortal.tsx(325,62): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(329,14): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(329,63): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(334,35): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(339,34): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(882,40): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(884,55): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(887,47): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(889,44): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(901,50): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(920,57): error TS2339: Property 'sent_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(921,61): error TS2339: Property 'sent_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(925,46): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(941,40): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(944,45): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(946,42): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(954,47): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(957,54): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(958,46): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(959,59): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(960,57): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(964,47): error TS2339: Property 'sent_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(966,52): error TS2339: Property 'sent_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(971,44): error TS2339: Property 'used_at' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1005,25): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1008,42): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1011,39): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1017,41): error TS2339: Property 'notification_type' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1020,48): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1021,40): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1022,52): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1023,51): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1029,46): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1030,38): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1031,51): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1032,49): error TS2339: Property 'metadata' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1042,63): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1044,48): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1053,76): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1060,56): error TS2339: Property 'id' does not exist on type 'never'.
+src/pages/UnifiedSupplierPortal.tsx(1072,75): error TS2339: Property 'id' does not exist on type 'never'.
 src/tests/integration/EnhancedValidationIntegration.test.ts(25,25): error TS2551: Property 'getValidationRepository' does not exist on type 'typeof RepositoryFactory'. Did you mean 'getLocationRepository'?
 src/tests/integration/EnhancedValidationIntegration.test.ts(29,7): error TS2554: Expected 0-4 arguments, but got 7.
 src/tests/integration/EnhancedValidationIntegration.test.ts(29,25): error TS2551: Property 'getReceptionRepository' does not exist on type 'typeof RepositoryFactory'. Did you mean 'getReportingRepository'?
@@ -334,34 +637,15 @@ src/tests/integration/EnhancedValidationIntegration.test.ts(359,14): error TS180
 src/tests/integration/EnhancedValidationIntegration.test.ts(360,14): error TS18048: 'complianceCategory' is possibly 'undefined'.
 src/tests/integration/EnhancedValidationIntegration.test.ts(400,23): error TS2345: Argument of type 'Promise<EnhancedValidationResult>' is not assignable to parameter of type 'never'.
 src/tests/integration/EnhancedValidationIntegration.test.ts(408,23): error TS2339: Property 'categories' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(61,16): error TS2769: No overload matches this call.
+src/utils/notificationToTaskMapper.ts(73,13): error TS2769: No overload matches this call.
   The last overload gave the following error.
-    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
-      Type 'undefined' is not assignable to type 'string | number'.
-src/utils/paymentCalculations.ts(77,66): error TS2559: Type 'string' has no properties in common with type 'GetBankGuaranteesOptionsDTO'.
-src/utils/paymentCalculations.ts(81,16): error TS2769: No overload matches this call.
+    Type '{ title: string; description: string; assigned_to: string; assigned_by: string; priority: "high" | "low" | "medium" | "urgent"; status: "pending"; due_date: string | undefined; project_id: string | undefined; notes: string; }' is missing the following properties from type '{ action_type: string; actual_cost?: number | null | undefined; actual_duration?: number | null | undefined; assigned_by?: string | null | undefined; assigned_to?: string[] | null | undefined; ... 28 more ...; weight?: number | ... 1 more ... | undefined; }[]': length, pop, push, concat, and 29 more.
+src/utils/notificationToTaskMapper.ts(85,7): error TS2769: No overload matches this call.
   The last overload gave the following error.
-    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
-      Type 'undefined' is not assignable to type 'string | number'.
-src/utils/paymentCalculations.ts(133,33): error TS2551: Property 'document_type' does not exist on type 'DocumentDTO'. Did you mean 'documentType'?
-src/utils/paymentCalculations.ts(138,51): error TS2551: Property 'document_type' does not exist on type 'DocumentDTO'. Did you mean 'documentType'?
-src/utils/paymentCalculations.ts(189,5): error TS2322: Type 'PaymentDTO[]' is not assignable to type 'never[]'.
-  Type 'PaymentDTO' is not assignable to type 'never'.
-src/utils/paymentCalculations.ts(191,5): error TS2322: Type 'PaymentDTO[]' is not assignable to type 'never[]'.
-  Type 'PaymentDTO' is not assignable to type 'never'.
-src/utils/paymentCalculations.ts(196,34): error TS2339: Property 'created_at' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(196,50): error TS2339: Property 'createdAt' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(201,56): error TS2339: Property 'getActiveBlocks' does not exist on type 'PaymentBlockingService'.
-src/utils/paymentCalculations.ts(209,56): error TS2339: Property 'transaction_id' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(209,77): error TS2339: Property 'transactionId' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(213,8): error TS2339: Property 'transaction_id' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(213,28): error TS2339: Property 'transactionId' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(213,49): error TS2339: Property 'created_at' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(213,65): error TS2339: Property 'createdAt' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(217,36): error TS2339: Property 'created_at' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(217,52): error TS2339: Property 'createdAt' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(218,38): error TS2339: Property 'payment_date' does not exist on type 'never'.
-src/utils/paymentCalculations.ts(218,56): error TS2339: Property 'paymentDate' does not exist on type 'never'.
+    Object literal may only specify known properties, and 'recipient_id' does not exist in type '{ created_at?: string | null | undefined; data?: Json | undefined; expires_at?: string | null | undefined; id?: string | undefined; is_read?: boolean | null | undefined; message: string; ... 5 more ...; user_id: string; }[]'.
+src/utils/notificationToTaskMapper.ts(218,7): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'recipient_id' does not exist in type '{ created_at?: string | null | undefined; data?: Json | undefined; expires_at?: string | null | undefined; id?: string | undefined; is_read?: boolean | null | undefined; message: string; ... 5 more ...; user_id: string; }[]'.
 src/utils/projectDataCalculations.ts(1,10): error TS2440: Import declaration conflicts with local declaration of 'ProjectDetailDTO'.
 src/utils/projectDataCalculations.ts(3,35): error TS2307: Cannot find module '../infrastructure/supabase/RepositoryFactory' or its corresponding type declarations.
 src/utils/projectDataCalculations.ts(110,13): error TS2322: Type 'ProjectDetailDTO | null' is not assignable to type 'ProjectDetailDTO'.
