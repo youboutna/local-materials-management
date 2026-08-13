@@ -88,23 +88,23 @@ export function SupplierPaymentPDFDocument({
         <PDFRow>
           <PDFMetricCard
             title="Total"
-            value={`${totals.totalAmount.toLocaleString('fr-FR')} MRU`}
+            value={`${formatNumber2(totals.totalAmount)} MRU`}
             color="#1d4ed8"
           />
           <PDFMetricCard
             title="Payé"
-            value={`${totals.paidAmount.toLocaleString('fr-FR')} MRU`}
+            value={`${formatNumber2(totals.paidAmount)} MRU`}
             color="#047857"
           />
           <PDFMetricCard
             title="En Attente"
-            value={`${totals.pendingAmount.toLocaleString('fr-FR')} MRU`}
+            value={`${formatNumber2(totals.pendingAmount)} MRU`}
             color="#d97706"
           />
           {totals.overdueAmount > 0 && (
             <PDFMetricCard
               title="En Retard"
-              value={`${totals.overdueAmount.toLocaleString('fr-FR')} MRU`}
+              value={`${formatNumber2(totals.overdueAmount)} MRU`}
               color="#dc2626"
             />
           )}
@@ -119,7 +119,7 @@ export function SupplierPaymentPDFDocument({
             data={payments.map((payment, index) => [
               payment.paymentDate ? format(new Date(payment.paymentDate), 'dd/MM/yyyy') : 'N/A',
               payment.transactionId || `Paiement #${index + 1}`,
-              payment.amount ? `${payment.amount.toLocaleString('fr-FR')} MRU` : '0 MRU',
+              payment.amount ? `${formatNumber2(payment.amount)} MRU` : '0 MRU',
               getStatusText(payment.status)
             ])}
             columnWidths={['20%', '40%', '25%', '15%']}
