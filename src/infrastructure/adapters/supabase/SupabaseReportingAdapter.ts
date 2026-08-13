@@ -76,13 +76,13 @@ export class SupabaseReportingAdapter implements IReportingRepository {
           endDate: t.due_date || t.end_date || undefined,
         })),
         milestones: (milestonesByPhase.get(phase.id) || []).map((m: any) => ({
-          id: m.id,
+          id: String(m.id),
           title: m.title || m.name || 'Jalon',
           status: m.status || 'pending',
-          dueDate: m.due_date || m.target_date || undefined,
-          completedAt: m.completed_at || undefined,
-          weight: m.weight ?? 0,
+          date: m.due_date || m.target_date || m.completion_date || '',
+          progress: m.progress ?? undefined,
         })),
+
         createdAt: phase.created_at || undefined,
         updatedAt: phase.updated_at || undefined,
         createdBy: phase.created_by || undefined,
