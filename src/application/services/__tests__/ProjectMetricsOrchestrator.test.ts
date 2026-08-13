@@ -67,6 +67,17 @@ describe('ProjectMetricsOrchestrator', () => {
     expect(metrics.gantt.phases[0].weightBasisLabel).toBeTruthy();
   });
 
+  it('utilise les dates projet si les dates de phase sont des chaînes vides', () => {
+    const result = ProjectMetricsOrchestrator.compute({
+      ...INPUT,
+      phases: [{ id: 'ph1', name: 'Phase réelle', progress: 95, startDate: '', endDate: '' }],
+    } as any);
+    expect(result.gantt.isEmpty).toBe(false);
+    expect(result.gantt.phases).toHaveLength(1);
+    expect(result.gantt.phases[0].start).toBe(new Date(INPUT.project.startDate).getTime());
+    expect(result.gantt.phases[0].end).toBe(new Date(INPUT.project.endDate).getTime());
+  });
+
   it('garantit une progression projet pondérée unique (≠ progression brute de phase)', () => {
     expect(metrics.progress).toBe(95);
     expect(metrics.gantt.phases[0].progress).toBe(95);

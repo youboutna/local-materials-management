@@ -119,6 +119,24 @@ describe('TakeoffToBoqService.syncProject', () => {
     expect(upserted[0]).toMatchObject({ quantity: 540 });
   });
 
+  it('repairs a historical unassigned takeoff when the project has exactly one phase', async () => {
+    const takeoff = makeTakeoff({ phase_id: null as unknown as string });
+    const base = makeService([], [takeoff]);
+    const phaseRepo = {
+      findByProjectId: vi.fn().mockResolvedValue([{ id: PHASE_ID }]),
+    } as unknown as import('@/domain/repositories/IPhaseRepository').IPhaseRepository;
+    const service = new TakeoffToBoqService(
+      (base.service as any).takeoffRepository,
+      base.boqRepo,
+      base.phaseMaterialRepo,
+      phaseRepo,
+    );
+
+    const result = await service.syncProject(PROJECT_ID);
+    expect(result.resourcesUpserted).toBe(1);
+    expect(base.upserted[0]).toMatchObject({ phaseId: PHASE_ID, quantity: 540 });
+  });
+
   it('skips resource sync when a takeoff has no phase attached', async () => {
     const takeoff = makeTakeoff({ phase_id: null as unknown as string });
     const { service, upserted } = makeService([], [takeoff]);
