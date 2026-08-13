@@ -992,6 +992,10 @@ export class ProjectTransformer {
     if (dto.forme !== undefined) updates.forme = dto.forme;
     if (dto.geographicZone !== undefined) updates.geographicZone = dto.geographicZone;
     if (dto.terrainType !== undefined) updates.terrainType = dto.terrainType;
+    if (dto.environmentalConstraints !== undefined) updates.environmentalConstraints = dto.environmentalConstraints;
+    if (dto.hasUtilities !== undefined) updates.hasUtilities = dto.hasUtilities;
+    if (dto.requiresPermits !== undefined) updates.requiresPermits = dto.requiresPermits;
+    if (dto.areaSqm !== undefined) updates.areaSqm = dto.areaSqm;
 
     // === Zones d'intervention (multi-polygones) → localisation v3 ===
     const zonesBuild = ProjectTransformer.buildLocalisationFromZones(
