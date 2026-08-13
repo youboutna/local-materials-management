@@ -40,17 +40,25 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
     setLoading(true);
 
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const ownerId = authData.user?.id;
+      if (!ownerId) throw new Error("Utilisateur non authentifié");
+
+      const payload: BtpTablesInsert<'workspaces'> = {
+        name: formData.name,
+        location: formData.location,
+        contact_manager: formData.contactManager,
+        contact_phone: formData.contactPhone,
+        status: formData.status,
+        facilities: [],
+        owner_id: ownerId,
+      };
+
       const { data, error } = await btpClient.from('workspaces')
-        .insert({
-          name: formData.name,
-          location: formData.location,
-          contact_manager: formData.contactManager,
-          contact_phone: formData.contactPhone,
-          status: formData.status,
-          facilities: [],
-        } satisfies BtpTablesInsert<'workspaces'>)
+        .insert(payload)
         .select()
         .single();
+
 
       if (error) throw error;
 
