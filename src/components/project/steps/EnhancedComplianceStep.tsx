@@ -879,7 +879,15 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               )}
             </CardContent>
           </Card>
+
+          {/* Questionnaire réglementaire piloté par référentiel */}
+          <RegulatoryComplianceChecklist
+            projectId={projectId}
+            canPersist={canPersistSubObjects}
+            onChanged={loadComplianceData}
+          />
         </TabsContent>
+
       </Tabs>
 
       {/* ============================================================
