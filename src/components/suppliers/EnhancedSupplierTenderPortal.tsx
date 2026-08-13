@@ -153,6 +153,7 @@ const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
 
 
 const EnhancedSupplierTenderPortal = () => {
+  const { openDocument } = useDocumentViewer();
   const [selectedTender, setSelectedTender] = useState<PublicTender | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File}>({});
