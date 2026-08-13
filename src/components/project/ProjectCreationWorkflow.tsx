@@ -152,6 +152,28 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     setMode: ctxSetMode,
   } = useWorkflowContext();
 
+  const interventionZones = useMemo(
+    () =>
+      ((formData?.projectData as unknown as { interventionZones?: InterventionZoneDTO[] })
+        ?.interventionZones) ?? [],
+    [formData?.projectData]
+  );
+
+  const handleInterventionZonesChange = useCallback(
+    (zones: InterventionZoneDTO[]) => {
+      if (JSON.stringify(interventionZones) === JSON.stringify(zones)) return;
+      const first = zones[0]?.coordinates?.[0];
+      updateFormData({
+        projectData: {
+          ...(formData?.projectData || {}),
+          interventionZones: zones,
+          ...(first ? { latitude: first.lat, longitude: first.lng } : {}),
+        } as any,
+      });
+    },
+    [formData?.projectData, interventionZones, updateFormData]
+  );
+
   useEffect(() => {
     ctxSetMode(mode === "edit" ? "edit" : "create");
   }, [mode, ctxSetMode]);
@@ -486,21 +508,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
         {currentStep === 2 && (
           <GeoZoneEditor
-            value={
-              ((formData?.projectData as unknown as { interventionZones?: InterventionZoneDTO[] })
-                ?.interventionZones) ?? []
-            }
-            onChange={(zones) => {
-              const first = zones[0]?.coordinates?.[0];
-              updateFormData({
-                projectData: {
-                  ...(formData?.projectData || {}),
-                  interventionZones: zones,
-                  ...(first ? { latitude: first.lat, longitude: first.lng } : {}),
-                } as any,
-              });
-              console.info('[ProjectCreationWorkflow] zones updated', zones.length);
-            }}
+            value={interventionZones}
+            onChange={handleInterventionZonesChange}
             title="Localisation & zones d'intervention"
             hint="Tracez une ou plusieurs zones (polygone, rectangle, cercle, point). Import GeoJSON supporté."
             defaultCenter={
