@@ -18,14 +18,32 @@ import { PertService, type PertActivityInput } from '@/application/services/Pert
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 
 interface UnifiedPERTAnalysisProps {
-  projectId: string;
-  projectDetail: ProjectDetailDTO;
+  projectId?: string;
+  projectDetail?: ProjectDetailDTO;
+  /** Résultat PERT calculé par ProjectMetricsOrchestrator (source unique). */
+  pert?: PertResult;
+  referenceDurationDays?: number | null;
 }
 
 const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
-  projectDetail
+  projectDetail,
+  pert,
 }) => {
   const pertData = useMemo(() => {
+    // Priorité absolue au modèle fourni par l'orchestrateur : aucun recalcul local.
+    if (pert) {
+      const confidenceLevel95Days = Number(
+        (pert.totalExpectedDuration + 1.645 * pert.standardDeviation).toFixed(2),
+      );
+      return {
+        activities: pert.activities,
+        milestoneActivities: [] as PertActivity[],
+        projectDurationDays: pert.totalExpectedDuration,
+        standardDeviation: pert.standardDeviation,
+        confidenceLevel95Days,
+        criticalPath: pert.criticalPath,
+      };
+    }
     const phaseInputs: PertActivityInput[] = (projectDetail?.phases || []).map((p) => ({
       id: p.id,
       name: p.name,
@@ -55,7 +73,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
       confidenceLevel95Days,
       criticalPath: phaseResult.criticalPath,
     };
-  }, [projectDetail]);
+  }, [projectDetail, pert]);
 
   const { 
     activities, 
