@@ -199,6 +199,8 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
   }
 
   private documentToRow(document: ComplianceDocument) {
+    // Les colonnes file_url et uploaded_at n'existent pas sur compliance_documents :
+    // elles ne sont pas persistées ici (voir ComplianceTransformer.documentFromSupabase).
     return {
       id: document.id || undefined,
       compliance_item_id: document.complianceItemId,
@@ -207,8 +209,6 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
       subcategory: document.subcategory,
       is_required: document.isRequired,
       uploaded_by: document.uploadedBy,
-      file_url: document.fileUrl,
-      uploaded_at: document.uploadedAt.toISOString(),
       created_at: document.createdAt.toISOString()
     };
   }

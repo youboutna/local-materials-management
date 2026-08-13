@@ -3,6 +3,7 @@
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import type {
   ITaskDependencyRepository,
   TaskDependencyRow,
@@ -23,7 +24,7 @@ export class SupabaseTaskDependencyAdapter implements ITaskDependencyRepository 
   async create(dependency: Partial<TaskDependencyRow>): Promise<TaskDependencyRow> {
     const { data, error } = await btpClient
       .from('task_dependencies')
-      .insert(dependency)
+      .insert(dependency as BtpTablesInsert<'task_dependencies'>)
       .select()
       .single();
 

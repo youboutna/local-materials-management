@@ -4,6 +4,7 @@ import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
 import { Tender, TenderStatus, SelectionMode, MarketType } from '@/domain/entities/Tender';
 import { TenderTransformer } from '@/dtos/transforms/TenderTransformer';
+import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 
 export class SupabaseTenderAdapter implements ITenderRepository {
   private mapToEntity(data: any): Tender {
@@ -45,8 +46,12 @@ export class SupabaseTenderAdapter implements ITenderRepository {
     if (!raw.created_at) delete raw.created_at;
     if (!raw.updated_at) delete raw.updated_at;
     if (!raw.status) raw.status = 'draft';
+    // `title`/`description` sont requis en base : garantir leur présence
+    // même quand un appelant fournit un payload partiel.
+    if (!raw.title) raw.title = raw.tender_number ? `Appel d'offres ${raw.tender_number}` : 'Appel d\'offres';
+    if (!raw.description) raw.description = raw.title;
 
-    const { data, error } = await supabase.from('tenders').insert([raw]).select().single();
+    const { data, error } = await supabase.from('tenders').insert([raw as BtpTablesInsert<'tenders'>]).select().single();
     if (error) throw new Error(`Failed to save tender: ${error.message}`);
     return data ? this.mapToEntity(data) : null;
   }
@@ -127,7 +132,8 @@ export class SupabaseTenderAdapter implements ITenderRepository {
   }
 
   async findByTenderNumber(tenderNumber: string): Promise<Tender | null> {
-    const { data, error } = await supabase.from('tenders').select('*').eq('tender_number', tenderNumber).single();
+    const numericTenderNumber = Number(tenderNumber);
+    const { data, error } = await supabase.from('tenders').select('*').eq('tender_number', numericTenderNumber).single();
     if (error || !data) return null;
     return this.mapToEntity(data);
   }

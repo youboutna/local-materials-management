@@ -6,7 +6,8 @@
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Project } from '@/domain/entities/Project';
-import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories';
+import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories/IProjectRepository';
+import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 
 /**
@@ -109,7 +110,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
    */
   private async writeWithSchemaFallback(
     payload: Record<string, unknown>,
-    run: (data: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string; message?: string } | null }>,
+    run: (data: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>,
   ): Promise<Record<string, unknown>> {
     const data = { ...payload };
     const dropped: string[] = [];
@@ -133,7 +134,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
   }
 
   async create(projectData: Record<string, unknown>): Promise<Project> {
-    const supabaseData = ProjectTransformer.toSupabase(projectData as Partial<Project>) as Record<string, unknown>;
+    const supabaseData = ProjectTransformer.toSupabase(projectData as unknown as Project) as Record<string, unknown>;
     if ('status' in supabaseData) {
       const normalized = normalizeStatusForDb(supabaseData.status);
       if (normalized) supabaseData.status = normalized;
@@ -141,7 +142,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     }
 
     const row = await this.writeWithSchemaFallback(supabaseData, (data) =>
-      supabase.from('projects').insert(data).select().single(),
+      supabase.from('projects').insert(data as unknown as BtpTablesInsert<'projects'>).select().single(),
     );
     return ProjectTransformer.fromSupabase(row);
   }
@@ -151,7 +152,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       throw new Error('Invalid project ID provided');
     }
 
-    const entityData = ProjectTransformer.toSupabase(updates as Project) as Record<string, unknown>;
+    const entityData = ProjectTransformer.toSupabase(updates as unknown as Project) as Record<string, unknown>;
     if ('status' in entityData) {
       const normalized = normalizeStatusForDb(entityData.status);
       if (normalized) entityData.status = normalized;
@@ -159,7 +160,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     }
 
     const row = await this.writeWithSchemaFallback(entityData, (data) =>
-      supabase.from('projects').update(data).eq('id', id).select().single(),
+      supabase.from('projects').update(data as unknown as BtpTablesUpdate<'projects'>).eq('id', id).select().single(),
     );
     return ProjectTransformer.fromSupabase(row);
   }

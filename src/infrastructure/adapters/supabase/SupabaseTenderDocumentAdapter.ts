@@ -429,8 +429,9 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       };
 
       data?.forEach(item => {
-        if (item.status in counts) {
-          counts[item.status as TenderDocumentStatus]++;
+        const status = item.status ?? 'draft';
+        if (status in counts) {
+          counts[status as TenderDocumentStatus]++;
         }
       });
 

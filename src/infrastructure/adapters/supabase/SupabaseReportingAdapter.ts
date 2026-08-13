@@ -58,8 +58,8 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         // sinon un 0 % réel serait écrasé par une estimation temporelle.
         status: vm.status || 'not_started',
         progress: vm.progress ?? 0,
-        startDate: vm.startDate || undefined,
-        endDate: vm.endDate || undefined,
+        startDate: vm.startDate || '',
+        endDate: vm.endDate || '',
         actualStartDate: (phase.actual_start_date as string) || undefined,
         actualEndDate: vm.actualEndDate || undefined,
         // budget = estimated_cost, actualCost = actual_cost (colonnes réelles)

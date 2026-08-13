@@ -20,17 +20,17 @@ interface DatabaseComplianceRow {
   id: string;
   type: string;
   title: string;
-  description: string;
+  description: string | null;
   status: string;
   priority: string;
-  deadline?: string;
+  deadline?: string | null;
   responsible: string;
   project_id: string;
-  bank_guarantee_id?: string;
-  created_at: string;
-  updated_at: string;
+  bank_guarantee_id?: string | null;
+  created_at: string | null;
+  updated_at: string | null;
   created_by: string;
-  updated_by?: string;
+  updated_by?: string | null;
 }
 
 interface DatabaseComplianceDocumentRow {
@@ -38,12 +38,10 @@ interface DatabaseComplianceDocumentRow {
   compliance_item_id: string;
   document_id: string;
   category: string;
-  subcategory?: string;
-  is_required: boolean;
-  uploaded_by?: string;
-  file_url?: string;
-  uploaded_at: string;
-  created_at: string;
+  subcategory?: string | null;
+  is_required: boolean | null;
+  uploaded_by?: string | null;
+  created_at: string | null;
 }
 
 interface DatabaseComplianceNoteRow {
@@ -51,17 +49,17 @@ interface DatabaseComplianceNoteRow {
   compliance_item_id: string;
   note: string;
   created_by: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface DatabaseComplianceAuditRow {
   id: string;
   compliance_item_id: string;
   field_name: string;
-  old_value?: string;
-  new_value?: string;
+  old_value?: string | null;
+  new_value?: string | null;
   changed_by: string;
-  changed_at: string;
+  changed_at: string | null;
 }
 
 export class ComplianceTransformer {
@@ -136,25 +134,27 @@ export class ComplianceTransformer {
 
   // Entity ↔ Database mappings
   static fromSupabase(row: DatabaseComplianceRow): ComplianceItem {
+    const createdAt = row.created_at ?? new Date().toISOString();
+    const updatedAt = row.updated_at ?? createdAt;
     return new ComplianceItem(
       row.id,
       row.type as 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental' | 'health_safety' | 'quality' | 'financial' | 'data_protection' | 'labor_law' | 'procurement',
       row.title,
-      row.description,
+      row.description ?? undefined,
       row.status as 'pending' | 'in_progress' | 'approved' | 'rejected' | 'requires_action',
       row.priority as 'low' | 'medium' | 'high' | 'critical',
-      row.deadline,
+      row.deadline ?? undefined,
       row.responsible,
       row.project_id,
-      row.bank_guarantee_id,
+      row.bank_guarantee_id ?? undefined,
       row.created_by,
-      row.updated_by,
-      new Date(row.created_at),
-      new Date(row.updated_at),
+      row.updated_by ?? undefined,
+      new Date(createdAt),
+      new Date(updatedAt),
       this.getCategoryFromType(row.type),
       undefined, // subcategory
       'partial', // complianceLevel
-      row.created_at.split('T')[0], // lastReviewed
+      createdAt.split('T')[0], // lastReviewed
       ComplianceItem.calculateNextReview(row.type as 'regulatory' | 'insurance' | 'bank_guarantee' | 'technical' | 'environmental' | 'health_safety' | 'quality' | 'financial' | 'data_protection' | 'labor_law' | 'procurement'), // nextReview
       [], // externalReferences
       'medium', // riskLevel
@@ -277,18 +277,19 @@ export class ComplianceTransformer {
   }
 
   static documentFromSupabase(row: DatabaseComplianceDocumentRow): ComplianceDocument {
+    const createdAt = row.created_at ?? new Date().toISOString();
     return new ComplianceDocument(
       row.id,
       row.compliance_item_id,
       row.document_id,
       row.category,
-      row.subcategory,
-      row.is_required,
-      row.uploaded_by,
-      row.file_url,
-      new Date(row.uploaded_at),
-      new Date(row.created_at),
-      new Date(row.created_at) // Use created_at as updated_at since it's not available in DB row
+      row.subcategory ?? undefined,
+      row.is_required ?? false,
+      row.uploaded_by ?? undefined,
+      undefined, // file_url: colonne absente du schéma compliance_documents
+      new Date(createdAt), // uploaded_at: colonne absente, on utilise created_at
+      new Date(createdAt),
+      new Date(createdAt) // Use created_at as updated_at since it's not available in DB row
     );
   }
 
@@ -337,13 +338,14 @@ export class ComplianceTransformer {
   }
 
   static noteFromSupabase(row: DatabaseComplianceNoteRow): ComplianceNote {
+    const createdAt = row.created_at ?? new Date().toISOString();
     return new ComplianceNote(
       row.id,
       row.compliance_item_id,
       row.note,
       row.created_by,
-      new Date(row.created_at),
-      new Date(row.created_at)
+      new Date(createdAt),
+      new Date(createdAt)
     );
   }
 
@@ -382,16 +384,17 @@ export class ComplianceTransformer {
   }
 
   static auditFromSupabase(row: DatabaseComplianceAuditRow): ComplianceAuditEntry {
+    const changedAt = row.changed_at ?? new Date().toISOString();
     return new ComplianceAuditEntry(
       row.id,
       row.compliance_item_id,
       row.field_name,
-      row.old_value,
-      row.new_value,
+      row.old_value ?? undefined,
+      row.new_value ?? undefined,
       row.changed_by,
-      new Date(row.changed_at),
-      new Date(row.changed_at),
-      new Date(row.changed_at)
+      new Date(changedAt),
+      new Date(changedAt),
+      new Date(changedAt)
     );
   }
 

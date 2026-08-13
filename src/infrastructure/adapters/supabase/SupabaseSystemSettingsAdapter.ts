@@ -3,6 +3,7 @@
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import type {
   ISystemSettingsRepository,
   SystemSettingRow,
@@ -39,7 +40,7 @@ export class SupabaseSystemSettingsAdapter implements ISystemSettingsRepository 
           category: setting.category ?? 'general',
           configuration: setting.configuration ?? {},
           updated_at: new Date().toISOString(),
-        },
+        } as BtpTablesInsert<'system_settings'>,
         { onConflict: 'key' }
       )
       .select()

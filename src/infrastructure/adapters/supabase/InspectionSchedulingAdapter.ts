@@ -140,15 +140,15 @@ export class InspectionSchedulingAdapter implements IInspectionSchedulingReposit
    */
   async getProjectInspectionSchedule(projectId: string): Promise<Array<{
     id: string;
-    date: string;
-    inspector: string;
-    status: string;
+    date: string | null;
+    inspector: string | null;
+    status: string | null;
     comments: string | null;
-    progress_at_inspection: number;
+    progress_at_inspection: number | null;
     project_id: string;
     phase_id: string | null;
-    created_at: string;
-    updated_at: string;
+    created_at: string | null;
+    updated_at: string | null;
     projects?: {
       title: string;
     } | null;

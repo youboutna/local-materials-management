@@ -142,6 +142,9 @@ export class SupabaseMonitoringAlertAdapter implements IMonitoringAlertRepositor
         description: alertData.description || null,
         project_id: alertData.stationId || '00000000-0000-0000-0000-000000000000',
         metadata: alertData.metadata || null,
+        message: alertData.description || alertData.title,
+        source: 'monitoring',
+        status: 'active',
       })
       .select()
       .single();

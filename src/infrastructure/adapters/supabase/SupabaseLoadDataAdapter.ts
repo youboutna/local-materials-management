@@ -26,6 +26,7 @@ export class SupabaseLoadDataAdapter implements ILoadDataRepository {
         title: 'Projet de Démonstration 1',
         description: 'Projet créé via le bouton de chargement',
         status: 'planning',
+        budget: 0,
         created_at: new Date().toISOString()
       },
       {
@@ -33,6 +34,7 @@ export class SupabaseLoadDataAdapter implements ILoadDataRepository {
         title: 'Projet de Démonstration 2', 
         description: 'Projet créé via le bouton de chargement',
         status: 'planning',
+        budget: 0,
         created_at: new Date().toISOString()
       }
     ];
