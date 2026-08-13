@@ -1,5 +1,6 @@
 // Business logic and calculations service - Hexagonal Architecture
 // Following Rule #1: Service orchestrates business logic
+import { PhaseWeightingService } from '@/application/services/PhaseWeightingService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
