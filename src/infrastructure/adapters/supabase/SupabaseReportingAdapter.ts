@@ -252,7 +252,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         .eq('project_id', project.id);
 
       const actualCost = paymentsData?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phases);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phases as unknown as Parameters<typeof ReportCalculations.calculateEVMMetrics>[2]);
 
       const analytics = ProjectCalculationService.calculateProjectHealthScore(
         project.progress || 0,
