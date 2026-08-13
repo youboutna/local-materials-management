@@ -108,12 +108,9 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     loadEmployees();
   }, []);
 
-  useEffect(() => {
-    // Update form data when risks change - use onUpdate which accepts Partial<ProjectDTO>
-    onUpdate({
-      // Store risk data in a way compatible with ProjectDTO
-    } as any);
-  }, [risks, onUpdate]);
+  // NOTE: no effect calling onUpdate() here — the callback is recreated on each
+  // parent render, which caused an infinite render loop ("Maximum update depth
+  // exceeded"). Risk changes are propagated explicitly by the CRUD handlers.
 
   const loadEmployees = async () => {
     try {

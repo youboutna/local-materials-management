@@ -109,12 +109,16 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   // GeoService instance
   const geoService = getGeocodingService();
 
+  // Sync from parent only when the value really changed (deep compare on a
+  // serialized signature) to avoid render loops with inline object props.
+  const valueSignature = value ? JSON.stringify(value) : '';
   useEffect(() => {
-    if (value) {
-      setMapData(value);
-      setAddress(value.address || '');
-    }
-  }, [value]);
+    if (!valueSignature) return;
+    const next = JSON.parse(valueSignature);
+    setMapData(next);
+    setAddress(next.address || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valueSignature]);
 
   const updateMapData = useCallback((newData: Partial<MapData>) => {
     const updatedData = { ...mapData, ...newData };

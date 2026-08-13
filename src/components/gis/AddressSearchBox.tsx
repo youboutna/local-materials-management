@@ -132,9 +132,9 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Mettre à jour la requête initiale
+  // Mettre à jour la requête initiale (sans boucle : on ignore les valeurs identiques)
   useEffect(() => {
-    setQuery(initialQuery);
+    setQuery((prev) => (prev === initialQuery ? prev : initialQuery));
   }, [initialQuery]);
 
   // ============ Handlers ============
