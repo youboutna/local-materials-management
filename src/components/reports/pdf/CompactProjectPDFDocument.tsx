@@ -755,39 +755,6 @@ export function CompactProjectPDFDocument({
               </Text>
             </View>
 
-            {/* Suivi & Évaluation — indicateurs réels, lecture DGEER si organisation concernée */}
-            {activeSections.monitoringEvaluation && missionInsights.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  Suivi &amp; Évaluation — référentiel missions DGEER
-                </Text>
-                <View style={styles.table}>
-                  <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderCell, { width: '30%' }]}>Mission</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '16%' }]}>Rattachement</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '34%' }]}>Indicateur de suivi</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Valeur</Text>
-                  </View>
-                  {missionInsights
-                    .filter((m) => m.relevant || m.indicator !== 'n/d')
-                    .map((m) => (
-                      <View key={m.code} style={styles.tableRow}>
-                        <Text style={[styles.tableCell, { width: '30%' }]}>{m.label}</Text>
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            { width: '16%', color: m.relevant ? colors.success : colors.muted },
-                          ]}
-                        >
-                          {m.relevant ? 'Direct' : 'Indirect'}
-                        </Text>
-                        <Text style={[styles.tableCell, { width: '34%' }]}>{m.indicatorLabel}</Text>
-                        <Text style={[styles.tableCell, { width: '20%' }]}>{m.indicator}</Text>
-                      </View>
-                    ))}
-                </View>
-              </View>
-            )}
 
 
 
