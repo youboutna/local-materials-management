@@ -526,7 +526,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => openDocument(doc, { proxyMode: true, context: { materiau: materialId } })}
+                            onClick={() => openDocument(doc, { proxy: true, context: { materiau: materialId } })}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

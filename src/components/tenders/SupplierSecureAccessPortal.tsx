@@ -67,7 +67,7 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
     } catch {
       /* tracking is best-effort */
     }
-    openDocument(doc, { proxyMode: true, allowStatusChange: false });
+    openDocument(doc, { proxy: true, allowStatusChange: false });
   };
 
   return (

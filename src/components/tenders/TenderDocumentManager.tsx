@@ -624,7 +624,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => openDocument(tenderDoc.document!, { proxyMode: true })}
+                                onClick={() => openDocument(tenderDoc.document!, { proxy: true })}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Voir

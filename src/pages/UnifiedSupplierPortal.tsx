@@ -720,7 +720,7 @@ const UnifiedSupplierPortal = () => {
                                   variant="outline"
                                   onClick={() =>
                                     openDocument(document, {
-                                      proxyMode: true,
+                                      proxy: true,
                                       allowStatusChange: false,
                                       context: { portail: "Fournisseur" },
                                     })

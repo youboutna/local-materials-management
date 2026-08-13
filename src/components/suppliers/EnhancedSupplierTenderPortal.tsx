@@ -564,7 +564,7 @@ const EnhancedSupplierTenderPortal = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => openDocument(doc, { proxyMode: true, allowStatusChange: false })}
+                                onClick={() => openDocument(doc, { proxy: true, allowStatusChange: false })}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Voir
