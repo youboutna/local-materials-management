@@ -691,8 +691,14 @@ export class EnhancedValidationService {
       ));
     }
 
-    // Check high-risk items
-    const highRisks = risks.filter(r => (r.probability * r.impact) > 50);
+    // Check high-risk items.
+    // RiskDTO.probability / impact sont normalisés sur 0..1 (voir RiskDTO), le score
+    // est donc ramené sur 100 avant comparaison au seuil métier (50/100).
+    const HIGH_RISK_SCORE_THRESHOLD = 50;
+    const toScore100 = (value: number) => (value > 1 ? value / 10 : value);
+    const highRisks = risks.filter(
+      (r) => toScore100(r.probability ?? 0) * toScore100(r.impact ?? 0) * 100 > HIGH_RISK_SCORE_THRESHOLD,
+    );
     if (highRisks.length > 0) {
       issues.push(this.createIssue(
         ValidationCategory.RISK,

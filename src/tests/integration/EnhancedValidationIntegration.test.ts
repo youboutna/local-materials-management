@@ -375,7 +375,8 @@ describe('Enhanced Validation Integration', () => {
         status: 'pending' as const,
         priority: 'high' as const,
         responsible: 'compliance-owner',
-        deadline: '2024-01-01',
+        // Échéance future : le service refuse toute deadline passée.
+        deadline: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 10),
         category: 'Regulatory',
         complianceLevel: 'partial' as const,
         riskLevel: 'high' as const,
