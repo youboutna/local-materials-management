@@ -29,7 +29,7 @@ import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import QuantityTakeoffs from "./QuantityTakeoffs";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
-import RiskAnalysisStep from "./steps/RiskAnalysisStep";
+import EnhancedRiskAnalysisStep from "./steps/EnhancedRiskAnalysisStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 
 // Import unified workflow hook
@@ -551,18 +551,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         )}
 
            {currentStep === 4 && (
-             <RiskAnalysisStep
-               workflowData={formData}
-               onStepComplete={(stepData) => {
-                 updateFormData({ 
+             <EnhancedRiskAnalysisStep
+               isEditing={mode === "edit"}
+               formData={{
+                 ...(formData?.projectData || {}),
+                 risks: formData?.relatedData?.risks || [],
+               } as any}
+               onUpdate={(data: any) => {
+                 updateFormData({
                    relatedData: {
                      ...formData?.relatedData,
-                     risks: stepData.risks
+                     risks: data.risks
                    }
                  });
                }}
              />
            )}
+
 
            {currentStep === 5 && (
              <EnhancedComplianceStep

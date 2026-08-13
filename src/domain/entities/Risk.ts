@@ -20,6 +20,20 @@ export interface IEmployee {
   };
 }
 
+/**
+ * Détails opérationnels d'un risque (plans, coûts, échéances).
+ * Optionnels: ne participent pas aux invariants du risque.
+ */
+export interface RiskDetails {
+  mitigationPlan?: string | null;
+  contingencyPlan?: string | null;
+  costs?: number | null;
+  timelineImpact?: number | null;
+  reviewDate?: string | null;
+  ownerId?: string | null;
+  dueDate?: string | null;
+}
+
 export class Risk {
   // Private fields for encapsulation
   private _id: string;
@@ -36,6 +50,8 @@ export class Risk {
   private _relatedTasks: string[];
   private _createdAt: string;
   private _updatedAt: string;
+  private _details: RiskDetails;
+
 
   constructor(
     id: string,
@@ -51,7 +67,8 @@ export class Risk {
     identifiedDate: string | null,
     relatedTasks: string[],
     createdAt: string,
-    updatedAt: string
+    updatedAt: string,
+    details: RiskDetails = {}
   ) {
     // Validate and assign private fields
     this._id = this.validateId(id);
@@ -68,10 +85,13 @@ export class Risk {
     this._relatedTasks = relatedTasks || [];
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
+    this._details = details || {};
   }
 
   // ============= Getters =============
+  get details(): RiskDetails { return this._details; }
   get id(): string { return this._id; }
+
   get project(): IProject | null { return this._project; }
   get projectId(): string { return this._project?.id || ''; }
   get title(): string { return this._title; }
@@ -284,24 +304,31 @@ export class Risk {
     status?: RiskStatus;
     category?: RiskCategory;
     identifiedBy?: IEmployee | null;
+    mitigationStrategy?: string | null;
+    identifiedDate?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    details?: RiskDetails;
   }): Risk {
     return new Risk(
       params.id,
       params.project || null,
       params.title,
       params.description || null,
-      params.probability || 0.5,
-      params.impact || 0.5,
+      params.probability ?? 0.5,
+      params.impact ?? 0.5,
       params.status || 'identified',
       params.category || 'operational',
-      null, // mitigationStrategy
+      params.mitigationStrategy ?? null,
       params.identifiedBy || null,
-      new Date().toISOString(), // identifiedDate
+      params.identifiedDate ?? new Date().toISOString(),
       [], // relatedTasks
-      new Date().toISOString(),
-      new Date().toISOString()
+      params.createdAt || new Date().toISOString(),
+      params.updatedAt || new Date().toISOString(),
+      params.details || {}
     );
   }
+
 
   // ============= Data Transformation Methods =============
   toPlainObject(): Record<string, unknown> {
