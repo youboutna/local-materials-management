@@ -130,7 +130,7 @@ export class ReportFormatting {
    * Format currency with French locale
    */
   static formatCurrency(amount: number, currency = 'MRU'): string {
-    return `${amount.toLocaleString('fr-FR')} ${currency}`;
+    return `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
   }
 
   /**
@@ -147,7 +147,7 @@ export class ReportFormatting {
   /**
    * Format percentage with precision
    */
-  static formatPercentage(value: number, precision = 1): string {
+  static formatPercentage(value: number, precision = 2): string {
     return `${value.toFixed(precision)}%`;
   }
 

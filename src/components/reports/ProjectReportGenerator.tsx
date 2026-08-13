@@ -80,6 +80,17 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
   const initialProfile: ReportProfile = 'summary';
 
+  const companyInfo = useMemo(() => {
+    if (!ownerOrganization) return undefined;
+    return {
+      name: ownerOrganization.name,
+      address: ownerOrganization.address || '',
+      phone: ownerOrganization.phone || '',
+      email: ownerOrganization.email || '',
+      logo: (ownerOrganization as any).logoUrl || undefined,
+    };
+  }, [ownerOrganization]);
+
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
     // Défauts pilotés par le référentiel — plus aucune liste de sections en dur.
@@ -240,6 +251,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           organizationName={ownerOrganization?.name}
 
           organizationCode={ownerOrganization?.code}
+          company={companyInfo}
         />
       );
 
@@ -301,6 +313,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           organizationName={ownerOrganization?.name}
 
           organizationCode={ownerOrganization?.code}
+          company={companyInfo}
         />
       );
 

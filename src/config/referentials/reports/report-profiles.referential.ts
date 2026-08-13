@@ -5,7 +5,7 @@
  * de hydratation. Plus aucun défaut en dur dans les composants.
  */
 
-export type ReportProfile = 'summary' | 'detailed' | 'financial' | 'project_manager';
+export type ReportProfile = 'summary' | 'detailed' | 'financial' | 'technical' | 'project_manager';
 
 export type ReportSectionKey =
   | 'overview'
@@ -69,6 +69,17 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     includes: [
       'overview', 'financial', 'phases', 'risks', 'kpi', 'bankGuarantees',
       'insurance', 'paymentBlocks', 'suppliers', 'escalationAlerts', 'evmAnalysis',
+      'monitoringEvaluation',
+    ],
+  },
+  technical: {
+    code: 'technical',
+    label: { fr: 'Rapport technique', en: 'Technical report' },
+    description: { fr: 'Focus exécution technique : phases, jalons, matériaux, inspections, PERT/Gantt' },
+    depth: 'full',
+    includes: [
+      'overview', 'timeline', 'materials', 'phases', 'inspections', 'milestones',
+      'documents', 'employees', 'risks', 'kpi', 'pertAnalysis', 'ganttChart',
       'monitoringEvaluation',
     ],
   },
