@@ -50,6 +50,8 @@ import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/Project
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import DocumentsListPaginated from '@/components/documents/DocumentsListPaginated';
+import RegulatoryComplianceChecklist from '@/components/project/compliance/RegulatoryComplianceChecklist';
+
 
 // ============================================================
 // Types
@@ -879,7 +881,15 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               )}
             </CardContent>
           </Card>
+
+          {/* Questionnaire réglementaire piloté par référentiel */}
+          <RegulatoryComplianceChecklist
+            projectId={projectId}
+            canPersist={canPersistSubObjects}
+            onChanged={loadComplianceData}
+          />
         </TabsContent>
+
       </Tabs>
 
       {/* ============================================================
@@ -888,7 +898,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Document Dialog */}
       <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ajouter un Document</DialogTitle>
             <DialogDescription>
@@ -909,7 +919,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Insurance Dialog */}
       <Dialog open={isInsuranceDialogOpen} onOpenChange={setIsInsuranceDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Gestion des Assurances</DialogTitle>
             <DialogDescription>
@@ -943,7 +953,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Bank Guarantee Dialog */}
       <Dialog open={isBankGuaranteeDialogOpen} onOpenChange={setIsBankGuaranteeDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Gestion des Garanties Bancaires</DialogTitle>
             <DialogDescription>
