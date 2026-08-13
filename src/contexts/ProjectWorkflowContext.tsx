@@ -176,6 +176,7 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
       };
       
     case 'SET_PROJECT_ID':
+      if (state.projectId === action.payload && state.isPersisted) return state;
       return {
         ...state,
         projectId: action.payload,
@@ -383,7 +384,8 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
     // État du workflow
     // ============================================================
       
-    case 'SET_CURRENT_STEP':
+    case 'SET_CURRENT_STEP': {
+      if (state.currentStep === action.payload) return state;
       const newCompletedSteps = Math.max(state.metadata.completedSteps, action.payload - 1);
       return {
         ...state,
@@ -394,8 +396,10 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
           progressPercentage: Math.round((newCompletedSteps / state.metadata.totalSteps) * 100)
         }
       };
+    }
       
     case 'SET_PERSISTED':
+      if (state.isPersisted === action.payload) return state;
       return {
         ...state,
         isPersisted: action.payload,
@@ -429,6 +433,7 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
       };
       
     case 'SET_MODE':
+      if (state.metadata.mode === action.payload) return state;
       return {
         ...state,
         metadata: { ...state.metadata, mode: action.payload }
