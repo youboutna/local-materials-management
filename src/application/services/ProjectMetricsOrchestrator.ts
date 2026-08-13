@@ -140,6 +140,12 @@ export interface ProjectMetrics {
   alerts: DerivedAlert[];
   insights: MonitoringInsight[];
   gantt: GanttModel;
+  /** Analyse PERT unique (estimation probabiliste). */
+  pert: PertResult;
+  /** Score de santé UNIQUE, cohérent avec les alertes. */
+  health: HealthScoreModel;
+  /** Progression jalons — source unique. */
+  milestoneProgress: MilestoneProgressModel;
   /** Chaînes prêtes à l'affichage — formatage unifié garanti. */
   formatted: {
     progress: string;
@@ -157,7 +163,10 @@ export interface ProjectMetrics {
     referenceDuration: string;
     pertDuration: string;
     scheduleGap: string;
+    healthScore: string;
+    milestoneProgress: string;
   };
+
 }
 
 const WEIGHT_BASIS_LABELS: Record<string, string> = {
