@@ -28,6 +28,8 @@ interface ProjectDocumentUploadProps {
   stakeholderId?: string | null;
   context?: 'project' | 'phase' | 'step' | 'task' | 'inspection' | 'stakeholder' | 'compliance';
   contextLabel?: string;
+  /** Type de document pré-sélectionné (ex: pièce attendue d'un contrôle réglementaire) */
+  defaultDocumentType?: DocumentType;
   onDocumentUploaded?: () => void;
 }
 
@@ -41,16 +43,25 @@ const ProjectDocumentUpload = ({
   stakeholderId, 
   context = 'project', 
   contextLabel,
+  defaultDocumentType,
   onDocumentUploaded 
 }: ProjectDocumentUploadProps) => {
   const documentCategories = React.useMemo(() => getDocumentCategoriesForContext(context), [context]);
-  const [selectedCategory, setSelectedCategory] = useState<string>(documentCategories[0]?.key ?? 'other');
+  const initialCategory = React.useMemo(() => {
+    if (defaultDocumentType) {
+      const match = documentCategories.find((c) => c.types.includes(defaultDocumentType));
+      if (match) return match.key;
+    }
+    return documentCategories[0]?.key ?? 'other';
+  }, [defaultDocumentType, documentCategories]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    documentType: '' as DocumentType,
+    documentType: (defaultDocumentType ?? '') as DocumentType,
     status: 'draft' as const
   });
+
   const [file, setFile] = useState<File | null>(null);
   
   const { toast } = useToast();
