@@ -36,6 +36,11 @@ import {
   AlertFilter as AlertFilterDTO
 } from '@/dtos/entities/AlertDTO';
 import { AlertTransformer } from '@/dtos/transforms/AlertTransformer';
+import {
+  MetricAlertRulesService,
+  type AlertRuleInput,
+  type DerivedAlert,
+} from '@/application/services/MetricAlertRulesService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -584,7 +589,7 @@ export class AlertService {
     const derived = derivedInput ? MetricAlertRulesService.evaluate(derivedInput) : [];
     let persisted: AlertDTO[] = [];
     try {
-      persisted = await this.getProjectAlerts(projectId);
+      persisted = await this.getAlertsByProjectId(projectId);
     } catch {
       persisted = [];
     }
