@@ -10,97 +10,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
 import { ProjectMiniMap } from './ProjectMiniMap';
-
-/**
- * Gantt PDF sur échelle calendaire réelle : une barre par phase positionnée
- * proportionnellement à la période du projet, remplissage = avancement réel,
- * repère rouge = aujourd'hui. Aucun caractère spécial (glyphes absents des
- * polices embarquées) — uniquement des rectangles.
- */
-const PhaseGanttBars: React.FC<{ phases: any[]; project: any }> = ({ phases, project }) => {
-  const rows = (phases || [])
-    .map((p: any) => ({
-      name: p.title || p.name || p.phase_name || '—',
-      start: new Date(p.startDate ?? p.start_date ?? project?.startDate ?? Date.now()).getTime(),
-      end: new Date(p.endDate ?? p.end_date ?? project?.endDate ?? Date.now()).getTime(),
-      progress: Math.max(0, Math.min(100, Number(p.actualProgress ?? p.progress ?? 0))),
-    }))
-    .filter((r) => Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start);
-
-  if (rows.length === 0) return null;
-
-  const min = Math.min(...rows.map((r) => r.start));
-  const max = Math.max(...rows.map((r) => r.end));
-  const span = max - min || 1;
-  const pct = (t: number) => ((t - min) / span) * 100;
-
-  const startYear = new Date(min).getFullYear();
-  const endYear = new Date(max).getFullYear();
-  const years = Array.from({ length: Math.max(1, endYear - startYear + 1) }, (_, i) => startYear + i);
-  const now = Date.now();
-  const todayPct = now >= min && now <= max ? pct(now) : null;
-
-  return (
-    <View style={{ marginTop: 8 }}>
-      <View style={{ flexDirection: 'row', marginBottom: 2 }}>
-        <Text style={{ width: '28%', fontSize: 7, color: '#6b7280' }}>Phase</Text>
-        <View style={{ width: '72%', flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#d1d5db' }}>
-          {years.map((y) => (
-            <Text key={y} style={{ flex: 1, fontSize: 7, color: '#6b7280', textAlign: 'center' }}>
-              {y}
-            </Text>
-          ))}
-        </View>
-      </View>
-
-      {rows.map((r, idx) => {
-        const left = pct(r.start);
-        const width = Math.max(1, pct(r.end) - left);
-        return (
-          <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-            <Text style={{ width: '28%', fontSize: 7 }}>{r.name}</Text>
-            <View style={{ width: '72%', height: 8, backgroundColor: '#f3f4f6', position: 'relative' }}>
-              <View
-                style={{
-                  position: 'absolute',
-                  left: `${left}%`,
-                  width: `${width}%`,
-                  height: 8,
-                  backgroundColor: '#dbeafe',
-                  borderWidth: 0.5,
-                  borderColor: '#93c5fd',
-                }}
-              >
-                <View
-                  style={{
-                    width: `${r.progress}%`,
-                    height: 7,
-                    backgroundColor: r.progress >= 100 ? '#10b981' : '#3b82f6',
-                  }}
-                />
-              </View>
-              {todayPct !== null && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: `${todayPct}%`,
-                    width: 1,
-                    height: 8,
-                    backgroundColor: '#ef4444',
-                  }}
-                />
-              )}
-            </View>
-          </View>
-        );
-      })}
-      <Text style={{ fontSize: 6, color: '#9ca3af', marginTop: 2 }}>
-        {`Barre pleine = avancement réel · trait rouge = aujourd'hui · échelle ${startYear}-${endYear}`}
-      </Text>
-    </View>
-  );
-};
-
+import { PhaseGanttBars } from './PhaseGanttBars';
+import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -286,6 +197,36 @@ export function ProjectPDFDocument({
     (evmMetrics as any)?.plannedProgress ??
     EvmService.plannedProgress(project.startDate as any, project.endDate as any);
 
+  // --- SOURCE UNIQUE DE VÉRITÉ : ProjectMetricsOrchestrator ---
+  const metrics = ProjectMetricsOrchestrator.compute({
+    project: {
+      id: (project as any).id,
+      title: project.title,
+      budget: project.budget ?? 0,
+      progress: project.progress ?? 0,
+      startDate: project.startDate as any,
+      endDate: project.endDate as any,
+      interventionZones: (project as any).interventionZones ?? [],
+      currency: (project as any).currency || 'MRU',
+    },
+    phases: (weightedPhases || []).map((p: any) => ({
+      id: p.id,
+      name: p.title || p.name || p.phase_name,
+      weight: p.weight ?? p.weight_percentage,
+      budget: p.budget ?? p.estimatedCost ?? p.estimated_cost,
+      startDate: p.startDate ?? p.start_date,
+      endDate: p.endDate ?? p.end_date,
+      progress: p.actualProgress ?? p.progress ?? 0,
+      actualCost: p.actualCost ?? p.actual_cost,
+      status: p.status,
+    })),
+    actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
+    inspectionsCount: safeReportData.inspections.length,
+    documentsCount: safeReportData.documents.length,
+    risks: (reportData?.risks || enrichedData?.riskAssessment?.risks || []) as any[],
+    pertExpectedDuration: pertAnalysis?.totalExpectedDuration ?? null,
+  });
+
 
 
   return (
@@ -344,7 +285,7 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Budget Total"
-              value={financialData.totalBudget ? `${formatNumber2(financialData.totalBudget)} MRU` : 'Non défini'}
+              value={financialData.totalBudget ? metrics.formatted.budget : 'Non défini'}
               color="#10b981"
             />
             <PDFMetricCard
@@ -359,8 +300,8 @@ export function ProjectPDFDocument({
             />
             <PDFMetricCard
               title="Écart Budget"
-              value={`${formatNumber2(financialData.costOverrun)} MRU`}
-              color={financialData.costOverrun > 0 ? "#ef4444" : "#10b981"}
+              value={metrics.formatted.budgetVariance}
+              color={metrics.budgetVariance > 0 ? "#ef4444" : "#10b981"}
             />
           </PDFRow>
           <PDFCard>
@@ -392,9 +333,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
                 <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Durée totale" value={project.startDate && project.endDate ? 
-                  `${Math.ceil((new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
-                  'Non calculé'} />
+                <PDFText label="Durée totale (référence)" value={metrics.formatted.referenceDuration} />
               </PDFCol>
               <PDFCol>
                 <PDFText label="Progression actuelle" value={formatPercent2(unifiedProgress)} />
@@ -491,7 +430,7 @@ export function ProjectPDFDocument({
               
               return [
                 p.title || p.name || p.phase_name || '—',
-                formatPercent2(p.actualProgress ?? p.progress ?? 0),
+                `${formatPercent2(p.actualProgress ?? p.progress ?? 0)} (source: brute)`,
                 statusMap[p.status] || p.status || '—',
                 p.budget ? `${formatNumber2(p.budget)} MRU` : '0 MRU',
                 p.actualCost ? `${formatNumber2(p.actualCost)} MRU` : '0 MRU',
@@ -501,8 +440,8 @@ export function ProjectPDFDocument({
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
           />
 
-          {/* Diagramme de Gantt — échelle calendaire réelle */}
-          <PhaseGanttBars phases={enrichedData.phases as any[]} project={project} />
+          {/* Gantt réutilisable — même composant que la section « Diagramme de Gantt » */}
+          <PhaseGanttBars gantt={metrics.gantt} />
         </PDFSection>
       )}
 
@@ -622,16 +561,16 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Performance délai" value={!hasPlannedValue ? "Non évaluable" : evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
-                <PDFText label="Performance coût" value={!hasActualCost ? "Non évaluable (aucun coût engagé)" : evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance délai" value={metrics.schedulePerformanceLabel} />
+                <PDFText label="Performance coût" value={metrics.costPerformanceLabel} />
               </PDFCol>
               <PDFCol>
                 <PDFText
                   label="Écart d'avancement"
                   value={
-                    plannedProgress == null
+                    metrics.scheduleGapPercent === null
                       ? 'Non évaluable'
-                      : `${formatSigned2(unifiedProgress - plannedProgress, 'pts')} (réel ${formatPercent2(unifiedProgress)} vs planifié ${formatPercent2(plannedProgress)})`
+                      : `${metrics.formatted.scheduleGap} (réel ${metrics.formatted.progress} vs planifié ${metrics.formatted.plannedProgress})`
                   }
                 />
                 <PDFText label="Statut global" value={!hasPlannedValue && !hasActualCost ? "Non évaluable" : hasPlannedValue && evmMetrics.schedulePerformanceIndex >= 1 && (!hasActualCost || evmMetrics.costPerformanceIndex >= 1) ? "Très bon" : "En surveillance"} />
@@ -743,48 +682,30 @@ export function ProjectPDFDocument({
               );
             })()}
 
-            {/* Suivi & Évaluation — référentiel générique (tout type de projet) */}
-            {(() => {
-              const highRisks = (safeReportData as any).risks
-                ? []
-                : (reportData?.risks || enrichedData?.riskAssessment?.risks || []);
-              const highCount = (highRisks as any[]).filter((r: any) => {
-                const level = String(r?.impact ?? r?.severity ?? r?.riskLevel ?? '').toLowerCase();
-                const status = String(r?.status ?? '').toLowerCase();
-                const open = !['mitigated', 'closed', 'resolu', 'resolved'].includes(status);
-                return open && (level.includes('high') || level.includes('eleve') || level.includes('critique') || level.includes('critical'));
-              }).length;
+            {/* Suivi & Évaluation — 7 axes alimentés par l'orchestrateur + AlertService */}
+            <PDFTable
+              headers={['Axe de suivi', 'Question de décision', 'Indicateur', 'Valeur', 'Appréciation']}
+              data={metrics.insights.map((m) => [
+                m.label,
+                m.decisionQuestion,
+                m.indicatorLabel,
+                m.value,
+                m.appreciationLabel,
+              ])}
+              columnWidths={['20%', '32%', '20%', '12%', '16%']}
+            />
 
-              const insights = buildMonitoringInsights({
-                progress: unifiedProgress,
-                budget: project.budget ?? 0,
-                actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
-                phasesCount: Array.isArray(enrichedData?.phases)
-                  ? enrichedData!.phases.length
-                  : safeReportData.phases.length,
-                interventionZonesCount: Array.isArray((project as any).interventionZones)
-                  ? (project as any).interventionZones.length
-                  : 0,
-                inspectionsCount: safeReportData.inspections.length,
-                documentsCount: safeReportData.documents.length,
-                highRisksCount: highCount,
-              });
-
-              return (
-                <PDFTable
-                  headers={['Axe de suivi', 'Question de décision', 'Indicateur', 'Valeur', 'Appréciation']}
-                  data={insights.map((m) => [
-                    m.label,
-                    m.decisionQuestion,
-                    m.indicatorLabel,
-                    m.value,
-                    m.appreciationLabel,
-                  ])}
-                  columnWidths={['20%', '32%', '20%', '12%', '16%']}
-                />
-              );
-            })()}
-
+            {metrics.alerts.length > 0 && (
+              <PDFTable
+                headers={['Alerte', 'Niveau', 'Détail']}
+                data={metrics.alerts.map((a) => [
+                  a.message,
+                  a.level === 'critical' ? 'CRITIQUE' : a.level === 'warning' ? 'VIGILANCE' : 'INFO',
+                  a.detail || '—',
+                ])}
+                columnWidths={['50%', '18%', '32%']}
+              />
+            )}
 
             <PDFCard>
               <PDFRow>
@@ -891,7 +812,7 @@ export function ProjectPDFDocument({
             />
             <PDFMetricCard
               title="SPI"
-              value={formatRatio2(evmMetrics.schedulePerformanceIndex)}
+              value={metrics.formatted.spi}
               color="#8b5cf6"
             />
           </PDFRow>
@@ -899,8 +820,8 @@ export function ProjectPDFDocument({
             <PDFRow>
               <PDFCol>
                 <PDFText label="Écart de délai (SV)" value={`${formatNumber2(evmMetrics.scheduleVariance)} MRU`} />
-                <PDFText label="Écart de coût (CV)" value={`${formatNumber2(evmMetrics.costVariance)} MRU`} />
-                <PDFText label="Indice de performance coût (CPI)" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
+                <PDFText label="Écart de coût (CV)" value={metrics.formatted.costVariance} />
+                <PDFText label="Indice de performance coût (CPI)" value={metrics.formatted.cpi} />
               </PDFCol>
               <PDFCol>
                 <PDFText label="Budget à l'achèvement (BAC)" value={`${formatNumber2(evmMetrics.budgetAtCompletion)} MRU`} />
@@ -920,7 +841,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Durée totale estimée (PERT)" 
-                  value={`${formatNumber2(pertAnalysis.totalExpectedDuration ?? 0)} jours`} 
+                  value={metrics.formatted.pertDuration} 
                 />
                 <PDFText 
                   label="Écart-type total" 
@@ -929,7 +850,7 @@ export function ProjectPDFDocument({
               </PDFCol>
               <PDFCol>
                 <PDFText
-                  label="Durée calendaire de référence"
+                  label="Durée calendaire de référence (unique)"
                   value={
                     project.startDate && project.endDate
                       ? `${formatNumber2(
@@ -970,7 +891,7 @@ export function ProjectPDFDocument({
       {/* Diagramme de Gantt — vue tabulaire phases sur timeline */}
       {reportConfig.includeSections.ganttChart && enrichedData?.phases && enrichedData.phases.length > 0 && (
         <PDFSection title="Diagramme de Gantt" borderColor="#0891b2">
-          <PhaseGanttBars phases={enrichedData.phases as any[]} project={project} />
+          <PhaseGanttBars gantt={metrics.gantt} />
           <PDFTable
             headers={['Phase', 'Début', 'Fin', 'Durée (j)', 'Avancement', 'Statut']}
             data={enrichedData.phases.map((p: any) => {
@@ -982,7 +903,7 @@ export function ProjectPDFDocument({
                 start ? format(start, 'dd/MM/yyyy') : '—',
                 end ? format(end, 'dd/MM/yyyy') : '—',
                 formatNumber2(duration),
-                formatPercent2(p.actualProgress ?? p.progress ?? 0),
+                `${formatPercent2(p.actualProgress ?? p.progress ?? 0)} (source: brute)`,
                 p.status || '—',
               ];
             })}
