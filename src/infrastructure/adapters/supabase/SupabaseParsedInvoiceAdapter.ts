@@ -6,6 +6,7 @@
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ParsedInvoiceEntity, InvoiceStatus, InvoiceType } from '@/domain/entities/ParsedInvoice';
+import { Json } from '@/integrations/supabase/types';
 
 export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
   
@@ -412,7 +413,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
     tender_id?: string;
     invoice_type?: string;
     status?: string;
-    extracted_data?: Record<string, unknown>;
+    extracted_data?: Json;
     parsing_errors?: string;
     validation_errors?: string;
     processed_at?: string;
@@ -437,7 +438,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
       tender_id?: string;
       invoice_type?: string;
       status?: string;
-      extracted_data?: Record<string, unknown>;
+      extracted_data?: Json;
       parsing_errors?: string;
       validation_errors?: string;
       processed_at?: string;
@@ -449,7 +450,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
     if (entity.invoiceNumber !== undefined) row.invoice_number = entity.invoiceNumber || undefined;
     if (entity.invoiceDate !== undefined) row.invoice_date = entity.invoiceDate || undefined;
     if (entity.amount !== undefined) row.amount = entity.amount || undefined;
-    if (entity.extractedData !== undefined) row.extracted_data = entity.extractedData || undefined;
+    if (entity.extractedData !== undefined) row.extracted_data = (entity.extractedData as unknown as Json) || undefined;
     if (entity.parsingErrors !== undefined) row.parsing_errors = entity.parsingErrors?.join(', ') || undefined;
     if (entity.status !== undefined) row.status = entity.status;
     if (entity.tenderId !== undefined) row.tender_id = entity.tenderId || undefined;
