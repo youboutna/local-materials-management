@@ -6,6 +6,7 @@
  * Le dialog propose une case à cocher par lot pour lier le document à plusieurs lots.
  */
 import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -274,10 +275,13 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
               </div>
               <div className="flex items-center gap-1">
                 {doc.fileUrl && (
-                  <Button size="icon" variant="ghost" asChild>
-                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" title="Ouvrir">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Consulter"
+                    onClick={() => openDocument(doc, { proxyMode: true })}
+                  >
+                    <Eye className="h-4 w-4" />
                   </Button>
                 )}
                 {!readOnly && (

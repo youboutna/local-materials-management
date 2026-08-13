@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ interface TenderDocumentManagerProps {
 }
 
 const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: TenderDocumentManagerProps) => {
+  const { openDocument } = useDocumentViewer();
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -622,7 +624,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => window.open(tenderDoc.document!.file_url!, '_blank')}
+                                onClick={() => openDocument(tenderDoc.document!, { proxyMode: true })}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Voir
