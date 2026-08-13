@@ -456,7 +456,75 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     fontSize: 6,
   },
+  // Ligne de synthèse (densité `line` du référentiel)
+  synthLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 4,
+    backgroundColor: colors.light,
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  synthItem: {
+    flexDirection: 'row',
+    gap: 3,
+    alignItems: 'center',
+  },
+  synthLabel: {
+    fontSize: 6,
+    color: colors.muted,
+  },
+  synthValue: {
+    fontSize: 7,
+    fontWeight: 'bold',
+    color: colors.dark,
+  },
+  // Micro-Gantt
+  ganttWrapper: {
+    marginBottom: 4,
+  },
+  ganttRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  ganttLabel: {
+    width: '26%',
+    fontSize: 5,
+    color: colors.muted,
+  },
+  ganttTrack: {
+    flex: 1,
+    height: 5,
+    backgroundColor: colors.light,
+    borderRadius: 2,
+    position: 'relative',
+  },
+  ganttBar: {
+    position: 'absolute',
+    height: 5,
+    borderRadius: 2,
+    backgroundColor: colors.secondary,
+  },
+  ganttToday: {
+    position: 'absolute',
+    width: 1,
+    height: 5,
+    backgroundColor: colors.danger,
+  },
+  ganttAxis: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 1,
+  },
+  ganttAxisText: {
+    fontSize: 5,
+    color: colors.muted,
+  },
 });
+
 
 interface CompactProjectPDFDocumentProps {
   projects: ProjectData[];
