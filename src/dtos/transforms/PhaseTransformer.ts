@@ -220,11 +220,13 @@ export class PhaseTransformer {
     set('notes', phase.notes);
     set('location', phase.location);
     set('custom_phase_data', phase.customPhaseData);
-    if (phase.dependencies !== undefined) set('dependencies', JSON.stringify(phase.dependencies));
-    if (phase.milestones !== undefined) set('milestones', JSON.stringify(phase.milestones));
-    if (phase.humanResources !== undefined) set('human_resources', JSON.stringify(phase.humanResources));
-    if (phase.materials !== undefined) set('materials', JSON.stringify(phase.materials));
-    if (phase.suppliers !== undefined) set('suppliers', JSON.stringify(phase.suppliers));
+    // Colonnes jsonb : on envoie les objets tels quels (pas de double encodage)
+    if (phase.dependencies !== undefined) set('dependencies', phase.dependencies);
+    if (phase.milestones !== undefined) set('milestones', phase.milestones);
+    if (phase.humanResources !== undefined) set('human_resources', phase.humanResources);
+    if (phase.materials !== undefined) set('materials', phase.materials);
+    if (phase.suppliers !== undefined) set('suppliers', phase.suppliers);
+
     return out;
   }
 
@@ -332,45 +334,59 @@ export class PhaseTransformer {
 
   // =================== Create Operations ===================
 
-  static fromCreateDTO(dto: Partial<PhaseDTO>): Phase {
+  static fromCreateDTO(dto: Partial<PhaseDTO> & Record<string, any>): Phase {
     const phaseCode = (dto as { phaseCode?: string }).phaseCode;
-    const customPhaseData = {
+    const raw = dto as Record<string, any>;
+
+    // Champs libres persistés dans custom_phase_data (steps, stages, champs métier…)
+    const customPhaseData: Record<string, unknown> = {
       ...((dto.customPhaseData as Record<string, unknown> | undefined) ?? {}),
+      ...((raw.customPhase as Record<string, unknown> | undefined) ?? {}),
       ...(phaseCode ? { phaseCode } : {}),
+      ...(raw.steps ? { steps: raw.steps } : {}),
+      ...(raw.stages ? { stages: raw.stages } : {}),
+      ...(raw.priority ? { priority: raw.priority } : {}),
+      ...(raw.responsibleId ? { responsibleId: raw.responsibleId } : {}),
     };
+
+    const resolvedName =
+      raw.phaseName ?? dto.name ?? raw.title ?? raw.label ?? '';
+    const resolvedCost =
+      dto.estimatedCost ?? raw.budget ?? raw.budgetMru ?? raw.estimated_cost ?? null;
+
     return Phase.create({
       id: dto.id,
       projectId: dto.projectId || '',
-      phaseName: dto.name || '',
-      description: dto.description || '',
+      phaseName: resolvedName,
+      description: dto.description || raw.notes || '',
       status: (dto.status as PhaseStatus) || 'pending',
       progress: dto.progress || 0,
-      orderIndex: dto.orderIndex || 0,
+      orderIndex: dto.orderIndex ?? raw.order ?? 0,
       // Type de phase normalisé pour respecter les contraintes CHECK côté DB
       phaseType: PhaseTransformer.normalizeDbPhaseType(
         (dto as { phaseType?: string }).phaseType ?? phaseCode ?? dto.type,
       ),
       startDate: dto.startDate || null,
       endDate: dto.endDate || null,
-      estimatedDuration: dto.estimatedDuration || null,
+      estimatedDuration: dto.estimatedDuration ?? raw.durationDays ?? null,
       actualDuration: dto.actualDuration || null,
-      estimatedCost: dto.estimatedCost || null,
-      actualCost: dto.actualCost || null,
-      dependencies: [],
+      estimatedCost: resolvedCost,
+      actualCost: dto.actualCost ?? raw.actualCost ?? null,
+      dependencies: Array.isArray(raw.dependencies) ? raw.dependencies : [],
       milestones: (dto.milestones ?? []).map((m) => (typeof m === 'string' ? m : m.id)),
-      humanResources: null,
-      materials: [],
-      suppliers: [],
-      location: null,
+      humanResources: raw.humanResources ?? null,
+      materials: Array.isArray(raw.materials) ? raw.materials : [],
+      suppliers: Array.isArray(raw.suppliers) ? raw.suppliers : [],
+      location: raw.location ?? null,
       customPhaseData: Object.keys(customPhaseData).length > 0 ? customPhaseData : null,
-      // Note: steps removed - handled as separate entities
-      notes: null,
+      notes: raw.notes ?? null,
       weight: dto.weight ?? 0.1,
       createdBy: null,
       createdAt: dto.createdAt || new Date().toISOString(),
       updatedAt: dto.updatedAt || new Date().toISOString()
     });
   }
+
 
   /**
    * Normalise un code/type source (ETUDES, "Travaux", TRAVAUX_RESEAU, ...) vers
