@@ -17,7 +17,10 @@ export interface MonitoringInsightInput {
   interventionZonesCount?: number;
   inspectionsCount?: number;
   documentsCount?: number;
+  /** @deprecated remplacé par `activeAlertsCount` (AlertService dérivé). */
   highRisksCount?: number;
+  /** Alertes actives (MetricAlertRulesService) — axe « Maîtrise des risques ». */
+  activeAlertsCount?: number;
 }
 
 export type MonitoringAppreciation = 'good' | 'warning' | 'critical' | 'unknown';
@@ -78,7 +81,7 @@ function resolveValue(code: MonitoringAxisCode, input: MonitoringInsightInput): 
     case 'documentation':
       return num(input.documentsCount);
     case 'maitrise_risques':
-      return num(input.highRisksCount);
+      return num(input.activeAlertsCount) ?? num(input.highRisksCount);
     default:
       return null;
   }
