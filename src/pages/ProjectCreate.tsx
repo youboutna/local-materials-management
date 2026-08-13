@@ -20,6 +20,7 @@
  */
 
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
+import WorkflowMetricsPreview from "@/components/project/WorkflowMetricsPreview";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
@@ -200,6 +201,9 @@ const ProjectCreate = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
+        {/* Indicateurs temps réel — source unique : ProjectMetricsOrchestrator */}
+        <WorkflowMetricsPreview formData={formData} mode="create" className="mb-6" />
+
         {/* Workflow Progress Bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">

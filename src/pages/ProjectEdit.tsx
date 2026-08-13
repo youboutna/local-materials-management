@@ -18,6 +18,7 @@
  */
 
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
+import WorkflowMetricsPreview from "@/components/project/WorkflowMetricsPreview";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -340,6 +341,9 @@ const ProjectEdit = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
+        {/* Indicateurs temps réel — source unique : ProjectMetricsOrchestrator */}
+        <WorkflowMetricsPreview formData={formData} mode="edit" className="mb-6" />
+
         {/* Workflow Progress Bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
