@@ -23,8 +23,8 @@ type ProjectMaterialRow = BtpRow;
 type BtpRow = Record<string, any>;
 
 export class SupabaseMaterialAdapter implements IMaterialRepository {
-  private tableName = 'materials';
-  private projectMaterialsTable = 'project_materials';
+  private readonly tableName = 'materials' as const;
+  private readonly projectMaterialsTable = 'project_materials' as const;
 
   // ============================================================================
   // PRIVATE HELPERS
@@ -351,11 +351,13 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       const { data, error } = await supabase
         .from(this.tableName)
         .select('*')
-        .lt('available_quantity', supabase.rpc('min', { col: 'min_quantity' }))
         .order('available_quantity', { ascending: true });
 
       if (error || !data) return [];
-      return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
+      const belowMin = (data as BtpRow[]).filter(
+        (row) => (row.available_quantity ?? 0) < (row.min_quantity ?? 0)
+      );
+      return belowMin.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findBelowMinStock failed:', error);
       return [];
