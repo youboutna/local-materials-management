@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, Upload, Trash2, Pencil, ExternalLink, Loader2, Plus, CheckCircle2 } from 'lucide-react';
+import { FileText, Upload, Trash2, Pencil, ExternalLink, Loader2, Plus, CheckCircle2, Eye } from 'lucide-react';
 import {
   useTenderLotDocuments,
   useCreateTenderLotDocument,
@@ -280,7 +280,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                     size="icon"
                     variant="ghost"
                     title="Consulter"
-                    onClick={() => openDocument(doc, { proxyMode: true })}
+                    onClick={() => openDocument(doc, { proxy: true })}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
