@@ -1,4 +1,4 @@
-import dataset from '@/data/json_project.json';
+import dataset from '@/tests/fixtures/projectImportDataset.fixture.json';
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { describe, expect, it } from 'vitest';
 import {
