@@ -91,9 +91,6 @@ export const useAddressSearch = (
         const suggestions = toSuggestions(results).slice(0, maxResults);
         cache.set(trimmed.toLowerCase(), suggestions);
         if (currentReq !== reqIdRef.current) return; // stale
-        const base = suggestions.filter((s) => s.source === 'base').length;
-        const nominatim = suggestions.length - base;
-        console.info('[AddressSearch]', { query: trimmed, base, nominatim });
         setState({
           results: suggestions,
           isLoading: false,
