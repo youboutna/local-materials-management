@@ -239,7 +239,21 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
         {/* Evaluation Tab */}
         <TabsContent value="evaluation" className="space-y-4">
+          {/* Questionnaire piloté par référentiel : alimente automatiquement les 3 scores */}
+          <EvaluationQuestionnaire
+            value={criterionScores}
+            onChange={({ scores: next, byCategory }) => {
+              setCriterionScores(next);
+              setScores((prev) => ({
+                ...prev,
+                administrative_score: Math.round(byCategory.administrative ?? 0),
+                technical_score: Math.round(byCategory.technical ?? 0),
+                financial_score: Math.round(byCategory.financial ?? 0),
+              }));
+            }}
+          />
           <Card>
+
             <CardHeader>
               <CardTitle>Grille d'Évaluation</CardTitle>
               <CardDescription>
