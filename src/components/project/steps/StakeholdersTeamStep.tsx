@@ -420,19 +420,21 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
         {/* Documents dialog */}
         <Dialog open={!!docsFor} onOpenChange={(o) => !o && setDocsFor(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden p-0">
+            <DialogHeader className="px-6 pt-6">
               <DialogTitle>
                 Documents — {docsFor?.name}
               </DialogTitle>
             </DialogHeader>
-            {docsFor && projectId && (
-              <StakeholderDocumentUpload
-                projectId={projectId}
-                stakeholderId={docsFor.id}
-                stakeholderName={docsFor.name}
-              />
-            )}
+            <div className="min-h-0 overflow-y-auto overscroll-contain px-6 pb-6">
+              {docsFor && projectId && (
+                <StakeholderDocumentUpload
+                  projectId={projectId}
+                  stakeholderId={docsFor.id}
+                  stakeholderName={docsFor.name}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </CardContent>
