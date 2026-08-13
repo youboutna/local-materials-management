@@ -304,24 +304,31 @@ export class Risk {
     status?: RiskStatus;
     category?: RiskCategory;
     identifiedBy?: IEmployee | null;
+    mitigationStrategy?: string | null;
+    identifiedDate?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    details?: RiskDetails;
   }): Risk {
     return new Risk(
       params.id,
       params.project || null,
       params.title,
       params.description || null,
-      params.probability || 0.5,
-      params.impact || 0.5,
+      params.probability ?? 0.5,
+      params.impact ?? 0.5,
       params.status || 'identified',
       params.category || 'operational',
-      null, // mitigationStrategy
+      params.mitigationStrategy ?? null,
       params.identifiedBy || null,
-      new Date().toISOString(), // identifiedDate
+      params.identifiedDate ?? new Date().toISOString(),
       [], // relatedTasks
-      new Date().toISOString(),
-      new Date().toISOString()
+      params.createdAt || new Date().toISOString(),
+      params.updatedAt || new Date().toISOString(),
+      params.details || {}
     );
   }
+
 
   // ============= Data Transformation Methods =============
   toPlainObject(): Record<string, unknown> {
