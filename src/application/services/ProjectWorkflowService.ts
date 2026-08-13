@@ -751,18 +751,30 @@ export class ProjectWorkflowService {
 
   private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
     if (!phases.length) return;
+    const { PhaseTransformer } = await import('@/dtos/transforms/PhaseTransformer');
     const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => []);
     for (const phase of phases) {
-      const payload = { ...phase, projectId, status: phase.status || PhaseStatus.PENDING };
-      const existingPhase = existing.find((c: any) => c.id === phase.id || c.phaseCode === phase.phaseCode || c.name === phase.name);
+      const raw = phase as unknown as Record<string, any>;
+      // Normalisation centralisée : titre, budget (→ estimated_cost), champs libres
+      const entity = PhaseTransformer.fromCreateDTO({
+        ...raw,
+        projectId,
+        status: phase.status || PhaseStatus.PENDING,
+      });
+      const existingPhase = existing.find(
+        (c: any) =>
+          c.id === phase.id ||
+          (phase.phaseCode && c.phaseCode === phase.phaseCode) ||
+          (c.phaseName || c.name) === (raw.name ?? raw.phaseName ?? raw.title),
+      );
       if (existingPhase) {
-        await this.phaseRepository.update(existingPhase.id, payload as unknown as Partial<Phase>);
+        await this.phaseRepository.update(existingPhase.id, entity as unknown as Partial<Phase>);
       } else {
-        const { id: _omit, ...toCreate } = payload as any;
-        await this.phaseRepository.create(toCreate as unknown as Phase);
+        await this.phaseRepository.create(entity as unknown as Phase);
       }
     }
   }
+
 
   private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
     // Implementation simplifiée
