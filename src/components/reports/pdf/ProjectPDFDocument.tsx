@@ -1,7 +1,7 @@
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
 import { buildMonitoringInsights } from '@/utils/monitoringInsights';
-import { formatAmount2, formatNumber2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
+import { formatAmount2, formatIndex2, formatNumber2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
@@ -121,7 +121,11 @@ export function ProjectPDFDocument({
   
   // Calculate labor costs
   const laborCost = employees.reduce((sum, employee) => {
-    const hoursWorked = employee.assignedTasks?.length * 8 || 40;
+    // Heures réelles si saisies ; sinon la ressource ne contribue pas au coût
+    // (avant : 8 h/tâche ou 40 h forfaitaires inventées).
+    const hoursWorked = Number(
+      (employee as any).hoursWorked ?? (employee as any).allocatedHours ?? 0,
+    );
     const hourlyRate = employee.costPerHour || 0;
     return sum + (hoursWorked * hourlyRate);
   }, 0);
@@ -449,7 +453,7 @@ export function ProjectPDFDocument({
               </PDFCol>
               <PDFCol>
                 <PDFText label="Indice SPI" value={formatRatio2(evmMetrics.schedulePerformanceIndex)} />
-                <PDFText label="Indice CPI" value={formatRatio2(evmMetrics.costPerformanceIndex)} />
+                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
               </PDFCol>
             </PDFRow>
             <PDFRow>
@@ -478,7 +482,7 @@ export function ProjectPDFDocument({
             />
             <PDFMetricCard
               title="Indice CPI"
-              value={formatRatio2(evmMetrics.costPerformanceIndex)}
+              value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)}
               color={evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
@@ -765,7 +769,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText label="Écart de délai (SV)" value={`${evmMetrics.scheduleVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
                 <PDFText label="Écart de coût (CV)" value={`${evmMetrics.costVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
-                <PDFText label="Indice de performance coût (CPI)" value={formatRatio2(evmMetrics.costPerformanceIndex)} />
+                <PDFText label="Indice de performance coût (CPI)" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
               </PDFCol>
               <PDFCol>
                 <PDFText label="Budget à l'achèvement (BAC)" value={`${evmMetrics.budgetAtCompletion.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />

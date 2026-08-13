@@ -137,19 +137,27 @@ export function CompactProjectReportGenerator({
             realCosts.totalSpent ?? completeReport.costCalculation.actualCost ?? 0
           );
 
-          // EVM réel : plannedValue temporel (ReportCalculations) + actualCost issu du repo
+          // EVM réel : PV temporel, EV pondéré par phase, AC issu du repo
+          const reportPhases = ((reportProject as any).phases || []) as any[];
           const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
             project as any,
             actualCost,
+            reportPhases,
           );
           setSingleEvmMetrics(evmMetricsResult as EVMMetrics);
 
-          const pertResult = ReportCalculations.calculatePERTAnalysis(project as any);
+          // PERT sur les phases/tâches RÉELLES (auparavant le projet était passé
+          // à la place des phases, ce qui déclenchait des activités fictives).
+          const pertResult = ReportCalculations.calculatePERTAnalysis(
+            reportPhases,
+            ((reportProject as any).tasks || (project as any).tasks || []) as any,
+          );
           setSinglePertAnalysis({
             expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
             variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,
             ...pertResult,
           });
+
 
           // Construire le DTO projet enrichi (préserver null si absent — ne pas mentir avec new Date())
           const projectDetailFromService = {
@@ -245,13 +253,19 @@ export function CompactProjectReportGenerator({
               } as ProjectDetailDTO;
               enrichedMap.set(proj.id, projectDetailFromService);
 
+              const reportPhases = ((reportProject as any).phases || []) as any[];
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj as any,
                 actualCost,
+                reportPhases,
               );
               evmMap.set(proj.id, evmMetricsResult as EVMMetrics);
 
-              const pertResult = ReportCalculations.calculatePERTAnalysis(proj as any);
+              const pertResult = ReportCalculations.calculatePERTAnalysis(
+                reportPhases,
+                ((reportProject as any).tasks || []) as any,
+              );
+
               pertMap.set(proj.id, {
                 expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
                 variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,

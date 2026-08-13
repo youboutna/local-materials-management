@@ -12,6 +12,7 @@
  * - ✅ Pas de redéfinition de types dans UI
  */
 
+import { EvmService } from '@/application/services/EvmService';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
@@ -66,60 +67,44 @@ interface PhaseTimeline {
 export class ReportCalculations {
   
   /**
-   * Calculate Earned Value Management (EVM) metrics with real project data
+   * Calculate Earned Value Management (EVM) metrics with real project data.
+   *
+   * Délègue à `EvmService` (source unique) : CV = EV − AC, CPI/SPI indéterminés
+   * quand AC/PV = 0, EV pondéré par phase (poids explicite → budget → durée).
    */
   static calculateEVMMetrics(project: ProjectData, actualCost: number, phases: PhaseDTO[] = []): EVMMetrics {
-    const budget = project.budget || 0;
-    const progress = project.progress || 0;
-    
-    // Calculate planned value based on project timeline
-    const projectStart = new Date(project.startDate);
-    const projectEnd = project.endDate ? new Date(project.endDate) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    const today = new Date();
-    
-    const totalDuration = projectEnd.getTime() - projectStart.getTime();
-    const elapsedTime = Math.max(0, today.getTime() - projectStart.getTime());
-    const timeProgress = totalDuration > 0 ? Math.min(1, elapsedTime / totalDuration) : 1;
-    
-    // Calculate planned value based on schedule
-    const plannedValue = budget * timeProgress;
-    
-    // Calculate earned value based on actual progress
-    const earnedValue = budget * (progress / 100);
-    
-    const budgetAtCompletion = budget;
-    
-    // Calculate variances
-    const scheduleVariance = earnedValue - plannedValue;
-    const costVariance = earnedValue - actualCost;
-    
-    // Calculate performance indices (avoid division by zero)
-    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 1;
-    const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 1;
-    
-    // Calculate forecasts
-    const estimateAtCompletion = costPerformanceIndex > 0 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
-    const estimateToComplete = Math.max(0, estimateAtCompletion - actualCost);
-    const varianceAtCompletion = budgetAtCompletion - estimateAtCompletion;
-
-    return {
-      plannedValue,
-      earnedValue,
+    const result = EvmService.compute({
+      budget: project.budget || 0,
+      progress: project.progress ?? 0,
+      startDate: project.startDate,
+      endDate: project.endDate,
       actualCost,
-      scheduleVariance,
-      costVariance,
-      schedulePerformanceIndex,
-      costPerformanceIndex,
-      budgetAtCompletion,
-      estimateAtCompletion,
-      estimateToComplete,
-      varianceAtCompletion
-    };
+      phases: (phases || []) as any,
+    });
+    return EvmService.toLegacyMetrics(result) as unknown as EVMMetrics;
+  }
+
+  /**
+   * Analyse EVM complète (indices nullables + statuts explicites).
+   */
+  static calculateEVM(project: ProjectData, actualCost: number, phases: PhaseDTO[] = []) {
+    return EvmService.compute({
+      budget: project.budget || 0,
+      progress: project.progress ?? 0,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      actualCost,
+      phases: (phases || []) as any,
+    });
   }
 
   /**
    * Calculate PERT analysis for project phases with realistic estimates
    * Utilise TaskAssignmentDTO pour les tâches
+   *
+   * IMPORTANT : aucune activité fictive n'est générée. Sans phases ni tâches
+   * réelles, l'analyse est vide (`isEstimated: false`, durée 0) afin de ne pas
+   * afficher une durée PERT fabriquée qui contredit le calendrier du projet.
    */
   static calculatePERTAnalysis(phases?: PhaseDTO[], tasks?: TaskAssignmentDTO[]): PERTAnalysis {
     let activities: PERTActivity[] = [];
@@ -139,24 +124,24 @@ export class ReportCalculations {
           phase.endDate
         );
         return {
-          name: phase.name || phase.name || 'Phase inconnue',
+          name: phase.name || 'Phase inconnue',
           optimistic: Math.max(1, duration * 0.7),
           mostLikely: duration || 14,
           pessimistic: duration * 1.4 || 21
         };
       });
-    } else {
-      // Realistic default activities based on typical construction projects
-      activities = [
-        { name: 'Études et conception', optimistic: 14, mostLikely: 21, pessimistic: 35 },
-        { name: 'Préparation du site', optimistic: 5, mostLikely: 10, pessimistic: 18 },
-        { name: 'Fondations et terrassement', optimistic: 20, mostLikely: 30, pessimistic: 45 },
-        { name: 'Structure et gros œuvre', optimistic: 60, mostLikely: 90, pessimistic: 120 },
-        { name: 'Second œuvre', optimistic: 45, mostLikely: 60, pessimistic: 90 },
-        { name: 'Finitions', optimistic: 30, mostLikely: 45, pessimistic: 65 },
-        { name: 'Réception et livraison', optimistic: 7, mostLikely: 14, pessimistic: 21 }
-      ];
     }
+
+    if (activities.length === 0) {
+      return {
+        activities: [],
+        expectedDurations: {},
+        criticalPath: [],
+        totalExpectedDuration: 0,
+        variances: {},
+      } as PERTAnalysis;
+    }
+
 
     const processedActivities = activities.map(activity => {
       const pertEstimate = ReportCalculations.calculatePERTEstimate(

@@ -8,10 +8,19 @@
 
 const DIGITS = { minimumFractionDigits: 2, maximumFractionDigits: 2 } as const;
 
+/**
+ * Les polices embarquées dans les PDF (react-pdf) ne possèdent pas les espaces
+ * fines insécables produites par `toLocaleString('fr-FR')` : elles s'affichaient
+ * en « / » (ex. « 450/000/000,10 MRU »). On normalise en espace simple.
+ */
+export function sanitizeNumberSpaces(text: string): string {
+  return text.replace(/[\u00A0\u202F\u2007\u2009]/g, ' ');
+}
+
 export function formatNumber2(value: unknown, locale = 'fr-FR'): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return '0,00'.replace(',', locale.startsWith('fr') ? ',' : '.');
-  return n.toLocaleString(locale, DIGITS);
+  return sanitizeNumberSpaces(n.toLocaleString(locale, DIGITS));
 }
 
 export function formatAmount2(value: unknown, currency = 'MRU', locale = 'fr-FR'): string {
@@ -27,3 +36,23 @@ export function formatRatio2(value: unknown): string {
   const n = Number(value);
   return Number.isFinite(n) ? n.toFixed(2) : '0.00';
 }
+
+/**
+ * Indice EVM (CPI/SPI) : « N/A » quand la métrique est indéterminée
+ * (aucun coût engagé pour le CPI, projet non démarré pour le SPI).
+ * Évite d'afficher « 1,00 / sous budget » sur un projet à 0 % d'engagement.
+ */
+export function formatIndex2(value: unknown, isAvailable?: boolean): string {
+  const n = Number(value);
+  if (isAvailable === false || !Number.isFinite(n) || n === 0) return 'N/A';
+  return n.toFixed(2);
+}
+
+/** Écart signé (points, MRU...) : signe explicite, 2 décimales. */
+export function formatSigned2(value: unknown, unit = '', locale = 'fr-FR'): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 'N/A';
+  const sign = n > 0 ? '+' : '';
+  return `${sign}${formatNumber2(n, locale)}${unit ? ` ${unit}` : ''}`;
+}
+

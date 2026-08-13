@@ -5,6 +5,8 @@ import {
   type ReportProfile,
   type ReportSectionKey,
 } from '@/config/referentials/reports/report-profiles.referential';
+import { formatNumber2 } from '@/utils/reportNumbers';
+
 
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
@@ -641,7 +643,7 @@ export function CompactProjectPDFDocument({
     if (budget >= 1000000) {
       return `${(budget / 1000000).toFixed(2)} M MRU`;
     }
-    return `${budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`;
+    return `${formatNumber2(budget)} MRU`;
   };
 
   const formatDecimal = (value: number) => {
@@ -1120,7 +1122,9 @@ export function CompactProjectPDFDocument({
                 <View style={styles.evmItem}>
                   <Text style={styles.evmLabel}>CPI</Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
-                    {formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
+                    {(evmMetrics as any)?.hasActualCost === false || !(evmMetrics?.costPerformanceIndex)
+                      ? 'N/A'
+                      : formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
@@ -1167,7 +1171,9 @@ export function CompactProjectPDFDocument({
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
-                    {formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
+                    {(evmMetrics as any)?.hasActualCost === false || !(evmMetrics?.costPerformanceIndex)
+                      ? 'N/A'
+                      : formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
                   </Text>
                   <Text style={styles.kpiLabel}>Indice CPI</Text>
                 </View>
@@ -1194,7 +1200,9 @@ export function CompactProjectPDFDocument({
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true), fontSize: 8 }]}>
-                    {(evmMetrics?.costPerformanceIndex || 0) >= 1 ? 'Sous budget' : (evmMetrics?.costPerformanceIndex || 0) >= 0.9 ? 'Dans budget' : 'Dépassement'}
+                    {(evmMetrics as any)?.hasActualCost === false || !(evmMetrics?.costPerformanceIndex)
+                      ? 'N/A (aucun coût engagé)'
+                      : (evmMetrics?.costPerformanceIndex || 0) >= 1 ? 'Sous budget' : (evmMetrics?.costPerformanceIndex || 0) >= 0.9 ? 'Dans budget' : 'Dépassement'}
                   </Text>
                   <Text style={styles.kpiLabel}>Perf. coût</Text>
                 </View>
