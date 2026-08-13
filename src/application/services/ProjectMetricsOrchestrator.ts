@@ -265,6 +265,38 @@ export class ProjectMetricsOrchestrator {
     // --- 7. Modèle Gantt réutilisable (calendrier réel) ---
     const gantt = this.buildGantt(project, phases, weighted.weights, progress, asOf);
 
+    // --- 8. PERT : moteur unique (activités fournies, sinon phases) ---
+    const pert = PertService.compute(
+      input.pertActivities && input.pertActivities.length > 0
+        ? input.pertActivities
+        : phases.map((p, i) => ({
+            id: p.id || `phase-${i}`,
+            name: p.name,
+            startDate: p.startDate ?? null,
+            endDate: p.endDate ?? null,
+          })),
+    );
+    const pertDurationDays =
+      input.pertExpectedDuration != null
+        ? Number(num(input.pertExpectedDuration).toFixed(2))
+        : pert.isEstimated
+          ? pert.totalExpectedDuration
+          : null;
+
+    // --- 9. Progression jalons : source UNIQUE ---
+    const milestoneProgress = this.buildMilestoneProgress(input.milestones, asOf);
+
+    // --- 10. Score de santé UNIQUE, dérivé des métriques et des alertes ---
+    const health = this.buildHealth({
+      progress,
+      plannedProgress: evm.plannedProgress,
+      spi: evm.schedulePerformanceIndex,
+      cpi: evm.costPerformanceIndex,
+      openRisksCount,
+      alerts,
+    });
+
+
     const costPerformanceLabel =
       evm.costPerformanceIndex === null
         ? 'Non évaluable (aucune dépense engagée)'
