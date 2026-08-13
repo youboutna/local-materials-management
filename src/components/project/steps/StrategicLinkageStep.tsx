@@ -454,6 +454,28 @@ export default function StrategicLinkageStep({
     };
   }, [budgetLinks]);
 
+  // Resolve human-readable labels for a budget link from the LF referential
+  const resolveBudgetLabel = useCallback((link: CreateProjectBudgetLinkDTO): string => {
+    const line = link.lineCode ? linkageHelpers.findBudgetLine(link.lineCode) : undefined;
+    if (line?.label?.fr) return line.label.fr;
+    const action = link.actionCode ? linkageHelpers.findAction(link.actionCode) : undefined;
+    if (action?.label?.fr) return action.label.fr;
+    const program = link.programCode ? linkageHelpers.findProgram(link.programCode) : undefined;
+    if (program?.label?.fr) return program.label.fr;
+    const ministry = link.ministryCode ? linkageHelpers.findMinistry(link.ministryCode) : undefined;
+    return ministry?.label?.fr ?? '';
+  }, []);
+
+  const resolveBudgetPath = useCallback((link: CreateProjectBudgetLinkDTO): string => {
+    const parts = [
+      link.ministryCode ? linkageHelpers.findMinistry(link.ministryCode)?.label?.fr : undefined,
+      link.programCode ? linkageHelpers.findProgram(link.programCode)?.label?.fr : undefined,
+      link.actionCode ? linkageHelpers.findAction(link.actionCode)?.label?.fr : undefined,
+    ].filter(Boolean) as string[];
+    return parts.join(' › ');
+  }, []);
+
+
   // Add strategy link
   const handleAddStrategyLink = useCallback(() => {
     if (!selectedStrategy.objectiveCode && !selectedStrategy.interventionCode) {
