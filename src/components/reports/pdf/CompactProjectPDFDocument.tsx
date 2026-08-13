@@ -535,6 +535,8 @@ interface CompactProjectPDFDocumentProps {
   includeCompanyHeader?: boolean;
   /** Sections activées (référentiel `report-profiles`). Absent = toutes. */
   sections?: Partial<Record<ReportSectionKey, boolean>>;
+  /** Profil de rapport : pilote la densité des sections via le référentiel. */
+  profile?: ReportProfile;
   /** Nom/code de l'organisation propriétaire (active le référentiel DGEER). */
   organizationName?: string;
   organizationCode?: string;
@@ -555,11 +557,19 @@ export function CompactProjectPDFDocument({
   pertAnalysisMap,
   includeCompanyHeader = true,
   sections,
+  profile = 'summary',
   organizationName,
   organizationCode,
   company,
 }: CompactProjectPDFDocumentProps) {
   const currentDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
+
+  // Densités pilotées par le référentiel (aucune règle de mise en page en dur).
+  const expensesMaxRows = getSectionMaxRows(profile, 'financial', 3);
+  const risksMaxRows = getSectionMaxRows(profile, 'risks', 3);
+  const pertDensity = getSectionDisplay(profile, 'pertAnalysis').density;
+  const milestonesDensity = getSectionDisplay(profile, 'milestones').density;
+
 
   // Sections actives : par défaut toutes (aucune régression si le prop est absent).
   const activeSections = ALL_REPORT_SECTIONS.reduce((acc, key) => {
