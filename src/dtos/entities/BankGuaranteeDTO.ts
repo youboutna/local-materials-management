@@ -30,6 +30,10 @@ export interface BankGuaranteeDTO {
   guaranteeAmount?: number;
   guarantee_amount?: number;
   currency: string;
+  exchangeRate?: number;
+  exchange_rate?: number;
+  phaseId?: string;
+  phase_id?: string;
   status: BankGuaranteeStatus;
   conditions?: string[];
   documents: string[];

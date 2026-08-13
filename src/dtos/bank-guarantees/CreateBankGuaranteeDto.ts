@@ -45,4 +45,8 @@ export interface CreateBankGuaranteeDTO extends BaseEntityDTO {
   
   /** Exchange rate if applicable */
   exchange_rate?: number;
+
+  /** Project phase this guarantee is attached to */
+  phaseId?: string;
+  phase_id?: string;
 }
