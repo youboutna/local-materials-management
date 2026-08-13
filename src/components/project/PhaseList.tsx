@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Plus, Calendar, Trash2, DollarSign, Eye, RefreshCw } from "lucide-react";
+import { formatAmount2 } from "@/utils/reportNumbers";
 import { useNavigate } from "react-router-dom";
 import { usePhasesHex } from "@/hooks/hexagonal";
 import {
@@ -174,7 +175,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
                       {phase.budget != null && (
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          <span>{phase.budget.toLocaleString()} MRU</span>
+                          <span>{formatAmount2(phase.budget)}</span>
                         </div>
                       )}
                     </div>

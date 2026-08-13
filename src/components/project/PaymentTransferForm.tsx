@@ -28,6 +28,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from '@/components/ui/progress';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 
 interface PaymentTransferFormProps {
   project: ProjectWithPayments;
@@ -100,6 +101,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
     maxAllowedAmount: maxToleranceAmount
   } = paymentValidation;
   const totalPaid = project.payments ? project.payments.reduce((sum, p) => sum + p.amount, 0) : 0;
+  const paymentProgressPercent = project.budget > 0 ? Math.min(100, (totalPaid / project.budget) * 100) : 0;
   const initialPaymentPercentage = project.initialPaymentPercentage || 0;
   const progressBasedAmount = (project.budget * project.progress) / 100;
   
@@ -205,11 +207,11 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                 <span className="text-sm text-muted-foreground">Budget total</span>
-                <span className="font-semibold text-lg">{project.budget.toLocaleString()} MRU</span>
+                <span className="font-semibold text-lg">{formatAmount2(project.budget)}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                 <span className="text-sm text-muted-foreground">Déjà payé</span>
-                <span className="font-semibold text-lg text-red-600">{totalPaid.toLocaleString()} MRU</span>
+                <span className="font-semibold text-lg text-red-600">{formatAmount2(totalPaid)}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                 <span className="text-sm text-muted-foreground">Progression</span>
@@ -221,18 +223,18 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               {isInitialPaymentPhase ? (
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <span className="text-sm text-green-700">Paiement initial autorisé</span>
-                  <span className="font-bold text-lg text-green-800">{maxInitialPayment.toLocaleString()} MRU</span>
+                  <span className="font-bold text-lg text-green-800">{formatAmount2(maxInitialPayment)}</span>
                 </div>
               ) : (
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-sm text-blue-700">Montant basé sur progression</span>
-                  <span className="font-bold text-lg text-blue-800">{progressBasedAmount.toLocaleString()} MRU</span>
+                  <span className="font-bold text-lg text-blue-800">{formatAmount2(progressBasedAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                 <span className="text-sm text-green-700">Maximum autorisé (1.5x)</span>
                 <span className="font-bold text-xl text-green-800">
-                  {maxToleranceAmount.toLocaleString()} MRU
+                  {formatAmount2(maxToleranceAmount)}
                 </span>
               </div>
             </div>
@@ -243,19 +245,19 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Progression du paiement vs budget</span>
-                <span className="font-medium">{((totalPaid / project.budget) * 100).toFixed(1)}%</span>
+                <span className="font-medium">{formatPercent2(paymentProgressPercent)}</span>
               </div>
-              <Progress value={(totalPaid / project.budget) * 100} className="h-3" />
+              <Progress value={paymentProgressPercent} className="h-3" />
             </div>
             
             {!isInitialPaymentPhase && (
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Progression vs paiement attendu</span>
-                  <span className="font-medium">{paymentValidation.allowedAmount > 0 ? ((totalPaid / paymentValidation.allowedAmount) * 100).toFixed(1) : 0}%</span>
+                  <span className="font-medium">{formatPercent2(paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0)}</span>
                 </div>
                 <Progress 
-                  value={paymentValidation.allowedAmount > 0 ? (totalPaid / paymentValidation.allowedAmount) * 100 : 0} 
+                  value={paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0} 
                   className="h-3" 
                 />
               </div>
@@ -271,7 +273,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           <AlertTitle className="text-green-800">Paiement initial autorisé</AlertTitle>
           <AlertDescription className="text-green-700">
             Ce projet autorise un paiement initial de {initialPaymentPercentage}% du budget total 
-            ({maxInitialPayment.toLocaleString()} MRU) selon les termes du contrat.
+            ({formatAmount2(maxInitialPayment)}) selon les termes du contrat.
           </AlertDescription>
         </Alert>
       )}
@@ -293,7 +295,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           <AlertTitle className="text-amber-800">Paiement avec tolérance étendue</AlertTitle>
           <AlertDescription className="text-amber-700">
             L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à 
-            {maxToleranceAmount.toLocaleString()} MRU (1.5x le montant basé sur la progression).
+            {formatAmount2(maxToleranceAmount)} (1.5x le montant basé sur la progression).
           </AlertDescription>
         </Alert>
       )}

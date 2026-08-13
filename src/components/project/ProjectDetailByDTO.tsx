@@ -1169,7 +1169,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                           </div>
                           <div className="text-right">
                             <p className="font-semibold">
-                              {(payment.amount || 0).toLocaleString()} MRU
+                              {formatAmount2(payment.amount || 0)}
                             </p>
                             <Badge
                               variant={payment.status === "approved" ? "default" : "secondary"}
@@ -1419,7 +1419,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                                   </p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-semibold">{(p.amount || 0).toLocaleString()} MRU</p>
+                                  <p className="font-semibold">{formatAmount2(p.amount || 0)}</p>
                                   <Badge variant="secondary">{p.status}</Badge>
                                 </div>
                               </a>
