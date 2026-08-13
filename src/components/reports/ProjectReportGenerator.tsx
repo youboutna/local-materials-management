@@ -236,6 +236,10 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           healthScore={healthScore}
           phaseDeviations={filteredPhaseDeviations}
           selectedPhaseIds={reportConfig.selectedPhaseIds}
+
+          organizationName={ownerOrganization?.name}
+
+          organizationCode={ownerOrganization?.code}
         />
       );
 
@@ -293,6 +297,10 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           healthScore={healthScore}
           phaseDeviations={filteredPhaseDeviations}
           selectedPhaseIds={reportConfig.selectedPhaseIds}
+
+          organizationName={ownerOrganization?.name}
+
+          organizationCode={ownerOrganization?.code}
         />
       );
 
