@@ -1,4 +1,5 @@
 import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,6 +73,7 @@ const DOCUMENT_TYPES = [
 ];
 
 const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, readonly = false }) => {
+  const { openDocument } = useDocumentViewer();
   const [documents, setDocuments] = useState<MaterialDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -524,7 +526,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(doc.file_url, '_blank')}
+                            onClick={() => openDocument(doc, { proxyMode: true, context: { materiau: materialId } })}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

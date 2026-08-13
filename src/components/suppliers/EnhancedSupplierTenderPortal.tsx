@@ -1,4 +1,5 @@
 import { SubmissionProgressTracker, SubmissionStep } from '@/components/suppliers/SubmissionProgressTracker';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
 import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq';
@@ -152,6 +153,7 @@ const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
 
 
 const EnhancedSupplierTenderPortal = () => {
+  const { openDocument } = useDocumentViewer();
   const [selectedTender, setSelectedTender] = useState<PublicTender | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File}>({});
@@ -558,14 +560,24 @@ const EnhancedSupplierTenderPortal = () => {
                                 Partagé le {new Date(doc.created_at).toLocaleDateString()}
                               </p>
                             </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => window.open(doc.file_url, '_blank')}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              {t('supplier_tender.actions.download')}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDocument(doc, { proxyMode: true, allowStatusChange: false })}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Voir
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(doc.file_url, '_blank')}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                {t('supplier_tender.actions.download')}
+                              </Button>
+                            </div>
                           </div>
                         </Card>
                       ))}
