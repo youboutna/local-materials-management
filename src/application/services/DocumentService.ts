@@ -36,10 +36,12 @@ function isDocumentStatus(status: string): status is DocumentStatus {
 
 function isValidDocumentStatusTransition(current: DocumentStatus, next: DocumentStatus): boolean {
   const validTransitions: Record<DocumentStatus, DocumentStatus[]> = {
-    [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_APPROVAL, DocumentStatus.ARCHIVED],
-    [DocumentStatus.PENDING_APPROVAL]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED],
+    [DocumentStatus.DRAFT]: [DocumentStatus.PENDING_APPROVAL, DocumentStatus.PENDING_REVIEW, DocumentStatus.ARCHIVED],
+    [DocumentStatus.PENDING_APPROVAL]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED, DocumentStatus.PENDING_REVIEW],
+    [DocumentStatus.PENDING_REVIEW]: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.ARCHIVED, DocumentStatus.PENDING_APPROVAL],
     [DocumentStatus.APPROVED]: [DocumentStatus.ARCHIVED, DocumentStatus.DEPRECATED],
-    [DocumentStatus.REJECTED]: [DocumentStatus.DRAFT, DocumentStatus.ARCHIVED],
+    [DocumentStatus.REJECTED]: [DocumentStatus.DRAFT, DocumentStatus.PENDING_REVIEW, DocumentStatus.ARCHIVED],
+
     [DocumentStatus.ARCHIVED]: [],
     [DocumentStatus.EXPIRED]: [DocumentStatus.ARCHIVED],
     [DocumentStatus.DEPRECATED]: [DocumentStatus.ARCHIVED]

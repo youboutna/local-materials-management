@@ -48,6 +48,7 @@ import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/Project
 
 // Composants intégrés
 import DocumentUpload from '@/components/documents/DocumentUpload';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import DocumentsListPaginated from '@/components/documents/DocumentsListPaginated';
 
 // ============================================================
@@ -333,7 +334,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       });
       return;
     }
-    navigate(`/projects/${projectId}/documents`);
+    navigate(`/documents?projectId=${projectId}`);
   }, [navigate, projectId, canManageSubObjects, toast]);
 
   const navigateToInsurancePage = useCallback(() => {
@@ -344,7 +345,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       });
       return;
     }
-    navigate(`/projects/${projectId}/insurance`);
+    navigate(`/insurance-management?projectId=${projectId}`);
   }, [navigate, projectId, canManageSubObjects, toast]);
 
   const navigateToBankGuaranteePage = useCallback(() => {
@@ -355,7 +356,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       });
       return;
     }
-    navigate(`/projects/${projectId}/bank-guarantees`);
+    navigate(`/bank-guarantee-monitor?projectId=${projectId}`);
   }, [navigate, projectId, canManageSubObjects, toast]);
 
   // ============================================================
@@ -894,14 +895,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               Téléchargez un nouveau document pour le projet
             </DialogDescription>
           </DialogHeader>
-          <DocumentUpload 
-            embedded 
+          <ProjectDocumentUpload
             projectId={projectId}
-            onSuccess={(doc) => {
+            context="compliance"
+            contextLabel="Conformité réglementaire"
+            onDocumentUploaded={() => {
               setIsDocumentDialogOpen(false);
-              if (doc) {
-                handleAddDocument(doc);
-              }
               loadComplianceData();
             }}
           />
@@ -920,7 +919,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
           <div className="py-6 text-center">
             <Shield className="h-16 w-16 mx-auto text-primary mb-4" />
             <p className="text-muted-foreground mb-4">
-              Pour ajouter ou gérer les assurances, veuillez utiliser l'interface dédiée.
+              Ajoutez ici l'attestation d'assurance, ou ouvrez l'interface dédiée pour le suivi complet.
             </p>
             <Button onClick={() => {
               setIsInsuranceDialogOpen(false);
@@ -930,6 +929,15 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               Ouvrir la Gestion des Assurances
             </Button>
           </div>
+          <ProjectDocumentUpload
+            projectId={projectId}
+            context="compliance"
+            contextLabel="Assurance projet"
+            onDocumentUploaded={() => {
+              setIsInsuranceDialogOpen(false);
+              loadComplianceData();
+            }}
+          />
         </DialogContent>
       </Dialog>
 
@@ -945,7 +953,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
           <div className="py-6 text-center">
             <Building className="h-16 w-16 mx-auto text-primary mb-4" />
             <p className="text-muted-foreground mb-4">
-              Pour ajouter ou gérer les garanties bancaires, veuillez utiliser l'interface dédiée.
+              Ajoutez ici l'acte de garantie, ou ouvrez l'interface dédiée pour le suivi complet.
             </p>
             <Button onClick={() => {
               setIsBankGuaranteeDialogOpen(false);
@@ -955,6 +963,15 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               Ouvrir la Gestion des Garanties
             </Button>
           </div>
+          <ProjectDocumentUpload
+            projectId={projectId}
+            context="compliance"
+            contextLabel="Garantie bancaire"
+            onDocumentUploaded={() => {
+              setIsBankGuaranteeDialogOpen(false);
+              loadComplianceData();
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

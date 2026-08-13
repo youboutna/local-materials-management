@@ -56,8 +56,9 @@ export class PhaseService {
         name: resolvedName,
         phase_name: resolvedName,
         projectId,
-        status: PhaseStatus.PENDING,
-        progress: 0,
+        status: (phaseData.status as PhaseStatus) || PhaseStatus.PENDING,
+        progress: phaseData.progress ?? 0,
+
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });

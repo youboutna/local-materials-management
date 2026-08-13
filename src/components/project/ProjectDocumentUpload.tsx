@@ -12,7 +12,12 @@ import { Upload, FileText, Loader2, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
 import { getDocumentService } from '@/application/services/DocumentService';
-import type { DocumentType } from '@/dtos/types/document';
+import {
+  DOCUMENT_TYPE_LABELS,
+  getDocumentCategoriesForContext,
+  type DocumentTypeCode as DocumentType,
+} from '@/config/referentials/documents/document-types.referential';
+
 
 interface ProjectDocumentUploadProps {
   projectId: string | null;
@@ -26,122 +31,6 @@ interface ProjectDocumentUploadProps {
   onDocumentUploaded?: () => void;
 }
 
-// Context-aware document categories
-const getDocumentCategoriesByContext = (context: string) => {
-  const baseCategories = {
-    administrative: {
-      label: 'Documents Administratifs',
-      types: ['contract', 'administrative'] as DocumentType[]
-    },
-    technical: {
-      label: 'Documents Techniques', 
-      types: ['technical', 'specification', 'drawing'] as DocumentType[]
-    },
-    inspection: {
-      label: 'Rapports et Inspections',
-      types: ['inspection', 'report'] as DocumentType[]
-    },
-    payment: {
-      label: 'Documents Financiers',
-      types: ['payment', 'invoice', 'payment_receipt'] as DocumentType[]
-    },
-    invoice: {
-      label: 'Factures',
-      types: ['invoice'] as DocumentType[]
-    },
-    delivery: {
-      label: 'Documents de Livraison',
-      types: ['delivery_note'] as DocumentType[]
-    },
-    photos: {
-      label: 'Photos et Médias',
-      types: ['photo'] as DocumentType[]
-    },
-    compliance: {
-      label: 'Conformité et Certification',
-      types: ['technical', 'administrative', 'inspection'] as DocumentType[]
-    },
-    stakeholder: {
-      label: 'Documents Parties Prenantes',
-      types: ['contract', 'administrative', 'supplier_info'] as DocumentType[]
-    },
-    other: {
-      label: 'Autres',
-      types: ['other', 'supplier_upload', 'supplier_info'] as DocumentType[]
-    }
-  };
-
-  // Filter categories based on context
-  switch (context) {
-    case 'inspection':
-      return {
-        inspection: baseCategories.inspection,
-        technical: baseCategories.technical,
-        photos: baseCategories.photos,
-        other: baseCategories.other
-      };
-    case 'phase':
-      return {
-        technical: baseCategories.technical,
-        inspection: baseCategories.inspection,
-        photos: baseCategories.photos,
-        delivery: baseCategories.delivery,
-        invoice: baseCategories.invoice,
-        other: baseCategories.other
-      };
-    case 'step':
-      return {
-        technical: baseCategories.technical,
-        photos: baseCategories.photos,
-        delivery: baseCategories.delivery,
-        invoice: baseCategories.invoice,
-        other: baseCategories.other
-      };
-    case 'stakeholder':
-      return {
-        stakeholder: baseCategories.stakeholder,
-        administrative: baseCategories.administrative,
-        other: baseCategories.other
-      };
-    case 'compliance':
-      return {
-        compliance: baseCategories.compliance,
-        administrative: baseCategories.administrative,
-        technical: baseCategories.technical,
-        other: baseCategories.other
-      };
-    case 'task':
-      return {
-        technical: baseCategories.technical,
-        photos: baseCategories.photos,
-        delivery: baseCategories.delivery,
-        payment: baseCategories.payment,
-        invoice: baseCategories.invoice,
-        other: baseCategories.other
-      };
-    default:
-      return baseCategories;
-  }
-};
-
-const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
-  'inspection': 'Rapport d\'inspection',
-  'payment': 'Document de paiement',
-  'invoice': 'Facture',
-  'delivery_note': 'Bon de livraison',
-  'payment_receipt': 'Reçu de paiement',
-  'technical': 'Document technique',
-  'administrative': 'Document administratif',
-  'supplier_upload': 'Upload fournisseur',
-  'supplier_catalog': 'Catalogue fournisseur',
-  'supplier_info': 'Information fournisseur',
-  'contract': 'Contrat',
-  'report': 'Rapport',
-  'specification': 'Spécification',
-  'drawing': 'Plan/Dessin',
-  'photo': 'Photo',
-  'other': 'Autre'
-};
 
 const ProjectDocumentUpload = ({ 
   projectId, 
@@ -154,10 +43,8 @@ const ProjectDocumentUpload = ({
   contextLabel,
   onDocumentUploaded 
 }: ProjectDocumentUploadProps) => {
-  const DOCUMENT_CATEGORIES = getDocumentCategoriesByContext(context);
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof DOCUMENT_CATEGORIES>(
-    Object.keys(DOCUMENT_CATEGORIES)[0] as keyof typeof DOCUMENT_CATEGORIES
-  );
+  const documentCategories = React.useMemo(() => getDocumentCategoriesForContext(context), [context]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(documentCategories[0]?.key ?? 'other');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -255,7 +142,7 @@ const ProjectDocumentUpload = ({
     }
   });
 
-  const handleCategoryChange = (category: keyof typeof DOCUMENT_CATEGORIES) => {
+  const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setFormData(prev => ({ ...prev, documentType: '' as DocumentType }));
   };
@@ -290,7 +177,7 @@ const ProjectDocumentUpload = ({
     }
   };
 
-  const availableTypes = DOCUMENT_CATEGORIES[selectedCategory]?.types || [];
+  const availableTypes = documentCategories.find((c) => c.key === selectedCategory)?.types ?? [];
 
   return (
     <Card>
@@ -323,12 +210,12 @@ const ProjectDocumentUpload = ({
           <div className="space-y-2">
             <Label>Catégorie de Document *</Label>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(DOCUMENT_CATEGORIES).map(([key, category]) => (
+              {documentCategories.map((category) => (
                 <Badge
-                  key={key}
-                  variant={selectedCategory === key ? "default" : "outline"}
+                  key={category.key}
+                  variant={selectedCategory === category.key ? "default" : "outline"}
                   className="cursor-pointer hover:bg-primary/20"
-                  onClick={() => handleCategoryChange(key as keyof typeof DOCUMENT_CATEGORIES)}
+                  onClick={() => handleCategoryChange(category.key)}
                 >
                   {category.label}
                 </Badge>
