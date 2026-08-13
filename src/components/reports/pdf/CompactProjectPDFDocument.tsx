@@ -823,6 +823,9 @@ export function CompactProjectPDFDocument({
         const phases = enrichedData?.plannedPhases || [];
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
+        const milestoneSummary = getMilestoneSummary((enrichedData as any)?.milestones || []);
+        const gantt = getGanttBars(project, phases);
+
 
 
 
