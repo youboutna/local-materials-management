@@ -9,6 +9,7 @@ import { TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/dtos/entities/
 type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 import { toast } from '@/hooks/use-toast';
 import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal'
+import { useDocumentViewer } from '@/components/documents/viewer';
 
 interface TenderDocumentsProps {
   projectId: string;
@@ -17,6 +18,7 @@ interface TenderDocumentsProps {
 
 const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) => {
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
+  const { openDocument } = useDocumentViewer();
 
   const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useTenderDocuments(projectId);
   const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useWorkflowStepDocuments(projectId);
