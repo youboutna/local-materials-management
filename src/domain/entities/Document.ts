@@ -54,6 +54,9 @@ export enum DocumentType {
 export enum DocumentStatus {
   DRAFT = 'draft',
   PENDING_APPROVAL = 'pending_approval',
+  /** Alias métier utilisé par l'UI / l'enum DB `document_status` */
+  PENDING_REVIEW = 'pending_review',
+
   APPROVED = 'approved',
   REJECTED = 'rejected',
   ARCHIVED = 'archived',
