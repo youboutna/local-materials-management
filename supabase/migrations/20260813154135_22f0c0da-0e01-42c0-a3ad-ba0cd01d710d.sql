@@ -1,0 +1,1 @@
+ALTER TABLE btp.projects ADD COLUMN IF NOT EXISTS contacts jsonb NOT NULL DEFAULT '[]'::jsonb;
