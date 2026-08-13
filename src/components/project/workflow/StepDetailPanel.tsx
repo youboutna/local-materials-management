@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 /**
  * StepDetailPanel - Panneau détaillé pour une étape
  * Utilise les composants existants: PhaseInspections, PhaseTasks, PhaseEmployees, PhaseMaterials, PhasePayments
@@ -70,8 +71,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     queryKey: ['project-for-scheduler', projectId],
     queryFn: async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('projects')
+      const { data, error } = await btpClient.from('projects')
         .select('id, title, location, status, project_reference, budget, progress, main_contractor')
         .eq('id', projectId)
         .single();
@@ -105,8 +105,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   ) => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('inspections')
+      const { error } = await btpClient.from('inspections')
         .insert({
           project_id: projId,
           phase_id: additionalData?.phase_id || phaseId,

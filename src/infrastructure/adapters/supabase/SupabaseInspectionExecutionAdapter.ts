@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Inspection Execution Adapter
  * Implements IInspectionExecutionRepository using Supabase

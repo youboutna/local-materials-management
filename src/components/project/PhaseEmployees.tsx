@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,8 +50,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     queryKey: ['phase-employees', phaseId],
     queryFn: async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('phase_employees')
+      const { data, error } = await btpClient.from('phase_employees')
         .select('*')
         .eq('phase_id', phaseId)
         .order('created_at', { ascending: false });
@@ -83,8 +83,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     queryKey: ['employees', employeeSearch],
     queryFn: async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      let query = supabase
-        .from('employees')
+      let query = btpClient.from('employees')
         .select('id, full_name, position, email, phone')
         .order('full_name');
 
@@ -101,8 +100,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const addEmployeeMutation = useMutation({
     mutationFn: async (employeeData: EmployeeFormData) => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('phase_employees')
+      const { data, error } = await btpClient.from('phase_employees')
         .insert({
           phase_id: phaseId,
           employee_name: employeeData.employeeName,
@@ -140,8 +138,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
         is_primary_supplier: data.isPrimarySupplier,
       };
       
-      const { error } = await supabase
-        .from('phase_employees')
+      const { error } = await btpClient.from('phase_employees')
         .update(updateData)
         .eq('id', id);
       
@@ -159,8 +156,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('phase_employees')
+      const { error } = await btpClient.from('phase_employees')
         .delete()
         .eq('id', id);
       

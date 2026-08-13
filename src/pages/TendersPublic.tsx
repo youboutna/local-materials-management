@@ -17,6 +17,7 @@ import { BoqWorkspace } from '@/components/boq';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export default function TendersPublic() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -26,8 +27,7 @@ export default function TendersPublic() {
     queryKey: ['public-tender', selectedId],
     queryFn: async () => {
       if (!selectedId) return null;
-      const { data, error } = await supabase
-        .from('tenders')
+      const { data, error } = await btpClient.from('tenders')
         .select('id, title, description, status, deadline_date, market_type, budget_max, project_reference')
         .eq('id', selectedId)
         .maybeSingle();

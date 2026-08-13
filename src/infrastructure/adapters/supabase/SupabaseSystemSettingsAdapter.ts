@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase adapter for btp.system_settings
  */

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { useQuery } from '@tanstack/react-query';
 import {
     AlertCircle,
@@ -56,8 +57,7 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
     queryKey: ['project-phase-hierarchy', projectId],
     queryFn: async () => {
       // Use supabase directly for hierarchy query since WorkflowService constructor requires many repos
-      const { data, error } = await supabase
-        .from('project_phases')
+      const { data, error } = await btpClient.from('project_phases')
         .select('*')
         .eq('project_id', projectId)
         .order('order_index');

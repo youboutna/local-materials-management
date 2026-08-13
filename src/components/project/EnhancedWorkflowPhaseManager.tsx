@@ -46,6 +46,7 @@ import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface Phase {
   id: string;
@@ -106,8 +107,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   const { data: phases, isLoading, refetch } = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<Phase[]> => {
-      const { data, error } = await supabase
-        .from('project_phases')
+      const { data, error } = await btpClient.from('project_phases')
         .select(`
           *,
           documents_count:documents(count),
@@ -151,8 +151,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   const { data: employees } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
+      const { data, error } = await btpClient.from('employees')
         .select('*')
         .eq('is_active', true)
         .order('full_name');
@@ -201,8 +200,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     if (!selectedPhase) return;
 
     try {
-      const { error } = await supabase
-        .from('project_phases')
+      const { error } = await btpClient.from('project_phases')
         .update({ custom_phase_data: { team_delegation: teamDelegation } } as any)
         .eq('id', selectedPhase.id);
 
@@ -240,8 +238,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     if (!selectedPhase) return;
 
     try {
-      const { error } = await supabase
-        .from('project_phases')
+      const { error } = await btpClient.from('project_phases')
         .update({ custom_phase_data: { location: phaseLocation } } as any)
         .eq('id', selectedPhase.id);
 

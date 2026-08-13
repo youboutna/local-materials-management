@@ -1,7 +1,6 @@
 /**
  * PhaseDetail — Lifecycle-grouped tabs (Planification / Exécution / Contrôle / Clôture).
  * Cross-module navigation buttons link to inspections, payments, documents and reports.
- * Vue typée via `toPhaseViewModel` — plus de (phase as any) ni de @ts-nocheck (M3 / L3).
  */
 import React, { useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';

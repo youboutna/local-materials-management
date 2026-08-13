@@ -1,15 +1,21 @@
-// @ts-nocheck
 /**
  * PV Generator Adapter - Supabase Implementation
  * Implements IPVGeneratorRepository using Supabase
  *
- * inspection_pvs lives in the public schema, so we use the default supabase client.
- * Inspection metadata still lives under btp.* and is accessed via btpClient.
+ * inspection_pvs and inspections both live in the btp schema, accessed via btpClient.
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
-import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
+import { IPVGeneratorRepository, SavedPVRecord } from '@/domain/repositories/IPVGeneratorRepository';
+import type { Database } from '@/integrations/supabase/types';
+
+type InspectionPVRow = Database['btp']['Tables']['inspection_pvs']['Row'];
+
+const toSavedPVRecord = (row: InspectionPVRow): SavedPVRecord => ({
+  ...row,
+  metadata: (row.metadata ?? null) as Record<string, unknown> | null,
+});
+type InspectionPVInsert = Database['btp']['Tables']['inspection_pvs']['Insert'];
 
 export class PVGeneratorAdapter implements IPVGeneratorRepository {
 
@@ -42,46 +48,49 @@ export class PVGeneratorAdapter implements IPVGeneratorRepository {
     version?: number;
     metadata?: Record<string, unknown>;
     generated_at?: string;
-  }): Promise<any> {
-    const payload: Record<string, unknown> = { ...pvData };
-    if (!payload.status) payload.status = 'draft';
-    if (!payload.version) payload.version = 1;
-    if (!payload.generated_at) payload.generated_at = new Date().toISOString();
+  }): Promise<SavedPVRecord> {
+    const payload: InspectionPVInsert = {
+      ...pvData,
+      status: pvData.status ?? 'draft',
+      version: pvData.version ?? 1,
+      generated_at: pvData.generated_at ?? new Date().toISOString(),
+      metadata: (pvData.metadata ?? null) as InspectionPVInsert['metadata'],
+    };
 
-    const { data, error } = await supabase
+    const { data, error } = await btpClient
       .from('inspection_pvs')
       .insert(payload)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toSavedPVRecord(data);
   }
 
-  async getInspectionPVs(inspectionId: string): Promise<any[]> {
-    const { data, error } = await supabase
+  async getInspectionPVs(inspectionId: string): Promise<SavedPVRecord[]> {
+    const { data, error } = await btpClient
       .from('inspection_pvs')
       .select('*')
       .eq('inspection_id', inspectionId)
       .order('generated_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toSavedPVRecord);
   }
 
-  async getPVById(pvId: string): Promise<any | null> {
-    const { data, error } = await supabase
+  async getPVById(pvId: string): Promise<SavedPVRecord | null> {
+    const { data, error } = await btpClient
       .from('inspection_pvs')
       .select('*')
       .eq('id', pvId)
       .maybeSingle();
 
     if (error) throw error;
-    return data || null;
+    return data ? toSavedPVRecord(data) : null;
   }
 
   async getPVContent(pvId: string): Promise<string | null> {
-    const { data, error } = await supabase
+    const { data, error } = await btpClient
       .from('inspection_pvs')
       .select('content')
       .eq('id', pvId)

@@ -3,6 +3,7 @@
  * Following hexagonal architecture - Infrastructure layer
  */
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import type { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 import type {
   ProjectBudgetLinkDTO,
@@ -15,8 +16,7 @@ const TABLE = 'project_budget_links';
 
 export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepository {
   async findByProjectId(projectId: string): Promise<ProjectBudgetLinkDTO[]> {
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false });
@@ -31,8 +31,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
   async create(dto: CreateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
     const { data: auth } = await supabase.auth.getUser();
     const payload = ProjectBudgetLinkTransformer.createToSupabase(dto, auth.user?.id ?? null);
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .insert(payload)
       .select('*')
       .single();
@@ -45,8 +44,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
 
   async update(id: string, dto: UpdateProjectBudgetLinkDTO): Promise<ProjectBudgetLinkDTO> {
     const payload = ProjectBudgetLinkTransformer.updateToSupabase(dto);
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .update(payload)
       .eq('id', id)
       .select('*')
@@ -59,7 +57,7 @@ export class SupabaseProjectBudgetLinkAdapter implements IProjectBudgetLinkRepos
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from(TABLE).delete().eq('id', id);
+    const { error } = await btpClient.from(TABLE).delete().eq('id', id);
     if (error) {
       throw new Error(`BudgetLink delete failed: ${error.message}`);
     }

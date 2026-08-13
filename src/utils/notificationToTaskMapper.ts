@@ -1,5 +1,6 @@
 import { NotificationType, NotificationMetadata, TaskType } from '@/dtos/types/notification';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface CreateTaskFromNotificationParams {
   notificationType: NotificationType;
@@ -68,8 +69,7 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
     notes: buildTaskNotes(notificationType, metadata),
   };
 
-  const { data: task, error } = await supabase
-    .from('task_assignments')
+  const { data: task, error } = await btpClient.from('task_assignments')
     .insert(taskData)
     .select()
     .single();
@@ -80,8 +80,7 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
   }
 
   // Create a notification for the assigned user
-  await supabase
-    .from('notifications')
+  await btpClient.from('notifications')
     .insert({
       recipient_id: recipientId,
       title: `Nouvelle tâche: ${title}`,
@@ -214,8 +213,7 @@ export const createNotificationWithTask = async (params: {
   const { recipientId, assignedById, title, message, type, metadata = {}, relatedId, createTask = true } = params;
 
   // Create the notification
-  const { data: notification, error: notifError } = await supabase
-    .from('notifications')
+  const { data: notification, error: notifError } = await btpClient.from('notifications')
     .insert({
       recipient_id: recipientId,
       title,

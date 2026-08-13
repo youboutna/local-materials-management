@@ -1,4 +1,3 @@
-// @ts-nocheck
 import RoleBasedNotificationCenter from '@/components/alerts/RoleBasedNotificationCenter';
 import NotificationCrud from '@/components/notifications/NotificationCrud';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -85,47 +84,22 @@ const NotificationsCenterPage = () => {
   const documentTypes = ['document_review', 'document_shared', 'document_approved', 'document_rejected', 'document_uploaded'];
   const systemTypes = ['system', 'bank_guarantee_trigger', 'contractor_penalty', 'compliance_alert', 'escalation_required', 'insurance_expiry', 'insurance_update'];
 
-  const { 
-    notifications: inspectionNotifications, 
-    loading: inspectionsLoading,
-    refetch: refetchInspections 
-  } = useNotificationsHex(undefined, inspectionTypes);
-  
-  const { 
-    notifications: projectNotifications,
-    refetch: refetchProjects 
-  } = useNotificationsHex(undefined, projectTypes);
-  
-  const { 
-    notifications: paymentNotifications,
-    refetch: refetchPayments 
-  } = useNotificationsHex(undefined, paymentTypes);
-  
-  const { 
-    notifications: taskNotifications,
-    refetch: refetchTasks 
-  } = useNotificationsHex(undefined, taskTypes);
-  
-  const { 
-    notifications: documentNotifications,
-    refetch: refetchDocuments 
-  } = useNotificationsHex(undefined, documentTypes);
-  
-  const { 
-    notifications: systemAlerts,
-    refetch: refetchSystem,
-    markAllAsRead: markAllSystemAsRead 
-  } = useNotificationsHex(currentUserId, systemTypes);
+  const {
+    notifications: allNotificationsRaw,
+    isLoading: loading,
+    refetch: refetchAllNotifications,
+    markAsRead,
+  } = useNotificationsHex();
 
-  const loading = inspectionsLoading;
+  const inspectionNotifications = allNotificationsRaw.filter(n => inspectionTypes.includes(n.type));
+  const projectNotifications = allNotificationsRaw.filter(n => projectTypes.includes(n.type));
+  const paymentNotifications = allNotificationsRaw.filter(n => paymentTypes.includes(n.type));
+  const taskNotifications = allNotificationsRaw.filter(n => taskTypes.includes(n.type));
+  const documentNotifications = allNotificationsRaw.filter(n => documentTypes.includes(n.type));
+  const systemAlerts = allNotificationsRaw.filter(n => systemTypes.includes(n.type));
 
   const fetchAllNotifications = () => {
-    refetchInspections();
-    refetchProjects();
-    refetchPayments();
-    refetchTasks();
-    refetchDocuments();
-    refetchSystem();
+    refetchAllNotifications();
   };
 
   // Refresh notifications periodically instead of real-time listener
@@ -142,8 +116,10 @@ const NotificationsCenterPage = () => {
     try {
       if (!user?.id) return;
 
-      // Use the hexagonal hook's markAllAsRead function
-      await markAllSystemAsRead();
+      // Marque toutes les notifications non lues comme lues
+      await Promise.all(
+        allNotificationsRaw.filter(n => !n.read).map(n => markAsRead(n.id))
+      );
 
       toast({
         title: t('common.success'),

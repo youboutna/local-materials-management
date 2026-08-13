@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Supabase Adapter for Document Repository - Fixed for DB schema
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
@@ -28,18 +27,18 @@ function toDbStatus(status?: string | null): string {
 export class SupabaseDocumentAdapter implements IDocumentRepository {
   private mapToEntity(data: any): Document {
     const typeMap: Record<string, DocumentType> = {
-      'contract': 'contract', 'inspection_report': 'pv', 'location_photo': 'photo',
-      'project_report': 'report', 'tender': 'specification', 'employee_record': 'other',
-      'supplier_catalog': 'specification', 'supplier_info': 'other', 'task_assignment': 'other'
+      'contract': DocumentType.CONTRACT, 'inspection_report': DocumentType.PV, 'location_photo': DocumentType.PHOTO,
+      'project_report': DocumentType.REPORT, 'tender': DocumentType.SPECIFICATION, 'employee_record': DocumentType.OTHER,
+      'supplier_catalog': DocumentType.SPECIFICATION, 'supplier_info': DocumentType.OTHER, 'task_assignment': DocumentType.OTHER
     };
     const statusMap: Record<string, DocumentStatus> = {
-      'pending': 'pending_review', 'pending_review': 'pending_review', 'validated': 'approved',
-      'approved': 'approved', 'rejected': 'rejected', 'archived': 'archived', 'draft': 'draft'
+      'pending': DocumentStatus.PENDING_REVIEW, 'pending_review': DocumentStatus.PENDING_REVIEW, 'validated': DocumentStatus.APPROVED,
+      'approved': DocumentStatus.APPROVED, 'rejected': DocumentStatus.REJECTED, 'archived': DocumentStatus.ARCHIVED, 'draft': DocumentStatus.DRAFT
     };
     return new Document(
       data.id, data.project_id || null, data.phase_id || null, data.inspection_id || null,
       data.payment_id || null, data.supplier_id || null, data.title, data.description || null,
-      typeMap[data.document_type] || 'other', statusMap[data.status] || 'draft',
+      typeMap[data.document_type] || DocumentType.OTHER, statusMap[data.status] || DocumentStatus.DRAFT,
       DocumentPriority.MEDIUM,
       data.file_name || null, data.file_url || null, data.file_size || null, data.mime_type || null,
       data.tags || [], data.is_internal_only ?? false, data.is_shared_with_suppliers ?? false,

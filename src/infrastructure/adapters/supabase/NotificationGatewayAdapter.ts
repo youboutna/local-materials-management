@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NotificationGatewayAdapter — single entry point for Supabase Edge Function
  * invocations and RPC calls used for notification-related side effects
@@ -12,7 +11,7 @@ export interface InvokeFunctionResult<T = any> {
 }
 
 export class NotificationGatewayAdapter {
-  async invokeFunction<T = any>(name: string, body: unknown): Promise<InvokeFunctionResult<T>> {
+  async invokeFunction<T = any>(name: string, body: Record<string, unknown> | undefined): Promise<InvokeFunctionResult<T>> {
     const { data, error } = await supabase.functions.invoke(name, { body });
     return { data: (data as T) ?? null, error: error ? { message: error.message } : null };
   }

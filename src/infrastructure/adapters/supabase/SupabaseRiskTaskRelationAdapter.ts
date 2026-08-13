@@ -1,5 +1,6 @@
 // Supabase Adapter for Risk-Task Relations (public.risk_task_relations)
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import {
   IRiskTaskRelationRepository,
   RiskTaskRelationRecord
@@ -21,8 +22,7 @@ export class SupabaseRiskTaskRelationAdapter implements IRiskTaskRelationReposit
   async findByRiskIds(riskIds: string[]): Promise<RiskTaskRelationRecord[]> {
     if (riskIds.length === 0) return [];
 
-    const { data, error } = await supabase
-      .from('risk_task_relations')
+    const { data, error } = await btpClient.from('risk_task_relations')
       .select('*')
       .in('risk_id', riskIds);
 
@@ -35,8 +35,7 @@ export class SupabaseRiskTaskRelationAdapter implements IRiskTaskRelationReposit
   }
 
   async create(relation: { riskId: string; taskId: string }): Promise<RiskTaskRelationRecord> {
-    const { data, error } = await supabase
-      .from('risk_task_relations')
+    const { data, error } = await btpClient.from('risk_task_relations')
       .insert({ risk_id: relation.riskId, task_id: relation.taskId })
       .select()
       .single();
@@ -46,8 +45,7 @@ export class SupabaseRiskTaskRelationAdapter implements IRiskTaskRelationReposit
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('risk_task_relations')
+    const { error } = await btpClient.from('risk_task_relations')
       .delete()
       .eq('id', id);
 
@@ -55,8 +53,7 @@ export class SupabaseRiskTaskRelationAdapter implements IRiskTaskRelationReposit
   }
 
   async deleteByRiskAndTask(riskId: string, taskId: string): Promise<void> {
-    const { error } = await supabase
-      .from('risk_task_relations')
+    const { error } = await btpClient.from('risk_task_relations')
       .delete()
       .eq('risk_id', riskId)
       .eq('task_id', taskId);

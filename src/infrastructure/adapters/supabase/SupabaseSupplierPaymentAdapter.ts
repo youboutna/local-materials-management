@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 /**
  * Accès faiblement typé réservé à `supplier_payment_requests`,
@@ -232,8 +233,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
       }
 
       // Fallback: Recherche via les inspections
-      const { data: inspections, error: inspError } = await supabase
-        .from('inspections')
+      const { data: inspections, error: inspError } = await btpClient.from('inspections')
         .select('id')
         .eq('project_id', projectId);
 
@@ -557,8 +557,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
   async getContractorSupplierIdForProject(projectId: string): Promise<string | null> {
     try {
       // Récupérer directement depuis la table project_stakeholders
-      const { data, error } = await supabase
-        .from('project_stakeholders')
+      const { data, error } = await btpClient.from('project_stakeholders')
         .select('supplier_id')
         .eq('project_id', projectId)
         .in('stakeholder_type', ['principal_contractor', 'contractor'])

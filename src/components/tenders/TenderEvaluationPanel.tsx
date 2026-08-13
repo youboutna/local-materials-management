@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface TenderEvaluationPanelProps {
   tenderId: string;
@@ -68,8 +69,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
   const { data: submissions, isLoading, refetch } = useQuery({
     queryKey: ['tender-submissions', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_submissions')
+      const { data, error } = await btpClient.from('tender_submissions')
         .select(`
           *,
           submission_documents:tender_submission_documents(
@@ -102,8 +102,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
         updateData.reviewed_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('tender_submissions')
+      const { error } = await btpClient.from('tender_submissions')
         .update(updateData)
         .eq('id', submissionId);
 

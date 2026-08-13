@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 /**
  * Supabase adapter for payment blocks (btp.payment_blocks)
  */
@@ -39,8 +40,7 @@ function mapRowToRecord(row: PaymentBlockRow): PaymentBlockRecord {
 export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
   async create(data: CreatePaymentBlockRecord): Promise<PaymentBlockRecord> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: row, error } = await supabase
-      .from('payment_blocks')
+    const { data: row, error } = await btpClient.from('payment_blocks')
       .insert({
         project_id: data.projectId,
         contractor_id: data.contractorId,
@@ -58,8 +58,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
 
   async findById(id: string): Promise<PaymentBlockRecord | null> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: row, error } = await supabase
-      .from('payment_blocks')
+    const { data: row, error } = await btpClient.from('payment_blocks')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -70,8 +69,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
 
   async findActiveByProjectAndContractor(projectId: string, contractorId: string): Promise<PaymentBlockRecord[]> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: rows, error } = await supabase
-      .from('payment_blocks')
+    const { data: rows, error } = await btpClient.from('payment_blocks')
       .select('*')
       .eq('project_id', projectId)
       .eq('contractor_id', contractorId)
@@ -84,8 +82,7 @@ export class SupabasePaymentBlockAdapter implements IPaymentBlockRepository {
 
   async resolve(id: string, resolvedBy: string): Promise<PaymentBlockRecord> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: row, error } = await supabase
-      .from('payment_blocks')
+    const { data: row, error } = await btpClient.from('payment_blocks')
       .update({
         resolved_at: new Date().toISOString(),
         resolved_by: resolvedBy

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
@@ -30,28 +31,24 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
     // Fetch real project and inspection data
     const [projectData, inspectionData, projectEmployees, inspectionDocuments] = await Promise.all([
       // Get project details
-      supabase
-        .from('projects')
+      btpClient.from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get inspection details
-      supabase
-        .from('inspections')
+      btpClient.from('inspections')
         .select('*')
         .eq('id', actionData.inspectionId)
         .single(),
       
       // Get project team members
-      supabase
-        .from('employees')
+      btpClient.from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get inspection documents
-      supabase
-        .from('documents')
+      btpClient.from('documents')
         .select('*')
         .eq('inspection_id', actionData.inspectionId)
     ]);
@@ -125,8 +122,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await supabase
-        .from('employees')
+      const { data: assignee } = await btpClient.from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -238,8 +234,7 @@ const executeInspectionHierarchyNotification = async (action: InspectionControlA
 const executeInspectionCommunication = async (action: InspectionControlAction): Promise<void> => {
   try {
     // Get employee details for communication
-    const { data: employees } = await supabase
-      .from('employees')
+    const { data: employees } = await btpClient.from('employees')
       .select('id, full_name, email, phone')
       .in('id', action.recipientIds);
 
@@ -314,8 +309,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
 
 export const getInspectionActions = async (inspectionId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = supabase
-    .from('notifications')
+  const query = btpClient.from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'inspection');

@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface Phase {
   id: string;
@@ -90,8 +91,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
       setLoading(true);
 
       // Fetch project details
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
+      const { data: projectData, error: projectError } = await btpClient.from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
@@ -99,8 +99,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
       if (projectError) throw projectError;
 
       // Fetch phases with steps
-      const { data: phasesData, error: phasesError } = await supabase
-        .from('project_phases')
+      const { data: phasesData, error: phasesError } = await btpClient.from('project_phases')
         .select(`
           *,
           phase_steps (*)

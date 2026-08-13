@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
@@ -30,28 +31,24 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
     // Fetch real project data and related entities
     const [projectData, bankGuaranteeData, projectEmployees, projectSuppliers] = await Promise.all([
       // Get project details
-      supabase
-        .from('projects')
+      btpClient.from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get bank guarantee details
-      supabase
-        .from('bank_guarantees')
+      btpClient.from('bank_guarantees')
         .select('*')
         .eq('id', actionData.bankGuaranteeId)
         .single(),
       
       // Get project employees
-      supabase
-        .from('employees')
+      btpClient.from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get project suppliers/contractors
-      supabase
-        .from('suppliers')
+      btpClient.from('suppliers')
         .select('id, name, email, phone, contact_person')
         .eq('is_active', true)
     ]);
@@ -125,8 +122,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await supabase
-        .from('employees')
+      const { data: assignee } = await btpClient.from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -281,20 +277,17 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
     // Get real project stakeholders for communication
     const [projectEmployees, projectSuppliers, bankGuaranteeDetails] = await Promise.all([
       // Get project team members
-      supabase
-        .from('employees')
+      btpClient.from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get project contractors/suppliers
-      supabase
-        .from('suppliers')
+      btpClient.from('suppliers')
         .select('id, name, email, phone, contact_person')
         .eq('is_active', true),
       
       // Get bank guarantee details with bank information
-      supabase
-        .from('bank_guarantees')
+      btpClient.from('bank_guarantees')
         .select('*')
         .eq('id', action.bankGuaranteeId)
         .single()
@@ -428,8 +421,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
 
 export const getBankGuaranteeActions = async (bankGuaranteeId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = supabase
-    .from('notifications')
+  const query = btpClient.from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'bank_guarantee');

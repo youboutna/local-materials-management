@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase adapter for btp.escalation_thresholds
  */

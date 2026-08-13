@@ -14,6 +14,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import { NotificationService } from '@/application/services/NotificationService';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface Project {
   id: string;
@@ -80,8 +81,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       if (!selectedProject?.id) return [];
       
       // Get phases for this project (phases act as steps in the workflow)
-      const { data: phases, error } = await supabase
-        .from('project_phases')
+      const { data: phases, error } = await btpClient.from('project_phases')
         .select('id, phase_name, order_index, status, progress')
         .eq('project_id', selectedProject.id)
         .order('order_index');
@@ -124,8 +124,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
     queryKey: ['inspectors'],
     queryFn: async () => {
       // Fetch employees
-      const { data: employeesData, error: employeesError } = await supabase
-        .from('employees')
+      const { data: employeesData, error: employeesError } = await btpClient.from('employees')
         .select('id, full_name, phone, position, department')
         .eq('is_active', true)
         .order('full_name');
@@ -133,8 +132,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       if (employeesError) throw employeesError;
 
       // Fetch suppliers
-      const { data: suppliersData, error: suppliersError } = await supabase
-        .from('suppliers')
+      const { data: suppliersData, error: suppliersError } = await btpClient.from('suppliers')
         .select('id, name, contact_person, email, phone, category, nif')
         .eq('is_active', true)
         .order('name');

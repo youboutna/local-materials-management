@@ -5,7 +5,6 @@ import { ProjectCalculationService } from '@/application/services/ProjectCalcula
 import type { ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
 import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';
 import { EnhancedPhaseDTO, ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
-import { supabase as publicSupabase } from '@/integrations/supabase/client';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { toPhaseViewModel, type PhaseViewModel } from '@/utils/phaseViewModel';
 import { ReportCalculations } from '@/utils/reportCalculations';
@@ -22,8 +21,7 @@ const hydratePhase = (row: unknown): ReportPhase => {
 export class SupabaseReportingAdapter implements IReportingRepository {
 
   async getProjectPhases(projectId: string): Promise<EnhancedPhaseDTO[]> {
-    const { data } = await supabase
-      .from('project_phases')
+    const { data } = await supabase.from('project_phases')
       .select('*')
       .eq('project_id', projectId);
 
@@ -96,8 +94,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   }
 
   async getProjectInspections(projectId: string): Promise<any[]> {
-    const { data } = await supabase
-      .from('inspections')
+    const { data } = await supabase.from('inspections')
       .select('*')
       .eq('project_id', projectId);
     return data || [];
@@ -155,31 +152,31 @@ export class SupabaseReportingAdapter implements IReportingRepository {
     }
     if (sections.bankGuarantees) {
       tasks.push(
-        safeFetch('bankGuarantees', publicSupabase.from('bank_guarantees').select('*').eq('project_id', projectId) as any)
+        safeFetch('bankGuarantees', supabase.from('bank_guarantees').select('*').eq('project_id', projectId) as any)
           .then(rows => { empty.bankGuarantees = rows; }),
       );
     }
     if (sections.insurance) {
       tasks.push(
-        safeFetch('insurance', publicSupabase.from('insurance_certificates').select('*').eq('project_id', projectId) as any)
+        safeFetch('insurance', supabase.from('insurance_certificates').select('*').eq('project_id', projectId) as any)
           .then(rows => { empty.insurance = rows; }),
       );
     }
     if (sections.paymentBlocks) {
       tasks.push(
-        safeFetch('paymentBlocks', publicSupabase.from('payment_blocks').select('*').eq('project_id', projectId) as any)
+        safeFetch('paymentBlocks', supabase.from('payment_blocks').select('*').eq('project_id', projectId) as any)
           .then(rows => { empty.paymentBlocks = rows; }),
       );
     }
     if (sections.documents) {
       tasks.push(
-        safeFetch('documents', publicSupabase.from('documents').select('*').eq('project_id', projectId) as any)
+        safeFetch('documents', supabase.from('documents').select('*').eq('project_id', projectId) as any)
           .then(rows => { empty.documents = rows; }),
       );
     }
     if (sections.milestones) {
       tasks.push(
-        safeFetch('milestones', publicSupabase.from('project_milestones').select('*').eq('project_id', projectId) as any)
+        safeFetch('milestones', supabase.from('project_milestones').select('*').eq('project_id', projectId) as any)
           .then(rows => { empty.constructionMilestones = rows; }),
       );
     }
@@ -187,7 +184,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
       tasks.push(
         safeFetch(
           'employees',
-          publicSupabase
+          supabase
             .from('project_resources')
             .select('*')
             .eq('project_id', projectId)
@@ -201,7 +198,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         (async () => {
           const stakeholders = await safeFetch(
             'project_stakeholders',
-            publicSupabase
+            supabase
               .from('project_stakeholders')
               .select('supplier_id')
               .eq('project_id', projectId)
@@ -216,7 +213,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
           }
           const rows = await safeFetch(
             'suppliers',
-            publicSupabase.from('suppliers').select('*').in('id', ids as string[]) as any,
+            supabase.from('suppliers').select('*').in('id', ids as string[]) as any,
           );
           empty.suppliers = rows;
         })(),
@@ -253,8 +250,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
       const materials = materialsData.data || [];
       const inspections = inspectionsData.data || [];
 
-      const { data: paymentsData } = await supabase
-        .from('payments')
+      const { data: paymentsData } = await supabase.from('payments')
         .select('amount')
         .eq('project_id', project.id);
 

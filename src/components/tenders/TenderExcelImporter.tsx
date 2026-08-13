@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface ImportedTender {
   ordre: number;
@@ -196,8 +197,7 @@ const TenderExcelImporter: React.FC = () => {
 
           console.log(`Importing tender ${index + 1}:`, processedTender);
 
-          const { error } = await supabase
-            .from('tenders')
+          const { error } = await btpClient.from('tenders')
             .insert([processedTender]);
 
           if (error) {

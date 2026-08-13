@@ -17,6 +17,7 @@ import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCal
 import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;
@@ -139,8 +140,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
   const { data: estimates, isLoading } = useQuery({
     queryKey: ['enhanced-tender-estimates', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_estimates')
+      const { data, error } = await btpClient.from('tender_estimates')
         .select(`
           *,
           items:tender_estimate_items(*)

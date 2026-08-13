@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Payment Blocking Supabase Adapter
  * Implements IPaymentBlockingRepository using Supabase

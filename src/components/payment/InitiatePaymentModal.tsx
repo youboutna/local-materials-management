@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 // Modal for initiating payment by different roles
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -71,8 +72,7 @@ const InitiatePaymentModal: React.FC<InitiatePaymentModalProps> = ({
 
   const fetchProjectInfo = async () => {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data } = await supabase
-      .from('projects')
+    const { data } = await btpClient.from('projects')
       .select('title, budget, status')
       .eq('id', projectId)
       .single();

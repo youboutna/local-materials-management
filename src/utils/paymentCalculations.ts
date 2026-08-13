@@ -1,10 +1,10 @@
-// @ts-nocheck
 import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { BankGuaranteeService, getBankGuaranteeService} from '@/application/services/BankGuaranteeService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { DocumentService, getDocumentService} from '@/application/services/DocumentService';
 import { PaymentService, getPaymentService} from '@/application/services/PaymentService';
 import { PaymentBlockingService, getPaymentBlockingService} from '@/application/services/PaymentBlockingService';
+import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 
 export interface PaymentValidationResult {
   canProceed: boolean;
@@ -56,10 +56,10 @@ export const calculatePaymentEligibility = async (
   // Check insurance certificates using InsuranceService
   const insuranceService = getInsuranceService();
   const insurance = await insuranceService.getInsuranceCertificates(projectId)
-    .then(certificates => certificates.filter(cert => 
-      cert.contractor_id === contractorId && 
-      cert.status === 'active' && 
-      new Date(cert.valid_until) >= new Date()
+    .then(certificates => certificates.filter(cert =>
+      cert.contractorId === contractorId &&
+      cert.status === 'active' &&
+      new Date(cert.validUntil) >= new Date()
     ));
 
   if (!insurance || insurance.length === 0) {
@@ -75,11 +75,11 @@ export const calculatePaymentEligibility = async (
 
   // Check bank guarantees using BankGuaranteeService
   const bankGuaranteeService = getBankGuaranteeService();
-  const guarantee = await bankGuaranteeService.getBankGuarantees(projectId)
-    .then(guarantees => guarantees.filter(g => 
-      g.contractor_id === contractorId && 
-      g.status === 'active' && 
-      new Date(g.expiry_date) >= new Date()
+  const guarantee = await bankGuaranteeService.getBankGuarantees({ projectId })
+    .then(guarantees => guarantees.filter(g =>
+      g.contractorId === contractorId &&
+      g.status === 'active' &&
+      new Date(g.expiryDate) >= new Date()
     ));
 
   if (!guarantee || guarantee.length === 0) {
@@ -130,13 +130,13 @@ export const calculatePaymentEligibility = async (
   // Check required documents using DocumentService
   const documentService = getDocumentService();
   const documents = await documentService.getProjectDocuments(projectId)
-    .then(docs => docs.filter(doc => 
-      ['contract'].includes(doc.document_type) && 
+    .then(docs => docs.filter(doc =>
+      ['contract'].includes(doc.documentType) &&
       doc.status === 'approved'
     ));
 
   const requiredDocTypes = ['contract'];
-  const availableDocTypes = documents?.map(d => d.document_type as string) || [];
+  const availableDocTypes = documents?.map(d => d.documentType as string) || [];
   const missingDocs = requiredDocTypes.filter(type => !availableDocTypes.includes(type));
 
   if (missingDocs.length > 0) {
@@ -185,7 +185,7 @@ export const calculatePaymentMetrics = async (
   const paymentBlockingService = getPaymentBlockingService();
 
   // Get payments via service
-  let payments = [];
+  let payments: PaymentDTO[] = [];
   if (projectId) {
     payments = await paymentService.getPaymentsByProject(projectId);
   } else {
@@ -194,29 +194,29 @@ export const calculatePaymentMetrics = async (
 
   // Filter by date range
   const filteredPayments = payments.filter(p => {
-    const createdAt = new Date(p.created_at || p.createdAt || '');
+    const createdAt = new Date(p.createdAt || '');
     return createdAt >= startDate && createdAt <= endDate;
   });
 
   // Get blocked payments via service
-  const blockedPayments = await paymentBlockingService.getActiveBlocks();
+  const blockedPayments = await paymentBlockingService.getActivePaymentBlocks();
   const filteredBlocked = blockedPayments.filter(block => {
-    const blockedAt = new Date(block.blocked_at || '');
+    const blockedAt = new Date(block.created_at || '');
     return blockedAt >= startDate && blockedAt <= endDate && !block.resolved_at;
   });
 
   const totalPayments = filteredPayments.length;
   const blockedCount = filteredBlocked.length;
-  const pendingCount = filteredPayments.filter(p => !p.transaction_id && !p.transactionId).length;
+  const pendingCount = filteredPayments.filter(p => !p.transactionId).length;
 
   // Calculate average processing time
-  const processedPayments = filteredPayments.filter(p => 
-    (p.transaction_id || p.transactionId) && (p.created_at || p.createdAt)
+  const processedPayments = filteredPayments.filter(p =>
+    p.transactionId && p.createdAt
   );
   const avgProcessingTime = processedPayments.length > 0
     ? processedPayments.reduce((sum, p) => {
-        const created = new Date(p.created_at || p.createdAt || '');
-        const processed = new Date(p.payment_date || p.paymentDate || '');
+        const created = new Date(p.createdAt || '');
+        const processed = new Date(p.paymentDate || '');
         return sum + (processed.getTime() - created.getTime());
       }, 0) / processedPayments.length / (1000 * 60 * 60 * 24)
     : 0;
@@ -224,13 +224,8 @@ export const calculatePaymentMetrics = async (
   // Count blocking reasons
   const blockingReasons: Record<string, number> = {};
   filteredBlocked.forEach(block => {
-    const reasons = block.blocking_reasons || block.blockingReasons;
-    if (reasons && Array.isArray(reasons)) {
-      reasons.forEach((reason: any) => {
-        const reasonKey = reason.reason || 'unknown';
-        blockingReasons[reasonKey] = (blockingReasons[reasonKey] || 0) + 1;
-      });
-    }
+    const reasonKey = block.block_reason || 'unknown';
+    blockingReasons[reasonKey] = (blockingReasons[reasonKey] || 0) + 1;
   });
 
   return {
