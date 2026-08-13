@@ -20,7 +20,6 @@ import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { MapLocation } from '@/domain/entities/Location';
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
-import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 import { ElectricSpinner } from "@/components/loading-page";
 import { useBulkSelection } from "@/hooks/projects/useBulkSelection";
 import BulkActions from "@/components/projects/BulkActions";
@@ -314,10 +313,6 @@ const Projects: React.FC = () => {
               onSelectAllOnPage={selectAllOnPage}
               onDeselectAllOnPage={deselectAllOnPage}
             />
-          </TabsContent>
-
-          <TabsContent value="waterfall" className="space-y-6">
-            <WaterfallProjectManager />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-6">

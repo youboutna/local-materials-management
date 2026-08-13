@@ -3,9 +3,11 @@
  *
  * Vues de la liste /projects (onglets affichés dans l'en-tête de page).
  * Centralise les modes d'affichage pour éviter les listes en dur dans Projects.tsx.
+ * La vue Waterfall a été retirée (Phase 7) : le pilotage par phases est unifié
+ * dans le détail projet (Gantt/Suivi-Évaluation alimentés par l'orchestrateur).
  */
 
-export type ProjectListViewKey = 'grid' | 'waterfall' | 'map' | 'interactive';
+export type ProjectListViewKey = 'grid' | 'map' | 'interactive';
 
 export interface ProjectListViewDef {
   key: ProjectListViewKey;
@@ -27,14 +29,6 @@ export const PROJECT_LIST_VIEWS: Record<ProjectListViewKey, ProjectListViewDef> 
     icon: 'Grid',
     order: 10,
     description: { fr: 'Liste paginée des projets avec filtres et sélection multiple' },
-  },
-  waterfall: {
-    key: 'waterfall',
-    uiValue: 'waterfall',
-    label: { fr: 'Gestion Waterfall' },
-    icon: 'Filter',
-    order: 20,
-    description: { fr: 'Pilotage des projets par phases waterfall' },
   },
   map: {
     key: 'map',
@@ -62,9 +56,9 @@ export interface ProjectListViewProfile {
 }
 
 export const PROJECT_LIST_VIEW_PROFILES: ProjectListViewProfile[] = [
-  { entityCode: 'DEFAULT',        views: ['grid', 'waterfall', 'map', 'interactive'], defaultView: 'grid' },
-  { entityCode: 'ETER',           views: ['grid', 'waterfall', 'map', 'interactive'], defaultView: 'grid' },
-  { entityCode: 'SOMELEC_INFRA',  views: ['grid', 'waterfall', 'map', 'interactive'], defaultView: 'grid' },
+  { entityCode: 'DEFAULT',        views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
+  { entityCode: 'ETER',           views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
+  { entityCode: 'SOMELEC_INFRA',  views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
 ];
 
 export function getProjectListViews(entityCode?: string): ProjectListViewDef[] {
