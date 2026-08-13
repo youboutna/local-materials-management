@@ -50,6 +50,8 @@ import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/Project
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import DocumentsListPaginated from '@/components/documents/DocumentsListPaginated';
+import RegulatoryComplianceChecklist from '@/components/project/compliance/RegulatoryComplianceChecklist';
+
 
 // ============================================================
 // Types
