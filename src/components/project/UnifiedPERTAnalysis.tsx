@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { PertService, type PertActivityInput } from '@/application/services/PertService';
+import { PertService, type PertActivity, type PertActivityInput, type PertResult } from '@/application/services/PertService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 
 interface UnifiedPERTAnalysisProps {
