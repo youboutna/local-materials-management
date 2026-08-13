@@ -64,6 +64,13 @@ interface PhaseTimeline {
  * Classe utilitaire pour les calculs de rapports
  * Toutes les méthodes sont statiques
  */
+export type EvmProjectInput = {
+  budget?: number | null;
+  progress?: number | null;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+};
+
 export class ReportCalculations {
   
   /**
@@ -72,7 +79,7 @@ export class ReportCalculations {
    * Délègue à `EvmService` (source unique) : CV = EV − AC, CPI/SPI indéterminés
    * quand AC/PV = 0, EV pondéré par phase (poids explicite → budget → durée).
    */
-  static calculateEVMMetrics(project: ProjectData, actualCost: number, phases: PhaseDTO[] = []): EVMMetrics {
+  static calculateEVMMetrics(project: EvmProjectInput, actualCost: number, phases: PhaseDTO[] = []): EVMMetrics {
     const result = EvmService.compute({
       budget: project.budget || 0,
       progress: project.progress ?? 0,
@@ -87,7 +94,7 @@ export class ReportCalculations {
   /**
    * Analyse EVM complète (indices nullables + statuts explicites).
    */
-  static calculateEVM(project: ProjectData, actualCost: number, phases: PhaseDTO[] = []) {
+  static calculateEVM(project: EvmProjectInput, actualCost: number, phases: PhaseDTO[] = []) {
     return EvmService.compute({
       budget: project.budget || 0,
       progress: project.progress ?? 0,

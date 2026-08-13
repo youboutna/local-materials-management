@@ -6,7 +6,7 @@ import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations
  */
 import { Project } from '@/domain/entities/Project';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
-import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import {
   ConstructionMilestoneDTO,
   EnhancedPhaseDTO,
@@ -274,7 +274,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
 
       // Calculate real EVM metrics using ReportCalculations
       const actualCost = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData as unknown as PhaseDTO[]);
 
       // Calculate performance indicators
       const onTimePerformance = this.calculateOnTimePerformance(phasesData);
