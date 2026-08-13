@@ -64,8 +64,8 @@ import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { LocalFilePreviewButton, useDocumentViewer } from "@/components/documents/viewer";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
-import {
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
+import {
   useSupplierPortalAuthHex,
   useFetchSupplierProfileHex,
   useSupplierLoginHex,

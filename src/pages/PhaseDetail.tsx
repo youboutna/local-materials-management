@@ -30,8 +30,8 @@ import {
   getStatusColor,
   getStatusLabel,
 } from '@/utils/phaseHelpers';
-import {
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
+import {
   ArrowLeft, Calendar, DollarSign, MapPin, Users, Package, FileText, BarChart3,
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
   ExternalLink, AlertTriangle,

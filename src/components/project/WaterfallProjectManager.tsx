@@ -190,12 +190,6 @@ const WaterfallProjectManager = () => {
     return isNaN(d.getTime()) ? null : d;
   }, []);
 
-  const getProjectPeriod = useCallback(() => {
-    const start = parseDate(selectedProject?.startDate) || new Date();
-    const end = parseDate(selectedProject?.endDate) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-    return { start, end };
-  }, [selectedProject, parseDate]);
-
   // ============================================================
   // États de chargement
   // ============================================================

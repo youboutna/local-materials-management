@@ -11,8 +11,8 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import {
 import { formatNumber2, formatAmount2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
+import {
   INDICATOR_TEMPLATES,
   IndicatorStatus,
   IndicatorTemplate,
