@@ -807,7 +807,7 @@ export function CompactProjectPDFDocument({
                           {formatBudget(phase.actualCost || 0)}
                         </Text>
                         <Text style={[styles.tableCell, { width: '15%' }]}>
-                          {phase.budget ? ((phase.actualCost || 0) / phase.budget * 100).toFixed(0) : 0}%
+                          {phase.budget ? formatDecimal(((phase.actualCost || 0) / phase.budget) * 100) : '0.00'}%
                         </Text>
                         <Text style={[styles.tableCell, { width: '25%' }]}>
                           {Array.isArray(project.contacts) ? (project.contacts.find((c: any) => c.role === 'contractor')?.name?.substring(0, 15) || project.contacts[0]?.name?.substring(0, 15) || '-') : '-'}
