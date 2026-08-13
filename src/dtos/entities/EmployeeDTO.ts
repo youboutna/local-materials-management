@@ -83,6 +83,18 @@ export interface EmployeeDTO extends BaseEntityDTO {
   email?: string;
   phone?: string;
   isActive?:boolean;
+  nationalId?: string;
+  userId?: string | null;
+
+  // Organisation & organigramme
+  organizationId?: string | null;
+  organizationName?: string;
+  managerId?: string | null;
+  superiorId?: string | null;
+  /** Intitulé du poste dans l'organigramme (btp.organizational_hierarchy) */
+  positionTitle?: string;
+  hierarchyLevel?: number;
+
 
   // Classification
   type: EmployeeType;
@@ -165,6 +177,13 @@ export interface CreateEmployeeDTO {
   firstName: string;
   lastName: string;
   fullName?: string;
+  nationalId?: string;
+  userId?: string | null;
+  organizationId?: string | null;
+  managerId?: string | null;
+  superiorId?: string | null;
+  positionTitle?: string;
+  hierarchyLevel?: number;
   email?: string;
   phone?: string;
   type: EmployeeType;
@@ -227,6 +246,17 @@ export interface UpdateEmployeeDTO {
   firstName?: string;
   lastName?: string;
   fullName?: string;
+  nationalId?: string;
+  userId?: string | null;
+  organizationId?: string | null;
+  managerId?: string | null;
+  superiorId?: string | null;
+  positionTitle?: string;
+  hierarchyLevel?: number;
+  isActive?: boolean;
+  employeeId?: string;
+  startDate?: string;
+  hireDate?: string;
   email?: string;
   phone?: string;
   type?: EmployeeType;

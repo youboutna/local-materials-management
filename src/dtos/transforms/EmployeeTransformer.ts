@@ -29,7 +29,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       position: (row.position as string) ?? null,
       department: (row.department as Department) ?? null,
       hireDate: (row.hire_date as string) ?? (row.start_date as string) ?? null,
-      salary: row.salary !== undefined ? Number(row.salary) : null,
+      salary: row.salary !== undefined && row.salary !== null ? Number(row.salary) : null,
       isActive: row.is_active !== undefined ? Boolean(row.is_active) : true,
       userId: (row.user_id as string) ?? null,
       managerId: (row.manager_id as string) ?? null,
@@ -38,6 +38,26 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       certifications: (row.certifications as unknown[]) || [],
       createdAt: (row.created_at as string) || new Date().toISOString(),
       updatedAt: (row.updated_at as string) || new Date().toISOString(),
+      extras: {
+        organizationId: (row.organization_id as string) ?? null,
+        employeeType: (row.employee_type as string) ?? null,
+        roleName: (row.role as string) ?? null,
+        status: (row.status as string) ?? null,
+        level: (row.level as string) ?? null,
+        endDate: (row.end_date as string) ?? null,
+        probationEndDate: (row.probation_end_date as string) ?? null,
+        hourlyRate: row.hourly_rate !== undefined && row.hourly_rate !== null ? Number(row.hourly_rate) : null,
+        currency: (row.currency as string) ?? null,
+        availability: (row.availability as string) ?? null,
+        address: (row.address as string) ?? null,
+        city: (row.city as string) ?? null,
+        country: (row.country as string) ?? null,
+        performanceRating: row.performance_rating !== undefined && row.performance_rating !== null ? Number(row.performance_rating) : null,
+        avatarUrl: (row.avatar_url as string) ?? null,
+        tags: (row.tags as string[]) ?? null,
+        notes: (row.notes as string) ?? null,
+        nationalId: (row.national_id as string) ?? null,
+      },
     };
     return Employee.create(props);
   }
@@ -53,6 +73,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Domain Entity → Supabase Insert/Update Object (snake_case)
    */
   static toSupabase(entity: Employee): Record<string, unknown> {
+    const x = entity.extras || {};
     return {
       id: entity.id,
       employee_id: entity.employeeId,
@@ -69,6 +90,24 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       user_id: entity.userId,
       skills: entity.skills,
       certifications: entity.certifications,
+      organization_id: x.organizationId ?? null,
+      employee_type: x.employeeType ?? null,
+      role: x.roleName ?? null,
+      status: x.status ?? null,
+      level: x.level ?? null,
+      end_date: x.endDate ?? null,
+      probation_end_date: x.probationEndDate ?? null,
+      hourly_rate: x.hourlyRate ?? null,
+      currency: x.currency ?? null,
+      availability: x.availability ?? null,
+      address: x.address ?? null,
+      city: x.city ?? null,
+      country: x.country ?? null,
+      performance_rating: x.performanceRating ?? null,
+      avatar_url: x.avatarUrl ?? null,
+      tags: x.tags ?? null,
+      notes: x.notes ?? null,
+      national_id: x.nationalId ?? null,
     };
   }
 
@@ -83,6 +122,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Transform Employee entity to EmployeeDTO (Domain Entity → DTO)
    */
   static toDTO(entity: Employee): EmployeeDTO {
+    const x = entity.extras || {};
     return {
       id: entity.id,
       firstName: entity.fullName?.split(' ')[0] || '',
@@ -92,15 +132,55 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       phone: entity.phone ?? undefined,
       position: entity.position ?? undefined,
       department: this.toDTODepartment(entity.department),
-      type: EmployeeType.FULL_TIME,
-      role: EmployeeRole.SPECIALIST,
-      status: entity.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE,
+      type: (x.employeeType as EmployeeType) || EmployeeType.FULL_TIME,
+      role: (x.roleName as EmployeeRole) || EmployeeRole.SPECIALIST,
+      status: (x.status as EmployeeStatus) || (entity.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE),
       employeeId: entity.employeeId,
       startDate: entity.hireDate ?? undefined,
+      endDate: x.endDate ?? undefined,
       salary: entity.salary ?? undefined,
+      hourlyRate: x.hourlyRate ?? undefined,
+      currency: x.currency ?? undefined,
+      availability: x.availability as EmployeeDTO['availability'],
+      address: x.address ?? undefined,
+      city: x.city ?? undefined,
+      country: x.country ?? undefined,
+      performanceRating: x.performanceRating ?? undefined,
+      avatar: x.avatarUrl ?? undefined,
+      tags: x.tags ?? undefined,
+      notes: x.notes ?? undefined,
+      nationalId: x.nationalId ?? undefined,
+      organizationId: x.organizationId ?? null,
+      managerId: entity.managerId,
+      superiorId: entity.superiorId,
+      userId: entity.userId,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt
+    } as EmployeeDTO;
+  }
+
+  /**
+   * Extract the extended (RH / organigramme) attributes from a DTO
+   */
+  private static extrasFromDTO(dto: Partial<EmployeeDTO> & Partial<CreateEmployeeDTO>) {
+    return {
+      organizationId: dto.organizationId ?? null,
+      employeeType: (dto.type as string) ?? null,
+      roleName: (dto.role as string) ?? null,
+      status: (dto.status as string) ?? null,
+      endDate: dto.endDate ?? null,
+      hourlyRate: dto.hourlyRate ?? null,
+      currency: dto.currency ?? null,
+      availability: (dto.availability as string) ?? null,
+      address: dto.address ?? null,
+      city: dto.city ?? null,
+      country: dto.country ?? null,
+      performanceRating: dto.performanceRating ?? null,
+      avatarUrl: dto.avatar ?? null,
+      tags: dto.tags ?? null,
+      notes: dto.notes ?? null,
+      nationalId: dto.nationalId ?? null,
     };
   }
 
@@ -121,6 +201,10 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       salary: dto.salary ?? null,
       isActive: dto.isActive !== undefined ? dto.isActive : dto.status === EmployeeStatus.ACTIVE,
       skills: dto.skills || [],
+      userId: dto.userId ?? null,
+      managerId: dto.managerId ?? null,
+      superiorId: dto.superiorId ?? null,
+      extras: this.extrasFromDTO(dto),
       createdAt: dto.createdAt || new Date().toISOString(),
       updatedAt: dto.updatedAt || new Date().toISOString()
     });
@@ -140,8 +224,12 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       department: this.toDomainDepartment(dto.department),
       hireDate: dto.startDate ?? null,
       salary: dto.salary ?? null,
-      isActive: dto.status === EmployeeStatus.ACTIVE,
+      isActive: dto.status ? dto.status === EmployeeStatus.ACTIVE : true,
       skills: dto.skills || [],
+      userId: dto.userId ?? null,
+      managerId: dto.managerId ?? null,
+      superiorId: dto.superiorId ?? null,
+      extras: this.extrasFromDTO(dto),
     });
   }
 
@@ -157,14 +245,40 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
     if (dto.firstName !== undefined || dto.lastName !== undefined) {
       result.fullName = `${dto.firstName || ''} ${dto.lastName || ''}`.trim();
     }
+    if (dto.employeeId !== undefined) result.employeeId = dto.employeeId;
     if (dto.email !== undefined) result.email = dto.email;
     if (dto.phone !== undefined) result.phone = dto.phone;
     if (dto.position !== undefined) result.position = dto.position;
     if (dto.department !== undefined) result.department = this.toDomainDepartment(dto.department);
     if (dto.salary !== undefined) result.salary = dto.salary;
-    if (dto.status !== undefined) result.isActive = dto.status === EmployeeStatus.ACTIVE;
+    if (dto.startDate !== undefined || dto.hireDate !== undefined) result.hireDate = dto.startDate ?? dto.hireDate;
+    if (dto.isActive !== undefined) result.isActive = dto.isActive;
+    else if (dto.status !== undefined) result.isActive = dto.status === EmployeeStatus.ACTIVE;
     if (dto.skills !== undefined) result.skills = dto.skills;
     if (dto.certifications !== undefined) result.certifications = dto.certifications;
+    if (dto.userId !== undefined) result.userId = dto.userId;
+    if (dto.managerId !== undefined) result.managerId = dto.managerId;
+    if (dto.superiorId !== undefined) result.superiorId = dto.superiorId;
+
+    // Extended RH / organigramme attributes
+    const extras: Record<string, unknown> = {};
+    if (dto.organizationId !== undefined) extras.organizationId = dto.organizationId;
+    if (dto.type !== undefined) extras.employeeType = dto.type;
+    if (dto.role !== undefined) extras.roleName = dto.role;
+    if (dto.status !== undefined) extras.status = dto.status;
+    if (dto.endDate !== undefined) extras.endDate = dto.endDate;
+    if (dto.hourlyRate !== undefined) extras.hourlyRate = dto.hourlyRate;
+    if (dto.currency !== undefined) extras.currency = dto.currency;
+    if (dto.availability !== undefined) extras.availability = dto.availability;
+    if (dto.address !== undefined) extras.address = dto.address;
+    if (dto.city !== undefined) extras.city = dto.city;
+    if (dto.country !== undefined) extras.country = dto.country;
+    if (dto.performanceRating !== undefined) extras.performanceRating = dto.performanceRating;
+    if (dto.avatar !== undefined) extras.avatarUrl = dto.avatar;
+    if (dto.tags !== undefined) extras.tags = dto.tags;
+    if (dto.notes !== undefined) extras.notes = dto.notes;
+    if (dto.nationalId !== undefined) extras.nationalId = dto.nationalId;
+    if (Object.keys(extras).length > 0) result.extras = extras;
 
     return result as Partial<Employee>;
   }

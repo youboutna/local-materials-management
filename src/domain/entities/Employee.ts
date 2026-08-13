@@ -12,6 +12,32 @@ import { Permission, Department, EmployeeData, EmployeeRole } from '../types';
 export type { Permission, Department, EmployeeData, EmployeeRole };
 
 /**
+ * EmployeeExtras - Extended employee metadata (RH / organigramme)
+ * Carried alongside the core domain state so the UI/reporting layers
+ * get a full round-trip without polluting core business invariants.
+ */
+export interface EmployeeExtras {
+  organizationId?: string | null;
+  employeeType?: string | null;
+  roleName?: string | null;
+  status?: string | null;
+  level?: string | null;
+  endDate?: string | null;
+  probationEndDate?: string | null;
+  hourlyRate?: number | null;
+  currency?: string | null;
+  availability?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  performanceRating?: number | null;
+  avatarUrl?: string | null;
+  tags?: string[] | null;
+  notes?: string | null;
+  nationalId?: string | null;
+}
+
+/**
  * EmployeeProps - Pure data interface for factory creation
  * Used by Transformers (infra layer) to build domain entities
  * No infrastructure dependencies allowed
@@ -35,6 +61,7 @@ export interface EmployeeProps {
   certifications?: unknown[];
   createdAt?: string;
   updatedAt?: string;
+  extras?: EmployeeExtras;
 }
 
 export class Employee {
@@ -61,6 +88,7 @@ export class Employee {
   private _userId: string | null;
   private _managerId: string | null;
   private _superiorId: string | null;
+  private _extras: EmployeeExtras = {};
   private _createdAt: string;
   private _updatedAt: string;
 
@@ -137,6 +165,8 @@ export class Employee {
   get userId(): string | null { return this._userId; }
   get managerId(): string | null { return this._managerId; }
   get superiorId(): string | null { return this._superiorId; }
+  get extras(): EmployeeExtras { return this._extras; }
+  get organizationId(): string | null { return this._extras.organizationId ?? null; }
   get createdAt(): string { return this._createdAt; }
   get updatedAt(): string { return this._updatedAt; }
 
@@ -303,6 +333,7 @@ export class Employee {
     emp._userId = this._userId;
     emp._managerId = this._managerId;
     emp._superiorId = this._superiorId;
+    emp._extras = { ...this._extras };
     return emp;
   }
 
@@ -356,6 +387,7 @@ export class Employee {
     emp._userId = props.userId ?? null;
     emp._managerId = props.managerId ?? null;
     emp._superiorId = props.superiorId ?? null;
+    emp._extras = props.extras ? { ...props.extras } : {};
     return emp;
   }
 

@@ -48,9 +48,10 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
     if (error) throw new Error(`Failed to save employee: ${error.message}`);
   }
 
-  async update(id: string, data: Partial<Employee>): Promise<void> {
+  async update(id: string, data: Partial<Employee> & { extras?: Record<string, unknown> }): Promise<void> {
     const updateData: Record<string, unknown> = {};
     if (data.fullName !== undefined) updateData.full_name = data.fullName;
+    if ((data as any).employeeId !== undefined) updateData.employee_id = (data as any).employeeId;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.position !== undefined) updateData.position = data.position;
@@ -60,7 +61,36 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
     if (data.certifications !== undefined) updateData.certifications = data.certifications;
     if (data.managerId !== undefined) updateData.manager_id = data.managerId;
     if (data.superiorId !== undefined) updateData.superior_id = data.superiorId;
+    if (data.userId !== undefined) updateData.user_id = data.userId;
+    if (data.hireDate !== undefined) updateData.hire_date = data.hireDate;
     if (data.salary !== undefined) updateData.salary = data.salary;
+
+    // Extended RH / organigramme attributes (camelCase extras → snake_case columns)
+    const extrasMap: Record<string, string> = {
+      organizationId: 'organization_id',
+      employeeType: 'employee_type',
+      roleName: 'role',
+      status: 'status',
+      level: 'level',
+      endDate: 'end_date',
+      probationEndDate: 'probation_end_date',
+      hourlyRate: 'hourly_rate',
+      currency: 'currency',
+      availability: 'availability',
+      address: 'address',
+      city: 'city',
+      country: 'country',
+      performanceRating: 'performance_rating',
+      avatarUrl: 'avatar_url',
+      tags: 'tags',
+      notes: 'notes',
+      nationalId: 'national_id',
+    };
+    const extras = (data.extras || {}) as Record<string, unknown>;
+    Object.entries(extrasMap).forEach(([key, column]) => {
+      if (extras[key] !== undefined) updateData[column] = extras[key];
+    });
+    updateData.updated_at = new Date().toISOString();
 
     const { error } = await supabase
       .from('employees')
