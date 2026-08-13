@@ -349,17 +349,11 @@ export class PhaseService {
    * Update construction phase with specific construction logic
    */
   async updateConstructionPhase(phaseId: string, phaseData: Partial<PhaseDTO>): Promise<Phase> {
-    try {
-      const existingPhase = await this.repository.findById(phaseId);
-      if (!existingPhase) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Construction phase not found');
-      }
-      throw new AppError(ErrorCode.NOT_IMPLEMENTED, 'Construction phase update requires new implementation');
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to update construction phase: ${error}`);
-    }
+    // Les phases de construction sont stockées dans la même table que les phases :
+    // on délègue à `updatePhase` (budget, matériaux, ressources, progression incluses).
+    return this.updatePhase(phaseId, phaseData);
   }
+
 
   // ============= Helper Methods =============
 
