@@ -27,7 +27,7 @@ const phases = [
 
 describe('Unification des métriques projet', () => {
   it('A — un seul moteur EVM : ProjectCalculationService délègue à EvmService', () => {
-    const metrics = ProjectMetricsOrchestrator.compute({ project, phases, asOf: new Date('2026-01-01') });
+    const metrics = ProjectMetricsOrchestrator.compute({ project, phases });
     const legacy = ProjectCalculationService.calculateEVMMetrics({
       ...(project as any),
       phases,
