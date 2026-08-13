@@ -371,7 +371,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       description: typedProject.description || "Aucune description disponible",
       location: typedProject.location || "Localisation non spécifiée",
       status: typedProject.status || "en cours",
-      progress: metrics?.progress ?? typedProject.progress ?? undefined,
+      progress: typedProject.progress ?? undefined,
       budget: typedProject.budget || undefined,
       startDate: typedProject.startDate || undefined,
       endDate: typedProject.endDate || undefined,
@@ -439,7 +439,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   }, [
     project,
     projectDetail,
-    metrics?.progress,
+    project?.progress,
     resources,
     tasksSource,
     risksSource,
