@@ -919,12 +919,33 @@ export function ProjectPDFDocument({
             <PDFRow>
               <PDFCol>
                 <PDFText 
-                  label="Durée totale estimée" 
+                  label="Durée totale estimée (PERT)" 
                   value={`${formatNumber2(pertAnalysis.totalExpectedDuration ?? 0)} jours`} 
                 />
                 <PDFText 
                   label="Écart-type total" 
                   value={`${formatNumber2(totalStandardDeviation)} jours`} 
+                />
+              </PDFCol>
+              <PDFCol>
+                <PDFText
+                  label="Durée calendaire de référence"
+                  value={
+                    project.startDate && project.endDate
+                      ? `${formatNumber2(
+                          Math.max(
+                            0,
+                            (new Date(project.endDate as any).getTime() -
+                              new Date(project.startDate as any).getTime()) /
+                              86400000,
+                          ),
+                        )} jours`
+                      : 'Non renseignée'
+                  }
+                />
+                <PDFText
+                  label="Lecture"
+                  value="La durée PERT est une estimation probabiliste ; la durée calendaire reste la référence contractuelle."
                 />
               </PDFCol>
             </PDFRow>
@@ -934,11 +955,11 @@ export function ProjectPDFDocument({
               headers={['Activité', 'Optimiste (j)', 'Probable (j)', 'Pessimiste (j)', 'Estimation PERT (j)', 'Écart-type']}
               data={pertAnalysis.activities.map((activity: any) => [
                 activity.name || 'Activité sans nom',
-                activity.optimistic?.toString() || '0',
-                activity.mostLikely?.toString() || '0',
-                activity.pessimistic?.toString() || '0',
-                formatRatio2(activity.pertEstimate ?? 0),
-                formatRatio2(activity.standardDeviation ?? 0)
+                formatNumber2(activity.optimistic ?? 0),
+                formatNumber2(activity.mostLikely ?? 0),
+                formatNumber2(activity.pessimistic ?? 0),
+                formatNumber2(activity.pertEstimate ?? 0),
+                formatNumber2(activity.standardDeviation ?? 0)
               ])}
               columnWidths={['25%', '12%', '12%', '12%', '15%', '12%']}
             />
@@ -949,6 +970,7 @@ export function ProjectPDFDocument({
       {/* Diagramme de Gantt — vue tabulaire phases sur timeline */}
       {reportConfig.includeSections.ganttChart && enrichedData?.phases && enrichedData.phases.length > 0 && (
         <PDFSection title="Diagramme de Gantt" borderColor="#0891b2">
+          <PhaseGanttBars phases={enrichedData.phases as any[]} project={project} />
           <PDFTable
             headers={['Phase', 'Début', 'Fin', 'Durée (j)', 'Avancement', 'Statut']}
             data={enrichedData.phases.map((p: any) => {
@@ -959,8 +981,8 @@ export function ProjectPDFDocument({
                 p.title || p.name || 'Phase',
                 start ? format(start, 'dd/MM/yyyy') : '—',
                 end ? format(end, 'dd/MM/yyyy') : '—',
-                duration.toString(),
-                formatPercent2(p.progress ?? 0),
+                formatNumber2(duration),
+                formatPercent2(p.actualProgress ?? p.progress ?? 0),
                 p.status || '—',
               ];
             })}
