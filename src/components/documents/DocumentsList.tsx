@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentsList } from '@/hooks/hexagonal';
+import { useDocumentViewer } from '@/components/documents/viewer';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 interface DocumentsListProps {
@@ -30,7 +31,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     }
   }, [location.search]);
 
-  const { data: documents, isLoading, error } = useDocumentsList({
+  const { openDocument } = useDocumentViewer();
+  const { data: documents, isLoading, error, refetch } = useDocumentsList({
     searchTerm,
     filterType,
     filterStatus
