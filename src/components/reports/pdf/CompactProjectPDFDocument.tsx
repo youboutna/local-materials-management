@@ -494,11 +494,6 @@ export function CompactProjectPDFDocument({
     return acc;
   }, {} as Record<ReportSectionKey, boolean>);
 
-  // Le référentiel DGEER n'est consulté que si l'organisation propriétaire est la DGEER.
-  const dgeerContext = isDgeerOrganization(
-    organizationName ?? company?.name,
-    organizationCode,
-  );
 
   // Default company information
   const defaultCompany = {
