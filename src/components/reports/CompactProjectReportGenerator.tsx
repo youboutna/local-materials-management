@@ -302,6 +302,7 @@ export function CompactProjectReportGenerator({
             pertAnalysis={singlePertAnalysis as any}
             reportTitle={reportTitle}
             sections={defaultSectionsFor(profile)}
+            profile={profile}
             organizationName={ownerOrganization?.name}
             organizationCode={ownerOrganization?.code}
             company={companyInfo}
@@ -323,6 +324,7 @@ export function CompactProjectReportGenerator({
             pertAnalysisMap={pertAnalysisMap as any}
             reportTitle={reportTitle}
             sections={defaultSectionsFor(profile)}
+            profile={profile}
             organizationName={ownerOrganization?.name}
             organizationCode={ownerOrganization?.code}
             company={companyInfo}

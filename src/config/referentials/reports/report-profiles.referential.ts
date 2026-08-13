@@ -38,13 +38,26 @@ export const ALL_REPORT_SECTIONS: ReportSectionKey[] = [
 
 export type ReportDepth = 'light' | 'full' | 'financial' | 'managerial';
 
+/** Densité d'affichage d'une section dans un rendu PDF. */
+export type SectionDensity = 'line' | 'compact' | 'full';
+
+export interface SectionDisplayConfig {
+  /** `line` = une seule ligne de synthèse, `compact` = tableau limité, `full` = tableau complet. */
+  density: SectionDensity;
+  /** Nombre maximum de lignes affichées (tableaux). */
+  maxRows?: number;
+}
+
 export interface ReportProfileConfig {
   code: ReportProfile;
   label: { fr: string; en?: string };
   description: { fr: string; en?: string };
   depth: ReportDepth;
   includes: ReportSectionKey[];
+  /** Densité par section (surcharge le défaut de densité du profil). */
+  sectionDisplay?: Partial<Record<ReportSectionKey, SectionDisplayConfig>>;
 }
+
 
 export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
   summary: {
@@ -52,8 +65,20 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     label: { fr: 'Résumé exécutif', en: 'Executive summary' },
     description: { fr: 'Rapport concis avec les informations essentielles du projet' },
     depth: 'light',
-    includes: ['overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones', 'monitoringEvaluation'],
+    includes: [
+      'overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones',
+      'risks', 'inspections', 'documents', 'evmAnalysis', 'pertAnalysis', 'ganttChart',
+    ],
+    sectionDisplay: {
+      financial: { density: 'compact', maxRows: 3 },
+      risks: { density: 'compact', maxRows: 3 },
+      milestones: { density: 'line' },
+      pertAnalysis: { density: 'line' },
+      ganttChart: { density: 'line' },
+      evmAnalysis: { density: 'compact' },
+    },
   },
+
   detailed: {
     code: 'detailed',
     label: { fr: 'Rapport détaillé', en: 'Detailed report' },
@@ -141,3 +166,32 @@ export const REPORT_SECTION_LABELS: Record<ReportSectionKey, string> = {
   ganttChart: 'Diagramme de Gantt',
   monitoringEvaluation: 'Suivi & Évaluation',
 };
+
+/** Densité par défaut selon la profondeur du profil (aucun défaut en dur dans le PDF). */
+const DEFAULT_DENSITY_BY_DEPTH: Record<ReportDepth, SectionDisplayConfig> = {
+  light: { density: 'compact', maxRows: 3 },
+  full: { density: 'full' },
+  financial: { density: 'full', maxRows: 10 },
+  managerial: { density: 'compact', maxRows: 5 },
+};
+
+/**
+ * Densité d'affichage d'une section pour un profil donné.
+ * Priorité : `sectionDisplay` du profil → défaut de la profondeur.
+ */
+export function getSectionDisplay(
+  code: ReportProfile,
+  section: ReportSectionKey,
+): SectionDisplayConfig {
+  const profile = getReportProfile(code);
+  return profile.sectionDisplay?.[section] ?? DEFAULT_DENSITY_BY_DEPTH[profile.depth];
+}
+
+/** Nombre max de lignes d'un tableau de section (Infinity si non limité). */
+export function getSectionMaxRows(
+  code: ReportProfile,
+  section: ReportSectionKey,
+  fallback = Number.POSITIVE_INFINITY,
+): number {
+  return getSectionDisplay(code, section).maxRows ?? fallback;
+}

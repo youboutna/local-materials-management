@@ -1,4 +1,11 @@
-import { ALL_REPORT_SECTIONS, type ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
+import {
+  ALL_REPORT_SECTIONS,
+  getSectionDisplay,
+  getSectionMaxRows,
+  type ReportProfile,
+  type ReportSectionKey,
+} from '@/config/referentials/reports/report-profiles.referential';
+
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
@@ -449,7 +456,75 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     fontSize: 6,
   },
+  // Ligne de synthèse (densité `line` du référentiel)
+  synthLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 4,
+    backgroundColor: colors.light,
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  synthItem: {
+    flexDirection: 'row',
+    gap: 3,
+    alignItems: 'center',
+  },
+  synthLabel: {
+    fontSize: 6,
+    color: colors.muted,
+  },
+  synthValue: {
+    fontSize: 7,
+    fontWeight: 'bold',
+    color: colors.dark,
+  },
+  // Micro-Gantt
+  ganttWrapper: {
+    marginBottom: 4,
+  },
+  ganttRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  ganttLabel: {
+    width: '26%',
+    fontSize: 5,
+    color: colors.muted,
+  },
+  ganttTrack: {
+    flex: 1,
+    height: 5,
+    backgroundColor: colors.light,
+    borderRadius: 2,
+    position: 'relative',
+  },
+  ganttBar: {
+    position: 'absolute',
+    height: 5,
+    borderRadius: 2,
+    backgroundColor: colors.secondary,
+  },
+  ganttToday: {
+    position: 'absolute',
+    width: 1,
+    height: 5,
+    backgroundColor: colors.danger,
+  },
+  ganttAxis: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 1,
+  },
+  ganttAxisText: {
+    fontSize: 5,
+    color: colors.muted,
+  },
 });
+
 
 interface CompactProjectPDFDocumentProps {
   projects: ProjectData[];
@@ -460,6 +535,8 @@ interface CompactProjectPDFDocumentProps {
   includeCompanyHeader?: boolean;
   /** Sections activées (référentiel `report-profiles`). Absent = toutes. */
   sections?: Partial<Record<ReportSectionKey, boolean>>;
+  /** Profil de rapport : pilote la densité des sections via le référentiel. */
+  profile?: ReportProfile;
   /** Nom/code de l'organisation propriétaire (active le référentiel DGEER). */
   organizationName?: string;
   organizationCode?: string;
@@ -480,11 +557,19 @@ export function CompactProjectPDFDocument({
   pertAnalysisMap,
   includeCompanyHeader = true,
   sections,
+  profile = 'summary',
   organizationName,
   organizationCode,
   company,
 }: CompactProjectPDFDocumentProps) {
   const currentDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
+
+  // Densités pilotées par le référentiel (aucune règle de mise en page en dur).
+  const expensesMaxRows = getSectionMaxRows(profile, 'financial', 3);
+  const risksMaxRows = getSectionMaxRows(profile, 'risks', 3);
+  const pertDensity = getSectionDisplay(profile, 'pertAnalysis').density;
+  const milestonesDensity = getSectionDisplay(profile, 'milestones').density;
+
 
   // Sections actives : par défaut toutes (aucune régression si le prop est absent).
   const activeSections = ALL_REPORT_SECTIONS.reduce((acc, key) => {
@@ -624,7 +709,78 @@ export function CompactProjectPDFDocument({
     return 0;
   };
 
+  // --- Jalons : synthèse « ligne » (prochain jalon, atteints, en retard) ---
+  const getMilestoneSummary = (milestones: any[]) => {
+    const list = Array.isArray(milestones) ? milestones : [];
+    const isDone = (m: any) =>
+      ['completed', 'achieved', 'atteint', 'validated'].includes(String(m?.status ?? '').toLowerCase());
+    const dateOf = (m: any) => {
+      const raw = m?.targetDate || m?.target_date || m?.dueDate;
+      const d = raw ? new Date(raw) : null;
+      return d && !Number.isNaN(d.getTime()) ? d : null;
+    };
+    const now = new Date();
+    const done = list.filter(isDone).length;
+    const late = list.filter((m) => {
+      const d = dateOf(m);
+      return !isDone(m) && d !== null && d < now;
+    }).length;
+    const upcoming = list
+      .filter((m) => !isDone(m) && dateOf(m) !== null && (dateOf(m) as Date) >= now)
+      .sort((a, b) => (dateOf(a) as Date).getTime() - (dateOf(b) as Date).getTime())[0];
+    return {
+      total: list.length,
+      done,
+      late,
+      nextLabel: upcoming ? String(upcoming.title || upcoming.name || 'Jalon') : null,
+      nextDate: upcoming ? format(dateOf(upcoming) as Date, 'dd/MM/yy') : null,
+    };
+  };
+
+  // --- Micro-Gantt : barres de phases normalisées sur la fenêtre projet ---
+  const getGanttBars = (project: ProjectData, phaseList: any[], maxBars = 5) => {
+    const parse = (raw: any): Date | null => {
+      const d = raw ? new Date(raw) : null;
+      return d && !Number.isNaN(d.getTime()) ? d : null;
+    };
+    const items = (Array.isArray(phaseList) ? phaseList : [])
+      .map((p: any, idx: number) => ({
+        label: String(p?.title || p?.name || p?.phase_name || `Phase ${idx + 1}`),
+        start: parse(p?.startDate ?? p?.start_date ?? p?.plannedStartDate),
+        end: parse(p?.endDate ?? p?.end_date ?? p?.plannedEndDate),
+        status: String(p?.status ?? ''),
+      }))
+      .filter((p) => p.start && p.end) as Array<{ label: string; start: Date; end: Date; status: string }>;
+
+    if (items.length === 0) return null;
+
+    const projStart = parse(project.startDate) ?? items[0].start;
+    const projEnd = parse(project.endDate) ?? items[items.length - 1].end;
+    const min = Math.min(projStart.getTime(), ...items.map((i) => i.start.getTime()));
+    const max = Math.max(projEnd.getTime(), ...items.map((i) => i.end.getTime()));
+    const span = Math.max(max - min, 1);
+    const pct = (t: number) => Math.min(100, Math.max(0, ((t - min) / span) * 100));
+
+    return {
+      start: format(new Date(min), 'dd/MM/yy'),
+      end: format(new Date(max), 'dd/MM/yy'),
+      todayLeft: pct(Date.now()),
+      bars: items.slice(0, maxBars).map((i) => ({
+        label: i.label.length > 18 ? `${i.label.substring(0, 18)}…` : i.label,
+        left: pct(i.start.getTime()),
+        width: Math.max(2, pct(i.end.getTime()) - pct(i.start.getTime())),
+        color:
+          i.status === 'completed'
+            ? colors.success
+            : i.status === 'in_progress'
+              ? colors.secondary
+              : colors.mapMajorStreet,
+      })),
+    };
+  };
+
   // Miniature SIG réelle (coordonnées + zones d'intervention persistées)
+
   const renderStreetMap = (project: ProjectData) => (
     <ProjectMiniMap
       project={{
@@ -667,6 +823,9 @@ export function CompactProjectPDFDocument({
         const phases = enrichedData?.plannedPhases || [];
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
+        const milestoneSummary = getMilestoneSummary((enrichedData as any)?.milestones || []);
+        const gantt = getGanttBars(project, phases);
+
 
 
 
@@ -775,7 +934,7 @@ export function CompactProjectPDFDocument({
                       <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Taux</Text>
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Fournisseur</Text>
                     </View>
-                    {phases.slice(0, 3).map((phase: any, idx: number) => (
+                    {phases.slice(0, expensesMaxRows).map((phase: any, idx: number) => (
                       <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableCell, { width: '35%' }]}>
                           {(phase.title || phase.name || `Phase ${idx + 1}`).toString().substring(0, 20)}
@@ -817,7 +976,7 @@ export function CompactProjectPDFDocument({
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Impact</Text>
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Prob.</Text>
                     </View>
-                    {risks.slice(0, 2).map((risk: any, idx: number) => {
+                    {[...risks].sort((a: any, b: any) => ((b?.impact || 0) * (b?.probability || 0)) - ((a?.impact || 0) * (a?.probability || 0))).slice(0, risksMaxRows).map((risk: any, idx: number) => {
                       const riskColor = getRiskColor(risk.impact > 70 ? 'élevé' : risk.impact > 40 ? 'moyen' : 'faible');
                       return (
                         <View key={idx} style={styles.tableRow}>
@@ -1057,8 +1216,93 @@ export function CompactProjectPDFDocument({
             </View>
             )}
 
-            {/* PERT Section */}
-            {activeSections.pertAnalysis && (
+            {/* Jalons — densité `line` : prochain jalon + atteints + retards */}
+            {activeSections.milestones && milestonesDensity === 'line' && (
+              <View style={styles.synthLine}>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Prochain jalon:</Text>
+                  <Text style={styles.synthValue}>
+                    {milestoneSummary.nextLabel
+                      ? `${milestoneSummary.nextLabel.substring(0, 28)} (${milestoneSummary.nextDate})`
+                      : 'Aucun jalon planifié'}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Atteints:</Text>
+                  <Text style={styles.synthValue}>
+                    {milestoneSummary.done}/{milestoneSummary.total}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>En retard:</Text>
+                  <Text
+                    style={[
+                      styles.synthValue,
+                      { color: milestoneSummary.late > 0 ? colors.danger : colors.success },
+                    ]}
+                  >
+                    {milestoneSummary.late}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Micro-Gantt — timeline horizontale des phases (repère « aujourd'hui ») */}
+            {activeSections.ganttChart && gantt && (
+              <View style={styles.ganttWrapper}>
+                <Text style={styles.sectionTitle}>Planning (Gantt condensé)</Text>
+                {gantt.bars.map((bar, idx) => (
+                  <View key={idx} style={styles.ganttRow}>
+                    <Text style={styles.ganttLabel}>{bar.label}</Text>
+                    <View style={styles.ganttTrack}>
+                      <View
+                        style={[
+                          styles.ganttBar,
+                          { left: `${bar.left}%`, width: `${bar.width}%`, backgroundColor: bar.color },
+                        ]}
+                      />
+                      <View style={[styles.ganttToday, { left: `${gantt.todayLeft}%` }]} />
+                    </View>
+                  </View>
+                ))}
+                <View style={styles.ganttAxis}>
+                  <Text style={styles.ganttAxisText}>{gantt.start}</Text>
+                  <Text style={styles.ganttAxisText}>Aujourd'hui</Text>
+                  <Text style={styles.ganttAxisText}>{gantt.end}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* PERT — densité `line` : une seule ligne de synthèse */}
+            {activeSections.pertAnalysis && pertDensity === 'line' && (
+              <View style={styles.synthLine}>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Durée attendue:</Text>
+                  <Text style={styles.synthValue}>
+                    {formatDecimal(getPertExpectedDuration(pertAnalysis))} j
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Écart-type:</Text>
+                  <Text style={styles.synthValue}>
+                    {formatDecimal(Math.sqrt(getPertTotalVariance(pertAnalysis)))}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Chemin critique:</Text>
+                  <Text style={styles.synthValue}>
+                    {pertAnalysis?.criticalPath?.length || 0} tâches
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Phase:</Text>
+                  <Text style={styles.synthValue}>{getCurrentPhase(phases).substring(0, 22)}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* PERT Section (densité complète) */}
+            {activeSections.pertAnalysis && pertDensity !== 'line' && (
             <View style={styles.section}>
 
               <Text style={styles.sectionTitle}>Analyse PERT</Text>
@@ -1114,6 +1358,8 @@ export function CompactProjectPDFDocument({
             )}
 
 
+
+
             {/* Footer Section */}
             <View style={styles.footerSection}>
               <View style={styles.footerItem}>
@@ -1161,6 +1407,7 @@ interface SingleCompactProjectPDFProps {
   pertAnalysis?: PERTAnalysis;
   includeCompanyHeader?: boolean;
   sections?: Partial<Record<ReportSectionKey, boolean>>;
+  profile?: ReportProfile;
   organizationName?: string;
   organizationCode?: string;
   company?: {
@@ -1180,6 +1427,7 @@ export function SingleCompactProjectPDF({
   pertAnalysis,
   includeCompanyHeader = true,
   sections,
+  profile,
   organizationName,
   organizationCode,
   company,
@@ -1201,6 +1449,7 @@ export function SingleCompactProjectPDF({
       pertAnalysisMap={pertAnalysisMap}
       includeCompanyHeader={includeCompanyHeader}
       sections={sections}
+      profile={profile}
       organizationName={organizationName}
       organizationCode={organizationCode}
       company={company}
