@@ -119,6 +119,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
     const labels: Record<string, string> = {
       'draft': 'Brouillon',
       'pending_approval': 'En attente',
+      'pending_review': 'En attente de revue',
       'approved': 'Approuvé',
       'rejected': 'Rejeté',
       'archived': 'Archivé',
@@ -127,6 +128,10 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
     };
     return labels[status] || status;
   };
+
+  const resolveStatus = (doc: DocumentDTO) =>
+    (doc.id && statusOverrides[doc.id]) || doc.status;
+
 
   if (isLoading) {
     return (
