@@ -684,8 +684,8 @@ export class ProjectDataCalculations {
 
     // Calculate time-based progress
     const timeMetrics = this.calculateTimeProgressMetrics(
-      phase.start_date,
-      phase.end_date,
+      phase.start_date ?? null,
+      phase.end_date ?? null,
       phase.progress || 0
     );
 
@@ -1006,7 +1006,7 @@ export class ProjectDataCalculations {
   /**
    * Calculate project timeline performance
    */
-  static calculateTimelinePerformance(project: ProjectData, phases: PhaseCostData[]) {
+  static calculateTimelinePerformance(project: LocalProjectDetailData, phases: PhaseCostData[]) {
     if (!phases || phases.length === 0) {
       return {
         onTimePhases: 0,
@@ -1022,7 +1022,7 @@ export class ProjectDataCalculations {
     let totalDelay = 0;
 
     phases.forEach(phase => {
-      const endDate = new Date(phase.end_date);
+      const endDate = new Date(phase.end_date ?? 0);
       const isCompleted = phase.status === 'completed';
       const isOverdue = !isCompleted && today > endDate;
 
