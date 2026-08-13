@@ -589,7 +589,7 @@ export class ProjectWorkflowService {
           break;
         case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
-          const pd = (data.projectData ?? {}) as Record<string, unknown>;
+          const pd = (data.projectData ?? {}) as unknown as Record<string, unknown>;
           const pick = <T,>(...keys: string[]): T | undefined => {
             for (const k of keys) {
               const v = pd[k];
