@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calculator, FileSpreadsheet } from 'lucide-react';
+import { Plus, Calculator, FileSpreadsheet, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +12,7 @@ import AdvancedQuantityCalculator from './AdvancedQuantityCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 import { getMaterialService } from '@/application/services/MaterialService';
+import { useQuantityTakeoffSync } from '@/hooks/hexagonal/useQuantityTakeoffSync';
 
 interface QuantityTakeoff {
   id: string;
@@ -41,6 +42,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const { t } = useLanguage();
+  const syncToBoq = useQuantityTakeoffSync(projectId);
 
   const fetchQuantityTakeoffs = async () => {
     try {
@@ -182,6 +184,16 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
               <FileSpreadsheet className="h-5 w-5" />
               {t('projects.tab.takeoffs')}
             </CardTitle>
+            <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => syncToBoq.mutate()}
+              disabled={syncToBoq.isPending || takeoffs.length === 0}
+              title="Créer les lignes DQE et les ressources de phase à partir des métrés"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${syncToBoq.isPending ? 'animate-spin' : ''}`} />
+              Générer le DQE
+            </Button>
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -217,6 +229,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                 </Tabs>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

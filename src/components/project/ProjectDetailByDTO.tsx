@@ -51,6 +51,7 @@ import { formatAmount2 } from "@/utils/reportNumbers";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getActualCostService } from "@/application/services/ActualCostService";
 import {
     AlertTriangle,
     BarChart3,
@@ -717,6 +718,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     [project],
   );
 
+  // Coût réel consolidé (paiements + engagements ressources) — source unique ActualCostService
+  const { data: actualCostBreakdown } = useQuery({
+    queryKey: ["project-actual-cost", project?.id],
+    queryFn: () => getActualCostService().computeActualCost(project!.id),
+    enabled: !!project?.id,
+    staleTime: 60_000,
+  });
+
   const metricsInput = useMemo(() => {
     if (!project) return null;
     return {
@@ -739,7 +748,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         progress: p.progress ?? 0,
         status: p.status,
       })),
-      actualCost: totalPaymentsSpent || (project as any)?.actualCost || 0,
+      // AC = paiements payés + engagements ressources de phase (source: ActualCostService)
+      actualCost: actualCostBreakdown?.actualCost ?? (totalPaymentsSpent || (project as any)?.actualCost || 0),
       inspectionsCount: inspectionsSource.length,
       documentsCount: documentsData.length,
       risks: risksSource as any[],
@@ -751,7 +761,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         dueDate: m.targetDate,
       })),
     };
-  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent]);
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent, actualCostBreakdown]);
 
   const metrics = useProjectMetrics(metricsInput);
 
@@ -1108,7 +1118,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             budget={project.budget || 0}
             spent={metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
-            financialMetrics={{}}
+            financialMetrics={
+              metrics
+                ? {
+                    costVariance: metrics.evm.costVariance,
+                    costPerformanceIndex: metrics.evm.costPerformanceIndex,
+                  }
+                : undefined
+            }
           />
 
           {/* Échéancier de paiements */}

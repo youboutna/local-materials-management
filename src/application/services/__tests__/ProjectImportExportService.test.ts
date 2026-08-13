@@ -1,4 +1,4 @@
-import dataset from '@/data/json_project.json';
+import dataset from '@/tests/fixtures/projectImportDataset.fixture.json';
 import type { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { describe, expect, it } from 'vitest';
 import {
@@ -25,7 +25,9 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     expect(dto.organizationId).toBe(source.organizationId);
     expect(dto.budget).toBe(typeof source.budget === 'number' ? source.budget : source.budget?.total);
     expect(dto.budgetSources).toEqual(typeof source.budget === 'object' ? source.budget?.sources : undefined);
-    expect(dto.startDate).toBe(source.timeline?.startDate);
+    // Le service normalise la date d'import en ISO (fallback: source.startDate puis timeline.startDate)
+    const expectedStart = (source as any).startDate ?? source.timeline?.startDate;
+    expect(dto.startDate).toBe(expectedStart ? new Date(expectedStart).toISOString() : undefined);
   });
 
   it('préserve les clés stables lors du retour vers le template', () => {
