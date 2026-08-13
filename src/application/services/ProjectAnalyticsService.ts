@@ -249,15 +249,20 @@ export class ProjectAnalyticsService {
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       const remainingBudget = totalBudget - actualCost;
 
-      // EVM-aligned : CPI = EV / AC ; EAC = BAC / CPI (PMI standard)
-      const progress = Number((projectData.project as any).progress ?? 0);
-      const earnedValue = totalBudget * (progress / 100);
-      const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 1;
-      const costVariance = earnedValue - actualCost;
-      const estimateAtCompletion = costPerformanceIndex > 0
-        ? totalBudget / costPerformanceIndex
-        : totalBudget;
-      const varianceAtCompletion = totalBudget - estimateAtCompletion;
+      // EVM : délégation au moteur UNIQUE (EvmService) — aucun calcul local.
+      const evm = EvmService.compute({
+        budget: totalBudget,
+        progress: Number((projectData.project as any).progress ?? 0),
+        startDate: (projectData.project as any).startDate ?? null,
+        endDate: (projectData.project as any).endDate ?? null,
+        actualCost,
+        phases: ((projectData as any).phases || []) as any[],
+      });
+      const costPerformanceIndex = evm.costPerformanceIndex ?? 0;
+      const costVariance = evm.costVariance ?? 0;
+      const estimateAtCompletion = evm.estimateAtCompletion ?? totalBudget;
+      const varianceAtCompletion = evm.varianceAtCompletion ?? 0;
+
 
       // Répartition réelle par catégorie (depuis payments.category), pas de split arbitraire
       const breakdownMap = new Map<string, { budgeted: number; actual: number }>();
