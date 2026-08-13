@@ -52,33 +52,39 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   /**
    * Transform Document entity to DocumentDTO (Domain Entity → DTO)
    */
-  static toDTO(entity: Document): DocumentDTO {
+  static toDTO(entity: Document | Record<string, any>): DocumentDTO {
+    // Tolérant : accepte une entité domaine, une ligne DB (snake_case) ou un objet partiel.
+    const e = (entity ?? {}) as Record<string, any>;
+    const pick = <T>(camel: string, snake: string, fallback: T): T =>
+      (e[camel] !== undefined && e[camel] !== null ? e[camel] : e[snake] !== undefined && e[snake] !== null ? e[snake] : fallback) as T;
+
     return {
-      id: entity.id,
-      projectId: entity.projectId,
-      phaseId: entity.phaseId,
-      inspectionId: entity.inspectionId,
-      paymentId: entity.paymentId,
-      supplierId: entity.supplierId,
-      title: entity.title,
-      description: entity.description,
-      documentType: entity.documentType,
-      status: entity.status,
-      fileName: entity.fileName,
-      fileUrl: entity.fileUrl,
-      fileSize: entity.fileSize,
-      mimeType: entity.mimeType,
-      tags: entity.tags,
-      isInternalOnly: entity.isInternalOnly,
-      isSharedWithSuppliers: entity.isSharedWithSuppliers,
-      deadlineDate: toIsoOrNull(entity.deadlineDate),
-      assignedTo: entity.assignedTo,
-      uploadedBy: entity.uploadedBy,
-      metadata: entity.metadata,
-      createdAt: toIso(entity.createdAt),
-      updatedAt: toIso(entity.updatedAt),
-    };
+      id: pick('id', 'id', ''),
+      projectId: pick('projectId', 'project_id', null),
+      phaseId: pick('phaseId', 'phase_id', null),
+      inspectionId: pick('inspectionId', 'inspection_id', null),
+      paymentId: pick('paymentId', 'payment_id', null),
+      supplierId: pick('supplierId', 'supplier_id', null),
+      title: pick('title', 'title', ''),
+      description: pick('description', 'description', null),
+      documentType: pick('documentType', 'document_type', DocumentType.OTHER),
+      status: pick('status', 'status', DocumentStatus.DRAFT),
+      fileName: pick('fileName', 'file_name', null),
+      fileUrl: pick('fileUrl', 'file_url', null),
+      fileSize: pick('fileSize', 'file_size', null),
+      mimeType: pick('mimeType', 'mime_type', null),
+      tags: pick('tags', 'tags', []),
+      isInternalOnly: pick('isInternalOnly', 'is_internal_only', false),
+      isSharedWithSuppliers: pick('isSharedWithSuppliers', 'is_shared_with_suppliers', false),
+      deadlineDate: toIsoOrNull(pick('deadlineDate', 'deadline_date', null)),
+      assignedTo: pick('assignedTo', 'assigned_to', null),
+      uploadedBy: pick('uploadedBy', 'uploaded_by', null),
+      metadata: pick('metadata', 'metadata', null),
+      createdAt: toIso(pick('createdAt', 'created_at', null)),
+      updatedAt: toIso(pick('updatedAt', 'updated_at', null)),
+    } as DocumentDTO;
   }
+
 
   /**
    * Transform Document entity to DocumentSummaryDTO (Domain Entity → Summary)
@@ -475,9 +481,10 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   /**
    * Batch: Domain Entities → DTOs
    */
-  static toDTOList(entities: Document[]): DocumentDTO[] {
-    return entities.map(entity => this.toDTO(entity));
+  static toDTOList(entities: Array<Document | Record<string, any>> | null | undefined): DocumentDTO[] {
+    return (entities ?? []).filter(Boolean).map(entity => this.toDTO(entity));
   }
+
 
   /**
    * Batch: Domain Entities → Summary DTOs

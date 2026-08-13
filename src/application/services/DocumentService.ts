@@ -369,8 +369,11 @@ export class DocumentService {
       // Transformation et création
       const repositoryData = DocumentTransformer.createToRepository(data);
       const created = await this.documentRepository.save(repositoryData as never);
-      
-      return DocumentTransformer.toDTO(created as never);
+
+      // Certains adapters ne renvoient rien : on retombe sur la ligne persistée
+      const source = created ?? (await this.documentRepository.findById(String((repositoryData as any).id))) ?? repositoryData;
+      return DocumentTransformer.toDTO(source as never);
+
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
