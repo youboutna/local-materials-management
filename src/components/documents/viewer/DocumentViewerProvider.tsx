@@ -56,12 +56,20 @@ export function DocumentViewerProvider({ children }: { children: ReactNode }) {
         onStatusChanged={(id, status) => {
           setDoc((d) => (d ? { ...d, status } : d));
           queryClient.invalidateQueries({ queryKey: ['documents'] });
+          emitDocumentChanged({ kind: 'status', id, status });
           options.onStatusChanged?.(id, status);
         }}
+        onDelete={
+          options.onDelete
+            ? (d) => {
+                emitDocumentChanged({ kind: 'deleted', id: d.id });
+                queryClient.invalidateQueries({ queryKey: ['documents'] });
+                options.onDelete?.(d);
+              }
+            : undefined
+        }
       />
-    </DocumentViewerContext.Provider>
-  );
-}
+
 
 export function useDocumentViewer(): DocumentViewerContextValue {
   const ctx = useContext(DocumentViewerContext);
