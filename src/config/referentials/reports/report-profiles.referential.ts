@@ -72,6 +72,17 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
       'monitoringEvaluation',
     ],
   },
+  technical: {
+    code: 'technical',
+    label: { fr: 'Rapport technique', en: 'Technical report' },
+    description: { fr: 'Focus exécution technique : phases, jalons, matériaux, inspections, PERT/Gantt' },
+    depth: 'full',
+    includes: [
+      'overview', 'timeline', 'materials', 'phases', 'inspections', 'milestones',
+      'documents', 'employees', 'risks', 'kpi', 'pertAnalysis', 'ganttChart',
+      'monitoringEvaluation',
+    ],
+  },
   project_manager: {
     code: 'project_manager',
     label: { fr: 'Chef de projet', en: 'Project manager' },
