@@ -65,22 +65,21 @@ export class ProjectAnalyticsService {
       const payments = projectData.payments || [];
       const actualCost = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
-      // --- EVM dérivé des vraies dates et progression ---
-      const startDate = projectData.project.startDate ? new Date(projectData.project.startDate as any) : null;
-      const endDate = (projectData.project as any).endDate ? new Date((projectData.project as any).endDate) : null;
-      let plannedValue = 0;
-      let timeProgressPct = 0;
-      if (startDate && endDate) {
-        const total = endDate.getTime() - startDate.getTime();
-        const elapsed = Math.max(0, Date.now() - startDate.getTime());
-        const ratio = total > 0 ? Math.min(1, elapsed / total) : 0;
-        timeProgressPct = ratio * 100;
-        plannedValue = budget * ratio;
-      }
-      const earnedValue = budget * (overallProgress / 100);
-      const spi = plannedValue > 0 ? earnedValue / plannedValue : 1;
-      const cpi = actualCost > 0 ? earnedValue / actualCost : 1;
-      const timelineVariance = overallProgress - timeProgressPct;
+      // --- EVM : délégation au moteur UNIQUE (EvmService) — aucun calcul local. ---
+      const evm = EvmService.compute({
+        budget,
+        progress: overallProgress,
+        startDate: projectData.project.startDate ?? null,
+        endDate: (projectData.project as any).endDate ?? null,
+        actualCost,
+        phases: ((projectData as any).phases || []) as any[],
+      });
+      const plannedValue = evm.plannedValue;
+      const earnedValue = evm.earnedValue;
+      // Compat DTO (nombre non-nullable) : 0 = non évaluable, cohérent avec `EvmService.toLegacyMetrics`.
+      const spi = evm.schedulePerformanceIndex ?? 0;
+      const cpi = evm.costPerformanceIndex ?? 0;
+      const timelineVariance = evm.progressGapPoints ?? (overallProgress - (evm.plannedProgress ?? 0));
 
       // --- Milestones réels ---
       let milestoneCompletion = 0;
@@ -151,11 +150,11 @@ export class ProjectAnalyticsService {
         stakeholderSatisfaction: 0,
         lastUpdated: new Date().toISOString(),
         cpi,
-        // Exposer EVM brut pour les widgets qui le consomment
+        // Exposer EVM brut pour les widgets qui le consomment (moteur unique EvmService)
         plannedValue,
         earnedValue,
-        scheduleVariance: earnedValue - plannedValue,
-        costVariance: earnedValue - actualCost,
+        scheduleVariance: evm.scheduleVariance,
+        costVariance: evm.costVariance ?? 0,
       } as ProjectAnalyticsDTO;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectAnalytics failed:', error);

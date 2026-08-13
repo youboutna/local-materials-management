@@ -6,7 +6,7 @@ import {
   getProjectListViews,
   getDefaultProjectListView,
 } from "@/config/referentials/projects/project-list-views.referential";
-import { Map, Grid, Filter, Plus } from "lucide-react";
+import { Map, Grid, Plus } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectFilters from "@/components/projects/ProjectFilters";
@@ -20,7 +20,6 @@ import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { MapLocation } from '@/domain/entities/Location';
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
-import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 import { ElectricSpinner } from "@/components/loading-page";
 import { useBulkSelection } from "@/hooks/projects/useBulkSelection";
 import BulkActions from "@/components/projects/BulkActions";
@@ -229,7 +228,7 @@ const Projects: React.FC = () => {
             style={{ gridTemplateColumns: `repeat(${getProjectListViews().length}, minmax(0, 1fr))` }}
           >
             {getProjectListViews().map((view) => {
-              const Icon = view.icon === "Grid" ? Grid : view.icon === "Filter" ? Filter : Map;
+              const Icon = view.icon === "Grid" ? Grid : Map;
               return (
                 <TabsTrigger
                   key={view.uiValue}
@@ -314,10 +313,6 @@ const Projects: React.FC = () => {
               onSelectAllOnPage={selectAllOnPage}
               onDeselectAllOnPage={deselectAllOnPage}
             />
-          </TabsContent>
-
-          <TabsContent value="waterfall" className="space-y-6">
-            <WaterfallProjectManager />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-6">

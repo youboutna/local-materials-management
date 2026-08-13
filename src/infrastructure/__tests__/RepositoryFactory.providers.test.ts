@@ -16,7 +16,7 @@ import { LocalStorageAdapter } from '@/infrastructure/adapters/local/LocalStorag
 import { PostgrestClient } from '@/infrastructure/adapters/postgrest/PostgrestClient';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
-import { SupabaseStorageProvider } from '@/infrastructure/adapters/storage/SupabaseStorageProvider';
+import { SupabaseStorageAdapter } from '@/infrastructure/adapters/supabase/SupabaseStorageAdapter';
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 
 function stubProviders(vars: Record<string, string | undefined>) {
@@ -126,7 +126,7 @@ describe('RepositoryFactory — storage provider selection', () => {
     stubProviders({ VITE_STORAGE_PROVIDER: 'supabase' });
     RepositoryFactory.reset();
     expect(RepositoryFactory.getStorageKind()).toBe('supabase');
-    expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(SupabaseStorageProvider);
+    expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(SupabaseStorageAdapter);
   });
 });
 
