@@ -1047,21 +1047,32 @@ export default function StrategicLinkageStep({
                             key={index}
                             className="flex items-center justify-between p-3 hover:bg-muted/50"
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="truncate text-sm font-medium">
+                                {resolveBudgetLabel(link) || 'Ligne budgétaire'}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1">
                                 {link.ministryCode && (
-                                  <Badge variant="outline">{link.ministryCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.ministryCode}</Badge>
                                 )}
                                 {link.programCode && (
-                                  <Badge variant="outline">{link.programCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.programCode}</Badge>
                                 )}
                                 {link.actionCode && (
-                                  <Badge variant="outline">{link.actionCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.actionCode}</Badge>
                                 )}
                                 {link.lineCode && (
-                                  <Badge variant="secondary">{link.lineCode}</Badge>
+                                  <Badge variant="secondary" className="text-xs">{link.lineCode}</Badge>
                                 )}
+                                <span className="text-xs text-muted-foreground">
+                                  Exercice {link.fiscalYear ?? '—'}
+                                </span>
                               </div>
+                              {resolveBudgetPath(link) && (
+                                <div className="truncate text-xs text-muted-foreground">
+                                  {resolveBudgetPath(link)}
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="text-right text-sm">
