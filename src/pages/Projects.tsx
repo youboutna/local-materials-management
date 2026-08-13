@@ -6,7 +6,7 @@ import {
   getProjectListViews,
   getDefaultProjectListView,
 } from "@/config/referentials/projects/project-list-views.referential";
-import { Map, Grid, Filter, Plus } from "lucide-react";
+import { Map, Grid, Plus } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectFilters from "@/components/projects/ProjectFilters";
@@ -228,7 +228,7 @@ const Projects: React.FC = () => {
             style={{ gridTemplateColumns: `repeat(${getProjectListViews().length}, minmax(0, 1fr))` }}
           >
             {getProjectListViews().map((view) => {
-              const Icon = view.icon === "Grid" ? Grid : view.icon === "Filter" ? Filter : Map;
+              const Icon = view.icon === "Grid" ? Grid : Map;
               return (
                 <TabsTrigger
                   key={view.uiValue}
