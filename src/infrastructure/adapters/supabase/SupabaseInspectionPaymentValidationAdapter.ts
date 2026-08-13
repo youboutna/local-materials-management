@@ -49,7 +49,9 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
     const { data, error } = await supabase
       .from('projects')
       .select(`
-        *,
+        id,
+        title,
+        description,
         project_stakeholders(
           stakeholder_type,
           stakeholder_entity_type,
@@ -61,6 +63,13 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
             contact_person,
             phone,
             email
+          ),
+          employees(
+            id,
+            first_name,
+            last_name,
+            phone,
+            email
           )
         )
       `)
@@ -68,7 +77,16 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
       .single();
 
     if (error) throw error;
-    return data as ProjectDetails;
+    if (!data) return null;
+
+    const { project_stakeholders, ...project } = data as typeof data & {
+      project_stakeholders?: unknown;
+    };
+
+    return {
+      ...project,
+      stakeholders: project_stakeholders,
+    } as ProjectDetails;
   }
 
   async updateInspectionStatus(inspectionId: string, status: string, comments: string): Promise<void> {
@@ -89,16 +107,21 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
     const project = await this.getProjectWithStakeholders(projectId);
     if (!project) return null;
 
-    const stakeholders = project.project_stakeholders || [];
-    const contractorStakeholder = stakeholders.find(s => 
+    const stakeholders = (project.stakeholders || []) as Array<{
+      stakeholder_type: string;
+      stakeholder_entity_type: string;
+      supplier_id?: string | null;
+      employee_id?: string | null;
+      suppliers?: any;
+    }>;
+    const contractorStakeholder = stakeholders.find(s =>
       s.stakeholder_type === 'contractor' && s.stakeholder_entity_type === 'supplier'
     );
-    
-    if (contractorStakeholder?.supplier_id && project.suppliers) {
-      const contractor = project.suppliers.find(s => s.id === contractorStakeholder.supplier_id);
-      return contractor;
+
+    if (contractorStakeholder?.supplier_id && contractorStakeholder.suppliers) {
+      return contractorStakeholder.suppliers;
     }
-    
+
     return null;
   }
 
@@ -106,16 +129,21 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
     const project = await this.getProjectWithStakeholders(projectId);
     if (!project) return null;
 
-    const stakeholders = project.project_stakeholders || [];
-    const engineerStakeholder = stakeholders.find(s => 
+    const stakeholders = (project.stakeholders || []) as Array<{
+      stakeholder_type: string;
+      stakeholder_entity_type: string;
+      supplier_id?: string | null;
+      employee_id?: string | null;
+      employees?: any;
+    }>;
+    const engineerStakeholder = stakeholders.find(s =>
       s.stakeholder_type === 'engineering_consultant' && s.stakeholder_entity_type === 'employee'
     );
-    
-    if (engineerStakeholder?.employee_id && project.employees) {
-      const engineer = project.employees.find(e => e.id === engineerStakeholder.employee_id);
-      return engineer;
+
+    if (engineerStakeholder?.employee_id && engineerStakeholder.employees) {
+      return engineerStakeholder.employees;
     }
-    
+
     return null;
   }
 }

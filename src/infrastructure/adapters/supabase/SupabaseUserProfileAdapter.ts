@@ -246,7 +246,7 @@ export class SupabaseUserProfileAdapter implements IUserProfileRepository {
     try {
       let query = supabase
         .from('profiles')
-        .select('id', { count: true, head: true });
+        .select('id', { count: 'exact', head: true });
 
       // Appliquer les filtres
       if (criteria.fullName) {
@@ -813,12 +813,7 @@ export class SupabaseUserProfileAdapter implements IUserProfileRepository {
         // Mettre à jour avec les données d'authentification
         const updateData: UpdateProfileData = {};
         
-        if (authData.email && authData.email !== existingProfile.email) {
-          // Note: Le champ email n'existe pas dans la table profiles
-          // On pourrait ajouter ce champ si nécessaire
-          updateData.fullName = existingProfile.fullName; // Garder le nom existant
-        }
-        
+        // Note: le champ email n'existe pas dans l'entité UserProfile / la table profiles.
         if (authData.lastLoginAt) {
           updateData.lastLogin = authData.lastLoginAt;
         }
@@ -855,28 +850,13 @@ export class SupabaseUserProfileAdapter implements IUserProfileRepository {
 
   async cleanupInactiveProfiles(since: Date): Promise<number> {
     try {
-      // TEMPORARY WORKAROUND: Use existing columns until database migration is applied
-      // Once migration is applied, uncomment the code below and remove this workaround
-      
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          // Use role field to indicate inactive status temporarily
-          role: 'inactive' as any
+        .update({
+          status: ProfileStatus.INACTIVE
         })
         .lt('updated_at', since.toISOString())
-        .neq('role', 'inactive');
-
-      /*
-      // PROPER CODE (uncomment after running migration):
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          status: ProfileStatus.INACTIVE 
-        })
-        .lt('last_login_at', since.toISOString())
         .eq('status', ProfileStatus.ACTIVE);
-      */
 
       if (error) {
         ErrorLogger.log(

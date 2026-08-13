@@ -1,80 +1,67 @@
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
-import { Inspection, InspectionStatus, Document } from '@/domain/entities/Inspection';
-import {
-  InspectionObservation,
-  ChecklistItem
-} from '@/dtos/entities/InspectionDTO';
+import type { BtpTables, BtpTablesInsert } from '@/integrations/supabase/btp-types';
+import type { Json } from '@/integrations/supabase/types';
+import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
+import { Inspection, InspectionStatus, Inspector, Document } from '@/domain/entities/Inspection';
+import { ChecklistItem } from '@/dtos/entities/InspectionDTO';
 
-// Database row interface for inspections table
-interface InspectionRow {
-  id: string;
-  project_id: string;
-  phase_id?: string;
-  step_id?: string;
-  inspector: string;
-  date: string;
-  status: string;
-  progress_at_inspection: number;
-  comments?: string;
-  observations?: InspectionObservation[]; // Store as JSON array
-  documents: unknown[];
-  payment_type?: string;
-  created_at: string;
-  updated_at: string;
-}
+// Official Supabase row/insert types for the `inspections` table (btp schema)
+type InspectionRow = BtpTables<'inspections'>;
+type InspectionInsert = BtpTablesInsert<'inspections'>;
 
 export class SupabaseInspectionAdapter implements IInspectionRepository {
   private mapToEntity(data: InspectionRow): Inspection {
     // Convert string status to InspectionStatus enum
-    const status = Inspection.mapStringToStatus(data.status);
+    const status = Inspection.mapStringToStatus(data.status || '');
 
     // Create Inspector object - can be employee, supplier, or external
     // In production, this should query the database to determine inspector type
     // For now, assume inspector string contains type information or lookup is needed
     const inspector: Inspector = {
-      id: data.inspector,
-      name: data.inspector, // This should be looked up from Employee/Supplier table
+      id: data.inspector || undefined,
+      name: data.inspector || '', // This should be looked up from Employee/Supplier table
       agency: 'SOMELEC',
       type: 'employee', // Default assumption - should be determined by lookup
-      employeeId: data.inspector, // If inspector is an employee
-      userId: data.inspector // If inspector has a user account
+      employeeId: data.inspector || undefined, // If inspector is an employee
+      userId: data.inspector || undefined // If inspector has a user account
     };
+
+    // The `observations` field is not persisted as its own column in the
+    // `inspections` table (btp schema) — it lives only in the domain entity
+    // for in-memory/business usage. Real observations are stored via the
+    // dedicated inspection execution workflow.
+    const documents = Array.isArray(data.documents) ? (data.documents as unknown as Document[]) : [];
 
     return Inspection.create({
       id: data.id,
       projectId: data.project_id,
-      phaseId: data.phase_id,
-      stepId: data.step_id,
+      phaseId: data.phase_id || undefined,
       inspector: inspector,
-      date: data.date,
+      date: data.date || '',
       status: status,
       progressAtInspection: data.progress_at_inspection || 0,
       comments: data.comments || undefined,
       progress: data.progress_at_inspection || 0,
-      observations: Array.isArray(data.observations) ? data.observations : [],
-      documents: Array.isArray(data.documents) ? (data.documents as Document[]) : [],
+      observations: [],
       paymentType: data.payment_type || undefined
     });
   }
 
-  private mapToRow(inspection: Inspection): Omit<InspectionRow, 'created_at' | 'updated_at'> {
+  private mapToRow(inspection: Inspection): Omit<InspectionInsert, 'created_at' | 'updated_at'> {
     const inspectorName = typeof inspection.inspector === 'string'
       ? inspection.inspector
       : inspection.inspector?.name ?? '';
     return {
       id: inspection.id,
       project_id: inspection.projectId || '',
-      phase_id: inspection.phaseId || undefined,
-      step_id: inspection.stepId || undefined,
+      phase_id: inspection.phaseId || null,
       inspector: inspectorName, // Extract name from Inspector object
       date: inspection.date,
       status: inspection.status.toString().toLowerCase(), // Convert enum to string
       progress_at_inspection: inspection.progressAtInspection,
-      comments: inspection.comments || undefined,
-      observations: inspection.observations || [], // Store observations as JSON array
-      documents: inspection.documents || [],
-      payment_type: inspection.paymentType || undefined
+      comments: inspection.comments || null,
+      documents: (inspection.documents || []) as unknown as Json,
+      payment_type: inspection.paymentType || null
     };
   }
 
@@ -116,12 +103,9 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
     if (data.progressAtInspection !== undefined) updateData.progress_at_inspection = data.progressAtInspection;
     if (data.comments !== undefined) updateData.comments = data.comments;
     if (data.documents !== undefined) updateData.documents = data.documents;
-    if (data.observations !== undefined) updateData.observations = data.observations;
     if ((data as { paymentType?: string }).paymentType !== undefined) {
       updateData.payment_type = (data as { paymentType?: string }).paymentType;
     }
-    if (data.stepId !== undefined) updateData.step_id = data.stepId;
-
 
     const { error } = await supabase
       .from('inspections')
@@ -205,7 +189,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   async findUpcoming(days: number): Promise<Inspection[]> {
     const now = new Date();
     const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -220,7 +204,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
 
   async findOverdue(): Promise<Inspection[]> {
     const now = new Date().toISOString();
-    
+
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -244,7 +228,8 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
 
     const counts: Record<string, number> = {};
     data.forEach(d => {
-      counts[d.status] = (counts[d.status] || 0) + 1;
+      const key = d.status || 'unknown';
+      counts[key] = (counts[key] || 0) + 1;
     });
 
     return counts as Record<InspectionStatus, number>;
