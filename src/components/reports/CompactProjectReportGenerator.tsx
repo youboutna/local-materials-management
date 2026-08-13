@@ -83,6 +83,43 @@ export function CompactProjectReportGenerator({
 
   // Create service instance
   const reportingService = useMemo(() => getReportingService(), []);
+  const organizationService = useMemo(() => getOrganizationService(), []);
+
+  // Organisation propriétaire : celle du projet, sinon l'organisation par défaut.
+  useEffect(() => {
+    let cancelled = false;
+    const loadOwner = async () => {
+      try {
+        const organizationId = (projectList[0] as any)?.organizationId as string | undefined;
+        const owner = organizationId
+          ? await organizationService.get(organizationId).catch(() => null)
+          : null;
+        const resolved = owner ?? (await organizationService.getDefault().catch(() => null));
+        if (!cancelled) setOwnerOrganization(resolved);
+      } catch (error) {
+        console.warn('[CompactProjectReportGenerator] owner organization unavailable', error);
+        if (!cancelled) setOwnerOrganization(null);
+      }
+    };
+    loadOwner();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationService, projectList]);
+
+  // Bloc "société" du PDF construit sur les données réelles de l'organisation.
+  const companyInfo = useMemo(() => {
+    if (!ownerOrganization) return undefined;
+    return {
+      name: ownerOrganization.name,
+      address: ownerOrganization.address || '',
+      phone: ownerOrganization.phone || '',
+      email: ownerOrganization.email || '',
+      logo: ownerOrganization.logoUrl || undefined,
+    };
+  }, [ownerOrganization]);
+
+
 
   useEffect(() => {
     const loadData = async () => {
