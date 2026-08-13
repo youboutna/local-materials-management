@@ -1,4 +1,11 @@
-import { ALL_REPORT_SECTIONS, type ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
+import {
+  ALL_REPORT_SECTIONS,
+  getSectionDisplay,
+  getSectionMaxRows,
+  type ReportProfile,
+  type ReportSectionKey,
+} from '@/config/referentials/reports/report-profiles.referential';
+
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
