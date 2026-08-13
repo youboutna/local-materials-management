@@ -854,11 +854,39 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileCheck className="h-5 w-5" />
-                Conformité Réglementaire ({complianceItems.length})
+                Conformité Réglementaire ({regulatoryCount})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {complianceItems.length === 0 ? (
+            <CardContent className="space-y-4">
+              {regulatoryDocuments.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Pièces justificatives ({regulatoryDocuments.length})
+                  </h4>
+                  {regulatoryDocuments.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{doc.title || doc.fileName}</p>
+                        <p className="text-xs text-muted-foreground">{doc.documentType}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge className={getStatusColor(doc.status || 'draft')}>{doc.status || 'draft'}</Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            openDocument(doc, { allowStatusChange: true, onStatusChanged: loadComplianceData })
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {complianceItems.length === 0 && regulatoryDocuments.length === 0 ? (
+
                 <div className="text-center py-8">
                   <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucun élément réglementaire</p>
