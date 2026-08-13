@@ -162,42 +162,112 @@ interface PDFDocumentProps {
     email: string;
     logo?: string;
   };
+  /** Miniature SIG (même composant que le rapport compact). */
+  miniMap?: React.ReactNode;
 }
 
-export function PDFDocument({ title, subtitle, children, company }: PDFDocumentProps) {
+// Styles alignés sur le rapport compact (en-tête organisation + pied de page).
+const headerStyles = StyleSheet.create({
+  companyHeader: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#2563eb',
+    paddingBottom: 6,
+    marginBottom: 8,
+  },
+  companyHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  companyInfo: {
+    flex: 1,
+  },
+  companyName: {
+    color: '#2563eb',
+    fontSize: 12,
+    marginBottom: 4,
+    fontWeight: 'bold',
+  },
+  companyDetail: {
+    marginVertical: 1,
+    fontSize: 9,
+    color: '#666666',
+  },
+  companyLogo: {
+    maxHeight: 24,
+    maxWidth: 60,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingBottom: 8,
+  },
+  reportTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e40af',
+  },
+  reportSubtitle: {
+    fontSize: 9,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  pageFooter: {
+    position: 'absolute',
+    bottom: 14,
+    left: 30,
+    right: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 7,
+    color: '#6b7280',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 6,
+  },
+});
+
+export function PDFDocument({ title, subtitle, children, company, miniMap }: PDFDocumentProps) {
   const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
+  const shortDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-            <Text style={styles.subtitle}>Généré le {currentDate}</Text>
-          </View>
-          {company && (
-            <View style={styles.headerRight}>
-              <Text style={[styles.subtitle, { fontWeight: 'bold' }]}>{company.name}</Text>
-              <Text style={styles.subtitle}>{company.address}</Text>
-              <Text style={styles.subtitle}>{company.phone}</Text>
-              <Text style={styles.subtitle}>{company.email}</Text>
+        {/* En-tête organisation (identique au rapport compact) */}
+        {company && (
+          <View style={headerStyles.companyHeader} fixed>
+            <View style={headerStyles.companyHeaderContent}>
+              <View style={headerStyles.companyInfo}>
+                <Text style={headerStyles.companyName}>{company.name}</Text>
+                <Text style={headerStyles.companyDetail}>{company.address}</Text>
+                <Text style={headerStyles.companyDetail}>Tél: {company.phone}</Text>
+                <Text style={headerStyles.companyDetail}>Email: {company.email}</Text>
+              </View>
+              {company.logo ? <Image src={company.logo} style={headerStyles.companyLogo} /> : null}
             </View>
-          )}
+          </View>
+        )}
+
+        {/* En-tête rapport + miniature SIG */}
+        <View style={headerStyles.reportHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={headerStyles.reportTitle}>{title} - Généré le {currentDate}</Text>
+            {subtitle && <Text style={headerStyles.reportSubtitle}>{subtitle}</Text>}
+          </View>
+          {miniMap}
         </View>
 
         {/* Content */}
         {children}
 
-        {/* Footer */}
-        <Text style={styles.footer}>
-          Ce document a été généré automatiquement le {currentDate} - Document confidentiel
-        </Text>
-        
-        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => 
-          `Page ${pageNumber} sur ${totalPages}`
-        } fixed />
+        {/* Footer (même design que le rapport compact) */}
+        <View style={headerStyles.pageFooter} fixed>
+          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} sur ${totalPages}`} />
+          <Text>Document confidentiel - {shortDate}</Text>
+        </View>
       </Page>
     </Document>
   );
