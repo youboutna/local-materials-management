@@ -2002,6 +2002,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          phase_id: string | null
           progress_percentage: number | null
           project_id: string
           status: string | null
@@ -2015,6 +2016,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          phase_id?: string | null
           progress_percentage?: number | null
           project_id: string
           status?: string | null
@@ -2028,6 +2030,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          phase_id?: string | null
           progress_percentage?: number | null
           project_id?: string
           status?: string | null
