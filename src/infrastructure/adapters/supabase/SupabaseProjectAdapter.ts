@@ -242,7 +242,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     const [
       projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult,
       documentsResult, bankGuaranteesResult, insuranceResult,
-      milestonesResult, stakeholdersResult, resourcesResult, contactsResult, materialsResult,
+      milestonesResult, stakeholdersResult, resourcesResult, materialsResult,
     ] = await Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('project_phases').select('*').eq('project_id', id).order('order_index'),
@@ -257,17 +257,6 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       supabase.from('project_milestones').select('*').eq('project_id', id),
       supabase.from('project_stakeholders').select('*').eq('project_id', id),
       supabase.from('project_resources').select('*').eq('project_id', id),
-      // `project_contacts` est optionnelle selon les déploiements (42P01 sinon) :
-      // on la traite en best-effort pour ne pas casser l'hydratation du projet.
-      supabase
-        .from('project_contacts')
-        .select('*')
-        .eq('project_id', id)
-        .then(
-          (res) => (res.error ? { data: [], error: null } : res),
-          () => ({ data: [], error: null })
-        ),
-
       supabase.from('project_materials').select('*').eq('project_id', id),
     ]);
 
@@ -321,14 +310,20 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       updatedAt: row.updated_at,
     }));
 
-    const contacts = (contactsResult.data || []).map((row: Record<string, any>) => ({
+    // Les contacts sont portés par le référentiel unifié project_stakeholders.
+    // Ne pas interroger l'ancienne table optionnelle project_contacts : PostgREST
+    // renvoie 42P01 sur les déploiements où elle n'existe pas et les retries du
+    // query client multiplient inutilement les requêtes 404.
+    const contacts = (stakeholdersResult.data || [])
+      .filter((row: Record<string, any>) => row.external_name || row.external_email || row.external_phone)
+      .map((row: Record<string, any>) => ({
       id: row.id,
       projectId: row.project_id,
-      name: row.name,
-      role: row.role,
-      email: row.email ?? '',
-      phone: row.phone ?? undefined,
-      company: row.company ?? undefined,
+      name: row.external_name ?? row.role_description ?? row.stakeholder_type ?? '',
+      role: row.stakeholder_type,
+      email: row.external_email ?? '',
+      phone: row.external_phone ?? undefined,
+      company: undefined,
       isPrimary: row.is_primary ?? false,
     }));
 

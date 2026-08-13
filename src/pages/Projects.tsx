@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -186,28 +186,14 @@ const Projects: React.FC = () => {
     setSortOption("newest");
   };
 
-  const handleMapFilterChange = (filteredLocations: MapLocation[]) => {
-    console.log(
-      "Map filter applied - Filtered locations:",
-      filteredLocations.length
-    );
-    setFilteredMapLocations(filteredLocations);
-
-    // Also update the filtered projects to match the map filter
-    if (projects) {
-      const filteredProjectIds = new Set(
-        filteredLocations.map((loc) => loc.id)
-      );
-      const matchingProjects = projects.filter((project) =>
-        filteredProjectIds.has(project.id)
-      );
-      console.log(
-        "Map filter - Updated grid projects:",
-        matchingProjects.length
-      );
-      // Note: filteredProjects is handled by the hook
-    }
-  };
+  const handleMapFilterChange = useCallback((filteredLocations: MapLocation[]) => {
+    setFilteredMapLocations((current) => {
+      const unchanged =
+        current.length === filteredLocations.length &&
+        current.every((location, index) => location.id === filteredLocations[index]?.id);
+      return unchanged ? current : filteredLocations;
+    });
+  }, []);
   const handleSearchChange = (query: string) => {
     // Supprimer setLocalSearchQuery pour éviter la dépendance circulaire
     // setLocalSearchQuery(query);
