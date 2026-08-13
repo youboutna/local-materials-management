@@ -45,23 +45,23 @@ export class TakeoffToBoqService {
     }
 
     const existingLines = await this.boqRepo.list({ source: 'quantity_takeoff', projectId });
-    const alreadySynced = new Set(
+    const existingByTakeoff = new Map(
       existingLines
-        .map((l) => this.extractTakeoffMarker(l.note))
-        .filter((id): id is string => Boolean(id)),
+        .map((line) => [this.extractTakeoffMarker(line.note), line] as const)
+        .filter((entry): entry is [string, BoqLineDTO] => Boolean(entry[0])),
     );
 
     const toCreate: BoqLineDTO[] = [];
     let skipped = 0;
 
     for (const takeoff of takeoffs) {
-      if (!takeoff.id || alreadySynced.has(takeoff.id)) {
+      if (!takeoff.id) {
         skipped += 1;
         continue;
       }
       const unitPrice = takeoff.material?.price_per_unit ?? null;
       const quantity = Number(takeoff.quantity ?? 0);
-      toCreate.push({
+      const line: BoqLineDTO = {
         source: 'quantity_takeoff',
         contextId: projectId,
         designation: takeoff.material?.name ?? takeoff.element_type ?? 'Métré',
@@ -78,7 +78,14 @@ export class TakeoffToBoqService {
         sourceType: 'import',
         note: this.buildTakeoffMarker(takeoff.id),
         status: 'draft',
-      });
+      };
+      const existing = existingByTakeoff.get(takeoff.id);
+      if (existing?.id) {
+        await this.boqRepo.update(existing.id, line);
+        skipped += 1;
+      } else {
+        toCreate.push(line);
+      }
     }
 
     if (toCreate.length) {

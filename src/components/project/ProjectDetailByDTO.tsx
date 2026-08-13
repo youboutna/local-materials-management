@@ -998,6 +998,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
           <ProjectCheckpointsDashboard
             projectId={projectId!}
+            progress={metrics?.progress}
             compact
             onPhaseClick={(phaseId) => navigate(`/projects/${projectId}/phases/${phaseId}`)}
           />

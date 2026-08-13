@@ -81,7 +81,8 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
   );
 
   // WBS cascade
-  const phase = getPhase(formData.phaseId);
+  const selectedProjectPhase = projectPhases.find((p) => p.id === formData.phaseId);
+  const phase = getPhase(selectedProjectPhase?.phase_type || selectedProjectPhase?.construction_phase || '');
   const milestone = phase?.milestones.find((m) => m.id === formData.milestoneId);
 
   useEffect(() => {
