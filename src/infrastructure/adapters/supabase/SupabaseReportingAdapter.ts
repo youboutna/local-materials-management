@@ -1,4 +1,6 @@
 
+import { EvmService } from '@/application/services/EvmService';
+import { PhaseWeightingService } from '@/application/services/PhaseWeightingService';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import type { ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
 import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';
@@ -54,14 +56,18 @@ export class SupabaseReportingAdapter implements IReportingRepository {
       return {
         id: vm.id,
         name: vm.name,
-        status: vm.status || this.getPhaseStatus(phase),
-        progress: vm.progress || this.calculatePhaseProgress(phase),
-        startDate: vm.startDate || new Date().toISOString(),
-        endDate: vm.endDate || new Date().toISOString(),
-        actualStartDate: vm.startDate,
-        actualEndDate: vm.actualEndDate || vm.endDate,
+        // Statut et avancement viennent de la base : `??` et non `||`,
+        // sinon un 0 % réel serait écrasé par une estimation temporelle.
+        status: vm.status || 'not_started',
+        progress: vm.progress ?? 0,
+        startDate: vm.startDate || undefined,
+        endDate: vm.endDate || undefined,
+        actualStartDate: (phase.actual_start_date as string) || undefined,
+        actualEndDate: vm.actualEndDate || undefined,
+        // budget = estimated_cost, actualCost = actual_cost (colonnes réelles)
         budget: vm.budget,
         actualCost: vm.actualCost,
+        weight: phase.weight ?? undefined,
         tasks: (tasksByPhase.get(phase.id) || []).map((t: any) => ({
           id: t.id,
           title: t.title || t.name || 'Tâche',
@@ -79,13 +85,14 @@ export class SupabaseReportingAdapter implements IReportingRepository {
           completedAt: m.completed_at || undefined,
           weight: m.weight ?? 0,
         })),
-        createdAt: phase.created_at || new Date().toISOString(),
-        updatedAt: phase.updated_at || new Date().toISOString(),
+        createdAt: phase.created_at || undefined,
+        updatedAt: phase.updated_at || undefined,
         createdBy: phase.created_by || undefined,
         updatedBy: phase.updated_by || undefined,
         version: 1,
       };
     });
+
   }
 
   async getProjectInspections(projectId: string): Promise<any[]> {
@@ -251,19 +258,51 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         .select('amount')
         .eq('project_id', project.id);
 
-      const actualCost = paymentsData?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phases as unknown as Parameters<typeof ReportCalculations.calculateEVMMetrics>[2]);
+      // Coût réel : coûts réels des phases (actual_cost) prioritaires, sinon paiements.
+      const paymentsTotal =
+        paymentsData?.reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0) || 0;
+      const phasesActualCost = PhaseWeightingService.sumActualCost(phases as any);
+      const actualCost = phasesActualCost > 0 ? phasesActualCost : paymentsTotal;
+
+      // TEP pondéré : source unique de l'avancement projet dans les rapports.
+      const weightedProgress = PhaseWeightingService.computeWeightedProgress(phases as any);
+      const canonicalProgress = weightedProgress.isEmpty
+        ? Number(project.progress ?? 0)
+        : weightedProgress.progress;
+
+      const evm = EvmService.compute({
+        budget: Number(project.budget ?? 0),
+        progress: canonicalProgress,
+        startDate: project.startDate ?? project.start_date,
+        endDate: project.endDate ?? project.end_date,
+        actualCost,
+        phases: phases as any,
+      });
+      const evmMetrics = EvmService.toLegacyMetrics(evm);
+
+      // Santé projet à partir de données réelles (plus de 85/90/88 en dur) :
+      //  - budget      : taux d'engagement budgétaire réel
+      //  - planning    : SPI réel (converti en score 0..100), 0 si indéterminé
+      //  - qualité     : taux de conformité des inspections réalisées
+      const budgetUtilization = evm.budgetCommitmentRate;
+      const schedulePerformance =
+        evm.schedulePerformanceIndex !== null
+          ? Math.max(0, Math.min(100, evm.schedulePerformanceIndex * 100))
+          : 0;
+      const qualityScore = this.computeInspectionQualityScore(inspections);
 
       const analytics = ProjectCalculationService.calculateProjectHealthScore(
-        project.progress || 0,
-        85,
-        90,
-        88,
+        canonicalProgress,
+        budgetUtilization,
+        schedulePerformance,
+        qualityScore,
       );
 
       return {
         project: {
           ...project,
+          progress: canonicalProgress,
+          progressBasis: evm.progressBasis,
           // `phases` (EnhancedPhaseDTO-like) ET `plannedPhases` (ProjectDetailDTO-like)
           // pointent sur la même source hydratée, plus de divergence snake/camel.
           phases,
@@ -277,9 +316,11 @@ export class SupabaseReportingAdapter implements IReportingRepository {
           inspections,
         },
         evmMetrics,
+        evm,
         analytics,
         generatedAt: new Date().toISOString(),
       } as unknown as ProjectReportDTO;
+
     } catch (error) {
       console.error('Error transforming project for report:', error);
       throw error;
@@ -287,30 +328,33 @@ export class SupabaseReportingAdapter implements IReportingRepository {
   }
 
   /**
-   * Calculate phase progress
+   * Score qualité réel = taux de conformité des inspections terminées.
+   * Retourne 0 (et non 85) quand aucune inspection n'est disponible : le
+   * rapport doit refléter l'absence de donnée, pas une valeur inventée.
    */
-  private calculatePhaseProgress(phase: any): number {
-    const now = new Date();
-    const start = phase.start_date ? new Date(phase.start_date) : new Date();
-    const end = phase.end_date ? new Date(phase.end_date) : new Date();
+  private computeInspectionQualityScore(inspections: any[]): number {
+    const list = Array.isArray(inspections) ? inspections : [];
+    const completed = list.filter(
+      (i: any) => i?.status === 'completed' || i?.status === 'validated' || i?.status === 'approved',
+    );
+    if (completed.length === 0) return 0;
 
-    if (now < start) return 0;
-    if (now > end) return 100;
+    const scored = completed
+      .map((i: any) => Number(i?.score ?? i?.compliance_score ?? NaN))
+      .filter((n: number) => Number.isFinite(n));
 
-    const total = end.getTime() - start.getTime();
-    const elapsed = now.getTime() - start.getTime();
-    return Math.round((elapsed / total) * 100);
+    if (scored.length > 0) {
+      return Number(
+        (scored.reduce((sum: number, n: number) => sum + n, 0) / scored.length).toFixed(2),
+      );
+    }
+
+    const compliant = completed.filter(
+      (i: any) => i?.result === 'compliant' || i?.is_compliant === true || i?.conformity === true,
+    ).length;
+    return Number(((compliant / completed.length) * 100).toFixed(2));
   }
 
-  /**
-   * Get phase status
-   */
-  private getPhaseStatus(phase: any): string {
-    const progress = this.calculatePhaseProgress(phase);
-    if (progress === 0) return 'pending';
-    if (progress === 100) return 'completed';
-    return 'in_progress';
-  }
 
   /**
    * Get milestone status

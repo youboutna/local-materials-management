@@ -405,34 +405,37 @@ export class ProjectCalculationService {
       
       const schedule = Math.max(0, 100 - (progressAnalytics.delayedTasksCount * 10));
       const budget = Math.max(0, 100 - Math.max(0, budgetAnalytics.budgetUtilization - 80) * 2);
-      const quality = Math.min(100, qualityMetrics.averageInspectionScore || 85);
+      // Qualité issue des inspections réelles — 0 si aucune donnée (pas de 85 fictif).
+      const quality = Math.min(100, Math.max(0, qualityMetrics.averageInspectionScore ?? 0));
       const risk = Math.max(0, 100 - (riskAnalytics.riskScore * 10));
       const scope = progressAnalytics.overallProgress;
-      const stakeholderSatisfaction = 75;
-      const overall = Math.round((schedule + budget + quality + risk + scope + stakeholderSatisfaction) / 6);
+      // Satisfaction parties prenantes : aucune source de données → exclue du score.
+      const stakeholderSatisfaction = 0;
+      const overall = Math.round((schedule + budget + quality + risk + scope) / 5);
 
       return { overallScore: overall, schedule, budget, quality, risk, scope, stakeholderSatisfaction };
     }
 
-    // Simple params version
+    // Simple params version — toutes les entrées viennent de données réelles.
     const progress = progressOrProject;
+    const quality = Math.max(0, Math.min(100, qualityScoreParam ?? 0));
+    const budget = Math.max(0, Math.min(100, budgetUtilization ?? 0));
+    const schedule = Math.max(0, Math.min(100, schedulePerformance ?? 0));
     const overallScore = Math.round(
-      (progress * 0.3) + 
-      ((budgetUtilization || 0) * 0.3) + 
-      ((schedulePerformance || 0) * 0.2) + 
-      ((qualityScoreParam || 85) * 0.2)
+      (progress * 0.3) + (budget * 0.3) + (schedule * 0.2) + (quality * 0.2)
     );
     
     return {
       overallScore,
-      schedule: Math.round(schedulePerformance || 0),
-      budget: Math.round(budgetUtilization || 0),
-      quality: Math.round(qualityScoreParam || 85),
-      risk: Math.round(100 - overallScore),
+      schedule: Math.round(schedule),
+      budget: Math.round(budget),
+      quality: Math.round(quality),
+      risk: Math.round(Math.max(0, 100 - overallScore)),
       scope: progress,
-      stakeholderSatisfaction: 75
+      stakeholderSatisfaction: 0
     };
   }
+
 
   // ============= PERT Analysis =============
 
