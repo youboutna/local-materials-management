@@ -51,3 +51,17 @@ Principe rappelé : **la source unique de vérité est un service**, pas un comp
 2. **1 hook** : `useProjectMetrics` remplace les queries ad hoc `project-kpis`, `project-pert`, `project-gantt`, `milestone-progress`.
 3. **N vues sans logique** : `ProjectMetricsPanel`, `ProjectGanttTimeline`, `PhaseGanttBars`, `PortfolioMetricsSummary`, `MonitoringEvaluationPanel` reçoivent des valeurs déjà calculées et formatées.
 4. **Ordre de bascule** : (a) unifier EVM, (b) unifier Gantt/PERT, (c) supprimer orphelins, (d) généraliser `reportNumbers.ts`, (e) supprimer doubles calculs santé/jalons.
+
+## F) Statut de la bascule (exécutée)
+
+| Étape | Cible | Statut |
+|---|---|---|
+| a | EVM : `EvmService` seul moteur ; `ProjectCalculationService.calculateEVMMetrics` et `ProjectAnalyticsService` délèguent | fait |
+| b | PERT : `PertService` seul moteur ; `planning/PERTDiagram` et `UnifiedPERTAnalysis` = vues sans calcul | fait |
+| b | Gantt : `ProjectGanttTimeline` (UI) + `PhaseGanttBars` (PDF) alimentés par `orchestrator.compute().gantt` ; `UnifiedGanttChart`, `GanttPertDataService`, `GanttDiagramWithMilestones` supprimés, `planning/GanttChart` = simple enveloppe | fait |
+| c | Orphelins supprimés : `ProjectPhasesDetail`, `WaterfallProjectKPIs`, `WaterfallProjectPhasesManager`, `PhaseMonitoringDashboard`, `UnifiedPhaseWorkflow` | fait |
+| d | Formatage : `reportNumbers.ts` généralisé (dashboard, listes, pages détail, rapports/PDF) | fait |
+| e | Santé globale et progression jalons : formule unique `ProjectMetricsOrchestrator.buildHealth` / `buildMilestoneProgress` ; bloc KPI inline de `ProjectDetailByDTO` supprimé | fait |
+| g | Alertes : `AlertService.evaluateDerived` / `listUnifiedAlerts` = point d'entrée unique (calculées + persistées) | fait |
+
+Tests de non-régression : `src/application/services/__tests__/MetricsUnification.test.ts` (8 cas : moteur EVM unique, CPI « N/A », progression pondérée, jalons Gantt, PERT, santé, progression jalons, formatage).
