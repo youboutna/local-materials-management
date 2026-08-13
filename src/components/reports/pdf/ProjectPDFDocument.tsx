@@ -1,11 +1,105 @@
+import React from 'react';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
 import { buildMonitoringInsights } from '@/utils/monitoringInsights';
-import { formatAmount2, formatIndex2, formatNumber2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
+import { formatAmount2, formatIndex2, formatNumber2, formatPercent2, formatRatio2, formatSigned2 } from '@/utils/reportNumbers';
+import { PhaseWeightingService } from '@/application/services/PhaseWeightingService';
+import { EvmService } from '@/application/services/EvmService';
+import { Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
 import { ProjectMiniMap } from './ProjectMiniMap';
+
+/**
+ * Gantt PDF sur échelle calendaire réelle : une barre par phase positionnée
+ * proportionnellement à la période du projet, remplissage = avancement réel,
+ * repère rouge = aujourd'hui. Aucun caractère spécial (glyphes absents des
+ * polices embarquées) — uniquement des rectangles.
+ */
+const PhaseGanttBars: React.FC<{ phases: any[]; project: any }> = ({ phases, project }) => {
+  const rows = (phases || [])
+    .map((p: any) => ({
+      name: p.title || p.name || p.phase_name || '—',
+      start: new Date(p.startDate ?? p.start_date ?? project?.startDate ?? Date.now()).getTime(),
+      end: new Date(p.endDate ?? p.end_date ?? project?.endDate ?? Date.now()).getTime(),
+      progress: Math.max(0, Math.min(100, Number(p.actualProgress ?? p.progress ?? 0))),
+    }))
+    .filter((r) => Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start);
+
+  if (rows.length === 0) return null;
+
+  const min = Math.min(...rows.map((r) => r.start));
+  const max = Math.max(...rows.map((r) => r.end));
+  const span = max - min || 1;
+  const pct = (t: number) => ((t - min) / span) * 100;
+
+  const startYear = new Date(min).getFullYear();
+  const endYear = new Date(max).getFullYear();
+  const years = Array.from({ length: Math.max(1, endYear - startYear + 1) }, (_, i) => startYear + i);
+  const now = Date.now();
+  const todayPct = now >= min && now <= max ? pct(now) : null;
+
+  return (
+    <View style={{ marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', marginBottom: 2 }}>
+        <Text style={{ width: '28%', fontSize: 7, color: '#6b7280' }}>Phase</Text>
+        <View style={{ width: '72%', flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#d1d5db' }}>
+          {years.map((y) => (
+            <Text key={y} style={{ flex: 1, fontSize: 7, color: '#6b7280', textAlign: 'center' }}>
+              {y}
+            </Text>
+          ))}
+        </View>
+      </View>
+
+      {rows.map((r, idx) => {
+        const left = pct(r.start);
+        const width = Math.max(1, pct(r.end) - left);
+        return (
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+            <Text style={{ width: '28%', fontSize: 7 }}>{r.name}</Text>
+            <View style={{ width: '72%', height: 8, backgroundColor: '#f3f4f6', position: 'relative' }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  left: `${left}%`,
+                  width: `${width}%`,
+                  height: 8,
+                  backgroundColor: '#dbeafe',
+                  borderWidth: 0.5,
+                  borderColor: '#93c5fd',
+                }}
+              >
+                <View
+                  style={{
+                    width: `${r.progress}%`,
+                    height: 7,
+                    backgroundColor: r.progress >= 100 ? '#10b981' : '#3b82f6',
+                  }}
+                />
+              </View>
+              {todayPct !== null && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: `${todayPct}%`,
+                    width: 1,
+                    height: 8,
+                    backgroundColor: '#ef4444',
+                  }}
+                />
+              )}
+            </View>
+          </View>
+        );
+      })}
+      <Text style={{ fontSize: 6, color: '#9ca3af', marginTop: 2 }}>
+        {`Barre pleine = avancement réel · trait rouge = aujourd'hui · échelle ${startYear}-${endYear}`}
+      </Text>
+    </View>
+  );
+};
 
 
 interface ProjectPDFDocumentProps {
@@ -168,6 +262,32 @@ export function ProjectPDFDocument({
     constructionMilestones: reportData?.constructionMilestones || []
   };
 
+  // --- Cohérence EVM : indices indéterminés → « N/A », jamais « sous budget » ---
+  const hasActualCost = (evmMetrics as any)?.hasActualCost ?? ((evmMetrics?.actualCost ?? 0) > 0);
+  const hasPlannedValue = (evmMetrics as any)?.hasPlannedValue ?? ((evmMetrics?.plannedValue ?? 0) > 0);
+
+  // Avancement unifié : TEP pondéré des phases (source unique) sinon avancement projet.
+  const weightedPhases = (enrichedData?.phases?.length ? enrichedData.phases : safeReportData.phases) as any[];
+  const weighted = PhaseWeightingService.computeWeightedProgress(
+    (weightedPhases || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      weight: p.weight ?? p.weight_percentage,
+      budget: p.budget ?? p.estimatedCost ?? p.estimated_cost,
+      startDate: p.startDate ?? p.start_date,
+      endDate: p.endDate ?? p.end_date,
+      progress: p.actualProgress ?? p.progress ?? 0,
+    })),
+  );
+  const unifiedProgress = weighted.isEmpty
+    ? Number((evmMetrics as any)?.progress ?? project.progress ?? 0)
+    : weighted.progress;
+  const plannedProgress =
+    (evmMetrics as any)?.plannedProgress ??
+    EvmService.plannedProgress(project.startDate as any, project.endDate as any);
+
+
+
   return (
     <PDFDocument
       title={reportConfig.title}
@@ -199,7 +319,7 @@ export function ProjectPDFDocument({
                 <PDFText label="Titre" value={project.title} />
                 <PDFText label="Localisation" value={project.location || 'Non défini'} />
                 <PDFText label="Statut" value={getStatusText(project.status)} />
-                <PDFText label="Progression" value={formatPercent2(project.progress ?? 0)} />
+                <PDFText label="Progression" value={formatPercent2(unifiedProgress)} />
               </PDFCol>
               <PDFCol>
                 <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
@@ -277,14 +397,14 @@ export function ProjectPDFDocument({
                   'Non calculé'} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Progression actuelle" value={formatPercent2(project.progress ?? 0)} />
+                <PDFText label="Progression actuelle" value={formatPercent2(unifiedProgress)} />
                 <PDFText label="Temps écoulé" value={project.startDate ? 
                   `${Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
                   'Non calculé'} />
                 <PDFText label="Statut planning" value={
-                  project.progress >= 90 ? 'Presque terminé' :
-                  project.progress >= 50 ? 'En bonne voie' :
-                  project.progress >= 25 ? 'En cours' : 'Début de projet'
+                  unifiedProgress >= 90 ? 'Presque terminé' :
+                  unifiedProgress >= 50 ? 'En bonne voie' :
+                  unifiedProgress >= 25 ? 'En cours' : 'Début de projet'
                 } />
               </PDFCol>
             </PDFRow>
@@ -380,6 +500,9 @@ export function ProjectPDFDocument({
             })}
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
           />
+
+          {/* Diagramme de Gantt — échelle calendaire réelle */}
+          <PhaseGanttBars phases={enrichedData.phases as any[]} project={project} />
         </PDFSection>
       )}
 
@@ -633,7 +756,7 @@ export function ProjectPDFDocument({
               }).length;
 
               const insights = buildMonitoringInsights({
-                progress: project.progress ?? 0,
+                progress: unifiedProgress,
                 budget: project.budget ?? 0,
                 actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
                 phasesCount: Array.isArray(enrichedData?.phases)
@@ -735,11 +858,11 @@ export function ProjectPDFDocument({
             <PDFTable
               headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
               data={[
-                ['Démarrage du Projet', '0%', project.progress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 0 ? '✓' : '⏳'],
-                ['25% d\'Avancement', '25%', project.progress >= 25 ? 'Terminé' : project.progress >= 15 ? 'En cours' : 'En attente', '', project.progress >= 25 ? '✓' : project.progress >= 15 ? '⏳' : '⌛'],
-                ['50% d\'Avancement', '50%', project.progress >= 50 ? 'Terminé' : project.progress >= 40 ? 'En cours' : 'En attente', '', project.progress >= 50 ? '✓' : project.progress >= 40 ? '⏳' : '⌛'],
-                ['75% d\'Avancement', '75%', project.progress >= 75 ? 'Terminé' : project.progress >= 65 ? 'En cours' : 'En attente', '', project.progress >= 75 ? '✓' : project.progress >= 65 ? '⏳' : '⌛'],
-                ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
+                ['Démarrage du Projet', '0%', unifiedProgress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 0 ? 'OK' : 'En cours'],
+                ['25% d\'Avancement', '25%', unifiedProgress >= 25 ? 'Terminé' : unifiedProgress >= 15 ? 'En cours' : 'En attente', '', unifiedProgress >= 25 ? 'OK' : unifiedProgress >= 15 ? 'En cours' : 'A venir'],
+                ['50% d\'Avancement', '50%', unifiedProgress >= 50 ? 'Terminé' : unifiedProgress >= 40 ? 'En cours' : 'En attente', '', unifiedProgress >= 50 ? 'OK' : unifiedProgress >= 40 ? 'En cours' : 'A venir'],
+                ['75% d\'Avancement', '75%', unifiedProgress >= 75 ? 'Terminé' : unifiedProgress >= 65 ? 'En cours' : 'En attente', '', unifiedProgress >= 75 ? 'OK' : unifiedProgress >= 65 ? 'En cours' : 'A venir'],
+                ['Finalisation', '100%', unifiedProgress >= 100 ? 'Terminé' : unifiedProgress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 100 ? 'OK' : unifiedProgress >= 90 ? 'En cours' : 'A venir']
               ]}
               columnWidths={['25%', '15%', '20%', '20%', '20%']}
             />
@@ -796,12 +919,33 @@ export function ProjectPDFDocument({
             <PDFRow>
               <PDFCol>
                 <PDFText 
-                  label="Durée totale estimée" 
+                  label="Durée totale estimée (PERT)" 
                   value={`${formatNumber2(pertAnalysis.totalExpectedDuration ?? 0)} jours`} 
                 />
                 <PDFText 
                   label="Écart-type total" 
                   value={`${formatNumber2(totalStandardDeviation)} jours`} 
+                />
+              </PDFCol>
+              <PDFCol>
+                <PDFText
+                  label="Durée calendaire de référence"
+                  value={
+                    project.startDate && project.endDate
+                      ? `${formatNumber2(
+                          Math.max(
+                            0,
+                            (new Date(project.endDate as any).getTime() -
+                              new Date(project.startDate as any).getTime()) /
+                              86400000,
+                          ),
+                        )} jours`
+                      : 'Non renseignée'
+                  }
+                />
+                <PDFText
+                  label="Lecture"
+                  value="La durée PERT est une estimation probabiliste ; la durée calendaire reste la référence contractuelle."
                 />
               </PDFCol>
             </PDFRow>
@@ -811,11 +955,11 @@ export function ProjectPDFDocument({
               headers={['Activité', 'Optimiste (j)', 'Probable (j)', 'Pessimiste (j)', 'Estimation PERT (j)', 'Écart-type']}
               data={pertAnalysis.activities.map((activity: any) => [
                 activity.name || 'Activité sans nom',
-                activity.optimistic?.toString() || '0',
-                activity.mostLikely?.toString() || '0',
-                activity.pessimistic?.toString() || '0',
-                formatRatio2(activity.pertEstimate ?? 0),
-                formatRatio2(activity.standardDeviation ?? 0)
+                formatNumber2(activity.optimistic ?? 0),
+                formatNumber2(activity.mostLikely ?? 0),
+                formatNumber2(activity.pessimistic ?? 0),
+                formatNumber2(activity.pertEstimate ?? 0),
+                formatNumber2(activity.standardDeviation ?? 0)
               ])}
               columnWidths={['25%', '12%', '12%', '12%', '15%', '12%']}
             />
@@ -826,6 +970,7 @@ export function ProjectPDFDocument({
       {/* Diagramme de Gantt — vue tabulaire phases sur timeline */}
       {reportConfig.includeSections.ganttChart && enrichedData?.phases && enrichedData.phases.length > 0 && (
         <PDFSection title="Diagramme de Gantt" borderColor="#0891b2">
+          <PhaseGanttBars phases={enrichedData.phases as any[]} project={project} />
           <PDFTable
             headers={['Phase', 'Début', 'Fin', 'Durée (j)', 'Avancement', 'Statut']}
             data={enrichedData.phases.map((p: any) => {
@@ -836,8 +981,8 @@ export function ProjectPDFDocument({
                 p.title || p.name || 'Phase',
                 start ? format(start, 'dd/MM/yyyy') : '—',
                 end ? format(end, 'dd/MM/yyyy') : '—',
-                duration.toString(),
-                formatPercent2(p.progress ?? 0),
+                formatNumber2(duration),
+                formatPercent2(p.actualProgress ?? p.progress ?? 0),
                 p.status || '—',
               ];
             })}
