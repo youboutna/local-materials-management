@@ -1,3 +1,4 @@
+import React from 'react';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
 import { buildMonitoringInsights } from '@/utils/monitoringInsights';
