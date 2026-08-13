@@ -1,3 +1,4 @@
+import { formatNumber2 } from '@/utils/reportNumbers';
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { format } from 'date-fns';
