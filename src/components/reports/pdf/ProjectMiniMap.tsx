@@ -1,31 +1,36 @@
 /**
- * ProjectMiniMap — miniature GIS rendue dans le PDF (react-pdf/Svg).
+ * ProjectMiniMap — miniature cartographique rendue dans le PDF.
  *
- * Utilise les données réelles du projet (coordonnées + zones d'intervention
- * telles que dessinées par le module SIG `GeoZoneEditor`) et les projette dans
- * une bbox normalisée. Aucune donnée simulée : si aucune géométrie n'existe,
- * le composant retourne un cadre "Localisation non géoréférencée".
+ * Fond de carte : image statique du pays (`src/assets/mauritania-basemap.png`)
+ * calibrée par le référentiel `mauritania-basemap.referential.ts`.
+ * Surcouche vectorielle (react-pdf/Svg) : zones d'intervention réellement
+ * persistées par le module SIG (`GeoZoneEditor`), centroïde du projet et villes
+ * de repère voisines issues du référentiel. Aucune donnée simulée : sans
+ * géométrie, le cadre affiche « Localisation non géoréférencée ».
  */
+import basemap from '@/assets/mauritania-basemap.png';
+import {
+  MAURITANIA_BASEMAP,
+  nearestReferenceCities,
+} from '@/config/referentials/reports/mauritania-basemap.referential';
 import type { InterventionZoneDTO, InterventionZoneLatLng } from '@/dtos/entities/InterventionZoneDTO';
-import { Circle, Polygon, Rect, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
+import { Circle, Image, Polygon, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
 
-const MAP_W = 120;
-const MAP_H = 72;
-const PAD = 6;
+const MAP_W = 150;
+const MAP_H = 104;
 
 const palette = {
-  land: '#f8fafc',
   border: '#93c5fd',
   zoneFill: '#3b82f6',
   zoneStroke: '#1e40af',
   pin: '#dc2626',
+  city: '#374151',
   text: '#4b5563',
 };
 
 const styles = StyleSheet.create({
   container: {
     width: MAP_W,
-    height: MAP_H + 12,
     marginLeft: 10,
   },
   frame: {
@@ -34,8 +39,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: palette.border,
     borderRadius: 4,
-    backgroundColor: palette.land,
+    position: 'relative',
     overflow: 'hidden',
+  },
+  basemap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: MAP_W,
+    height: MAP_H,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  cityLabel: {
+    position: 'absolute',
+    fontSize: 3.5,
+    color: palette.city,
   },
   caption: {
     fontSize: 5,
@@ -47,7 +69,7 @@ const styles = StyleSheet.create({
     fontSize: 5,
     color: palette.text,
     textAlign: 'center',
-    marginTop: 30,
+    marginTop: 46,
   },
 });
 
@@ -74,6 +96,16 @@ const collectPoints = (project: ProjectMiniMapInput): InterventionZoneLatLng[] =
   return points;
 };
 
+/** Projection fixe sur l'étendue du raster statique (pays entier). */
+const projectPoint = (p: InterventionZoneLatLng) => {
+  const { lngMin, lngMax, latMin, latMax } = MAURITANIA_BASEMAP;
+  const x = ((p.lng - lngMin) / (lngMax - lngMin)) * MAP_W;
+  const y = ((latMax - p.lat) / (latMax - latMin)) * MAP_H;
+  return { x, y };
+};
+
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
 export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
   const zones = (project.interventionZones || []).filter(
     (z) => Array.isArray(z?.coordinates) && z.coordinates.length > 0,
@@ -84,6 +116,7 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
     return (
       <View style={styles.container}>
         <View style={styles.frame}>
+          <Image src={basemap} style={styles.basemap} />
           <Text style={styles.empty}>Localisation non géoréférencée</Text>
         </View>
         <Text style={styles.caption}>{project.location || 'Localisation non définie'}</Text>
@@ -93,34 +126,18 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
 
   const lats = points.map((p) => p.lat);
   const lngs = points.map((p) => p.lng);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-  // Marge minimale pour éviter une division par zéro sur un point unique.
-  const spanLat = Math.max(maxLat - minLat, 0.02);
-  const spanLng = Math.max(maxLng - minLng, 0.02);
-  const centerLat = (minLat + maxLat) / 2;
-  const centerLng = (minLng + maxLng) / 2;
-
-  const projectPoint = (p: InterventionZoneLatLng) => {
-    const x = PAD + ((p.lng - (centerLng - spanLng / 2)) / spanLng) * (MAP_W - 2 * PAD);
-    // Latitude croissante vers le haut → inversion de l'axe Y.
-    const y = PAD + ((centerLat + spanLat / 2 - p.lat) / spanLat) * (MAP_H - 2 * PAD);
-    return { x, y };
-  };
+  const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+  const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
 
   const pin = projectPoint({ lat: centerLat, lng: centerLng });
+  const cities = nearestReferenceCities(centerLat, centerLng, 4);
 
   return (
     <View style={styles.container}>
       <View style={styles.frame}>
-        <Svg width={MAP_W} height={MAP_H} viewBox={`0 0 ${MAP_W} ${MAP_H}`}>
-          {/* Graticule de repère (échelle relative à la bbox du projet) */}
-          <Rect x="0" y="0" width={MAP_W} height={MAP_H} fill={palette.land} />
-          <Rect x={PAD} y={MAP_H / 2} width={MAP_W - 2 * PAD} height={0.4} fill="#e5e7eb" />
-          <Rect x={MAP_W / 2} y={PAD} width={0.4} height={MAP_H - 2 * PAD} fill="#e5e7eb" />
+        <Image src={basemap} style={styles.basemap} />
 
+        <Svg width={MAP_W} height={MAP_H} viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={styles.overlay}>
           {zones.map((zone, idx) => {
             const projected = zone.coordinates
               .filter((c) => isNum(c?.lat) && isNum(c?.lng))
@@ -128,15 +145,10 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
             if (projected.length === 0) return null;
 
             if (zone.type === 'circle' && projected.length === 1) {
+              const degPerPx = (MAURITANIA_BASEMAP.lngMax - MAURITANIA_BASEMAP.lngMin) / MAP_W;
               const radiusPx = zone.radiusMeters
-                ? Math.max(
-                    2,
-                    Math.min(
-                      (MAP_W - 2 * PAD) / 2,
-                      (zone.radiusMeters / 111_320 / spanLng) * (MAP_W - 2 * PAD),
-                    ),
-                  )
-                : 3;
+                ? clamp(zone.radiusMeters / 111_320 / degPerPx, 1.2, MAP_W / 3)
+                : 2;
               return (
                 <Circle
                   key={`zone-${idx}`}
@@ -144,9 +156,9 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
                   cy={projected[0].y}
                   r={radiusPx}
                   fill={palette.zoneFill}
-                  fillOpacity={0.25}
+                  fillOpacity={0.3}
                   stroke={palette.zoneStroke}
-                  strokeWidth={0.6}
+                  strokeWidth={0.5}
                 />
               );
             }
@@ -157,7 +169,7 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
                   key={`zone-${idx}`}
                   cx={projected[0].x}
                   cy={projected[0].y}
-                  r={2}
+                  r={1.6}
                   fill={palette.pin}
                 />
               );
@@ -168,9 +180,23 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
                 key={`zone-${idx}`}
                 points={projected.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}
                 fill={palette.zoneFill}
-                fillOpacity={0.25}
+                fillOpacity={0.3}
                 stroke={palette.zoneStroke}
                 strokeWidth={0.6}
+              />
+            );
+          })}
+
+          {/* Villes de repère voisines */}
+          {cities.map((city) => {
+            const c = projectPoint({ lat: city.lat, lng: city.lng });
+            return (
+              <Circle
+                key={`city-${city.name}`}
+                cx={c.x}
+                cy={c.y}
+                r={city.major ? 1.1 : 0.8}
+                fill={palette.city}
               />
             );
           })}
@@ -178,9 +204,27 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
           {/* Centroïde du projet */}
           <Circle cx={pin.x} cy={pin.y} r={2.2} fill={palette.pin} />
         </Svg>
+
+        {cities.map((city) => {
+          const c = projectPoint({ lat: city.lat, lng: city.lng });
+          return (
+            <Text
+              key={`label-${city.name}`}
+              style={[
+                styles.cityLabel,
+                {
+                  left: clamp(c.x + 2, 0, MAP_W - 26),
+                  top: clamp(c.y - 2.5, 0, MAP_H - 6),
+                },
+              ]}
+            >
+              {city.name}
+            </Text>
+          );
+        })}
       </View>
       <Text style={styles.caption}>
-        {(project.location || 'Localisation').slice(0, 26)} — {centerLat.toFixed(2)}, {centerLng.toFixed(2)}
+        {(project.location || 'Localisation').slice(0, 30)} — {centerLat.toFixed(2)}, {centerLng.toFixed(2)}
         {zones.length > 0 ? ` (${zones.length} zone${zones.length > 1 ? 's' : ''})` : ''}
       </Text>
     </View>
