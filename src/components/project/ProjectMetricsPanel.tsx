@@ -18,6 +18,15 @@ interface Props {
   documentsCount?: number;
   risks?: any[];
   pertExpectedDuration?: number | null;
+  /**
+   * 'full'    → KPI + alertes + 7 axes + Gantt (détail projet, phases, monitoring)
+   * 'compact' → KPI + alertes (workflows création/édition, sous-objets)
+   */
+  variant?: 'full' | 'compact';
+  showAxes?: boolean;
+  showAlerts?: boolean;
+  showGantt?: boolean;
+  className?: string;
 }
 
 const APPRECIATION_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -35,7 +44,17 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
   documentsCount = 0,
   risks = [],
   pertExpectedDuration = null,
+  variant = 'full',
+  showAxes,
+  showAlerts,
+  showGantt,
+  className,
 }) => {
+  const isCompact = variant === 'compact';
+  const withAxes = showAxes ?? !isCompact;
+  const withAlerts = showAlerts ?? true;
+  const withGantt = showGantt ?? !isCompact;
+
   const metrics = useMemo(() => {
     const input: ProjectMetricsInput = {
       project: {
@@ -69,7 +88,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
   }, [project, phases, actualCost, inspectionsCount, documentsCount, risks, pertExpectedDuration]);
 
   return (
-    <div className="space-y-6">
+    <div className={`${isCompact ? 'space-y-3' : 'space-y-6'} ${className ?? ''}`}>
       {/* KPI — source unique */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -137,6 +156,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
       </div>
 
       {/* Alertes actives (mêmes règles que le rapport PDF) */}
+      {withAlerts && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Alertes actives ({metrics.alerts.length})</CardTitle>
@@ -160,7 +180,10 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         </CardContent>
       </Card>
 
+      )}
+
       {/* Suivi & Évaluation — 7 axes */}
+      {withAxes && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Suivi &amp; Évaluation (7 axes)</CardTitle>
@@ -181,15 +204,19 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         </CardContent>
       </Card>
 
+      )}
+
       {/* Gantt réutilisable */}
+      {withGantt && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Diagramme de Gantt (calendrier réel)</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProjectGanttTimeline gantt={metrics.gantt} />
+          <ProjectGanttTimeline gantt={metrics.gantt} showAsciiBars={!isCompact} />
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };

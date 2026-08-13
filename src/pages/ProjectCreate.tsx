@@ -20,6 +20,7 @@
  */
 
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
+import WorkflowMetricsPreview from "@/components/project/WorkflowMetricsPreview";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ const ProjectCreate = () => {
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liveWorkflowData, setLiveWorkflowData] = useState<ProjectWorkflowData | null>(null);
 
   // ============================================================
   // Workflow Steps Definition
@@ -200,6 +202,9 @@ const ProjectCreate = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
+        {/* Indicateurs temps réel — source unique : ProjectMetricsOrchestrator */}
+        <WorkflowMetricsPreview formData={liveWorkflowData} mode="create" className="mb-6" />
+
         {/* Workflow Progress Bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -276,6 +281,7 @@ const ProjectCreate = () => {
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}
             isSubmitting={isSubmitting}
+            onWorkflowDataChange={setLiveWorkflowData}
           />
         </div>
 

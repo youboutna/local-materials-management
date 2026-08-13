@@ -80,6 +80,8 @@ interface ProjectCreationWorkflowProps {
   onStepValidation?: (step: number, isValid: boolean) => void;
   /** Soumission en cours pilotée par la page */
   isSubmitting?: boolean;
+  /** Remonte les données live du workflow (indicateurs temps réel côté page) */
+  onWorkflowDataChange?: (data: ProjectWorkflowData | null) => void;
 }
 
 const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
@@ -93,6 +95,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onStepChange,
   onStepValidation,
   isSubmitting,
+  onWorkflowDataChange,
 }) => {
 
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
@@ -136,6 +139,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   useEffect(() => {
     setCurrentStep(currentStep + 1);
   }, [currentStep, setCurrentStep]);
+
+  // Remonte les données live à la page (KPI/EVM/alertes temps réel).
+  useEffect(() => {
+    onWorkflowDataChange?.((formData ?? null) as ProjectWorkflowData | null);
+  }, [formData, onWorkflowDataChange]);
 
 
   // ============================================================

@@ -2,6 +2,7 @@ import { PhaseService, getPhaseService} from '@/application/services/PhaseServic
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
 import MonitoringEvaluationPanel from '@/components/project/monitoring/MonitoringEvaluationPanel';
+import ProjectMetricsPanel from '@/components/project/ProjectMetricsPanel';
 import PhaseCompliance from '@/components/project/PhaseCompliance';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
@@ -206,7 +207,19 @@ const ProjectPhasesDetail: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="gantt">
-              {selectedPhaseId ? (
+              {project ? (
+                <div className="space-y-6">
+                  {/* Gantt calendrier réel — même modèle que le détail projet et le PDF */}
+                  <ProjectMetricsPanel
+                    project={project}
+                    phases={monitoringPhases}
+                    actualCost={(project as any)?.actualCost ?? 0}
+                    showAxes={false}
+                    showAlerts={false}
+                  />
+                  {selectedPhaseId && <PhaseMilestones phaseId={selectedPhaseId} projectId={id!} />}
+                </div>
+              ) : selectedPhaseId ? (
                 <PhaseMilestones phaseId={selectedPhaseId} projectId={id!} />
               ) : (
                 <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
@@ -225,6 +238,17 @@ const ProjectPhasesDetail: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="monitoring">
+              {project ? (
+                <ProjectMetricsPanel
+                  className="mb-6"
+                  project={project}
+                  phases={monitoringPhases}
+                  actualCost={(project as any)?.actualCost ?? 0}
+                  documentsCount={(project as any)?.documents?.length ?? 0}
+                  inspectionsCount={(project as any)?.inspections?.length ?? 0}
+                  risks={((project as any)?.risks ?? []) as any[]}
+                />
+              ) : null}
               {project && selectedPhaseId ? (
                 <MonitoringEvaluationPanel
                   scope="phase"
