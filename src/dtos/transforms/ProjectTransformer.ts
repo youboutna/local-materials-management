@@ -938,10 +938,6 @@ export class ProjectTransformer {
     if (zonesBuild.payload) {
       entityData.localisation = zonesBuild.payload;
       if (!dto.forme && zonesBuild.forme) entityData.forme = zonesBuild.forme;
-      console.debug('[ProjectTransformer] Create: hydrated localisation from zones', {
-        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
-        forme: entityData.forme,
-      });
     }
 
     return entityData;
@@ -1012,10 +1008,6 @@ export class ProjectTransformer {
           updates.coordinates = new ProjectCoordinates(center.lat, center.lng);
         }
       }
-      console.debug('[ProjectTransformer] Update: hydrated localisation from zones', {
-        count: (dto.interventionZones?.length ?? (dto.interventionZone ? 1 : 0)),
-        forme: updates.forme,
-      });
     }
 
     return updates;

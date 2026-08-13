@@ -303,27 +303,33 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   fallbackAddress,
 }) => {
   // ============ State ============
+  // ⚠️ `defaultCenter` est souvent un littéral `[lat, lng]` recréé à chaque
+  // render du parent : on dépend de ses composantes primitives pour éviter de
+  // régénérer le tableau `zones` (et les objets zone) à chaque render.
+  const centerLat = Array.isArray(defaultCenter) ? defaultCenter[0] : undefined;
+  const centerLng = Array.isArray(defaultCenter) ? defaultCenter[1] : undefined;
+
   const zones = useMemo(() => {
     const provided = value ?? [];
     if (provided.length > 0) return provided;
     // Fallback readOnly : synthétise un point si on a un centre explicite.
     const hasExplicitCenter =
-      Array.isArray(defaultCenter) &&
-      Number.isFinite(defaultCenter[0]) &&
-      Number.isFinite(defaultCenter[1]) &&
-      !(defaultCenter[0] === 18.0735 && defaultCenter[1] === -15.9582);
+      Number.isFinite(centerLat) &&
+      Number.isFinite(centerLng) &&
+      !(centerLat === 18.0735 && centerLng === -15.9582);
     if (readOnly && hasExplicitCenter) {
       return [
         {
           type: 'point' as const,
-          coordinates: [{ lat: defaultCenter[0], lng: defaultCenter[1] }],
+          coordinates: [{ lat: centerLat as number, lng: centerLng as number }],
           label: fallbackLabel || fallbackAddress || 'Localisation',
           address: fallbackAddress,
         },
       ];
     }
     return provided;
-  }, [value, readOnly, defaultCenter, fallbackLabel, fallbackAddress]);
+  }, [value, readOnly, centerLat, centerLng, fallbackLabel, fallbackAddress]);
+
 
   const zonesRef = useRef<InterventionZoneDTO[]>(zones);
   useEffect(() => {
