@@ -152,32 +152,17 @@ const Projects: React.FC = () => {
 
   }, [projects]);
 
-  // Initialize and update map locations
+  // Initialize map locations from the memoized list (aucune recréation à chaque
+  // rendu : évite la boucle "Maximum update depth exceeded").
   useEffect(() => {
-    console.log("Projects initialized - Total locations:", projects.length);
+    setFilteredMapLocations((current) => {
+      const unchanged =
+        current.length === originalMapLocations.length &&
+        current.every((location, index) => location.id === originalMapLocations[index]?.id);
+      return unchanged ? current : originalMapLocations;
+    });
+  }, [originalMapLocations]);
 
-    // Set initial locations from all projects
-    const allLocations = projects
-      .filter((project) => Boolean(getProjectCoordinates(project)))
-      .map(project => {
-        const coords = getProjectCoordinates(project)!;
-        return {
-        id: project.id,
-        name: project.title,
-        type: "project" as const,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        status: project.status,
-        region: project.location,
-        startDate: project.startDate,
-        endDate: project.endDate,
-        interventionZone: (project as { interventionZone?: import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO }).interventionZone,
-        };
-      });
-
-
-    setFilteredMapLocations(allLocations);
-  }, [projects]);
 
   const handleReset = () => {
     setSearchQuery("");
