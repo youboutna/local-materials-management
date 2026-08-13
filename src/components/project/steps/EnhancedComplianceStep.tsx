@@ -105,10 +105,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const isPersistedEffective = isPersisted || isEditable;
   
   // Données du contexte
-  const contextDocuments = state.relatedData.documents || [];
-  const contextInsurancePolicies = state.relatedData.insurancePolicies || [];
-  const contextBankGuarantees = state.relatedData.bankGuarantees || [];
-  const contextComplianceItems = state.relatedData.compliance?.regulations || [];
+  const contextDocuments = state.relatedData.documents;
+  const contextInsurancePolicies = state.relatedData.insurancePolicies;
+  const contextBankGuarantees = state.relatedData.bankGuarantees;
+  const contextComplianceItems = state.relatedData.compliance.regulations;
   
   // Services
   const { openDocument } = useDocumentViewer();
@@ -138,19 +138,19 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   // ============================================================
   
   useEffect(() => {
-    setDocuments(contextDocuments);
+    setDocuments(previous => previous === contextDocuments ? previous : contextDocuments);
   }, [contextDocuments]);
   
   useEffect(() => {
-    setInsurancePolicies(contextInsurancePolicies);
+    setInsurancePolicies(previous => previous === contextInsurancePolicies ? previous : contextInsurancePolicies);
   }, [contextInsurancePolicies]);
   
   useEffect(() => {
-    setBankGuarantees(contextBankGuarantees);
+    setBankGuarantees(previous => previous === contextBankGuarantees ? previous : contextBankGuarantees);
   }, [contextBankGuarantees]);
   
   useEffect(() => {
-    setComplianceItems(contextComplianceItems);
+    setComplianceItems(previous => previous === contextComplianceItems ? previous : contextComplianceItems);
   }, [contextComplianceItems]);
 
   // ============================================================

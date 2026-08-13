@@ -384,7 +384,7 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
     // État du workflow
     // ============================================================
       
-    case 'SET_CURRENT_STEP':
+    case 'SET_CURRENT_STEP': {
       if (state.currentStep === action.payload) return state;
       const newCompletedSteps = Math.max(state.metadata.completedSteps, action.payload - 1);
       return {
@@ -396,6 +396,7 @@ function workflowReducer(state: WorkflowState, action: WorkflowAction): Workflow
           progressPercentage: Math.round((newCompletedSteps / state.metadata.totalSteps) * 100)
         }
       };
+    }
       
     case 'SET_PERSISTED':
       if (state.isPersisted === action.payload) return state;
