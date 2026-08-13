@@ -1,5 +1,6 @@
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
+import { buildMonitoringInsights } from '@/utils/monitoringInsights';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
@@ -585,8 +586,47 @@ export function ProjectPDFDocument({
               );
             })()}
 
+            {/* Suivi & Évaluation — référentiel générique (tout type de projet) */}
+            {(() => {
+              const highRisks = (safeReportData as any).risks
+                ? []
+                : (reportData?.risks || enrichedData?.riskAssessment?.risks || []);
+              const highCount = (highRisks as any[]).filter((r: any) => {
+                const level = String(r?.impact ?? r?.severity ?? r?.riskLevel ?? '').toLowerCase();
+                const status = String(r?.status ?? '').toLowerCase();
+                const open = !['mitigated', 'closed', 'resolu', 'resolved'].includes(status);
+                return open && (level.includes('high') || level.includes('eleve') || level.includes('critique') || level.includes('critical'));
+              }).length;
 
+              const insights = buildMonitoringInsights({
+                progress: project.progress ?? 0,
+                budget: project.budget ?? 0,
+                actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
+                phasesCount: Array.isArray(enrichedData?.phases)
+                  ? enrichedData!.phases.length
+                  : safeReportData.phases.length,
+                interventionZonesCount: Array.isArray((project as any).interventionZones)
+                  ? (project as any).interventionZones.length
+                  : 0,
+                inspectionsCount: safeReportData.inspections.length,
+                documentsCount: safeReportData.documents.length,
+                highRisksCount: highCount,
+              });
 
+              return (
+                <PDFTable
+                  headers={['Axe de suivi', 'Question de décision', 'Indicateur', 'Valeur', 'Appréciation']}
+                  data={insights.map((m) => [
+                    m.label,
+                    m.decisionQuestion,
+                    m.indicatorLabel,
+                    m.value,
+                    m.appreciationLabel,
+                  ])}
+                  columnWidths={['20%', '32%', '20%', '12%', '16%']}
+                />
+              );
+            })()}
 
 
             <PDFCard>
