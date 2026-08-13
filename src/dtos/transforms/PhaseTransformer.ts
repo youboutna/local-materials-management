@@ -155,10 +155,13 @@ export class PhaseTransformer {
       actualDuration: phase.actualDuration || 0,
       estimatedCost: phase.estimatedCost || 0,
       actualCost: phase.actualCost || 0,
+      // `budget` est le champ consommé par l'UI détail de phase (MRU)
+      budget: phase.estimatedCost || 0,
       type: mappedType || ('execution' as DTOType),
       priority: 'medium' as DTOPriority, // Priority not persisted yet in project_phases
       dependencies: phase.dependencies || [],
       milestones: [], // Hydratés par MilestoneService (workflow projet)
+      notes: phase.notes ?? undefined,
       createdAt: phase.createdAt,
       updatedAt: phase.updatedAt,
 
@@ -167,10 +170,14 @@ export class PhaseTransformer {
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
       customPhaseData: phase.customPhaseData ?? undefined,
-      humanResources: phase.humanResources ? (phase.humanResources as unknown as Record<string, unknown>) : undefined,
+      humanResources: (phase.humanResources ?? undefined) as unknown as PhaseDTO['humanResources'],
+      materials: (phase.materials ?? []) as unknown as PhaseDTO['materials'],
+      suppliers: (phase.suppliers ?? []) as unknown as PhaseDTO['suppliers'],
+
       weight: phase.weight || undefined,
     };
   }
+
 
   // =================== Domain Entity → DB Row (snake_case) ===================
   /**
@@ -493,10 +500,12 @@ export class PhaseTransformer {
 
   // =================== Update Operations ===================
 
-  static updatePhase(phase: Phase, updates: Partial<PhaseDTO>): Phase {
+  static updatePhase(phase: Phase, updates: Partial<PhaseDTO> & Record<string, any>): Phase {
+    const raw = updates as Record<string, any>;
+    const pick = <T,>(value: T | undefined, fallback: T): T => (value !== undefined ? value : fallback);
     return Phase.create({
       ...phase.toJSON(),
-      phaseName: updates.name || phase.phaseName,
+      phaseName: updates.name || raw.phaseName || raw.title || phase.phaseName,
       description: updates.description !== undefined ? updates.description : phase.description,
       status: updates.status ? this.validatePhaseStatus(updates.status) : phase.status,
       progress: updates.progress !== undefined ? updates.progress : phase.progress,
@@ -505,10 +514,22 @@ export class PhaseTransformer {
       endDate: updates.endDate !== undefined ? updates.endDate : phase.endDate,
       estimatedDuration: updates.estimatedDuration !== undefined ? updates.estimatedDuration : phase.estimatedDuration,
       actualDuration: updates.actualDuration !== undefined ? updates.actualDuration : phase.actualDuration,
-      estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : phase.estimatedCost,
+      estimatedCost: pick(
+        updates.estimatedCost ?? (raw.budget as number | undefined),
+        phase.estimatedCost as any,
+      ),
       actualCost: updates.actualCost !== undefined ? updates.actualCost : phase.actualCost,
+      // Colonnes jsonb : ressources / matériaux / fournisseurs sont éditées dans l'UI
+      // détail de phase et doivent être persistées avec le reste de la phase.
+      materials: pick(raw.materials, phase.materials as any),
+      humanResources: pick(raw.humanResources ?? raw.human_resources, phase.humanResources as any),
+      suppliers: pick(raw.suppliers, phase.suppliers as any),
+      location: pick(raw.location, phase.location as any),
+      notes: pick(updates.notes ?? raw.notes, phase.notes as any),
+      customPhaseData: pick(updates.customPhaseData, phase.customPhaseData as any),
       // Note: steps removed - handled as separate entities
       updatedAt: new Date().toISOString()
     });
   }
 }
+

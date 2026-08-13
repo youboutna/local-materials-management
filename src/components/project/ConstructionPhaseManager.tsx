@@ -114,13 +114,43 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   const allPhases = useMemo(() => {
     const merged = [...constructionPhaseHook.phases, ...existingPhases] as any[];
     const seen = new Set<string>();
-    return merged.filter((p) => {
-      const key = String(p?.id ?? p?.phaseCode ?? p?.name ?? Math.random());
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const statusFromDto: Record<string, PhaseData['status']> = {
+      pending: 'not_started',
+      not_started: 'not_started',
+      in_progress: 'in_progress',
+      completed: 'completed',
+      delayed: 'delayed',
+      blocked: 'delayed',
+    };
+    return merged
+      .filter((p) => {
+        const key = String(p?.id ?? p?.phaseCode ?? p?.name ?? Math.random());
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      // Normalisation DTO → forme PhaseData attendue par la liste et le dialog
+      .map((p) => ({
+        ...p,
+        title: p.title ?? p.name ?? p.phaseName ?? '',
+        description: p.description ?? '',
+        startDate: p.startDate ?? p.start_date ?? '',
+        endDate: p.endDate ?? p.end_date ?? '',
+        status: statusFromDto[String(p.status)] ?? 'not_started',
+        budget: Number(p.budget ?? p.estimatedCost ?? p.estimated_cost ?? 0),
+        actualCost: Number(p.actualCost ?? p.actual_cost ?? 0),
+        progress: Number(p.progress ?? 0),
+        materials: Array.isArray(p.materials) ? p.materials : [],
+        humanResources: Array.isArray(p.humanResources)
+          ? p.humanResources
+          : Array.isArray(p.human_resources)
+          ? p.human_resources
+          : [],
+        suppliers: Array.isArray(p.suppliers) ? p.suppliers : [],
+        location: typeof p.location === 'string' ? p.location : '',
+      }));
   }, [constructionPhaseHook.phases, existingPhases]);
+
 
 
   
@@ -397,10 +427,17 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       startDate: updatedPhase.startDate || undefined,
       endDate: updatedPhase.endDate || undefined,
       estimatedCost: Number(updatedPhase.budget) || 0,
+      budget: Number(updatedPhase.budget) || 0,
       actualCost: Number(updatedPhase.actualCost) || 0,
       progress: Number(updatedPhase.progress) || 0,
       status: (statusMap[updatedPhase.status] || updatedPhase.status) as PhaseDTO['status'],
+      // Colonnes jsonb éditées dans le détail de phase
+      materials: updatedPhase.materials ?? [],
+      humanResources: updatedPhase.humanResources ?? [],
+      suppliers: updatedPhase.suppliers ?? [],
+      notes: updatedPhase.notes,
     };
+    (phaseDTO as Record<string, unknown>).location = updatedPhase.location;
 
     // Detect "no change" to avoid silent ignored update
     if (previous) {
@@ -411,7 +448,14 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       const sameBudget = Number(previous.budget || 0) === Number(updatedPhase.budget || 0);
       const sameStatus = previous.status === updatedPhase.status;
       const sameProgress = Number(previous.progress || 0) === Number(updatedPhase.progress || 0);
-      if (sameTitle && sameDesc && sameStart && sameEnd && sameBudget && sameStatus && sameProgress) {
+      const sameJson = (a: unknown, b: unknown) => JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
+      const sameResources =
+        sameJson(previous.materials, updatedPhase.materials) &&
+        sameJson(previous.humanResources, updatedPhase.humanResources) &&
+        sameJson(previous.suppliers, updatedPhase.suppliers) &&
+        (previous.location ?? '') === (updatedPhase.location ?? '') &&
+        (previous.notes ?? '') === (updatedPhase.notes ?? '');
+      if (sameTitle && sameDesc && sameStart && sameEnd && sameBudget && sameStatus && sameProgress && sameResources) {
         toast({
           title: "Aucune modification",
           description: "Aucun changement détecté — la sauvegarde a été ignorée.",
@@ -419,6 +463,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
         return false;
       }
     }
+
 
     try {
       try {

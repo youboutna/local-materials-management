@@ -184,8 +184,14 @@ export interface PhaseDTO extends BaseEntityDTO {
   constructionStage?: string;           // construction_stage
   createdBy?: string;                   // created_by
   customPhaseData?: Record<string, unknown>;                // custom_phase_data (Json)
-  humanResources?: Record<string, unknown>;                 // human_resources (Json)
+  /** human_resources (jsonb) — liste de rôles planifiés, tolère l'ancien format objet */
+  humanResources?: Array<{ roleId: string; quantity: number; role?: string }> | Record<string, unknown>;
+  /** materials (jsonb) — matériaux planifiés de la phase */
+  materials?: Array<{ materialId: string; quantity: number; name?: string }>;
+  /** suppliers (jsonb) — fournisseurs rattachés à la phase */
+  suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
   weight?: number;                      // weight
+
 
   // Legacy/compat snake_case aliases (project_phases table shape)
   project_id?: string;
