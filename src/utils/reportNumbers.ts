@@ -8,10 +8,19 @@
 
 const DIGITS = { minimumFractionDigits: 2, maximumFractionDigits: 2 } as const;
 
+/**
+ * Les polices embarquées dans les PDF (react-pdf) ne possèdent pas les espaces
+ * fines insécables produites par `toLocaleString('fr-FR')` : elles s'affichaient
+ * en « / » (ex. « 450/000/000,10 MRU »). On normalise en espace simple.
+ */
+export function sanitizeNumberSpaces(text: string): string {
+  return text.replace(/[\u00A0\u202F\u2007\u2009]/g, ' ');
+}
+
 export function formatNumber2(value: unknown, locale = 'fr-FR'): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return '0,00'.replace(',', locale.startsWith('fr') ? ',' : '.');
-  return n.toLocaleString(locale, DIGITS);
+  return sanitizeNumberSpaces(n.toLocaleString(locale, DIGITS));
 }
 
 export function formatAmount2(value: unknown, currency = 'MRU', locale = 'fr-FR'): string {

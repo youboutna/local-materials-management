@@ -641,7 +641,7 @@ export function CompactProjectPDFDocument({
     if (budget >= 1000000) {
       return `${(budget / 1000000).toFixed(2)} M MRU`;
     }
-    return `${budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`;
+    return `${formatNumber2(budget)} MRU`;
   };
 
   const formatDecimal = (value: number) => {
