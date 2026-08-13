@@ -1407,6 +1407,7 @@ interface SingleCompactProjectPDFProps {
   pertAnalysis?: PERTAnalysis;
   includeCompanyHeader?: boolean;
   sections?: Partial<Record<ReportSectionKey, boolean>>;
+  profile?: ReportProfile;
   organizationName?: string;
   organizationCode?: string;
   company?: {
@@ -1426,6 +1427,7 @@ export function SingleCompactProjectPDF({
   pertAnalysis,
   includeCompanyHeader = true,
   sections,
+  profile,
   organizationName,
   organizationCode,
   company,
@@ -1447,6 +1449,7 @@ export function SingleCompactProjectPDF({
       pertAnalysisMap={pertAnalysisMap}
       includeCompanyHeader={includeCompanyHeader}
       sections={sections}
+      profile={profile}
       organizationName={organizationName}
       organizationCode={organizationCode}
       company={company}
