@@ -86,8 +86,6 @@ export function ProjectPDFDocument({
   organizationName,
   organizationCode,
 }: ProjectPDFDocumentProps) {
-  // Référentiel DGEER consulté uniquement si l'organisation propriétaire est la DGEER.
-  const dgeerContext = isDgeerOrganization(organizationName, organizationCode);
 
   
   const getStatusText = (status: string) => {
