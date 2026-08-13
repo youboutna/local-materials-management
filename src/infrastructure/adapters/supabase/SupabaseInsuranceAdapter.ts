@@ -48,7 +48,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       validFrom: data.valid_from,
       validUntil: data.valid_until,
       status: data.status as InsuranceCertificateStatus,
-      notes: data.notes,
+      notes: data.notes ?? undefined,
       certificateUrl: data.certificate_url ?? undefined,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
@@ -86,11 +86,11 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       coverage_type: entity.coverage_type || entity.insurance_type || 'responsabilite_civile',
       valid_from: entity.valid_from,
       valid_until: entity.valid_until,
-      certificate_url: entity.certificate_url,
+      certificate_url: entity.certificate_url ?? null,
       status: entity.status,
-      last_verified: entity.last_verified,
-      verified_by: entity.verified_by,
-      notes: entity.notes,
+      last_verified: entity.last_verified ?? null,
+      verified_by: entity.verified_by ?? null,
+      notes: entity.notes ?? null,
     };
   }
 

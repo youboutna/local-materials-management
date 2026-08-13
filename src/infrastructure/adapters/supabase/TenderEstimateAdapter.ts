@@ -185,7 +185,7 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       delete updateData.overheadPercentage; delete updateData.overheadAmount;
       delete updateData.profitMarginPercentage; delete updateData.profitMarginAmount;
       delete updateData.finalTotal; delete updateData.currency; delete updateData.createdAt; delete updateData.updatedAt;
-      delete updateData.items; delete updateData.submittedBy; delete updateData.subtotal === undefined ? '' : '';
+      delete updateData.items; delete updateData.submittedBy;
 
       const { data, error } = await supabase
         .from('tender_estimates')
