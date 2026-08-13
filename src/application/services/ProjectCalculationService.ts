@@ -218,9 +218,16 @@ export class ProjectCalculationService {
     const tasksInProgressCount = tasks.filter(task => task.status === 'in_progress').length;
     const pendingTasksCount = tasks.filter(task => task.status === 'not_started').length;
 
-    const overallProgress = tasks.length > 0 
-      ? Math.round(tasks.reduce((sum, task) => sum + task.progress, 0) / tasks.length)
-      : 0;
+    // Avancement global : TEP pondéré par phase (poids explicite → budget → durée).
+    // Fallback moyenne des tâches uniquement si aucune phase exploitable.
+    const phases = (project.phases || (project as any).plannedPhases || []) as any[];
+    const weighted = PhaseWeightingService.computeWeightedProgress(phases as any);
+    const overallProgress = !weighted.isEmpty
+      ? Math.round(weighted.progress)
+      : tasks.length > 0
+        ? Math.round(tasks.reduce((sum, task) => sum + task.progress, 0) / tasks.length)
+        : 0;
+
 
     const phaseProgress: Record<string, number> = {};
     const taskProgress: Record<string, number> = {};
