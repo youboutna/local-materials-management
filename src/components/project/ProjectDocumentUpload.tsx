@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { LocalFilePreviewButton } from '@/components/documents/viewer';
 import { useAuth } from '@/contexts/use-auth';
 import { getDocumentService } from '@/application/services/DocumentService';
 import {
