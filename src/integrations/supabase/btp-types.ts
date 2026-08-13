@@ -16,6 +16,16 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+/** Enums transverses du schéma `public` du projet BTP (référencés par le schéma `btp`). */
+export type MovementValidationStatus = "pending" | "validated" | "rejected"
+export type WorkflowStepStatus =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "approved"
+  | "rejected"
+  | "on_hold"
+
 export type BtpDatabase = {
   btp: {
     Tables: {
@@ -3830,7 +3840,7 @@ export type BtpDatabase = {
           validated_at: string | null
           validated_by: string | null
           validation_status:
-            | Database["public"]["Enums"]["movement_validation_status"]
+            | MovementValidationStatus
             | null
         }
         Insert: {
@@ -3864,7 +3874,7 @@ export type BtpDatabase = {
           validated_at?: string | null
           validated_by?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["movement_validation_status"]
+            | MovementValidationStatus
             | null
         }
         Update: {
@@ -3898,7 +3908,7 @@ export type BtpDatabase = {
           validated_at?: string | null
           validated_by?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["movement_validation_status"]
+            | MovementValidationStatus
             | null
         }
         Relationships: []
@@ -5116,7 +5126,7 @@ export type BtpDatabase = {
           id: string
           required_documents: string[] | null
           review_deadline: string | null
-          status: Database["public"]["Enums"]["workflow_step_status"] | null
+          status: WorkflowStepStatus | null
           step_number: number
           submission_date: string | null
           tender_id: string
@@ -5132,7 +5142,7 @@ export type BtpDatabase = {
           id?: string
           required_documents?: string[] | null
           review_deadline?: string | null
-          status?: Database["public"]["Enums"]["workflow_step_status"] | null
+          status?: WorkflowStepStatus | null
           step_number: number
           submission_date?: string | null
           tender_id: string
@@ -5148,7 +5158,7 @@ export type BtpDatabase = {
           id?: string
           required_documents?: string[] | null
           review_deadline?: string | null
-          status?: Database["public"]["Enums"]["workflow_step_status"] | null
+          status?: WorkflowStepStatus | null
           step_number?: number
           submission_date?: string | null
           tender_id?: string
