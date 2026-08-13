@@ -29,7 +29,7 @@ import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import QuantityTakeoffs from "./QuantityTakeoffs";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
-import RiskAnalysisStep from "./steps/RiskAnalysisStep";
+import EnhancedRiskAnalysisStep from "./steps/EnhancedRiskAnalysisStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
 
 // Import unified workflow hook
