@@ -5,7 +5,7 @@
  * de hydratation. Plus aucun défaut en dur dans les composants.
  */
 
-export type ReportProfile = 'summary' | 'detailed' | 'financial' | 'project_manager';
+export type ReportProfile = 'summary' | 'detailed' | 'financial' | 'technical' | 'project_manager';
 
 export type ReportSectionKey =
   | 'overview'
