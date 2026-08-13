@@ -8,13 +8,12 @@
  * - Toutes les données proviennent des services
  */
 
-import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
 import { getProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
-import { ProjectAnalyticsService, getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
+import { getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
-import { CriticalPathView, GanttChart, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
+import { CriticalPathView, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
 import FinancialOverview from "@/components/project/FinaancialOverview";
@@ -30,7 +29,6 @@ import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
-import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +45,9 @@ import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import { useProjectMetrics } from "@/hooks/useProjectMetrics";
+import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
+import { formatAmount2 } from "@/utils/reportNumbers";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -222,132 +223,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     [projectDetail]
   );
 
-  // Analytics from ProjectService
-  const projectAnalyticsQuery = useQuery({
-    queryKey: ["project-analytics", projectId],
-    queryFn: async () => {
-      if (!projectId) return null;
-      const analyticsService = getProjectAnalyticsService();
-      return await analyticsService.getProjectAnalytics(projectId);
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
-
-  // KPIs from ProjectAnalyticsService
-  const { data: kpiMetrics } = useQuery({
-    queryKey: ["project-kpis", projectId],
-    queryFn: async () => {
-      if (!projectId || !projectDetail) return null;
-      
-      const analyticsService = getProjectAnalyticsService();
-      const [analytics, metrics, costAnalysis] = await Promise.all([
-        analyticsService.getProjectAnalytics(projectDetail.id),
-        analyticsService.getProjectMetrics(projectDetail.id),
-        analyticsService.getProjectCostAnalysis(projectDetail.id)
-      ]);
-
-      const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
-      const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
-      const typedCostAnalysis = (costAnalysis || {}) as unknown as Record<string, number>;
-      
-      return {
-        completedTasks: typedMetrics.completedMilestones || 0,
-        delayedTasks: typedMetrics.overdueTasks || 0,
-        totalTasks: typedMetrics.totalMilestones || 0,
-        pendingTasks: 0,
-        totalMilestones: typedMetrics.totalMilestones || 0,
-        completedMilestones: typedMetrics.completedMilestones || 0,
-        totalRisks: 0,
-        highRisks: 0,
-        mediumRisks: 0,
-        lowRisks: 0,
-        totalIssues: 0,
-        openIssues: 0,
-        resolvedIssues: 0,
-        criticalIssues: 0,
-        budgetUtilization: (typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 1) * 100,
-        remainingBudget: typedCostAnalysis.remainingBudget || typedCostAnalysis.remaining_budget || 0,
-        actualCost: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-        totalBudget: typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 0,
-        cpi: typedCostAnalysis.costPerformanceIndex || typedCostAnalysis.cost_performance_index || 0,
-        earnedValue: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-        costVariance: typedCostAnalysis.costVariance || typedCostAnalysis.cost_variance || 0,
-        progressPercentage: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-        milestoneCompletion: typedAnalytics.milestoneCompletion || typedAnalytics.milestone_completion || 0,
-        schedulePerformance: typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0,
-        costEfficiency: typedAnalytics.costEfficiency || typedAnalytics.cost_efficiency || 0,
-        qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-        riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
-        spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
-        inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-        healthScore: Math.round(
-          ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
-           (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
-           (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
-        ),
-        remainingDays: Math.max(0, 30),
-        elapsedDays: 45,
-        overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-        scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
-      };
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Compliance data
-  const { data: complianceData } = useQuery({
-    queryKey: ["project-compliance", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const analyticsService = getProjectAnalyticsService();
-      return await analyticsService.getComplianceData(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // PERT Analysis
-  const { data: pertAnalysis } = useQuery({
-    queryKey: ["project-pert", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const { ProjectCalculationService } = await import(
-        "@/application/services/ProjectCalculationService"
-      );
-      return ProjectCalculationService.calculatePERTAnalysis(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Gantt Chart
-  const { data: ganttChart } = useQuery({
-    queryKey: ["project-gantt", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const { ProjectCalculationService } = await import(
-        "@/application/services/ProjectCalculationService"
-      );
-      return ProjectCalculationService.generateGanttChart(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Milestone progress
-  const milestoneServiceInstance = useMemo(() => getMilestoneService(), []);
+  // Bloc de calculs remplacé par l'orchestrateur unique (voir useProjectMetrics ci-dessous)
   const progressServiceInstance = useMemo(() => getProgressCalculationHexService(), []);
-  const { data: milestoneProgress } = useQuery({
-    queryKey: ["milestone-progress", projectId],
-    queryFn: async () => {
-      if (!projectId) return null;
-      return await milestoneServiceInstance.getMilestoneProgress(projectId);
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
 
   // Use data from ProjectDetailDTO
   const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);
@@ -829,6 +706,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return { total, completed, inProgress };
   }, [computedPhases, project?.phasesCount, project?.status, project?.progress]);
 
+  // ============ Métriques projet — SOURCE UNIQUE (ProjectMetricsOrchestrator) ============
+  const totalPaymentsSpent = useMemo(
+    () => paymentsSource.reduce((sum, p: any) => sum + (p.amount || 0), 0),
+    [paymentsSource],
+  );
+
+  const initialPaymentAmount = useMemo(
+    () => (((project as ProjectSummaryDTO)?.budget || 0) * ((project as ProjectSummaryDTO)?.initialPaymentPercentage || 0)) / 100,
+    [project],
+  );
+
+  const metricsInput = useMemo(() => {
+    if (!project) return null;
+    return {
+      project: {
+        id: project.id,
+        title: project.title,
+        budget: project.budget ?? 0,
+        progress: project.progress ?? 0,
+        startDate: project.startDate ?? null,
+        endDate: project.endDate ?? null,
+        interventionZones: interventionZones,
+        currency: "MRU",
+      },
+      phases: computedPhases.map((p: any) => ({
+        id: p.id,
+        name: p.phase ?? p.phase_name,
+        budget: p.budget,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        progress: p.progress ?? 0,
+        status: p.status,
+      })),
+      actualCost: totalPaymentsSpent || (project as any)?.actualCost || 0,
+      inspectionsCount: inspectionsSource.length,
+      documentsCount: documentsData.length,
+      risks: risksSource as any[],
+      milestones: ((projectDetail as any)?.milestones ?? []).map((m: any) => ({
+        id: m.id,
+        name: m.title,
+        status: m.status,
+        progress: m.progress,
+        dueDate: m.targetDate,
+      })),
+    };
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent]);
+
+  const metrics = useProjectMetrics(metricsInput);
+
   // ============ Suppression ============
   const handleDelete = async (projectIdToDelete: string) => {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.`)) {
@@ -1153,10 +1079,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {typeof milestoneProgress === 'number' ? milestoneProgress : 0}
+                      {metrics?.milestoneProgress.completed ?? 0} / {metrics?.milestoneProgress.total ?? 0}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Progression: {typeof milestoneProgress === 'number' ? milestoneProgress : 0}%
+                      Progression: {metrics?.formatted.milestoneProgress ?? '0,00 %'}
                     </p>
                   </div>
                 </div>
@@ -1180,7 +1106,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview
             budget={project.budget || 0}
-            spent={paymentsSource.reduce((sum, p) => sum + (p.amount || 0), 0)}
+            spent={metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
             financialMetrics={{}}
           />
@@ -1221,11 +1147,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       {(project as ProjectSummaryDTO).initialPaymentPercentage}% du montant total
                     </p>
                     <p className="font-semibold text-green-700">
-                      {(
-                        (((project as ProjectSummaryDTO).budget || 0) *
-                          ((project as ProjectSummaryDTO).initialPaymentPercentage || 0)) /
-                        100
-                      ).toLocaleString()} MRU
+                      {formatAmount2(initialPaymentAmount, "MRU")}
                     </p>
                   </div>
                 )}
@@ -1363,7 +1285,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 </TabsList>
 
                 <TabsContent value="gantt">
-                  <GanttChart projectId={projectId!} />
+                  {metrics ? (
+                    <ProjectGanttTimeline gantt={metrics.gantt} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="pert">
@@ -1405,78 +1331,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 </TabsContent>
 
                 <TabsContent value="gantt">
-                  {projectDetail ? (
-                    <UnifiedGanttChart
-                      projectId={projectId!}
-                      projectDetail={projectDetail}
-                      onMilestoneClick={(milestoneId, phaseId) => {
-                        if (phaseId) {
-                          navigate(`/projects/${projectId}/phases/${phaseId}`);
-                        }
-                      }}
-                    />
+                  {metrics ? (
+                    <ProjectGanttTimeline gantt={metrics.gantt} />
                   ) : (
-                    <ProjectGantt
-                      project={project as any}
-                      phases={(computedPhases || []).map((p) => ({
-                        id: p.id,
-                        name: p.phase,
-                        startDate: new Date(p.startDate || new Date()),
-                        endDate: new Date(p.endDate || new Date()),
-                        progress: p.progress || 0,
-                        status: p.status || "planned",
-                      }))}
-                    />
+                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
                   )}
                 </TabsContent>
 
                 <TabsContent value="pert">
-                  {projectDetail ? (
-                    <UnifiedPERTAnalysis
-                      projectId={projectId!}
-                      projectDetail={projectDetail}
-                    />
+                  {metrics ? (
+                    <UnifiedPERTAnalysis pert={metrics.pert} referenceDurationDays={metrics.referenceDurationDays} />
                   ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Analyse PERT</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {pertAnalysis ? (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div>
-                                <p className="text-sm text-muted-foreground">Durée attendue totale</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Écart-type total</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.variances
-                                    ? Math.sqrt(
-                                        (Object.values(pertAnalysis.variances) as number[]).reduce(
-                                          (sum: number, variance: number) => sum + (variance || 0),
-                                          0
-                                        )
-                                      ).toFixed(1)
-                                    : "0.0"} jours
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.criticalPath?.length || 0}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">Chargement de l'analyse PERT...</p>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <p className="text-sm text-muted-foreground">Chargement de l'analyse PERT...</p>
                   )}
                 </TabsContent>
               </Tabs>
@@ -1583,171 +1449,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <div className="mt-6" />
           <EnhancedRiskManager projectId={projectId!} phases={computedPhases as any} />
           
-          {/* KPIs */}
-          {kpiMetrics ? (
-            <div className="space-y-4 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Progression</p>
-                        <p className="text-xl font-semibold">
-                          {kpiMetrics.progressPercentage}% ({kpiMetrics.milestoneCompletion}% jalons)
-                        </p>
-                      </div>
-                      <TrendingUp className="h-8 w-8 text-primary" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.completedTasks} tâches terminées / {kpiMetrics.delayedTasks} en retard
-                    </p>
-                  </CardContent>
-                </Card>
+          {/* KPI : plus aucun calcul inline ici — ProjectMetricsPanel (ci-dessus)
+              affiche les KPI issus de ProjectMetricsOrchestrator (source unique). */}
 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Utilisation Budget</p>
-                        <p className="text-xl font-semibold">
-                          {((kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100).toFixed(1)}%
-                        </p>
-                      </div>
-                      <DollarSign className="h-8 w-8 text-green-600" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Reste: {kpiMetrics.remainingBudget.toLocaleString()} MRU
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">CPI (Coût)</p>
-                        <p className="text-xl font-semibold">{kpiMetrics.costEfficiency.toFixed(2)}</p>
-                      </div>
-                      <TrendingUp className={`h-8 w-8 ${kpiMetrics.costEfficiency >= 1 ? "text-green-600" : "text-red-600"}`} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.costEfficiency >= 1 ? "En dessous du budget" : "Au-dessus du budget"}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">SPI (Planning)</p>
-                        <p className="text-xl font-semibold">{kpiMetrics.schedulePerformance.toFixed(2)}</p>
-                      </div>
-                      <Calendar className={`h-8 w-8 ${kpiMetrics.schedulePerformance >= 1 ? "text-green-600" : "text-orange-600"}`} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {kpiMetrics.schedulePerformance >= 1 ? "En avance" : "En retard"}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Qualité</p>
-                        <p className="text-xl font-semibold">{kpiMetrics.qualityScore.toFixed(0)}%</p>
-                      </div>
-                      <CheckCircle className="h-8 w-8 text-green-600" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">{kpiMetrics.riskScore} incidents critiques</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Risques</p>
-                        <p className="text-xl font-semibold">{kpiMetrics.riskScore}</p>
-                      </div>
-                      <AlertTriangle className="h-8 w-8 text-red-600" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">{Math.round(kpiMetrics.riskScore * 0.3)} risques élevés</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Santé Globale</p>
-                        <p className="text-xl font-semibold">
-                          {Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3)}
-                        </p>
-                      </div>
-                      <Target className={`h-8 w-8 ${
-                        Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 80
-                          ? "text-green-600"
-                          : Math.round((kpiMetrics.qualityScore + kpiMetrics.schedulePerformance + kpiMetrics.costEfficiency) / 3) >= 60
-                          ? "text-orange-600"
-                          : "text-red-600"
-                      }`} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">Score sur 100</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance Budget</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Valeur acquise</span>
-                        <span className="font-semibold">{kpiMetrics.actualCost.toLocaleString()} MRU</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Variance coût</span>
-                        <span className={`font-semibold ${kpiMetrics.costVariance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {kpiMetrics.costVariance.toLocaleString()} MRU
-                        </span>
-                      </div>
-                      <Progress value={(kpiMetrics.actualCost / (kpiMetrics.totalBudget || 1)) * 100} className="mt-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance Planning</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Variance planning</span>
-                        <span className={`font-semibold ${kpiMetrics.scheduleVariance >= 0 ? "text-green-600" : "text-orange-600"}`}>
-                          {Math.abs(kpiMetrics.scheduleVariance).toFixed(1)} jours
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Tâches en retard</span>
-                        <span className="font-semibold text-red-600">{Math.round(kpiMetrics.riskScore * 0.2)}</span>
-                      </div>
-                      <Progress value={kpiMetrics.progressPercentage} className="mt-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">Chargement des KPIs...</p>
-          )}
 
           <MonitoringEvaluationPanel
             scope="project"

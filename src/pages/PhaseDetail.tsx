@@ -30,6 +30,7 @@ import {
   getStatusColor,
   getStatusLabel,
 } from '@/utils/phaseHelpers';
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 import {
   ArrowLeft, Calendar, DollarSign, MapPin, Users, Package, FileText, BarChart3,
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
@@ -144,7 +145,7 @@ const PhaseDetail: React.FC = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
-              <div className="text-xl font-bold">{(budget).toLocaleString()} MRU</div>
+              <div className="text-xl font-bold">{formatAmount2(budget)}</div>
             </CardContent>
           </Card>
           <Card>

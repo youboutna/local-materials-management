@@ -30,6 +30,7 @@ import { entityToasts } from '@/hooks/projects/projectToasts';
 import { ArrowLeft, Calendar, ExternalLink, Flag, Pencil, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 
 const milestoneToasts = entityToasts('jalon');
 
@@ -162,7 +163,7 @@ const MilestoneDetail: React.FC = () => {
                 label="Date de complétion"
                 value={milestone.completionDate ? new Date(milestone.completionDate).toLocaleDateString('fr-FR') : null}
               />
-              <Field label="Poids" value={`${(milestone.weight * 100).toFixed(0)} %`} />
+              <Field label="Poids" value={formatPercent2(milestone.weight * 100)} />
               <Field label="Notes" value={milestone.notes} />
 
               <div className="md:col-span-2 flex flex-wrap gap-2 pt-2">

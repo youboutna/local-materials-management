@@ -39,6 +39,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { buildLocationDistribution, getProjectCoordinates } from "@/utils/projectLocationBuckets";
+import { formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 
 
 const Dashboard: React.FC = () => {
@@ -89,7 +90,7 @@ const Dashboard: React.FC = () => {
         const s = String(p.status);
         return s === 'en cours' || s === 'in_progress' || s === 'en_cours_v2' || s === 'enCours';
       }).length,
-      totalBudget: dashboardStats?.totalBudget ?? hexProjects.reduce((s, p) => s + (p.budget || 0), 0),
+      totalBudget: dashboardStats?.totalBudget ?? 0,
       teamMembers: dashboardStats?.totalEmployees ?? 0,
       materials: dashboardStats?.totalMaterials ?? 0,
       statusDistribution: dashboardStats?.statusDistribution ?? [],
@@ -273,7 +274,7 @@ const Dashboard: React.FC = () => {
                     <CardContent>
                       <div className="flex items-baseline">
                         <span className="text-3xl font-bold">
-                          {(stats.totalBudget / 1000000).toFixed(1)}M
+                          {formatNumber2(stats.totalBudget)}
                         </span>
                         <span className="ml-2 text-sm text-muted-foreground">
                           MRU

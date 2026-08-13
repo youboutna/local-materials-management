@@ -27,6 +27,7 @@ import BulkActions from "@/components/projects/BulkActions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { formatAmount2 } from "@/utils/reportNumbers";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
@@ -384,7 +385,7 @@ const Projects: React.FC = () => {
                               <>
                                 <p>
                                   <strong>Budget:</strong>{" "}
-                                  {project.budget.toLocaleString()} MRU
+                                  {formatAmount2(project.budget)}
                                 </p>
                                 <p>
                                   <strong>Équipe:</strong> {project.teamSize}{" "}

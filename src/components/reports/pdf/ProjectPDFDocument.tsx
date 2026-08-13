@@ -313,11 +313,11 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Pourcentage Matériaux" 
-                  value={financialData.spentAmount > 0 ? `${((materialCost / financialData.spentAmount) * 100).toFixed(2)}%` : '0%'} 
+                  value={financialData.spentAmount > 0 ? formatPercent2((materialCost / financialData.spentAmount) * 100) : formatPercent2(0)} 
                 />
                 <PDFText 
                   label="Pourcentage Main-d'œuvre" 
-                  value={financialData.spentAmount > 0 ? `${((laborCost / financialData.spentAmount) * 100).toFixed(2)}%` : '0%'} 
+                  value={financialData.spentAmount > 0 ? formatPercent2((laborCost / financialData.spentAmount) * 100) : formatPercent2(0)} 
                 />
               </PDFCol>
             </PDFRow>

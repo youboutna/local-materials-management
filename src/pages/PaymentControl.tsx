@@ -35,6 +35,7 @@ import {
     Eye
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 // ============================================================
 // Composant des actions de contrôle des paiements
@@ -308,7 +309,7 @@ const PaymentControlContent = () => {
                           {notification.metadata?.payment_amount && (
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline" className="text-green-600">
-                                {notification.metadata.payment_amount.toLocaleString('fr-FR')} €
+                                {formatAmount2(notification.metadata.payment_amount, '€')}
                               </Badge>
                               {notification.metadata?.payment_method && (
                                 <Badge variant="outline">{notification.metadata.payment_method}</Badge>

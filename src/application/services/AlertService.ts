@@ -36,6 +36,11 @@ import {
   AlertFilter as AlertFilterDTO
 } from '@/dtos/entities/AlertDTO';
 import { AlertTransformer } from '@/dtos/transforms/AlertTransformer';
+import {
+  MetricAlertRulesService,
+  type AlertRuleInput,
+  type DerivedAlert,
+} from '@/application/services/MetricAlertRulesService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -563,7 +568,35 @@ export class AlertService {
     }
     return new AppError(ErrorCode.INTERNAL_ERROR, defaultMessage);
   }
+
+  // ============================================================
+  // Alertes CALCULÉES (fusion avec MetricAlertRulesService)
+  // ============================================================
+  /**
+   * Règles de déclenchement dérivées des métriques (SPI < 0.8, CPI < 0.8,
+   * progression faible, risques ouverts > 3...). Point d'entrée UNIQUE :
+   * les vues n'appellent plus `MetricAlertRulesService` directement.
+   */
+  static evaluateDerived(input: AlertRuleInput): DerivedAlert[] {
+    return MetricAlertRulesService.evaluate(input);
+  }
+
+  /** Alertes calculées + alertes persistées d'un projet, dans une seule liste. */
+  async listUnifiedAlerts(
+    projectId: string,
+    derivedInput?: AlertRuleInput,
+  ): Promise<{ derived: DerivedAlert[]; persisted: AlertDTO[] }> {
+    const derived = derivedInput ? MetricAlertRulesService.evaluate(derivedInput) : [];
+    let persisted: AlertDTO[] = [];
+    try {
+      persisted = await this.getAlertsByProjectId(projectId);
+    } catch {
+      persisted = [];
+    }
+    return { derived, persisted };
+  }
 }
+
 
 // ============================================================
 // Singleton

@@ -15,6 +15,7 @@ import { fr } from 'date-fns/locale';
 import { DollarSign, Download, Loader2, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
+import { formatNumber2 } from '@/utils/reportNumbers';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: SupplierDTO;
@@ -117,20 +118,20 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
             <div style="background: #eff6ff; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #1d4ed8; margin: 0; font-size: 14px;">Total</h3>
-              <p style="color: #1e40af; font-size: 20px; font-weight: bold; margin: 5px 0;">${totalAmount.toLocaleString('fr-FR')} MRU</p>
+              <p style="color: #1e40af; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(totalAmount)} MRU</p>
             </div>
             <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #065f46; margin: 0; font-size: 14px;">Payé</h3>
-              <p style="color: #047857; font-size: 20px; font-weight: bold; margin: 5px 0;">${paidAmount.toLocaleString('fr-FR')} MRU</p>
+              <p style="color: #047857; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(paidAmount)} MRU</p>
             </div>
             <div style="background: #fffbeb; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #92400e; margin: 0; font-size: 14px;">En Attente</h3>
-              <p style="color: #d97706; font-size: 20px; font-weight: bold; margin: 5px 0;">${pendingAmount.toLocaleString('fr-FR')} MRU</p>
+              <p style="color: #d97706; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(pendingAmount)} MRU</p>
             </div>
             ${overdueAmount > 0 ? `
             <div style="background: #fef2f2; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #991b1b; margin: 0; font-size: 14px;">En Retard</h3>
-              <p style="color: #dc2626; font-size: 20px; font-weight: bold; margin: 5px 0;">${overdueAmount.toLocaleString('fr-FR')} MRU</p>
+              <p style="color: #dc2626; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(overdueAmount)} MRU</p>
             </div>
             ` : ''}
           </div>
@@ -155,7 +156,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
                 <tr style="border-bottom: 1px solid #f3f4f6;">
                   <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.paymentDate ? format(new Date(payment.paymentDate), 'dd/MM/yyyy') : 'N/A'}</td>
                   <td style="padding: 12px 8px; font-size: 14px; color: #374151;">${payment.transactionId || `Paiement #${index + 1}`}</td>
-                  <td style="padding: 12px 8px; font-size: 14px; color: #374151; text-align: right; font-weight: 500;">${payment.amount ? payment.amount.toLocaleString('fr-FR') : '0'} MRU</td>
+                  <td style="padding: 12px 8px; font-size: 14px; color: #374151; text-align: right; font-weight: 500;">${payment.amount ? formatNumber2(payment.amount) : '0,00'} MRU</td>
                   <td style="padding: 12px 8px; text-align: center;">
                     <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getPaymentStatusColor((payment as any).status || 'pending')}">${(payment as any).status || 'pending'}</span>
                   </td>
@@ -263,9 +264,9 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           <p>Bonjour,</p>
           <p>Veuillez trouver ci-joint le rapport de paiements pour le fournisseur <strong>${supplier.name}</strong>.</p>
           <p><strong>Période:</strong> ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}</p>
-          <p><strong>Total des paiements:</strong> ${calculateTotals().totalAmount.toLocaleString('fr-FR')} MRU</p>
-          <p><strong>Montants payés:</strong> ${calculateTotals().paidAmount.toLocaleString('fr-FR')} MRU</p>
-          <p><strong>Montants en attente:</strong> ${calculateTotals().pendingAmount.toLocaleString('fr-FR')} MRU</p>
+          <p><strong>Total des paiements:</strong> ${formatNumber2(calculateTotals().totalAmount)} MRU</p>
+          <p><strong>Montants payés:</strong> ${formatNumber2(calculateTotals().paidAmount)} MRU</p>
+          <p><strong>Montants en attente:</strong> ${formatNumber2(calculateTotals().pendingAmount)} MRU</p>
           <p>Ce rapport a été généré automatiquement par le système.</p>
           <br>
           <p>Cordialement,</p>
@@ -388,19 +389,19 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="font-bold text-lg">{calculateTotals().totalAmount.toLocaleString('fr-FR')} MRU</p>
+            <p className="font-bold text-lg">{formatNumber2(calculateTotals().totalAmount)} MRU</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Payé</p>
-            <p className="font-bold text-lg text-green-600">{calculateTotals().paidAmount.toLocaleString('fr-FR')} MRU</p>
+            <p className="font-bold text-lg text-green-600">{formatNumber2(calculateTotals().paidAmount)} MRU</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">En attente</p>
-            <p className="font-bold text-lg text-yellow-600">{calculateTotals().pendingAmount.toLocaleString('fr-FR')} MRU</p>
+            <p className="font-bold text-lg text-yellow-600">{formatNumber2(calculateTotals().pendingAmount)} MRU</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Retard</p>
-            <p className="font-bold text-lg text-red-600">{calculateTotals().overdueAmount.toLocaleString('fr-FR')} MRU</p>
+            <p className="font-bold text-lg text-red-600">{formatNumber2(calculateTotals().overdueAmount)} MRU</p>
           </div>
         </div>
 

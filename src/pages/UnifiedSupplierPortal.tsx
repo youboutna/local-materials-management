@@ -64,6 +64,7 @@ import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { LocalFilePreviewButton, useDocumentViewer } from "@/components/documents/viewer";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
+import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 import {
   useSupplierPortalAuthHex,
   useFetchSupplierProfileHex,
@@ -226,7 +227,7 @@ const UnifiedSupplierPortal = () => {
         title: 'Facture analysée',
         description: parseError
           ? `Erreur d'analyse: ${parseError}`
-          : `${dtos.length} lignes extraites — Total HT ${totalHt.toLocaleString('fr-FR')} MRU${vatRate ? ` · TVA ${(vatRate * 100).toFixed(0)}%` : ''}`,
+          : `${dtos.length} lignes extraites — Total HT ${formatAmount2(totalHt)}${vatRate ? ` · TVA ${formatPercent2(vatRate * 100)}` : ''}`,
       });
       refetchInvoices();
     } catch (e: any) {
@@ -523,7 +524,7 @@ const UnifiedSupplierPortal = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {totalPayments.toLocaleString()} MRU
+                  {formatAmount2(totalPayments)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {paymentRequests.length} demandes
@@ -919,7 +920,7 @@ const UnifiedSupplierPortal = () => {
                                 </p>
                                 <div className="flex gap-4 mt-2 text-sm">
                                   <span className="font-medium">
-                                    Montant estimé: {(metadata?.estimated_amount || 0).toLocaleString()} MRU
+                                    Montant estimé: {formatAmount2(metadata?.estimated_amount || 0)}
                                   </span>
                                   {metadata?.deadline && (
                                     <span className="text-orange-600">
