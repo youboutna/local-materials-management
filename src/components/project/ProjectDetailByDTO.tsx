@@ -28,6 +28,7 @@ import PlanningVarianceView from "@/components/project/PlanningVarianceView";
 import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
+import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
@@ -1569,6 +1570,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== MONITORING ===== */}
         <TabsContent value="monitoring" className="mt-6">
+          {/* Dashboard Monitoring — source unique : ProjectMetricsOrchestrator */}
+          <ProjectMetricsPanel
+            project={project as any}
+            phases={computedPhases as any[]}
+            actualCost={(project as any)?.actualCost ?? 0}
+            inspectionsCount={(projectDetail as any)?.inspections?.length ?? 0}
+            documentsCount={(projectDetail as any)?.documents?.length ?? 0}
+            risks={((projectDetail as any)?.risks ?? []) as any[]}
+          />
+
+          <div className="mt-6" />
           <EnhancedRiskManager projectId={projectId!} phases={computedPhases as any} />
           
           {/* KPIs */}
