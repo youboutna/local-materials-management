@@ -1,8 +1,11 @@
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { isDgeerOrganization } from '@/config/referentials/reports/dgeer-missions.referential';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
+import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
+
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -63,6 +66,9 @@ interface ProjectPDFDocumentProps {
   }>;
   /** IDs des phases sélectionnées par l'utilisateur (undefined = toutes). */
   selectedPhaseIds?: string[];
+  /** Organisation propriétaire — active la lecture référentielle DGEER. */
+  organizationName?: string;
+  organizationCode?: string;
 }
 
 export function ProjectPDFDocument({
@@ -77,7 +83,12 @@ export function ProjectPDFDocument({
   healthScore = null,
   phaseDeviations = [],
   selectedPhaseIds,
+  organizationName,
+  organizationCode,
 }: ProjectPDFDocumentProps) {
+  // Référentiel DGEER consulté uniquement si l'organisation propriétaire est la DGEER.
+  const dgeerContext = isDgeerOrganization(organizationName, organizationCode);
+
   
   const getStatusText = (status: string) => {
     const statusMap: { [key: string]: string } = {
