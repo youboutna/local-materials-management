@@ -8,7 +8,6 @@
  * - Toutes les données proviennent des services
  */
 
-import { MilestoneService, getMilestoneService} from '@/application/services/MilestoneService';
 import { getProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
 import { getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
@@ -223,132 +222,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     [projectDetail]
   );
 
-  // Analytics from ProjectService
-  const projectAnalyticsQuery = useQuery({
-    queryKey: ["project-analytics", projectId],
-    queryFn: async () => {
-      if (!projectId) return null;
-      const analyticsService = getProjectAnalyticsService();
-      return await analyticsService.getProjectAnalytics(projectId);
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
-
-  // KPIs from ProjectAnalyticsService
-  const { data: kpiMetrics } = useQuery({
-    queryKey: ["project-kpis", projectId],
-    queryFn: async () => {
-      if (!projectId || !projectDetail) return null;
-      
-      const analyticsService = getProjectAnalyticsService();
-      const [analytics, metrics, costAnalysis] = await Promise.all([
-        analyticsService.getProjectAnalytics(projectDetail.id),
-        analyticsService.getProjectMetrics(projectDetail.id),
-        analyticsService.getProjectCostAnalysis(projectDetail.id)
-      ]);
-
-      const typedMetrics = (metrics || {}) as { totalMilestones?: number; completedMilestones?: number; overdueTasks?: number };
-      const typedAnalytics = (analytics || {}) as unknown as Record<string, number>;
-      const typedCostAnalysis = (costAnalysis || {}) as unknown as Record<string, number>;
-      
-      return {
-        completedTasks: typedMetrics.completedMilestones || 0,
-        delayedTasks: typedMetrics.overdueTasks || 0,
-        totalTasks: typedMetrics.totalMilestones || 0,
-        pendingTasks: 0,
-        totalMilestones: typedMetrics.totalMilestones || 0,
-        completedMilestones: typedMetrics.completedMilestones || 0,
-        totalRisks: 0,
-        highRisks: 0,
-        mediumRisks: 0,
-        lowRisks: 0,
-        totalIssues: 0,
-        openIssues: 0,
-        resolvedIssues: 0,
-        criticalIssues: 0,
-        budgetUtilization: (typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0) / (typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 1) * 100,
-        remainingBudget: typedCostAnalysis.remainingBudget || typedCostAnalysis.remaining_budget || 0,
-        actualCost: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-        totalBudget: typedCostAnalysis.totalBudget || typedCostAnalysis.total_budget || 0,
-        cpi: typedCostAnalysis.costPerformanceIndex || typedCostAnalysis.cost_performance_index || 0,
-        earnedValue: typedCostAnalysis.actualCost || typedCostAnalysis.actual_cost || 0,
-        costVariance: typedCostAnalysis.costVariance || typedCostAnalysis.cost_variance || 0,
-        progressPercentage: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-        milestoneCompletion: typedAnalytics.milestoneCompletion || typedAnalytics.milestone_completion || 0,
-        schedulePerformance: typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0,
-        costEfficiency: typedAnalytics.costEfficiency || typedAnalytics.cost_efficiency || 0,
-        qualityScore: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-        riskScore: typedAnalytics.riskScore || typedAnalytics.risk_score || 0,
-        spi: (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0) / 100,
-        inspectionPassRate: typedAnalytics.qualityScore || typedAnalytics.quality_score || 0,
-        healthScore: Math.round(
-          ((typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0) + 
-           (typedAnalytics.qualityScore || typedAnalytics.quality_score || 0) + 
-           (typedAnalytics.schedulePerformance || typedAnalytics.schedule_performance || 0)) / 3
-        ),
-        remainingDays: Math.max(0, 30),
-        elapsedDays: 45,
-        overallProgress: typedAnalytics.progressPercentage || typedAnalytics.progress_percentage || 0,
-        scheduleVariance: typedAnalytics.timelineVariance || typedAnalytics.timeline_variance || 0
-      };
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Compliance data
-  const { data: complianceData } = useQuery({
-    queryKey: ["project-compliance", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const analyticsService = getProjectAnalyticsService();
-      return await analyticsService.getComplianceData(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // PERT Analysis
-  const { data: pertAnalysis } = useQuery({
-    queryKey: ["project-pert", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const { ProjectCalculationService } = await import(
-        "@/application/services/ProjectCalculationService"
-      );
-      return ProjectCalculationService.calculatePERTAnalysis(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Gantt Chart
-  const { data: ganttChart } = useQuery({
-    queryKey: ["project-gantt", projectId],
-    queryFn: async (): Promise<any> => {
-      if (!projectId || !projectDetail) return null;
-      const { ProjectCalculationService } = await import(
-        "@/application/services/ProjectCalculationService"
-      );
-      return ProjectCalculationService.generateGanttChart(projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000,
-  });
-
-  // Milestone progress
-  const milestoneServiceInstance = useMemo(() => getMilestoneService(), []);
+  // Bloc de calculs remplacé par l'orchestrateur unique (voir useProjectMetrics ci-dessous)
   const progressServiceInstance = useMemo(() => getProgressCalculationHexService(), []);
-  const { data: milestoneProgress } = useQuery({
-    queryKey: ["milestone-progress", projectId],
-    queryFn: async () => {
-      if (!projectId) return null;
-      return await milestoneServiceInstance.getMilestoneProgress(projectId);
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
 
   // Use data from ProjectDetailDTO
   const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);

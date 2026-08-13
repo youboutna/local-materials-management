@@ -6,6 +6,7 @@ import {
   type ReportSectionKey,
 } from '@/config/referentials/reports/report-profiles.referential';
 import { formatNumber2 } from '@/utils/reportNumbers';
+import { formatRatio2 } from '@/utils/reportNumbers';
 
 
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
@@ -638,16 +639,16 @@ export function CompactProjectPDFDocument({
 
   const formatBudget = (budget: number) => {
     if (budget >= 1000000000) {
-      return `${(budget / 1000000000).toFixed(2)} Md MRU`;
+      return `${formatNumber2(budget / 1000000000)} Md MRU`;
     }
     if (budget >= 1000000) {
-      return `${(budget / 1000000).toFixed(2)} M MRU`;
+      return `${formatNumber2(budget / 1000000)} M MRU`;
     }
     return `${formatNumber2(budget)} MRU`;
   };
 
   const formatDecimal = (value: number) => {
-    return value.toFixed(2);
+    return formatRatio2(value);
   };
 
   const getPerformanceColor = (value: number, isIndex: boolean = false) => {
