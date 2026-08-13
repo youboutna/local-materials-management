@@ -14,7 +14,10 @@ import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import { CheckSquare, Download, FileText, Loader2, Mail, Square } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
+import { getOrganizationService } from '@/application/services/OrganizationService';
+import type { OrganizationDTO } from '@/dtos/entities/OrganizationDTO';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
+
 import {
   ReportProfile,
   ReportSectionKey,
@@ -51,6 +54,29 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [enrichedData, setEnrichedData] = useState<any>(null);
   const [deviations, setDeviations] = useState<any[]>([]);
   const [healthScore, setHealthScore] = useState<any>(null);
+  const [ownerOrganization, setOwnerOrganization] = useState<OrganizationDTO | null>(null);
+
+  // Organisation propriétaire du projet (en-tête + activation du référentiel DGEER)
+  const organizationService = useMemo(() => getOrganizationService(), []);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const organizationId = (project as any)?.organizationId as string | undefined;
+        const owner = organizationId
+          ? await organizationService.get(organizationId).catch(() => null)
+          : null;
+        const resolved = owner ?? (await organizationService.getDefault().catch(() => null));
+        if (!cancelled) setOwnerOrganization(resolved ?? null);
+      } catch (error) {
+        console.warn('[ProjectReportGenerator] owner organization unavailable', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationService, project]);
+
 
   const initialProfile: ReportProfile = 'summary';
 
