@@ -15,6 +15,7 @@ import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ProjectMiniMap } from './ProjectMiniMap';
+import { ReportFooter, ReportHeader } from './ReportPageFrame';
 
 
 // Local types for PDF rendering
@@ -796,26 +797,6 @@ export function CompactProjectPDFDocument({
     />
   );
 
-  // Company Header Component
-  const CompanyHeader = () => (
-    <View style={styles.companyHeader}>
-      <View style={styles.companyHeaderContent}>
-        <View style={styles.companyInfo}>
-          <Text style={styles.companyName}>{companyInfo.name}</Text>
-          <Text style={styles.companyDetail}>{companyInfo.address}</Text>
-          <Text style={styles.companyDetail}>Tél: {companyInfo.phone}</Text>
-          <Text style={styles.companyDetail}>Email: {companyInfo.email}</Text>
-        </View>
-        {companyInfo.logo ? (
-          <Image 
-            src={companyInfo.logo} 
-            style={styles.companyLogo} 
-          />
-        ) : null}
-      </View>
-    </View>
-  );
-
   return (
     <Document>
       {projects.map((project, index) => {
@@ -834,17 +815,12 @@ export function CompactProjectPDFDocument({
 
         return (
           <Page key={project.id} size="A4" style={styles.page}>
-            {/* Company Header - Conditionally rendered */}
-            {includeCompanyHeader && <CompanyHeader />}
-
-            {/* Report Header */}
-            <View style={styles.header}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.headerTitle}>{reportTitle} - Généré le {currentDate}</Text>
-              </View>
-              {/* Mini map preview: top-right header */}
-              {renderStreetMap(project)}
-            </View>
+            {/* En-tête factorisé : complet en page 1 (organisation), allégé ensuite */}
+            <ReportHeader
+              title={reportTitle}
+              company={includeCompanyHeader ? companyInfo : undefined}
+              extra={renderStreetMap(project)}
+            />
 
             {/* Project Title */}
             <View style={styles.projectTitle}>
@@ -1395,11 +1371,8 @@ export function CompactProjectPDFDocument({
 
 
 
-            {/* Page Footer */}
-            <View style={styles.pageFooter}>
-              <Text>Projet {index + 1} sur {projects.length}</Text>
-              <Text>Document confidentiel - {currentDate}</Text>
-            </View>
+            {/* Pied de page factorisé : pagination "Page X / Y" sur l'ensemble du document */}
+            <ReportFooter label={`Projet ${index + 1}/${projects.length} - Document confidentiel`} />
           </Page>
         );
       })}

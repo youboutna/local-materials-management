@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { ReportFooter, ReportHeader } from './ReportPageFrame';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -166,108 +167,16 @@ interface PDFDocumentProps {
   miniMap?: React.ReactNode;
 }
 
-// Styles alignés sur le rapport compact (en-tête organisation + pied de page).
-const headerStyles = StyleSheet.create({
-  companyHeader: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#2563eb',
-    paddingBottom: 6,
-    marginBottom: 8,
-  },
-  companyHeaderContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  companyInfo: {
-    flex: 1,
-  },
-  companyName: {
-    color: '#2563eb',
-    fontSize: 12,
-    marginBottom: 4,
-    fontWeight: 'bold',
-  },
-  companyDetail: {
-    marginVertical: 1,
-    fontSize: 9,
-    color: '#666666',
-  },
-  companyLogo: {
-    maxHeight: 24,
-    maxWidth: 60,
-  },
-  reportHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-    paddingBottom: 8,
-  },
-  reportTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1e40af',
-  },
-  reportSubtitle: {
-    fontSize: 9,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  pageFooter: {
-    position: 'absolute',
-    bottom: 14,
-    left: 30,
-    right: 30,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 7,
-    color: '#6b7280',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 6,
-  },
-});
-
 export function PDFDocument({ title, subtitle, children, company, miniMap }: PDFDocumentProps) {
-  const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
-  const shortDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* En-tête organisation (identique au rapport compact) */}
-        {company && (
-          <View style={headerStyles.companyHeader} fixed>
-            <View style={headerStyles.companyHeaderContent}>
-              <View style={headerStyles.companyInfo}>
-                <Text style={headerStyles.companyName}>{company.name}</Text>
-                <Text style={headerStyles.companyDetail}>{company.address}</Text>
-                <Text style={headerStyles.companyDetail}>Tél: {company.phone}</Text>
-                <Text style={headerStyles.companyDetail}>Email: {company.email}</Text>
-              </View>
-              {company.logo ? <Image src={company.logo} style={headerStyles.companyLogo} /> : null}
-            </View>
-          </View>
-        )}
-
-        {/* En-tête rapport + miniature SIG */}
-        <View style={headerStyles.reportHeader}>
-          <View style={{ flex: 1 }}>
-            <Text style={headerStyles.reportTitle}>{title} - Généré le {currentDate}</Text>
-            {subtitle && <Text style={headerStyles.reportSubtitle}>{subtitle}</Text>}
-          </View>
-          {miniMap}
-        </View>
+        <ReportHeader title={title} subtitle={subtitle} company={company} extra={miniMap} />
 
         {/* Content */}
         {children}
 
-        {/* Footer (même design que le rapport compact) */}
-        <View style={headerStyles.pageFooter} fixed>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} sur ${totalPages}`} />
-          <Text>Document confidentiel - {shortDate}</Text>
-        </View>
+        <ReportFooter />
       </Page>
     </Document>
   );
