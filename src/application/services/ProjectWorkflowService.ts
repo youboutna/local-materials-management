@@ -288,11 +288,24 @@ export class ProjectWorkflowService {
     return true;
   }
 
+  /**
+   * Alertes: NON déclenchées par les workflows de création/édition de projet.
+   * Elles relèvent d'un job planifié (cron hebdomadaire) ou d'une exécution manuelle.
+   * Ce hook reste en place mais est inerte sauf activation explicite.
+   */
+  private static readonly WORKFLOW_ALERTS_ENABLED = false;
+
   private createAlertBackground(projectId: string, type: string, data: any): void {
+    if (!ProjectWorkflowService.WORKFLOW_ALERTS_ENABLED) {
+      console.debug('[Alert] Workflow-triggered alerts disabled (cron-managed):', type);
+      return;
+    }
     setTimeout(async () => {
       try {
         const config = getAlertConfig(type);
         if (!config.enabled) return;
+
+
 
         const cacheKey = `${projectId}-${type}`;
         if (!this.canCreateAlert(cacheKey)) return;
