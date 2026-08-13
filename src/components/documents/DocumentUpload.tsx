@@ -414,6 +414,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   </p>
                 </div>
               </div>
+              <div className="flex items-center gap-1">
+              <LocalFilePreviewButton file={file} title={formData.title || file.name} documentType={formData.documentType} />
               <Button
                 type="button"
                 variant="ghost"
@@ -423,6 +425,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               >
                 <X className="h-4 w-4" />
               </Button>
+              </div>
             </div>
           ) : (
             <div className="text-center">

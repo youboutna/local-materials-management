@@ -299,9 +299,10 @@ const ProjectDocumentUpload = ({
                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
               />
               {file && (
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <FileText className="h-4 w-4 mr-1" />
-                  {file.name}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="truncate max-w-[160px]">{file.name}</span>
+                  <LocalFilePreviewButton file={file} title={formData.title || file.name} documentType={formData.documentType} />
                 </div>
               )}
             </div>
