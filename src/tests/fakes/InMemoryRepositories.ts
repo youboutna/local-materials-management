@@ -248,3 +248,174 @@ export class InMemoryValidationRepository {
     return this.results.get(projectId) || [];
   }
 }
+
+/**
+ * Fake in-memory des réceptions (provisoires/définitives) — évite tout appel Supabase
+ * dans les tests d'intégration de validation.
+ */
+export class InMemoryReceptionRepository implements IReceptionRepository {
+  private receptions = new Map<string, ReceptionDTO>();
+  private documents = new Map<string, any[]>();
+  private seq = 0;
+
+  private nextId(): string {
+    this.seq += 1;
+    return `reception-${this.seq}`;
+  }
+
+  async create(reception: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>): Promise<ReceptionDTO> {
+    const now = new Date().toISOString();
+    const created = { ...reception, id: this.nextId(), createdAt: now, updatedAt: now } as ReceptionDTO;
+    this.receptions.set(created.id, created);
+    return created;
+  }
+
+  async findById(id: string): Promise<ReceptionDTO | null> {
+    return this.receptions.get(id) ?? null;
+  }
+
+  async findByProjectId(projectId: string): Promise<ReceptionDTO[]> {
+    return [...this.receptions.values()].filter((r) => r.projectId === projectId);
+  }
+
+  async update(id: string, updates: Partial<ReceptionDTO>): Promise<ReceptionDTO> {
+    const existing = this.receptions.get(id);
+    if (!existing) throw new Error(`Reception ${id} not found`);
+    const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() } as ReceptionDTO;
+    this.receptions.set(id, updated);
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    this.receptions.delete(id);
+  }
+
+  async findByType(projectId: string, type: 'provisional' | 'definitive'): Promise<ReceptionDTO[]> {
+    return (await this.findByProjectId(projectId)).filter((r) => r.type === type);
+  }
+
+  async findByStatus(status: string): Promise<ReceptionDTO[]> {
+    return [...this.receptions.values()].filter((r) => r.status === status);
+  }
+
+  async findByDateRange(startDate: string, endDate: string): Promise<ReceptionDTO[]> {
+    return [...this.receptions.values()].filter((r) => {
+      const d = (r as any).receptionDate ?? (r as any).plannedDate;
+      return !!d && d >= startDate && d <= endDate;
+    });
+  }
+
+  async findByChairman(chairmanId: string): Promise<ReceptionDTO[]> {
+    return [...this.receptions.values()].filter((r) => (r as any).chairmanId === chairmanId);
+  }
+
+  async createBatch(receptions: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<ReceptionDTO[]> {
+    return Promise.all(receptions.map((r) => this.create(r)));
+  }
+
+  async updateBatch(updates: Array<{ id: string; data: Partial<ReceptionDTO> }>): Promise<ReceptionDTO[]> {
+    return Promise.all(updates.map((u) => this.update(u.id, u.data)));
+  }
+
+  async search(criteria: {
+    projectId?: string;
+    type?: 'provisional' | 'definitive';
+    status?: string;
+    dateRange?: { start: string; end: string };
+    chairmanId?: string;
+  }): Promise<ReceptionDTO[]> {
+    return [...this.receptions.values()].filter((r) => {
+      if (criteria.projectId && r.projectId !== criteria.projectId) return false;
+      if (criteria.type && r.type !== criteria.type) return false;
+      if (criteria.status && r.status !== criteria.status) return false;
+      if (criteria.chairmanId && (r as any).chairmanId !== criteria.chairmanId) return false;
+      return true;
+    });
+  }
+
+  async validateReception(id: string): Promise<boolean> {
+    return this.receptions.has(id);
+  }
+
+  async getReceptionWorkflow(projectId: string): Promise<any> {
+    const all = await this.findByProjectId(projectId);
+    const provisional = all.filter((r) => r.type === 'provisional');
+    const definitive = all.filter((r) => r.type === 'definitive');
+    return {
+      provisional: provisional[0] ?? null,
+      definitive: definitive[0] ?? null,
+      canCreateDefinitive: provisional.some((r) => r.status === 'approved'),
+      receptions: all,
+    };
+  }
+
+  async addDocument(receptionId: string, document: any): Promise<void> {
+    const list = this.documents.get(receptionId) ?? [];
+    list.push(document);
+    this.documents.set(receptionId, list);
+  }
+
+  async removeDocument(receptionId: string, documentId: string): Promise<void> {
+    const list = (this.documents.get(receptionId) ?? []).filter((d) => d?.id !== documentId);
+    this.documents.set(receptionId, list);
+  }
+
+  async getDocuments(receptionId: string): Promise<any[]> {
+    return this.documents.get(receptionId) ?? [];
+  }
+
+  async updateCommittee(receptionId: string, committee: string[]): Promise<void> {
+    await this.update(receptionId, { committee } as Partial<ReceptionDTO>);
+  }
+
+  async addCommitteeMember(receptionId: string, member: any): Promise<void> {
+    const existing = (this.receptions.get(receptionId) as any)?.committee ?? [];
+    await this.update(receptionId, { committee: [...existing, member] } as Partial<ReceptionDTO>);
+  }
+
+  async removeCommitteeMember(receptionId: string, memberId: string): Promise<void> {
+    const existing = (this.receptions.get(receptionId) as any)?.committee ?? [];
+    await this.update(receptionId, {
+      committee: existing.filter((m: any) => (typeof m === 'string' ? m !== memberId : m?.id !== memberId)),
+    } as Partial<ReceptionDTO>);
+  }
+
+  async addFinding(receptionId: string, finding: any): Promise<void> {
+    const existing = (this.receptions.get(receptionId) as any)?.findings ?? [];
+    await this.update(receptionId, { findings: [...existing, finding] } as Partial<ReceptionDTO>);
+  }
+
+  async updateFinding(receptionId: string, findingId: string, finding: any): Promise<void> {
+    const existing = (this.receptions.get(receptionId) as any)?.findings ?? [];
+    await this.update(receptionId, {
+      findings: existing.map((f: any) => (f?.id === findingId ? { ...f, ...finding } : f)),
+    } as Partial<ReceptionDTO>);
+  }
+
+  async addDecision(receptionId: string, decision: any): Promise<void> {
+    const existing = (this.receptions.get(receptionId) as any)?.decisions ?? [];
+    await this.update(receptionId, { decisions: [...existing, decision] } as Partial<ReceptionDTO>);
+  }
+
+  async getReceptionStats(projectId: string) {
+    const all = await this.findByProjectId(projectId);
+    return {
+      total: all.length,
+      provisional: all.filter((r) => r.type === 'provisional').length,
+      definitive: all.filter((r) => r.type === 'definitive').length,
+      approved: all.filter((r) => r.status === 'approved').length,
+      pending: all.filter((r) => r.status === 'pending').length,
+      rejected: all.filter((r) => r.status === 'rejected').length,
+    };
+  }
+
+  async getReceptionTimeline(projectId: string) {
+    const all = await this.findByProjectId(projectId);
+    return all.map((r) => ({
+      date: ((r as any).receptionDate ?? (r as any).plannedDate ?? r.createdAt) as string,
+      type: r.type as 'provisional' | 'definitive',
+      status: String(r.status),
+      description: `Réception ${r.type}`,
+    }));
+  }
+}
