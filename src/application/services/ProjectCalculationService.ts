@@ -432,39 +432,33 @@ export class ProjectCalculationService {
   }
 
 
-  // ============= PERT Analysis =============
+  // ============= PERT Analysis (délégation moteur unique) =============
 
+  /**
+   * @deprecated Utiliser `ProjectMetricsOrchestrator.compute().pert`.
+   * Délègue à `PertService` — moteur PERT UNIQUE.
+   */
   static calculatePERTAnalysis(project: ProjectDetailDTO): PERTAnalysis {
     const tasks = project.tasks || [];
-    
-    const activities = tasks.map(task => ({
-      name: task.title,
-      optimistic: (task.estimatedDuration || 1) * 0.8,
-      mostLikely: task.estimatedDuration || 1,
-      pessimistic: (task.estimatedDuration || 1) * 1.5,
-      pertEstimate: ((task.estimatedDuration || 1) * 0.8 + 4 * (task.estimatedDuration || 1) + (task.estimatedDuration || 1) * 1.5) / 6,
-      standardDeviation: ((task.estimatedDuration || 1) * 1.5 - (task.estimatedDuration || 1) * 0.8) / 6
-    }));
-    
-    const expectedDurations: Record<string, number> = {};
-    const variances: Record<string, number> = {};
-    
-    tasks.forEach((task, index) => {
-      expectedDurations[task.id] = activities[index]?.pertEstimate || 0;
-      variances[task.id] = Math.pow(activities[index]?.standardDeviation || 0, 2);
-    });
-    
-    const criticalPath = tasks.map(task => task.id);
-    const totalExpectedDuration = activities.reduce((sum, activity) => sum + activity.pertEstimate, 0);
+    const result = PertService.compute(
+      tasks.map((task) => ({
+        id: task.id,
+        name: task.title,
+        durationDays: task.estimatedDuration ?? null,
+        startDate: task.startDate ?? null,
+        endDate: task.endDate ?? null,
+      })),
+    );
 
     return {
-      activities,
-      expectedDurations,
-      criticalPath,
-      totalExpectedDuration,
-      variances
+      activities: result.activities as unknown as PERTAnalysis['activities'],
+      expectedDurations: result.expectedDurations,
+      criticalPath: result.criticalPath,
+      totalExpectedDuration: result.totalExpectedDuration,
+      variances: result.variances,
     };
   }
+
 
   // ============= Gantt Chart Generation =============
 
