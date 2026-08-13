@@ -40,6 +40,11 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     filterStatus
   });
 
+  // Resynchronisation immédiate après action visionneuse (statut, suppression)
+  useDocumentChanges(useCallback(() => { refetch?.(); }, [refetch]));
+
+
+
   const getDocumentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       'inspection_report': 'Rapport d\'inspection',
