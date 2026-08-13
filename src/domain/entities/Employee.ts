@@ -88,6 +88,7 @@ export class Employee {
   private _userId: string | null;
   private _managerId: string | null;
   private _superiorId: string | null;
+  private _extras: EmployeeExtras = {};
   private _createdAt: string;
   private _updatedAt: string;
 
@@ -164,6 +165,8 @@ export class Employee {
   get userId(): string | null { return this._userId; }
   get managerId(): string | null { return this._managerId; }
   get superiorId(): string | null { return this._superiorId; }
+  get extras(): EmployeeExtras { return this._extras; }
+  get organizationId(): string | null { return this._extras.organizationId ?? null; }
   get createdAt(): string { return this._createdAt; }
   get updatedAt(): string { return this._updatedAt; }
 
