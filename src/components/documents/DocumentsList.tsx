@@ -106,9 +106,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
   };
 
   const handleViewDocument = (doc: DocumentDTO) => {
-    if (onDocumentSelect) {
-      onDocumentSelect(doc);
-    }
+    openDocument(doc, { onStatusChanged: () => refetch?.() });
+    onDocumentSelect?.(doc);
   };
 
   // Clear filter and return to all documents
