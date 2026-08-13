@@ -5,6 +5,7 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Json } from '@/integrations/supabase/types';
 
 // Database row interface matching project_alerts table
 export interface MonitoringAlertDbRow {
@@ -141,7 +142,7 @@ export class SupabaseMonitoringAlertAdapter implements IMonitoringAlertRepositor
         severity: alertData.priority || 'medium',
         description: alertData.description || null,
         project_id: alertData.stationId || '00000000-0000-0000-0000-000000000000',
-        metadata: alertData.metadata || null,
+        metadata: (alertData.metadata as unknown as Json) || null,
         message: alertData.description || alertData.title,
         source: 'monitoring',
         status: 'active',

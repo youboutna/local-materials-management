@@ -7,6 +7,7 @@
 import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
 import { MilestoneDTO, MaterialUsageDTO } from '@/dtos/entities/MilestoneDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Json } from '@/integrations/supabase/types';
 
 export class SupabaseMilestoneAdapter implements IMilestoneRepository {
   /**
@@ -147,7 +148,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         dependencies: data.dependencies || [],
         notes: data.notes || null,
         stage_type: data.stage_type || data.type || null,
-        material_usage: (data.material_usage as unknown as MaterialUsageDTO[]) || [],
+        material_usage: (data.material_usage as unknown as Json) || [],
         material_cost_estimate: data.material_cost_estimate || null,
         actual_material_cost: data.actual_material_cost || null,
         created_at: now,
@@ -180,7 +181,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       const updateData = {
         ...data,
         material_usage: data.material_usage !== undefined
-          ? (data.material_usage as unknown as import('@/integrations/supabase/types').Json)
+          ? (data.material_usage as unknown as Json)
           : undefined,
         updated_at: new Date().toISOString()
       };
@@ -297,7 +298,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         
         if (milestone.status === 'completed') {
           acc.completed++;
-        } else if (['pending', 'in_progress'].includes(milestone.status)) {
+        } else if (milestone.status && ['pending', 'in_progress'].includes(milestone.status)) {
           acc.pending++;
           if (milestone.target_date && new Date(milestone.target_date) < now) {
             acc.overdue++;
