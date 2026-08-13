@@ -310,22 +310,37 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       updatedAt: row.updated_at,
     }));
 
-    // Les contacts sont portés par le référentiel unifié project_stakeholders.
-    // Ne pas interroger l'ancienne table optionnelle project_contacts : PostgREST
-    // renvoie 42P01 sur les déploiements où elle n'existe pas et les retries du
-    // query client multiplient inutilement les requêtes 404.
-    const contacts = (stakeholdersResult.data || [])
+    // Les contacts projet sont stockés en JSON dans `projects.contacts` (aucune
+    // table `project_contacts` : PostgREST renvoyait 42P01 et le query client
+    // multipliait les 404). Fallback : contacts externes des parties prenantes.
+    const jsonContacts = Array.isArray((projectResult.data as Record<string, any> | null)?.contacts)
+      ? ((projectResult.data as Record<string, any>).contacts as Array<Record<string, any>>).map((c, index) => ({
+          id: String(c.id ?? `${id}-contact-${index}`),
+          projectId: id,
+          name: c.name ?? '',
+          role: c.role ?? '',
+          email: c.email ?? undefined,
+          phone: c.phone ?? undefined,
+          company: c.company ?? undefined,
+          isPrimary: c.isPrimary ?? c.is_primary ?? false,
+        }))
+      : [];
+
+    const stakeholderContacts = (stakeholdersResult.data || [])
       .filter((row: Record<string, any>) => row.external_name || row.external_email || row.external_phone)
       .map((row: Record<string, any>) => ({
-      id: row.id,
-      projectId: row.project_id,
-      name: row.external_name ?? row.role_description ?? row.stakeholder_type ?? '',
-      role: row.stakeholder_type,
-      email: row.external_email ?? '',
-      phone: row.external_phone ?? undefined,
-      company: undefined,
-      isPrimary: row.is_primary ?? false,
-    }));
+        id: row.id,
+        projectId: row.project_id,
+        name: row.external_name ?? row.role_description ?? row.stakeholder_type ?? '',
+        role: row.stakeholder_type,
+        email: row.external_email ?? '',
+        phone: row.external_phone ?? undefined,
+        company: undefined,
+        isPrimary: row.is_primary ?? false,
+      }));
+
+    const contacts = jsonContacts.length > 0 ? jsonContacts : stakeholderContacts;
+
 
     return {
       project: projectResult.data ? ProjectTransformer.fromSupabase(projectResult.data as Record<string, unknown>) : null,
