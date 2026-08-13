@@ -182,23 +182,9 @@ export class EmployeeService {
    */
   private employeeToDTO(employee: Employee): EmployeeDTO {
     return {
-      id: employee.id,
-      employeeId: employee.employeeId,
-      firstName: employee.fullName?.split(' ')[0] || '',
-      lastName: employee.fullName?.split(' ').slice(1).join(' ') || '',
-      fullName: employee.fullName,
-      email: employee.email || '',
-      phone: employee.phone || '',
-      position: employee.position || '',
-      department: ((employee.department as string) || 'engineering') as EmployeeDepartment,
-      role: ((employee.role?.name as string) || 'employee') as EmployeeRole,
-      type: EmployeeType.FULL_TIME,
-      status: employee.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE,
-      salary: employee.salary || 0,
+      ...EmployeeTransformer.toDTO(employee),
       skills: employee.skills || [],
-      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : c.name || ''),
-      createdAt: employee.createdAt,
-      updatedAt: employee.updatedAt
+      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : (c as { name?: string }).name || ''),
     };
   }
 
