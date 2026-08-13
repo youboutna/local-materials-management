@@ -31,39 +31,24 @@ interface MapFiltersProps {
 
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
-  const [originalLocations] = useState<MapLocation[]>(locations);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
 
   // Get unique statuses from locations
   const availableStatuses = React.useMemo(() => {
     const statuses = new Set<string>();
-    originalLocations.forEach(location => {
+    locations.forEach(location => {
       if (location.status) {
         statuses.add(location.status);
       }
     });
     return Array.from(statuses);
-  }, [originalLocations]);
+  }, [locations]);
 
   // Get budget range from projects
-  const budgets = originalLocations.map(p => p.budget ?? 0);
+  const budgets = locations.map(p => p.budget ?? 0);
   const minBudget = Math.min(...budgets);
   const maxBudget = Math.max(...budgets);
-
-  const applyFilters = useCallback(() => {
-    const filtered = originalLocations.filter(project => {
-      // Region filter
-      if (regionFilter !== 'all' && project.region) {
-        const region = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
-        if (region) {
-          return isLocationInRegion(project.region, region);
-        }
-      }
-      return true;
-    });
-    onFilterChange(filtered);
-  }, [originalLocations, regionFilter, onFilterChange]);
 
   // Enhanced location matching using Mauritania utilities
   const matchesLocation = useCallback((itemLocation: string, selectedRegionCode: string): boolean => {
@@ -121,7 +106,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   // Get available regions based on current locations
   const availableRegions = useMemo(() => {
     const regionCodes = new Set<string>();
-    originalLocations.forEach(location => {
+    locations.forEach(location => {
       if (location.region) {
         const matchedRegion = findRegionByLocation(location.region);
         if (matchedRegion) {
@@ -130,22 +115,23 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
       }
     });
     return MAURITANIA_REGIONS.filter(region => regionCodes.has(region.code));
-  }, [originalLocations]);
+  }, [locations]);
 
-  // Apply filters and update the parent component
-  useEffect(() => {
-    let filtered = [...originalLocations];
-    
+  const filteredLocations = useMemo(() => {
+    let filtered = locations;
     if (statusFilter !== 'all') {
       filtered = filtered.filter(item => item.status === statusFilter);
     }
-    
     if (regionFilter !== 'all') {
       filtered = filtered.filter(item => matchesLocation(item.region || '', regionFilter));
     }
-    
-    onFilterChange(filtered);
-  }, [statusFilter, regionFilter, originalLocations, onFilterChange, matchesLocation]);
+    return filtered;
+  }, [locations, statusFilter, regionFilter, matchesLocation]);
+
+  // Apply filters and update the parent component
+  useEffect(() => {
+    onFilterChange(filteredLocations);
+  }, [filteredLocations, onFilterChange]);
 
   return (
     <Card className="mb-6 shadow-md">
@@ -154,7 +140,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           <Filter className="h-5 w-5 text-gray-600" />
           <h3 className="text-lg font-medium">Filtres de la carte</h3>
           <Badge variant="secondary" className="ml-auto">
-            {originalLocations.length} projet{originalLocations.length > 1 ? 's' : ''}
+            {locations.length} projet{locations.length > 1 ? 's' : ''}
           </Badge>
         </div>
         
@@ -280,14 +266,14 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="text-lg font-bold text-gray-900">
                 {(() => {
-                  let count = originalLocations.length;
+                  let count = locations.length;
                   
                   if (statusFilter !== 'all') {
-                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                    count = locations.filter(item => item.status === statusFilter).length;
                   }
                   
                   if (regionFilter !== 'all') {
-                    let filtered = originalLocations;
+                    let filtered = locations;
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
@@ -299,14 +285,14 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               </div>
               <div className="text-xs text-muted-foreground">
                 projet{(() => {
-                  let count = originalLocations.length;
+                  let count = locations.length;
                   
                   if (statusFilter !== 'all') {
-                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                    count = locations.filter(item => item.status === statusFilter).length;
                   }
                   
                   if (regionFilter !== 'all') {
-                    let filtered = originalLocations;
+                    let filtered = locations;
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
@@ -315,14 +301,14 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                   
                   return count > 1 ? 's' : '';
                 })()} affiché{(() => {
-                  let count = originalLocations.length;
+                  let count = locations.length;
                   
                   if (statusFilter !== 'all') {
-                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                    count = locations.filter(item => item.status === statusFilter).length;
                   }
                   
                   if (regionFilter !== 'all') {
-                    let filtered = originalLocations;
+                    let filtered = locations;
                     if (statusFilter !== 'all') {
                       filtered = filtered.filter(item => item.status === statusFilter);
                     }
@@ -335,7 +321,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               
               {/* Enhanced Debug Info */}
               <div className="mt-2 text-xs text-gray-500 border-t pt-2">
-                <div>Total disponible: {originalLocations.length}</div>
+                <div>Total disponible: {locations.length}</div>
                 {regionFilter !== 'all' && (() => {
                   const region = getWilayaByCode(regionFilter);
                   const stats = regionStats.find(s => s.code === regionFilter);
