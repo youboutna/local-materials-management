@@ -1,7 +1,5 @@
-import { isDgeerOrganization } from '@/config/referentials/reports/dgeer-missions.referential';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
-import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
