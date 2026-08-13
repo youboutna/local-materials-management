@@ -11,6 +11,7 @@ import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface WorkspaceCreateDialogProps {
@@ -46,8 +47,8 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
           contact_manager: formData.contactManager,
           contact_phone: formData.contactPhone,
           status: formData.status,
-          facilities: []
-        })
+          facilities: [],
+        } satisfies BtpTablesInsert<'workspaces'>)
         .select()
         .single();
 
