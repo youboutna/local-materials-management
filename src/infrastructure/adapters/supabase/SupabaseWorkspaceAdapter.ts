@@ -34,7 +34,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         id: workspace.workspaceId || crypto.randomUUID(),
         name: workspace.name,
         description: workspace.description,
-        location: typeof workspace.location === 'string' ? workspace.location : workspace.location.name,
+        location: workspace.location,
         capacity: workspace.capacity,
         status: workspace.status,
         contact_manager: workspace.contact?.manager,
@@ -117,7 +117,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.location !== undefined) {
-        updateData.location = typeof updates.location === 'string' ? updates.location : updates.location.name;
+        updateData.location = updates.location;
       }
       if (updates.capacity !== undefined) updateData.capacity = updates.capacity;
       if (updates.status !== undefined) updateData.status = updates.status;

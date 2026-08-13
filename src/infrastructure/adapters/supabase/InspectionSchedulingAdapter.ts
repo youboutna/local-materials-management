@@ -152,7 +152,7 @@ export class InspectionSchedulingAdapter implements IInspectionSchedulingReposit
     projects?: {
       title: string;
     } | null;
-    project_phases?: {
+    phases?: {
       phase_name: string;
     } | null;
   }>> {
@@ -162,7 +162,7 @@ export class InspectionSchedulingAdapter implements IInspectionSchedulingReposit
         .select(`
           *,
           projects (title),
-          project_phases (phase_name)
+          phases (phase_name)
         `)
         .eq('project_id', projectId)
         .order('date', { ascending: true });
