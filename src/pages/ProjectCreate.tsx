@@ -59,6 +59,7 @@ const ProjectCreate = () => {
   const [stepValidation, setStepValidation] = useState<Record<number, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liveWorkflowData, setLiveWorkflowData] = useState<ProjectWorkflowData | null>(null);
 
   // ============================================================
   // Workflow Steps Definition
@@ -202,7 +203,7 @@ const ProjectCreate = () => {
         className="max-w-7xl mx-auto"
       >
         {/* Indicateurs temps réel — source unique : ProjectMetricsOrchestrator */}
-        <WorkflowMetricsPreview formData={formData} mode="create" className="mb-6" />
+        <WorkflowMetricsPreview formData={liveWorkflowData} mode="create" className="mb-6" />
 
         {/* Workflow Progress Bar */}
         <div className="mb-6">
@@ -280,6 +281,7 @@ const ProjectCreate = () => {
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}
             isSubmitting={isSubmitting}
+            onWorkflowDataChange={setLiveWorkflowData}
           />
         </div>
 
