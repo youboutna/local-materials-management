@@ -392,7 +392,7 @@ export class EnhancedReportingService {
       onTimePerformance: 100,
       budgetVariance: 0,
       qualityScore: 0,
-      teamEfficiency: 90
+      teamEfficiency: 0
     };
   }
 
@@ -408,12 +408,14 @@ export class EnhancedReportingService {
     return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
   }
 
+  // Qualité issue des inspections réelles — 0 quand aucune inspection n'est
+  // exploitable (plus de constante 85 qui simulait une qualité inexistante).
   private static calculateQualityFromInspections(inspections: any[]): number {
-    if (!inspections || inspections.length === 0) return 85;
+    if (!inspections || inspections.length === 0) return 0;
     const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'approved');
     const approvedInspections = inspections.filter(i => i.status === 'approved');
     const rejectedInspections = inspections.filter(i => i.status === 'rejected');
-    if (completedInspections.length === 0) return 85;
+    if (completedInspections.length === 0) return 0;
     const approvalRate = approvedInspections.length / completedInspections.length;
     const rejectionPenalty = (rejectedInspections.length / completedInspections.length) * 30;
     return Math.max(50, Math.min(100, (approvalRate * 100) - rejectionPenalty));

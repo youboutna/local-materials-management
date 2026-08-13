@@ -121,7 +121,11 @@ export function ProjectPDFDocument({
   
   // Calculate labor costs
   const laborCost = employees.reduce((sum, employee) => {
-    const hoursWorked = employee.assignedTasks?.length * 8 || 40;
+    // Heures réelles si saisies ; sinon la ressource ne contribue pas au coût
+    // (avant : 8 h/tâche ou 40 h forfaitaires inventées).
+    const hoursWorked = Number(
+      (employee as any).hoursWorked ?? (employee as any).allocatedHours ?? 0,
+    );
     const hourlyRate = employee.costPerHour || 0;
     return sum + (hoursWorked * hourlyRate);
   }, 0);
