@@ -17,7 +17,10 @@ export interface MonitoringInsightInput {
   interventionZonesCount?: number;
   inspectionsCount?: number;
   documentsCount?: number;
+  /** @deprecated remplacé par `activeAlertsCount` (AlertService dérivé). */
   highRisksCount?: number;
+  /** Alertes actives (MetricAlertRulesService) — axe « Maîtrise des risques ». */
+  activeAlertsCount?: number;
 }
 
 export type MonitoringAppreciation = 'good' | 'warning' | 'critical' | 'unknown';
