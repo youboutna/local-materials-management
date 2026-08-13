@@ -180,7 +180,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
                 <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Budget" value={project.budget ? `${project.budget.toLocaleString('fr-FR')} MRU` : 'Non défini'} />
+                <PDFText label="Budget" value={project.budget ? `${project.budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : 'Non défini'} />
               </PDFCol>
             </PDFRow>
             {project.description && (
@@ -200,22 +200,22 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Budget Total"
-              value={financialData.totalBudget ? `${financialData.totalBudget.toLocaleString('fr-FR')} MRU` : 'Non défini'}
+              value={financialData.totalBudget ? `${financialData.totalBudget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : 'Non défini'}
               color="#10b981"
             />
             <PDFMetricCard
               title="Dépenses Total"
-              value={`${financialData.spentAmount.toLocaleString('fr-FR')} MRU`}
+              value={`${financialData.spentAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color="#f59e0b"
             />
             <PDFMetricCard
               title="Budget Restant"
-              value={`${financialData.remainingBudget.toLocaleString('fr-FR')} MRU`}
+              value={`${financialData.remainingBudget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
               title="Écart Budget"
-              value={`${financialData.costOverrun.toLocaleString('fr-FR')} MRU`}
+              value={`${financialData.costOverrun.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color={financialData.costOverrun > 0 ? "#ef4444" : "#10b981"}
             />
           </PDFRow>
@@ -228,11 +228,11 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Pourcentage Matériaux" 
-                  value={financialData.spentAmount > 0 ? `${((materialCost / financialData.spentAmount) * 100).toFixed(1)}%` : '0%'} 
+                  value={financialData.spentAmount > 0 ? `${((materialCost / financialData.spentAmount) * 100).toFixed(2)}%` : '0%'} 
                 />
                 <PDFText 
                   label="Pourcentage Main-d'œuvre" 
-                  value={financialData.spentAmount > 0 ? `${((laborCost / financialData.spentAmount) * 100).toFixed(1)}%` : '0%'} 
+                  value={financialData.spentAmount > 0 ? `${((laborCost / financialData.spentAmount) * 100).toFixed(2)}%` : '0%'} 
                 />
               </PDFCol>
             </PDFRow>
@@ -305,8 +305,8 @@ export function ProjectPDFDocument({
               material.name,
               quantity.toString(),
               'unité',
-              `${unitCost.toLocaleString('fr-FR')} MRU`,
-              `${totalCost.toLocaleString('fr-FR')} MRU`
+              `${unitCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`,
+              `${totalCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`
             ];
           })}
           columnWidths={['30%', '15%', '15%', '20%', '20%']}
@@ -322,9 +322,9 @@ export function ProjectPDFDocument({
             data={employees.map(employee => [
               employee.name,
               employee.skills?.join(', ') || 'Non spécifié',
-              employee.costPerHour ? `${employee.costPerHour.toLocaleString('fr-FR')} MRU/h` : '0 MRU/h',
+              employee.costPerHour ? `${employee.costPerHour.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU/h` : '0 MRU/h',
               '40h',
-              employee.costPerHour ? `${(employee.costPerHour * 40).toLocaleString('fr-FR')} MRU` : '0 MRU'
+              employee.costPerHour ? `${(employee.costPerHour * 40).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU'
             ])}
             columnWidths={['25%', '25%', '15%', '15%', '20%']}
           />
@@ -349,9 +349,9 @@ export function ProjectPDFDocument({
                 p.title || p.name || p.phase_name || '—',
                 `${p.actualProgress ?? p.progress ?? 0}%`,
                 statusMap[p.status] || p.status || '—',
-                p.budget ? `${p.budget.toLocaleString('fr-FR')} MRU` : '0 MRU',
-                p.actualCost ? `${p.actualCost.toLocaleString('fr-FR')} MRU` : '0 MRU',
-                ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR') + ' MRU'
+                p.budget ? `${p.budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU',
+                p.actualCost ? `${p.actualCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU',
+                ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MRU'
               ];
             })}
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
@@ -384,7 +384,7 @@ export function ProjectPDFDocument({
             data={safeReportData.bankGuarantees.map((bg: any) => [
               bg.guarantee_type || '',
               bg.bank_name || '',
-              bg.guarantee_amount ? `${bg.guarantee_amount.toLocaleString('fr-FR')} MRU` : '',
+              bg.guarantee_amount ? `${bg.guarantee_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '',
               bg.issue_date ? format(new Date(bg.issue_date), 'dd/MM/yyyy') : '',
               bg.expiry_date ? format(new Date(bg.expiry_date), 'dd/MM/yyyy') : '',
               bg.status || ''
@@ -402,7 +402,7 @@ export function ProjectPDFDocument({
             data={safeReportData.insurance.map((ins: any) => [
               ins.insurance_company || '',
               ins.coverage_type || '',
-              ins.coverage_amount ? `${ins.coverage_amount.toLocaleString('fr-FR')} MRU` : '',
+              ins.coverage_amount ? `${ins.coverage_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '',
               ins.valid_from ? format(new Date(ins.valid_from), 'dd/MM/yyyy') : '',
               ins.valid_until ? format(new Date(ins.valid_until), 'dd/MM/yyyy') : '',
               ins.status || ''
@@ -463,12 +463,12 @@ export function ProjectPDFDocument({
             />
             <PDFMetricCard
               title="Écart Budget"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(1)}%` : '0%'}
+              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(2)}%` : '0%'}
               color={evmMetrics.budgetAtCompletion > 0 && evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
             />
             <PDFMetricCard
               title="Progression"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(1)}%` : '0%'}
+              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(2)}%` : '0%'}
               color="#8b5cf6"
             />
           </PDFRow>
@@ -721,17 +721,17 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Valeur Planifiée (PV)"
-              value={`${evmMetrics.plannedValue.toLocaleString('fr-FR')} MRU`}
+              value={`${evmMetrics.plannedValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
               title="Valeur Acquise (EV)"
-              value={`${evmMetrics.earnedValue.toLocaleString('fr-FR')} MRU`}
+              value={`${evmMetrics.earnedValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color="#10b981"
             />
             <PDFMetricCard
               title="Coût Réel (AC)"
-              value={`${evmMetrics.actualCost.toLocaleString('fr-FR')} MRU`}
+              value={`${evmMetrics.actualCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
               color="#ef4444"
             />
             <PDFMetricCard
@@ -743,14 +743,14 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Écart de délai (SV)" value={`${evmMetrics.scheduleVariance.toLocaleString('fr-FR')} MRU`} />
-                <PDFText label="Écart de coût (CV)" value={`${evmMetrics.costVariance.toLocaleString('fr-FR')} MRU`} />
+                <PDFText label="Écart de délai (SV)" value={`${evmMetrics.scheduleVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
+                <PDFText label="Écart de coût (CV)" value={`${evmMetrics.costVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
                 <PDFText label="Indice de performance coût (CPI)" value={evmMetrics.costPerformanceIndex.toFixed(2)} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Budget à l'achèvement (BAC)" value={`${evmMetrics.budgetAtCompletion.toLocaleString('fr-FR')} MRU`} />
-                <PDFText label="Estimation à l'achèvement (EAC)" value={`${evmMetrics.estimateAtCompletion.toLocaleString('fr-FR')} MRU`} />
-                <PDFText label="Estimation pour terminer (ETC)" value={`${evmMetrics.estimateToComplete.toLocaleString('fr-FR')} MRU`} />
+                <PDFText label="Budget à l'achèvement (BAC)" value={`${evmMetrics.budgetAtCompletion.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
+                <PDFText label="Estimation à l'achèvement (EAC)" value={`${evmMetrics.estimateAtCompletion.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
+                <PDFText label="Estimation pour terminer (ETC)" value={`${evmMetrics.estimateToComplete.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -765,7 +765,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Durée totale estimée" 
-                  value={`${pertAnalysis.totalExpectedDuration?.toFixed(1) || '0.0'} jours`} 
+                  value={`${pertAnalysis.totalExpectedDuration?.toFixed(2) || '0.0'} jours`} 
                 />
                 <PDFText 
                   label="Écart-type total" 
@@ -782,7 +782,7 @@ export function ProjectPDFDocument({
                 activity.optimistic?.toString() || '0',
                 activity.mostLikely?.toString() || '0',
                 activity.pessimistic?.toString() || '0',
-                activity.pertEstimate?.toFixed(1) || '0.0',
+                activity.pertEstimate?.toFixed(2) || '0.0',
                 activity.standardDeviation?.toFixed(2) || '0.00'
               ])}
               columnWidths={['25%', '12%', '12%', '12%', '15%', '12%']}
@@ -822,7 +822,7 @@ export function ProjectPDFDocument({
             data={safeReportData.paymentBlocks.map((b: any) => [
               b.reference || b.id || '—',
               b.reason || b.cause || '—',
-              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR')} ${(project as any).currency || 'MRU'}` : '—',
+              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${(project as any).currency || 'MRU'}` : '—',
               b.status || 'bloqué',
               b.createdAt ? format(new Date(b.createdAt), 'dd/MM/yyyy') : '—',
             ])}
