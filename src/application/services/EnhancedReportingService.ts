@@ -391,7 +391,7 @@ export class EnhancedReportingService {
       varianceAtCompletion: 0,
       onTimePerformance: 100,
       budgetVariance: 0,
-      qualityScore: 85,
+      qualityScore: 0,
       teamEfficiency: 90
     };
   }
