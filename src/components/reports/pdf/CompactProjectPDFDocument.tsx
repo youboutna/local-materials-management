@@ -5,6 +5,8 @@ import {
   type ReportProfile,
   type ReportSectionKey,
 } from '@/config/referentials/reports/report-profiles.referential';
+import { formatNumber2 } from '@/utils/reportNumbers';
+
 
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
