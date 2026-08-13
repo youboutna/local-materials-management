@@ -858,11 +858,11 @@ export function ProjectPDFDocument({
             <PDFTable
               headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
               data={[
-                ['Démarrage du Projet', '0%', unifiedProgress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 0 ? '✓' : '⏳'],
-                ['25% d\'Avancement', '25%', unifiedProgress >= 25 ? 'Terminé' : unifiedProgress >= 15 ? 'En cours' : 'En attente', '', unifiedProgress >= 25 ? '✓' : unifiedProgress >= 15 ? '⏳' : '⌛'],
-                ['50% d\'Avancement', '50%', unifiedProgress >= 50 ? 'Terminé' : unifiedProgress >= 40 ? 'En cours' : 'En attente', '', unifiedProgress >= 50 ? '✓' : unifiedProgress >= 40 ? '⏳' : '⌛'],
-                ['75% d\'Avancement', '75%', unifiedProgress >= 75 ? 'Terminé' : unifiedProgress >= 65 ? 'En cours' : 'En attente', '', unifiedProgress >= 75 ? '✓' : unifiedProgress >= 65 ? '⏳' : '⌛'],
-                ['Finalisation', '100%', unifiedProgress >= 100 ? 'Terminé' : unifiedProgress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 100 ? '✓' : unifiedProgress >= 90 ? '⏳' : '⌛']
+                ['Démarrage du Projet', '0%', unifiedProgress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 0 ? 'OK' : 'En cours'],
+                ['25% d\'Avancement', '25%', unifiedProgress >= 25 ? 'Terminé' : unifiedProgress >= 15 ? 'En cours' : 'En attente', '', unifiedProgress >= 25 ? 'OK' : unifiedProgress >= 15 ? 'En cours' : 'A venir'],
+                ['50% d\'Avancement', '50%', unifiedProgress >= 50 ? 'Terminé' : unifiedProgress >= 40 ? 'En cours' : 'En attente', '', unifiedProgress >= 50 ? 'OK' : unifiedProgress >= 40 ? 'En cours' : 'A venir'],
+                ['75% d\'Avancement', '75%', unifiedProgress >= 75 ? 'Terminé' : unifiedProgress >= 65 ? 'En cours' : 'En attente', '', unifiedProgress >= 75 ? 'OK' : unifiedProgress >= 65 ? 'En cours' : 'A venir'],
+                ['Finalisation', '100%', unifiedProgress >= 100 ? 'Terminé' : unifiedProgress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 100 ? 'OK' : unifiedProgress >= 90 ? 'En cours' : 'A venir']
               ]}
               columnWidths={['25%', '15%', '20%', '20%', '20%']}
             />
