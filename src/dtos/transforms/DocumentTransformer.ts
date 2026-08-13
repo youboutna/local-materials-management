@@ -481,9 +481,10 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   /**
    * Batch: Domain Entities → DTOs
    */
-  static toDTOList(entities: Document[]): DocumentDTO[] {
-    return entities.map(entity => this.toDTO(entity));
+  static toDTOList(entities: Array<Document | Record<string, any>> | null | undefined): DocumentDTO[] {
+    return (entities ?? []).filter(Boolean).map(entity => this.toDTO(entity));
   }
+
 
   /**
    * Batch: Domain Entities → Summary DTOs
