@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ReportingService, getReportingService} from '@/application/services/ReportingService';
+import { getOrganizationService } from '@/application/services/OrganizationService';
+import type { OrganizationDTO } from '@/dtos/entities/OrganizationDTO';
 import { ProjectAnalyticsService } from '@/application/services/ProjectAnalyticsService';
 import { ProjectDetailDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
-import { Download, FileText, Loader2, MapPin } from 'lucide-react';
+import { Building2, Download, FileText, Loader2, MapPin } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/config/referentials/reports/report-profiles.referential';
@@ -61,6 +63,10 @@ export function CompactProjectReportGenerator({
   const [loading, setLoading] = useState(false);
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
   const [profile, setProfile] = useState<ReportProfile>('summary');
+  // Organisation propriétaire réelle du projet (en-tête du rapport)
+  const [ownerOrganization, setOwnerOrganization] = useState<OrganizationDTO | null>(null);
+  
+
   
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
@@ -77,6 +83,43 @@ export function CompactProjectReportGenerator({
 
   // Create service instance
   const reportingService = useMemo(() => getReportingService(), []);
+  const organizationService = useMemo(() => getOrganizationService(), []);
+
+  // Organisation propriétaire : celle du projet, sinon l'organisation par défaut.
+  useEffect(() => {
+    let cancelled = false;
+    const loadOwner = async () => {
+      try {
+        const organizationId = (projectList[0] as any)?.organizationId as string | undefined;
+        const owner = organizationId
+          ? await organizationService.get(organizationId).catch(() => null)
+          : null;
+        const resolved = owner ?? (await organizationService.getDefault().catch(() => null));
+        if (!cancelled) setOwnerOrganization(resolved);
+      } catch (error) {
+        console.warn('[CompactProjectReportGenerator] owner organization unavailable', error);
+        if (!cancelled) setOwnerOrganization(null);
+      }
+    };
+    loadOwner();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationService, projectList]);
+
+  // Bloc "société" du PDF construit sur les données réelles de l'organisation.
+  const companyInfo = useMemo(() => {
+    if (!ownerOrganization) return undefined;
+    return {
+      name: ownerOrganization.name,
+      address: ownerOrganization.address || '',
+      phone: ownerOrganization.phone || '',
+      email: ownerOrganization.email || '',
+      logo: ownerOrganization.logoUrl || undefined,
+    };
+  }, [ownerOrganization]);
+
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -258,6 +301,7 @@ export function CompactProjectReportGenerator({
             evmMetrics={singleEvmMetrics as any}
             pertAnalysis={singlePertAnalysis as any}
             reportTitle={reportTitle}
+            company={companyInfo}
           />
         ).toBlob();
         
@@ -268,17 +312,14 @@ export function CompactProjectReportGenerator({
           description: "Rapport généré avec succès",
         });
       } else {
-        const projectsData = Array.from(enrichedDataMap.entries()).map(([id, data]) => ({
-          id,
-          data,
-          evmMetrics: evmMetricsMap.get(id),
-          pertAnalysis: pertAnalysisMap.get(id)
-        }));
-        
         const blob = await pdf(
           <CompactProjectPDFDocument 
-            projects={projectsData as any}
+            projects={projectList as any}
+            enrichedDataMap={enrichedDataMap}
+            evmMetricsMap={evmMetricsMap as any}
+            pertAnalysisMap={pertAnalysisMap as any}
             reportTitle={reportTitle}
+            company={companyInfo}
           />
         ).toBlob();
         
@@ -354,6 +395,10 @@ export function CompactProjectReportGenerator({
             <Badge variant="outline">
               {isSingleProject ? '1 projet sélectionné' : `${projectList.length} projets sélectionnés`}
             </Badge>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              {ownerOrganization?.name || 'Organisation propriétaire non définie'}
+            </div>
             {isSingleProject && project && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />

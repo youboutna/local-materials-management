@@ -1,8 +1,10 @@
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
+import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ProjectMiniMap } from './ProjectMiniMap';
 
 // Local types for PDF rendering
 type EVMMetrics = Record<string, any>;
@@ -605,60 +607,18 @@ export function CompactProjectPDFDocument({
     return 0;
   };
 
-  // Helper function to render street map
-  const renderStreetMap = (project: ProjectData) => {
-    const hasCoordinates = project.coordinates?.latitude && project.coordinates?.longitude;
-    
-    // Generate a pseudo-random but consistent position based on project id
-    const projectHash = project.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const pinX = 30 + (projectHash % 40);
-    const pinY = 20 + ((projectHash * 7) % 30);
-    
-    return (
-      <View style={styles.mapContainer}>
-        <View style={styles.mapContent}>
-          {/* Street grid */}
-          <View style={[styles.majorStreetHorizontal, { top: 15, left: 0, width: '100%' }]} />
-          <View style={[styles.majorStreetHorizontal, { top: 45, left: 0, width: '100%' }]} />
-          <View style={[styles.majorStreetVertical, { left: 25, top: 0, height: '100%' }]} />
-          <View style={[styles.majorStreetVertical, { left: 75, top: 0, height: '100%' }]} />
-          
-          {/* Minor streets */}
-          <View style={[styles.streetHorizontal, { top: 30, left: 0, width: '100%' }]} />
-          <View style={[styles.streetVertical, { left: 50, top: 0, height: '100%' }]} />
-          
-          {/* Buildings */}
-          <View style={[styles.building, { left: 5, top: 5, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 80, top: 5, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 5, top: 35, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 80, top: 35, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 30, top: 20, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 55, top: 20, width: 15, height: 10 }]} />
-          
-          {/* Park */}
-          <View style={[styles.park, { left: 30, top: 35, width: 40, height: 15 }]} />
-          
-          {/* Water feature */}
-          <View style={[styles.water, { left: 70, top: 50, width: 10, height: 5 }]} />
-          
-          {/* Project location pin */}
-          <View style={[styles.mapPin, { left: pinX, top: pinY }]} />
-          
-          {/* Map label */}
-          <View style={{ position: 'absolute', bottom: 2, left: 0, right: 0, alignItems: 'center' }}>
-            <Text style={styles.mapLabel}>
-              {project.location ? (project.location.length > 15 ? project.location.substring(0, 15) + '...' : project.location) : 'Localisation'}
-            </Text>
-          {hasCoordinates && project.coordinates && (
-              <Text style={styles.mapCoordinates}>
-                {project.coordinates.latitude?.toFixed(2)}, {project.coordinates.longitude?.toFixed(2)}
-              </Text>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  };
+  // Miniature SIG réelle (coordonnées + zones d'intervention persistées)
+  const renderStreetMap = (project: ProjectData) => (
+    <ProjectMiniMap
+      project={{
+        location: project.location,
+        latitude: (project as any).latitude,
+        longitude: (project as any).longitude,
+        coordinates: project.coordinates,
+        interventionZones: (project as any).interventionZones,
+      }}
+    />
+  );
 
   // Company Header Component
   const CompanyHeader = () => (
@@ -690,6 +650,25 @@ export function CompactProjectPDFDocument({
         const phases = enrichedData?.plannedPhases || [];
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
+
+        // Lecture directionnelle (missions DGEER) dérivée des données réelles.
+        const missionInsights = buildDgeerMissionInsights({
+          title: project.title,
+          description: (project as any).description,
+          projectType: (project as any).projectType || (project as any).project_type,
+          sector: (project as any).sector,
+          location: project.location,
+          progress: project.progress ?? 0,
+          budget: project.budget ?? 0,
+          actualCost: Number(evmMetrics?.actualCost ?? 0),
+          interventionZonesCount: Array.isArray((project as any).interventionZones)
+            ? (project as any).interventionZones.length
+            : 0,
+          inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
+            ? (enrichedData as any).inspections.length
+            : 0,
+          phasesCount: phases.length,
+        });
 
         return (
           <Page key={project.id} size="A4" style={styles.page}>
@@ -743,9 +722,38 @@ export function CompactProjectPDFDocument({
                 <View style={[styles.progressFill, { width: `${project.progress || 0}%` }]} />
               </View>
               <Text style={styles.progressText}>
-                Progression: {project.progress || 0}% | Équipe: {Array.isArray(project.resources) ? project.resources.filter((r: any) => r.type === 'human').length : 0} personnes
+                Progression: {formatDecimal(project.progress || 0)}% | Équipe: {Array.isArray(project.resources) ? project.resources.filter((r: any) => r.type === 'human').length : 0} personnes
               </Text>
             </View>
+
+            {/* Lecture directionnelle DGEER */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Contribution aux missions DGEER</Text>
+              <View style={styles.table}>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderCell, { width: '34%' }]}>Mission</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '18%' }]}>Rattachement</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '32%' }]}>Indicateur</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '16%' }]}>Valeur</Text>
+                </View>
+                {missionInsights.map((m) => (
+                  <View key={m.code} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, { width: '34%' }]}>{m.label}</Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        { width: '18%', color: m.relevant ? colors.success : colors.muted },
+                      ]}
+                    >
+                      {m.relevant ? 'Direct' : 'Indirect'}
+                    </Text>
+                    <Text style={[styles.tableCell, { width: '32%' }]}>{m.indicatorLabel}</Text>
+                    <Text style={[styles.tableCell, { width: '16%' }]}>{m.indicator}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
 
             {/* Particularity */}
             {project.description && (
@@ -799,7 +807,7 @@ export function CompactProjectPDFDocument({
                           {formatBudget(phase.actualCost || 0)}
                         </Text>
                         <Text style={[styles.tableCell, { width: '15%' }]}>
-                          {phase.budget ? ((phase.actualCost || 0) / phase.budget * 100).toFixed(0) : 0}%
+                          {phase.budget ? formatDecimal(((phase.actualCost || 0) / phase.budget) * 100) : '0.00'}%
                         </Text>
                         <Text style={[styles.tableCell, { width: '25%' }]}>
                           {Array.isArray(project.contacts) ? (project.contacts.find((c: any) => c.role === 'contractor')?.name?.substring(0, 15) || project.contacts[0]?.name?.substring(0, 15) || '-') : '-'}
