@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Project Stakeholder Adapter
  * Implements IProjectStakeholderRepository using Supabase

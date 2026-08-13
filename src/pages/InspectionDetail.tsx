@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -80,15 +79,26 @@ const InspectionDetail = () => {
   const projectTitle = inspection.projectTitle || 'Projet non spécifié';
 
   // Transform to snake_case for legacy components
-  const inspectionData = {
+  const executorInspectionData = {
     id: inspection.id,
-    project_id: inspection.projectId,
-    phase_id: inspection.phaseId,
+    project_id: inspection.projectId ?? undefined,
+    phase_id: inspection.phaseId ?? undefined,
     date: inspection.date,
     inspector: inspection.inspector,
     status: inspection.status,
-    progress_at_inspection: inspection.progressAtInspection,
-    comments: inspection.comments,
+    progress_at_inspection: inspection.progressAtInspection ?? 0,
+    comments: inspection.comments ?? '',
+  };
+
+  const pvInspectionData = {
+    id: inspection.id,
+    project_id: inspection.projectId ?? '',
+    phase_id: inspection.phaseId ?? undefined,
+    date: inspection.date,
+    inspector: inspection.inspector,
+    status: inspection.status,
+    progress_at_inspection: inspection.progressAtInspection ?? 0,
+    comments: inspection.comments ?? '',
   };
 
   return (
@@ -227,7 +237,7 @@ const InspectionDetail = () => {
             {canExecute && (
               <TabsContent value="execution">
                 <FieldInspectionExecutor
-                  inspection={inspectionData}
+                  inspection={executorInspectionData}
                   projectTitle={projectTitle}
                   onComplete={() => {
                     refetch();
@@ -240,7 +250,7 @@ const InspectionDetail = () => {
 
             <TabsContent value="pv">
               <InspectionPVGenerator
-                inspection={inspectionData}
+                inspection={pvInspectionData}
                 projectTitle={projectTitle}
                 onGenerated={(pv, url) => {
                   console.log('PV generated:', pv.pv_number);

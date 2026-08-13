@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface PaymentDocument {
   id: string;
@@ -88,8 +89,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
     queryKey: ['payment-documents', projectId, phaseId],
     queryFn: async () => {
       // Fetch documents from recent inspections
-      const { data: inspections, error } = await supabase
-        .from('inspections')
+      const { data: inspections, error } = await btpClient.from('inspections')
         .select('id, date, status, documents, progress_at_inspection')
         .eq('project_id', projectId)
         .eq('status', 'approved')
@@ -120,8 +120,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
       }
 
       // Also fetch from documents table
-      const { data: projectDocs } = await supabase
-        .from('documents')
+      const { data: projectDocs } = await btpClient.from('documents')
         .select('id, title, document_type, file_url, created_at, status')
         .eq('project_id', projectId)
         .in('document_type', ['inspection_report', 'project_report'])
@@ -194,8 +193,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
 
     try {
       // Create payment request
-      const { error } = await supabase
-        .from('payments')
+      const { error } = await btpClient.from('payments')
         .insert({
           project_id: projectId,
           phase_id: phaseId,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Quantity Takeoff Adapter
  * Implements IQuantityTakeoffRepository using Supabase

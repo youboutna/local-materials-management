@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -77,8 +78,7 @@ export function ConsultantValidationPanel() {
     try {
       setLoading(true);
       // Load invoices pending consultant validation
-      const { data, error } = await supabase
-        .from('progress_invoices')
+      const { data, error } = await btpClient.from('progress_invoices')
         .select('*')
         .eq('status', 'submitted')
         .order('created_at', { ascending: false });

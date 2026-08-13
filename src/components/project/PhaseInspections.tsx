@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -54,8 +55,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     queryKey: ['phase-inspections', phaseId],
     queryFn: async () => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('inspections')
+      const { data, error } = await btpClient.from('inspections')
         .select('*')
         .eq('phase_id', phaseId)
         .order('date', { ascending: false });
@@ -90,8 +90,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       }
 
       const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('inspections')
+      const { data, error } = await btpClient.from('inspections')
         .insert({
           project_id: projectId,
           phase_id: phaseId,
@@ -124,8 +123,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const deleteInspectionMutation = useMutation({
     mutationFn: async (id: string) => {
       const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase
-        .from('inspections')
+      const { error } = await btpClient.from('inspections')
         .delete()
         .eq('id', id);
       

@@ -11,6 +11,7 @@ type CreateDocumentRequestDto = CreateDocumentDTO;
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface PhaseWorkflowContainerProps {
   projectId: string;
@@ -144,8 +145,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
                url: publicUrl,
              } as any);
 
-            const { data: projectData } = await supabase
-              .from('projects')
+            const { data: projectData } = await btpClient.from('projects')
               .select('created_by')
               .eq('id', projectId)
               .single();

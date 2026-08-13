@@ -10,12 +10,12 @@ interface ProjectMaterialEntity {
 }
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export class MaterialRepository {
   static async getAllMaterials(): Promise<MaterialEntity[]> {
     try {
-      const { data, error } = await supabase
-        .from('materials')
+      const { data, error } = await btpClient.from('materials')
         .select('*')
         .order('name');
 
@@ -29,8 +29,7 @@ export class MaterialRepository {
 
   static async getProjectMaterials(projectId: string): Promise<(ProjectMaterialEntity & { materials: MaterialEntity })[]> {
     try {
-      const { data, error } = await supabase
-        .from('project_materials')
+      const { data, error } = await btpClient.from('project_materials')
         .select('*, materials(*)')
         .eq('project_id', projectId);
 
@@ -48,8 +47,7 @@ export class MaterialRepository {
     quantity: number
   ): Promise<ProjectMaterialEntity> {
     try {
-      const { data, error } = await supabase
-        .from('project_materials')
+      const { data, error } = await btpClient.from('project_materials')
         .insert({
           project_id: projectId,
           material_id: materialId,
@@ -73,8 +71,7 @@ export class MaterialRepository {
     updates: Partial<ProjectMaterialEntity>
   ): Promise<ProjectMaterialEntity> {
     try {
-      const { data, error } = await supabase
-        .from('project_materials')
+      const { data, error } = await btpClient.from('project_materials')
         .update(updates)
         .eq('id', id)
         .select()
@@ -92,8 +89,7 @@ export class MaterialRepository {
 
   static async removeMaterialFromProject(id: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('project_materials')
+      const { error } = await btpClient.from('project_materials')
         .delete()
         .eq('id', id);
 

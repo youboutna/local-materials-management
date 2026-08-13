@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Phase Adapter
  * Implements IPhaseRepository using Supabase

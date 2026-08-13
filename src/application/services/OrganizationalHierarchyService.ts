@@ -6,7 +6,7 @@
  * a richer org-chart repository can be wired later without changing callers.
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export type HierarchyLevel = 'team' | 'supervisor' | 'manager' | 'director';
 
@@ -57,8 +57,7 @@ export class OrganizationalHierarchyService {
     _projectId: string,
     criteria: FindRecipientsCriteria,
   ): Promise<HierarchyRecipient[]> {
-    const query = supabase
-      .from('employees')
+    const query = btpClient.from('employees')
       .select('id, full_name, email, phone, position, department')
       .eq('is_active', true);
 
@@ -92,8 +91,7 @@ export class OrganizationalHierarchyService {
 
   static async resolveByIds(ids: string[]): Promise<HierarchyRecipient[]> {
     if (ids.length === 0) return [];
-    const { data, error } = await supabase
-      .from('employees')
+    const { data, error } = await btpClient.from('employees')
       .select('id, full_name, email, phone, position')
       .in('id', ids);
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Supabase Adapter for Payment Repository
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
@@ -62,7 +61,7 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
       .from('payments')
       .insert({
         id: payment.id,
-        project_id: payment.projectId,
+        project_id: payment.project?.id ?? null,
         amount: payment.amount,
         payment_date: payment.paymentDate,
         payment_method: payment.paymentMethod,

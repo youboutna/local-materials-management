@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -142,8 +143,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
         try {
           const { supabase } = await import('@/integrations/supabase/client');
           
-          const { data, error } = await supabase
-            .from('tenders')
+          const { data, error } = await btpClient.from('tenders')
             .insert(valid)
             .select();
           

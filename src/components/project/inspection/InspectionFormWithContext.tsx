@@ -30,6 +30,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [
@@ -132,8 +133,7 @@ export function InspectionFormWithContext({
         fullComments = `${fullComments}\n\n--- Points de contrôle validés ---\n${checklistSummary}`;
       }
 
-      const { data: inspection, error } = await supabase
-        .from('inspections')
+      const { data: inspection, error } = await btpClient.from('inspections')
         .insert({
           project_id: projectId,
           date: format(date, 'yyyy-MM-dd'),

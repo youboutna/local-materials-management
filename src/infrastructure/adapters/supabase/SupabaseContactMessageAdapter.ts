@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { ContactMessage } from '@/domain/entities/ContactMessage';
 import { BlockedSender } from '@/domain/entities/BlockedSender';
 import {
@@ -18,8 +19,7 @@ import {
 export class SupabaseContactMessageAdapter implements IContactMessageRepository {
   
   async create(data: CreateContactMessageData): Promise<ContactMessage> {
-    const { data: result, error } = await supabase
-      .from('contact_messages')
+    const { data: result, error } = await btpClient.from('contact_messages')
       .insert({
         sender_name: data.senderName,
         sender_email: data.senderEmail,
@@ -40,8 +40,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async findById(id: string): Promise<ContactMessage | null> {
-    const { data, error } = await supabase
-      .from('contact_messages')
+    const { data, error } = await btpClient.from('contact_messages')
       .select('*')
       .eq('id', id)
       .single();
@@ -55,7 +54,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async findAll(filters: ContactMessageFilters = {}): Promise<ContactMessage[]> {
-    let query = supabase.from('contact_messages').select('*');
+    let query = btpClient.from('contact_messages').select('*');
 
     // Apply filters
     if (filters.isRead !== undefined) {
@@ -92,8 +91,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async findRecent(limit: number = 10): Promise<ContactMessage[]> {
-    const { data, error } = await supabase
-      .from('contact_messages')
+    const { data, error } = await btpClient.from('contact_messages')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -115,8 +113,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
     if (data.isArchived !== undefined) updateData.is_archived = data.isArchived;
     if (data.metadata !== undefined) updateData.metadata = data.metadata;
 
-    const { data: result, error } = await supabase
-      .from('contact_messages')
+    const { data: result, error } = await btpClient.from('contact_messages')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -130,8 +127,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('contact_messages')
+    const { error } = await btpClient.from('contact_messages')
       .delete()
       .eq('id', id);
 
@@ -149,14 +145,14 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
       todayResult,
       weekResult
     ] = await Promise.all([
-      supabase.from('contact_messages').select('id', { count: 'exact', head: true }),
-      supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_read', false),
-      supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_spam', true),
-      supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_archived', true),
-      supabase.from('contact_messages')
+      btpClient.from('contact_messages').select('id', { count: 'exact', head: true }),
+      btpClient.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_read', false),
+      btpClient.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_spam', true),
+      btpClient.from('contact_messages').select('id', { count: 'exact', head: true }).eq('is_archived', true),
+      btpClient.from('contact_messages')
         .select('id', { count: 'exact', head: true })
         .gte('created_at', new Date().toDateString()),
-      supabase.from('contact_messages')
+      btpClient.from('contact_messages')
         .select('id', { count: 'exact', head: true })
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
     ]);
@@ -172,8 +168,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async markMultipleAsRead(ids: string[]): Promise<void> {
-    const { error } = await supabase
-      .from('contact_messages')
+    const { error } = await btpClient.from('contact_messages')
       .update({ is_read: true, updated_at: new Date().toISOString() })
       .in('id', ids);
 
@@ -183,8 +178,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async markMultipleAsSpam(ids: string[]): Promise<void> {
-    const { error } = await supabase
-      .from('contact_messages')
+    const { error } = await btpClient.from('contact_messages')
       .update({ is_spam: true, updated_at: new Date().toISOString() })
       .in('id', ids);
 
@@ -194,8 +188,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async archiveMultiple(ids: string[]): Promise<void> {
-    const { error } = await supabase
-      .from('contact_messages')
+    const { error } = await btpClient.from('contact_messages')
       .update({ is_archived: true, updated_at: new Date().toISOString() })
       .in('id', ids);
 
@@ -205,8 +198,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async deleteMultiple(ids: string[]): Promise<void> {
-    const { error } = await supabase
-      .from('contact_messages')
+    const { error } = await btpClient.from('contact_messages')
       .delete()
       .in('id', ids);
 
@@ -217,8 +209,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
 
   // Blocked Senders Management
   async createBlockedSender(data: CreateBlockedSenderData): Promise<BlockedSender> {
-    const { data: result, error } = await supabase
-      .from('blocked_senders')
+    const { data: result, error } = await btpClient.from('blocked_senders')
       .insert({
         email: data.email,
         reason: data.reason,
@@ -235,8 +226,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async findBlockedSenderByEmail(email: string): Promise<BlockedSender | null> {
-    const { data, error } = await supabase
-      .from('blocked_senders')
+    const { data, error } = await btpClient.from('blocked_senders')
       .select('*')
       .eq('email', email)
       .eq('is_active', true)
@@ -251,8 +241,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async findAllBlockedSenders(): Promise<BlockedSender[]> {
-    const { data, error } = await supabase
-      .from('blocked_senders')
+    const { data, error } = await btpClient.from('blocked_senders')
       .select('*')
       .order('blocked_at', { ascending: false });
 
@@ -268,8 +257,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
     if (data.isActive !== undefined) updateData.is_active = data.isActive;
     if (data.reason !== undefined) updateData.reason = data.reason;
 
-    const { data: result, error } = await supabase
-      .from('blocked_senders')
+    const { data: result, error } = await btpClient.from('blocked_senders')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -283,8 +271,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async deleteBlockedSender(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('blocked_senders')
+    const { error } = await btpClient.from('blocked_senders')
       .delete()
       .eq('id', id);
 
@@ -294,8 +281,7 @@ export class SupabaseContactMessageAdapter implements IContactMessageRepository 
   }
 
   async isEmailBlocked(email: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('blocked_senders')
+    const { data, error } = await btpClient.from('blocked_senders')
       .select('id')
       .eq('email', email)
       .eq('is_active', true)

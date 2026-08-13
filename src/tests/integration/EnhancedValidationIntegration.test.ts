@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Enhanced Validation Integration Test
  * Tests the complete integration of enhanced risk, compliance, and validation management

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Supabase Compliance Adapter
  * Implements the compliance repository interface using Supabase
@@ -149,7 +148,7 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
   }
 
   async saveDocument(document: ComplianceDocument): Promise<ComplianceDocument> {
-    const dbRow = ComplianceTransformer.documentToSupabase(document);
+    const dbRow = this.documentToRow(document);
     const { data, error } = await supabase
       .from('compliance_documents')
       .insert(dbRow)
@@ -170,8 +169,20 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
       throw new Error(`Compliance document with id ${id} not found`);
     }
 
-    const updatedDoc = existingDoc.update(document);
-    const dbRow = ComplianceTransformer.documentToSupabase(updatedDoc);
+    const updatedDoc = new ComplianceDocument(
+      existingDoc.id,
+      document.complianceItemId ?? existingDoc.complianceItemId,
+      document.documentId ?? existingDoc.documentId,
+      document.category ?? existingDoc.category,
+      document.subcategory ?? existingDoc.subcategory,
+      document.isRequired ?? existingDoc.isRequired,
+      document.uploadedBy ?? existingDoc.uploadedBy,
+      document.fileUrl ?? existingDoc.fileUrl,
+      document.uploadedAt ?? existingDoc.uploadedAt,
+      existingDoc.createdAt,
+      new Date()
+    );
+    const dbRow = this.documentToRow(updatedDoc);
     const { data, error } = await supabase
       .from('compliance_documents')
       .update(dbRow)
@@ -185,6 +196,21 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
     }
 
     return ComplianceTransformer.documentFromSupabase(data);
+  }
+
+  private documentToRow(document: ComplianceDocument) {
+    return {
+      id: document.id || undefined,
+      compliance_item_id: document.complianceItemId,
+      document_id: document.documentId,
+      category: document.category,
+      subcategory: document.subcategory,
+      is_required: document.isRequired,
+      uploaded_by: document.uploadedBy,
+      file_url: document.fileUrl,
+      uploaded_at: document.uploadedAt.toISOString(),
+      created_at: document.createdAt.toISOString()
+    };
   }
 
   async deleteDocument(id: string): Promise<void> {
@@ -231,7 +257,7 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
   }
 
   async saveNote(note: ComplianceNote): Promise<ComplianceNote> {
-    const dbRow = ComplianceTransformer.noteToSupabase(note);
+    const dbRow = this.noteToRow(note);
     const { data, error } = await supabase
       .from('compliance_notes')
       .insert(dbRow)
@@ -252,8 +278,15 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
       throw new Error(`Compliance note with id ${id} not found`);
     }
 
-    const updatedNote = existingNote.update(note);
-    const dbRow = ComplianceTransformer.noteToSupabase(updatedNote);
+    const updatedNote = new ComplianceNote(
+      existingNote.id,
+      note.complianceItemId ?? existingNote.complianceItemId,
+      note.note ?? existingNote.note,
+      note.createdBy ?? existingNote.createdBy,
+      existingNote.createdAt,
+      new Date()
+    );
+    const dbRow = this.noteToRow(updatedNote);
     const { data, error } = await supabase
       .from('compliance_notes')
       .update(dbRow)
@@ -267,6 +300,16 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
     }
 
     return ComplianceTransformer.noteFromSupabase(data);
+  }
+
+  private noteToRow(note: ComplianceNote) {
+    return {
+      id: note.id || undefined,
+      compliance_item_id: note.complianceItemId,
+      note: note.note,
+      created_by: note.createdBy,
+      created_at: note.createdAt.toISOString()
+    };
   }
 
   async deleteNote(id: string): Promise<void> {
@@ -298,7 +341,15 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
 
   // Audit operations
   async saveAuditEntry(auditEntry: ComplianceAuditEntry): Promise<ComplianceAuditEntry> {
-    const dbRow = ComplianceTransformer.auditToSupabase(auditEntry);
+    const dbRow = {
+      id: auditEntry.id || undefined,
+      compliance_item_id: auditEntry.complianceItemId,
+      field_name: auditEntry.fieldName,
+      old_value: auditEntry.oldValue,
+      new_value: auditEntry.newValue,
+      changed_by: auditEntry.changedBy,
+      changed_at: auditEntry.changedAt.toISOString()
+    };
     const { data, error } = await supabase
       .from('compliance_audit_log')
       .insert(dbRow)
@@ -338,7 +389,7 @@ export class SupabaseComplianceAdapter implements IComplianceRepository {
     criticalItems: number;
     overdueItems: number;
   }> {
-    const items = await this.findByProject({ projectId });
+    const items = await this.findByProject(projectId);
     
     const totalItems = items.length;
     const approvedItems = items.filter(item => item.status === 'approved').length;

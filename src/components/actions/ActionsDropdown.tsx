@@ -6,6 +6,7 @@ import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from '
 import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
@@ -61,12 +62,10 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   const loadAvailableUsers = async () => {
     try {
       const [employeesData, suppliersData] = await Promise.all([
-        supabase
-          .from('employees')
+        btpClient.from('employees')
           .select('id, full_name, email, phone, position, department')
           .eq('is_active', true),
-        supabase
-          .from('suppliers')
+        btpClient.from('suppliers')
           .select('id, name, email, phone, contact_person')
           .eq('is_active', true)
       ]);

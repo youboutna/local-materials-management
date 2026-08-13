@@ -11,6 +11,7 @@ import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface WorkspaceCreateDialogProps {
   selectedRegion?: string;
@@ -38,8 +39,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('workspaces')
+      const { data, error } = await btpClient.from('workspaces')
         .insert({
           name: formData.name,
           location: formData.location,

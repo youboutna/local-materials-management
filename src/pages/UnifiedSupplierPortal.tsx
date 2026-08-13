@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,11 +48,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
 import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
 import { parsePdf } from "@/utils/btpCalculations";
-import {
-  Supplier,
-  SupplierNotification,
-  DocumentWithViewStatus,
-} from "@/dtos/entities/SupplierDTO";
+import type { Tables } from "@/integrations/supabase/types";
+
+type SupplierNotificationRow = Tables<{ schema: "btp" }, "supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";
@@ -64,6 +61,7 @@ import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { LocalFilePreviewButton, useDocumentViewer } from "@/components/documents/viewer";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
+import { InspectionTransformer } from "@/dtos/transforms/InspectionTransformer";
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 import {
   useSupplierPortalAuthHex,
@@ -148,9 +146,10 @@ const UnifiedSupplierPortal = () => {
   // Use hexagonal hooks
   const { user, session, loading } = useSupplierPortalAuthHex();
   const { data: supplierProfile } = useFetchSupplierProfileHex(user);
-  const { data: notifications = [] } = useSupplierPortalNotificationsHex(supplierProfile?.id);
-  const { data: paymentRequests = [], refetch: refetchPaymentRequests } = useSupplierPortalPaymentRequestsHex(supplierProfile?.id);
-  const { data: documents = [] } = useSupplierPortalDocumentsHex(user?.id, supplierProfile?.id, supplierProfile?.name);
+  const { data: notificationsRaw } = useSupplierPortalNotificationsHex(supplierProfile?.id ?? "");
+  const notifications = (notificationsRaw ?? []) as SupplierNotificationRow[];
+  const { data: paymentRequests = [], refetch: refetchPaymentRequests } = useSupplierPortalPaymentRequestsHex(supplierProfile?.id ?? "");
+  const { data: documents = [] } = useSupplierPortalDocumentsHex(supplierProfile?.id ?? "");
   
   // Mutations
   const loginMutation = useSupplierLoginHex();
@@ -269,14 +268,12 @@ const UnifiedSupplierPortal = () => {
     }
 
     uploadDocumentMutation.mutate({
+      file: uploadFile,
       userId: user.id,
       title: uploadTitle,
       description: uploadDescription,
-      fileUrl: uploadResult.url,
-      fileName: uploadFile.name,
-      mimeType: uploadFile.type,
-      fileSize: uploadFile.size,
       documentType: documentType,
+      supplierId: supplierProfile?.id,
     });
 
     // Reset form
@@ -289,7 +286,6 @@ const UnifiedSupplierPortal = () => {
     if (!taskComment.trim() || !user || !supplierProfile?.id) return;
 
     addTaskCommentMutation.mutate({
-      supplierId: supplierProfile.id,
       taskId,
       email: user.email || "",
       comment: taskComment,
@@ -303,9 +299,8 @@ const UnifiedSupplierPortal = () => {
     if (!user || !supplierProfile?.id) return;
 
     markTaskCompletedMutation.mutate({
-      supplierId: supplierProfile.id,
       taskId,
-      email: user.email || "",
+      projectManagerId: supplierProfile.id,
     });
   };
 
@@ -315,7 +310,7 @@ const UnifiedSupplierPortal = () => {
       doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
     const matchesType =
-      typeFilter === "all" || doc.document_type === typeFilter;
+      typeFilter === "all" || doc.documentType === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -335,7 +330,7 @@ const UnifiedSupplierPortal = () => {
   ).length;
 
   // Handle clicking on a payment initiation notification
-  const handlePaymentInitiationClick = (notification: SupplierNotification) => {
+  const handlePaymentInitiationClick = (notification: SupplierNotificationRow) => {
     const metadata = notification.metadata as any;
     setPrefillPaymentData({
       projectId: metadata?.project_id,
@@ -678,21 +673,13 @@ const UnifiedSupplierPortal = () => {
                                 </p>
                                 <div className="flex gap-2 mt-1">
                                   <Badge variant="outline" className="text-xs">
-                                    {document.document_type}
+                                    {document.documentType}
                                   </Badge>
-                                  {document.projects && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      {document.projects.title}
-                                    </Badge>
-                                  )}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  {document.created_at
+                                  {document.createdAt
                                     ? new Date(
-                                        document.created_at
+                                        document.createdAt
                                       ).toLocaleDateString("fr-FR")
                                     : "Date inconnue"}
                                 </p>
@@ -715,7 +702,7 @@ const UnifiedSupplierPortal = () => {
                               >
                                 {document.status}
                               </Badge>
-                              {document.file_url && (
+                              {document.fileUrl && (
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -1106,7 +1093,7 @@ const UnifiedSupplierPortal = () => {
             {/* Inspections Tab */}
             <TabsContent value="inspections">
               <SupplierInspectionsList
-                inspections={supplierInspections}
+                inspections={InspectionTransformer.manyToDTO(supplierInspections)}
                 loading={inspectionsLoading}
                 supplierId={supplierProfile?.id}
                 onInspectionUpdated={refetchInspections}

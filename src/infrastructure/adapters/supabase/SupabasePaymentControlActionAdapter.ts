@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 /**
  * Supabase adapter for payment control actions (btp.payment_control_actions)
  */
@@ -40,8 +41,7 @@ function mapRowToRecord(row: PaymentControlActionRow): PaymentControlActionRecor
 export class SupabasePaymentControlActionAdapter implements IPaymentControlActionRepository {
   async create(data: CreatePaymentControlActionRecord): Promise<PaymentControlActionRecord> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: row, error } = await supabase
-      .from('payment_control_actions')
+    const { data: row, error } = await btpClient.from('payment_control_actions')
       .insert({
         payment_block_id: data.paymentBlockId,
         action_type: data.actionType,
@@ -60,8 +60,7 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
 
   async findByBlockId(blockId: string): Promise<PaymentControlActionRecord[]> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: rows, error } = await supabase
-      .from('payment_control_actions')
+    const { data: rows, error } = await btpClient.from('payment_control_actions')
       .select('*')
       .eq('payment_block_id', blockId)
       .order('created_at', { ascending: true });
@@ -72,8 +71,7 @@ export class SupabasePaymentControlActionAdapter implements IPaymentControlActio
 
   async complete(id: string): Promise<PaymentControlActionRecord> {
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: row, error } = await supabase
-      .from('payment_control_actions')
+    const { data: row, error } = await btpClient.from('payment_control_actions')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString()

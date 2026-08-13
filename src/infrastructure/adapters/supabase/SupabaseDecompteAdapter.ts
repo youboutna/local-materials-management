@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SupabaseDecompteAdapter
  * 
@@ -8,11 +7,14 @@
 
 import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';
 import {
     AutomaticDecompteDTO,
     DecompteLineDTO,
-    DEFAULT_MAURITANIA_RULES
+    DecompteStatus
 } from '@/dtos/types/checkpoint-dto';
+import { Payment } from '@/domain/entities/Payment';
+import { InspectionStatus } from '@/domain/entities/Inspection';
 
 // Import des repositories existants (via RepositoryFactory)
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -35,9 +37,10 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const payments = await paymentRepository.findByProjectId(projectId);
 
     const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    // Le domaine Payment ne conserve pas de montant de retenue dédié :
+    // la retenue est calculée à la demande via getNetAmount().
     const totalRetentionHeld = payments
-      .filter(payment => payment.retentionAmount)
-      .reduce((sum, payment) => sum + (payment.retentionAmount || 0), 0);
+      .reduce((sum, payment) => sum + (payment.amount - payment.getNetAmount()), 0);
 
     return {
       budget: project.budget || 0,
@@ -62,7 +65,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const phaseFinancials: PhaseFinancials[] = [];
 
     for (const phase of phases) {
-      const phasePayments = payments.filter(payment => payment.phaseId === phase.id);
+      const phasePayments = payments.filter(payment => payment.phase?.id === phase.id);
       const totalPaid = phasePayments.reduce((sum, payment) => sum + payment.amount, 0);
 
       phaseFinancials.push({
@@ -106,18 +109,8 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const milestoneRepository = RepositoryFactory.getMilestoneRepository();
     const milestones = await milestoneRepository.findByPhaseId(phaseId);
 
-    // Transformer en MilestoneDTO
-    return milestones.map(milestone => ({
-      id: milestone.id,
-      title: milestone.title || '',
-      description: milestone.description || '',
-      weight: milestone.weight || 0,
-      targetDate: milestone.targetDate || '',
-      status: milestone.status || 'pending',
-      completionDate: milestone.completionDate,
-      phaseId: milestone.phaseId || '',
-      progress: milestone.progress || 0,
-    }));
+    // Transformer en MilestoneDTO via le transformer canonique
+    return milestones.map(milestone => MilestoneTransformer.toDTO(milestone));
   }
 
   // === DONNÉES JALON ===
@@ -135,15 +128,16 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const verifiedMilestones: VerifiedMilestone[] = [];
 
     for (const milestone of completedMilestones) {
-      if (milestone.phaseId) {
-        const phase = await phaseRepository.findById(milestone.phaseId);
+      const phaseId = milestone.configuration.phaseId;
+      if (phaseId) {
+        const phase = await phaseRepository.findById(phaseId);
         
         verifiedMilestones.push({
           id: milestone.id,
           title: milestone.title || '',
-          weight: milestone.weight || 0,
+          weight: milestone.configuration.weight || 0,
           completionDate: milestone.completionDate || new Date().toISOString(),
-          phaseId: milestone.phaseId,
+          phaseId,
           phaseEstimatedCost: phase?.estimatedCost || 0,
         });
       }
@@ -167,24 +161,31 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     }
 
     // Transformer les paiements en décomptes (adapter selon vos besoins)
-    return payments.map(payment => ({
-      id: payment.id,
-      projectId: payment.projectId || '',
-      phaseId: payment.phaseId,
-      decompteNumber: `DEC-${payment.id}`,
-      calculationDate: payment.createdAt || new Date().toISOString(),
-      status: DecompteStatus.APPROVED,
-      totalAmount: payment.amount,
-      retentionAmount: payment.retentionAmount || 0,
-      netAmount: payment.amount - (payment.retentionAmount || 0),
-      progressAtPayment: payment.progressAtPayment || 0,
-      lines: [], // À implémenter selon vos besoins
-      businessRules: DEFAULT_MAURITANIA_RULES,
-      approvedBy: payment.approvedBy,
-      approvedAt: payment.approvedAt,
-      createdAt: payment.createdAt,
-      updatedAt: payment.updatedAt,
-    }));
+    return payments.map(payment => {
+      const retentionAmount = payment.amount - payment.getNetAmount();
+      return {
+        id: payment.id,
+        project_id: payment.project?.id || projectId,
+        phase_id: payment.phase?.id,
+        decompte_number: 0,
+        decompte_type: 'progress',
+        contract_amount: 0,
+        previous_cumulative: 0,
+        current_period_amount: payment.amount,
+        cumulative_amount: payment.amount,
+        retention_rate: 0,
+        retention_amount: retentionAmount,
+        previous_retention_released: 0,
+        retention_to_release: 0,
+        net_payable: payment.getNetAmount(),
+        verified_milestones: [],
+        lines: [],
+        progress_at_decompte: payment.progressAtPayment || 0,
+        status: 'approved' as DecompteStatus,
+        calculated_at: payment.createdAt || new Date().toISOString(),
+        calculation_log: [],
+      };
+    });
   }
 
   async getPaidThresholds(projectId: string): Promise<number[]> {
@@ -205,7 +206,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
 
     // Filtrer les inspections approuvées pour ce seuil
     const approvedInspections = inspections.filter(inspection => 
-      inspection.status === 'approved' && 
+      inspection.status === InspectionStatus.Approved && 
       inspection.progressAtInspection === threshold
     );
 
@@ -228,11 +229,12 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
         id: `line-${milestone.id}`,
         description: milestone.title,
         quantity: 1,
-        unitPrice: milestoneAmount,
-        totalPrice: milestoneAmount,
-        category: 'milestone',
-        milestoneId: milestone.id,
-        phaseId: milestone.phaseId,
+        unit: 'forfait',
+        unit_price: milestoneAmount,
+        total_amount: milestoneAmount,
+        category: 'works',
+        milestone_id: milestone.id,
+        verification_status: 'verified',
       });
 
       totalAmount += milestoneAmount;
@@ -240,34 +242,47 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
 
     // Application des règles métier
     const retentionAmount = Math.floor(
-      totalAmount * (context.businessRules.retentionPercentage / 100)
+      totalAmount * (context.businessRules.retentionRate / 100)
     );
     const netAmount = totalAmount - retentionAmount;
+    const previousCumulative = context.projectFinancials.totalPaid;
 
     return {
       id: `decompte-${Date.now()}`,
-      projectId: context.projectId,
-      decompteNumber: `DEC-${Date.now()}`,
-      calculationDate: new Date().toISOString(),
-      status: DecompteStatus.DRAFT,
-      totalAmount,
-      retentionAmount,
-      netAmount,
-      progressAtPayment: this.calculateProgress(context),
+      project_id: context.projectId,
+      decompte_number: context.previousDecomptes.length + 1,
+      decompte_type: 'progress',
+      contract_amount: context.projectFinancials.budget,
+      previous_cumulative: previousCumulative,
+      current_period_amount: totalAmount,
+      cumulative_amount: previousCumulative + totalAmount,
+      retention_rate: context.businessRules.retentionRate,
+      retention_amount: retentionAmount,
+      previous_retention_released: 0,
+      retention_to_release: 0,
+      net_payable: netAmount,
+      verified_milestones: context.verifiedMilestones.map(milestone => ({
+        milestone_id: milestone.id,
+        title: milestone.title,
+        weight: milestone.weight,
+        amount: (milestone.phaseEstimatedCost * milestone.weight) / 100,
+        verified_at: milestone.completionDate,
+      })),
       lines,
-      businessRules: context.businessRules,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      progress_at_decompte: this.calculateProgress(context),
+      status: 'draft',
+      calculated_at: new Date().toISOString(),
+      calculation_log: [],
     };
   }
 
   async validateDecompte(decompte: AutomaticDecompteDTO): Promise<boolean> {
     // Validation basique du décompte
     return (
-      decompte.totalAmount > 0 &&
+      decompte.current_period_amount > 0 &&
       decompte.lines.length > 0 &&
-      decompte.progressAtPayment >= 0 &&
-      decompte.progressAtPayment <= 100
+      decompte.progress_at_decompte >= 0 &&
+      decompte.progress_at_decompte <= 100
     );
   }
 
@@ -276,24 +291,40 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     // Adapter selon votre logique métier
     
     const paymentRepository = RepositoryFactory.getPaymentRepository();
-    
-    // Créer un paiement à partir du décompte
-    const payment = await paymentRepository.create({
-      projectId: decompte.projectId,
-      phaseId: decompte.phaseId,
-      amount: decompte.netAmount,
-      retentionAmount: decompte.retentionAmount,
-      progressAtPayment: decompte.progressAtPayment,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    const now = new Date().toISOString();
+    const id = decompte.id || `decompte-${Date.now()}`;
+
+    const payment = new Payment(
+      id,
+      decompte.project_id ? ({ id: decompte.project_id } as any) : null,
+      decompte.phase_id ? ({ id: decompte.phase_id } as any) : null,
+      null,
+      decompte.net_payable,
+      now,
+      'bank_transfer',
+      'pending',
+      decompte.progress_at_decompte,
+      null,
+      '',
+      '',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      [],
+      now,
+      now
+    );
+
+    await paymentRepository.save(payment);
 
     // Retourner le décompte avec l'ID du paiement
     return {
       ...decompte,
       id: payment.id,
-      updatedAt: new Date().toISOString(),
+      calculated_at: now,
     };
   }
 

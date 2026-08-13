@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;
@@ -39,8 +40,7 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
     queryKey: ['public-tenders-open'],
     queryFn: async (): Promise<PublicTender[]> => {
       // Accès anonyme autorisé par policy RLS (statut public + deadline valide).
-      const { data, error } = await supabase
-        .from('tenders')
+      const { data, error } = await btpClient.from('tenders')
         .select('id, title, description, status, deadline_date, publication_date, market_type, budget_max, project_reference')
         .in('status', ['published', 'open'])
         .order('deadline_date', { ascending: true, nullsFirst: false });

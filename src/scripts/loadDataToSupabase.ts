@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 import { supabase } from "@/integrations/supabase/client";
 import { allProjectsData } from "@/data/projectsData";
@@ -9,8 +10,7 @@ import { allProjectsData } from "@/data/projectsData";
 export const loadProjectsToSupabase = async () => {
   try {
     // Check if projects already exist to avoid duplicates
-    const { data: existingProjects, error: fetchError } = await supabase
-      .from('projects')
+    const { data: existingProjects, error: fetchError } = await btpClient.from('projects')
       .select('title');
 
     if (fetchError) {
@@ -41,8 +41,7 @@ export const loadProjectsToSupabase = async () => {
     }));
 
     // Insert all projects
-    const { data, error } = await supabase
-      .from('projects')
+    const { data, error } = await btpClient.from('projects')
       .insert(projectsToInsert)
       .select();
 

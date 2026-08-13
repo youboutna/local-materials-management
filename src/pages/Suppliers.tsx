@@ -1,4 +1,3 @@
-// @ts-nocheck
 import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
 import { SupplierDocumentsPanel } from '@/components/documents/panels';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +16,9 @@ import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } fro
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AppLayout } from '@/components/layout';
-import type { Database } from '@/integrations/supabase/types';
+import type { Supplier } from '@/domain/entities';
 
-type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
+type SupplierRow = Supplier;
 type SupplierCategory = 'materials' | 'services' | 'equipment' | 'subcontractor' | 'consultant' | 'other';
 
 const Suppliers = () => {
@@ -46,7 +45,7 @@ const Suppliers = () => {
   // Hook hexagonal pour les fournisseurs
   const { 
     suppliers, 
-    loading: isLoading, 
+    isLoading, 
     createSupplier, 
     updateSupplier, 
     deleteSupplier,
@@ -75,11 +74,9 @@ const Suppliers = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        const success = await updateSupplier({ id: editingId, data: formData });
-        if (success) {
-          toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
-          resetForm();
-        }
+        updateSupplier({ id: editingId, data: formData });
+        toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
+        resetForm();
       } else {
         await createSupplier({
           name: formData.name,
@@ -106,7 +103,7 @@ const Suppliers = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteSupplier(id);
+      deleteSupplier(id);
       toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
     } catch (error) {
       toast({
@@ -120,14 +117,14 @@ const Suppliers = () => {
   const handleEdit = (supplier: SupplierRow) => {
     setFormData({
       name: supplier.name || "",
-      contact_person: supplier.contactPerson || supplier.contact_person || "",
+      contact_person: supplier.getPrimaryContact()?.name || "",
       email: supplier.email || "",
       phone: supplier.phone || "",
       address: supplier.address || "",
       category: supplier.category || "",
       rating: typeof supplier.rating === 'number' ? supplier.rating : 0,
       nif: supplier.nif || "",
-      commerce_register_ref: supplier.commerceRegisterRef || supplier.commerce_register_ref || "",
+      commerce_register_ref: "",
     });
     setEditingId(supplier.id);
     setIsCreating(true);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,8 +38,8 @@ const SupplierPasswordReset = () => {
     }
 
     try {
-      const authRepository = RepositoryFactory.getAuthRepository();
-      const data = await authRepository.invokeRPC('validate_supplier_reset_token', {
+      const notificationGateway = RepositoryFactory.getNotificationGateway();
+      const { data } = await notificationGateway.rpc<unknown[]>('validate_supplier_reset_token', {
         reset_token: token
       });
 
@@ -102,35 +101,29 @@ const SupplierPasswordReset = () => {
 
     try {
       // Get the notification to find the supplier email
-      const authRepository = RepositoryFactory.getAuthRepository();
-      const notification = await authRepository.invokeRPC('get_supplier_notification_by_token', {
-        reset_token: token
-      });
+      const notificationGateway = RepositoryFactory.getNotificationGateway();
+      const { data: notification } = await notificationGateway.rpc<{ email: string; supplier_id?: string }>(
+        'get_supplier_notification_by_token',
+        { reset_token: token }
+      );
 
       if (!notification) {
         throw new Error('Token invalide');
       }
 
-      // Create/update auth user for the supplier
-      const authData = await authRepository.signUp({
+      // Create auth user for the supplier
+      const authRepository = RepositoryFactory.getAuthRepository();
+      const { user, error: signUpError } = await authRepository.signUp({
         email: notification.email,
         password: password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/supplier-portal`
-        }
       });
 
-      // Update the supplier record with the user_id
-      if (authData.user && notification.supplier_id) {
-        const supplierRepository = RepositoryFactory.getSupplierRepository();
-        await supplierRepository.update(notification.supplier_id, { 
-          user_id: authData.user.id,
-          default_password_reset_required: false
-        });
+      if (signUpError) {
+        throw signUpError;
       }
 
       // Mark the token as used
-      await authRepository.invokeRPC('mark_supplier_token_used', {
+      await notificationGateway.rpc('mark_supplier_token_used', {
         reset_token: token
       });
 

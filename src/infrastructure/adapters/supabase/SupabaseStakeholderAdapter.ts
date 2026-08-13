@@ -10,6 +10,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { Stakeholder } from '@/domain/entities/Stakeholder';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 
@@ -23,7 +24,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   private async create(stakeholder: Omit<Stakeholder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Stakeholder> {
     const row = this.mapToSupabase(stakeholder);
-    const { data, error } = await supabase.from(TABLE).insert(row).select().single();
+    const { data, error } = await btpClient.from(TABLE).insert(row).select().single();
     if (error) throw error;
     return this.mapToEntity(data);
   }
@@ -31,22 +32,21 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
   async update(id: string, data: Partial<Stakeholder>): Promise<Stakeholder> {
     if (!id) throw new Error('Invalid stakeholder ID provided');
     const row = this.mapToSupabase(data);
-    const { data: updated, error } = await supabase.from(TABLE).update(row).eq('id', id).select().single();
+    const { data: updated, error } = await btpClient.from(TABLE).update(row).eq('id', id).select().single();
     if (error) throw error;
     return this.mapToEntity(updated);
   }
 
   async findById(id: string): Promise<Stakeholder | null> {
     if (!id) return null;
-    const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).maybeSingle();
+    const { data, error } = await btpClient.from(TABLE).select('*').eq('id', id).maybeSingle();
     if (error) throw error;
     return data ? this.mapToEntity(data) : null;
   }
 
   async findByProjectId(projectId: string): Promise<Stakeholder[]> {
     if (!projectId) return [];
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
@@ -55,8 +55,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
   }
 
   async findByType(type: string): Promise<Stakeholder[]> {
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('stakeholder_type', type)
       .order('created_at', { ascending: true });
@@ -75,8 +74,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   async findInternalByProjectId(projectId: string): Promise<Stakeholder[]> {
     if (!projectId) return [];
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('project_id', projectId)
       .eq('stakeholder_entity_type', 'employee')
@@ -87,8 +85,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   async findExternalByProjectId(projectId: string): Promise<Stakeholder[]> {
     if (!projectId) return [];
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('project_id', projectId)
       .neq('stakeholder_entity_type', 'employee')
@@ -99,8 +96,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   async findPrimaryByProjectId(projectId: string): Promise<Stakeholder[]> {
     if (!projectId) return [];
-    const { data, error } = await supabase
-      .from(TABLE)
+    const { data, error } = await btpClient.from(TABLE)
       .select('*')
       .eq('project_id', projectId)
       .eq('is_primary', true)
@@ -111,21 +107,20 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   async delete(id: string): Promise<void> {
     if (!id) throw new Error('Invalid stakeholder ID provided');
-    const { error } = await supabase.from(TABLE).delete().eq('id', id);
+    const { error } = await btpClient.from(TABLE).delete().eq('id', id);
     if (error) throw error;
   }
 
   async exists(id: string): Promise<boolean> {
     if (!id) return false;
-    const { data, error } = await supabase.from(TABLE).select('id').eq('id', id).maybeSingle();
+    const { data, error } = await btpClient.from(TABLE).select('id').eq('id', id).maybeSingle();
     if (error) throw error;
     return !!data;
   }
 
   async countByProjectId(projectId: string): Promise<number> {
     if (!projectId) return 0;
-    const { count, error } = await supabase
-      .from(TABLE)
+    const { count, error } = await btpClient.from(TABLE)
       .select('id', { count: 'exact', head: true })
       .eq('project_id', projectId);
     if (error) throw error;
@@ -133,8 +128,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
   }
 
   async countByType(type: string): Promise<number> {
-    const { count, error } = await supabase
-      .from(TABLE)
+    const { count, error } = await btpClient.from(TABLE)
       .select('id', { count: 'exact', head: true })
       .eq('stakeholder_type', type);
     if (error) throw error;

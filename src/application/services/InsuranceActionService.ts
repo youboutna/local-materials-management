@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
@@ -28,31 +28,23 @@ export interface InsuranceControlAction {
 export const createInsuranceAction = async (actionData: Omit<InsuranceControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<InsuranceControlAction> => {
   try {
     // Fetch real project and insurance data
-    const [projectData, insuranceData, projectEmployees, insuranceCompanies] = await Promise.all([
+    const [projectData, insuranceData, projectEmployees] = await Promise.all([
       // Get project details
-      supabase
-        .from('projects')
+      btpClient.from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get insurance certificate details
-      supabase
-        .from('insurance_certificates')
+      btpClient.from('insurance_certificates')
         .select('*')
         .eq('id', actionData.insuranceId)
         .single(),
       
       // Get project team members
-      supabase
-        .from('employees')
+      btpClient.from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
-      
-      // Get insurance companies
-      supabase
-        .from('insurance_companies')
-        .select('*')
     ]);
 
     const action: InsuranceControlAction = {
@@ -66,7 +58,6 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
         project: projectData.data,
         insurance: insuranceData.data,
         availableEmployees: projectEmployees.data || [],
-        insuranceCompanies: insuranceCompanies.data || []
       }
     };
 
@@ -124,8 +115,7 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await supabase
-        .from('employees')
+      const { data: assignee } = await btpClient.from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -237,8 +227,7 @@ const executeInsuranceHierarchyNotification = async (action: InsuranceControlAct
 const executeInsuranceCommunication = async (action: InsuranceControlAction): Promise<void> => {
   try {
     // Get employee details for communication
-    const { data: employees } = await supabase
-      .from('employees')
+    const { data: employees } = await btpClient.from('employees')
       .select('id, full_name, email, phone')
       .in('id', action.recipientIds);
 
@@ -313,8 +302,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
 
 export const getInsuranceActions = async (insuranceId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = supabase
-    .from('notifications')
+  const query = btpClient.from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'insurance');

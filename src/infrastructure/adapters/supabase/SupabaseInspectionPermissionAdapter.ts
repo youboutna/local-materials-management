@@ -59,8 +59,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async getAssignableInspectors(context: PermissionContext): Promise<AssignableInspector[]> {
     try {
       // Get inspectors from employees table with inspection capabilities
-      const { data: employeeInspectors, error: employeeError } = await supabase
-        .from('employees')
+      const { data: employeeInspectors, error: employeeError } = await supabase.from('employees')
         .select(`
           id,
           full_name,
@@ -74,8 +73,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
         .contains('skills', [this.getRequiredSpecialization(context.inspectionType)]);
 
       // Get inspectors from suppliers table (external inspectors)
-      const { data: supplierInspectors, error: supplierError } = await supabase
-        .from('suppliers')
+      const { data: supplierInspectors, error: supplierError } = await supabase.from('suppliers')
         .select(`
           id,
           name,
@@ -174,7 +172,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async checkProjectAccess(userId: string, projectId: string): Promise<boolean> {
     try {
       // Check if user is assigned to project phase
-      const { data, error } = await publicClient
+      const { data, error } = await supabase
         .from('phase_employees')
         .select('id')
         .eq('employee_id', userId)
@@ -194,8 +192,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async getAlternativeInspectors(context: PermissionContext): Promise<AssignableInspector[]> {
     try {
       // Get alternative inspectors from employees table
-      const { data: employeeInspectors, error: employeeError } = await supabase
-        .from('employees')
+      const { data: employeeInspectors, error: employeeError } = await supabase.from('employees')
         .select(`
           id,
           full_name,
@@ -212,8 +209,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
         .limit(5);
 
       // Get alternative inspectors from suppliers table
-      const { data: supplierInspectors, error: supplierError } = await supabase
-        .from('suppliers')
+      const { data: supplierInspectors, error: supplierError } = await supabase.from('suppliers')
         .select(`
           id,
           name,
@@ -247,8 +243,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async getInspectorDetails(inspectorId: string): Promise<AssignableInspector | null> {
     try {
       // Try to find inspector in employees table first
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('employees')
+      const { data: employeeData, error: employeeError } = await supabase.from('employees')
         .select(`
           id,
           full_name,
@@ -266,8 +261,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       }
 
       // Try to find inspector in suppliers table
-      const { data: supplierData, error: supplierError } = await supabase
-        .from('suppliers')
+      const { data: supplierData, error: supplierError } = await supabase.from('suppliers')
         .select(`
           id,
           name,
@@ -320,8 +314,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
   async checkInspectorAvailability(inspectorId: string): Promise<boolean> {
     try {
       // Check availability in employees table
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('employees')
+      const { data: employeeData, error: employeeError } = await supabase.from('employees')
         .select('is_active')
         .eq('id', inspectorId)
         .single();
@@ -331,8 +324,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       }
 
       // Check availability in suppliers table
-      const { data: supplierData, error: supplierError } = await supabase
-        .from('suppliers')
+      const { data: supplierData, error: supplierError } = await supabase.from('suppliers')
         .select('is_active')
         .eq('id', inspectorId)
         .single();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Location Repository Implementation
  * Infrastructure layer for location data access
@@ -6,9 +5,13 @@
  */
 
 import { ILocationRepository } from '@/domain/repositories/LocationRepository';
-import { Location, MapLocation } from '@/domain/entities/Location';
+import { Location, MapLocation, LocationType, EconomicImportance } from '@/domain/entities/Location';
 import { AppError, DatabaseError } from '@/utils/errors';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+type LocationRow = Database['public']['Tables']['locations']['Row'];
+type LocationInsert = Database['public']['Tables']['locations']['Insert'];
 
 /**
  * Supabase implementation of LocationRepository
@@ -412,23 +415,22 @@ export class LocationRepository implements ILocationRepository {
   /**
    * Map database row to Location entity
    */
-  private mapRowToLocation(row: Record<string, unknown>): Location {
+  private mapRowToLocation(row: LocationRow): Location {
     // Normalize 'wilaya' → 'region' for domain consistency
-    const rawType = row.type as string;
-    const normalizedType = rawType === 'wilaya' ? 'region' : rawType;
-    
+    const normalizedType: LocationType = row.type === 'wilaya' ? 'region' : (row.type as LocationType);
+
     return new Location({
       id: row.id,
       code: row.code,
       name: row.name,
-      nameAr: row.name_ar,
+      nameAr: row.name_ar ?? '',
       type: normalizedType,
-      coordinates: row.latitude && row.longitude ? {
+      coordinates: row.latitude != null && row.longitude != null ? {
         lat: row.latitude,
         lng: row.longitude
       } : undefined,
-      parentCode: row.parent_code,
-      economicImportance: row.economic_importance,
+      parentCode: row.parent_code ?? undefined,
+      economicImportance: (row.economic_importance ?? undefined) as EconomicImportance | undefined,
       population: row.population ? Number(row.population) : undefined,
       createdAt: row.created_at ? new Date(row.created_at) : undefined,
       updatedAt: row.updated_at ? new Date(row.updated_at) : undefined
@@ -438,7 +440,7 @@ export class LocationRepository implements ILocationRepository {
   /**
    * Map Location entity to database row
    */
-  private mapLocationToRow(location: Location): Record<string, unknown> {
+  private mapLocationToRow(location: Location): LocationInsert {
     return {
       id: location.id,
       code: location.code,

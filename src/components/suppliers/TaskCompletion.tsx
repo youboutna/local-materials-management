@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface Task {
   id: string;
@@ -35,8 +36,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
   const handleCompleteTask = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('task_assignments')
+      const { error } = await btpClient.from('task_assignments')
         .update({ 
           status: 'completed',
           completion_date: new Date().toISOString(),
