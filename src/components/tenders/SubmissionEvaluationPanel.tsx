@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EvaluationQuestionnaire } from '@/components/tenders/EvaluationQuestionnaire';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 import {
