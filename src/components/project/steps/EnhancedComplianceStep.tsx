@@ -888,7 +888,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Document Dialog */}
       <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ajouter un Document</DialogTitle>
             <DialogDescription>
@@ -909,7 +909,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Insurance Dialog */}
       <Dialog open={isInsuranceDialogOpen} onOpenChange={setIsInsuranceDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Gestion des Assurances</DialogTitle>
             <DialogDescription>
@@ -943,7 +943,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Bank Guarantee Dialog */}
       <Dialog open={isBankGuaranteeDialogOpen} onOpenChange={setIsBankGuaranteeDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Gestion des Garanties Bancaires</DialogTitle>
             <DialogDescription>

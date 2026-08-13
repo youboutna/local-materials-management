@@ -4,6 +4,27 @@ import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
 
+/**
+ * Mapping domaine → enum DB `document_status`
+ * Valeurs autorisées: draft | pending_review | approved | rejected | archived
+ */
+const DB_DOCUMENT_STATUS: Record<string, string> = {
+  draft: 'draft',
+  pending: 'pending_review',
+  pending_review: 'pending_review',
+  pending_approval: 'pending_review',
+  validated: 'approved',
+  approved: 'approved',
+  rejected: 'rejected',
+  archived: 'archived',
+  expired: 'archived',
+  deprecated: 'archived',
+};
+
+function toDbStatus(status?: string | null): string {
+  return DB_DOCUMENT_STATUS[String(status ?? 'draft')] || 'draft';
+}
+
 export class SupabaseDocumentAdapter implements IDocumentRepository {
   private mapToEntity(data: any): Document {
     const typeMap: Record<string, DocumentType> = {
@@ -12,7 +33,8 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       'supplier_catalog': 'specification', 'supplier_info': 'other', 'task_assignment': 'other'
     };
     const statusMap: Record<string, DocumentStatus> = {
-      'pending': 'pending_review', 'validated': 'approved', 'rejected': 'rejected', 'archived': 'archived', 'draft': 'draft'
+      'pending': 'pending_review', 'pending_review': 'pending_review', 'validated': 'approved',
+      'approved': 'approved', 'rejected': 'rejected', 'archived': 'archived', 'draft': 'draft'
     };
     return new Document(
       data.id, data.project_id || null, data.phase_id || null, data.inspection_id || null,
@@ -49,7 +71,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       task_assignment: 'task_assignment', employee_record: 'employee_record',
     };
     const dbType = toDbType[document.documentType] || 'project_report';
-    const dbStatus = document.status === 'approved' ? 'validated' : document.status === 'pending_review' ? 'pending' : document.status;
+    const dbStatus = toDbStatus(document.status);
     const { error } = await supabase.from('documents').insert({
       id: document.id, title: document.title, description: document.description,
       document_type: dbType as any, status: dbStatus as any, file_url: document.fileUrl,
@@ -66,7 +88,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     const updateData: Record<string, any> = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.status !== undefined) updateData.status = data.status === 'approved' ? 'validated' : data.status === 'pending_review' ? 'pending' : data.status;
+    if (data.status !== undefined) updateData.status = toDbStatus(data.status);
     if (data.tags !== undefined) updateData.tags = data.tags;
     if (data.metadata !== undefined) updateData.metadata = data.metadata;
     const { error } = await supabase.from('documents').update(updateData).eq('id', id);
@@ -116,10 +138,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   }
 
   async findByStatus(status: DocumentStatus): Promise<Document[]> {
-    const statusMapToDb: Record<DocumentStatus, string> = {
-      'approved': 'approved', 'pending_review': 'pending_review', 'rejected': 'rejected', 'archived': 'archived', 'draft': 'draft'
-    };
-    const dbStatus = statusMapToDb[status] || status;
+    const dbStatus = toDbStatus(status);
     const { data, error } = await supabase.from('documents').select('*').eq('status', dbStatus as any);
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
