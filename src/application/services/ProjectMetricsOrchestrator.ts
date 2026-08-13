@@ -322,8 +322,7 @@ export class ProjectMetricsOrchestrator {
       progressBasisLabel: WEIGHT_BASIS_LABELS[progressBasis] ?? progressBasis,
       weights: weighted.weights,
       referenceDurationDays,
-      pertDurationDays:
-        input.pertExpectedDuration != null ? Number(num(input.pertExpectedDuration).toFixed(2)) : null,
+      pertDurationDays,
       budget,
       actualCost,
       budgetVariance,
@@ -335,6 +334,9 @@ export class ProjectMetricsOrchestrator {
       alerts,
       insights,
       gantt,
+      pert,
+      health,
+      milestoneProgress,
       formatted: {
         progress: formatPercent2(progress),
         plannedProgress: evm.plannedProgress === null ? 'N/A' : formatPercent2(evm.plannedProgress),
@@ -356,13 +358,92 @@ export class ProjectMetricsOrchestrator {
         referenceDuration:
           referenceDurationDays === null ? 'Non renseignée' : `${formatNumber2(referenceDurationDays)} jours`,
         pertDuration:
-          input.pertExpectedDuration == null
+          pertDurationDays === null
             ? 'Non estimée'
-            : `${formatNumber2(input.pertExpectedDuration)} jours (estimation)`,
+            : `${formatNumber2(pertDurationDays)} jours (estimation)`,
         scheduleGap: scheduleGapPercent === null ? 'Non évaluable' : formatSigned2(scheduleGapPercent, '%'),
+        healthScore: `${formatNumber2(health.overallScore)}/100`,
+        milestoneProgress: formatPercent2(milestoneProgress.progress),
       },
     };
   }
+
+  /** Progression jalons — source UNIQUE (remplace MilestoneService.getMilestoneProgress). */
+  static buildMilestoneProgress(
+    milestones: ProjectMetricsInput['milestones'],
+    asOf: Date = new Date(),
+  ): MilestoneProgressModel {
+    const list = (milestones || []).filter(Boolean);
+    if (list.length === 0) return { total: 0, completed: 0, overdue: 0, progress: 0 };
+
+    const isCompleted = (m: NonNullable<ProjectMetricsInput['milestones']>[number]) => {
+      const status = String(m?.status ?? '').toLowerCase();
+      return status.includes('complet') || status.includes('termin') || status.includes('achiev') || clamp100(m?.progress) >= 100;
+    };
+
+    const completed = list.filter(isCompleted).length;
+    const overdue = list.filter((m) => {
+      if (isCompleted(m)) return false;
+      const due = m?.dueDate ? new Date(m.dueDate as string).getTime() : NaN;
+      return Number.isFinite(due) && due < asOf.getTime();
+    }).length;
+
+    const progress = Number(
+      (
+        list.reduce((sum, m) => sum + (isCompleted(m) ? 100 : clamp100(m?.progress)), 0) / list.length
+      ).toFixed(2),
+    );
+
+    return { total: list.length, completed, overdue, progress };
+  }
+
+  /**
+   * Score de santé UNIQUE : moyenne pondérée planning/coût/périmètre/risques,
+   * puis pénalités par alerte (critique −15, avertissement −5). Garantit la
+   * cohérence « 3 alertes critiques ⇒ score < 30 ».
+   */
+  static buildHealth(input: {
+    progress: number;
+    plannedProgress: number | null;
+    spi: number | null;
+    cpi: number | null;
+    openRisksCount: number;
+    alerts: DerivedAlert[];
+  }): HealthScoreModel {
+    const toScore = (index: number | null): number =>
+      index === null ? 60 : Math.max(0, Math.min(100, Math.round(index * 100)));
+
+    const schedule = toScore(input.spi);
+    const cost = toScore(input.cpi);
+    const scope = Math.round(clamp100(input.progress));
+    const risk = Math.max(0, 100 - input.openRisksCount * 15);
+
+    const base = (schedule * 0.3 + cost * 0.25 + scope * 0.25 + risk * 0.2);
+    const penalty = input.alerts.reduce(
+      (sum, a) => sum + (a.level === 'critical' ? 15 : a.level === 'warning' ? 5 : 0),
+      0,
+    );
+    const overallScore = Math.max(0, Math.min(100, Math.round(base - penalty)));
+
+    const status: HealthScoreModel['status'] =
+      overallScore < 30 ? 'critical' : overallScore < 55 ? 'at_risk' : overallScore < 75 ? 'acceptable' : 'healthy';
+
+    return {
+      overallScore,
+      schedule,
+      cost,
+      scope,
+      risk,
+      status,
+      statusLabel: {
+        critical: 'Critique',
+        at_risk: 'À risque',
+        acceptable: 'Acceptable',
+        healthy: 'Bonne santé',
+      }[status],
+    };
+  }
+
 
   /** Modèle de données du Gantt réutilisable (PDF & UI partagent ce modèle). */
   static buildGantt(
