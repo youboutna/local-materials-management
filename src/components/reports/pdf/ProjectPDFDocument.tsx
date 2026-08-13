@@ -408,6 +408,92 @@ export function ProjectPDFDocument({
             })}
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
           />
+
+          {/* Diagramme de Gantt — échelle calendaire réelle */}
+          {(() => {
+            const rows = (enrichedData.phases as any[])
+              .map((p: any) => ({
+                name: p.title || p.name || p.phase_name || '—',
+                start: new Date(p.startDate ?? p.start_date ?? project.startDate ?? Date.now()).getTime(),
+                end: new Date(p.endDate ?? p.end_date ?? project.endDate ?? Date.now()).getTime(),
+                progress: Math.max(0, Math.min(100, Number(p.actualProgress ?? p.progress ?? 0))),
+              }))
+              .filter((r) => Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start);
+
+            if (rows.length === 0) return null;
+
+            const min = Math.min(...rows.map((r) => r.start));
+            const max = Math.max(...rows.map((r) => r.end));
+            const span = max - min || 1;
+            const pct = (t: number) => ((t - min) / span) * 100;
+
+            const startYear = new Date(min).getFullYear();
+            const endYear = new Date(max).getFullYear();
+            const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+            const now = Date.now();
+            const todayPct = now >= min && now <= max ? pct(now) : null;
+
+            return (
+              <View style={{ marginTop: 8 }}>
+                {/* Axe des années */}
+                <View style={{ flexDirection: 'row', marginBottom: 2 }}>
+                  <Text style={{ width: '28%', fontSize: 7, color: '#6b7280' }}>Phase</Text>
+                  <View style={{ width: '72%', flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#d1d5db' }}>
+                    {years.map((y) => (
+                      <Text key={y} style={{ flex: 1, fontSize: 7, color: '#6b7280', textAlign: 'center' }}>
+                        {y}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+
+                {rows.map((r, idx) => {
+                  const left = pct(r.start);
+                  const width = Math.max(1, pct(r.end) - left);
+                  return (
+                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                      <Text style={{ width: '28%', fontSize: 7 }}>{r.name}</Text>
+                      <View style={{ width: '72%', height: 8, backgroundColor: '#f3f4f6', position: 'relative' }}>
+                        <View
+                          style={{
+                            position: 'absolute',
+                            left: `${left}%`,
+                            width: `${width}%`,
+                            height: 8,
+                            backgroundColor: '#dbeafe',
+                            borderWidth: 0.5,
+                            borderColor: '#93c5fd',
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: `${r.progress}%`,
+                              height: 7,
+                              backgroundColor: r.progress >= 100 ? '#10b981' : '#3b82f6',
+                            }}
+                          />
+                        </View>
+                        {todayPct !== null && (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: `${todayPct}%`,
+                              width: 1,
+                              height: 8,
+                              backgroundColor: '#ef4444',
+                            }}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+                <Text style={{ fontSize: 6, color: '#9ca3af', marginTop: 2 }}>
+                  Barre pleine = avancement réel · trait rouge = aujourd'hui · échelle {startYear}–{endYear}
+                </Text>
+              </View>
+            );
+          })()}
         </PDFSection>
       )}
 
