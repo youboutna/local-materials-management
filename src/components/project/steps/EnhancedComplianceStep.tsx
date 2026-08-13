@@ -112,6 +112,8 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   
   // Services
   const { openDocument } = useDocumentViewer();
+  const complianceService = useMemo(() => getComplianceService(), []);
+
 
   const bankGuaranteeService = useMemo(() => getBankGuaranteeService(), []);
   const insuranceService = useMemo(() => getInsuranceService(), []);
