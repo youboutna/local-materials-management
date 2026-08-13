@@ -537,7 +537,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
   // Resource allocation
   resources?: ProjectResource[];
 
-  /** Contacts projet (btp.project_contacts) */
+  /** Contacts projet (stockés en JSON dans btp.projects.contacts) */
   contacts?: Array<{
     id: string;
     projectId?: string;
