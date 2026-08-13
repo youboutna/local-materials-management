@@ -253,13 +253,19 @@ export function CompactProjectReportGenerator({
               } as ProjectDetailDTO;
               enrichedMap.set(proj.id, projectDetailFromService);
 
+              const reportPhases = ((reportProject as any).phases || []) as any[];
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj as any,
                 actualCost,
+                reportPhases,
               );
               evmMap.set(proj.id, evmMetricsResult as EVMMetrics);
 
-              const pertResult = ReportCalculations.calculatePERTAnalysis(proj as any);
+              const pertResult = ReportCalculations.calculatePERTAnalysis(
+                reportPhases,
+                ((reportProject as any).tasks || []) as any,
+              );
+
               pertMap.set(proj.id, {
                 expectedDuration: (pertResult as any).totalExpectedDuration || (pertResult as any).expectedDuration || 0,
                 variance: (pertResult as any).totalVariance || (pertResult as any).variance || 0,
