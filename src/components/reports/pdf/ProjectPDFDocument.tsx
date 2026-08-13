@@ -589,44 +589,6 @@ export function ProjectPDFDocument({
               );
             })()}
 
-            {/* Lecture référentielle DGEER — uniquement si l'organisation propriétaire est la DGEER */}
-            {dgeerContext && (() => {
-              const insights = buildDgeerMissionInsights({
-                title: project.title,
-                description: (project as any).description,
-                projectType: (project as any).projectType || (project as any).project_type,
-                sector: (project as any).sector,
-                location: project.location,
-                progress: project.progress ?? 0,
-                budget: project.budget ?? 0,
-                actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
-                interventionZonesCount: Array.isArray((project as any).interventionZones)
-                  ? (project as any).interventionZones.length
-                  : 0,
-                inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
-                  ? (enrichedData as any).inspections.length
-                  : 0,
-                phasesCount: Array.isArray((enrichedData as any)?.phases)
-                  ? (enrichedData as any).phases.length
-                  : Array.isArray((project as any).phases)
-                    ? (project as any).phases.length
-                    : 0,
-              }).filter((m) => m.relevant || m.indicator !== 'n/d');
-
-              if (insights.length === 0) return null;
-              return (
-                <PDFTable
-                  headers={['Mission DGEER', 'Rattachement', 'Indicateur de suivi', 'Valeur']}
-                  data={insights.map((m) => [
-                    m.label,
-                    m.relevant ? 'Direct' : 'Indirect',
-                    m.indicatorLabel,
-                    m.indicator,
-                  ])}
-                  columnWidths={['30%', '16%', '34%', '20%']}
-                />
-              );
-            })()}
 
 
 
