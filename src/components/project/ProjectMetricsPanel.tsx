@@ -88,7 +88,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
   }, [project, phases, actualCost, inspectionsCount, documentsCount, risks, pertExpectedDuration]);
 
   return (
-    <div className="space-y-6">
+    <div className={`${isCompact ? 'space-y-3' : 'space-y-6'} ${className ?? ''}`}>
       {/* KPI — source unique */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -156,6 +156,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
       </div>
 
       {/* Alertes actives (mêmes règles que le rapport PDF) */}
+      {withAlerts && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Alertes actives ({metrics.alerts.length})</CardTitle>
@@ -179,7 +180,10 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         </CardContent>
       </Card>
 
+      )}
+
       {/* Suivi & Évaluation — 7 axes */}
+      {withAxes && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Suivi &amp; Évaluation (7 axes)</CardTitle>
@@ -200,15 +204,19 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         </CardContent>
       </Card>
 
+      )}
+
       {/* Gantt réutilisable */}
+      {withGantt && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Diagramme de Gantt (calendrier réel)</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProjectGanttTimeline gantt={metrics.gantt} />
+          <ProjectGanttTimeline gantt={metrics.gantt} showAsciiBars={!isCompact} />
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };
