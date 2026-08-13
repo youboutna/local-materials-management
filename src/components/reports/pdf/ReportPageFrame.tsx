@@ -73,15 +73,20 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 2,
   },
-  // En-tête allégé (pages 2, 3, ...)
+  // En-tête allégé (pages 2, 3, ...) — positionné en absolu pour ne JAMAIS
+  // consommer de hauteur dans le flux (sinon react-pdf pousse tout le contenu
+  // et laisse la page 1 vide).
   lightHeader: {
+    position: 'absolute',
+    top: 10,
+    left: 30,
+    right: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
-    paddingBottom: 6,
-    marginBottom: 10,
+    paddingBottom: 4,
   },
   lightHeaderTitle: {
     fontSize: 9,
@@ -115,54 +120,70 @@ interface ReportHeaderProps {
   company?: ReportCompanyInfo;
   /** Contenu additionnel (ex: miniature SIG) affiché uniquement en page 1. */
   extra?: React.ReactNode;
+  /**
+   * Affiche le bloc complet (organisation + titre + synthèse) dans le flux.
+   * À passer à `false` pour les pages secondaires d'un document multi-projets.
+   */
+  showFullHeader?: boolean;
 }
 
 /**
- * En-tête « intelligent » : plein sur la première page du document (logo,
- * coordonnées organisation), allégé (titre + date + filet) sur les suivantes.
- * Utilise le render prop `fixed`, calculé sur l'ensemble du document.
+ * En-tête « intelligent » :
+ *  - bloc complet (logo, coordonnées organisation, titre) rendu DANS LE FLUX,
+ *    donc uniquement en tête du document (page 1) ;
+ *  - en-tête allégé (titre + date) rendu en position absolue `fixed` sur les
+ *    pages suivantes — il ne consomme aucune hauteur de flux, ce qui évite la
+ *    régression « page 1 vide » observée avec un `render` fixe de hauteur
+ *    variable.
  */
-export function ReportHeader({ title, subtitle, company, extra }: ReportHeaderProps) {
+export function ReportHeader({ title, subtitle, company, extra, showFullHeader = true }: ReportHeaderProps) {
   const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
   const shortDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
 
   return (
-    <View
-      fixed
-      render={({ pageNumber }: { pageNumber: number }) =>
-        pageNumber === 1 ? (
-          <View>
-            {company && (
-              <View style={styles.companyHeader}>
-                <View style={styles.companyHeaderContent}>
-                  <View style={styles.companyInfo}>
-                    <Text style={styles.companyName}>{company.name}</Text>
-                    <Text style={styles.companyDetail}>{company.address}</Text>
-                    <Text style={styles.companyDetail}>Tél: {company.phone}</Text>
-                    <Text style={styles.companyDetail}>Email: {company.email}</Text>
-                  </View>
-                  {company.logo ? <Image src={company.logo} style={styles.companyLogo} /> : null}
+    <>
+      {showFullHeader && (
+        <View>
+          {company && (
+            <View style={styles.companyHeader}>
+              <View style={styles.companyHeaderContent}>
+                <View style={styles.companyInfo}>
+                  <Text style={styles.companyName}>{company.name}</Text>
+                  <Text style={styles.companyDetail}>{company.address}</Text>
+                  <Text style={styles.companyDetail}>Tél: {company.phone}</Text>
+                  <Text style={styles.companyDetail}>Email: {company.email}</Text>
                 </View>
+                {company.logo ? <Image src={company.logo} style={styles.companyLogo} /> : null}
               </View>
-            )}
-            <View style={styles.reportHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.reportTitle}>{title} - Généré le {currentDate}</Text>
-                {subtitle && <Text style={styles.reportSubtitle}>{subtitle}</Text>}
-              </View>
-              {extra}
             </View>
+          )}
+          <View style={styles.reportHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.reportTitle}>{title} - Généré le {currentDate}</Text>
+              {subtitle && <Text style={styles.reportSubtitle}>{subtitle}</Text>}
+            </View>
+            {extra}
           </View>
-        ) : (
-          <View style={styles.lightHeader}>
-            <Text style={styles.lightHeaderTitle}>{title}</Text>
-            <Text style={styles.lightHeaderDate}>{shortDate}</Text>
-          </View>
-        )
-      }
-    />
+        </View>
+      )}
+
+      {/* En-tête allégé des pages ≥ 2 (absolu + fixed : hauteur nulle en flux) */}
+      <View
+        style={styles.lightHeader}
+        fixed
+        render={({ pageNumber }: { pageNumber: number }) =>
+          pageNumber === 1 ? null : (
+            <>
+              <Text style={styles.lightHeaderTitle}>{title}</Text>
+              <Text style={styles.lightHeaderDate}>{shortDate}</Text>
+            </>
+          )
+        }
+      />
+    </>
   );
 }
+
 
 interface ReportFooterProps {
   /** Libellé affiché à gauche du pied de page (ex: mention de confidentialité). */

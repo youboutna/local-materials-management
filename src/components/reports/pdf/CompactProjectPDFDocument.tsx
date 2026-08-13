@@ -820,7 +820,9 @@ export function CompactProjectPDFDocument({
               title={reportTitle}
               company={includeCompanyHeader ? companyInfo : undefined}
               extra={renderStreetMap(project)}
+              showFullHeader={index === 0}
             />
+
 
             {/* Project Title */}
             <View style={styles.projectTitle}>
