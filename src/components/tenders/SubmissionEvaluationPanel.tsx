@@ -57,6 +57,10 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
     recommendations: ''
   });
 
+  // Questionnaire détaillé (référentiel de critères pondérés)
+  const [criterionScores, setCriterionScores] = useState<Record<string, number>>({});
+
+
   // Use hexagonal hooks
   const { data: submission, isLoading: submissionLoading } = useTenderSubmission(submissionId);
   const { data: documents, isLoading: documentsLoading } = useSubmissionDocuments(submissionId);
