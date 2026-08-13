@@ -9,6 +9,8 @@ import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentsList } from '@/hooks/hexagonal';
 import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentChanges } from '@/components/documents/viewer/documentEvents';
+
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 interface DocumentsListProps {
