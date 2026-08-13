@@ -52,7 +52,7 @@ export const MONITORING_AXES: Record<MonitoringAxisCode, MonitoringAxis> = {
     decisionQuestion: 'Où en est la réalisation sur le terrain ?',
     indicatorLabel: 'Progression (%)',
     unit: 'percent',
-    thresholds: { good: 75, warning: 40 },
+    thresholds: { good: 75, warning: 50 },
   },
   execution_budgetaire: {
     code: 'execution_budgetaire',
@@ -61,7 +61,7 @@ export const MONITORING_AXES: Record<MonitoringAxisCode, MonitoringAxis> = {
     decisionQuestion: 'Les crédits sont-ils consommés au rythme des travaux ?',
     indicatorLabel: 'Budget engagé (%)',
     unit: 'percent',
-    thresholds: { good: 80, warning: 40 },
+    thresholds: { good: 80, warning: 50 },
   },
   couverture_territoriale: {
     code: 'couverture_territoriale',
@@ -70,7 +70,7 @@ export const MONITORING_AXES: Record<MonitoringAxisCode, MonitoringAxis> = {
     decisionQuestion: "Quelle est l'emprise géographique du projet ?",
     indicatorLabel: "Zones d'intervention",
     unit: 'count',
-    thresholds: { good: 2, warning: 1 },
+    thresholds: { good: 3, warning: 1 },
   },
   controle_qualite: {
     code: 'controle_qualite',
@@ -95,7 +95,7 @@ export const MONITORING_AXES: Record<MonitoringAxisCode, MonitoringAxis> = {
     order: 7,
     label: 'Maîtrise des risques',
     decisionQuestion: 'Des risques non traités menacent-ils le projet ?',
-    indicatorLabel: 'Risques élevés ouverts',
+    indicatorLabel: 'Alertes actives',
     unit: 'count',
     thresholds: { good: 0, warning: 2 },
     lowerIsBetter: true,
