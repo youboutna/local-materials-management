@@ -11,8 +11,11 @@
  * ⚠️ canManageSubObjects = true en mode EDIT (projet persisté)
  */
 
-import { Building, Calendar, FileCheck, FileText, Plus, Shield, Upload, Users, ExternalLink, AlertCircle, Info } from 'lucide-react';
+import { Building, Calendar, Eye, FileCheck, FileText, Plus, Shield, Upload, Users, ExternalLink, AlertCircle, Info } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentChanges } from '@/components/documents/viewer/documentEvents';
+
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +111,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const contextComplianceItems = state.relatedData.compliance?.regulations || [];
   
   // Services
+  const { openDocument } = useDocumentViewer();
   const complianceService = useMemo(() => getComplianceService(), []);
+
+
   const bankGuaranteeService = useMemo(() => getBankGuaranteeService(), []);
   const insuranceService = useMemo(() => getInsuranceService(), []);
   const documentService = useMemo(() => getDocumentService(), []);
@@ -221,6 +227,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     loadedKeyRef.current = key;
     loadComplianceData();
   }, [projectId, mode, isPersistedEffective, loadComplianceData]);
+
+  // Resynchronisation après action de la visionneuse (statut, suppression)
+  useDocumentChanges(useCallback(() => { loadComplianceData(); }, [loadComplianceData]));
+
+
 
   // Mise à jour du parent quand les données changent
   useEffect(() => {
@@ -408,6 +419,24 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     return (completed / complianceItems.length) * 100;
   };
 
+  // Documents rattachés à la conformité réglementaire (contexte d'upload = compliance)
+  const regulatoryDocuments = useMemo(
+    () =>
+      documents.filter((doc) => {
+        const meta = (doc.metadata ?? {}) as Record<string, unknown>;
+        return (
+          meta.context === 'compliance' ||
+          String(doc.documentType ?? '').startsWith('regulatory') ||
+          String(doc.documentType ?? '').includes('permit') ||
+          String(doc.documentType ?? '').includes('authorization')
+        );
+      }),
+    [documents]
+  );
+
+  // Nombre d'éléments réglementaires (contrôles + pièces justificatives)
+  const regulatoryCount = complianceItems.length + regulatoryDocuments.length;
+
   // Calculate stats
   const stats = useMemo(() => ({
     total: complianceItems.length,
@@ -415,6 +444,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     pending: complianceItems.filter(i => String(i.status) === 'pending' || String(i.status) === 'in_review').length,
     rejected: complianceItems.filter(i => i.status === 'rejected').length,
   }), [complianceItems]);
+
 
   // ============================================================
   // Render
@@ -835,11 +865,39 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileCheck className="h-5 w-5" />
-                Conformité Réglementaire ({complianceItems.length})
+                Conformité Réglementaire ({regulatoryCount})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {complianceItems.length === 0 ? (
+            <CardContent className="space-y-4">
+              {regulatoryDocuments.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Pièces justificatives ({regulatoryDocuments.length})
+                  </h4>
+                  {regulatoryDocuments.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{doc.title || doc.fileName}</p>
+                        <p className="text-xs text-muted-foreground">{doc.documentType}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge className={getStatusColor(doc.status || 'draft')}>{doc.status || 'draft'}</Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            openDocument(doc, { allowStatusChange: true, onStatusChanged: loadComplianceData })
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {complianceItems.length === 0 && regulatoryDocuments.length === 0 ? (
+
                 <div className="text-center py-8">
                   <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucun élément réglementaire</p>

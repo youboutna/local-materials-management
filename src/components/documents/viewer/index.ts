@@ -8,3 +8,10 @@ export {
   type DocumentViewerOptions,
 } from './types';
 export { LocalFilePreviewButton } from './LocalFilePreviewButton';
+export {
+  emitDocumentChanged,
+  useDocumentChanges,
+  type DocumentChangeEvent,
+  type DocumentChangeKind,
+} from './documentEvents';
+

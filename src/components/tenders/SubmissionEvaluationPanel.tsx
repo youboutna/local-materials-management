@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EvaluationQuestionnaire } from '@/components/tenders/EvaluationQuestionnaire';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 import {
@@ -56,6 +58,10 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
     notes: '',
     recommendations: ''
   });
+
+  // Questionnaire détaillé (référentiel de critères pondérés)
+  const [criterionScores, setCriterionScores] = useState<Record<string, number>>({});
+
 
   // Use hexagonal hooks
   const { data: submission, isLoading: submissionLoading } = useTenderSubmission(submissionId);
@@ -235,7 +241,21 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
         {/* Evaluation Tab */}
         <TabsContent value="evaluation" className="space-y-4">
+          {/* Questionnaire piloté par référentiel : alimente automatiquement les 3 scores */}
+          <EvaluationQuestionnaire
+            value={criterionScores}
+            onChange={({ scores: next, byCategory }) => {
+              setCriterionScores(next);
+              setScores((prev) => ({
+                ...prev,
+                administrative_score: Math.round(byCategory.administrative ?? 0),
+                technical_score: Math.round(byCategory.technical ?? 0),
+                financial_score: Math.round(byCategory.financial ?? 0),
+              }));
+            }}
+          />
           <Card>
+
             <CardHeader>
               <CardTitle>Grille d'Évaluation</CardTitle>
               <CardDescription>

@@ -6,7 +6,7 @@
  * Affichage paginé des documents avec filtrage
  */
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar, User, Eye, Download, Trash2 } from 'lucide-react';
 import { DocumentDTO, DocumentStatus } from '@/dtos/entities/DocumentDTO';
 import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentChanges, type DocumentChangeEvent } from '@/components/documents/viewer/documentEvents';
 
 interface DocumentsListPaginatedProps {
   documents: DocumentDTO[];
@@ -24,6 +25,8 @@ interface DocumentsListPaginatedProps {
   onDocumentSelect: (document: DocumentDTO) => void;
   onDocumentDownload?: (document: DocumentDTO) => void;
   onDocumentDelete?: (document: DocumentDTO) => void;
+  /** Appelé après une action de la visionneuse (statut, suppression) */
+  onDocumentsChanged?: () => void;
   isLoading?: boolean;
 }
 
@@ -36,9 +39,21 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
   onDocumentSelect,
   onDocumentDownload,
   onDocumentDelete,
+  onDocumentsChanged,
   isLoading = false
 }) => {
   const { openDocument } = useDocumentViewer();
+  // Synchronisation immédiate des statuts modifiés depuis la visionneuse
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
+  useDocumentChanges(
+    useCallback((event: DocumentChangeEvent) => {
+      if (event.kind === 'status' && event.id && event.status) {
+        setStatusOverrides((prev) => ({ ...prev, [event.id as string]: event.status as string }));
+      }
+      onDocumentsChanged?.();
+    }, [onDocumentsChanged])
+  );
+
   const generateVisiblePages = () => {
     const delta = 2;
     const range: number[] = [];
@@ -104,6 +119,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
     const labels: Record<string, string> = {
       'draft': 'Brouillon',
       'pending_approval': 'En attente',
+      'pending_review': 'En attente de revue',
       'approved': 'Approuvé',
       'rejected': 'Rejeté',
       'archived': 'Archivé',
@@ -112,6 +128,10 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
     };
     return labels[status] || status;
   };
+
+  const resolveStatus = (doc: DocumentDTO) =>
+    (doc.id && statusOverrides[doc.id]) || doc.status;
+
 
   if (isLoading) {
     return (
@@ -186,9 +206,10 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant={getStatusBadgeVariant(document.status)}>
-                      {getStatusLabel(document.status)}
+                    <Badge variant={getStatusBadgeVariant(resolveStatus(document))}>
+                      {getStatusLabel(resolveStatus(document))}
                     </Badge>
+
                     <Badge variant="outline">
                       {getDocumentTypeLabel(document.documentType)}
                     </Badge>
@@ -231,12 +252,19 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => { openDocument(document); onDocumentSelect?.(document); }}
+                    onClick={() => {
+                      openDocument(
+                        { ...document, status: resolveStatus(document) },
+                        onDocumentDelete ? { onDelete: () => onDocumentDelete(document) } : undefined
+                      );
+                      onDocumentSelect?.(document);
+                    }}
                     className="flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
                     Voir
                   </Button>
+
                   
                   {onDocumentDownload && document.fileUrl && (
                     <Button 

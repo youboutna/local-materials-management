@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentsList } from '@/hooks/hexagonal';
 import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentChanges } from '@/components/documents/viewer/documentEvents';
+
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 interface DocumentsListProps {
@@ -38,6 +40,11 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     filterStatus
   });
 
+  // Resynchronisation immédiate après action visionneuse (statut, suppression)
+  useDocumentChanges(useCallback(() => { refetch?.(); }, [refetch]));
+
+
+
   const getDocumentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       'inspection_report': 'Rapport d\'inspection',
@@ -53,21 +60,28 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'pending_review': return 'bg-yellow-100 text-yellow-800';
+      case 'draft': return 'bg-muted text-muted-foreground';
+      case 'pending_review':
+      case 'pending_approval': return 'bg-yellow-100 text-yellow-800';
       case 'approved': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'rejected': return 'bg-destructive/10 text-destructive';
+      case 'archived': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getStatusLabel = (status: string | null) => {
     const statuses: Record<string, string> = {
       'draft': 'Brouillon',
-      'pending_review': 'En attente de révision',
-      'approved': 'Approuvé'
+      'pending_review': 'En attente de revue',
+      'pending_approval': 'En attente',
+      'approved': 'Approuvé',
+      'rejected': 'Rejeté',
+      'archived': 'Archivé'
     };
     return statuses[status || 'draft'] || status || 'Brouillon';
   };
+
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';
@@ -204,12 +218,46 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents?.map(doc => (
-          <div key={doc.id}>
-            <span>{doc.fileName}</span>
-            <span>{getDocumentTypeLabel(doc.documentType)}</span>
-          </div>
+          <Card key={doc.id} className="flex flex-col transition-shadow hover:shadow-md">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="truncate text-base" title={doc.title}>
+                    {doc.title || doc.fileName || 'Document'}
+                  </CardTitle>
+                  <p className="truncate text-xs text-muted-foreground">{doc.fileName || '—'}</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-3">
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline">{getDocumentTypeLabel(doc.documentType)}</Badge>
+                <Badge className={getStatusColor(doc.status)}>{getStatusLabel(doc.status)}</Badge>
+              </div>
+              {doc.description && (
+                <p className="line-clamp-2 text-sm text-muted-foreground">{doc.description}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {formatFileSize(doc.fileSize ?? null)}
+                {doc.createdAt && ` · ${new Date(doc.createdAt).toLocaleDateString('fr-FR')}`}
+              </p>
+              <div className="mt-auto flex items-center gap-2 pt-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
+                  <Eye className="mr-1 h-4 w-4" />
+                  Voir
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title="Télécharger">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
+
 
       {documents?.length === 0 && (
         <Card>
