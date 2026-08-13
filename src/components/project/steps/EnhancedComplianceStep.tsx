@@ -111,7 +111,8 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const contextComplianceItems = state.relatedData.compliance?.regulations || [];
   
   // Services
-  const complianceService = useMemo(() => getComplianceService(), []);
+  const { openDocument } = useDocumentViewer();
+
   const bankGuaranteeService = useMemo(() => getBankGuaranteeService(), []);
   const insuranceService = useMemo(() => getInsuranceService(), []);
   const documentService = useMemo(() => getDocumentService(), []);
