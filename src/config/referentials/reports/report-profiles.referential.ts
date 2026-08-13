@@ -65,8 +65,20 @@ export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
     label: { fr: 'Résumé exécutif', en: 'Executive summary' },
     description: { fr: 'Rapport concis avec les informations essentielles du projet' },
     depth: 'light',
-    includes: ['overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones', 'monitoringEvaluation'],
+    includes: [
+      'overview', 'financial', 'timeline', 'phases', 'kpi', 'milestones',
+      'risks', 'inspections', 'documents', 'evmAnalysis', 'pertAnalysis', 'ganttChart',
+    ],
+    sectionDisplay: {
+      financial: { density: 'compact', maxRows: 3 },
+      risks: { density: 'compact', maxRows: 3 },
+      milestones: { density: 'line' },
+      pertAnalysis: { density: 'line' },
+      ganttChart: { density: 'line' },
+      evmAnalysis: { density: 'compact' },
+    },
   },
+
   detailed: {
     code: 'detailed',
     label: { fr: 'Rapport détaillé', en: 'Detailed report' },
