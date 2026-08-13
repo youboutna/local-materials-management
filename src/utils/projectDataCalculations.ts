@@ -41,10 +41,10 @@ interface ProjectPayment {
   contractor_name?: string;
 }
 
-interface LocalProjectDetailData extends RealProjectDetailDTO {
+type LocalProjectDetailData = Partial<RealProjectDetailDTO> & {
   payments?: ProjectPayment[];
   expenses?: any[];
-}
+};
 
 interface TimelineMetrics {
   timeProgress: number;
@@ -389,7 +389,7 @@ export class ProjectDataCalculations {
         // Performance indicators
         performanceIndicators: this.calculatePerformanceIndicators(
           { overallProgress } as ProgressMetrics,
-          {}
+          {} as LocalProjectDetailData
         )
       };
     } catch (error) {
