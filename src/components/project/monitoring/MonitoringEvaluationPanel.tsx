@@ -30,7 +30,7 @@ import {
   DeviationResult,
 } from "@/application/services/DeviationEngine";
 import { ProjectMetricsOrchestrator } from "@/application/services/ProjectMetricsOrchestrator";
-import { formatIndex2 } from "@/utils/reportNumbers";
+import { formatIndex2, formatAmount2 } from "@/utils/reportNumbers";
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 export interface MonitoringEvalPhaseInput {
@@ -181,10 +181,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="SPI (planning)"
-            value={evm.schedulePerformanceIndex.toFixed(2)}
-            tone={evm.schedulePerformanceIndex >= 0.95 ? "text-success" : "text-warning"}
+            value={formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)}
+            tone={spiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={
-              evm.schedulePerformanceIndex >= 1 ? (
+              spiForJudgement >= 1 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
                 <TrendingDown className="h-4 w-4" />
@@ -193,10 +193,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="CPI (coût)"
-            value={evm.costPerformanceIndex.toFixed(2)}
-            tone={evm.costPerformanceIndex >= 0.95 ? "text-success" : "text-warning"}
+            value={formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)}
+            tone={cpiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={
-              evm.costPerformanceIndex >= 1 ? (
+              cpiForJudgement >= 1 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
                 <TrendingDown className="h-4 w-4" />
@@ -267,10 +267,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           <p className="text-sm">
             <span className="font-semibold">Synthèse : </span>
             <span className={judgement.tone}>{judgement.label}</span>. SPI ={" "}
-            {evm.schedulePerformanceIndex.toFixed(2)} • CPI ={" "}
-            {evm.costPerformanceIndex.toFixed(2)} • EAC ={" "}
-            {Math.round(evm.estimateAtCompletion).toLocaleString("fr-FR")} • VAC ={" "}
-            {Math.round(evm.varianceAtCompletion).toLocaleString("fr-FR")}.
+            {formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)} • CPI ={" "}
+            {formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)} • EAC ={" "}
+            {formatAmount2(evm.estimateAtCompletion ?? 0)} • VAC ={" "}
+            {formatAmount2(evm.varianceAtCompletion ?? 0)}.
           </p>
         </div>
       </CardContent>
