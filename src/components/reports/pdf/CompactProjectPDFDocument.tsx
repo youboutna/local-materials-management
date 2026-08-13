@@ -1,8 +1,6 @@
-import { isDgeerOrganization } from '@/config/referentials/reports/dgeer-missions.referential';
 import { ALL_REPORT_SECTIONS, type ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
-import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -494,11 +492,6 @@ export function CompactProjectPDFDocument({
     return acc;
   }, {} as Record<ReportSectionKey, boolean>);
 
-  // Le référentiel DGEER n'est consulté que si l'organisation propriétaire est la DGEER.
-  const dgeerContext = isDgeerOrganization(
-    organizationName ?? company?.name,
-    organizationCode,
-  );
 
   // Default company information
   const defaultCompany = {
@@ -675,28 +668,6 @@ export function CompactProjectPDFDocument({
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
 
-        // Référentiel DGEER : consulté uniquement si l'organisation propriétaire est la DGEER
-        // et si la section « Suivi & Évaluation » est demandée.
-        const missionInsights =
-          dgeerContext && activeSections.monitoringEvaluation
-            ? buildDgeerMissionInsights({
-                title: project.title,
-                description: (project as any).description,
-                projectType: (project as any).projectType || (project as any).project_type,
-                sector: (project as any).sector,
-                location: project.location,
-                progress: project.progress ?? 0,
-                budget: project.budget ?? 0,
-                actualCost: Number(evmMetrics?.actualCost ?? 0),
-                interventionZonesCount: Array.isArray((project as any).interventionZones)
-                  ? (project as any).interventionZones.length
-                  : 0,
-                inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
-                  ? (enrichedData as any).inspections.length
-                  : 0,
-                phasesCount: phases.length,
-              })
-            : [];
 
 
         return (
@@ -755,39 +726,6 @@ export function CompactProjectPDFDocument({
               </Text>
             </View>
 
-            {/* Suivi & Évaluation — indicateurs réels, lecture DGEER si organisation concernée */}
-            {activeSections.monitoringEvaluation && missionInsights.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  Suivi &amp; Évaluation — référentiel missions DGEER
-                </Text>
-                <View style={styles.table}>
-                  <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderCell, { width: '30%' }]}>Mission</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '16%' }]}>Rattachement</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '34%' }]}>Indicateur de suivi</Text>
-                    <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Valeur</Text>
-                  </View>
-                  {missionInsights
-                    .filter((m) => m.relevant || m.indicator !== 'n/d')
-                    .map((m) => (
-                      <View key={m.code} style={styles.tableRow}>
-                        <Text style={[styles.tableCell, { width: '30%' }]}>{m.label}</Text>
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            { width: '16%', color: m.relevant ? colors.success : colors.muted },
-                          ]}
-                        >
-                          {m.relevant ? 'Direct' : 'Indirect'}
-                        </Text>
-                        <Text style={[styles.tableCell, { width: '34%' }]}>{m.indicatorLabel}</Text>
-                        <Text style={[styles.tableCell, { width: '20%' }]}>{m.indicator}</Text>
-                      </View>
-                    ))}
-                </View>
-              </View>
-            )}
 
 
 
