@@ -1,8 +1,10 @@
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
+import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ProjectMiniMap } from './ProjectMiniMap';
 
 // Local types for PDF rendering
 type EVMMetrics = Record<string, any>;
