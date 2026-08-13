@@ -63,6 +63,10 @@ export function CompactProjectReportGenerator({
   const [loading, setLoading] = useState(false);
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
   const [profile, setProfile] = useState<ReportProfile>('summary');
+  // Organisation propriétaire réelle du projet (en-tête du rapport)
+  const [ownerOrganization, setOwnerOrganization] = useState<OrganizationDTO | null>(null);
+  
+
   
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
