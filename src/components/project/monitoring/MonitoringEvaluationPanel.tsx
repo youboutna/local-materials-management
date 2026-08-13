@@ -29,7 +29,8 @@ import {
   DeviationEngine,
   DeviationResult,
 } from "@/application/services/DeviationEngine";
-import { ProjectCalculationService } from "@/application/services/ProjectCalculationService";
+import { ProjectMetricsOrchestrator } from "@/application/services/ProjectMetricsOrchestrator";
+import { formatIndex2 } from "@/utils/reportNumbers";
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 export interface MonitoringEvalPhaseInput {
@@ -92,13 +93,40 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
     [scope, phaseId, phases],
   );
 
-  // EVM / health — calculés sur le projet entier (les écarts par phase ci-dessous)
-  const evm = useMemo(() => ProjectCalculationService.calculateEVMMetrics(project), [project]);
-  const health = useMemo(
-    () => ProjectCalculationService.calculateProjectHealthScore(project),
-    [project],
+  // EVM / health — SOURCE UNIQUE : ProjectMetricsOrchestrator (mêmes valeurs
+  // que le Dashboard Monitoring et le rapport PDF ; évite les 3 moteurs EVM
+  // parallèles constatés dans l'audit).
+  const metrics = useMemo(
+    () =>
+      ProjectMetricsOrchestrator.compute({
+        project: {
+          id: project.id,
+          title: project.title,
+          budget: project.budget ?? 0,
+          progress: project.progress ?? 0,
+          startDate: project.startDate ?? null,
+          endDate: project.endDate ?? null,
+          currency: (project as any).currency || 'MRU',
+        },
+        phases: phases.map((p) => ({
+          id: p.id,
+          name: p.name,
+          weight: undefined,
+          budget: p.budget ?? undefined,
+          startDate: p.startDate ?? undefined,
+          endDate: p.endDate ?? undefined,
+          progress: p.actualProgress ?? p.progress ?? 0,
+          actualCost: p.actualCost ?? undefined,
+          status: p.status,
+        })),
+      }),
+    [project, phases],
   );
-  const judgement = judge(evm.schedulePerformanceIndex, evm.costPerformanceIndex);
+  const evm = metrics.evm;
+  const health = metrics.health;
+  const spiForJudgement = evm.schedulePerformanceIndex ?? 0;
+  const cpiForJudgement = evm.costPerformanceIndex ?? 0;
+  const judgement = judge(spiForJudgement, cpiForJudgement);
 
   // Écarts par phase (DeviationEngine en scope 'phase')
   const phaseDeviations = useMemo(
