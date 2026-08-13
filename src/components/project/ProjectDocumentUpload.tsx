@@ -12,7 +12,12 @@ import { Upload, FileText, Loader2, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/contexts/use-auth';
 import { getDocumentService } from '@/application/services/DocumentService';
-import type { DocumentType } from '@/dtos/types/document';
+import {
+  DOCUMENT_TYPE_LABELS,
+  getDocumentCategoriesForContext,
+  type DocumentTypeCode as DocumentType,
+} from '@/config/referentials/documents/document-types.referential';
+
 
 interface ProjectDocumentUploadProps {
   projectId: string | null;
