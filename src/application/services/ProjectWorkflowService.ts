@@ -560,9 +560,15 @@ export class ProjectWorkflowService {
       const pd = (data.projectData ?? {}) as Record<string, unknown>;
       const hasCoordinates = Boolean(pd.latitude && pd.longitude);
       const hasAddress = Boolean((pd.address as string)?.trim() || (pd.location as string)?.trim());
-      if (!hasCoordinates && !hasAddress) {
-        errors.push('Renseignez une adresse ou des coordonnées (latitude / longitude) pour localiser le projet');
+      // Une zone d'intervention tracée sur la carte suffit à localiser le projet.
+      const zones = Array.isArray(pd.interventionZones) ? (pd.interventionZones as any[]) : [];
+      const hasZones = zones.some(
+        (z) => Array.isArray(z?.coordinates) && z.coordinates.length > 0,
+      ) || Boolean((pd.interventionZone as any)?.coordinates?.length);
+      if (!hasCoordinates && !hasAddress && !hasZones) {
+        errors.push('Renseignez une adresse, des coordonnées ou tracez une zone d\'intervention pour localiser le projet');
       }
+
     }
     if (stepNumber === 4 && (!data.relatedData?.phases || data.relatedData.phases.length === 0)) {
       warnings.push('Aucune phase définie. Utilisez un référentiel pour générer les phases.');
