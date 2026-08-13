@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
   payload,
   onReset,
 }) => {
+  const { openDocument } = useDocumentViewer();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -65,7 +67,7 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
     } catch {
       /* tracking is best-effort */
     }
-    window.open(doc.file_url, '_blank');
+    openDocument(doc, { proxyMode: true, allowStatusChange: false });
   };
 
   return (

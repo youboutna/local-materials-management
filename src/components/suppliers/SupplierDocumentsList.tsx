@@ -1,4 +1,5 @@
 ﻿import { Card, CardContent } from '@/components/ui/card';
+import { useDocumentViewer } from "@/components/documents/viewer";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye } from 'lucide-react';
@@ -12,6 +13,7 @@ interface SupplierDocumentsListProps {
 }
 
 const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
+  const { openDocument } = useDocumentViewer();
   const { toast } = useToast();
   const { data: documents, isLoading } = useSupplierDocumentsHex(supplier.id);
 
@@ -116,7 +118,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => window.open(doc.file_url!, '_blank')}
+                    onClick={() => openDocument(doc, { proxyMode: true, allowStatusChange: false })}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
