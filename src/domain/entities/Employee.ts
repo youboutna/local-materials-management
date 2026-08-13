@@ -333,6 +333,7 @@ export class Employee {
     emp._userId = this._userId;
     emp._managerId = this._managerId;
     emp._superiorId = this._superiorId;
+    emp._extras = { ...this._extras };
     return emp;
   }
 
@@ -386,6 +387,7 @@ export class Employee {
     emp._userId = props.userId ?? null;
     emp._managerId = props.managerId ?? null;
     emp._superiorId = props.superiorId ?? null;
+    emp._extras = props.extras ? { ...props.extras } : {};
     return emp;
   }
 
