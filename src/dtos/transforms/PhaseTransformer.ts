@@ -155,10 +155,13 @@ export class PhaseTransformer {
       actualDuration: phase.actualDuration || 0,
       estimatedCost: phase.estimatedCost || 0,
       actualCost: phase.actualCost || 0,
+      // `budget` est le champ consommé par l'UI détail de phase (MRU)
+      budget: phase.estimatedCost || 0,
       type: mappedType || ('execution' as DTOType),
       priority: 'medium' as DTOPriority, // Priority not persisted yet in project_phases
       dependencies: phase.dependencies || [],
       milestones: [], // Hydratés par MilestoneService (workflow projet)
+      notes: phase.notes ?? undefined,
       createdAt: phase.createdAt,
       updatedAt: phase.updatedAt,
 
@@ -167,10 +170,13 @@ export class PhaseTransformer {
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
       customPhaseData: phase.customPhaseData ?? undefined,
-      humanResources: phase.humanResources ? (phase.humanResources as unknown as Record<string, unknown>) : undefined,
+      humanResources: (phase.humanResources ?? undefined) as PhaseDTO['humanResources'],
+      materials: (phase.materials ?? []) as PhaseDTO['materials'],
+      suppliers: (phase.suppliers ?? []) as PhaseDTO['suppliers'],
       weight: phase.weight || undefined,
     };
   }
+
 
   // =================== Domain Entity → DB Row (snake_case) ===================
   /**
