@@ -8,6 +8,7 @@ import {
     SupplierInfoDTO
 } from '@/dtos/entities/PaymentInitiationDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Json } from '@/integrations/supabase/types';
 
 export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepository {
 
@@ -148,7 +149,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
               email: supplierInfo.email
             } : null
           }
-        } as unknown as Record<string, unknown>
+        } as unknown as Json
       }])
       .select()
       .single();
@@ -164,7 +165,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
     const { error } = await supabase
       .from('notifications')
       .update({
-        data: updatedMetadata as unknown as Record<string, unknown>,
+        data: updatedMetadata as unknown as Json,
       })
       .eq('id', action.notificationId);
 
@@ -177,7 +178,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
     const { error } = await supabase
       .from('notifications')
       .update({
-        data: updatedMetadata as unknown as Record<string, unknown>,
+        data: updatedMetadata as unknown as Json,
       })
       .eq('id', dto.notificationId);
 
