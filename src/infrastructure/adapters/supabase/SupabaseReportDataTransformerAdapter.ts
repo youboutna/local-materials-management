@@ -105,7 +105,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       projectData.coordinates?.latitude?.toString() || undefined,
       projectData.coordinates?.longitude?.toString() || undefined,
       Number(projectData.teamSize ?? 0),
-      projectData.thumbnail || ''
+      String(projectData.thumbnail ?? '')
     );
   }
 
@@ -274,7 +274,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
 
       // Calculate real EVM metrics using ReportCalculations
       const actualCost = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData as unknown as PhaseDTO[]);
+      const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData);
 
       // Calculate performance indicators
       const onTimePerformance = this.calculateOnTimePerformance(phasesData);

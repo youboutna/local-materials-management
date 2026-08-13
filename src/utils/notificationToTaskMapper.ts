@@ -70,7 +70,7 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
   };
 
   const { data: task, error } = await btpClient.from('task_assignments')
-    .insert(taskData)
+    .insert({ ...taskData, action_type: taskType })
     .select()
     .single();
 
@@ -82,16 +82,16 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
   // Create a notification for the assigned user
   await btpClient.from('notifications')
     .insert({
-      recipient_id: recipientId,
+      user_id: recipientId,
       title: `Nouvelle tâche: ${title}`,
       message: description || `Vous avez été assigné à une nouvelle tâche`,
       type: 'task_assignment',
       related_id: task.id,
-      metadata: {
+      data: {
         task_type: taskType,
         related_project_id: metadata.related_project_id,
         priority: priority,
-      } as any,
+      } as never,
     });
 
   console.log('Task created from notification:', task);
@@ -215,12 +215,12 @@ export const createNotificationWithTask = async (params: {
   // Create the notification
   const { data: notification, error: notifError } = await btpClient.from('notifications')
     .insert({
-      recipient_id: recipientId,
+      user_id: recipientId,
       title,
       message,
       type,
       related_id: relatedId || null,
-      metadata: metadata as any,
+      data: metadata as never,
     })
     .select()
     .single();
