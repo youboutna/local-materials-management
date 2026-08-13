@@ -675,28 +675,6 @@ export function CompactProjectPDFDocument({
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
 
-        // Référentiel DGEER : consulté uniquement si l'organisation propriétaire est la DGEER
-        // et si la section « Suivi & Évaluation » est demandée.
-        const missionInsights =
-          dgeerContext && activeSections.monitoringEvaluation
-            ? buildDgeerMissionInsights({
-                title: project.title,
-                description: (project as any).description,
-                projectType: (project as any).projectType || (project as any).project_type,
-                sector: (project as any).sector,
-                location: project.location,
-                progress: project.progress ?? 0,
-                budget: project.budget ?? 0,
-                actualCost: Number(evmMetrics?.actualCost ?? 0),
-                interventionZonesCount: Array.isArray((project as any).interventionZones)
-                  ? (project as any).interventionZones.length
-                  : 0,
-                inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
-                  ? (enrichedData as any).inspections.length
-                  : 0,
-                phasesCount: phases.length,
-              })
-            : [];
 
 
         return (
