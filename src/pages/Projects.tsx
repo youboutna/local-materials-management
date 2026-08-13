@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PortfolioMetricsSummary from "@/components/project/PortfolioMetricsSummary";
 import {
   getProjectListViews,
   getDefaultProjectListView,
@@ -217,6 +218,10 @@ const Projects: React.FC = () => {
       }
     >
       <div className="space-y-3">
+        {/* Synthèse portefeuille — commune à tous les onglets de la liste.
+            Source unique : ProjectMetricsOrchestrator. */}
+        <PortfolioMetricsSummary projects={filteredProjects} />
+
         <Tabs defaultValue={getDefaultProjectListView()} className="w-full">
           <TabsList
             className="grid w-full h-9"
