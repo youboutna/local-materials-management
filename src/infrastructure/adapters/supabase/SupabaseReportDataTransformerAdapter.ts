@@ -6,7 +6,7 @@ import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations
  */
 import { Project } from '@/domain/entities/Project';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
-import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import type { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
 import {
   ConstructionMilestoneDTO,
   EnhancedPhaseDTO,
@@ -104,7 +104,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       projectData.location || '',
       projectData.coordinates?.latitude?.toString() || undefined,
       projectData.coordinates?.longitude?.toString() || undefined,
-      projectData.teamSize ?? 0,
+      Number(projectData.teamSize ?? 0),
       projectData.thumbnail || ''
     );
   }
