@@ -6,6 +6,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
 import { KeycloakAuthProvider } from "./contexts/KeycloakAuthContext";
 import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
+import { DocumentViewerProvider } from "@/components/documents/viewer";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
@@ -103,6 +104,7 @@ function App() {
               <KeycloakAuthProvider>
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <HexagonalAuthProvider>
+                  <DocumentViewerProvider>
                   <div className="min-h-screen bg-background">
                     <MergedNavbar />
                   <main className="pt-16">
@@ -553,6 +555,7 @@ function App() {
                   <Toaster />
                   <UIToaster />
                 </div>
+                  </DocumentViewerProvider>
                 </HexagonalAuthProvider>
                 </BrowserRouter>
               </KeycloakAuthProvider>

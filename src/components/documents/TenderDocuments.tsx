@@ -9,6 +9,7 @@ import { TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/dtos/entities/
 type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 import { toast } from '@/hooks/use-toast';
 import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal'
+import { useDocumentViewer } from '@/components/documents/viewer';
 
 interface TenderDocumentsProps {
   projectId: string;
@@ -17,6 +18,7 @@ interface TenderDocumentsProps {
 
 const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) => {
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
+  const { openDocument } = useDocumentViewer();
 
   const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useTenderDocuments(projectId);
   const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useWorkflowStepDocuments(projectId);
@@ -78,8 +80,11 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   };
 
   const handleViewDocument = (tenderDoc: any) => {
-    if (tenderDoc.document && onDocumentSelect) {
-      onDocumentSelect(tenderDoc.document);
+    if (tenderDoc.document || tenderDoc.file_url) {
+      openDocument(tenderDoc.document ?? tenderDoc, {
+        context: { categorie: tenderDoc.category, lot: tenderDoc.lot_name },
+      });
+      onDocumentSelect?.(tenderDoc.document ?? tenderDoc);
     } else {
       toast({
         title: "Document non disponible",

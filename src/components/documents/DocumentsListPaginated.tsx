@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar, User, Eye, Download, Trash2 } from 'lucide-react';
 import { DocumentDTO, DocumentStatus } from '@/dtos/entities/DocumentDTO';
+import { useDocumentViewer } from '@/components/documents/viewer';
 
 interface DocumentsListPaginatedProps {
   documents: DocumentDTO[];
@@ -37,6 +38,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
   onDocumentDelete,
   isLoading = false
 }) => {
+  const { openDocument } = useDocumentViewer();
   const generateVisiblePages = () => {
     const delta = 2;
     const range: number[] = [];
@@ -229,7 +231,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => onDocumentSelect(document)}
+                    onClick={() => { openDocument(document); onDocumentSelect?.(document); }}
                     className="flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />

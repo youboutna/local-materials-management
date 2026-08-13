@@ -15,6 +15,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { FileText, Loader2, Upload, CheckCircle, AlertCircle, X, Image, File, FileArchive } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { LocalFilePreviewButton } from '@/components/documents/viewer';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -414,6 +415,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   </p>
                 </div>
               </div>
+              <div className="flex items-center gap-1">
+              <LocalFilePreviewButton file={file} title={formData.title || file.name} documentType={formData.documentType} />
               <Button
                 type="button"
                 variant="ghost"
@@ -423,6 +426,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               >
                 <X className="h-4 w-4" />
               </Button>
+              </div>
             </div>
           ) : (
             <div className="text-center">
