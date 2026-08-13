@@ -229,27 +229,24 @@ export class GeocodingService {
         throw new AppError('Address is required for geocoding', 'VALIDATION_ERROR');
       }
 
-      // Always try local Mauritania data first (if prioritized)
-      if (this.prioritizeLocal) {
-        const localResults = await this.geocodeLocal(address);
-        if (localResults.length > 0) return localResults;
-      }
+      // Fusion base locale (MR) + externe (Nominatim) pour une autocomplétion riche.
+      const [localResults, externalResults] = await Promise.all([
+        this.geocodeLocal(address).catch(() => [] as GeocodingResult[]),
+        this.geocodeExternal(address).catch(() => [] as GeocodingResult[]),
+      ]);
 
-      // Try external geocoding based on provider
-      const externalResults = await this.geocodeExternal(address);
-      
-      // If external results found and we still want local fallback, merge them
-      if (externalResults.length > 0) {
-        return externalResults;
-      }
+      const ordered = this.prioritizeLocal
+        ? [...localResults, ...externalResults]
+        : [...externalResults, ...localResults];
 
-      // Final fallback: try local even if not prioritized
-      if (!this.prioritizeLocal) {
-        const localResults = await this.geocodeLocal(address);
-        if (localResults.length > 0) return localResults;
-      }
-
-      return [];
+      // Dédoublonnage par coordonnées arrondies + adresse
+      const seen = new Set<string>();
+      return ordered.filter((r) => {
+        const key = `${r.coordinates.lat.toFixed(3)}|${r.coordinates.lng.toFixed(3)}|${(r.address || '').toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new NetworkError('Failed to geocode address', error);
