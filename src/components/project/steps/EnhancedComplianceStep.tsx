@@ -228,6 +228,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     loadComplianceData();
   }, [projectId, mode, isPersistedEffective, loadComplianceData]);
 
+  // Resynchronisation après action de la visionneuse (statut, suppression)
+  useDocumentChanges(useCallback(() => { loadComplianceData(); }, [loadComplianceData]));
+
+
+
   // Mise à jour du parent quand les données changent
   useEffect(() => {
     if (onStepComplete && !isLoading) {
