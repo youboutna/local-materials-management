@@ -1134,6 +1134,65 @@ export function CompactProjectPDFDocument({
               </View>
             </View>
 
+            {/* Suivi & Évaluation — référentiel générique d'aide à la décision */}
+            {activeSections.monitoringEvaluation && (() => {
+              const inspectionsList = Array.isArray((enrichedData as any)?.inspections)
+                ? (enrichedData as any).inspections
+                : [];
+              const documentsList = Array.isArray((enrichedData as any)?.documents)
+                ? (enrichedData as any).documents
+                : [];
+              const highRisks = (risks as any[]).filter((r: any) => {
+                const level = String(r?.impact ?? r?.severity ?? r?.riskLevel ?? '').toLowerCase();
+                const status = String(r?.status ?? '').toLowerCase();
+                const open = !['mitigated', 'closed', 'resolu', 'resolved'].includes(status);
+                return open && (level.includes('high') || level.includes('eleve') || level.includes('critique') || level.includes('critical'));
+              }).length;
+
+              const insights = buildMonitoringInsights({
+                progress: project.progress ?? 0,
+                budget: project.budget ?? 0,
+                actualCost: Number(evmMetrics?.actualCost ?? 0),
+                phasesCount: phases.length,
+                interventionZonesCount: Array.isArray((project as any).interventionZones)
+                  ? (project as any).interventionZones.length
+                  : 0,
+                inspectionsCount: inspectionsList.length,
+                documentsCount: documentsList.length,
+                highRisksCount: highRisks,
+              });
+
+              const appreciationColor = (a: string) =>
+                a === 'good' ? colors.success : a === 'warning' ? colors.warning : a === 'critical' ? colors.danger : colors.muted;
+
+              return (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Suivi &amp; Évaluation</Text>
+                  <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                      <Text style={[styles.tableHeaderCell, { width: '26%' }]}>Axe de suivi</Text>
+                      <Text style={[styles.tableHeaderCell, { width: '36%' }]}>Question de décision</Text>
+                      <Text style={[styles.tableHeaderCell, { width: '22%' }]}>Indicateur</Text>
+                      <Text style={[styles.tableHeaderCell, { width: '16%' }]}>Appréciation</Text>
+                    </View>
+                    {insights.map((m) => (
+                      <View key={m.code} style={styles.tableRow}>
+                        <Text style={[styles.tableCell, { width: '26%' }]}>{m.label}</Text>
+                        <Text style={[styles.tableCell, { width: '36%' }]}>{m.decisionQuestion}</Text>
+                        <Text style={[styles.tableCell, { width: '22%' }]}>
+                          {m.indicatorLabel}: {m.value}
+                        </Text>
+                        <Text style={[styles.tableCell, { width: '16%', color: appreciationColor(m.appreciation) }]}>
+                          {m.appreciationLabel}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              );
+            })()}
+
+
             {/* Page Footer */}
             <View style={styles.pageFooter}>
               <Text>Projet {index + 1} sur {projects.length}</Text>
