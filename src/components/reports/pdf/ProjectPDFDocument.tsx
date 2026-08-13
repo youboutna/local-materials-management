@@ -70,6 +70,8 @@ interface ProjectPDFDocumentProps {
   /** Organisation propriétaire — active la lecture référentielle DGEER. */
   organizationName?: string;
   organizationCode?: string;
+  /** Coordonnées de l'organisation propriétaire (en-tête unifié avec le rapport compact). */
+  company?: { name: string; address: string; phone: string; email: string; logo?: string };
 }
 
 export function ProjectPDFDocument({
@@ -86,6 +88,7 @@ export function ProjectPDFDocument({
   selectedPhaseIds,
   organizationName,
   organizationCode,
+  company,
 }: ProjectPDFDocumentProps) {
 
   
@@ -164,7 +167,24 @@ export function ProjectPDFDocument({
   return (
     <PDFDocument
       title={reportConfig.title}
-      subtitle={`Projet ${project.title} - ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}`}
+      subtitle={`Projet ${project.title}`}
+      company={company ?? (organizationName ? {
+        name: organizationName,
+        address: (project as any).location || '',
+        phone: '',
+        email: '',
+      } : undefined)}
+      miniMap={
+        <ProjectMiniMap
+          project={{
+            location: project.location,
+            latitude: (project as any).latitude,
+            longitude: (project as any).longitude,
+            coordinates: (project as any).coordinates,
+            interventionZones: (project as any).interventionZones,
+          }}
+        />
+      }
     >
       {/* Aperçu général */}
       {reportConfig.includeSections.overview && (
