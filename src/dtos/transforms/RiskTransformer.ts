@@ -20,6 +20,7 @@ export class RiskTransformer {
    * Transformer une entité Risk en DTO
    */
   static toDTO(entity: Risk): RiskDTO {
+    const details = (entity as any).details || {};
     return {
       id: entity.id,
       projectId: entity.project?.id,
@@ -27,16 +28,27 @@ export class RiskTransformer {
       description: entity.description || undefined,
       probability: entity.probability,
       impact: entity.impact,
+      riskScore: entity.getRiskScore(),
+      riskLevel: entity.getRiskLevel() as any,
       status: this.domainToDtoStatus(entity.status),
       category: this.domainToDtoCategory(entity.category),
       mitigationStrategy: entity.mitigationStrategy || undefined,
-      owner: (entity as any).identifiedBy?.id,
+      mitigationPlan: details.mitigationPlan || undefined,
+      contingencyPlan: details.contingencyPlan || undefined,
+      costs: details.costs ?? undefined,
+      timelineImpact: details.timelineImpact ?? undefined,
+      reviewDate: details.reviewDate || undefined,
+      dueDate: details.dueDate || undefined,
+      ownerId: details.ownerId || undefined,
+      owner: details.ownerId || (entity as any).identifiedBy?.id,
+      identifiedBy: (entity as any).identifiedBy?.id,
       identifiedDate: (entity as any).identifiedDate || undefined,
       relatedRisks: entity.relatedTasks,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt
     };
   }
+
 
   /**
    * Transformer un DTO en entité Risk
