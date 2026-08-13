@@ -983,7 +983,9 @@ export function CompactProjectPDFDocument({
             </View>
 
             {/* EVM Section - Analyse Valeur Acquise */}
+            {activeSections.evmAnalysis && (
             <View style={styles.section}>
+
               <Text style={styles.sectionTitle}>Analyse EVM (Earned Value Management)</Text>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
@@ -1050,9 +1052,12 @@ export function CompactProjectPDFDocument({
                 </View>
               </View>
             </View>
+            )}
 
             {/* KPI Section */}
+            {activeSections.kpi && (
             <View style={styles.kpiSection}>
+
               <Text style={[styles.sectionTitle, { backgroundColor: 'transparent', borderLeftWidth: 0, marginBottom: 6 }]}>
                 Indicateurs de Performance (KPI)
               </Text>
@@ -1077,7 +1082,8 @@ export function CompactProjectPDFDocument({
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: colors.primary }]}>
-                    {project.progress || 0}%
+                    {formatDecimal(project.progress || 0)}%
+
                   </Text>
                   <Text style={styles.kpiLabel}>Progression</Text>
                 </View>
@@ -1111,9 +1117,12 @@ export function CompactProjectPDFDocument({
                 </View>
               </View>
             </View>
+            )}
 
             {/* PERT Section */}
+            {activeSections.pertAnalysis && (
             <View style={styles.section}>
+
               <Text style={styles.sectionTitle}>Analyse PERT</Text>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
@@ -1164,6 +1173,8 @@ export function CompactProjectPDFDocument({
                 </View>
               </View>
             </View>
+            )}
+
 
             {/* Footer Section */}
             <View style={styles.footerSection}>
