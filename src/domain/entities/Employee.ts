@@ -12,6 +12,32 @@ import { Permission, Department, EmployeeData, EmployeeRole } from '../types';
 export type { Permission, Department, EmployeeData, EmployeeRole };
 
 /**
+ * EmployeeExtras - Extended employee metadata (RH / organigramme)
+ * Carried alongside the core domain state so the UI/reporting layers
+ * get a full round-trip without polluting core business invariants.
+ */
+export interface EmployeeExtras {
+  organizationId?: string | null;
+  employeeType?: string | null;
+  roleName?: string | null;
+  status?: string | null;
+  level?: string | null;
+  endDate?: string | null;
+  probationEndDate?: string | null;
+  hourlyRate?: number | null;
+  currency?: string | null;
+  availability?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  performanceRating?: number | null;
+  avatarUrl?: string | null;
+  tags?: string[] | null;
+  notes?: string | null;
+  nationalId?: string | null;
+}
+
+/**
  * EmployeeProps - Pure data interface for factory creation
  * Used by Transformers (infra layer) to build domain entities
  * No infrastructure dependencies allowed
@@ -35,6 +61,7 @@ export interface EmployeeProps {
   certifications?: unknown[];
   createdAt?: string;
   updatedAt?: string;
+  extras?: EmployeeExtras;
 }
 
 export class Employee {
