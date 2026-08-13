@@ -11,8 +11,11 @@
  * ⚠️ canManageSubObjects = true en mode EDIT (projet persisté)
  */
 
-import { Building, Calendar, FileCheck, FileText, Plus, Shield, Upload, Users, ExternalLink, AlertCircle, Info } from 'lucide-react';
+import { Building, Calendar, Eye, FileCheck, FileText, Plus, Shield, Upload, Users, ExternalLink, AlertCircle, Info } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentChanges } from '@/components/documents/viewer/documentEvents';
+
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
