@@ -67,7 +67,8 @@ export class Risk {
     identifiedDate: string | null,
     relatedTasks: string[],
     createdAt: string,
-    updatedAt: string
+    updatedAt: string,
+    details: RiskDetails = {}
   ) {
     // Validate and assign private fields
     this._id = this.validateId(id);
@@ -84,10 +85,13 @@ export class Risk {
     this._relatedTasks = relatedTasks || [];
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
+    this._details = details || {};
   }
 
   // ============= Getters =============
+  get details(): RiskDetails { return this._details; }
   get id(): string { return this._id; }
+
   get project(): IProject | null { return this._project; }
   get projectId(): string { return this._project?.id || ''; }
   get title(): string { return this._title; }
