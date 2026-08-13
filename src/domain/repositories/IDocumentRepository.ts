@@ -6,7 +6,8 @@ export interface IDocumentRepository {
   // CRUD operations
   findById(id: string): Promise<Document | null>;
   findAll(): Promise<Document[]>;
-  save(document: Document): Promise<void>;
+  /** Persiste puis retourne l'entité réellement enregistrée. */
+  save(document: Document): Promise<Document>;
   update(id: string, data: Partial<Document>): Promise<void>;
   delete(id: string): Promise<void>;
   

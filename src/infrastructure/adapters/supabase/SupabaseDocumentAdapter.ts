@@ -2,7 +2,7 @@
 // Supabase Adapter for Document Repository - Fixed for DB schema
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
-import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
+import { Document, DocumentPriority, DocumentType, DocumentStatus } from '@/domain/entities/Document';
 
 /**
  * Mapping domaine → enum DB `document_status`
@@ -40,10 +40,12 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       data.id, data.project_id || null, data.phase_id || null, data.inspection_id || null,
       data.payment_id || null, data.supplier_id || null, data.title, data.description || null,
       typeMap[data.document_type] || 'other', statusMap[data.status] || 'draft',
+      DocumentPriority.MEDIUM,
       data.file_name || null, data.file_url || null, data.file_size || null, data.mime_type || null,
       data.tags || [], data.is_internal_only ?? false, data.is_shared_with_suppliers ?? false,
-      data.deadline_date || null, data.assigned_to || null, data.uploaded_by || null,
-      data.created_at, data.updated_at,
+      data.deadline_date ? new Date(data.deadline_date) : null,
+      data.assigned_to || null, data.uploaded_by || null,
+      new Date(data.created_at), new Date(data.updated_at),
       data.metadata || null
     );
   }
@@ -60,7 +62,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
-  async save(document: Document): Promise<void> {
+  async save(document: Document): Promise<Document> {
     // Mapping domaine → enum DB `document_type` (valeurs autorisées uniquement)
     const toDbType: Record<string, string> = {
       pv: 'inspection_report', inspection_report: 'inspection_report',
@@ -72,7 +74,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     };
     const dbType = toDbType[document.documentType] || 'project_report';
     const dbStatus = toDbStatus(document.status);
-    const { error } = await supabase.from('documents').insert({
+    const { data, error } = await supabase.from('documents').insert({
       id: document.id, title: document.title, description: document.description,
       document_type: dbType as any, status: dbStatus as any, file_url: document.fileUrl,
       file_name: document.fileName, file_size: document.fileSize, mime_type: document.mimeType,
@@ -80,8 +82,10 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       payment_id: document.paymentId, supplier_id: document.supplierId, uploaded_by: document.uploadedBy,
       tags: document.tags, is_internal_only: document.isInternalOnly, is_shared_with_suppliers: document.isSharedWithSuppliers,
       metadata: document.metadata as any
-    });
+    }).select('*').single();
     if (error) throw new Error(`Failed to save document: ${error.message}`);
+    if (!data) throw new Error('Failed to save document: no row returned');
+    return this.mapToEntity(data);
   }
 
   async update(id: string, data: Partial<Document>): Promise<void> {

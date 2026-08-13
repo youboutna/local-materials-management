@@ -307,8 +307,8 @@ const ProjectDocumentUpload = ({
             </div>
           </div>
 
-          <Button type="submit" disabled={uploading} className="w-full">
-            {uploading ? (
+          <Button type="submit" disabled={uploading || uploadMutation.isPending} className="w-full">
+            {uploading || uploadMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Téléchargement en cours...
