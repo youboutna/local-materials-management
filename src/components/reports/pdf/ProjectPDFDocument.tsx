@@ -319,7 +319,7 @@ export function ProjectPDFDocument({
                 <PDFText label="Titre" value={project.title} />
                 <PDFText label="Localisation" value={project.location || 'Non défini'} />
                 <PDFText label="Statut" value={getStatusText(project.status)} />
-                <PDFText label="Progression" value={formatPercent2(project.progress ?? 0)} />
+                <PDFText label="Progression" value={formatPercent2(unifiedProgress)} />
               </PDFCol>
               <PDFCol>
                 <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
@@ -397,14 +397,14 @@ export function ProjectPDFDocument({
                   'Non calculé'} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Progression actuelle" value={formatPercent2(project.progress ?? 0)} />
+                <PDFText label="Progression actuelle" value={formatPercent2(unifiedProgress)} />
                 <PDFText label="Temps écoulé" value={project.startDate ? 
                   `${Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
                   'Non calculé'} />
                 <PDFText label="Statut planning" value={
-                  project.progress >= 90 ? 'Presque terminé' :
-                  project.progress >= 50 ? 'En bonne voie' :
-                  project.progress >= 25 ? 'En cours' : 'Début de projet'
+                  unifiedProgress >= 90 ? 'Presque terminé' :
+                  unifiedProgress >= 50 ? 'En bonne voie' :
+                  unifiedProgress >= 25 ? 'En cours' : 'Début de projet'
                 } />
               </PDFCol>
             </PDFRow>
@@ -756,7 +756,7 @@ export function ProjectPDFDocument({
               }).length;
 
               const insights = buildMonitoringInsights({
-                progress: project.progress ?? 0,
+                progress: unifiedProgress,
                 budget: project.budget ?? 0,
                 actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
                 phasesCount: Array.isArray(enrichedData?.phases)
@@ -858,11 +858,11 @@ export function ProjectPDFDocument({
             <PDFTable
               headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
               data={[
-                ['Démarrage du Projet', '0%', project.progress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 0 ? '✓' : '⏳'],
-                ['25% d\'Avancement', '25%', project.progress >= 25 ? 'Terminé' : project.progress >= 15 ? 'En cours' : 'En attente', '', project.progress >= 25 ? '✓' : project.progress >= 15 ? '⏳' : '⌛'],
-                ['50% d\'Avancement', '50%', project.progress >= 50 ? 'Terminé' : project.progress >= 40 ? 'En cours' : 'En attente', '', project.progress >= 50 ? '✓' : project.progress >= 40 ? '⏳' : '⌛'],
-                ['75% d\'Avancement', '75%', project.progress >= 75 ? 'Terminé' : project.progress >= 65 ? 'En cours' : 'En attente', '', project.progress >= 75 ? '✓' : project.progress >= 65 ? '⏳' : '⌛'],
-                ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
+                ['Démarrage du Projet', '0%', unifiedProgress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 0 ? '✓' : '⏳'],
+                ['25% d\'Avancement', '25%', unifiedProgress >= 25 ? 'Terminé' : unifiedProgress >= 15 ? 'En cours' : 'En attente', '', unifiedProgress >= 25 ? '✓' : unifiedProgress >= 15 ? '⏳' : '⌛'],
+                ['50% d\'Avancement', '50%', unifiedProgress >= 50 ? 'Terminé' : unifiedProgress >= 40 ? 'En cours' : 'En attente', '', unifiedProgress >= 50 ? '✓' : unifiedProgress >= 40 ? '⏳' : '⌛'],
+                ['75% d\'Avancement', '75%', unifiedProgress >= 75 ? 'Terminé' : unifiedProgress >= 65 ? 'En cours' : 'En attente', '', unifiedProgress >= 75 ? '✓' : unifiedProgress >= 65 ? '⏳' : '⌛'],
+                ['Finalisation', '100%', unifiedProgress >= 100 ? 'Terminé' : unifiedProgress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', unifiedProgress >= 100 ? '✓' : unifiedProgress >= 90 ? '⏳' : '⌛']
               ]}
               columnWidths={['25%', '15%', '20%', '20%', '20%']}
             />
