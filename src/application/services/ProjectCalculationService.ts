@@ -1,6 +1,9 @@
 // Business logic and calculations service - Hexagonal Architecture
 // Following Rule #1: Service orchestrates business logic
+import { EvmService } from '@/application/services/EvmService';
+import { PertService } from '@/application/services/PertService';
 import { PhaseWeightingService } from '@/application/services/PhaseWeightingService';
+import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
