@@ -38,6 +38,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
   onDocumentDelete,
   isLoading = false
 }) => {
+  const { openDocument } = useDocumentViewer();
   const generateVisiblePages = () => {
     const delta = 2;
     const range: number[] = [];

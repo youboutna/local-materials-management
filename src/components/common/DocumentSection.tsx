@@ -48,6 +48,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
   title = "Documents associés",
   documentService: injectedDocumentService
 }) => {
+  const { openDocument } = useDocumentViewer();
   // ============================================================================
   // SERVICES HEXAGONAUX (injection)
   // ============================================================================
