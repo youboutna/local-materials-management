@@ -610,6 +610,8 @@ export function getDocumentStatusLabel(status: DocumentStatusUnion): string {
   const labels: Record<DocumentStatusUnion, string> = {
     [DocumentStatus.DRAFT]: 'Brouillon',
     [DocumentStatus.PENDING_APPROVAL]: 'En attente de validation',
+    [DocumentStatus.PENDING_REVIEW]: 'En attente de révision',
+
     [DocumentStatus.APPROVED]: 'Approuvé',
     [DocumentStatus.REJECTED]: 'Rejeté',
     [DocumentStatus.ARCHIVED]: 'Archivé',
@@ -626,6 +628,8 @@ export function getDocumentStatusColor(status: DocumentStatusUnion): string {
   const colors: Record<DocumentStatusUnion, string> = {
     [DocumentStatus.DRAFT]: 'bg-gray-100 text-gray-800 border-gray-200',
     [DocumentStatus.PENDING_APPROVAL]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    [DocumentStatus.PENDING_REVIEW]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+
     [DocumentStatus.APPROVED]: 'bg-green-100 text-green-800 border-green-200',
     [DocumentStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200',
     [DocumentStatus.ARCHIVED]: 'bg-gray-200 text-gray-600 border-gray-300',
