@@ -29,7 +29,8 @@ import {
   DeviationEngine,
   DeviationResult,
 } from "@/application/services/DeviationEngine";
-import { ProjectCalculationService } from "@/application/services/ProjectCalculationService";
+import { ProjectMetricsOrchestrator } from "@/application/services/ProjectMetricsOrchestrator";
+import { formatIndex2, formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 export interface MonitoringEvalPhaseInput {
@@ -92,13 +93,40 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
     [scope, phaseId, phases],
   );
 
-  // EVM / health — calculés sur le projet entier (les écarts par phase ci-dessous)
-  const evm = useMemo(() => ProjectCalculationService.calculateEVMMetrics(project), [project]);
-  const health = useMemo(
-    () => ProjectCalculationService.calculateProjectHealthScore(project),
-    [project],
+  // EVM / health — SOURCE UNIQUE : ProjectMetricsOrchestrator (mêmes valeurs
+  // que le Dashboard Monitoring et le rapport PDF ; évite les 3 moteurs EVM
+  // parallèles constatés dans l'audit).
+  const metrics = useMemo(
+    () =>
+      ProjectMetricsOrchestrator.compute({
+        project: {
+          id: project.id,
+          title: project.title,
+          budget: project.budget ?? 0,
+          progress: project.progress ?? 0,
+          startDate: project.startDate ?? null,
+          endDate: project.endDate ?? null,
+          currency: (project as any).currency || 'MRU',
+        },
+        phases: phases.map((p) => ({
+          id: p.id,
+          name: p.name,
+          weight: undefined,
+          budget: p.budget ?? undefined,
+          startDate: p.startDate ?? undefined,
+          endDate: p.endDate ?? undefined,
+          progress: p.actualProgress ?? p.progress ?? 0,
+          actualCost: p.actualCost ?? undefined,
+          status: p.status,
+        })),
+      }),
+    [project, phases],
   );
-  const judgement = judge(evm.schedulePerformanceIndex, evm.costPerformanceIndex);
+  const evm = metrics.evm;
+  const health = metrics.health;
+  const spiForJudgement = evm.schedulePerformanceIndex ?? 0;
+  const cpiForJudgement = evm.costPerformanceIndex ?? 0;
+  const judgement = judge(spiForJudgement, cpiForJudgement);
 
   // Écarts par phase (DeviationEngine en scope 'phase')
   const phaseDeviations = useMemo(
@@ -141,7 +169,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="Score de santé"
-            value={`${health.overallScore}/100`}
+            value={`${formatNumber2(health.overallScore)}/100`}
             tone={
               health.overallScore >= 75
                 ? "text-success"
@@ -153,10 +181,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="SPI (planning)"
-            value={evm.schedulePerformanceIndex.toFixed(2)}
-            tone={evm.schedulePerformanceIndex >= 0.95 ? "text-success" : "text-warning"}
+            value={formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)}
+            tone={spiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={
-              evm.schedulePerformanceIndex >= 1 ? (
+              spiForJudgement >= 1 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
                 <TrendingDown className="h-4 w-4" />
@@ -165,10 +193,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="CPI (coût)"
-            value={evm.costPerformanceIndex.toFixed(2)}
-            tone={evm.costPerformanceIndex >= 0.95 ? "text-success" : "text-warning"}
+            value={formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)}
+            tone={cpiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={
-              evm.costPerformanceIndex >= 1 ? (
+              cpiForJudgement >= 1 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
                 <TrendingDown className="h-4 w-4" />
@@ -239,10 +267,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           <p className="text-sm">
             <span className="font-semibold">Synthèse : </span>
             <span className={judgement.tone}>{judgement.label}</span>. SPI ={" "}
-            {evm.schedulePerformanceIndex.toFixed(2)} • CPI ={" "}
-            {evm.costPerformanceIndex.toFixed(2)} • EAC ={" "}
-            {Math.round(evm.estimateAtCompletion).toLocaleString("fr-FR")} • VAC ={" "}
-            {Math.round(evm.varianceAtCompletion).toLocaleString("fr-FR")}.
+            {formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)} • CPI ={" "}
+            {formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)} • EAC ={" "}
+            {formatAmount2(evm.estimateAtCompletion ?? 0)} • VAC ={" "}
+            {formatAmount2(evm.varianceAtCompletion ?? 0)}.
           </p>
         </div>
       </CardContent>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, Save, CreditCard } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -15,6 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BankGuaranteeFormData {
   projectId: string;
+  guaranteeNumber: string;
+  currency: string;
+  exchangeRate: number;
+  conditions: string;
   tenderReference: string;
   contractorId: string;
   bankName: string;
@@ -39,6 +44,10 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
   const { toast } = useToast();
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     projectId: initialData?.projectId || '',
+    guaranteeNumber: initialData?.guaranteeNumber || '',
+    currency: initialData?.currency || 'MRU',
+    exchangeRate: initialData?.exchangeRate ?? 1,
+    conditions: initialData?.conditions || '',
     tenderReference: initialData?.tenderReference || '',
     contractorId: initialData?.contractorId || '',
     bankName: initialData?.bankName || '',
@@ -88,6 +97,43 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
             tenderReference={formData.tenderReference}
             onTenderReferenceChange={(ref) => updateFormData('tenderReference', ref)}
           />
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="guaranteeNumber">Numéro de garantie</Label>
+              <Input
+                id="guaranteeNumber"
+                value={formData.guaranteeNumber}
+                onChange={(e) => updateFormData('guaranteeNumber', e.target.value)}
+                placeholder="Ex. GAR-2026-001"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="currency">Devise</Label>
+              <Select value={formData.currency} onValueChange={(value) => updateFormData('currency', value)}>
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Devise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MRU">MRU</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="exchangeRate">Taux de change</Label>
+              <Input
+                id="exchangeRate"
+                type="number"
+                step="0.0001"
+                value={formData.exchangeRate}
+                onChange={(e) => updateFormData('exchangeRate', parseFloat(e.target.value) || 1)}
+              />
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -210,6 +256,17 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
                 <SelectItem value="cancelled">Annulée</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="conditions">Conditions particulières</Label>
+            <Textarea
+              id="conditions"
+              rows={3}
+              value={formData.conditions}
+              onChange={(e) => updateFormData('conditions', e.target.value)}
+              placeholder="Une condition par ligne"
+            />
           </div>
 
           <div className="flex justify-end">

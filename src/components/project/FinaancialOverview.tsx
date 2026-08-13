@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { formatAmount2, formatPercent2, formatIndex2 } from '@/utils/reportNumbers';
 
 interface FinancialOverviewProps {
   budget: number;
@@ -19,7 +20,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
   financialMetrics
 }) => {
   const remaining = budget - spent;
-  const percentageSpent = budget > 0 ? (spent / budget) * 100 : 0;
+  const percentageSpent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
   const costVariance = financialMetrics?.costVariance || spent - budget;
 
   return (
@@ -31,7 +32,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{budget.toLocaleString()} MRU</div>
+            <div className="text-2xl font-bold">{formatAmount2(budget)}</div>
           </CardContent>
         </Card>
 
@@ -41,9 +42,9 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{spent.toLocaleString()} MRU</div>
+            <div className="text-2xl font-bold">{formatAmount2(spent)}</div>
             <p className="text-xs text-muted-foreground">
-              {percentageSpent.toFixed(1)}% du budget
+              {formatPercent2(percentageSpent)} du budget
             </p>
           </CardContent>
         </Card>
@@ -54,9 +55,9 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{remaining.toLocaleString()} MRU</div>
+            <div className="text-2xl font-bold">{formatAmount2(remaining)}</div>
             <p className="text-xs text-muted-foreground">
-              {(100 - percentageSpent).toFixed(1)}% du budget
+              {formatPercent2(100 - percentageSpent)} du budget
             </p>
           </CardContent>
         </Card>
@@ -71,7 +72,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
             {phases.map((phase, index) => {
               const phaseSpent = phase.actualCost || 0;
               const phaseBudget = phase.budget || 0;
-              const phasePercentage = phaseBudget > 0 ? (phaseSpent / phaseBudget) * 100 : 0;
+              const phasePercentage = phaseBudget > 0 ? Math.min(100, (phaseSpent / phaseBudget) * 100) : 0;
               
               return (
                 <div key={index} className="space-y-2">
@@ -79,10 +80,10 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
                     <span className="text-sm font-medium">{phase.phase}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm">
-                        {phaseSpent.toLocaleString()} / {phaseBudget.toLocaleString()} MRU
+                        {formatAmount2(phaseSpent)} / {formatAmount2(phaseBudget)}
                       </span>
                       <Badge variant={phaseSpent > phaseBudget ? "destructive" : "default"}>
-                        {phasePercentage.toFixed(1)}%
+                        {formatPercent2(phasePercentage)}
                       </Badge>
                     </div>
                   </div>
@@ -104,12 +105,12 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
               <div>
                 <h4 className="text-sm font-medium mb-2">Variance des coûts (CV)</h4>
                 <p className={costVariance < 0 ? "text-red-600" : "text-green-600"}>
-                  {costVariance.toLocaleString()} MRU
+                  {formatAmount2(costVariance)}
                 </p>
               </div>
               <div>
                 <h4 className="text-sm font-medium mb-2">Indice de performance des coûts (CPI)</h4>
-                <p>{financialMetrics.costPerformanceIndex?.toFixed(2) || "N/A"}</p>
+                <p>{formatIndex2(financialMetrics.costPerformanceIndex, financialMetrics.costPerformanceIndex != null && financialMetrics.costPerformanceIndex !== 0)}</p>
               </div>
             </div>
           </CardContent>

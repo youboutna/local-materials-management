@@ -31,6 +31,12 @@ export type BtpDatabase = {
     Tables: {
       bank_guarantees: {
         Row: {
+          guarantee_number: string | null
+          conditions: string | null
+          documents: Json
+          currency: string
+          exchange_rate: number
+          phase_id: string | null
           bank_name: string
           contractor_id: string
           created_at: string
@@ -45,6 +51,12 @@ export type BtpDatabase = {
           updated_at: string
         }
         Insert: {
+          guarantee_number?: string | null
+          conditions?: string | null
+          documents?: Json
+          currency?: string
+          exchange_rate?: number
+          phase_id?: string | null
           bank_name: string
           contractor_id: string
           created_at?: string
@@ -59,6 +71,12 @@ export type BtpDatabase = {
           updated_at?: string
         }
         Update: {
+          guarantee_number?: string | null
+          conditions?: string | null
+          documents?: Json
+          currency?: string
+          exchange_rate?: number
+          phase_id?: string | null
           bank_name?: string
           contractor_id?: string
           created_at?: string

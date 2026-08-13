@@ -33,6 +33,9 @@ export interface UpdateBankGuaranteeDTO {
   
   /** Exchange rate if applicable */
   exchange_rate?: number;
+
+  /** Project phase this guarantee is attached to */
+  phase_id?: string;
   
   /** Actions performed on this guarantee */
   actions?: BankGuaranteeActionDTO[];

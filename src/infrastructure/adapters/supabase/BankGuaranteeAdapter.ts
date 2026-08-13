@@ -23,6 +23,12 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       issue_date: guarantee.issue_date ?? guarantee.issueDate,
       expiry_date: guarantee.expiry_date ?? guarantee.expiryDate,
       status: guarantee.status || 'pending',
+      guarantee_number: guarantee.guarantee_number ?? guarantee.guaranteeNumber ?? null,
+      conditions: Array.isArray(guarantee.conditions) ? guarantee.conditions.join('\n') : null,
+      documents: (guarantee.documents ?? []) as unknown as never,
+      currency: guarantee.currency ?? 'MRU',
+      exchange_rate: guarantee.exchange_rate ?? 1,
+      phase_id: guarantee.phaseId ?? guarantee.phase_id ?? null,
       contractor_id: '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -72,10 +78,13 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update bank guarantee status', error);
   }
 
-  async releasePhaseGuarantees(_phaseId: string): Promise<void> {
-    // La table bank_guarantees ne référence pas de phase_id : aucune libération
-    // par phase n'est possible avec le schéma réel. Opération sans effet.
-    return;
+  async releasePhaseGuarantees(phaseId: string): Promise<void> {
+    const { error } = await supabase
+      .from('bank_guarantees')
+      .update({ status: 'released', released_at: new Date().toISOString() })
+      .eq('phase_id', phaseId);
+
+    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to release phase guarantees', error);
   }
 
   async releaseProjectGuarantees(projectId: string): Promise<void> {
@@ -106,6 +115,12 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       issue_date: updates.issue_date,
       expiry_date: updates.expiry_date,
       status: updates.status,
+      guarantee_number: updates.guarantee_number,
+      conditions: Array.isArray(updates.conditions) ? updates.conditions.join('\n') : undefined,
+      documents: updates.documents as unknown as never,
+      currency: updates.currency,
+      exchange_rate: updates.exchange_rate,
+      phase_id: updates.phase_id,
       updated_at: new Date().toISOString()
     };
 
@@ -141,9 +156,9 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       type,
       guaranteeType: type,
       guarantee_type: data.guarantee_type,
-      number: data.id,
-      guaranteeNumber: data.id,
-      guarantee_number: data.id,
+      number: data.guarantee_number ?? data.id,
+      guaranteeNumber: data.guarantee_number ?? undefined,
+      guarantee_number: data.guarantee_number ?? undefined,
       issuingBank: data.bank_name,
       issuing_bank: data.bank_name,
       bank_name: data.bank_name,
@@ -154,10 +169,14 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       amount: data.guarantee_amount,
       guaranteeAmount: data.guarantee_amount,
       guarantee_amount: data.guarantee_amount,
-      currency: 'MRU',
+      currency: data.currency ?? 'MRU',
+      exchangeRate: data.exchange_rate ?? 1,
+      exchange_rate: data.exchange_rate ?? 1,
+      phaseId: data.phase_id ?? undefined,
+      phase_id: data.phase_id ?? undefined,
       status,
-      conditions: [],
-      documents: [],
+      conditions: data.conditions ? data.conditions.split('\n').filter(Boolean) : [],
+      documents: Array.isArray(data.documents) ? (data.documents as unknown as string[]) : [],
       createdAt: data.created_at,
       created_at: data.created_at,
       updatedAt: data.updated_at,
