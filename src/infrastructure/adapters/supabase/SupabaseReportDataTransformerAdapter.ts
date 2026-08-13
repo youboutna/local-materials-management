@@ -1,3 +1,4 @@
+import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 /**
  * Supabase Adapter for Report Data Transformer Repository
  * Implements the IReportDataTransformerRepository using Supabase
@@ -20,11 +21,11 @@ import { Database } from '@/integrations/supabase/types';
 import { ReportCalculations } from '@/utils/reportCalculations';
 
 // Types officiels Supabase pour les tables utilisées
-type ProjectPhaseRow = Database['btp']['Tables']['project_phases']['Row'];
-type ProjectMilestoneRow = Database['btp']['Tables']['project_milestones']['Row'];
-type ProjectMaterialRow = Database['btp']['Tables']['project_materials']['Row'];
-type InspectionRow = Database['btp']['Tables']['inspections']['Row'];
-type PaymentRow = Database['btp']['Tables']['payments']['Row'];
+type ProjectPhaseRow = BtpTables<'project_phases'>;
+type ProjectMilestoneRow = BtpTables<'project_milestones'>;
+type ProjectMaterialRow = BtpTables<'project_materials'>;
+type InspectionRow = BtpTables<'inspections'>;
+type PaymentRow = BtpTables<'payments'>;
 
 export class SupabaseReportDataTransformerAdapter implements IReportDataTransformerRepository {
 
