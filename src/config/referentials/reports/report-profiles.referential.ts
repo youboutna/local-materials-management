@@ -38,13 +38,26 @@ export const ALL_REPORT_SECTIONS: ReportSectionKey[] = [
 
 export type ReportDepth = 'light' | 'full' | 'financial' | 'managerial';
 
+/** Densité d'affichage d'une section dans un rendu PDF. */
+export type SectionDensity = 'line' | 'compact' | 'full';
+
+export interface SectionDisplayConfig {
+  /** `line` = une seule ligne de synthèse, `compact` = tableau limité, `full` = tableau complet. */
+  density: SectionDensity;
+  /** Nombre maximum de lignes affichées (tableaux). */
+  maxRows?: number;
+}
+
 export interface ReportProfileConfig {
   code: ReportProfile;
   label: { fr: string; en?: string };
   description: { fr: string; en?: string };
   depth: ReportDepth;
   includes: ReportSectionKey[];
+  /** Densité par section (surcharge le défaut de densité du profil). */
+  sectionDisplay?: Partial<Record<ReportSectionKey, SectionDisplayConfig>>;
 }
+
 
 export const REPORT_PROFILES: Record<ReportProfile, ReportProfileConfig> = {
   summary: {
