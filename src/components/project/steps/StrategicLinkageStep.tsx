@@ -454,6 +454,28 @@ export default function StrategicLinkageStep({
     };
   }, [budgetLinks]);
 
+  // Resolve human-readable labels for a budget link from the LF referential
+  const resolveBudgetLabel = useCallback((link: CreateProjectBudgetLinkDTO): string => {
+    const line = link.lineCode ? linkageHelpers.findBudgetLine(link.lineCode)?.line : undefined;
+    if (line?.label?.fr) return line.label.fr;
+    const action = link.actionCode ? linkageHelpers.findAction(link.actionCode)?.action : undefined;
+    if (action?.label?.fr) return action.label.fr;
+    const program = link.programCode ? linkageHelpers.findProgram(link.programCode)?.program : undefined;
+    if (program?.label?.fr) return program.label.fr;
+    const ministry = link.ministryCode ? linkageHelpers.findMinistry(link.ministryCode) : undefined;
+    return ministry?.label?.fr ?? '';
+  }, []);
+
+  const resolveBudgetPath = useCallback((link: CreateProjectBudgetLinkDTO): string => {
+    const parts = [
+      link.ministryCode ? linkageHelpers.findMinistry(link.ministryCode)?.label?.fr : undefined,
+      link.programCode ? linkageHelpers.findProgram(link.programCode)?.program?.label?.fr : undefined,
+      link.actionCode ? linkageHelpers.findAction(link.actionCode)?.action?.label?.fr : undefined,
+    ].filter(Boolean) as string[];
+    return parts.join(' › ');
+  }, []);
+
+
   // Add strategy link
   const handleAddStrategyLink = useCallback(() => {
     if (!selectedStrategy.objectiveCode && !selectedStrategy.interventionCode) {
@@ -1047,21 +1069,32 @@ export default function StrategicLinkageStep({
                             key={index}
                             className="flex items-center justify-between p-3 hover:bg-muted/50"
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="truncate text-sm font-medium">
+                                {resolveBudgetLabel(link) || 'Ligne budgétaire'}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1">
                                 {link.ministryCode && (
-                                  <Badge variant="outline">{link.ministryCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.ministryCode}</Badge>
                                 )}
                                 {link.programCode && (
-                                  <Badge variant="outline">{link.programCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.programCode}</Badge>
                                 )}
                                 {link.actionCode && (
-                                  <Badge variant="outline">{link.actionCode}</Badge>
+                                  <Badge variant="outline" className="text-xs">{link.actionCode}</Badge>
                                 )}
                                 {link.lineCode && (
-                                  <Badge variant="secondary">{link.lineCode}</Badge>
+                                  <Badge variant="secondary" className="text-xs">{link.lineCode}</Badge>
                                 )}
+                                <span className="text-xs text-muted-foreground">
+                                  Exercice {link.fiscalYear ?? '—'}
+                                </span>
                               </div>
+                              {resolveBudgetPath(link) && (
+                                <div className="truncate text-xs text-muted-foreground">
+                                  {resolveBudgetPath(link)}
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="text-right text-sm">
