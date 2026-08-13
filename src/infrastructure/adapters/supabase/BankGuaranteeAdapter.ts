@@ -7,41 +7,22 @@
 import { BankGuaranteeQueryOptions, IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
 import { BankGuaranteeDTO, CreateBankGuaranteeDTO, UpdateBankGuaranteeDTO } from '@/dtos/bank-guarantees';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { BtpTables } from '@/integrations/supabase/btp-types';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
-interface SupabaseBankGuarantee {
-  id: string;
-  project_id: string;
-  contractor_id: string;
-  guarantee_type: string;
-  guarantee_amount: number;
-  bank_name: string;
-  guarantee_number: string;
-  issue_date: string;
-  expiry_date: string;
-  status: string;
-  conditions?: string[];
-  documents?: string[];
-  currency?: string;
-  exchange_rate?: number;
-  created_at: string;
-  updated_at: string;
-}
+type SupabaseBankGuarantee = BtpTables<'bank_guarantees'>;
 
 export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
-  
+
   async create(guarantee: CreateBankGuaranteeDTO): Promise<BankGuaranteeDTO> {
     const supabaseData = {
-      project_id: guarantee.project_id,
-      guarantee_type: guarantee.guarantee_type,
-      guarantee_amount: guarantee.guarantee_amount,
-      bank_name: guarantee.issuing_bank,
-      guarantee_number: guarantee.guarantee_number,
-      issue_date: guarantee.issue_date,
-      expiry_date: guarantee.expiry_date,
+      project_id: guarantee.project_id ?? guarantee.projectId,
+      guarantee_type: guarantee.guarantee_type ?? guarantee.guaranteeType,
+      guarantee_amount: guarantee.guarantee_amount ?? guarantee.guaranteeAmount,
+      bank_name: guarantee.issuing_bank ?? guarantee.issuingBank,
+      issue_date: guarantee.issue_date ?? guarantee.issueDate,
+      expiry_date: guarantee.expiry_date ?? guarantee.expiryDate,
       status: guarantee.status || 'pending',
-      conditions: guarantee.conditions || [],
-      documents: guarantee.documents || [],
       contractor_id: '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -71,7 +52,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     const { data, error } = await query;
 
     if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch bank guarantees', error);
-    return (data as SupabaseBankGuarantee[]).map(this.toDto);
+    return (data as SupabaseBankGuarantee[]).map((row) => this.toDto(row));
   }
 
   async findByProjectId(projectId: string): Promise<BankGuaranteeDTO[]> {
@@ -91,13 +72,10 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
     if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update bank guarantee status', error);
   }
 
-  async releasePhaseGuarantees(phaseId: string): Promise<void> {
-    const { error } = await supabase
-      .from('bank_guarantees')
-      .update({ status: 'released', released_at: new Date().toISOString() })
-      .eq('phase_id', phaseId);
-
-    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to release phase guarantees', error);
+  async releasePhaseGuarantees(_phaseId: string): Promise<void> {
+    // La table bank_guarantees ne référence pas de phase_id : aucune libération
+    // par phase n'est possible avec le schéma réel. Opération sans effet.
+    return;
   }
 
   async releaseProjectGuarantees(projectId: string): Promise<void> {
@@ -125,12 +103,9 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       guarantee_type: updates.guarantee_type,
       guarantee_amount: updates.guarantee_amount,
       bank_name: updates.issuing_bank,
-      guarantee_number: updates.guarantee_number,
       issue_date: updates.issue_date,
       expiry_date: updates.expiry_date,
       status: updates.status,
-      conditions: updates.conditions,
-      documents: updates.documents,
       updated_at: new Date().toISOString()
     };
 
@@ -166,9 +141,9 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       type,
       guaranteeType: type,
       guarantee_type: data.guarantee_type,
-      number: data.guarantee_number,
-      guaranteeNumber: data.guarantee_number,
-      guarantee_number: data.guarantee_number,
+      number: data.id,
+      guaranteeNumber: data.id,
+      guarantee_number: data.id,
       issuingBank: data.bank_name,
       issuing_bank: data.bank_name,
       bank_name: data.bank_name,
@@ -179,10 +154,10 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       amount: data.guarantee_amount,
       guaranteeAmount: data.guarantee_amount,
       guarantee_amount: data.guarantee_amount,
-      currency: data.currency || 'MRU',
+      currency: 'MRU',
       status,
-      conditions: data.conditions || [],
-      documents: data.documents || [],
+      conditions: [],
+      documents: [],
       createdAt: data.created_at,
       created_at: data.created_at,
       updatedAt: data.updated_at,

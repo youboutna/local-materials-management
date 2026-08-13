@@ -1,4 +1,4 @@
-import { LocalProjectDetailData as RealProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { ProjectDetailDTO as RealProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { getProjectService } from '../application/services/ProjectService';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
@@ -167,7 +167,7 @@ export class ProjectDataCalculations {
       const projectDetail = await projectService.getProjectWithDetails(projectId) as LocalProjectDetailData | null;
       
       // Calculate costs from project data and phase information
-      const costs = await this.extractPhaseCostsFromProjectData(projectDetail, phase);
+      const costs = await this.extractPhaseCostsFromProjectData(projectDetail as LocalProjectDetailData, phase);
       
       const estimatedCost = phase.estimated_cost || 
         ((phase as PhaseCostData).budget || 0) + 
