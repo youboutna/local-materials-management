@@ -170,9 +170,10 @@ export class PhaseTransformer {
       constructionStage: phase.constructionStage || undefined,
       createdBy: phase.createdBy || undefined,
       customPhaseData: phase.customPhaseData ?? undefined,
-      humanResources: (phase.humanResources ?? undefined) as PhaseDTO['humanResources'],
-      materials: (phase.materials ?? []) as PhaseDTO['materials'],
-      suppliers: (phase.suppliers ?? []) as PhaseDTO['suppliers'],
+      humanResources: (phase.humanResources ?? undefined) as unknown as PhaseDTO['humanResources'],
+      materials: (phase.materials ?? []) as unknown as PhaseDTO['materials'],
+      suppliers: (phase.suppliers ?? []) as unknown as PhaseDTO['suppliers'],
+
       weight: phase.weight || undefined,
     };
   }
