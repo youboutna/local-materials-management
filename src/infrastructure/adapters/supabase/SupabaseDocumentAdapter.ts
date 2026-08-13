@@ -62,7 +62,11 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
-  async save(document: Document): Promise<Document> {
+  async save(document: any): Promise<Document> {
+    // Tolérant : accepte une entité domaine (camelCase) ou une ligne repository (snake_case)
+    const d = document ?? {};
+    const g = (camel: string, snake: string) => (d[camel] !== undefined && d[camel] !== null ? d[camel] : d[snake]);
+
     // Mapping domaine → enum DB `document_type` (valeurs autorisées uniquement)
     const toDbType: Record<string, string> = {
       pv: 'inspection_report', inspection_report: 'inspection_report',
@@ -72,21 +76,27 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
       supplier_catalog: 'supplier_catalog', supplier_info: 'supplier_info',
       task_assignment: 'task_assignment', employee_record: 'employee_record',
     };
-    const dbType = toDbType[document.documentType] || 'project_report';
-    const dbStatus = toDbStatus(document.status);
+    const dbType = toDbType[g('documentType', 'document_type')] || 'project_report';
+    const dbStatus = toDbStatus(g('status', 'status'));
     const { data, error } = await supabase.from('documents').insert({
-      id: document.id, title: document.title, description: document.description,
-      document_type: dbType as any, status: dbStatus as any, file_url: document.fileUrl,
-      file_name: document.fileName, file_size: document.fileSize, mime_type: document.mimeType,
-      project_id: document.projectId, phase_id: document.phaseId, inspection_id: document.inspectionId,
-      payment_id: document.paymentId, supplier_id: document.supplierId, uploaded_by: document.uploadedBy,
-      tags: document.tags, is_internal_only: document.isInternalOnly, is_shared_with_suppliers: document.isSharedWithSuppliers,
-      metadata: document.metadata as any
+      id: d.id, title: g('title', 'title'), description: g('description', 'description') ?? null,
+      document_type: dbType as any, status: dbStatus as any, file_url: g('fileUrl', 'file_url') ?? null,
+      file_name: g('fileName', 'file_name') ?? null, file_size: g('fileSize', 'file_size') ?? null,
+      mime_type: g('mimeType', 'mime_type') ?? null,
+      project_id: g('projectId', 'project_id') ?? null, phase_id: g('phaseId', 'phase_id') ?? null,
+      inspection_id: g('inspectionId', 'inspection_id') ?? null,
+      payment_id: g('paymentId', 'payment_id') ?? null, supplier_id: g('supplierId', 'supplier_id') ?? null,
+      uploaded_by: g('uploadedBy', 'uploaded_by') ?? null,
+      tags: g('tags', 'tags') ?? [],
+      is_internal_only: g('isInternalOnly', 'is_internal_only') ?? false,
+      is_shared_with_suppliers: g('isSharedWithSuppliers', 'is_shared_with_suppliers') ?? false,
+      metadata: (g('metadata', 'metadata') ?? null) as any
     }).select('*').single();
     if (error) throw new Error(`Failed to save document: ${error.message}`);
     if (!data) throw new Error('Failed to save document: no row returned');
     return this.mapToEntity(data);
   }
+
 
   async update(id: string, data: Partial<Document>): Promise<void> {
     const updateData: Record<string, any> = {};
