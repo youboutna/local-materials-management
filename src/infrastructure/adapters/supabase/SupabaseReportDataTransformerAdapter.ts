@@ -104,7 +104,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       projectData.location || '',
       projectData.coordinates?.latitude?.toString() || undefined,
       projectData.coordinates?.longitude?.toString() || undefined,
-      projectData.teamSize || 0,
+      projectData.teamSize ?? 0,
       projectData.thumbnail || ''
     );
   }
@@ -139,7 +139,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    * Get milestone status using official Supabase types
    */
   private getMilestoneStatus(milestone: ProjectMilestoneRow): string {
-    if (milestone.completed) return 'completed';
+    if (milestone.status === 'completed' || milestone.completion_date) return 'completed';
     if (milestone.target_date && new Date(milestone.target_date) < new Date()) return 'overdue';
     return 'pending';
   }
@@ -308,22 +308,19 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    */
   async calculateFinancialMetrics(projectId: string): Promise<FinancialMetricsDTO> {
     try {
-      const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
+      const [payments, bankGuarantees, insurance, project] = await Promise.all([
         supabase.from('payments').select('*').eq('project_id', projectId),
         supabase.from('bank_guarantees').select('*').eq('project_id', projectId),
         supabase.from('insurance_certificates').select('*').eq('project_id', projectId),
-        supabase.from('projects').select('budget, progress').eq('id', projectId).single(),
-        supabase.from('mission_expenses').select('*').eq('mission_id', projectId)
+        supabase.from('projects').select('budget, progress').eq('id', projectId).single()
       ]);
 
       const paymentsData = payments.data || [];
-      const expensesData = expenses.data || [];
       const projectData = project.data;
 
       const totalBudget = projectData?.budget || 0;
       const totalPaid = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const totalExpenses = expensesData.reduce((sum, e) => sum + (e.amount || 0), 0);
-      const spentAmount = totalPaid + totalExpenses;
+      const spentAmount = totalPaid;
       const remainingBudget = totalBudget - spentAmount;
       const costOverrun = Math.max(0, spentAmount - totalBudget);
 
@@ -334,9 +331,9 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
         costOverrun,
         paymentMilestones: paymentsData.map(p => ({
           id: p.id,
-          amount: p.amount,
-          dueDate: new Date(p.payment_date),
-          paidDate: new Date(p.payment_date),
+          amount: p.amount ?? 0,
+          dueDate: p.payment_date ? new Date(p.payment_date) : new Date(),
+          paidDate: p.payment_date ? new Date(p.payment_date) : new Date(),
           status: 'paid' as const,
           description: p.transaction_id || `Payment ${p.id.slice(0, 8)}`
         })),

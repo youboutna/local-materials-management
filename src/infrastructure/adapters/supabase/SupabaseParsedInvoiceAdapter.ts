@@ -119,6 +119,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
         .from('parsed_invoices')
         .insert({
           ...rowData,
+          tender_id: invoice.tenderId,
           created_at: now,
           updated_at: now
         })
