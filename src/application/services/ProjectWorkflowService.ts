@@ -587,11 +587,36 @@ export class ProjectWorkflowService {
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
           await this.upsertStakeholders(projectId, data.relatedData?.stakeholders || []);
           break;
-        case 3:
+        case 3: {
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
-          const locUpdate: UpdateProjectDTO = { id: projectId, location: data.projectData?.location, latitude: data.projectData?.latitude, longitude: data.projectData?.longitude };
+          const pd = (data.projectData ?? {}) as unknown as Record<string, unknown>;
+          const pick = <T,>(...keys: string[]): T | undefined => {
+            for (const k of keys) {
+              const v = pd[k];
+              if (v !== undefined && v !== null && v !== '') return v as T;
+            }
+            return undefined;
+          };
+          const locUpdate: UpdateProjectDTO = {
+            id: projectId,
+            location: data.projectData?.location,
+            latitude: data.projectData?.latitude,
+            longitude: data.projectData?.longitude,
+            coordinates: data.projectData?.coordinates,
+            // Zones d'intervention → colonne `localisation` (jsonb v3) + `forme`
+            interventionZones: pick<any[]>('interventionZones'),
+            interventionZone: pick<any>('interventionZone'),
+            // Caractéristiques du site saisies à l'étape Localisation
+            geographicZone: pick<string>('geographicZone', 'geographic_zone'),
+            terrainType: pick<string>('terrainType', 'terrain_type'),
+            environmentalConstraints: pick<string>('environmentalConstraints', 'environmental_constraints'),
+            hasUtilities: pick<boolean>('hasUtilities', 'has_utilities') ?? (pd.has_utilities as boolean | undefined),
+            requiresPermits: pick<boolean>('requiresPermits', 'requires_permits') ?? (pd.requires_permits as boolean | undefined),
+          } as UpdateProjectDTO;
           await this.projectRepository.update(projectId, ProjectTransformer.fromUpdateDTOToEntity(locUpdate) as any);
           break;
+        }
+
         case 4:
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
           await this.upsertPhases(projectId, data.relatedData?.phases || []);
