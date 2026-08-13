@@ -1,6 +1,7 @@
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
 import { OperationalStatus } from '@/utils/mauritania';
+import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 import type { Workspace } from '@/domain/entities/Workspace';
 import type { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
 
@@ -14,9 +15,9 @@ interface WorkspaceRow {
   status?: string | null;
   contact_manager?: string | null;
   contact_phone?: string | null;
-  facilities?: Json; // Supabase Json type - can be string[] or null
-  created_at: string;
-  updated_at: string;
+  facilities?: string[] | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 /**
@@ -29,7 +30,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
    */
   async create(workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>): Promise<Workspace> {
     try {
-      const workspaceData = {
+      const workspaceData: BtpTablesInsert<'workspaces'> = {
         id: workspace.workspaceId || crypto.randomUUID(),
         name: workspace.name,
         description: workspace.description,
@@ -39,6 +40,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         contact_manager: workspace.contact?.manager,
         contact_phone: workspace.contact?.phone,
         facilities: workspace.facilities,
+        owner_id: workspace.workspaceId || crypto.randomUUID(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -99,7 +101,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to fetch workspaces: ${error.message}`);
       }
 
-      return data.map(d => this.mapToEntity(d));
+      return (data || []).map(d => this.mapToEntity(d));
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.findAll error:', error);
       throw error;
@@ -126,7 +128,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
 
       const { data, error } = await supabase
         .from('workspaces')
-        .update(updateData)
+        .update(updateData as BtpTablesUpdate<'workspaces'>)
         .eq('id', id)
         .select()
         .single();
@@ -176,7 +178,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to fetch workspaces by status: ${error.message}`);
       }
 
-      return data.map(d => this.mapToEntity(d));
+      return (data || []).map(d => this.mapToEntity(d));
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.findByStatus error:', error);
       throw error;
@@ -198,7 +200,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         throw new Error(`Failed to fetch workspaces by location: ${error.message}`);
       }
 
-      return data.map(d => this.mapToEntity(d));
+      return (data || []).map(d => this.mapToEntity(d));
     } catch (error) {
       console.error('SupabaseWorkspaceAdapter.findByLocation error:', error);
       throw error;
@@ -225,8 +227,8 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       status: data.status === 'active' ? OperationalStatus.active :
              data.status === 'inactive' ? OperationalStatus.inactive :
              OperationalStatus.closed,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      createdAt: new Date(data.created_at || Date.now()),
+      updatedAt: new Date(data.updated_at || Date.now())
     };
   }
 }
