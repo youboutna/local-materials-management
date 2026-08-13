@@ -605,60 +605,18 @@ export function CompactProjectPDFDocument({
     return 0;
   };
 
-  // Helper function to render street map
-  const renderStreetMap = (project: ProjectData) => {
-    const hasCoordinates = project.coordinates?.latitude && project.coordinates?.longitude;
-    
-    // Generate a pseudo-random but consistent position based on project id
-    const projectHash = project.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const pinX = 30 + (projectHash % 40);
-    const pinY = 20 + ((projectHash * 7) % 30);
-    
-    return (
-      <View style={styles.mapContainer}>
-        <View style={styles.mapContent}>
-          {/* Street grid */}
-          <View style={[styles.majorStreetHorizontal, { top: 15, left: 0, width: '100%' }]} />
-          <View style={[styles.majorStreetHorizontal, { top: 45, left: 0, width: '100%' }]} />
-          <View style={[styles.majorStreetVertical, { left: 25, top: 0, height: '100%' }]} />
-          <View style={[styles.majorStreetVertical, { left: 75, top: 0, height: '100%' }]} />
-          
-          {/* Minor streets */}
-          <View style={[styles.streetHorizontal, { top: 30, left: 0, width: '100%' }]} />
-          <View style={[styles.streetVertical, { left: 50, top: 0, height: '100%' }]} />
-          
-          {/* Buildings */}
-          <View style={[styles.building, { left: 5, top: 5, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 80, top: 5, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 5, top: 35, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 80, top: 35, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 30, top: 20, width: 15, height: 10 }]} />
-          <View style={[styles.building, { left: 55, top: 20, width: 15, height: 10 }]} />
-          
-          {/* Park */}
-          <View style={[styles.park, { left: 30, top: 35, width: 40, height: 15 }]} />
-          
-          {/* Water feature */}
-          <View style={[styles.water, { left: 70, top: 50, width: 10, height: 5 }]} />
-          
-          {/* Project location pin */}
-          <View style={[styles.mapPin, { left: pinX, top: pinY }]} />
-          
-          {/* Map label */}
-          <View style={{ position: 'absolute', bottom: 2, left: 0, right: 0, alignItems: 'center' }}>
-            <Text style={styles.mapLabel}>
-              {project.location ? (project.location.length > 15 ? project.location.substring(0, 15) + '...' : project.location) : 'Localisation'}
-            </Text>
-          {hasCoordinates && project.coordinates && (
-              <Text style={styles.mapCoordinates}>
-                {project.coordinates.latitude?.toFixed(2)}, {project.coordinates.longitude?.toFixed(2)}
-              </Text>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  };
+  // Miniature SIG réelle (coordonnées + zones d'intervention persistées)
+  const renderStreetMap = (project: ProjectData) => (
+    <ProjectMiniMap
+      project={{
+        location: project.location,
+        latitude: (project as any).latitude,
+        longitude: (project as any).longitude,
+        coordinates: project.coordinates,
+        interventionZones: (project as any).interventionZones,
+      }}
+    />
+  );
 
   // Company Header Component
   const CompanyHeader = () => (
