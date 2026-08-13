@@ -93,14 +93,23 @@ const ProjectEdit = () => {
     if (formData) {
       // Récupérer les étapes complétées depuis le workflow
       const completed = workflowState?.completedSteps || [];
-      setCompletedSteps(completed);
+      setCompletedSteps(previous =>
+        previous.length === completed.length &&
+        previous.every((step, index) => step === completed[index])
+          ? previous
+          : completed
+      );
       
       // Mettre à jour la progression
       if (workflowState?.currentStep) {
-        setCurrentStep(workflowState.currentStep);
+        setCurrentStep(previous =>
+          previous === workflowState.currentStep
+            ? previous
+            : workflowState.currentStep
+        );
       }
     }
-  }, [formData, workflowState]);
+  }, [formData, workflowState?.completedSteps, workflowState?.currentStep]);
 
   // Gérer les erreurs du workflow
   useEffect(() => {

@@ -233,9 +233,16 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
 
 
+  // La callback du parent est inline et change d'identité à chaque rendu.
+  // Une ref permet de notifier seulement quand les données métier changent.
+  const onStepCompleteRef = React.useRef(onStepComplete);
+  useEffect(() => {
+    onStepCompleteRef.current = onStepComplete;
+  }, [onStepComplete]);
+
   // Mise à jour du parent quand les données changent
   useEffect(() => {
-    if (onStepComplete && !isLoading) {
+    if (!isLoading) {
       const complianceData: ComplianceDataDTO = {
         regulations: complianceItems,
         certifications: insurancePolicies,
@@ -243,9 +250,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         status: 'pending' as const,
         documents: documents
       };
-      onStepComplete({ compliance: complianceData });
+      onStepCompleteRef.current?.({ compliance: complianceData });
     }
-  }, [complianceItems, insurancePolicies, bankGuarantees, documents, onStepComplete, isLoading]);
+  }, [complianceItems, insurancePolicies, bankGuarantees, documents, isLoading]);
 
   // ============================================================
   // Handlers d'ajout (avec vérification canManageSubObjects)
