@@ -525,7 +525,7 @@ export function ProjectPDFDocument({
               {score != null && (
                 <PDFMetricCard
                   title="Score de santé"
-                  value={`${Number(score).toFixed(0)}/100`}
+                  value={`${Number(score).toFixed(2)}/100`}
                   color="#8b5cf6"
                 />
               )}
