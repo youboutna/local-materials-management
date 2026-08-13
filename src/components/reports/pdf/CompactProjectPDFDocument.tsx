@@ -722,9 +722,38 @@ export function CompactProjectPDFDocument({
                 <View style={[styles.progressFill, { width: `${project.progress || 0}%` }]} />
               </View>
               <Text style={styles.progressText}>
-                Progression: {project.progress || 0}% | Équipe: {Array.isArray(project.resources) ? project.resources.filter((r: any) => r.type === 'human').length : 0} personnes
+                Progression: {formatDecimal(project.progress || 0)}% | Équipe: {Array.isArray(project.resources) ? project.resources.filter((r: any) => r.type === 'human').length : 0} personnes
               </Text>
             </View>
+
+            {/* Lecture directionnelle DGEER */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Contribution aux missions DGEER</Text>
+              <View style={styles.table}>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderCell, { width: '34%' }]}>Mission</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '18%' }]}>Rattachement</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '32%' }]}>Indicateur</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '16%' }]}>Valeur</Text>
+                </View>
+                {missionInsights.map((m) => (
+                  <View key={m.code} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, { width: '34%' }]}>{m.label}</Text>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        { width: '18%', color: m.relevant ? colors.success : colors.muted },
+                      ]}
+                    >
+                      {m.relevant ? 'Direct' : 'Indirect'}
+                    </Text>
+                    <Text style={[styles.tableCell, { width: '32%' }]}>{m.indicatorLabel}</Text>
+                    <Text style={[styles.tableCell, { width: '16%' }]}>{m.indicator}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
 
             {/* Particularity */}
             {project.description && (
