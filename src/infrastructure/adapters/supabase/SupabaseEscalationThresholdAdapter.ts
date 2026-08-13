@@ -7,6 +7,7 @@ import type {
   IEscalationThresholdRepository,
   EscalationThresholdRow,
 } from '@/domain/repositories/IEscalationThresholdRepository';
+import { BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 
 export class SupabaseEscalationThresholdAdapter implements IEscalationThresholdRepository {
   async findAll(): Promise<EscalationThresholdRow[]> {
@@ -26,7 +27,7 @@ export class SupabaseEscalationThresholdAdapter implements IEscalationThresholdR
   ): Promise<EscalationThresholdRow> {
     const { data, error } = await btpClient
       .from('escalation_thresholds')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updates, updated_at: new Date().toISOString() } as BtpTablesUpdate<'escalation_thresholds'>)
       .eq('id', id)
       .select()
       .single();

@@ -8,6 +8,7 @@ export interface TenderSubmissionNotificationData {
   submission_id: string;
   secret_code: string;
   admin_emails?: string[];
+  [key: string]: unknown;
 }
 
 export const sendTenderSubmissionNotification = async (data: TenderSubmissionNotificationData) => {

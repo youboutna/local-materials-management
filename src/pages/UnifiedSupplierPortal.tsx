@@ -48,9 +48,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
 import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
 import { parsePdf } from "@/utils/btpCalculations";
-import type { Tables } from "@/integrations/supabase/types";
+import type { BtpTables } from "@/integrations/supabase/btp-types";
 
-type SupplierNotificationRow = Tables<{ schema: "btp" }, "supplier_notifications">;
+type SupplierNotificationRow = BtpTables<"supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";

@@ -1,3 +1,4 @@
+import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 /**
  * PV Generator Adapter - Supabase Implementation
  * Implements IPVGeneratorRepository using Supabase
@@ -9,13 +10,13 @@ import { btpClient } from '@/integrations/supabase/schema-clients';
 import { IPVGeneratorRepository, SavedPVRecord } from '@/domain/repositories/IPVGeneratorRepository';
 import type { Database } from '@/integrations/supabase/types';
 
-type InspectionPVRow = Database['btp']['Tables']['inspection_pvs']['Row'];
+type InspectionPVRow = BtpTables<'inspection_pvs'>;
 
 const toSavedPVRecord = (row: InspectionPVRow): SavedPVRecord => ({
   ...row,
   metadata: (row.metadata ?? null) as Record<string, unknown> | null,
 });
-type InspectionPVInsert = Database['btp']['Tables']['inspection_pvs']['Insert'];
+type InspectionPVInsert = BtpTablesInsert<'inspection_pvs'>;
 
 export class PVGeneratorAdapter implements IPVGeneratorRepository {
 

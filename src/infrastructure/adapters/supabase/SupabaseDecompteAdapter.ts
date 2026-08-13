@@ -7,7 +7,6 @@
 
 import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
-import { MilestoneTransformer } from '@/dtos/transforms/MilestoneTransformer';
 import {
     AutomaticDecompteDTO,
     DecompteLineDTO,
@@ -109,8 +108,8 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const milestoneRepository = RepositoryFactory.getMilestoneRepository();
     const milestones = await milestoneRepository.findByPhaseId(phaseId);
 
-    // Transformer en MilestoneDTO via le transformer canonique
-    return milestones.map(milestone => MilestoneTransformer.toDTO(milestone));
+    // Le repository retourne déjà des MilestoneDTO
+    return milestones;
   }
 
   // === DONNÉES JALON ===
@@ -128,14 +127,14 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const verifiedMilestones: VerifiedMilestone[] = [];
 
     for (const milestone of completedMilestones) {
-      const phaseId = milestone.configuration.phaseId;
+      const phaseId = milestone.phaseId;
       if (phaseId) {
         const phase = await phaseRepository.findById(phaseId);
         
         verifiedMilestones.push({
           id: milestone.id,
           title: milestone.title || '',
-          weight: milestone.configuration.weight || 0,
+          weight: milestone.weight || 0,
           completionDate: milestone.completionDate || new Date().toISOString(),
           phaseId,
           phaseEstimatedCost: phase?.estimatedCost || 0,

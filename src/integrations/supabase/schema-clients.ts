@@ -24,7 +24,10 @@
  *   - Aucun changement de code applicatif requis.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { supabase } from './client';
+import type { BtpDatabase } from './btp-types';
 
 /** Schéma BTP par défaut codé en dur (utilisé si l'env n'est pas défini). */
 /**
@@ -74,6 +77,13 @@ export function getSchemaClient(schemaName: SchemaName) {
   return (supabase as any).schema(schemaName);
 }
 
+/**
+ * Client BTP typé sur le schéma `btp` (cf. `btp-types.ts`).
+ * `types.ts` étant régénéré par la plateforme (schéma `public` uniquement),
+ * le typage métier est porté par `BtpDatabase`.
+ */
+export type BtpClient = SupabaseClient<BtpDatabase, 'btp'>;
+
 /** Client BTP — résolu une fois au chargement du module. */
 export const BTP_SCHEMA: SchemaName = resolveBtpSchemaName();
-export const btpClient = getSchemaClient(BTP_SCHEMA);
+export const btpClient = getSchemaClient(BTP_SCHEMA) as unknown as BtpClient;

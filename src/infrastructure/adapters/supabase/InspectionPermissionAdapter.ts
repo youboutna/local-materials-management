@@ -12,6 +12,25 @@ import {
   AssignableInspector
 } from '@/domain/repositories/IInspectionPermissionRepository';
 
+function toAssignableInspector(row: {
+  id: string;
+  full_name: string;
+  email: string | null;
+  specializations: string[];
+  certifications: string[];
+}): AssignableInspector {
+  return {
+    id: row.id,
+    name: row.full_name,
+    email: row.email || '',
+    role: 'inspector',
+    specializations: row.specializations,
+    certifications: row.certifications,
+    maxConcurrentInspections: 5,
+    currentInspections: 0,
+  };
+}
+
 export class InspectionPermissionAdapter implements IInspectionPermissionRepository {
   
   /**
@@ -51,10 +70,10 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
         .from('inspectors')
         .select('*')
         .eq('status', 'active')
-        .in('specializations', context.inspectionType);
+        .contains('specializations', [context.inspectionType]);
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(toAssignableInspector);
     } catch (error) {
       console.error('Error getting assignable inspectors:', error);
       throw error;
@@ -104,7 +123,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
    */
   async getUserRole(userId: string): Promise<string> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await publicClient
         .from('user_profiles')
         .select('role')
         .eq('user_id', userId)
@@ -147,11 +166,11 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
         .from('inspectors')
         .select('*')
         .eq('status', 'active')
-        .in('specializations', context.inspectionType)
+        .contains('specializations', [context.inspectionType])
         .neq('id', context.userId); // Exclude current user
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(toAssignableInspector);
     } catch (error) {
       console.error('Error getting alternative inspectors:', error);
       throw error;
@@ -170,7 +189,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
         .single();
 
       if (error) throw error;
-      return data;
+      return data ? toAssignableInspector(data) : null;
     } catch (error) {
       console.error('Error getting inspector details:', error);
       throw error;
@@ -180,7 +199,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
   /**
    * Validate certifications
    */
-  private validateCertifications(
+  validateCertifications(
     certifications: string[], 
     inspectionType: string
   ): boolean {
@@ -189,9 +208,16 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
   }
 
   /**
+   * Check if a role has basic inspection permission
+   */
+  private hasBasicInspectionPermission(role: string): boolean {
+    return ['admin', 'engineer', 'inspector', 'project_manager'].includes(role);
+  }
+
+  /**
    * Get required certifications for inspection type
    */
-  private getRequiredCertifications(inspectionType: string): string[] {
+  getRequiredCertifications(inspectionType: string): string[] {
     switch (inspectionType) {
       case 'technical':
         return ['certification_technique', 'safety_certification'];
@@ -207,7 +233,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
   /**
    * Check inspector availability
    */
-  private async checkInspectorAvailability(inspectorId: string): Promise<boolean> {
+  async checkInspectorAvailability(inspectorId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
         .from('inspector_availability')

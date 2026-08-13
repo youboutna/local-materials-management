@@ -1,3 +1,4 @@
+import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 /**
  * Supabase Adapter for Employee Repository
  * Implements IEmployeeRepository using Supabase
@@ -10,7 +11,7 @@ import { EmployeeTransformer } from '@/dtos/transforms/EmployeeTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Database } from '@/integrations/supabase/types';
 
-type EmployeeRow = Database['btp']['Tables']['employees']['Row'];
+type EmployeeRow = BtpTables<'employees'>;
 
 export class SupabaseEmployeeAdapter implements IEmployeeRepository {
   private mapToEntity(data: EmployeeRow): Employee {
@@ -43,7 +44,7 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
   async save(employee: Employee): Promise<void> {
     const dbData = EmployeeTransformer.toSupabase(employee);
-    const { error } = await supabase.from('employees').insert([dbData as Database['btp']['Tables']['employees']['Insert']]);
+    const { error } = await supabase.from('employees').insert([dbData as BtpTablesInsert<'employees'>]);
     if (error) throw new Error(`Failed to save employee: ${error.message}`);
   }
 
@@ -93,7 +94,7 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
 
     const { error } = await supabase
       .from('employees')
-      .update(updateData as Database['btp']['Tables']['employees']['Update'])
+      .update(updateData as BtpTablesUpdate<'employees'>)
       .eq('id', id);
     if (error) throw new Error(`Failed to update employee: ${error.message}`);
   }

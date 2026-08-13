@@ -7,6 +7,7 @@ import { TaskAssignment } from '@/domain/entities/TaskAssignment';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 
 const TABLE = 'task_assignments';
 
@@ -42,7 +43,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
   async save(task: TaskAssignment): Promise<TaskAssignment> {
     const payload = TaskAssignmentTransformer.toRepository(task);
     const data = await this.writeWithSchemaFallback(payload, async (row) =>
-      supabase.from(TABLE).upsert(row, { onConflict: 'id' }).select().single(),
+      supabase.from(TABLE).upsert(row as BtpTablesInsert<'task_assignments'>, { onConflict: 'id' }).select().single(),
     );
     return TaskAssignmentTransformer.fromRepository(data);
   }

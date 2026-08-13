@@ -96,7 +96,6 @@ export type { IReportingRepository } from './IReportingRepository';
 // ============================================================================
 
 export type { IComplianceRepository } from './IComplianceRepository';
-export type { IMissionExpenseRepository } from './IMissionExpenseRepository';
 export type { IStakeholderRepository } from './IStakeholderRepository';
 
 // ============================================================================

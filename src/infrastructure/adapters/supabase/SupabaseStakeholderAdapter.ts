@@ -11,6 +11,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import { Stakeholder } from '@/domain/entities/Stakeholder';
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 
@@ -23,7 +24,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
   }
 
   private async create(stakeholder: Omit<Stakeholder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Stakeholder> {
-    const row = this.mapToSupabase(stakeholder);
+    const row = this.mapToSupabase(stakeholder) as BtpTablesInsert<'project_stakeholders'>;
     const { data, error } = await btpClient.from(TABLE).insert(row).select().single();
     if (error) throw error;
     return this.mapToEntity(data);

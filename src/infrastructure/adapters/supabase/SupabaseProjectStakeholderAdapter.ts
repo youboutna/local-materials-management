@@ -7,6 +7,7 @@ import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { normalizePostgrestError } from './postgrestError';
+import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 
 // Database row interface for project_stakeholders table
 interface ProjectStakeholderRow {
@@ -147,7 +148,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
 
     const { data, error } = await supabase
       .from('project_stakeholders')
-      .insert(entityData)
+      .insert(entityData as unknown as BtpTablesInsert<'project_stakeholders'>)
       .select()
       .single();
 
@@ -295,8 +296,8 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     return ProjectStakeholderEntity.create({
       id: data.id,
       projectId: data.project_id,
-      stakeholderType: data.stakeholder_type,
-      stakeholderEntityType: data.stakeholder_entity_type,
+      stakeholderType: data.stakeholder_type as ProjectStakeholderEntity['stakeholderType'],
+      stakeholderEntityType: data.stakeholder_entity_type as ProjectStakeholderEntity['stakeholderEntityType'],
       employeeId: data.employee_id || null,
       supplierId: data.supplier_id || null,
       organizationId: data.organization_id || null,

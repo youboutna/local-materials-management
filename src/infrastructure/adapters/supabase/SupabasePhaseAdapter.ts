@@ -6,27 +6,28 @@
 
 import { Phase, PhaseStatus, PhaseStep, PhaseTask } from '@/domain/entities';
 import { IPhaseRepository } from '@/domain/repositories';
+import type { PhaseMetrics } from '@/domain/repositories/IPhaseRepository';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 
-// Define PhaseMetrics interface locally since it's not in domain entities
-interface PhaseMetrics {
-  materialCost: number;
-  totalMaterials: number;
-  totalTasks: number;
-  completedTasks: number;
-  taskCompletionRate: number;
-  totalInspections: number;
-  passedInspections: number;
-  inspectionPassRate: number;
-  totalEmployees: number;
-  totalPayments: number;
-  totalPaymentAmount: number;
-  totalDocuments: number;
-  milestoneProgress: number;
-  stepsCount: number;
-  completedSteps: number;
-}
+const DEFAULT_METRICS: PhaseMetrics = {
+  materialCost: 0,
+  totalMaterials: 0,
+  totalTasks: 0,
+  completedTasks: 0,
+  taskCompletionRate: 0,
+  totalInspections: 0,
+  passedInspections: 0,
+  inspectionPassRate: 0,
+  totalEmployees: 0,
+  totalPayments: 0,
+  totalPaymentAmount: 0,
+  totalDocuments: 0,
+  milestoneProgress: 0,
+  stepsCount: 0,
+  completedSteps: 0,
+};
 
 interface PhaseOperationParams {
   id: string;
@@ -35,22 +36,8 @@ interface PhaseOperationParams {
   status: PhaseStatus;
 }
 
-interface PhaseDB {
-  id: string;
-  project_id: string;
-  phase_name: string | null;
-  description: string | null;
-  status: string | null;
-  progress: number | null;
-  order_index: number | null;
-  start_date: string | null;
-  end_date: string | null;
-  estimated_cost: number | null;
-  actual_cost: number | null;
-  construction_phase: string | null;
-  construction_stage: string | null;
-  custom_phase_data: Record<string, unknown> | null;
-}
+type PhaseInsert = BtpTablesInsert<'project_phases'>;
+type PhaseUpdate = BtpTablesUpdate<'project_phases'>;
 
 export class SupabasePhaseAdapter implements IPhaseRepository {
   async insertPhaseEmployee(row: Record<string, unknown>): Promise<void> {
@@ -62,7 +49,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
   async findById(id: string): Promise<Phase | null> {
     const { data, error } = await supabase
-      .from<PhaseDB>('project_phases')
+      .from('project_phases')
       .select('*')
       .eq('id', id)
       .single();
@@ -100,7 +87,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
   private async withPhaseTypeFallback<T>(
     row: Record<string, unknown>,
-    run: (payload: Record<string, unknown>) => Promise<{ data: T; error: any }>,
+    run: (payload: Record<string, unknown>) => PromiseLike<{ data: T; error: any }>,
   ): Promise<T> {
     const original =
       row.phase_type == null || row.phase_type === '' ? 'standard' : String(row.phase_type);
@@ -140,8 +127,8 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
   async create(phase: Partial<Phase>): Promise<Phase> {
     const entityData = await this.mapToEntity(phase);
 
-    const data = await this.withPhaseTypeFallback(entityData as Record<string, unknown>, (payload) =>
-      supabase.from('project_phases').insert(payload).select().single(),
+    const data = await this.withPhaseTypeFallback(entityData, (payload) =>
+      supabase.from('project_phases').insert(payload as PhaseInsert).select().single(),
     );
 
     return PhaseTransformer.fromDTO(data);
@@ -150,8 +137,8 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
   async update(id: string, updates: Partial<Phase>): Promise<Phase> {
     const entityData = await this.mapToEntity(updates);
 
-    const data = await this.withPhaseTypeFallback(entityData as Record<string, unknown>, (payload) =>
-      supabase.from('project_phases').update(payload).eq('id', id).select().single(),
+    const data = await this.withPhaseTypeFallback(entityData, (payload) =>
+      supabase.from('project_phases').update(payload as PhaseUpdate).eq('id', id).select().single(),
     );
 
     return PhaseTransformer.fromDTO(data);
@@ -181,7 +168,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       throw error;
     }
 
-    return { id: data.id, name: data.phase_name };
+    return { id: data.id, name: data.phase_name ?? '' };
   }
 
   async findWithSteps(id: string): Promise<Phase | null> {
@@ -243,7 +230,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
         const customData = typeof phase.custom_phase_data === 'string'
           ? JSON.parse(phase.custom_phase_data)
           : phase.custom_phase_data;
-        
+
         const steps = customData?.steps || customData?.customStages || [];
         stepsCount = steps.length;
         completedSteps = steps.filter((s: any) => s.status === 'completed').length;
@@ -270,11 +257,17 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       };
     } catch (error) {
       console.error('Error fetching metrics:', error);
-      return defaultMetrics;
+      return DEFAULT_METRICS;
     }
   }
 
   // ============= Step Operations =============
+  // Steps/tasks are stored inside `custom_phase_data.steps` (no dedicated table).
+
+  private getStepsFromPhase(phase: Phase): PhaseStep[] {
+    const customData = phase.customPhaseData as { steps?: PhaseStep[] } | null;
+    return Array.isArray(customData?.steps) ? (customData!.steps as PhaseStep[]) : [];
+  }
 
   async addStep(phaseId: string, step: Omit<PhaseStep, 'id'>): Promise<PhaseStep> {
     const phase = await this.findById(phaseId);
@@ -285,7 +278,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       id: crypto.randomUUID(),
     };
 
-    const updatedSteps = [...phase.steps, newStep];
+    const updatedSteps = [...this.getStepsFromPhase(phase), newStep];
     await this.updateSteps(phaseId, updatedSteps);
 
     return newStep;
@@ -295,7 +288,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     const phase = await this.findById(phaseId);
     if (!phase) throw new Error('Phase not found');
 
-    const updatedSteps = phase.steps.map(step =>
+    const updatedSteps = this.getStepsFromPhase(phase).map(step =>
       step.id === stepId ? { ...step, ...updates } : step
     );
 
@@ -311,7 +304,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     const phase = await this.findById(phaseId);
     if (!phase) throw new Error('Phase not found');
 
-    const updatedSteps = phase.steps.filter(step => step.id !== stepId);
+    const updatedSteps = this.getStepsFromPhase(phase).filter(step => step.id !== stepId);
     await this.updateSteps(phaseId, updatedSteps);
   }
 
@@ -326,7 +319,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
       id: crypto.randomUUID(),
     };
 
-    const updatedSteps = phase.steps.map(step =>
+    const updatedSteps = this.getStepsFromPhase(phase).map(step =>
       step.id === stepId
         ? { ...step, tasks: [...step.tasks, newTask] }
         : step
@@ -343,7 +336,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
     let updatedTask: PhaseTask | undefined;
 
-    const updatedSteps = phase.steps.map(step => {
+    const updatedSteps = this.getStepsFromPhase(phase).map(step => {
       if (step.id === stepId) {
         return {
           ...step,
@@ -369,7 +362,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     const phase = await this.findById(phaseId);
     if (!phase) throw new Error('Phase not found');
 
-    const updatedSteps = phase.steps.map(step =>
+    const updatedSteps = this.getStepsFromPhase(phase).map(step =>
       step.id === stepId
         ? { ...step, tasks: step.tasks.filter(task => task.id !== taskId) }
         : step
@@ -378,10 +371,10 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     await this.updateSteps(phaseId, updatedSteps);
   }
 
-  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: TaskStatus, progress: number): Promise<Phase> {
+  async updateTaskStatus(phaseId: string, stepId: string, taskId: string, status: string, progress: number): Promise<Phase> {
     await this.updateTask(phaseId, stepId, taskId, {
       status,
-      progress 
+      progress
     });
     const phase = await this.findById(phaseId);
     if (!phase) throw new Error(`Phase ${phaseId} not found after update`);
@@ -401,10 +394,13 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
   async recalculateProgress(id: string): Promise<number> {
     const phase = await this.findById(id);
-    if (!phase || phase.steps.length === 0) return 0;
+    if (!phase) return 0;
 
-    const completedSteps = phase.steps.filter(s => s.status === 'completed').length;
-    const progress = (completedSteps / phase.steps.length) * 100;
+    const steps = this.getStepsFromPhase(phase);
+    if (steps.length === 0) return 0;
+
+    const completedSteps = steps.filter(s => s.status === 'completed').length;
+    const progress = (completedSteps / steps.length) * 100;
 
     await this.updateProgress(id, progress);
     return progress;
@@ -413,20 +409,23 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
   // ============= Private Helpers =============
 
   private async updateSteps(phaseId: string, steps: PhaseStep[]): Promise<void> {
-    // Convert steps to custom_phase_data format
-    const customPhaseData = JSON.stringify({ steps });
+    const phase = await this.findById(phaseId);
+    const customPhaseData = {
+      ...((phase?.customPhaseData as Record<string, unknown> | null) ?? {}),
+      steps,
+    };
 
     const { error } = await supabase
       .from('project_phases')
-      .update({ custom_phase_data: customPhaseData })
+      .update({ custom_phase_data: customPhaseData as unknown as PhaseUpdate['custom_phase_data'] })
       .eq('id', phaseId);
 
     if (error) throw error;
   }
 
-  private async mapToEntity(phase: Partial<Phase>): Promise<Partial<PhaseDB>> {
+  private async mapToEntity(phase: Partial<Phase>): Promise<Record<string, unknown>> {
     // Delegate to centralized transformer for guaranteed round-trip parity
-    return PhaseTransformer.toDB(phase as any) as Partial<PhaseDB>;
+    return PhaseTransformer.toDB(phase as any);
   }
 
   async updatePhase(params: PhaseOperationParams): Promise<Phase> {
@@ -434,7 +433,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
     const { data, error } = await supabase
       .from('project_phases')
-      .update(entityData)
+      .update(entityData as PhaseUpdate)
       .eq('id', params.id)
       .select()
       .single();
@@ -446,59 +445,35 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
   async getAllPhases(): Promise<Phase[]> {
     const { data, error } = await supabase
-      .from<PhaseDB>('project_phases')
+      .from('project_phases')
       .select();
-      
+
     if (error) throw error;
     return data.map(d => PhaseTransformer.fromDTO(d));
   }
 
+  async findByProjectIdAndCode(
+    projectId: string,
+    phaseCode: string
+  ): Promise<Phase | null> {
+    try {
+      const { data, error } = await supabase
+        .from('project_phases')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('phase_code', phaseCode)
+        .maybeSingle();
 
+      if (error) {
+        console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
+        return null;
+      }
 
-async findByProjectIdAndCode(
-  projectId: string,
-  phaseCode: string
-): Promise<Phase | null> {
-  try {
-    // Récupérer toutes les phases du projet
-    const phases = await this.findByProjectId(projectId);
-    
-    // Filtrer par phase_code dans custom_phase_data
-    return phases.find((phase) => {
-      const customData = phase.customPhaseData as { phaseCode?: string } | null;
-      return customData?.phaseCode === phaseCode;
-    }) ?? null;
-    
-  } catch (error) {
-    console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
-    return null;
-  }
-}
+      return data ? PhaseTransformer.fromDB(data) : null;
 
-// OU requête SQL directe (plus performant)
-async findByProjectIdAndCode(
-  projectId: string,
-  phaseCode: string
-): Promise<Phase | null> {
-  try {
-    const { data, error } = await supabase
-      .from('project_phases')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('phase_code', phaseCode)
-      .maybeSingle();
-
-    if (error) {
+    } catch (error) {
       console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
       return null;
     }
-
-    return data ? PhaseTransformer.fromDB(data) : null;
-    
-  } catch (error) {
-    console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
-    return null;
   }
 }
-}
-

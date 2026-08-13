@@ -44,13 +44,13 @@ interface DBAlert {
   status: string;
   
   // === Project Context ===
-  project_title: string;
+  project_title: string | null;
 
   // === Dates ===
-  timestamp: string;
-  trigger_date: string;
+  timestamp: string | null;
+  trigger_date: string | null;
   deadline?: string | null;
-  recurrence?: number | null;
+  recurrence?: string | null;
   created_at: string;
   updated_at: string;
   
@@ -69,11 +69,11 @@ interface DBAlert {
 
   // === Actions ===
   action_taken?: string | null;
-  available_actions: string[];
-  action_proof: any[]; // JSONB array
+  available_actions: string[] | null;
+  action_proof: any; // JSONB
 
   // === Escalation ===
-  escalation_level: number;
+  escalation_level: number | null;
 
   // === Additional Data ===
   delay_days?: number | null;
@@ -87,7 +87,7 @@ const mapDBToAlert = (dbAlert: DBAlert): Alert => {
   return {
     id: dbAlert.id,
     projectId: dbAlert.project_id,
-    projectTitle: dbAlert.project_title,
+    projectTitle: dbAlert.project_title ?? '',
     relatedEntityId: dbAlert.related_entity_id || undefined,
     
     type: dbAlert.type as AlertType,
@@ -98,10 +98,10 @@ const mapDBToAlert = (dbAlert: DBAlert): Alert => {
     title: dbAlert.title,
     message: dbAlert.message,
     
-    timestamp: dbAlert.timestamp,
-    triggerDate: dbAlert.trigger_date,
+    timestamp: dbAlert.timestamp ?? new Date().toISOString(),
+    triggerDate: dbAlert.trigger_date ?? new Date().toISOString(),
     deadline: dbAlert.deadline || undefined,
-    recurrence: dbAlert.recurrence || undefined,
+    recurrence: dbAlert.recurrence ? Number(dbAlert.recurrence) : undefined,
     
     acknowledged: dbAlert.acknowledged,
     acknowledgedBy: dbAlert.acknowledged_by || undefined,
@@ -114,7 +114,7 @@ const mapDBToAlert = (dbAlert: DBAlert): Alert => {
     
     resolvedAt: dbAlert.resolved_at || undefined,
     
-    escalationLevel: dbAlert.escalation_level,
+    escalationLevel: dbAlert.escalation_level ?? 0,
     availableActions: dbAlert.available_actions || [],
     actionProof: dbAlert.action_proof || [],
     delayDays: dbAlert.delay_days || undefined,
@@ -148,7 +148,7 @@ const mapAlertToDB = (alert: Alert): Omit<DBAlert, 'created_at' | 'updated_at'> 
     timestamp: alert.timestamp || new Date().toISOString(),
     trigger_date: alert.triggerDate || new Date().toISOString(),
     deadline: alert.deadline || null,
-    recurrence: alert.recurrence || null,
+    recurrence: alert.recurrence !== undefined ? String(alert.recurrence) : null,
     
     acknowledged: alert.acknowledged || false,
     acknowledged_by: alert.acknowledgedBy || null,
@@ -187,12 +187,12 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       title: dbAlert.title,
       message: dbAlert.message,
       projectId: dbAlert.project_id,
-      projectTitle: dbAlert.project_title,
+      projectTitle: dbAlert.project_title ?? '',
       relatedEntityId: dbAlert.related_entity_id ?? undefined,
       source: dbAlert.source as AlertSource,
       delayDays: dbAlert.delay_days ?? undefined,
-      timestamp: dbAlert.timestamp,
-      triggerDate: dbAlert.trigger_date,
+      timestamp: dbAlert.timestamp ?? new Date().toISOString(),
+      triggerDate: dbAlert.trigger_date ?? new Date().toISOString(),
       acknowledged: dbAlert.acknowledged,
       acknowledgedBy: dbAlert.acknowledged_by ?? undefined,
       acknowledgedAt: dbAlert.acknowledged_at ?? undefined,
@@ -200,11 +200,11 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       actionTaken: dbAlert.action_taken ?? undefined,
       actionTakenBy: dbAlert.action_taken_by ?? undefined,
       actionTakenAt: dbAlert.action_taken_at ?? undefined,
-      escalationLevel: dbAlert.escalation_level,
-      availableActions: dbAlert.available_actions,
-      actionProof: dbAlert.action_proof,
+      escalationLevel: dbAlert.escalation_level ?? 0,
+      availableActions: dbAlert.available_actions ?? [],
+      actionProof: dbAlert.action_proof ?? [],
       deadline: dbAlert.deadline ?? undefined,
-      recurrence: dbAlert.recurrence ?? undefined,
+      recurrence: dbAlert.recurrence ? Number(dbAlert.recurrence) : undefined,
       status: dbAlert.status as AlertStatus,
       createdAt: dbAlert.created_at,
       updatedAt: dbAlert.updated_at,
@@ -240,7 +240,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       available_actions: alert.availableActions || [],
       action_proof: alert.actionProof || [],
       deadline: alert.deadline ?? null,
-      recurrence: alert.recurrence ?? null,
+      recurrence: alert.recurrence !== undefined ? String(alert.recurrence) : null,
       status: alert.status || 'open',
       resolved_at: alert.resolvedAt ?? null,
     };
@@ -346,7 +346,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -363,7 +363,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by project');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -380,7 +380,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find active alerts');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -397,7 +397,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by type');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -414,7 +414,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by severity');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -431,7 +431,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by source');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -448,7 +448,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by status');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -602,7 +602,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'acknowledge batch alerts');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -626,7 +626,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'resolve batch alerts');
     }
 
-    return (data || []).map((item: DBAlert) => this.fromDB(item));
+    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
   }
 
   /**
@@ -697,8 +697,22 @@ export class SupabaseAlertAdapter implements IAlertRepository {
    * Compte le nombre d'alertes
    */
   async count(filters?: AlertFilter): Promise<number> {
-    const query = this.buildQuery(filters);
-    const { count, error } = await query.select('*', { count: 'exact', head: true });
+    let query = supabase.from(TABLE_NAME).select('*', { count: 'exact', head: true });
+
+    if (filters) {
+      if (filters.severity) query = query.eq('severity', filters.severity);
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.status) query = query.eq('status', filters.status);
+      if (filters.source) query = query.eq('source', filters.source);
+      if (filters.projectId) query = query.eq('project_id', filters.projectId);
+      if (filters.acknowledged !== undefined) query = query.eq('acknowledged', filters.acknowledged);
+      if (filters.dateRange) {
+        if (filters.dateRange.start) query = query.gte('created_at', filters.dateRange.start);
+        if (filters.dateRange.end) query = query.lte('created_at', filters.dateRange.end);
+      }
+    }
+
+    const { count, error } = await query;
 
     if (error) {
       this.handleError(error, 'count alerts');

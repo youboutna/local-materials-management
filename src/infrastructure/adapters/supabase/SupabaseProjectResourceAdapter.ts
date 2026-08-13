@@ -3,10 +3,17 @@
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 import type {
   IProjectResourceRepository,
   ProjectResourceRow,
 } from '@/domain/repositories/IProjectResourceRepository';
+
+// La table réelle `project_resources` n'a pas de colonne `phase_id`.
+function stripUnsupportedFields(resource: Partial<ProjectResourceRow>): Partial<ProjectResourceRow> {
+  const { phase_id: _phaseId, ...rest } = resource;
+  return rest;
+}
 
 export class SupabaseProjectResourceAdapter implements IProjectResourceRepository {
   async findByProjectId(projectId: string): Promise<ProjectResourceRow[]> {
@@ -23,7 +30,7 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
   async create(resource: Partial<ProjectResourceRow>): Promise<ProjectResourceRow> {
     const { data, error } = await btpClient
       .from('project_resources')
-      .insert(resource)
+      .insert(stripUnsupportedFields(resource) as BtpTablesInsert<'project_resources'>)
       .select()
       .single();
 
@@ -35,7 +42,7 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
     if (!resources.length) return [];
     const { data, error } = await btpClient
       .from('project_resources')
-      .insert(resources)
+      .insert(resources.map(stripUnsupportedFields) as BtpTablesInsert<'project_resources'>[])
       .select();
 
     if (error) throw error;
@@ -45,7 +52,7 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
   async update(id: string, updates: Partial<ProjectResourceRow>): Promise<ProjectResourceRow> {
     const { data, error } = await btpClient
       .from('project_resources')
-      .update(updates)
+      .update(stripUnsupportedFields(updates) as BtpTablesUpdate<'project_resources'>)
       .eq('id', id)
       .select()
       .single();

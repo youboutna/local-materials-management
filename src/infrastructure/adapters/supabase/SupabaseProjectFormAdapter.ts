@@ -240,9 +240,16 @@ export class SupabaseProjectFormAdapter implements IProjectFormRepository {
           return { success: false, projectId: null, error: validation.errors.join(', ') };
         }
 
+        const insertData = {
+          ...projectData,
+          title: formData.title as string,
+          location: formData.location as string,
+          description: (formData.description as string) || '',
+        };
+
         const { data, error } = await supabase
           .from('projects')
-          .insert(projectData)
+          .insert([insertData])
           .select('id')
           .single();
 

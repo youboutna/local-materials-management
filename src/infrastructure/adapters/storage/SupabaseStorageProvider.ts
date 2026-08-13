@@ -198,7 +198,7 @@ export class SupabaseStorageProvider implements IStorageProvider {
         success: true,
         files: data.map(file => ({
           name: file.name,
-          size: file.size || 0,
+          size: (file.metadata?.size as number | undefined) || 0,
           created_at: file.created_at || '',
           updated_at: file.updated_at || ''
         }))
@@ -217,11 +217,13 @@ export class SupabaseStorageProvider implements IStorageProvider {
    */
   async fileExists(path: string): Promise<boolean> {
     try {
+      const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+      const fileName = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path;
       const { data, error } = await supabase.storage
         .from(this.bucket)
-        .getMetadata(path);
+        .list(folder, { search: fileName });
 
-      return !error && data !== null;
+      return !error && !!data?.some(f => f.name === fileName);
     } catch (error) {
       return false;
     }

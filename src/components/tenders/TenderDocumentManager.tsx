@@ -322,20 +322,18 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 {
                   tender_id: tenderId,
                   project_id: projectId || null,
-                  estimate_type: 'quantitative',
-                  total_materials_cost: 0,
-                  total_labor_cost: 0,
-                  total_equipment_cost: 0,
+                  title: 'Métré quantitatif',
+                  total_materials: 0,
+                  total_labor: 0,
+                  total_equipment: 0,
                   subtotal: 0,
                   tax_rate: 14,
                   tax_amount: 0,
-                  total_with_tax: 0,
+                  total_amount: 0,
                   overhead_percentage: 15,
                   overhead_amount: 0,
-                  profit_margin_percentage: 10,
-                  profit_margin_amount: 0,
-                  final_total: 0,
-                  currency: 'MRU',
+                  profit_percentage: 10,
+                  profit_amount: 0,
                   status: 'draft'
                 }
               ])

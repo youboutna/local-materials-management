@@ -8,11 +8,12 @@ import {
     SupplierInfoDTO
 } from '@/dtos/entities/PaymentInitiationDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { Json } from '@/integrations/supabase/types';
 
 export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepository {
 
   private mapDbRowToDto(row: any): PaymentInitiationNotificationDTO {
-    const metadata = row.metadata as Record<string, any> | null;
+    const metadata = row.data as Record<string, any> | null;
     const pi = metadata?.payment_initiation || {};
 
     return {
@@ -103,9 +104,9 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
 
     if (error || !data) return null;
     return {
-      userId: data.user_id,
-      name: data.name,
-      email: data.email
+      userId: data.user_id ?? '',
+      name: data.name ?? '',
+      email: data.email ?? ''
     };
   }
 
@@ -122,11 +123,12 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
     const { data, error } = await supabase
       .from('notifications')
       .insert([{
+        user_id: supplierInfo?.userId || initiatorId,
         recipient_id: supplierInfo?.userId || initiatorId,
         type: 'payment_initiation',
         title: `Demande de paiement - ${projectTitle}`,
         message: `Nouvelle demande de paiement pour le projet ${projectTitle}`,
-        metadata: {
+        data: {
           payment_initiation: {
             project_id: dto.projectId,
             phase_id: dto.phaseId,
@@ -147,7 +149,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
               email: supplierInfo.email
             } : null
           }
-        }
+        } as unknown as Json
       }])
       .select()
       .single();
@@ -163,8 +165,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
     const { error } = await supabase
       .from('notifications')
       .update({
-        metadata: updatedMetadata,
-        updated_at: new Date().toISOString()
+        data: updatedMetadata as unknown as Json,
       })
       .eq('id', action.notificationId);
 
@@ -177,8 +178,7 @@ export class SupabasePaymentInitiationAdapter implements IPaymentInitiationRepos
     const { error } = await supabase
       .from('notifications')
       .update({
-        metadata: updatedMetadata,
-        updated_at: new Date().toISOString()
+        data: updatedMetadata as unknown as Json,
       })
       .eq('id', dto.notificationId);
 

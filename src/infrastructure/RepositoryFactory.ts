@@ -44,7 +44,6 @@ import {
   SupabaseLoadDataAdapter,
   SupabaseMaterialAdapter,
   SupabaseMilestoneAdapter,
-  SupabaseMissionExpenseAdapter,
   SupabaseMonitoringAdapter,
   SupabaseNotificationAdapter,
   SupabaseParsedInvoiceAdapter,
@@ -137,7 +136,6 @@ import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository
 import { ILoadDataRepository } from '@/domain/repositories/ILoadDataRepository';
 import { IMaterialRepository } from '@/domain/repositories/IMaterialRepository';
 import { IMilestoneRepository } from '@/domain/repositories/IMilestoneRepository';
-import { IMissionExpenseRepository } from '@/domain/repositories/IMissionExpenseRepository';
 import { IMonitoringRepository } from '@/domain/repositories/IMonitoringRepository';
 import { INotificationRepository } from '@/domain/repositories/INotificationRepository';
 import { IOAuthProviderRepository } from '@/domain/repositories/IOAuthProviderRepository';
@@ -260,7 +258,6 @@ interface RepositoryRegistry {
   location?: ILocationRepository;
   projectStakeholder?: IProjectStakeholderRepository;
   stakeholder?: IStakeholderRepository;
-  missionExpense?: IMissionExpenseRepository;
   compliance?: IComplianceRepository;
   monitoring?: IMonitoringRepository;
   workspace?: IWorkspaceRepository;
@@ -723,12 +720,6 @@ export class RepositoryFactory {
     if (registry.stakeholder) return registry.stakeholder;
     registry.stakeholder = new SupabaseStakeholderAdapter();
     return registry.stakeholder;
-  }
-
-  static getMissionExpenseRepository(): IMissionExpenseRepository {
-    if (registry.missionExpense) return registry.missionExpense;
-    registry.missionExpense = new SupabaseMissionExpenseAdapter();
-    return registry.missionExpense;
   }
 
   // ================================================================

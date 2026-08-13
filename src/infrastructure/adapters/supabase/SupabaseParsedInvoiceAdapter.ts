@@ -6,6 +6,7 @@
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { IParsedInvoiceRepository } from '@/domain/repositories/IParsedInvoiceRepository';
 import { ParsedInvoiceEntity, InvoiceStatus, InvoiceType } from '@/domain/entities/ParsedInvoice';
+import { Json } from '@/integrations/supabase/types';
 
 export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
   
@@ -118,6 +119,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
         .from('parsed_invoices')
         .insert({
           ...rowData,
+          tender_id: invoice.tenderId ?? '',
           created_at: now,
           updated_at: now
         })
@@ -396,67 +398,40 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
    * Map ParsedInvoiceEntity to Supabase row
    */
   private mapEntityToRow(entity: Partial<ParsedInvoiceEntity>): {
-    id?: string;
     file_name?: string;
-    original_file_name?: string;
-    file_path?: string;
-    file_size?: number;
-    mime_type?: string;
     invoice_number?: string;
     invoice_date?: string;
-    due_date?: string;
-    amount?: number;
-    currency?: string;
-    supplier_id?: string;
-    project_id?: string;
+    total_amount?: number;
     tender_id?: string;
-    invoice_type?: string;
-    status?: string;
-    extracted_data?: Record<string, unknown>;
+    parsed_data?: Json;
     parsing_errors?: string;
-    validation_errors?: string;
-    processed_at?: string;
-    uploaded_by?: string;
-    created_at?: string;
-    updated_at?: string;
+    parsing_status?: string;
+    supplier_info?: Json;
   } {
     const row: {
-      id?: string;
       file_name?: string;
-      original_file_name?: string;
-      file_path?: string;
-      file_size?: number;
-      mime_type?: string;
       invoice_number?: string;
       invoice_date?: string;
-      due_date?: string;
-      amount?: number;
-      currency?: string;
-      supplier_id?: string;
-      project_id?: string;
+      total_amount?: number;
       tender_id?: string;
-      invoice_type?: string;
-      status?: string;
-      extracted_data?: Record<string, unknown>;
+      parsed_data?: Json;
       parsing_errors?: string;
-      validation_errors?: string;
-      processed_at?: string;
-      uploaded_by?: string;
-      created_at?: string;
-      updated_at?: string;
+      parsing_status?: string;
+      supplier_info?: Json;
     } = {};
 
+    if (entity.fileName !== undefined) row.file_name = entity.fileName || undefined;
     if (entity.invoiceNumber !== undefined) row.invoice_number = entity.invoiceNumber || undefined;
     if (entity.invoiceDate !== undefined) row.invoice_date = entity.invoiceDate || undefined;
-    if (entity.amount !== undefined) row.amount = entity.amount || undefined;
-    if (entity.extractedData !== undefined) row.extracted_data = entity.extractedData || undefined;
+    if (entity.amount !== undefined) row.total_amount = entity.amount || undefined;
+    if (entity.extractedData !== undefined) row.parsed_data = (entity.extractedData as unknown as Json) || undefined;
     if (entity.parsingErrors !== undefined) row.parsing_errors = entity.parsingErrors?.join(', ') || undefined;
-    if (entity.status !== undefined) row.status = entity.status;
+    if (entity.status !== undefined) row.parsing_status = entity.status;
     if (entity.tenderId !== undefined) row.tender_id = entity.tenderId || undefined;
 
     // Map supplier info
     if (entity.supplierId) {
-      row.supplier_id = entity.supplierId;
+      row.supplier_info = { supplier_id: entity.supplierId } as unknown as Json;
     }
 
     return row;

@@ -4,8 +4,9 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { QuantityTakeoffWithDetails } from '@/dtos/entities/ProjectDTO';
+import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
+import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 
 export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepository {
   // ============= CRUD Operations =============
@@ -33,7 +34,7 @@ export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepositor
   async create(takeoff: Partial<QuantityTakeoffWithDetails>): Promise<QuantityTakeoffWithDetails> {
     const { data, error } = await supabase
       .from('quantity_takeoffs')
-      .insert(takeoff)
+      .insert(takeoff as unknown as BtpTablesInsert<'quantity_takeoffs'>)
       .select(`
         *,
         material:materials(
@@ -53,7 +54,7 @@ export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepositor
   async update(id: string, updates: Partial<QuantityTakeoffWithDetails>): Promise<QuantityTakeoffWithDetails> {
     const { data, error } = await supabase
       .from('quantity_takeoffs')
-      .update(updates)
+      .update(updates as unknown as BtpTablesUpdate<'quantity_takeoffs'>)
       .eq('id', id)
       .select(`
         *,
@@ -91,7 +92,7 @@ export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepositor
 
     if (error) throw error;
     
-    return (data || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+    return (data || []).reduce((sum, item) => sum + (item.quantity ?? 0), 0);
   }
 
   async getTotalValue(projectId: string): Promise<number> {
@@ -107,7 +108,7 @@ export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepositor
     
     return (data || []).reduce((sum, item) => {
       const materialPrice = item.material?.price_per_unit || 0;
-      return sum + (item.quantity * materialPrice);
+      return sum + ((item.quantity ?? 0) * materialPrice);
     }, 0);
   }
 
@@ -120,10 +121,10 @@ export class SupabaseQuantityTakeoffAdapter implements IQuantityTakeoffRepositor
     if (error) throw error;
   }
 
-  async createMany(takeoffs: any[]): Promise<QuantityTakeoffWithDetails[]> {
+  async createMany(takeoffs: Partial<QuantityTakeoffWithDetails>[]): Promise<QuantityTakeoffWithDetails[]> {
     const { data, error } = await supabase
       .from('quantity_takeoffs')
-      .insert(takeoffs)
+      .insert(takeoffs as unknown as BtpTablesInsert<'quantity_takeoffs'>[])
       .select(`
         *,
         material:materials(

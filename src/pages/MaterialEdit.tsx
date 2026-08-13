@@ -9,6 +9,7 @@ import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { useMaterialHex, useMaterialsHex, useWorkspacesHex, useSuppliersHex } from "@/hooks/hexagonal";
 import { MaterialFormDataDTO, UpdateMaterialRequestDto } from "@/dtos/transforms/shared";
 import { MaterialDTO, MaterialUnit, MaterialStatus, MaterialCategory } from "@/dtos/entities/MaterialDTO";
+import type { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { AppLayout } from "@/components/layout";
 
@@ -132,7 +133,7 @@ const MaterialEdit = () => {
             ref={(formRef) => { if (formRef) window.materialFormRef = formRef; }}
             onSubmit={handleSubmit}
             initialData={formData}
-            workspaces={transformedWorkspaces}
+            workspaces={transformedWorkspaces as unknown as WorkspaceDTO[]}
             suppliers={suppliers}
             showSubmitButton={false}
             materialId={id}
