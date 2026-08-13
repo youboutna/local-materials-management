@@ -1,7 +1,6 @@
 import { ALL_REPORT_SECTIONS, type ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
-import { buildMonitoringInsights } from '@/utils/monitoringInsights';
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
