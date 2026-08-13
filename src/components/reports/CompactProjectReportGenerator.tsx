@@ -301,6 +301,9 @@ export function CompactProjectReportGenerator({
             evmMetrics={singleEvmMetrics as any}
             pertAnalysis={singlePertAnalysis as any}
             reportTitle={reportTitle}
+            sections={defaultSectionsFor(profile)}
+            organizationName={ownerOrganization?.name}
+            organizationCode={ownerOrganization?.code}
             company={companyInfo}
           />
         ).toBlob();
@@ -319,9 +322,13 @@ export function CompactProjectReportGenerator({
             evmMetricsMap={evmMetricsMap as any}
             pertAnalysisMap={pertAnalysisMap as any}
             reportTitle={reportTitle}
+            sections={defaultSectionsFor(profile)}
+            organizationName={ownerOrganization?.name}
+            organizationCode={ownerOrganization?.code}
             company={companyInfo}
           />
         ).toBlob();
+
         
         saveAs(blob, `${reportTitle.replace(/\s+/g, '_')}.pdf`);
         

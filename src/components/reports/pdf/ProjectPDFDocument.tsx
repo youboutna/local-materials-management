@@ -1,8 +1,11 @@
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { isDgeerOrganization } from '@/config/referentials/reports/dgeer-missions.referential';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
+import { buildDgeerMissionInsights } from '@/utils/dgeerMissionInsights';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
+
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -63,6 +66,9 @@ interface ProjectPDFDocumentProps {
   }>;
   /** IDs des phases sélectionnées par l'utilisateur (undefined = toutes). */
   selectedPhaseIds?: string[];
+  /** Organisation propriétaire — active la lecture référentielle DGEER. */
+  organizationName?: string;
+  organizationCode?: string;
 }
 
 export function ProjectPDFDocument({
@@ -77,7 +83,12 @@ export function ProjectPDFDocument({
   healthScore = null,
   phaseDeviations = [],
   selectedPhaseIds,
+  organizationName,
+  organizationCode,
 }: ProjectPDFDocumentProps) {
+  // Référentiel DGEER consulté uniquement si l'organisation propriétaire est la DGEER.
+  const dgeerContext = isDgeerOrganization(organizationName, organizationCode);
+
   
   const getStatusText = (status: string) => {
     const statusMap: { [key: string]: string } = {
@@ -514,7 +525,7 @@ export function ProjectPDFDocument({
               {score != null && (
                 <PDFMetricCard
                   title="Score de santé"
-                  value={`${Number(score).toFixed(0)}/100`}
+                  value={`${Number(score).toFixed(2)}/100`}
                   color="#8b5cf6"
                 />
               )}
@@ -539,7 +550,7 @@ export function ProjectPDFDocument({
                 headers={['Indicateur', 'Écart', 'Unité', 'Sévérité', 'Jugement']}
                 data={deviations.map((d) => [
                   d.label,
-                  `${d.value > 0 ? '+' : ''}${d.value}`,
+                  `${d.value > 0 ? '+' : ''}${Number(d.value).toFixed(2)}`,
                   d.unit,
                   (severityLabel[d.severity] || d.severity).toUpperCase(),
                   judgeDeviation(d.sign, d.severity),
@@ -562,7 +573,7 @@ export function ProjectPDFDocument({
                   ? pd.deviations.map((d) => [
                       pd.phaseName,
                       d.label,
-                      `${d.value > 0 ? '+' : ''}${d.value} ${d.unit}`,
+                      `${d.value > 0 ? '+' : ''}${Number(d.value).toFixed(2)} ${d.unit}`,
                       (severityLabel[d.severity] || d.severity).toUpperCase(),
                       judgeDeviation(d.sign, d.severity),
                     ])
@@ -577,6 +588,47 @@ export function ProjectPDFDocument({
                 />
               );
             })()}
+
+            {/* Lecture référentielle DGEER — uniquement si l'organisation propriétaire est la DGEER */}
+            {dgeerContext && (() => {
+              const insights = buildDgeerMissionInsights({
+                title: project.title,
+                description: (project as any).description,
+                projectType: (project as any).projectType || (project as any).project_type,
+                sector: (project as any).sector,
+                location: project.location,
+                progress: project.progress ?? 0,
+                budget: project.budget ?? 0,
+                actualCost: Number(evmMetrics?.actualCost ?? costCalculation?.totalCost ?? 0),
+                interventionZonesCount: Array.isArray((project as any).interventionZones)
+                  ? (project as any).interventionZones.length
+                  : 0,
+                inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
+                  ? (enrichedData as any).inspections.length
+                  : 0,
+                phasesCount: Array.isArray((enrichedData as any)?.phases)
+                  ? (enrichedData as any).phases.length
+                  : Array.isArray((project as any).phases)
+                    ? (project as any).phases.length
+                    : 0,
+              }).filter((m) => m.relevant || m.indicator !== 'n/d');
+
+              if (insights.length === 0) return null;
+              return (
+                <PDFTable
+                  headers={['Mission DGEER', 'Rattachement', 'Indicateur de suivi', 'Valeur']}
+                  data={insights.map((m) => [
+                    m.label,
+                    m.relevant ? 'Direct' : 'Indirect',
+                    m.indicatorLabel,
+                    m.indicator,
+                  ])}
+                  columnWidths={['30%', '16%', '34%', '20%']}
+                />
+              );
+            })()}
+
+
 
 
             <PDFCard>

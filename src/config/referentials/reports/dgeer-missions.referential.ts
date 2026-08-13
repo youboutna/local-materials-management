@@ -64,3 +64,30 @@ export const DGEER_MISSIONS: Record<DgeerMissionCode, DgeerMission> = {
 export const DGEER_MISSION_LIST: DgeerMission[] = Object.values(DGEER_MISSIONS).sort(
   (a, b) => a.order - b.order,
 );
+
+/**
+ * Mots-clés identifiant l'organisation DGEER (ou son ministère de rattachement).
+ * Le référentiel n'est consulté dans les rapports que si l'organisation
+ * propriétaire du projet correspond.
+ */
+export const DGEER_ORGANIZATION_KEYWORDS = [
+  'dgeer',
+  'direction generale de l electricite',
+  'direction generale de lelectricite',
+  'electricite et des energies renouvelables',
+  'energies renouvelables',
+];
+
+/** True si l'organisation (nom et/ou code) relève de la DGEER. */
+export function isDgeerOrganization(...identifiers: Array<string | null | undefined>): boolean {
+  const haystack = identifiers
+    .filter(Boolean)
+    .join(' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/['’-]/g, ' ')
+    .toLowerCase();
+  if (!haystack.trim()) return false;
+  return DGEER_ORGANIZATION_KEYWORDS.some((kw) => haystack.includes(kw));
+}
+
