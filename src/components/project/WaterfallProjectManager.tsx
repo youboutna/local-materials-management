@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { useProjects } from '@/hooks/projects/useProjects';
+import { formatAmount2, formatIndex2 } from '@/utils/reportNumbers';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { ProjectGanttTimeline } from '@/components/project/ProjectGanttTimeline';
 import {
@@ -49,8 +50,8 @@ interface PhaseData {
 }
 
 interface ProjectMetrics {
-  schedulePerformanceIndex: number;
-  costPerformanceIndex: number;
+  schedulePerformanceIndex: number | null;
+  costPerformanceIndex: number | null;
   totalPhases: number;
   completedPhases: number;
   inProgressPhases: number;
@@ -122,41 +123,8 @@ const WaterfallProjectManager = () => {
     [phasesEntities]
   );
 
-  // Calculer les métriques
-  const metrics = useMemo<ProjectMetrics>(() => {
-    if (!phases.length) {
-      return {
-        schedulePerformanceIndex: 1,
-        costPerformanceIndex: 1,
-        totalPhases: 0,
-        completedPhases: 0,
-        inProgressPhases: 0,
-        notStartedPhases: 0,
-      };
-    }
-
-    const earnedValue = phases.reduce(
-      (sum, p) => sum + ((p.actualProgress || 0) / 100) * (p.budget || 0),
-      0
-    );
-    const actualCost = phases.reduce((sum, p) => sum + (p.actualCost || 0), 0);
-    
-    const completedPhases = phases.filter(p => p.status === 'completed').length;
-    const inProgressPhases = phases.filter(p => p.status === 'in_progress').length;
-    const notStartedPhases = phases.filter(p => p.status === 'not_started').length;
-
-    return {
-      schedulePerformanceIndex: 1,
-      costPerformanceIndex: actualCost > 0 ? earnedValue / actualCost : 1,
-      totalPhases: phases.length,
-      completedPhases,
-      inProgressPhases,
-      notStartedPhases,
-    };
-  }, [phases]);
-
-  // Modèle Gantt UNIQUE, alimenté par l'orchestrateur (GanttModel)
-  const ganttModel = useMemo(
+  // Métriques UNIQUES via l'orchestrateur (source de vérité)
+  const projectMetrics = useMemo(
     () =>
       ProjectMetricsOrchestrator.compute({
         project: {
@@ -177,9 +145,25 @@ const WaterfallProjectManager = () => {
           budget: p.budget,
           actualCost: p.actualCost,
         })),
-      }).gantt,
+      }),
     [selectedProject, phases]
   );
+
+  const ganttModel = projectMetrics.gantt;
+
+  // Compteurs de phases dérivés des mêmes données que l'orchestrateur
+  const metrics = useMemo<ProjectMetrics>(() => {
+    const isCompleted = (status: string) => status === 'completed' || status === 'termine' || status === 'terminee';
+    const isInProgress = (status: string) => status === 'in_progress' || status === 'en_cours';
+    return {
+      schedulePerformanceIndex: projectMetrics.evm.schedulePerformanceIndex,
+      costPerformanceIndex: projectMetrics.evm.costPerformanceIndex,
+      totalPhases: phases.length,
+      completedPhases: phases.filter((p) => isCompleted(p.status)).length,
+      inProgressPhases: phases.filter((p) => isInProgress(p.status)).length,
+      notStartedPhases: phases.filter((p) => !isCompleted(p.status) && !isInProgress(p.status)).length,
+    };
+  }, [phases, projectMetrics]);
 
   // ============================================================
   // Fonctions utilitaires
@@ -297,7 +281,7 @@ const WaterfallProjectManager = () => {
                     Budget
                   </p>
                   <p className="text-sm font-bold">
-                    {selectedProject.budget ? `${(selectedProject.budget / 1000000).toFixed(1)}M MRU` : 'Non défini'}
+                    {selectedProject.budget ? `${formatAmount2(selectedProject.budget)} MRU` : 'Non défini'}
                   </p>
                 </div>
               </div>
@@ -357,7 +341,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     SPI
                   </p>
-                  <p className="text-2xl font-bold">{metrics.schedulePerformanceIndex.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{formatIndex2(metrics.schedulePerformanceIndex ?? 0, metrics.schedulePerformanceIndex !== null)}</p>
                 </div>
               </div>
             </CardContent>
@@ -371,7 +355,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     CPI
                   </p>
-                  <p className="text-2xl font-bold">{metrics.costPerformanceIndex.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{formatIndex2(metrics.costPerformanceIndex ?? 0, metrics.costPerformanceIndex !== null)}</p>
                 </div>
               </div>
             </CardContent>
@@ -475,13 +459,13 @@ const WaterfallProjectManager = () => {
                   <Card>
                     <CardContent className="pt-6">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">SPI (Schedule Performance Index)</p>
-                      <p className="text-2xl font-bold">{metrics.schedulePerformanceIndex.toFixed(2)}</p>
+                      <p className="text-2xl font-bold">{formatIndex2(metrics.schedulePerformanceIndex ?? 0, metrics.schedulePerformanceIndex !== null)}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-6">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPI (Cost Performance Index)</p>
-                      <p className="text-2xl font-bold">{metrics.costPerformanceIndex.toFixed(2)}</p>
+                      <p className="text-2xl font-bold">{formatIndex2(metrics.costPerformanceIndex ?? 0, metrics.costPerformanceIndex !== null)}</p>
                     </CardContent>
                   </Card>
                 </div>

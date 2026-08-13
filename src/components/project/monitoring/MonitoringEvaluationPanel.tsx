@@ -30,7 +30,7 @@ import {
   DeviationResult,
 } from "@/application/services/DeviationEngine";
 import { ProjectMetricsOrchestrator } from "@/application/services/ProjectMetricsOrchestrator";
-import { formatIndex2, formatAmount2 } from "@/utils/reportNumbers";
+import { formatIndex2, formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 export interface MonitoringEvalPhaseInput {
@@ -169,7 +169,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           />
           <KpiTile
             label="Score de santé"
-            value={`${health.overallScore}/100`}
+            value={`${formatNumber2(health.overallScore)}/100`}
             tone={
               health.overallScore >= 75
                 ? "text-success"
