@@ -16,6 +16,7 @@
 
 import { DocumentService, getDocumentService } from '@/application/services/DocumentService';
 import DocumentViewer from '@/components/documents/DocumentViewer';
+import { useDocumentViewer } from '@/components/documents/viewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -105,8 +106,10 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
    * Ouvre un document dans le visualiseur
    */
   const handleViewDocument = (document: DocumentDTO): void => {
-    setSelectedDocument(document);
-    setActiveTab('viewer');
+    openDocument(document, {
+      context: { projet: projectId },
+      onStatusChanged: () => { void loadDocuments(); },
+    });
   };
 
   /**

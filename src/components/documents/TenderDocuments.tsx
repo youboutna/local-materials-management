@@ -78,8 +78,11 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   };
 
   const handleViewDocument = (tenderDoc: any) => {
-    if (tenderDoc.document && onDocumentSelect) {
-      onDocumentSelect(tenderDoc.document);
+    if (tenderDoc.document || tenderDoc.file_url) {
+      openDocument(tenderDoc.document ?? tenderDoc, {
+        context: { categorie: tenderDoc.category, lot: tenderDoc.lot_name },
+      });
+      onDocumentSelect?.(tenderDoc.document ?? tenderDoc);
     } else {
       toast({
         title: "Document non disponible",
