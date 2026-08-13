@@ -651,6 +651,25 @@ export function CompactProjectPDFDocument({
         const risks = enrichedData?.risks || [];
         const expenses = enrichedData?.expenses || [];
 
+        // Lecture directionnelle (missions DGEER) dérivée des données réelles.
+        const missionInsights = buildDgeerMissionInsights({
+          title: project.title,
+          description: (project as any).description,
+          projectType: (project as any).projectType || (project as any).project_type,
+          sector: (project as any).sector,
+          location: project.location,
+          progress: project.progress ?? 0,
+          budget: project.budget ?? 0,
+          actualCost: Number(evmMetrics?.actualCost ?? 0),
+          interventionZonesCount: Array.isArray((project as any).interventionZones)
+            ? (project as any).interventionZones.length
+            : 0,
+          inspectionsCount: Array.isArray((enrichedData as any)?.inspections)
+            ? (enrichedData as any).inspections.length
+            : 0,
+          phasesCount: phases.length,
+        });
+
         return (
           <Page key={project.id} size="A4" style={styles.page}>
             {/* Company Header - Conditionally rendered */}
