@@ -1216,8 +1216,93 @@ export function CompactProjectPDFDocument({
             </View>
             )}
 
-            {/* PERT Section */}
-            {activeSections.pertAnalysis && (
+            {/* Jalons — densité `line` : prochain jalon + atteints + retards */}
+            {activeSections.milestones && milestonesDensity === 'line' && (
+              <View style={styles.synthLine}>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Prochain jalon:</Text>
+                  <Text style={styles.synthValue}>
+                    {milestoneSummary.nextLabel
+                      ? `${milestoneSummary.nextLabel.substring(0, 28)} (${milestoneSummary.nextDate})`
+                      : 'Aucun jalon planifié'}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Atteints:</Text>
+                  <Text style={styles.synthValue}>
+                    {milestoneSummary.done}/{milestoneSummary.total}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>En retard:</Text>
+                  <Text
+                    style={[
+                      styles.synthValue,
+                      { color: milestoneSummary.late > 0 ? colors.danger : colors.success },
+                    ]}
+                  >
+                    {milestoneSummary.late}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Micro-Gantt — timeline horizontale des phases (repère « aujourd'hui ») */}
+            {activeSections.ganttChart && gantt && (
+              <View style={styles.ganttWrapper}>
+                <Text style={styles.sectionTitle}>Planning (Gantt condensé)</Text>
+                {gantt.bars.map((bar, idx) => (
+                  <View key={idx} style={styles.ganttRow}>
+                    <Text style={styles.ganttLabel}>{bar.label}</Text>
+                    <View style={styles.ganttTrack}>
+                      <View
+                        style={[
+                          styles.ganttBar,
+                          { left: `${bar.left}%`, width: `${bar.width}%`, backgroundColor: bar.color },
+                        ]}
+                      />
+                      <View style={[styles.ganttToday, { left: `${gantt.todayLeft}%` }]} />
+                    </View>
+                  </View>
+                ))}
+                <View style={styles.ganttAxis}>
+                  <Text style={styles.ganttAxisText}>{gantt.start}</Text>
+                  <Text style={styles.ganttAxisText}>Aujourd'hui</Text>
+                  <Text style={styles.ganttAxisText}>{gantt.end}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* PERT — densité `line` : une seule ligne de synthèse */}
+            {activeSections.pertAnalysis && pertDensity === 'line' && (
+              <View style={styles.synthLine}>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Durée attendue:</Text>
+                  <Text style={styles.synthValue}>
+                    {formatDecimal(getPertExpectedDuration(pertAnalysis))} j
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Écart-type:</Text>
+                  <Text style={styles.synthValue}>
+                    {formatDecimal(Math.sqrt(getPertTotalVariance(pertAnalysis)))}
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Chemin critique:</Text>
+                  <Text style={styles.synthValue}>
+                    {pertAnalysis?.criticalPath?.length || 0} tâches
+                  </Text>
+                </View>
+                <View style={styles.synthItem}>
+                  <Text style={styles.synthLabel}>Phase:</Text>
+                  <Text style={styles.synthValue}>{getCurrentPhase(phases).substring(0, 22)}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* PERT Section (densité complète) */}
+            {activeSections.pertAnalysis && pertDensity !== 'line' && (
             <View style={styles.section}>
 
               <Text style={styles.sectionTitle}>Analyse PERT</Text>
@@ -1271,6 +1356,8 @@ export function CompactProjectPDFDocument({
               </View>
             </View>
             )}
+
+
 
 
             {/* Footer Section */}
