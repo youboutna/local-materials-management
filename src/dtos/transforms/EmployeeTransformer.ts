@@ -29,7 +29,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       position: (row.position as string) ?? null,
       department: (row.department as Department) ?? null,
       hireDate: (row.hire_date as string) ?? (row.start_date as string) ?? null,
-      salary: row.salary !== undefined ? Number(row.salary) : null,
+      salary: row.salary !== undefined && row.salary !== null ? Number(row.salary) : null,
       isActive: row.is_active !== undefined ? Boolean(row.is_active) : true,
       userId: (row.user_id as string) ?? null,
       managerId: (row.manager_id as string) ?? null,
@@ -38,6 +38,26 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       certifications: (row.certifications as unknown[]) || [],
       createdAt: (row.created_at as string) || new Date().toISOString(),
       updatedAt: (row.updated_at as string) || new Date().toISOString(),
+      extras: {
+        organizationId: (row.organization_id as string) ?? null,
+        employeeType: (row.employee_type as string) ?? null,
+        roleName: (row.role as string) ?? null,
+        status: (row.status as string) ?? null,
+        level: (row.level as string) ?? null,
+        endDate: (row.end_date as string) ?? null,
+        probationEndDate: (row.probation_end_date as string) ?? null,
+        hourlyRate: row.hourly_rate !== undefined && row.hourly_rate !== null ? Number(row.hourly_rate) : null,
+        currency: (row.currency as string) ?? null,
+        availability: (row.availability as string) ?? null,
+        address: (row.address as string) ?? null,
+        city: (row.city as string) ?? null,
+        country: (row.country as string) ?? null,
+        performanceRating: row.performance_rating !== undefined && row.performance_rating !== null ? Number(row.performance_rating) : null,
+        avatarUrl: (row.avatar_url as string) ?? null,
+        tags: (row.tags as string[]) ?? null,
+        notes: (row.notes as string) ?? null,
+        nationalId: (row.national_id as string) ?? null,
+      },
     };
     return Employee.create(props);
   }
@@ -53,6 +73,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Domain Entity → Supabase Insert/Update Object (snake_case)
    */
   static toSupabase(entity: Employee): Record<string, unknown> {
+    const x = entity.extras || {};
     return {
       id: entity.id,
       employee_id: entity.employeeId,
@@ -69,6 +90,24 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       user_id: entity.userId,
       skills: entity.skills,
       certifications: entity.certifications,
+      organization_id: x.organizationId ?? null,
+      employee_type: x.employeeType ?? null,
+      role: x.roleName ?? null,
+      status: x.status ?? null,
+      level: x.level ?? null,
+      end_date: x.endDate ?? null,
+      probation_end_date: x.probationEndDate ?? null,
+      hourly_rate: x.hourlyRate ?? null,
+      currency: x.currency ?? null,
+      availability: x.availability ?? null,
+      address: x.address ?? null,
+      city: x.city ?? null,
+      country: x.country ?? null,
+      performance_rating: x.performanceRating ?? null,
+      avatar_url: x.avatarUrl ?? null,
+      tags: x.tags ?? null,
+      notes: x.notes ?? null,
+      national_id: x.nationalId ?? null,
     };
   }
 
