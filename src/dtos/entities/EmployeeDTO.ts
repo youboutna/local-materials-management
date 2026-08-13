@@ -83,6 +83,18 @@ export interface EmployeeDTO extends BaseEntityDTO {
   email?: string;
   phone?: string;
   isActive?:boolean;
+  nationalId?: string;
+  userId?: string | null;
+
+  // Organisation & organigramme
+  organizationId?: string | null;
+  organizationName?: string;
+  managerId?: string | null;
+  superiorId?: string | null;
+  /** Intitulé du poste dans l'organigramme (btp.organizational_hierarchy) */
+  positionTitle?: string;
+  hierarchyLevel?: number;
+
 
   // Classification
   type: EmployeeType;
