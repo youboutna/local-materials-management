@@ -229,6 +229,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                 </Tabs>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
