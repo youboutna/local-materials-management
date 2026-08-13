@@ -58,10 +58,37 @@ export interface ProjectMetricsInput {
   documentsCount?: number;
   /** Risques (bruts) — l'ouverture est déduite du statut. */
   risks?: Array<{ status?: string | null; impact?: string | null; severity?: string | null; riskLevel?: string | null }>;
-  /** Durée PERT estimée (jours) — estimation probabiliste, jamais la référence. */
+  /**
+   * Durée PERT estimée (jours) — rétro-compatibilité. Si absent, le PERT est
+   * calculé par `PertService` depuis `pertActivities` (ou les phases).
+   */
   pertExpectedDuration?: number | null;
+  /** Activités PERT (tâches ou phases). À défaut, les phases sont utilisées. */
+  pertActivities?: PertActivityInput[];
+  /** Jalons projet — source UNIQUE de la progression jalons. */
+  milestones?: Array<{ id?: string; name?: string | null; status?: string | null; progress?: number | null; dueDate?: string | Date | null }>;
   asOf?: Date;
 }
+
+export interface MilestoneProgressModel {
+  total: number;
+  completed: number;
+  overdue: number;
+  /** Progression jalons [0..100] — moyenne des avancements, 100 si complété. */
+  progress: number;
+}
+
+export interface HealthScoreModel {
+  /** Score global [0..100] — cohérent avec les alertes actives. */
+  overallScore: number;
+  schedule: number;
+  cost: number;
+  scope: number;
+  risk: number;
+  status: 'critical' | 'at_risk' | 'acceptable' | 'healthy';
+  statusLabel: string;
+}
+
 
 export interface GanttPhaseModel {
   id: string;
