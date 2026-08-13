@@ -1,12 +1,12 @@
-// @ts-nocheck
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { supabase as publicSupabase } from '@/integrations/supabase/client';
-import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';
-import type { ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
-import { ReportCalculations } from '@/utils/reportCalculations';
+
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
-import { ProjectReportDTO, EnhancedPhaseDTO } from '@/dtos/entities/ProjectReportDTO';
+import type { ReportSectionKey } from '@/config/referentials/reports/report-profiles.referential';
+import { IReportingRepository, ReportSectionsData } from '@/domain/repositories/IReportingRepository';
+import { EnhancedPhaseDTO, ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
+import { supabase as publicSupabase } from '@/integrations/supabase/client';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { toPhaseViewModel, type PhaseViewModel } from '@/utils/phaseViewModel';
+import { ReportCalculations } from '@/utils/reportCalculations';
 
 // Phase hydratée pour les rapports — camelCase + alias `name` pour rester
 // compatible avec EnhancedPhaseDTO/ProjectDetailDTO côté UI/PDF.
@@ -31,7 +31,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
 
     // Tâches et jalons réellement rattachés aux phases (une requête par collection).
     const [tasksRes, milestonesRes] = await Promise.all([
-      supabase.from('tasks').select('*').in('phase_id', phaseIds),
+      supabase.from('task_assignments').select('*').in('phase_id', phaseIds),
       supabase.from('project_milestones').select('*').in('phase_id', phaseIds),
     ]);
 

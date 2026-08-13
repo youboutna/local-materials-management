@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -301,7 +301,7 @@ async function buildProjectContext(supabase: SupabaseClient, project: Project): 
     { data: inspections },
     { data: escalation }
   ] = await Promise.all([
-    supabase.from('tasks').select('*').eq('project_id', project.id) as { data: TaskRecord[] | null },
+    supabase.from('task_assignments').select('*').eq('project_id', project.id) as { data: TaskRecord[] | null },
     supabase.from('insurance_certificates').select('*').eq('project_id', project.id) as { data: InsuranceRecord[] | null },
     supabase.from('inspections').select('*').eq('project_id', project.id) as { data: InspectionRecord[] | null },
     supabase.from('escalation_thresholds').select('*').eq('is_active', true) as { data: EscalationThresholdRecord[] | null }
