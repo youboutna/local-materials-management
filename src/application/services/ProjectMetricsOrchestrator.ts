@@ -459,11 +459,13 @@ export class ProjectMetricsOrchestrator {
       .map((phase, index) => {
         const id = phase.id || `phase-${index}`;
         const w = weightById.get(id);
+        // Une chaîne vide issue d'un formulaire n'est pas une date et ne doit
+        // pas neutraliser les dates projet utilisées comme repli.
         const start = new Date(
-          (phase.startDate as string) ?? (project.startDate as string) ?? asOf.toISOString(),
+          (phase.startDate as string) || (project.startDate as string) || asOf.toISOString(),
         ).getTime();
         const end = new Date(
-          (phase.endDate as string) ?? (project.endDate as string) ?? asOf.toISOString(),
+          (phase.endDate as string) || (project.endDate as string) || asOf.toISOString(),
         ).getTime();
         const basis = w?.basis ?? 'equal';
         return {

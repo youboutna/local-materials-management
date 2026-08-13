@@ -9,6 +9,7 @@
 import type { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
 import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
 import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
+import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -30,6 +31,7 @@ export class TakeoffToBoqService {
     private readonly takeoffRepository: IQuantityTakeoffRepository,
     private readonly boqRepo: IBoqRepository,
     private readonly phaseMaterialRepository: IPhaseMaterialRepository,
+    private readonly phaseRepository?: IPhaseRepository,
   ) {}
 
   /**
@@ -45,23 +47,23 @@ export class TakeoffToBoqService {
     }
 
     const existingLines = await this.boqRepo.list({ source: 'quantity_takeoff', projectId });
-    const alreadySynced = new Set(
+    const existingByTakeoff = new Map(
       existingLines
-        .map((l) => this.extractTakeoffMarker(l.note))
-        .filter((id): id is string => Boolean(id)),
+        .map((line) => [this.extractTakeoffMarker(line.note), line] as const)
+        .filter((entry): entry is [string, BoqLineDTO] => Boolean(entry[0])),
     );
 
     const toCreate: BoqLineDTO[] = [];
     let skipped = 0;
 
     for (const takeoff of takeoffs) {
-      if (!takeoff.id || alreadySynced.has(takeoff.id)) {
+      if (!takeoff.id) {
         skipped += 1;
         continue;
       }
       const unitPrice = takeoff.material?.price_per_unit ?? null;
       const quantity = Number(takeoff.quantity ?? 0);
-      toCreate.push({
+      const line: BoqLineDTO = {
         source: 'quantity_takeoff',
         contextId: projectId,
         designation: takeoff.material?.name ?? takeoff.element_type ?? 'Métré',
@@ -78,7 +80,14 @@ export class TakeoffToBoqService {
         sourceType: 'import',
         note: this.buildTakeoffMarker(takeoff.id),
         status: 'draft',
-      });
+      };
+      const existing = existingByTakeoff.get(takeoff.id);
+      if (existing?.id) {
+        await this.boqRepo.update(existing.id, line);
+        skipped += 1;
+      } else {
+        toCreate.push(line);
+      }
     }
 
     if (toCreate.length) {
@@ -108,9 +117,15 @@ export class TakeoffToBoqService {
     takeoffs: QuantityTakeoffWithDetails[],
   ): Promise<number> {
     const byPhaseMaterial = new Map<string, { phaseId: string; materialId: string; quantity: number }>();
+    const projectPhases = this.phaseRepository
+      ? await this.phaseRepository.findByProjectId(projectId)
+      : [];
+    // Réparation sûre des métrés historiques : si le projet ne possède qu'une
+    // seule phase, cette phase est l'unique rattachement WBS possible.
+    const onlyPhaseId = projectPhases.length === 1 ? projectPhases[0].id : null;
 
     for (const t of takeoffs) {
-      const phaseId = (t as { phase_id?: string | null }).phase_id;
+      const phaseId = (t as { phase_id?: string | null }).phase_id || onlyPhaseId;
       const materialId = t.material_id;
       if (!phaseId || !materialId) continue; // no WBS attachment -> cannot become a phase resource
       const key = `${phaseId}::${materialId}`;
@@ -149,6 +164,7 @@ export function getTakeoffToBoqService(): TakeoffToBoqService {
       RepositoryFactory.getQuantityTakeoffRepository(),
       boqRepository,
       RepositoryFactory.getPhaseMaterialRepository(),
+      RepositoryFactory.getPhaseRepository(),
     );
   }
   return instance;

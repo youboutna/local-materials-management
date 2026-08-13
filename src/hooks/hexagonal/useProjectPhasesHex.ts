@@ -9,10 +9,16 @@ import { toast } from 'sonner';
 export interface ProjectPhase {
   id: string;
   name: string;
+  phaseName?: string;
   description: string | null;
+  startDate: string | null;
+  endDate: string | null;
   start_date: string | null;
   end_date: string | null;
   progress: number | null;
+  status?: string | null;
+  estimatedCost?: number | null;
+  weight?: number | null;
   phase_type?: string | null;
   construction_phase?: string | null;
   custom_phase_data?: Record<string, unknown>;
@@ -48,14 +54,20 @@ export function useProjectPhasesHex(projectId?: string) {
       const data = await phaseRepo.findByProjectId(projectId!);
       return (data || []).map((p: any) => ({
         id: p.id,
-        name: p.phase_name || p.name || '',
+        name: p.phaseName || p.phase_name || p.name || '',
+        phaseName: p.phaseName || p.phase_name || p.name || '',
         description: p.description || null,
-        start_date: p.start_date || p.startDate || null,
-        end_date: p.end_date || p.endDate || null,
-        progress: p.progress || null,
-        phase_type: p.phase_type || null,
-        construction_phase: p.construction_phase || null,
-        custom_phase_data: p.custom_phase_data || undefined,
+        startDate: p.startDate || p.start_date || null,
+        endDate: p.endDate || p.end_date || null,
+        start_date: p.startDate || p.start_date || null,
+        end_date: p.endDate || p.end_date || null,
+        progress: p.progress ?? 0,
+        status: p.status || null,
+        estimatedCost: p.estimatedCost ?? p.estimated_cost ?? null,
+        weight: p.weight ?? null,
+        phase_type: p.phaseType || p.phase_type || null,
+        construction_phase: p.constructionPhase || p.construction_phase || null,
+        custom_phase_data: p.customPhaseData || p.custom_phase_data || undefined,
       }));
     },
     enabled: !!projectId,

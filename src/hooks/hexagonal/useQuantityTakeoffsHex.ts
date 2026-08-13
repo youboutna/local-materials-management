@@ -8,6 +8,7 @@ import {
   type QuantityTakeoffInput,
 } from '@/application/services/QuantityTakeoffService';
 import type { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
+import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 export function useQuantityTakeoffsHex(projectId?: string) {
   const service = getQuantityTakeoffService();
@@ -23,25 +24,31 @@ export function useQuantityTakeoffsHex(projectId?: string) {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] });
 
+  const syncProject = async <T,>(operation: Promise<T>): Promise<T> => {
+    const result = await operation;
+    if (projectId) await getTakeoffToBoqService().syncProject(projectId);
+    return result;
+  };
+
   const createMutation = useMutation({
-    mutationFn: (input: QuantityTakeoffInput) => service.create(input),
+    mutationFn: (input: QuantityTakeoffInput) => syncProject(service.create(input)),
     onSuccess: invalidate,
   });
 
   const createManyMutation = useMutation({
-    mutationFn: (inputs: QuantityTakeoffInput[]) => service.createMany(inputs),
+    mutationFn: (inputs: QuantityTakeoffInput[]) => syncProject(service.createMany(inputs)),
     onSuccess: invalidate,
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<QuantityTakeoffInput> }) =>
-      service.update(id, updates),
+      syncProject(service.update(id, updates)),
     onSuccess: invalidate,
   });
 
   const updateRawMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Record<string, unknown> }) =>
-      service.updateRaw(id, updates),
+      syncProject(service.updateRaw(id, updates)),
     onSuccess: invalidate,
   });
 

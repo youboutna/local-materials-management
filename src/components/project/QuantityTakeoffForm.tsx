@@ -19,6 +19,8 @@ import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorSe
 import { BoqValidatorService, BoqFieldError } from '@/application/services/boq/BoqValidatorService';
 import { WBS_REFERENTIAL, getPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
+import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectPhasesHex';
+import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 interface QuantityTakeoffFormProps {
   projectId: string;
@@ -59,6 +61,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: materials } = useMaterialsForTakeoff();
+  const { phases: projectPhases } = useProjectPhasesHex(projectId);
   const { data: selectedMaterial } = useMaterialById(formData.materialId);
 
   const unitPrice = (selectedMaterial as { pricePerUnit?: number } | null | undefined)?.pricePerUnit ?? 0;
@@ -78,7 +81,8 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
   );
 
   // WBS cascade
-  const phase = getPhase(formData.phaseId);
+  const selectedProjectPhase = projectPhases.find((p) => p.id === formData.phaseId);
+  const phase = getPhase(selectedProjectPhase?.phase_type || selectedProjectPhase?.construction_phase || '');
   const milestone = phase?.milestones.find((m) => m.id === formData.milestoneId);
 
   useEffect(() => {
@@ -144,6 +148,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
         milestone_id: formData.milestoneId || undefined,
         note: formData.note || undefined,
       });
+      await getTakeoffToBoqService().syncProject(projectId);
 
       toast({
         title: 'Métré créé',
@@ -219,9 +224,9 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
                   <SelectValue placeholder="Phase..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {WBS_REFERENTIAL.map((p) => (
+                  {projectPhases.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.label}
+                      {p.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

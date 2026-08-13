@@ -23,6 +23,8 @@ import { useProjectCheckpoints } from '@/hooks/useProjectCheckpoints';
 
 interface ProjectCheckpointsDashboardProps {
   projectId: string;
+  /** Avancement canonique fourni par ProjectMetricsOrchestrator. */
+  progress?: number;
   compact?: boolean;
   onPhaseClick?: (phaseId: string) => void;
 }
@@ -37,6 +39,7 @@ const formatCurrency = (amount: number): string => {
 
 const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = ({
   projectId,
+  progress,
   compact = false,
   onPhaseClick,
 }) => {
@@ -49,6 +52,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
     metrics,
     isLoading,
   } = useProjectCheckpoints(projectId);
+  const canonicalProgress = progress ?? metrics.verifiedProgress;
 
   if (isLoading) {
     return (
@@ -101,8 +105,8 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="p-3 rounded-lg bg-primary/5 border text-center">
-              <p className="text-xs text-muted-foreground">Progression vérifiée</p>
-              <p className="text-xl font-bold text-primary">{metrics.verifiedProgress}%</p>
+              <p className="text-xs text-muted-foreground">Progression globale</p>
+              <p className="text-xl font-bold text-primary">{canonicalProgress}%</p>
             </div>
             <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 text-center">
               <p className="text-xs text-muted-foreground">Total payé</p>
@@ -170,8 +174,8 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Progression</span>
               </div>
-              <p className="text-2xl font-bold text-primary">{metrics.verifiedProgress}%</p>
-              <Progress value={metrics.verifiedProgress} className="h-1 mt-2" />
+              <p className="text-2xl font-bold text-primary">{canonicalProgress}%</p>
+              <Progress value={canonicalProgress} className="h-1 mt-2" />
             </div>
             <div className="p-4 rounded-lg bg-muted/30 border">
               <div className="flex items-center gap-2 mb-2">
@@ -270,7 +274,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                   ({projectDecompte.progressToNextThreshold}% restants)
                 </span>
               </div>
-              <Progress value={(metrics.verifiedProgress / projectDecompte.nextPaymentThreshold) * 100} className="h-1 mt-2" />
+              <Progress value={(canonicalProgress / projectDecompte.nextPaymentThreshold) * 100} className="h-1 mt-2" />
             </div>
           )}
         </CardContent>

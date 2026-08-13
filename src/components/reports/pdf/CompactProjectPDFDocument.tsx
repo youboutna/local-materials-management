@@ -64,45 +64,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     backgroundColor: colors.white,
   },
-  // Company Header styles
-  companyHeader: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#2563eb',
-    paddingBottom: 5,
-    marginBottom: 5,
-    pageBreakInside: 'avoid',
-  },
-  companyHeaderContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  companyInfo: {
-    flex: 1,
-  },
-  companyName: {
-    color: '#2563eb',
-    fontSize: 12,
-    marginBottom:5 ,
-    fontWeight: 'bold',
-  },
-  companyDetail: {
-    marginVertical: 2,
-    fontSize: 12,
-    color: '#666666',
-  },
-  companyLogo: {
-    maxHeight: 20,
-    maxWidth: 50,
-  },
-  // Report Header styles
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
-  },
   headerTitle: {
     fontSize: 14,
     fontWeight: 'bold',

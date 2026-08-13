@@ -95,25 +95,21 @@ export function ProjectPDFDocument({
   organizationCode,
   company,
 }: ProjectPDFDocumentProps) {
-
-  
   const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: string } = {
+    const statusMap: Record<string, string> = {
       'en cours': 'En cours',
       'terminé': 'Terminé',
       'en attente': 'En attente',
       'suspendu': 'Suspendu',
-      'annulé': 'Annulé'
+      'annulé': 'Annulé',
     };
     return statusMap[status] || status;
   };
 
-  // Get materials from project resources
-  const materials = project.resources?.filter(r => r.type === 'material') || [];
-  
-  // Get employees from project resources
-  const employees = project.resources?.filter(r => r.type === 'human') || [];
-  
+  // Get resources from project data.
+  const materials = project.resources?.filter((resource) => resource.type === 'material') || [];
+  const employees = project.resources?.filter((resource) => resource.type === 'human') || [];
+
   // Get expenses from project data
   const expenses = project.expenses || [];
   
@@ -251,6 +247,19 @@ export function ProjectPDFDocument({
         />
       }
     >
+      {/* Synthèse minimale toujours présente en page 1, même si la section
+          "overview" est désactivée. Le bloc court et insécable empêche une
+          première page limitée à l'en-tête/pied de page. */}
+      <View wrap={false} style={{ marginBottom: 12, padding: 10, backgroundColor: '#eff6ff' }}>
+        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#1e40af', marginBottom: 6 }}>
+          Synthèse du projet
+        </Text>
+        <Text>Avancement : {metrics.formatted.progress}</Text>
+        <Text>Budget : {metrics.formatted.budget}</Text>
+        <Text>Coût réel : {metrics.formatted.actualCost}</Text>
+        <Text>Période : {project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non définie'} — {project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non définie'}</Text>
+      </View>
+
       {/* Aperçu général */}
       {reportConfig.includeSections.overview && (
         <PDFSection title="Aperçu Général" borderColor="#3b82f6">

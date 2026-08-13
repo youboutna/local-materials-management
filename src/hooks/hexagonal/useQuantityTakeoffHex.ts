@@ -7,6 +7,7 @@ import { MaterialService, getMaterialService} from '@/application/services/Mater
 import { QuantityTakeoffService, getQuantityTakeoffService} from '@/application/services/QuantityTakeoffService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 // Hook: Fetch materials for quantity takeoff
 export function useMaterialsForTakeoff() {
@@ -60,10 +61,13 @@ export function useCreateQuantityTakeoff(projectId: string) {
         milestone_id: data.milestone_id,
         note: data.note,
       });
+      await getTakeoffToBoqService().syncProject(projectId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', projectId] });
       queryClient.invalidateQueries({ queryKey: ['phase-quantity-takeoffs'] });
+      queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] });
+      queryClient.invalidateQueries({ queryKey: ['boq-lines'] });
     }
   });
 }

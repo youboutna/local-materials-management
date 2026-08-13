@@ -8,7 +8,6 @@
  * - Toutes les données proviennent des services
  */
 
-import { getProgressCalculationHexService } from '@/application/services/ProgressCalculationHexService';
 import { getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
 import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
@@ -224,9 +223,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     [projectDetail]
   );
 
-  // Bloc de calculs remplacé par l'orchestrateur unique (voir useProjectMetrics ci-dessous)
-  const progressServiceInstance = useMemo(() => getProgressCalculationHexService(), []);
-
   // Use data from ProjectDetailDTO
   const phasesSource = useMemo(() => projectDetail?.plannedPhases || [], [projectDetail]);
   const tasksSource = useMemo(() => projectDetail?.tasks || [], [projectDetail]);
@@ -363,55 +359,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   }, [projectDetail, risksSource, tasksSource, t]);
 
-  // ============ Calcul de la progression ============
-  const calculatedProgress = useMemo<number>(() => {
-    const phases = (phasesSource || []) as any[];
-    const tasks = (tasksSource || []) as any[];
-    const inspections = (inspectionsSource || []) as any[];
-
-    if (phases.length === 0 && tasks.length === 0 && inspections.length === 0) {
-      return projectDetail?.progress ?? 0;
-    }
-
-    const normalizeStatus = (s: any) => String(s ?? '').toLowerCase().replace(/[\s-]/g, '_');
-    const mapPhase = (p: any) => ({
-      id: p.id,
-      name: p.phase_name || p.name || '',
-      phase_name: p.phase_name || p.name || '',
-      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(p.status))
-        ? (normalizeStatus(p.status) as any)
-        : 'pending',
-      progress: Number(p.progress ?? 0),
-    });
-    const mapTask = (t: any) => ({
-      id: t.id,
-      title: t.title || t.task_name || '',
-      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(t.status))
-        ? (normalizeStatus(t.status) as any)
-        : 'pending',
-      progress: Number(t.progress ?? 0),
-      phase_id: t.phase_id || '',
-      priority: (t.priority || 'medium') as any,
-    });
-    const mapInspection = (i: any) => ({
-      id: i.id,
-      title: i.title || i.inspection_type || '',
-      status: ['completed', 'in_progress', 'cancelled'].includes(normalizeStatus(i.status))
-        ? (normalizeStatus(i.status) as any)
-        : 'scheduled',
-      progress: Number(i.progress ?? (normalizeStatus(i.status) === 'completed' ? 100 : 0)),
-      phase_id: i.phase_id || '',
-      type: (i.type || 'regular') as any,
-      priority: (i.priority || 'medium') as any,
-    });
-
-    return progressServiceInstance.calculateProjectProgress(
-      phases.map(mapPhase) as any,
-      tasks.map(mapTask) as any,
-      inspections.map(mapInspection) as any,
-    );
-  }, [phasesSource, tasksSource, inspectionsSource, projectDetail?.progress]);
-
   // ============ Données pour le rapport ============
   const projectDataForReport = useMemo(() => {
     if (!project || !projectDetail) return null;
@@ -424,7 +371,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       description: typedProject.description || "Aucune description disponible",
       location: typedProject.location || "Localisation non spécifiée",
       status: typedProject.status || "en cours",
-      progress: calculatedProgress || typedProject.progress || undefined,
+      progress: typedProject.progress ?? undefined,
       budget: typedProject.budget || undefined,
       startDate: typedProject.startDate || undefined,
       endDate: typedProject.endDate || undefined,
@@ -492,7 +439,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   }, [
     project,
     projectDetail,
-    calculatedProgress,
+    project?.progress,
     resources,
     tasksSource,
     risksSource,
@@ -669,10 +616,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         phase_name: p.phase_name || p.phase || p.name,
         status: p.status || "planned",
         progress: p.progress || 0,
-        startDate: p.startDate || "",
-        endDate: p.endDate || "",
+        startDate: p.startDate || p.start_date || "",
+        endDate: p.endDate || p.end_date || "",
         description: p.description,
-        budget: p.estimatedCost || p.estimated_cost || p.budget,
+        budget: p.estimatedCost ?? p.estimated_cost ?? p.budget,
+        weight: p.weight ?? null,
         stages: Array.isArray(p.stages)
           ? p.stages
           : (p.customPhaseData || p.custom_phase_data)?.customStages
@@ -743,6 +691,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         id: p.id,
         name: p.phase ?? p.phase_name,
         budget: p.budget,
+        weight: p.weight,
         startDate: p.startDate,
         endDate: p.endDate,
         progress: p.progress ?? 0,
@@ -897,7 +846,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           title: project.title || "Projet sans titre",
           description: project.description,
           status: project.status || "en cours",
-          progress: calculatedProgress,
+          progress: metrics?.progress ?? project.progress ?? 0,
           budget: project.budget || 0,
           currency: "MRU",
           location: project.location,
@@ -1036,12 +985,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <span className="text-sm font-medium">Méthodologie</span>
                   <Badge variant="outline">{projectMethodology}</Badge>
                 </div>
-                <Progress value={calculatedProgress} className="mt-4" />
+                <Progress value={metrics?.progress ?? 0} className="mt-4" />
                 <p className="text-xs text-center text-muted-foreground">
-                  Progression globale calculée: {calculatedProgress}%
+                  Progression globale pondérée: {metrics?.formatted.progress ?? "N/A"}
                 </p>
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  Basée sur: {computedPhases.length} phases, {tasksSource.length} tâches, {inspectionsSource.length} inspections
+                  Source unique: phases ({metrics?.progressBasisLabel ?? "projet"})
                 </p>
               </CardContent>
             </Card>
@@ -1049,6 +998,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
           <ProjectCheckpointsDashboard
             projectId={projectId!}
+            progress={metrics?.progress}
             compact
             onPhaseClick={(phaseId) => navigate(`/projects/${projectId}/phases/${phaseId}`)}
           />
