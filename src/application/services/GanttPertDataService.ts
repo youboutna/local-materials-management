@@ -299,10 +299,14 @@ export class GanttPertDataService {
       return sum + earnedDuration;
     }, 0);
 
-    const totalPlannedTime = (currentDate.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24);
-    const totalEarnedTime = (currentDate.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24) * (totalEarnedDuration / totalPlannedDuration);
+    if (totalPlannedDuration <= 0) return 1.0;
 
-    return totalPlannedTime > 0 ? totalEarnedTime / totalPlannedTime : 1.0;
+    // SPI planning = valeur acquise en durée / durée planifiée à date
+    // (même définition que EvmService : EV / PV, appliquée aux durées).
+    const elapsed = (currentDate.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24);
+    const plannedToDate = Math.max(0, Math.min(totalPlannedDuration, elapsed));
+
+    return plannedToDate > 0 ? totalEarnedDuration / plannedToDate : 1.0;
   }
 
   /**
@@ -374,7 +378,9 @@ export class GanttPertDataService {
     completed?: boolean;
   }): number {
     // Milestones are typically points in time, duration is minimal
-    return 0.5; // Half day for milestone completion
+    // Un jalon est un évènement ponctuel : durée nulle. Lui attribuer 0,5 j
+    // gonflait artificiellement la durée PERT face au calendrier réel.
+    return 0;
   }
 
   /**

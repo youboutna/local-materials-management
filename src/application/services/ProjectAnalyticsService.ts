@@ -201,7 +201,12 @@ export class ProjectAnalyticsService {
           standardDeviation: 0,
           variance: 0
         },
-        complexityScore: totalTasks > 10 ? 80 : totalTasks > 5 ? 50 : 20
+        // Complexité normalisée sur les volumes réels (tâches, jalons, retards)
+        // au lieu de paliers arbitraires 80/50/20.
+        complexityScore: Math.min(
+          100,
+          Math.round(totalTasks * 2 + totalMilestones * 3 + overdueTasks * 5),
+        )
       } as ProjectMetricsDTO;
     } catch (error) {
       console.error('ProjectAnalyticsService.getProjectMetrics failed:', error);
