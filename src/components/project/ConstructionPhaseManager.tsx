@@ -114,13 +114,43 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   const allPhases = useMemo(() => {
     const merged = [...constructionPhaseHook.phases, ...existingPhases] as any[];
     const seen = new Set<string>();
-    return merged.filter((p) => {
-      const key = String(p?.id ?? p?.phaseCode ?? p?.name ?? Math.random());
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const statusFromDto: Record<string, PhaseData['status']> = {
+      pending: 'not_started',
+      not_started: 'not_started',
+      in_progress: 'in_progress',
+      completed: 'completed',
+      delayed: 'delayed',
+      blocked: 'delayed',
+    };
+    return merged
+      .filter((p) => {
+        const key = String(p?.id ?? p?.phaseCode ?? p?.name ?? Math.random());
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      // Normalisation DTO → forme PhaseData attendue par la liste et le dialog
+      .map((p) => ({
+        ...p,
+        title: p.title ?? p.name ?? p.phaseName ?? '',
+        description: p.description ?? '',
+        startDate: p.startDate ?? p.start_date ?? '',
+        endDate: p.endDate ?? p.end_date ?? '',
+        status: statusFromDto[String(p.status)] ?? 'not_started',
+        budget: Number(p.budget ?? p.estimatedCost ?? p.estimated_cost ?? 0),
+        actualCost: Number(p.actualCost ?? p.actual_cost ?? 0),
+        progress: Number(p.progress ?? 0),
+        materials: Array.isArray(p.materials) ? p.materials : [],
+        humanResources: Array.isArray(p.humanResources)
+          ? p.humanResources
+          : Array.isArray(p.human_resources)
+          ? p.human_resources
+          : [],
+        suppliers: Array.isArray(p.suppliers) ? p.suppliers : [],
+        location: typeof p.location === 'string' ? p.location : '',
+      }));
   }, [constructionPhaseHook.phases, existingPhases]);
+
 
 
   
