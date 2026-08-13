@@ -1,3 +1,4 @@
+import { formatNumber2 } from '@/utils/reportNumbers';
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { format } from 'date-fns';
@@ -184,9 +185,7 @@ export function DevisPDFDocument({
             data={estimateItems.map(item => [
               item.description || '',
               item.item_type || 'autre',
-              (item.quantity || 0).toString(),
-              (item.unit_price || 0).toLocaleString('fr-FR'),
-              (item.total_price || 0).toLocaleString('fr-FR')
+              (item.quantity || 0).toString(),formatNumber2((item.unit_price || 0)),formatNumber2((item.total_price || 0))
             ])}
             columnWidths={['40%', '15%', '10%', '17.5%', '17.5%']}
           />
@@ -199,23 +198,23 @@ export function DevisPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Matériaux" value={`${totals.materialsCost.toLocaleString('fr-FR')} ${estimate.currency}`} />
-                <PDFText label="Main-d'œuvre" value={`${totals.laborCost.toLocaleString('fr-FR')} ${estimate.currency}`} />
-                <PDFText label="Équipement" value={`${totals.equipmentCost.toLocaleString('fr-FR')} ${estimate.currency}`} />
+                <PDFText label="Matériaux" value={`${formatNumber2(totals.materialsCost)} ${estimate.currency}`} />
+                <PDFText label="Main-d'œuvre" value={`${formatNumber2(totals.laborCost)} ${estimate.currency}`} />
+                <PDFText label="Équipement" value={`${formatNumber2(totals.equipmentCost)} ${estimate.currency}`} />
                 {totals.otherCost > 0 && (
-                  <PDFText label="Autres" value={`${totals.otherCost.toLocaleString('fr-FR')} ${estimate.currency}`} />
+                  <PDFText label="Autres" value={`${formatNumber2(totals.otherCost)} ${estimate.currency}`} />
                 )}
               </PDFCol>
               <PDFCol>
-                <PDFText label={`TVA (${estimate.tax_rate}%)`} value={`${totals.taxAmount.toLocaleString('fr-FR')} ${estimate.currency}`} />
-                <PDFText label={`Frais généraux (${estimate.overhead_percentage}%)`} value={`${totals.overheadAmount.toLocaleString('fr-FR')} ${estimate.currency}`} />
-                <PDFText label={`Marge bénéficiaire (${estimate.profit_margin_percentage}%)`} value={`${totals.profitAmount.toLocaleString('fr-FR')} ${estimate.currency}`} />
+                <PDFText label={`TVA (${estimate.tax_rate}%)`} value={`${formatNumber2(totals.taxAmount)} ${estimate.currency}`} />
+                <PDFText label={`Frais généraux (${estimate.overhead_percentage}%)`} value={`${formatNumber2(totals.overheadAmount)} ${estimate.currency}`} />
+                <PDFText label={`Marge bénéficiaire (${estimate.profit_margin_percentage}%)`} value={`${formatNumber2(totals.profitAmount)} ${estimate.currency}`} />
               </PDFCol>
             </PDFRow>
             
             <View style={styles.grandTotal}>
               <Text style={styles.grandTotalText}>
-                TOTAL GÉNÉRAL TTC: {totals.finalTotal.toLocaleString('fr-FR')} {estimate.currency}
+                TOTAL GÉNÉRAL TTC: {formatNumber2(totals.finalTotal)} {estimate.currency}
               </Text>
             </View>
           </PDFCard>

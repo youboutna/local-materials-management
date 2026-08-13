@@ -204,7 +204,7 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
                 <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Budget" value={project.budget ? `${project.budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : 'Non défini'} />
+                <PDFText label="Budget" value={project.budget ? `${formatNumber2(project.budget)} MRU` : 'Non défini'} />
               </PDFCol>
             </PDFRow>
             {project.description && (
@@ -224,22 +224,22 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Budget Total"
-              value={financialData.totalBudget ? `${financialData.totalBudget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : 'Non défini'}
+              value={financialData.totalBudget ? `${formatNumber2(financialData.totalBudget)} MRU` : 'Non défini'}
               color="#10b981"
             />
             <PDFMetricCard
               title="Dépenses Total"
-              value={`${financialData.spentAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(financialData.spentAmount)} MRU`}
               color="#f59e0b"
             />
             <PDFMetricCard
               title="Budget Restant"
-              value={`${financialData.remainingBudget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(financialData.remainingBudget)} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
               title="Écart Budget"
-              value={`${financialData.costOverrun.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(financialData.costOverrun)} MRU`}
               color={financialData.costOverrun > 0 ? "#ef4444" : "#10b981"}
             />
           </PDFRow>
@@ -329,8 +329,8 @@ export function ProjectPDFDocument({
               material.name,
               quantity.toString(),
               'unité',
-              `${unitCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`,
-              `${totalCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`
+              `${formatNumber2(unitCost)} MRU`,
+              `${formatNumber2(totalCost)} MRU`
             ];
           })}
           columnWidths={['30%', '15%', '15%', '20%', '20%']}
@@ -346,9 +346,9 @@ export function ProjectPDFDocument({
             data={employees.map(employee => [
               employee.name,
               employee.skills?.join(', ') || 'Non spécifié',
-              employee.costPerHour ? `${employee.costPerHour.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU/h` : '0 MRU/h',
+              employee.costPerHour ? `${formatNumber2(employee.costPerHour)} MRU/h` : '0 MRU/h',
               '40h',
-              employee.costPerHour ? `${(employee.costPerHour * 40).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU'
+              employee.costPerHour ? `${formatNumber2((employee.costPerHour * 40))} MRU` : '0 MRU'
             ])}
             columnWidths={['25%', '25%', '15%', '15%', '20%']}
           />
@@ -373,9 +373,9 @@ export function ProjectPDFDocument({
                 p.title || p.name || p.phase_name || '—',
                 formatPercent2(p.actualProgress ?? p.progress ?? 0),
                 statusMap[p.status] || p.status || '—',
-                p.budget ? `${p.budget.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU',
-                p.actualCost ? `${p.actualCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '0 MRU',
-                ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MRU'
+                p.budget ? `${formatNumber2(p.budget)} MRU` : '0 MRU',
+                p.actualCost ? `${formatNumber2(p.actualCost)} MRU` : '0 MRU',
+                formatNumber2((p.actualCost || 0) - (p.budget || 0)) + ' MRU'
               ];
             })}
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
@@ -408,7 +408,7 @@ export function ProjectPDFDocument({
             data={safeReportData.bankGuarantees.map((bg: any) => [
               bg.guarantee_type || '',
               bg.bank_name || '',
-              bg.guarantee_amount ? `${bg.guarantee_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '',
+              bg.guarantee_amount ? `${formatNumber2(bg.guarantee_amount)} MRU` : '',
               bg.issue_date ? format(new Date(bg.issue_date), 'dd/MM/yyyy') : '',
               bg.expiry_date ? format(new Date(bg.expiry_date), 'dd/MM/yyyy') : '',
               bg.status || ''
@@ -426,7 +426,7 @@ export function ProjectPDFDocument({
             data={safeReportData.insurance.map((ins: any) => [
               ins.insurance_company || '',
               ins.coverage_type || '',
-              ins.coverage_amount ? `${ins.coverage_amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU` : '',
+              ins.coverage_amount ? `${formatNumber2(ins.coverage_amount)} MRU` : '',
               ins.valid_from ? format(new Date(ins.valid_from), 'dd/MM/yyyy') : '',
               ins.valid_until ? format(new Date(ins.valid_until), 'dd/MM/yyyy') : '',
               ins.status || ''
@@ -444,23 +444,23 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Risque de délai" 
-                  value={evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
+                  value={!hasPlannedValue ? "NON ÉVALUABLE - Projet non démarré (PV = 0)" : evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
                 />
                 <PDFText 
                   label="Risque de coût" 
-                  value={evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
+                  value={!hasActualCost ? "NON ÉVALUABLE - Aucun coût engagé (AC = 0)" : evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
                 />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Indice SPI" value={formatRatio2(evmMetrics.schedulePerformanceIndex)} />
-                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
+                <PDFText label="Indice SPI" value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)} />
+                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)} />
               </PDFCol>
             </PDFRow>
             <PDFRow>
               <PDFCol>
                 <PDFText 
                   label="Recommandations" 
-                  value={evmMetrics.schedulePerformanceIndex < 0.9 || evmMetrics.costPerformanceIndex < 0.9 ? 
+                  value={(hasPlannedValue && evmMetrics.schedulePerformanceIndex < 0.9) || (hasActualCost && evmMetrics.costPerformanceIndex < 0.9) ? 
                     "Actions correctives urgentes requises. Révision du planning et du budget nécessaire." : 
                     "Continuer la surveillance régulière des indicateurs de performance."
                   } 
@@ -477,39 +477,47 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Indice SPI"
-              value={formatRatio2(evmMetrics.schedulePerformanceIndex)}
-              color={evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+              value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)}
+              color={!hasPlannedValue ? "#6b7280" : evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
               title="Indice CPI"
-              value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)}
-              color={evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+              value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)}
+              color={!hasActualCost ? "#6b7280" : evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Écart Budget"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(2)}%` : '0%'}
+              title="Budget engagé"
+              value={evmMetrics.budgetAtCompletion > 0 ? formatPercent2((evmMetrics.actualCost / evmMetrics.budgetAtCompletion) * 100) : formatPercent2(0)}
               color={evmMetrics.budgetAtCompletion > 0 && evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Progression"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(2)}%` : '0%'}
+              title="Progression (TEP pondéré)"
+              value={formatPercent2(unifiedProgress)}
               color="#8b5cf6"
             />
           </PDFRow>
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Performance délai" value={evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
-                <PDFText label="Performance coût" value={evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance délai" value={!hasPlannedValue ? "Non évaluable" : evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance coût" value={!hasActualCost ? "Non évaluable (aucun coût engagé)" : evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Tendance générale" value={evmMetrics.schedulePerformanceIndex >= 0.9 && evmMetrics.costPerformanceIndex >= 0.9 ? "Positive" : "Nécessite attention"} />
-                <PDFText label="Statut global" value={evmMetrics.schedulePerformanceIndex >= 1 && evmMetrics.costPerformanceIndex >= 1 ? "Très bon" : "En surveillance"} />
+                <PDFText
+                  label="Écart d'avancement"
+                  value={
+                    plannedProgress == null
+                      ? 'Non évaluable'
+                      : `${formatSigned2(unifiedProgress - plannedProgress, 'pts')} (réel ${formatPercent2(unifiedProgress)} vs planifié ${formatPercent2(plannedProgress)})`
+                  }
+                />
+                <PDFText label="Statut global" value={!hasPlannedValue && !hasActualCost ? "Non évaluable" : hasPlannedValue && evmMetrics.schedulePerformanceIndex >= 1 && (!hasActualCost || evmMetrics.costPerformanceIndex >= 1) ? "Très bon" : "En surveillance"} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
         </PDFSection>
       )}
+
 
       {/* Suivi & Évaluation — synthèse écarts + jugement global de performance */}
       {reportConfig.includeSections.monitoringEvaluation && (() => {
@@ -745,17 +753,17 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Valeur Planifiée (PV)"
-              value={`${evmMetrics.plannedValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(evmMetrics.plannedValue)} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
               title="Valeur Acquise (EV)"
-              value={`${evmMetrics.earnedValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(evmMetrics.earnedValue)} MRU`}
               color="#10b981"
             />
             <PDFMetricCard
               title="Coût Réel (AC)"
-              value={`${evmMetrics.actualCost.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`}
+              value={`${formatNumber2(evmMetrics.actualCost)} MRU`}
               color="#ef4444"
             />
             <PDFMetricCard
@@ -767,14 +775,14 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Écart de délai (SV)" value={`${evmMetrics.scheduleVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
-                <PDFText label="Écart de coût (CV)" value={`${evmMetrics.costVariance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
+                <PDFText label="Écart de délai (SV)" value={`${formatNumber2(evmMetrics.scheduleVariance)} MRU`} />
+                <PDFText label="Écart de coût (CV)" value={`${formatNumber2(evmMetrics.costVariance)} MRU`} />
                 <PDFText label="Indice de performance coût (CPI)" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Budget à l'achèvement (BAC)" value={`${evmMetrics.budgetAtCompletion.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
-                <PDFText label="Estimation à l'achèvement (EAC)" value={`${evmMetrics.estimateAtCompletion.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
-                <PDFText label="Estimation pour terminer (ETC)" value={`${evmMetrics.estimateToComplete.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MRU`} />
+                <PDFText label="Budget à l'achèvement (BAC)" value={`${formatNumber2(evmMetrics.budgetAtCompletion)} MRU`} />
+                <PDFText label="Estimation à l'achèvement (EAC)" value={`${formatNumber2(evmMetrics.estimateAtCompletion)} MRU`} />
+                <PDFText label="Estimation pour terminer (ETC)" value={`${formatNumber2(evmMetrics.estimateToComplete)} MRU`} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -846,7 +854,7 @@ export function ProjectPDFDocument({
             data={safeReportData.paymentBlocks.map((b: any) => [
               b.reference || b.id || '—',
               b.reason || b.cause || '—',
-              b.amount != null ? `${Number(b.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${(project as any).currency || 'MRU'}` : '—',
+              b.amount != null ? `${formatNumber2(Number(b.amount))} ${(project as any).currency || 'MRU'}` : '—',
               b.status || 'bloqué',
               b.createdAt ? format(new Date(b.createdAt), 'dd/MM/yyyy') : '—',
             ])}
