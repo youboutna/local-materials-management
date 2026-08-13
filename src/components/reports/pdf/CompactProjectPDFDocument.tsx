@@ -709,7 +709,78 @@ export function CompactProjectPDFDocument({
     return 0;
   };
 
+  // --- Jalons : synthèse « ligne » (prochain jalon, atteints, en retard) ---
+  const getMilestoneSummary = (milestones: any[]) => {
+    const list = Array.isArray(milestones) ? milestones : [];
+    const isDone = (m: any) =>
+      ['completed', 'achieved', 'atteint', 'validated'].includes(String(m?.status ?? '').toLowerCase());
+    const dateOf = (m: any) => {
+      const raw = m?.targetDate || m?.target_date || m?.dueDate;
+      const d = raw ? new Date(raw) : null;
+      return d && !Number.isNaN(d.getTime()) ? d : null;
+    };
+    const now = new Date();
+    const done = list.filter(isDone).length;
+    const late = list.filter((m) => {
+      const d = dateOf(m);
+      return !isDone(m) && d !== null && d < now;
+    }).length;
+    const upcoming = list
+      .filter((m) => !isDone(m) && dateOf(m) !== null && (dateOf(m) as Date) >= now)
+      .sort((a, b) => (dateOf(a) as Date).getTime() - (dateOf(b) as Date).getTime())[0];
+    return {
+      total: list.length,
+      done,
+      late,
+      nextLabel: upcoming ? String(upcoming.title || upcoming.name || 'Jalon') : null,
+      nextDate: upcoming ? format(dateOf(upcoming) as Date, 'dd/MM/yy') : null,
+    };
+  };
+
+  // --- Micro-Gantt : barres de phases normalisées sur la fenêtre projet ---
+  const getGanttBars = (project: ProjectData, phaseList: any[], maxBars = 5) => {
+    const parse = (raw: any): Date | null => {
+      const d = raw ? new Date(raw) : null;
+      return d && !Number.isNaN(d.getTime()) ? d : null;
+    };
+    const items = (Array.isArray(phaseList) ? phaseList : [])
+      .map((p: any, idx: number) => ({
+        label: String(p?.title || p?.name || p?.phase_name || `Phase ${idx + 1}`),
+        start: parse(p?.startDate ?? p?.start_date ?? p?.plannedStartDate),
+        end: parse(p?.endDate ?? p?.end_date ?? p?.plannedEndDate),
+        status: String(p?.status ?? ''),
+      }))
+      .filter((p) => p.start && p.end) as Array<{ label: string; start: Date; end: Date; status: string }>;
+
+    if (items.length === 0) return null;
+
+    const projStart = parse(project.startDate) ?? items[0].start;
+    const projEnd = parse(project.endDate) ?? items[items.length - 1].end;
+    const min = Math.min(projStart.getTime(), ...items.map((i) => i.start.getTime()));
+    const max = Math.max(projEnd.getTime(), ...items.map((i) => i.end.getTime()));
+    const span = Math.max(max - min, 1);
+    const pct = (t: number) => Math.min(100, Math.max(0, ((t - min) / span) * 100));
+
+    return {
+      start: format(new Date(min), 'dd/MM/yy'),
+      end: format(new Date(max), 'dd/MM/yy'),
+      todayLeft: pct(Date.now()),
+      bars: items.slice(0, maxBars).map((i) => ({
+        label: i.label.length > 18 ? `${i.label.substring(0, 18)}…` : i.label,
+        left: pct(i.start.getTime()),
+        width: Math.max(2, pct(i.end.getTime()) - pct(i.start.getTime())),
+        color:
+          i.status === 'completed'
+            ? colors.success
+            : i.status === 'in_progress'
+              ? colors.secondary
+              : colors.mapMajorStreet,
+      })),
+    };
+  };
+
   // Miniature SIG réelle (coordonnées + zones d'intervention persistées)
+
   const renderStreetMap = (project: ProjectData) => (
     <ProjectMiniMap
       project={{
