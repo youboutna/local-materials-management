@@ -3,6 +3,7 @@
  * Business logic for project analytics and metrics
  */
 
+import { EvmService } from '@/application/services/EvmService';
 import { IInspectionRepository, IMilestoneRepository, IProjectRepository } from '@/domain/repositories';
 import {
     ProjectAnalyticsDTO,
