@@ -382,54 +382,72 @@ export class ProjectCalculationService {
   }
 
 
-  // ============= Health Score Calculation =============
+  // ============= Health Score (formule UNIQUE de l'orchestrateur) =============
 
+  /**
+   * @deprecated Utiliser `ProjectMetricsOrchestrator.compute().health`.
+   * Toutes les variantes délèguent désormais à `ProjectMetricsOrchestrator.buildHealth`
+   * afin d'éliminer les trois formules divergentes de santé globale.
+   */
   static calculateProjectHealthScore(
     progressOrProject: number | ProjectDetailDTO,
     budgetUtilization?: number,
     schedulePerformance?: number,
     qualityScoreParam?: number
   ): ProjectHealthScore {
-    // Overload: accept ProjectDetailDTO or individual params
     if (typeof progressOrProject === 'object') {
       const project = progressOrProject;
-      const progressAnalytics = this.calculateProgressAnalytics(project);
-      const budgetAnalytics = this.calculateBudgetAnalytics(project);
       const qualityMetrics = this.calculateQualityMetrics(project);
-      const riskAnalytics = this.calculateRiskAnalytics(project);
-      
-      const schedule = Math.max(0, 100 - (progressAnalytics.delayedTasksCount * 10));
-      const budget = Math.max(0, 100 - Math.max(0, budgetAnalytics.budgetUtilization - 80) * 2);
-      // Qualité issue des inspections réelles — 0 si aucune donnée (pas de 85 fictif).
-      const quality = Math.min(100, Math.max(0, qualityMetrics.averageInspectionScore ?? 0));
-      const risk = Math.max(0, 100 - (riskAnalytics.riskScore * 10));
-      const scope = progressAnalytics.overallProgress;
-      // Satisfaction parties prenantes : aucune source de données → exclue du score.
-      const stakeholderSatisfaction = 0;
-      const overall = Math.round((schedule + budget + quality + risk + scope) / 5);
+      const metrics = ProjectMetricsOrchestrator.compute({
+        project: {
+          id: project.id,
+          title: project.title,
+          budget: project.budget,
+          progress: project.progress,
+          startDate: project.startDate,
+          endDate: project.endDate,
+        },
+        phases: ((project as any).phases || []) as any[],
+        actualCost: (project.tasks || []).reduce(
+          (sum, task: any) => sum + (Number(task?.actualCost) || 0),
+          0,
+        ),
+        risks: ((project as any).risks || []) as any[],
+      });
 
-      return { overallScore: overall, schedule, budget, quality, risk, scope, stakeholderSatisfaction };
+      return {
+        overallScore: metrics.health.overallScore,
+        schedule: metrics.health.schedule,
+        budget: metrics.health.cost,
+        quality: Math.min(100, Math.max(0, qualityMetrics.averageInspectionScore ?? 0)),
+        risk: metrics.health.risk,
+        scope: metrics.health.scope,
+        stakeholderSatisfaction: 0,
+      };
     }
 
-    // Simple params version — toutes les entrées viennent de données réelles.
-    const progress = progressOrProject;
-    const quality = Math.max(0, Math.min(100, qualityScoreParam ?? 0));
-    const budget = Math.max(0, Math.min(100, budgetUtilization ?? 0));
-    const schedule = Math.max(0, Math.min(100, schedulePerformance ?? 0));
-    const overallScore = Math.round(
-      (progress * 0.3) + (budget * 0.3) + (schedule * 0.2) + (quality * 0.2)
-    );
-    
+    // Variante « paramètres » : même formule, indices reconstruits depuis les %.
+    const progress = Math.max(0, Math.min(100, progressOrProject));
+    const health = ProjectMetricsOrchestrator.buildHealth({
+      progress,
+      plannedProgress: null,
+      spi: schedulePerformance != null ? Math.max(0, schedulePerformance) / 100 : null,
+      cpi: budgetUtilization != null ? Math.max(0, budgetUtilization) / 100 : null,
+      openRisksCount: 0,
+      alerts: [],
+    });
+
     return {
-      overallScore,
-      schedule: Math.round(schedule),
-      budget: Math.round(budget),
-      quality: Math.round(quality),
-      risk: Math.round(Math.max(0, 100 - overallScore)),
-      scope: progress,
-      stakeholderSatisfaction: 0
+      overallScore: health.overallScore,
+      schedule: health.schedule,
+      budget: health.cost,
+      quality: Math.max(0, Math.min(100, Math.round(qualityScoreParam ?? 0))),
+      risk: health.risk,
+      scope: health.scope,
+      stakeholderSatisfaction: 0,
     };
   }
+
 
 
   // ============= PERT Analysis (délégation moteur unique) =============
