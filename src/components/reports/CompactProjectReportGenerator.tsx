@@ -312,16 +312,12 @@ export function CompactProjectReportGenerator({
           description: "Rapport généré avec succès",
         });
       } else {
-        const projectsData = Array.from(enrichedDataMap.entries()).map(([id, data]) => ({
-          id,
-          data,
-          evmMetrics: evmMetricsMap.get(id),
-          pertAnalysis: pertAnalysisMap.get(id)
-        }));
-        
         const blob = await pdf(
           <CompactProjectPDFDocument 
-            projects={projectsData as any}
+            projects={projectList as any}
+            enrichedDataMap={enrichedDataMap}
+            evmMetricsMap={evmMetricsMap as any}
+            pertAnalysisMap={pertAnalysisMap as any}
             reportTitle={reportTitle}
             company={companyInfo}
           />
