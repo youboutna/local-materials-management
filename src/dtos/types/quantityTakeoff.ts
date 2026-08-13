@@ -4,7 +4,7 @@ export interface QuantityTakeoff {
   project_id: string;
   material_id: string;
   element_type: string;
-  unit: 'm³' | 'm²' | 'm' | 'unité';
+  unit: string;
   length: number;
   width?: number;
   height?: number;
@@ -28,7 +28,7 @@ export interface CreateQuantityTakeoffData {
   project_id: string;
   material_id: string;
   element_type: string;
-  unit: 'm³' | 'm²' | 'm' | 'unité';
+  unit: string;
   length: number;
   width?: number;
   height?: number;

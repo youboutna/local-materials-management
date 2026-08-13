@@ -46,16 +46,15 @@ export function useCreateQuantityTakeoff(projectId: string) {
       unit_price?: number;
     }) => {
       const service = getQuantityTakeoffService();
-      const allowed = new Set(['m³', 'm²', 'm', 'unité']);
-      const unit = (allowed.has(data.unit) ? data.unit : 'unité') as 'm³' | 'm²' | 'm' | 'unité';
       await service.createQuantityTakeoff({
         project_id: projectId,
         material_id: data.material_id,
         element_type: data.element_type,
-        unit,
+        unit: data.unit,
         length: data.length || 0,
         width: data.width,
         height: data.height,
+        quantity: data.quantity,
         unit_price: data.unit_price,
         phase_id: data.phase_id,
         milestone_id: data.milestone_id,

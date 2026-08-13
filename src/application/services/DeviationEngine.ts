@@ -68,7 +68,9 @@ export class DeviationEngine {
           break;
         }
         case 'cost_deviation_pct': {
-          if (input.plannedBudget && input.plannedBudget > 0 && input.actualCost != null) {
+          // Sans coût engagé, l'écart coût n'est pas évaluable : 0 ne signifie
+          // pas une économie de 100 %, mais une absence de valeur acquise.
+          if (input.plannedBudget && input.plannedBudget > 0 && input.actualCost != null && input.actualCost > 0) {
             value = ((input.actualCost - input.plannedBudget) / input.plannedBudget) * 100;
           }
           break;

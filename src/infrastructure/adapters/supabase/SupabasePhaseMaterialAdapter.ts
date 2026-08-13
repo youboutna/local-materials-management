@@ -86,4 +86,20 @@ export class SupabasePhaseMaterialAdapter implements IPhaseMaterialRepository {
     if (error) throw new Error(error.message);
     return fromDb(data as PhaseMaterialDbRow);
   }
+
+  async updateQuantity(id: string, quantity: number): Promise<PhaseMaterialRow> {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ quantity })
+      .eq('id', id)
+      .select('*')
+      .single();
+    if (error) throw new Error(error.message);
+    return fromDb(data as PhaseMaterialDbRow);
+  }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from(TABLE).delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  }
 }

@@ -24,4 +24,6 @@ export interface IPhaseMaterialRepository {
   findByProjectId(projectId: string): Promise<PhaseMaterialRow[]>;
   /** Idempotent upsert keyed on (phase_id, material_id): creates or updates the quantity. */
   upsert(input: PhaseMaterialInput): Promise<PhaseMaterialRow>;
+  updateQuantity(id: string, quantity: number): Promise<PhaseMaterialRow>;
+  delete(id: string): Promise<void>;
 }

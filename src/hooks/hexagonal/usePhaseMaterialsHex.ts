@@ -2,9 +2,9 @@
 
 import { MaterialService, getMaterialService} from '@/application/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getPhaseMaterialService } from '@/application/services/PhaseMaterialService';
+import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 export interface MaterialDetails {
   id: string;
@@ -35,6 +35,7 @@ export interface AvailableMaterial {
 export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   const queryClient = useQueryClient();
   const materialService = getMaterialService();
+  const phaseMaterialService = getPhaseMaterialService();
 
   const loadAvailable = async (): Promise<AvailableMaterial[]> => {
     const materials = await materialService.getAllMaterials();
@@ -64,32 +65,21 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
     queryKey: ['phase-materials-hex', phaseId],
     queryFn: async (): Promise<PhaseMaterial[]> => {
       if (!phaseId) return [];
-      const { data, error } = await supabase
-        .from('phase_materials' as never)
-        .select('id, phase_id, material_id, quantity')
-        .eq('phase_id', phaseId);
-      if (error) {
-        console.error('[usePhaseMaterialsHex] load error:', error);
-        throw error;
-      }
-      const list = (data || []) as Array<{
-        id: string;
-        phase_id: string;
-        material_id: string;
-        quantity: number;
-      }>;
+      // Répare aussi les métrés historiques avant lecture des ressources.
+      if (projectId) await getTakeoffToBoqService().syncProject(projectId);
+      const list = await phaseMaterialService.getByPhase(phaseId);
       // enrich with material details using already-loaded available materials
       const allMaterials = await loadAvailable();
       const byId = new Map(allMaterials.map((m) => [m.id, m]));
       return list.map((row) => {
-        const m = byId.get(row.material_id);
+        const m = byId.get(row.materialId);
         return {
           id: row.id,
-          phase_id: row.phase_id,
-          material_id: row.material_id,
+          phase_id: row.phaseId,
+          material_id: row.materialId,
           quantity: Number(row.quantity) || 0,
           material: {
-            id: row.material_id,
+            id: row.materialId,
             name: m?.name || 'Matériau inconnu',
             category: m?.category || '',
             unit: m?.unit || '',
@@ -103,21 +93,12 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
 
   const addMaterialMutation = useMutation({
     mutationFn: async ({ materialId, quantity }: { materialId: string; quantity: number }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      const payload = {
-        phase_id: phaseId,
-        project_id: projectId ?? null,
-        material_id: materialId,
+      return phaseMaterialService.assign({
+        phaseId,
+        projectId: projectId ?? null,
+        materialId,
         quantity,
-        created_by: userData?.user?.id ?? null,
-      };
-      const { data, error } = await supabase
-        .from('phase_materials' as never)
-        .insert(payload as never)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-materials-hex', phaseId] });
@@ -134,11 +115,7 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
 
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ id, newQuantity }: { id: string; newQuantity: number }) => {
-      const { error } = await supabase
-        .from('phase_materials' as never)
-        .update({ quantity: newQuantity } as never)
-        .eq('id', id);
-      if (error) throw error;
+      return phaseMaterialService.updateQuantity(id, newQuantity);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-materials-hex', phaseId] });
@@ -155,11 +132,7 @@ export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
 
   const removeMaterialMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('phase_materials' as never)
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
+      await phaseMaterialService.remove(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-materials-hex', phaseId] });

@@ -22,7 +22,11 @@ export function useQuantityTakeoffsHex(projectId?: string) {
     staleTime: 60 * 1000,
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] });
+    queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] });
+    queryClient.invalidateQueries({ queryKey: ['boq-lines'] });
+  };
 
   const syncProject = async <T,>(operation: Promise<T>): Promise<T> => {
     const result = await operation;
@@ -53,13 +57,13 @@ export function useQuantityTakeoffsHex(projectId?: string) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => service.remove(id),
+    mutationFn: (id: string) => syncProject(service.remove(id)),
     onSuccess: invalidate,
   });
 
   const replaceMutation = useMutation({
     mutationFn: (inputs: QuantityTakeoffInput[]) =>
-      service.replaceForProject(projectId as string, inputs),
+      syncProject(service.replaceForProject(projectId as string, inputs)),
     onSuccess: invalidate,
   });
 

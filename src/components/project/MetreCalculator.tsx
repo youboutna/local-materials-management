@@ -179,6 +179,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
           note: calc.note ?? null,
         })),
       );
+      await getTakeoffToBoqService().syncProject(projectId);
 
       toast({
         title: "Métrés sauvegardés",
