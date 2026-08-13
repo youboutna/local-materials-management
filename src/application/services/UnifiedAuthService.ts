@@ -331,23 +331,39 @@ export class UnifiedAuthService {
 
   // Private helper methods
   private async getUserProfile(userId: string): Promise<any> {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    // Le preview passe par Cloudflare : un `fetch` peut échouer ponctuellement
+    // (NetworkError). On retente avant de renoncer, sans bruit console.
+    const maxAttempts = 3;
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data ?? null;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String((error as any)?.message ?? error);
+        const isNetworkError = /NetworkError|Failed to fetch|network/i.test(message);
+
+        if (attempt < maxAttempts && isNetworkError) {
+          await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+          continue;
+        }
+
+        if (!isNetworkError) {
+          console.warn('Failed to fetch user profile:', message);
+        }
+        return null;
       }
-
-      return data;
-    } catch (error) {
-      console.warn('Failed to fetch user profile:', error);
-      return null;
     }
+
+    return null;
   }
+
 
   private async updateProfileWithOAuthData(
     userId: string, 
