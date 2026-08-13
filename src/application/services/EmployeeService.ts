@@ -117,42 +117,16 @@ export class EmployeeService {
   }
 
   /**
-   * Create a new employee
+   * Create a new employee (full round-trip UI → DTO → Entity → DB)
    */
   async createEmployee(employeeData: CreateEmployeeDTO): Promise<EmployeeDTO> {
     try {
-      const employee = new Employee(
-        this.generateId(),
-        this.generateEmployeeId(),
-        employeeData.fullName || `${employeeData.firstName} ${employeeData.lastName}`,
-        employeeData.email || null,
-        employeeData.phone || null,
-        employeeData.position || null,
-        employeeData.department as any || null,
-        employeeData.role as any || { name: 'employee', permissions: [] },
-        employeeData.startDate || null,
-        employeeData.salary || null,
-        employeeData.status !== EmployeeStatus.INACTIVE,
-        null, // user
-        null, // manager
-        null, // superior
-        [], // directReports
-        [], // managedProjects
-        [], // teamMembers
-        employeeData.skills || [],
-        (employeeData.certifications || []).map(c => ({ 
-        id: '',
-        name: c, 
-        issuedBy: 'system',
-        expiryDate: new Date().toISOString(),
-        employeeId: this.generateId()
-      } as any)),
-        new Date().toISOString(), // createdAt
-        new Date().toISOString()  // updatedAt
-      );
-      
+      const payload: CreateEmployeeDTO = {
+        ...employeeData,
+        employeeId: employeeData.employeeId || this.generateEmployeeId(),
+      };
+      const employee = EmployeeTransformer.fromCreateDTOToEntity(payload);
       await this.employeeRepository.save(employee);
-      
       return EmployeeTransformer.toDTO(employee);
     } catch (error) {
       console.error('EmployeeService.createEmployee failed:', error);
@@ -170,31 +144,21 @@ export class EmployeeService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Employee not found');
       }
 
-      // Convert UpdateEmployeeDTO to Partial<Employee>
-      const employeeUpdates: Partial<Employee> = {
-        fullName: updates.fullName,
-        email: updates.email,
-        phone: updates.phone,
-        position: updates.position,
-        department: updates.department as unknown as Employee['department'] || null,
-        isActive: updates.status ? updates.status !== EmployeeStatus.INACTIVE : undefined,
-        skills: updates.skills
-      };
-
+      const employeeUpdates = EmployeeTransformer.fromUpdateDTOToEntity(updates);
       await this.employeeRepository.update(id, employeeUpdates);
-      
-      // Return updated employee - convert to DTO
+
       const updatedEmployee = await this.employeeRepository.findById(id);
       if (!updatedEmployee) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to retrieve updated employee');
       }
-      
+
       return this.employeeToDTO(updatedEmployee);
     } catch (error) {
       console.error('EmployeeService.updateEmployee failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update employee');
     }
   }
+
 
   /**
    * Delete an employee
