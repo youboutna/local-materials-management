@@ -444,23 +444,23 @@ export function ProjectPDFDocument({
               <PDFCol>
                 <PDFText 
                   label="Risque de délai" 
-                  value={evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
+                  value={!hasPlannedValue ? "NON ÉVALUABLE - Projet non démarré (PV = 0)" : evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
                 />
                 <PDFText 
                   label="Risque de coût" 
-                  value={evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
+                  value={!hasActualCost ? "NON ÉVALUABLE - Aucun coût engagé (AC = 0)" : evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
                 />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Indice SPI" value={formatRatio2(evmMetrics.schedulePerformanceIndex)} />
-                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)} />
+                <PDFText label="Indice SPI" value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)} />
+                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)} />
               </PDFCol>
             </PDFRow>
             <PDFRow>
               <PDFCol>
                 <PDFText 
                   label="Recommandations" 
-                  value={evmMetrics.schedulePerformanceIndex < 0.9 || evmMetrics.costPerformanceIndex < 0.9 ? 
+                  value={(hasPlannedValue && evmMetrics.schedulePerformanceIndex < 0.9) || (hasActualCost && evmMetrics.costPerformanceIndex < 0.9) ? 
                     "Actions correctives urgentes requises. Révision du planning et du budget nécessaire." : 
                     "Continuer la surveillance régulière des indicateurs de performance."
                   } 
@@ -477,39 +477,47 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Indice SPI"
-              value={formatRatio2(evmMetrics.schedulePerformanceIndex)}
-              color={evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+              value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)}
+              color={!hasPlannedValue ? "#6b7280" : evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
               title="Indice CPI"
-              value={formatIndex2(evmMetrics.costPerformanceIndex, (evmMetrics as any).hasActualCost)}
-              color={evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+              value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)}
+              color={!hasActualCost ? "#6b7280" : evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Écart Budget"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(2)}%` : '0%'}
+              title="Budget engagé"
+              value={evmMetrics.budgetAtCompletion > 0 ? formatPercent2((evmMetrics.actualCost / evmMetrics.budgetAtCompletion) * 100) : formatPercent2(0)}
               color={evmMetrics.budgetAtCompletion > 0 && evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Progression"
-              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(2)}%` : '0%'}
+              title="Progression (TEP pondéré)"
+              value={formatPercent2(unifiedProgress)}
               color="#8b5cf6"
             />
           </PDFRow>
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Performance délai" value={evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
-                <PDFText label="Performance coût" value={evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance délai" value={!hasPlannedValue ? "Non évaluable" : evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance coût" value={!hasActualCost ? "Non évaluable (aucun coût engagé)" : evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Tendance générale" value={evmMetrics.schedulePerformanceIndex >= 0.9 && evmMetrics.costPerformanceIndex >= 0.9 ? "Positive" : "Nécessite attention"} />
-                <PDFText label="Statut global" value={evmMetrics.schedulePerformanceIndex >= 1 && evmMetrics.costPerformanceIndex >= 1 ? "Très bon" : "En surveillance"} />
+                <PDFText
+                  label="Écart d'avancement"
+                  value={
+                    plannedProgress == null
+                      ? 'Non évaluable'
+                      : `${formatSigned2(unifiedProgress - plannedProgress, 'pts')} (réel ${formatPercent2(unifiedProgress)} vs planifié ${formatPercent2(plannedProgress)})`
+                  }
+                />
+                <PDFText label="Statut global" value={!hasPlannedValue && !hasActualCost ? "Non évaluable" : hasPlannedValue && evmMetrics.schedulePerformanceIndex >= 1 && (!hasActualCost || evmMetrics.costPerformanceIndex >= 1) ? "Très bon" : "En surveillance"} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
         </PDFSection>
       )}
+
 
       {/* Suivi & Évaluation — synthèse écarts + jugement global de performance */}
       {reportConfig.includeSections.monitoringEvaluation && (() => {
