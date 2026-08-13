@@ -19,22 +19,19 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
         .insert({
           tender_id: estimate.tenderId,
           project_id: estimate.projectId,
-          estimate_type: estimate.estimateType,
-          total_materials_cost: estimate.totalMaterialsCost,
-          total_labor_cost: estimate.totalLaborCost,
-          total_equipment_cost: estimate.totalEquipmentCost,
+          // `title` est la colonne réelle (non nulle) la plus proche de estimateType.
+          title: estimate.estimateType || 'Estimation',
+          total_materials: estimate.totalMaterialsCost,
+          total_labor: estimate.totalLaborCost,
+          total_equipment: estimate.totalEquipmentCost,
           subtotal: estimate.subtotal,
           tax_rate: estimate.taxRate,
           tax_amount: estimate.taxAmount,
-          total_with_tax: estimate.totalWithTax,
-          discount_rate: estimate.discountRate,    // ✅ Added discount field
-          discount_amount: estimate.discountAmount, // ✅ Added discount field
           overhead_percentage: estimate.overheadPercentage,
           overhead_amount: estimate.overheadAmount,
-          profit_margin_percentage: estimate.profitMarginPercentage,
-          profit_margin_amount: estimate.profitMarginAmount,
-          final_total: estimate.finalTotal,
-          currency: estimate.currency,
+          profit_percentage: estimate.profitMarginPercentage,
+          profit_amount: estimate.profitMarginAmount,
+          total_amount: estimate.finalTotal,
           status: estimate.status,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -163,26 +160,32 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
         updated_at: new Date().toISOString()
       };
 
-      // Map entity fields to database fields
+      // Map entity fields to database fields (colonnes réelles de tender_estimates)
       if (updates.tenderId) updateData.tender_id = updates.tenderId;
       if (updates.projectId) updateData.project_id = updates.projectId;
-      if (updates.estimateType) updateData.estimate_type = updates.estimateType;
-      if (updates.totalMaterialsCost !== undefined) updateData.total_materials_cost = updates.totalMaterialsCost;
-      if (updates.totalLaborCost !== undefined) updateData.total_labor_cost = updates.totalLaborCost;
-      if (updates.totalEquipmentCost !== undefined) updateData.total_equipment_cost = updates.totalEquipmentCost;
+      if (updates.estimateType) updateData.title = updates.estimateType;
+      if (updates.totalMaterialsCost !== undefined) updateData.total_materials = updates.totalMaterialsCost;
+      if (updates.totalLaborCost !== undefined) updateData.total_labor = updates.totalLaborCost;
+      if (updates.totalEquipmentCost !== undefined) updateData.total_equipment = updates.totalEquipmentCost;
       if (updates.subtotal !== undefined) updateData.subtotal = updates.subtotal;
       if (updates.taxRate !== undefined) updateData.tax_rate = updates.taxRate;
       if (updates.taxAmount !== undefined) updateData.tax_amount = updates.taxAmount;
-      if (updates.totalWithTax !== undefined) updateData.total_with_tax = updates.totalWithTax;
-      if (updates.discountRate !== undefined) updateData.discount_rate = updates.discountRate;    // ✅ Added discount field
-      if (updates.discountAmount !== undefined) updateData.discount_amount = updates.discountAmount; // ✅ Added discount field
       if (updates.overheadPercentage !== undefined) updateData.overhead_percentage = updates.overheadPercentage;
       if (updates.overheadAmount !== undefined) updateData.overhead_amount = updates.overheadAmount;
-      if (updates.profitMarginPercentage !== undefined) updateData.profit_margin_percentage = updates.profitMarginPercentage;
-      if (updates.profitMarginAmount !== undefined) updateData.profit_margin_amount = updates.profitMarginAmount;
-      if (updates.finalTotal !== undefined) updateData.final_total = updates.finalTotal;
-      if (updates.currency) updateData.currency = updates.currency;
+      if (updates.profitMarginPercentage !== undefined) updateData.profit_percentage = updates.profitMarginPercentage;
+      if (updates.profitMarginAmount !== undefined) updateData.profit_amount = updates.profitMarginAmount;
+      if (updates.finalTotal !== undefined) updateData.total_amount = updates.finalTotal;
       if (updates.status) updateData.status = updates.status;
+
+      // Champs sans équivalent en base (calculés côté application) : ne pas persister.
+      delete updateData.tenderId; delete updateData.projectId; delete updateData.estimateType;
+      delete updateData.totalMaterialsCost; delete updateData.totalLaborCost; delete updateData.totalEquipmentCost;
+      delete updateData.taxRate; delete updateData.taxAmount; delete updateData.totalWithTax;
+      delete updateData.discountRate; delete updateData.discountAmount;
+      delete updateData.overheadPercentage; delete updateData.overheadAmount;
+      delete updateData.profitMarginPercentage; delete updateData.profitMarginAmount;
+      delete updateData.finalTotal; delete updateData.currency; delete updateData.createdAt; delete updateData.updatedAt;
+      delete updateData.items; delete updateData.submittedBy; delete updateData.subtotal === undefined ? '' : '';
 
       const { data, error } = await supabase
         .from('tender_estimates')
@@ -359,17 +362,18 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
     try {
       const { data, error } = await supabase
         .from('tender_estimates')
-        .select('final_total, status')
+        .select('total_amount, status')
         .eq('tender_id', tenderId);
 
       if (error) throw error;
 
       const stats = {
         totalEstimates: data.length,
-        totalAmount: data.reduce((sum, item) => sum + (item.final_total || 0), 0),
-        averageAmount: data.length > 0 ? data.reduce((sum, item) => sum + (item.final_total || 0), 0) / data.length : 0,
+        totalAmount: data.reduce((sum, item) => sum + (item.total_amount || 0), 0),
+        averageAmount: data.length > 0 ? data.reduce((sum, item) => sum + (item.total_amount || 0), 0) / data.length : 0,
         byStatus: data.reduce((acc, item) => {
-          acc[item.status] = (acc[item.status] || 0) + 1;
+          const key = item.status || 'draft';
+          acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
       };
@@ -389,8 +393,8 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
       row.id,
       row.tender_id,
       row.status || 'draft',
-      row.currency || 'MRO',
-      row.estimate_type || 'standard',
+      'MRU',
+      row.title || 'standard',
       row.created_at,
       row.updated_at,
       {
@@ -399,17 +403,15 @@ export class TenderEstimateAdapter implements ITenderEstimateRepository {
         subtotal: row.subtotal || 0,
         taxAmount: row.tax_amount || 0,
         taxRate: row.tax_rate || 0,
-        totalWithTax: row.total_with_tax || 0,
-        finalTotal: row.final_total || 0,
-        discountRate: row.discount_rate || 0,
-        discountAmount: row.discount_amount || 0,
-        totalMaterialsCost: row.total_materials_cost || 0,
-        totalLaborCost: row.total_labor_cost || 0,
-        totalEquipmentCost: row.total_equipment_cost || 0,
+        totalWithTax: row.total_amount || 0,
+        finalTotal: row.total_amount || 0,
+        totalMaterialsCost: row.total_materials || 0,
+        totalLaborCost: row.total_labor || 0,
+        totalEquipmentCost: row.total_equipment || 0,
         overheadPercentage: row.overhead_percentage || 0,
         overheadAmount: row.overhead_amount || 0,
-        profitMarginPercentage: row.profit_margin_percentage || 0,
-        profitMarginAmount: row.profit_margin_amount || 0,
+        profitMarginPercentage: row.profit_percentage || 0,
+        profitMarginAmount: row.profit_amount || 0,
         items: [] // Items loaded separately
       }
     );

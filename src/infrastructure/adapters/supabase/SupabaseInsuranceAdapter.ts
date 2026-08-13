@@ -15,32 +15,13 @@ import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
 import { InsuranceCertificateDTO, InsuranceCertificateStatus } from '@/dtos/entities/InsuranceDTO';
+import { BtpTables } from '@/integrations/supabase/btp-types';
 
 // ============================================================
 // Types
 // ============================================================
 
-interface InsuranceCertificateDB {
-  id: string;
-  project_id: string;
-  contractor_id: string;
-  contractor_name: string;
-  insurance_company: string;
-  policy_number: string;
-  coverage_amount: number;
-  coverage_type: string;
-  valid_from: string;
-  valid_until: string;
-  certificate_url?: string;
-  status: string;
-  last_verified?: string;
-  verified_by?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
-}
+type InsuranceCertificateDB = BtpTables<'insurance_certificates'>;
 
 // ============================================================
 // Adapter
@@ -68,13 +49,11 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       validUntil: data.valid_until,
       status: data.status as InsuranceCertificateStatus,
       notes: data.notes,
-      certificateUrl: data.certificate_url,
+      certificateUrl: data.certificate_url ?? undefined,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
-      createdBy: data.created_by,
-      updatedBy: data.updated_by,
-      lastVerified: data.last_verified,
-      verifiedBy: data.verified_by,
+      lastVerified: data.last_verified ?? undefined,
+      verifiedBy: data.verified_by ?? undefined,
       // Legacy snake_case
       project_id: data.project_id,
       contractor_id: data.contractor_id,
@@ -112,8 +91,6 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       last_verified: entity.last_verified,
       verified_by: entity.verified_by,
       notes: entity.notes,
-      created_by: entity.created_by,
-      updated_by: entity.updated_by,
     };
   }
 
