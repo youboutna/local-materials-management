@@ -1108,7 +1108,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             budget={project.budget || 0}
             spent={metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
-            financialMetrics={{}}
+            financialMetrics={
+              metrics
+                ? {
+                    costVariance: metrics.evm.costVariance,
+                    costPerformanceIndex: metrics.evm.costPerformanceIndex,
+                  }
+                : undefined
+            }
           />
 
           {/* Échéancier de paiements */}

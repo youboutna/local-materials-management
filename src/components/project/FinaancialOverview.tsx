@@ -10,7 +10,14 @@ interface FinancialOverviewProps {
   budget: number;
   spent: number;
   phases: any[];
-  financialMetrics?: any;
+  /**
+   * Métriques EVM calculées par ProjectMetricsOrchestrator (source unique).
+   * `costPerformanceIndex === null` => CPI non évaluable (aucune dépense engagée).
+   */
+  financialMetrics?: {
+    costVariance?: number | null;
+    costPerformanceIndex?: number | null;
+  };
 }
 
 const FinancialOverview: React.FC<FinancialOverviewProps> = ({
@@ -21,7 +28,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
 }) => {
   const remaining = budget - spent;
   const percentageSpent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
-  const costVariance = financialMetrics?.costVariance || spent - budget;
+  const costVariance = financialMetrics?.costVariance ?? null;
 
   return (
     <div className="space-y-6">
@@ -95,7 +102,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
         </CardContent>
       </Card>
 
-      {financialMetrics && (
+      {financialMetrics ? (
         <Card>
           <CardHeader>
             <CardTitle>Métriques financières avancées</CardTitle>
@@ -104,18 +111,23 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h4 className="text-sm font-medium mb-2">Variance des coûts (CV)</h4>
-                <p className={costVariance < 0 ? "text-red-600" : "text-green-600"}>
-                  {formatAmount2(costVariance)}
+                <p className={(costVariance ?? 0) < 0 ? "text-destructive" : "text-success"}>
+                  {costVariance === null ? 'Non évaluable' : formatAmount2(costVariance)}
                 </p>
               </div>
               <div>
                 <h4 className="text-sm font-medium mb-2">Indice de performance des coûts (CPI)</h4>
-                <p>{formatIndex2(financialMetrics.costPerformanceIndex, financialMetrics.costPerformanceIndex != null && financialMetrics.costPerformanceIndex !== 0)}</p>
+                <p>
+                  {formatIndex2(
+                    financialMetrics.costPerformanceIndex ?? 0,
+                    financialMetrics.costPerformanceIndex != null,
+                  )}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 };
