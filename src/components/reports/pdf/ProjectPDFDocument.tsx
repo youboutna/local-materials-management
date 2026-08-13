@@ -374,7 +374,8 @@ export function ProjectPDFDocument({
                 formatPercent2(p.actualProgress ?? p.progress ?? 0),
                 statusMap[p.status] || p.status || '—',
                 p.budget ? `${formatNumber2(p.budget)} MRU` : '0 MRU',
-                p.actualCost ? `${formatNumber2(p.actualCost)} MRU` : '0 MRU',formatNumber2(((p.actualCost || 0) - (p.budget || 0))) + ' MRU'
+                p.actualCost ? `${formatNumber2(p.actualCost)} MRU` : '0 MRU',
+                formatNumber2((p.actualCost || 0) - (p.budget || 0)) + ' MRU'
               ];
             })}
             columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
