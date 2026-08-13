@@ -301,6 +301,7 @@ export function CompactProjectReportGenerator({
             evmMetrics={singleEvmMetrics as any}
             pertAnalysis={singlePertAnalysis as any}
             reportTitle={reportTitle}
+            company={companyInfo}
           />
         ).toBlob();
         
@@ -322,6 +323,7 @@ export function CompactProjectReportGenerator({
           <CompactProjectPDFDocument 
             projects={projectsData as any}
             reportTitle={reportTitle}
+            company={companyInfo}
           />
         ).toBlob();
         
