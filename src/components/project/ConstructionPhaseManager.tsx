@@ -397,10 +397,17 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       startDate: updatedPhase.startDate || undefined,
       endDate: updatedPhase.endDate || undefined,
       estimatedCost: Number(updatedPhase.budget) || 0,
+      budget: Number(updatedPhase.budget) || 0,
       actualCost: Number(updatedPhase.actualCost) || 0,
       progress: Number(updatedPhase.progress) || 0,
       status: (statusMap[updatedPhase.status] || updatedPhase.status) as PhaseDTO['status'],
+      // Colonnes jsonb éditées dans le détail de phase
+      materials: updatedPhase.materials ?? [],
+      humanResources: updatedPhase.humanResources ?? [],
+      suppliers: updatedPhase.suppliers ?? [],
+      notes: updatedPhase.notes,
     };
+    (phaseDTO as Record<string, unknown>).location = updatedPhase.location;
 
     // Detect "no change" to avoid silent ignored update
     if (previous) {
@@ -411,7 +418,14 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       const sameBudget = Number(previous.budget || 0) === Number(updatedPhase.budget || 0);
       const sameStatus = previous.status === updatedPhase.status;
       const sameProgress = Number(previous.progress || 0) === Number(updatedPhase.progress || 0);
-      if (sameTitle && sameDesc && sameStart && sameEnd && sameBudget && sameStatus && sameProgress) {
+      const sameJson = (a: unknown, b: unknown) => JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
+      const sameResources =
+        sameJson(previous.materials, updatedPhase.materials) &&
+        sameJson(previous.humanResources, updatedPhase.humanResources) &&
+        sameJson(previous.suppliers, updatedPhase.suppliers) &&
+        (previous.location ?? '') === (updatedPhase.location ?? '') &&
+        (previous.notes ?? '') === (updatedPhase.notes ?? '');
+      if (sameTitle && sameDesc && sameStart && sameEnd && sameBudget && sameStatus && sameProgress && sameResources) {
         toast({
           title: "Aucune modification",
           description: "Aucun changement détecté — la sauvegarde a été ignorée.",
@@ -419,6 +433,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
         return false;
       }
     }
+
 
     try {
       try {
