@@ -102,8 +102,6 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       projectData.startDate ? new Date(projectData.startDate) : null,
       projectData.endDate ? new Date(projectData.endDate) : null,
       projectData.location || '',
-      projectData.coordinates?.latitude?.toString() || undefined,
-      projectData.coordinates?.longitude?.toString() || undefined,
       Number(projectData.teamSize ?? 0),
       String(projectData.thumbnail ?? '')
     );
