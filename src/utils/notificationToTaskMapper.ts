@@ -60,7 +60,8 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
   const taskData = {
     title,
     description: description || `Action requise suite à: ${title}`,
-    assigned_to: recipientId,
+    assigned_to: [recipientId],
+    assignee_name: recipientId,
     assigned_by: assignedById,
     priority,
     status: 'pending' as const,

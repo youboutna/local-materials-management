@@ -132,7 +132,7 @@ const MaterialEdit = () => {
             ref={(formRef) => { if (formRef) window.materialFormRef = formRef; }}
             onSubmit={handleSubmit}
             initialData={formData}
-            workspaces={transformedWorkspaces}
+            workspaces={transformedWorkspaces as unknown as WorkspaceDTO[]}
             suppliers={suppliers}
             showSubmitButton={false}
             materialId={id}
