@@ -66,6 +66,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
   availableLots = [],
   readOnly,
 }) => {
+  const { openDocument } = useDocumentViewer();
   const { data: allDocs = [], isLoading } = useTenderLotDocuments(tenderId);
   const createDoc = useCreateTenderLotDocument(tenderId);
   const updateDoc = useUpdateTenderLotDocument(tenderId);
