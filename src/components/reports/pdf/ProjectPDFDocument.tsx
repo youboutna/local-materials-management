@@ -65,7 +65,51 @@ interface ProjectPDFDocumentProps {
       ruleCode: string;
       label: string;
       value: number;
-  
+      unit: string;
+      severity: 'info' | 'low' | 'medium' | 'high';
+      sign: 1 | -1 | 0;
+    }>;
+  }>;
+  /** IDs des phases sélectionnées par l'utilisateur (undefined = toutes). */
+  selectedPhaseIds?: string[];
+  /** Organisation propriétaire — active la lecture référentielle DGEER. */
+  organizationName?: string;
+  organizationCode?: string;
+  /** Coordonnées de l'organisation propriétaire (en-tête unifié avec le rapport compact). */
+  company?: { name: string; address: string; phone: string; email: string; logo?: string };
+}
+
+export function ProjectPDFDocument({
+  project,
+  reportData,
+  costCalculation,
+  evmMetrics,
+  pertAnalysis,
+  reportConfig,
+  enrichedData,
+  deviations = [],
+  healthScore = null,
+  phaseDeviations = [],
+  selectedPhaseIds,
+  organizationName,
+  organizationCode,
+  company,
+}: ProjectPDFDocumentProps) {
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'en cours': 'En cours',
+      'terminé': 'Terminé',
+      'en attente': 'En attente',
+      'suspendu': 'Suspendu',
+      'annulé': 'Annulé',
+    };
+    return statusMap[status] || status;
+  };
+
+  // Get resources from project data.
+  const materials = project.resources?.filter((resource) => resource.type === 'material') || [];
+  const employees = project.resources?.filter((resource) => resource.type === 'human') || [];
+
   // Get expenses from project data
   const expenses = project.expenses || [];
   
