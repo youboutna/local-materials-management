@@ -81,7 +81,7 @@ function resolveValue(code: MonitoringAxisCode, input: MonitoringInsightInput): 
     case 'documentation':
       return num(input.documentsCount);
     case 'maitrise_risques':
-      return num(input.highRisksCount);
+      return num(input.activeAlertsCount) ?? num(input.highRisksCount);
     default:
       return null;
   }
