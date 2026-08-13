@@ -8,156 +8,79 @@ import { EnhancedValidationService } from '@/application/services/EnhancedValida
 import { ReceptionService } from '@/application/services/ReceptionService';
 import { RiskService } from '@/application/services/RiskService';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
-import { ReceptionDTO, ReceptionStatus, ReceptionType } from '@/dtos/entities/ReceptionDTO';
-import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
+import { ReceptionStatus, ReceptionType } from '@/dtos/entities/ReceptionDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-
-class InMemoryReceptionRepository implements IReceptionRepository {
-  private receptions = new Map<string, ReceptionDTO>();
-  private counter = 0;
-
-  async create(reception: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>): Promise<ReceptionDTO> {
-    const now = new Date().toISOString();
-    const created: ReceptionDTO = {
-      ...reception,
-      id: `reception-${++this.counter}`,
-      createdAt: now,
-      updatedAt: now,
-    } as ReceptionDTO;
-    this.receptions.set(created.id, created);
-    return created;
-  }
-
-  async findById(id: string): Promise<ReceptionDTO | null> {
-    return this.receptions.get(id) || null;
-  }
-
-  async findByProjectId(projectId: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => r.projectId === projectId);
-  }
-
-  async update(id: string, updates: Partial<ReceptionDTO>): Promise<ReceptionDTO> {
-    const existing = this.receptions.get(id);
-    if (!existing) throw new Error('Reception not found');
-    const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() } as ReceptionDTO;
-    this.receptions.set(id, updated);
-    return updated;
-  }
-
-  async delete(id: string): Promise<void> {
-    this.receptions.delete(id);
-  }
-
-  async findByType(projectId: string, type: 'provisional' | 'definitive'): Promise<ReceptionDTO[]> {
-    return (await this.findByProjectId(projectId)).filter(r => r.type === type);
-  }
-
-  async findByStatus(status: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => r.status === status);
-  }
-
-  async findByDateRange(): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values());
-  }
-
-  async findByChairman(chairmanId: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => (r as any).chairmanId === chairmanId);
-  }
-
-  async createBatch(receptions: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<ReceptionDTO[]> {
-    return Promise.all(receptions.map(r => this.create(r)));
-  }
-
-  async updateBatch(updates: Array<{ id: string; data: Partial<ReceptionDTO> }>): Promise<ReceptionDTO[]> {
-    return Promise.all(updates.map(u => this.update(u.id, u.data)));
-  }
-
-  async search(criteria: {
-    projectId?: string;
-    type?: 'provisional' | 'definitive';
-    status?: string;
-    dateRange?: { start: string; end: string };
-    chairmanId?: string;
-  }): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r =>
-      (!criteria.projectId || r.projectId === criteria.projectId) &&
-      (!criteria.type || r.type === criteria.type) &&
-      (!criteria.status || r.status === criteria.status)
-    );
-  }
-
-  async validateReception(): Promise<boolean> {
-    return true;
-  }
-
-  async getReceptionWorkflow(projectId: string): Promise<any> {
-    const receptions = await this.findByProjectId(projectId);
-    return {
-      projectId,
-      currentStep: receptions.length,
-      totalSteps: 2,
-    };
-  }
-
-  async addDocument(): Promise<void> {}
-  async removeDocument(): Promise<void> {}
-  async getDocuments(): Promise<any[]> {
-    return [];
-  }
-  async updateCommittee(): Promise<void> {}
-  async addCommitteeMember(): Promise<void> {}
-  async removeCommitteeMember(): Promise<void> {}
-  async addFinding(): Promise<void> {}
-  async updateFinding(): Promise<void> {}
-  async addDecision(): Promise<void> {}
-
-  async getReceptionStats(projectId: string) {
-    const receptions = await this.findByProjectId(projectId);
-    return {
-      total: receptions.length,
-      provisional: receptions.filter(r => r.type === 'provisional').length,
-      definitive: receptions.filter(r => r.type === 'definitive').length,
-      approved: receptions.filter(r => r.status === 'approved').length,
-      pending: receptions.filter(r => r.status === 'pending').length,
-      rejected: receptions.filter(r => r.status === 'rejected').length,
-    };
-  }
-
-  async getReceptionTimeline(): Promise<Array<{ date: string; type: 'provisional' | 'definitive'; status: string; description: string }>> {
-    return [];
-  }
-}
+import { 
+  InMemoryProjectRepository, 
+  InMemoryRiskRepository, 
+  InMemoryComplianceRepository, 
+  InMemoryInspectionRepository, 
+  InMemoryDocumentRepository, 
+  InMemoryEmployeeRepository,
+  InMemoryReceptionRepository,
+  InMemoryValidationRepository
+} from '../fakes/InMemoryRepositories';
+import { Employee } from '@/domain/entities/Employee';
 
 describe('Enhanced Validation Integration', () => {
   let validationService: EnhancedValidationService;
   let receptionService: ReceptionService;
   let riskService: RiskService;
   let complianceService: ComplianceService;
+  
+  let projectRepo: InMemoryProjectRepository;
+  let riskRepo: InMemoryRiskRepository;
+  let complianceRepo: InMemoryComplianceRepository;
+  let inspectionRepo: InMemoryInspectionRepository;
+  let documentRepo: InMemoryDocumentRepository;
+  let employeeRepo: InMemoryEmployeeRepository;
+  let receptionRepo: InMemoryReceptionRepository;
+  let validationRepo: InMemoryValidationRepository;
+
   let testProjectId: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Initialize fakes
+    projectRepo = new InMemoryProjectRepository();
+    riskRepo = new InMemoryRiskRepository();
+    complianceRepo = new InMemoryComplianceRepository();
+    inspectionRepo = new InMemoryInspectionRepository();
+    documentRepo = new InMemoryDocumentRepository();
+    employeeRepo = new InMemoryEmployeeRepository();
+    receptionRepo = new InMemoryReceptionRepository();
+    validationRepo = new InMemoryValidationRepository();
+
     // Initialize services with repositories
     validationService = new EnhancedValidationService(
-      RepositoryFactory.getProjectRepository(),
-      RepositoryFactory.getRiskRepository(),
-      RepositoryFactory.getInspectionRepository(),
-      RepositoryFactory.getDocumentRepository()
+      projectRepo,
+      riskRepo,
+      inspectionRepo,
+      documentRepo
     );
+    // Inject validation repository fake (it's optional/private in the service)
+    (validationService as any).validationRepository = validationRepo;
 
     receptionService = new ReceptionService(
-      new InMemoryReceptionRepository(),
-      RepositoryFactory.getDocumentRepository(),
-      RepositoryFactory.getInspectionRepository(),
-      RepositoryFactory.getEmployeeRepository()
+      receptionRepo,
+      documentRepo,
+      inspectionRepo,
+      employeeRepo
     );
 
-    riskService = new RiskService(RepositoryFactory.getRiskRepository());
-    complianceService = new ComplianceService(RepositoryFactory.getComplianceRepository());
+    riskService = new RiskService(riskRepo);
+    complianceService = new ComplianceService(complianceRepo);
 
     testProjectId = 'test-project-' + Date.now();
+
+    // Setup required data: a chairman for receptions
+    await employeeRepo.save(Employee.create({
+      id: 'chairman-1',
+      employeeId: 'EMP001',
+      fullName: 'John Chairman',
+      isActive: true,
+      role: 'inspector'
+    }));
   });
 
   describe('Reception Management Integration', () => {
@@ -195,7 +118,6 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should approve provisional reception', async () => {
-      // First create a provisional reception
       const receptionData = {
         scheduledDate: '2024-12-15',
         committee: ['John Doe', 'Jane Smith'],
@@ -206,7 +128,6 @@ describe('Enhanced Validation Integration', () => {
 
       const provisionalReception = await receptionService.createProvisionalReception(testProjectId, '', receptionData);
       
-      // Then approve it
       const approvalData = {
         findings: [],
         conditions: [
@@ -222,7 +143,7 @@ describe('Enhanced Validation Integration', () => {
         validUntil: '2025-03-15',
         notes: 'Approved with conditions',
         approvedBy: 'approver-1'
-      } as { findings: import('@/dtos/entities/ReceptionDTO').ReceptionFindingDTO[]; conditions: import('@/dtos/entities/ReceptionDTO').ReceptionConditionDTO[]; validUntil: string; notes: string; approvedBy: string };
+      } as any;
 
       const result = await receptionService.approveProvisionalReception(provisionalReception.id, approvalData);
       
@@ -248,8 +169,8 @@ describe('Enhanced Validation Integration', () => {
         title: 'Test Risk',
         description: 'Test risk description',
         category: 'technical',
-        probability: 7,
-        impact: 8,
+        probability: 7, // Will be converted to 0.7 by service
+        impact: 8,      // Will be converted to 0.8 by service
         mitigation_plan: 'Test mitigation plan',
         contingency_plan: 'Test contingency plan',
         status: 'identified',
@@ -259,13 +180,14 @@ describe('Enhanced Validation Integration', () => {
         timeline_impact: 5
       };
 
-      const result = await riskService.createRisk(riskData);
+      const result = await riskService.createRisk(riskData as any);
       
       expect(result).toBeDefined();
       expect(result.title).toBe('Test Risk');
       expect(result.category).toBe('technical');
-      expect(result.probability).toBe(7);
-      expect(result.impact).toBe(8);
+      // The domain entity uses 0-1 scale
+      expect(result.probability).toBe(0.7);
+      expect(result.impact).toBe(0.8);
     });
 
     it('should get risks by project', async () => {
@@ -309,7 +231,6 @@ describe('Enhanced Validation Integration', () => {
 
   describe('Enhanced Validation Service Integration', () => {
     it('should perform complete project validation', async () => {
-      // Create test project data
       const projectData: Partial<ProjectDTO> = {
         id: testProjectId,
         title: 'Test Project',
@@ -322,25 +243,24 @@ describe('Enhanced Validation Integration', () => {
         progress: 50
       };
 
-      // Mock project creation
-      const project = await RepositoryFactory.getProjectRepository().create(projectData as any);
+      const project = await projectRepo.create(projectData as any);
       expect(project).toBeDefined();
 
-      // Perform validation
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'test-validator');
       
       expect(validationResult).toBeDefined();
       expect(validationResult.validationDate).toBeDefined();
       expect(validationResult.validatedBy).toBe('test-validator');
-      expect(validationResult.categories).toHaveLength(10); // All categories
+      expect(validationResult.categories).toHaveLength(10);
       expect(validationResult.overallScore).toBeGreaterThanOrEqual(0);
       expect(validationResult.overallScore).toBeLessThanOrEqual(100);
     });
 
     it('should calculate validation scores correctly', async () => {
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
+
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'test-validator');
       
-      // Check that all categories are present
       const categories = validationResult.categories.map(cat => cat.category);
       expect(categories).toContain('technical');
       expect(categories).toContain('financial');
@@ -353,7 +273,6 @@ describe('Enhanced Validation Integration', () => {
       expect(categories).toContain('risk');
       expect(categories).toContain('compliance');
 
-      // Check score calculations
       validationResult.categories.forEach(category => {
         expect(category.score).toBeGreaterThanOrEqual(0);
         expect(category.score).toBeLessThanOrEqual(100);
@@ -362,6 +281,7 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should generate appropriate recommendations', async () => {
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'test-validator');
       
       expect(validationResult.recommendations).toBeDefined();
@@ -371,7 +291,7 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should track validation history', async () => {
-      // Perform multiple validations
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       await validationService.validateProjectComplete(testProjectId, 'validator-1');
       await validationService.validateProjectComplete(testProjectId, 'validator-2');
       
@@ -383,24 +303,22 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should calculate validation trends', async () => {
-      // Perform multiple validations over time
-      const dates = ['2024-01-01', '2024-02-01', '2024-03-01'];
-      for (const date of dates) {
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
+      for (let i = 0; i < 3; i++) {
         await validationService.validateProjectComplete(testProjectId, 'validator');
-        void date;
       }
 
       const trends = await validationService.getValidationTrends(testProjectId, 3);
       
       expect(trends.dates).toHaveLength(3);
       expect(trends.scores).toHaveLength(3);
-      expect(Object.keys(trends.categories)).toHaveLength(10); // All categories
+      expect(Object.keys(trends.categories)).toHaveLength(10);
     });
   });
 
   describe('Cross-Service Integration', () => {
     it('should integrate reception with validation', async () => {
-      // Create reception
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const receptionData = {
         scheduledDate: '2024-12-15',
         committee: ['John Doe', 'Jane Smith'],
@@ -409,9 +327,8 @@ describe('Enhanced Validation Integration', () => {
         notes: 'Test reception'
       };
 
-      const reception = await receptionService.createProvisionalReception(testProjectId, '', receptionData);
+      await receptionService.createProvisionalReception(testProjectId, '', receptionData);
       
-      // Validate project (should include reception validation)
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'validator');
       
       const receptionCategory = validationResult.categories.find(cat => cat.category === 'reception');
@@ -420,7 +337,7 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should integrate risks with validation', async () => {
-      // Create high-risk item
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const riskData = {
         project_id: testProjectId,
         title: 'High Risk Item',
@@ -437,9 +354,8 @@ describe('Enhanced Validation Integration', () => {
         timeline_impact: 10
       };
 
-      await riskService.createRisk(riskData);
+      await riskService.createRisk(riskData as any);
       
-      // Validate project (should detect high risk)
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'validator');
       
       const riskCategory = validationResult.categories.find(cat => cat.category === 'risk');
@@ -449,7 +365,7 @@ describe('Enhanced Validation Integration', () => {
     });
 
     it('should integrate compliance with validation', async () => {
-      // Create overdue compliance item
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const complianceData = {
         projectId: testProjectId,
         createdBy: 'test-validator',
@@ -459,7 +375,7 @@ describe('Enhanced Validation Integration', () => {
         status: 'pending' as const,
         priority: 'high' as const,
         responsible: 'compliance-owner',
-        deadline: '2024-01-01', // Past date
+        deadline: '2024-01-01',
         category: 'Regulatory',
         complianceLevel: 'partial' as const,
         riskLevel: 'high' as const,
@@ -468,7 +384,6 @@ describe('Enhanced Validation Integration', () => {
 
       await complianceService.createComplianceItem(complianceData);
       
-      // Validate project (should detect overdue compliance)
       const validationResult = await validationService.validateProjectComplete(testProjectId, 'validator');
       
       const complianceCategory = validationResult.categories.find(cat => cat.category === 'compliance');
@@ -480,15 +395,14 @@ describe('Enhanced Validation Integration', () => {
 
   describe('Error Handling', () => {
     it('should handle validation errors gracefully', async () => {
-      // Test with invalid project ID
       await expect(
         validationService.validateProjectComplete('invalid-id', 'validator')
       ).rejects.toThrow();
     });
 
     it('should handle service errors gracefully', async () => {
-      // Mock repository error
-      vi.spyOn(RepositoryFactory.getProjectRepository(), 'findById').mockRejectedValue(new Error('Database error'));
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
+      vi.spyOn(projectRepo, 'findById').mockRejectedValue(new Error('Database error'));
 
       await expect(
         validationService.validateProjectComplete(testProjectId, 'validator')
@@ -498,6 +412,7 @@ describe('Enhanced Validation Integration', () => {
 
   describe('Performance', () => {
     it('should complete validation within reasonable time', async () => {
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const startTime = Date.now();
       
       await validationService.validateProjectComplete(testProjectId, 'validator');
@@ -505,14 +420,13 @@ describe('Enhanced Validation Integration', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
       
-      // Should complete within 5 seconds
       expect(duration).toBeLessThan(5000);
     });
 
     it('should handle multiple concurrent validations', async () => {
+      await projectRepo.create({ id: testProjectId, title: 'Test' } as any);
       const promises: ReturnType<typeof validationService.validateProjectComplete>[] = [];
       
-      // Create 5 concurrent validations
       for (let i = 0; i < 5; i++) {
         promises.push(validationService.validateProjectComplete(testProjectId, `validator-${i}`));
       }

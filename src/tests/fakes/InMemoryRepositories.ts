@@ -7,10 +7,10 @@ import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { Project } from '@/domain/entities/Project';
 import { Risk, RiskStatus, RiskLevel } from '@/domain/entities/Risk';
-import { ComplianceItem, ComplianceDocument, ComplianceNote, ComplianceAuditEntry } from '@/domain/entities/Compliance';
-import { Inspection, InspectionStatus, Document as InspectionDocument } from '@/domain/entities/Inspection';
-import { Document, DocumentType, DocumentStatus } from '@/domain/entities/Document';
-import { Employee, EmployeeRole, Department, EmployeeProps } from '@/domain/entities/Employee';
+import { ComplianceItem } from '@/domain/entities/Compliance';
+import { Inspection } from '@/domain/entities/Inspection';
+import { Document } from '@/domain/entities/Document';
+import { Employee } from '@/domain/entities/Employee';
 import { ReceptionDTO } from '@/dtos/entities/ReceptionDTO';
 
 export class InMemoryProjectRepository implements IProjectRepository {
@@ -26,16 +26,15 @@ export class InMemoryProjectRepository implements IProjectRepository {
 
   async create(project: Partial<Project>): Promise<Project> {
     const id = project.id || `project-${Date.now()}`;
-    const newProject = { ...project, id } as Project;
-    // We use type assertion because Project constructor is complex
-    this.projects.set(id, newProject as Project);
-    return newProject as Project;
+    const newProject = { ...project, id } as any;
+    this.projects.set(id, newProject);
+    return newProject;
   }
 
   async update(id: string, updates: Partial<Project>): Promise<Project> {
     const existing = this.projects.get(id);
     if (!existing) throw new Error('Project not found');
-    const updated = { ...existing, ...updates } as Project;
+    const updated = { ...existing, ...updates } as any;
     this.projects.set(id, updated);
     return updated;
   }
@@ -52,8 +51,9 @@ export class InMemoryProjectRepository implements IProjectRepository {
   async findActiveProjects() { return []; }
   async findOverdueProjects() { return []; }
   async findWithRelatedData(id: string): Promise<ProjectWithRelatedData> {
+    const project = await this.findById(id);
     return {
-      project: this.projects.get(id) || null,
+      project: project || null,
       phases: [], tasks: [], risks: [], inspections: [], payments: [],
       documents: [], bankGuarantees: [], insuranceCertificates: []
     };
@@ -98,7 +98,7 @@ export class InMemoryRiskRepository implements IRiskRepository {
   async countByStatus() { return {} as any; }
   async countByLevel() { return {} as any; }
   async getAverageRiskScore() { return 0; }
-  async getHighestRisks(projectId: string, limit: number) {
+  async getHighestRisks(projectId: string) {
     return this.findByProjectId(projectId);
   }
   async getUnmitigatedRisks() { return []; }
@@ -237,112 +237,14 @@ export class InMemoryEmployeeRepository implements IEmployeeRepository {
   async getTeamHierarchy() { return []; }
 }
 
-export class InMemoryReceptionRepository implements IReceptionRepository {
-  private receptions = new Map<string, ReceptionDTO>();
-  private counter = 0;
-
-  async create(reception: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>): Promise<ReceptionDTO> {
-    const now = new Date().toISOString();
-    const created: ReceptionDTO = {
-      ...reception,
-      id: `reception-${++this.counter}`,
-      createdAt: now,
-      updatedAt: now,
-    } as ReceptionDTO;
-    this.receptions.set(created.id, created);
-    return created;
+export class InMemoryValidationRepository {
+  private results = new Map<string, any[]>();
+  async create(data: any) {
+    const list = this.results.get(data.projectId) || [];
+    list.push(data.validationResult);
+    this.results.set(data.projectId, list);
   }
-
-  async findById(id: string): Promise<ReceptionDTO | null> {
-    return this.receptions.get(id) || null;
-  }
-
-  async findByProjectId(projectId: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => r.projectId === projectId);
-  }
-
-  async update(id: string, updates: Partial<ReceptionDTO>): Promise<ReceptionDTO> {
-    const existing = this.receptions.get(id);
-    if (!existing) throw new Error('Reception not found');
-    const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() } as ReceptionDTO;
-    this.receptions.set(id, updated);
-    return updated;
-  }
-
-  async delete(id: string): Promise<void> {
-    this.receptions.delete(id);
-  }
-
-  async findByType(projectId: string, type: 'provisional' | 'definitive'): Promise<ReceptionDTO[]> {
-    return (await this.findByProjectId(projectId)).filter(r => r.type === type);
-  }
-
-  async findByStatus(status: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => r.status === status);
-  }
-
-  async findByDateRange(): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values());
-  }
-
-  async findByChairman(chairmanId: string): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r => (r as any).chairmanId === chairmanId);
-  }
-
-  async createBatch(receptions: Omit<ReceptionDTO, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<ReceptionDTO[]> {
-    return Promise.all(receptions.map(r => this.create(r)));
-  }
-
-  async updateBatch(updates: Array<{ id: string; data: Partial<ReceptionDTO> }>): Promise<ReceptionDTO[]> {
-    return Promise.all(updates.map(u => this.update(u.id, u.data)));
-  }
-
-  async search(criteria: any): Promise<ReceptionDTO[]> {
-    return Array.from(this.receptions.values()).filter(r =>
-      (!criteria.projectId || r.projectId === criteria.projectId) &&
-      (!criteria.type || r.type === criteria.type) &&
-      (!criteria.status || r.status === criteria.status)
-    );
-  }
-
-  async validateReception(): Promise<boolean> {
-    return true;
-  }
-
-  async getReceptionWorkflow(projectId: string): Promise<any> {
-    const receptions = await this.findByProjectId(projectId);
-    return {
-      projectId,
-      currentStep: receptions.length,
-      totalSteps: 2,
-    };
-  }
-
-  async addDocument(): Promise<void> {}
-  async removeDocument(): Promise<void> {}
-  async getDocuments(): Promise<any[]> {
-    return [];
-  }
-  async updateCommittee(): Promise<void> {}
-  async addCommitteeMember(): Promise<void> {}
-  async removeCommitteeMember(): Promise<void> {}
-  async addFinding(): Promise<void> {}
-  async updateFinding(): Promise<void> {}
-  async addDecision(): Promise<void> {}
-
-  async getReceptionStats(projectId: string) {
-    const receptions = await this.findByProjectId(projectId);
-    return {
-      total: receptions.length,
-      provisional: receptions.filter(r => r.type === 'provisional').length,
-      definitive: receptions.filter(r => r.type === 'definitive').length,
-      approved: receptions.filter(r => r.status === 'approved').length,
-      pending: receptions.filter(r => r.status === 'pending').length,
-      rejected: receptions.filter(r => r.status === 'rejected').length,
-    };
-  }
-
-  async getReceptionTimeline(): Promise<any[]> {
-    return [];
+  async findByProjectId(projectId: string) {
+    return this.results.get(projectId) || [];
   }
 }
