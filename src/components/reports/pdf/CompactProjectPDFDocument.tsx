@@ -934,7 +934,7 @@ export function CompactProjectPDFDocument({
                       <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Taux</Text>
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Fournisseur</Text>
                     </View>
-                    {phases.slice(0, 3).map((phase: any, idx: number) => (
+                    {phases.slice(0, expensesMaxRows).map((phase: any, idx: number) => (
                       <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableCell, { width: '35%' }]}>
                           {(phase.title || phase.name || `Phase ${idx + 1}`).toString().substring(0, 20)}
@@ -976,7 +976,7 @@ export function CompactProjectPDFDocument({
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Impact</Text>
                       <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Prob.</Text>
                     </View>
-                    {risks.slice(0, 2).map((risk: any, idx: number) => {
+                    {[...risks].sort((a: any, b: any) => ((b?.impact || 0) * (b?.probability || 0)) - ((a?.impact || 0) * (a?.probability || 0))).slice(0, risksMaxRows).map((risk: any, idx: number) => {
                       const riskColor = getRiskColor(risk.impact > 70 ? 'élevé' : risk.impact > 40 ? 'moyen' : 'faible');
                       return (
                         <View key={idx} style={styles.tableRow}>
