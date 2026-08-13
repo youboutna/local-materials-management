@@ -62,6 +62,7 @@ import { UnlockedView as SecretUnlockedView } from "@/components/tenders/Supplie
 import { BoqWorkspace } from "@/components/boq";
 import { DqeWorkspace } from "@/components/boq/DqeWorkspace";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
+import { LocalFilePreviewButton, useDocumentViewer } from "@/components/documents/viewer";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
 import {
   useSupplierPortalAuthHex,
@@ -713,14 +714,19 @@ const UnifiedSupplierPortal = () => {
                                 {document.status}
                               </Badge>
                               {document.file_url && (
-                                <Button size="sm" variant="outline" asChild>
-                                  <a
-                                    href={document.file_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </a>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    openDocument(document, {
+                                      proxyMode: true,
+                                      allowStatusChange: false,
+                                      context: { portail: "Fournisseur" },
+                                    })
+                                  }
+                                  title="Consulter le document"
+                                >
+                                  <Eye className="h-4 w-4" />
                                 </Button>
                               )}
                             </div>
@@ -833,6 +839,16 @@ const UnifiedSupplierPortal = () => {
                       }
                       accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                     />
+                    {uploadFile && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="truncate max-w-[220px]">{uploadFile.name}</span>
+                        <LocalFilePreviewButton
+                          file={uploadFile}
+                          title={uploadTitle || uploadFile.name}
+                          documentType={documentType}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <Button
