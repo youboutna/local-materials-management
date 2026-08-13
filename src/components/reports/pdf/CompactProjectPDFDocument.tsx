@@ -1216,6 +1216,9 @@ interface SingleCompactProjectPDFProps {
   evmMetrics?: EVMMetrics;
   pertAnalysis?: PERTAnalysis;
   includeCompanyHeader?: boolean;
+  sections?: Partial<Record<ReportSectionKey, boolean>>;
+  organizationName?: string;
+  organizationCode?: string;
   company?: {
     name: string;
     address: string;
@@ -1232,6 +1235,9 @@ export function SingleCompactProjectPDF({
   evmMetrics,
   pertAnalysis,
   includeCompanyHeader = true,
+  sections,
+  organizationName,
+  organizationCode,
   company,
 }: SingleCompactProjectPDFProps) {
   const enrichedDataMap = new Map<string, ProjectDetailDTO>();
@@ -1250,6 +1256,9 @@ export function SingleCompactProjectPDF({
       evmMetricsMap={evmMetricsMap}
       pertAnalysisMap={pertAnalysisMap}
       includeCompanyHeader={includeCompanyHeader}
+      sections={sections}
+      organizationName={organizationName}
+      organizationCode={organizationCode}
       company={company}
     />
   );
