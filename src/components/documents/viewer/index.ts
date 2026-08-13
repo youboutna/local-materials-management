@@ -7,3 +7,4 @@ export {
   type ViewableDocument,
   type DocumentViewerOptions,
 } from './types';
+export { LocalFilePreviewButton } from './LocalFilePreviewButton';
