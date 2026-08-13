@@ -204,12 +204,46 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents?.map(doc => (
-          <div key={doc.id}>
-            <span>{doc.fileName}</span>
-            <span>{getDocumentTypeLabel(doc.documentType)}</span>
-          </div>
+          <Card key={doc.id} className="flex flex-col transition-shadow hover:shadow-md">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="truncate text-base" title={doc.title}>
+                    {doc.title || doc.fileName || 'Document'}
+                  </CardTitle>
+                  <p className="truncate text-xs text-muted-foreground">{doc.fileName || '—'}</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-3">
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline">{getDocumentTypeLabel(doc.documentType)}</Badge>
+                <Badge className={getStatusColor(doc.status)}>{getStatusLabel(doc.status)}</Badge>
+              </div>
+              {doc.description && (
+                <p className="line-clamp-2 text-sm text-muted-foreground">{doc.description}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {formatFileSize(doc.fileSize ?? null)}
+                {doc.createdAt && ` · ${new Date(doc.createdAt).toLocaleDateString('fr-FR')}`}
+              </p>
+              <div className="mt-auto flex items-center gap-2 pt-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
+                  <Eye className="mr-1 h-4 w-4" />
+                  Voir
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title="Télécharger">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
+
 
       {documents?.length === 0 && (
         <Card>
