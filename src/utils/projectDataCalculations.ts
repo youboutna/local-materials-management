@@ -1,6 +1,5 @@
-import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { LocalProjectDetailData as RealProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { getProjectService } from '../application/services/ProjectService';
-import { RepositoryFactory } from '../infrastructure/supabase/RepositoryFactory';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { getPhaseService } from '@/application/services/PhaseService';
@@ -42,7 +41,7 @@ interface ProjectPayment {
   contractor_name?: string;
 }
 
-interface ProjectDetailDTO {
+interface LocalProjectDetailData extends RealProjectDetailDTO {
   payments?: ProjectPayment[];
   expenses?: any[];
 }
@@ -107,16 +106,16 @@ export class ProjectDataCalculations {
     try {
       // Get project detail with all related data using ProjectService
       const projectService = getProjectService();
-      const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
+      const projectDetail = await projectService.getProjectWithDetails(projectId) as LocalProjectDetailData | null;
       if (!projectDetail) {
         throw new Error('Project detail is null');
       }
 
       // Get project phases using PhaseService
       const phaseService = getPhaseService();
-      const phases: PhaseCostData[] = await phaseService.getPhasesByProject(projectId) || [];
+      const phases = (await phaseService.getPhasesByProject(projectId) || []) as unknown as PhaseCostData[];
 
-      // Calculate costs from expenses (payments are not in ProjectDetailDTO, use expenses instead)
+      // Calculate costs from expenses (payments are not in LocalProjectDetailData, use expenses instead)
       const totalPayments = projectDetail.expenses?.reduce((sum: number, expense: ProjectPayment) => 
         sum + (expense.amount || 0), 0) || 0;
       
@@ -158,14 +157,14 @@ export class ProjectDataCalculations {
     try {
       // Get phase details using PhaseService
       const phaseService = getPhaseService();
-      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
+      const phase = await phaseService.getPhaseById(phaseId) as unknown as PhaseCostData | null;
       if (!phase) {
         throw new Error('Phase not found');
       }
 
       // Get project detail for payments data
       const projectService = getProjectService();
-      const projectDetail: ProjectDetailDTO = await projectService.getProjectWithDetails(projectId);
+      const projectDetail = await projectService.getProjectWithDetails(projectId) as LocalProjectDetailData | null;
       
       // Calculate costs from project data and phase information
       const costs = await this.extractPhaseCostsFromProjectData(projectDetail, phase);
@@ -236,7 +235,7 @@ export class ProjectDataCalculations {
     try {
       // Get phase details
       const phaseService = getPhaseService();
-      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
+      const phase = await phaseService.getPhaseById(phaseId) as unknown as PhaseCostData | null;
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -297,7 +296,7 @@ export class ProjectDataCalculations {
     try {
       // Get phase with detailed information using PhaseService
       const phaseService = getPhaseService();
-      const phase: PhaseCostData = await phaseService.getPhaseById(phaseId);
+      const phase = await phaseService.getPhaseById(phaseId) as unknown as PhaseCostData | null;
       if (!phase) {
         throw new Error('Phase not found');
       }
@@ -326,8 +325,8 @@ export class ProjectDataCalculations {
 
       // Calculate time-based progress
       const timeMetrics = this.calculateTimeProgressMetrics(
-        phase.start_date,
-        phase.end_date,
+        phase.start_date ?? null,
+        phase.end_date ?? null,
         phase.progress || 0
       );
 
@@ -401,7 +400,7 @@ export class ProjectDataCalculations {
 
   // ============= Helper Methods =============
 
-  private static async extractPhaseCostsFromProjectData(projectDetail: ProjectDetailDTO, phase: PhaseCostData) {
+  private static async extractPhaseCostsFromProjectData(projectDetail: LocalProjectDetailData, phase: PhaseCostData) {
     // Filter payments for this specific phase
     const phasePayments = projectDetail.payments?.filter((payment: ProjectPayment) => 
       payment.phase_id === phase.id
@@ -438,7 +437,7 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static estimateProjectExpenses(projectDetail: ProjectDetailDTO, phases: PhaseCostData[]) {
+  private static estimateProjectExpenses(projectDetail: LocalProjectDetailData, phases: PhaseCostData[]) {
     // Estimate expenses as 20% of total phase costs
     const totalPhaseCosts = phases.reduce((sum, phase) => 
       sum + (phase.estimated_cost || 0), 0);
@@ -849,7 +848,7 @@ export class ProjectDataCalculations {
     };
   }
 
-  private static calculatePerformanceIndicators(progressMetrics: ProgressMetrics, projectAnalytics: ProjectDetailDTO) {
+  private static calculatePerformanceIndicators(progressMetrics: ProgressMetrics, projectAnalytics: LocalProjectDetailData) {
     // Simplified performance indicators
     const schedulePerformanceIndex = progressMetrics.timeline.schedulePerformanceIndex || 1;
     const costPerformanceIndex = 1; // Would need actual cost data
