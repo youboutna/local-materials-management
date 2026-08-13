@@ -1,7 +1,9 @@
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/dtos/types/project';
 import { ProjectReportDTO } from '@/dtos/types/reportTypes';
 import { buildMonitoringInsights } from '@/utils/monitoringInsights';
-import { formatAmount2, formatIndex2, formatNumber2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
+import { formatAmount2, formatIndex2, formatNumber2, formatPercent2, formatRatio2, formatSigned2 } from '@/utils/reportNumbers';
+import { PhaseWeightingService } from '@/application/services/PhaseWeightingService';
+import { EvmService } from '@/application/services/EvmService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
