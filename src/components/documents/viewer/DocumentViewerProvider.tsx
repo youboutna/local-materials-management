@@ -12,6 +12,8 @@ import { createContext, useCallback, useContext, useMemo, useState, ReactNode } 
 import { useQueryClient } from '@tanstack/react-query';
 import { UniversalDocumentViewer } from './UniversalDocumentViewer';
 import { DocumentViewerOptions, ViewableDocument, normalizeViewable } from './types';
+import { emitDocumentChanged } from './documentEvents';
+
 
 interface DocumentViewerContextValue {
   openDocument: (input: unknown, options?: DocumentViewerOptions & Partial<ViewableDocument>) => void;
