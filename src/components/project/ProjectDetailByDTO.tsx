@@ -1331,78 +1331,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 </TabsContent>
 
                 <TabsContent value="gantt">
-                  {projectDetail ? (
-                    <UnifiedGanttChart
-                      projectId={projectId!}
-                      projectDetail={projectDetail}
-                      onMilestoneClick={(milestoneId, phaseId) => {
-                        if (phaseId) {
-                          navigate(`/projects/${projectId}/phases/${phaseId}`);
-                        }
-                      }}
-                    />
+                  {metrics ? (
+                    <ProjectGanttTimeline gantt={metrics.gantt} />
                   ) : (
-                    <ProjectGantt
-                      project={project as any}
-                      phases={(computedPhases || []).map((p) => ({
-                        id: p.id,
-                        name: p.phase,
-                        startDate: new Date(p.startDate || new Date()),
-                        endDate: new Date(p.endDate || new Date()),
-                        progress: p.progress || 0,
-                        status: p.status || "planned",
-                      }))}
-                    />
+                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
                   )}
                 </TabsContent>
 
                 <TabsContent value="pert">
-                  {projectDetail ? (
-                    <UnifiedPERTAnalysis
-                      projectId={projectId!}
-                      projectDetail={projectDetail}
-                    />
+                  {metrics ? (
+                    <UnifiedPERTAnalysis pert={metrics.pert} referenceDurationDays={metrics.referenceDurationDays} />
                   ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Analyse PERT</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {pertAnalysis ? (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div>
-                                <p className="text-sm text-muted-foreground">Durée attendue totale</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Écart-type total</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.variances
-                                    ? Math.sqrt(
-                                        (Object.values(pertAnalysis.variances) as number[]).reduce(
-                                          (sum: number, variance: number) => sum + (variance || 0),
-                                          0
-                                        )
-                                      ).toFixed(1)
-                                    : "0.0"} jours
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
-                                <p className="text-xl font-semibold">
-                                  {pertAnalysis.criticalPath?.length || 0}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">Chargement de l'analyse PERT...</p>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <p className="text-sm text-muted-foreground">Chargement de l'analyse PERT...</p>
                   )}
                 </TabsContent>
               </Tabs>

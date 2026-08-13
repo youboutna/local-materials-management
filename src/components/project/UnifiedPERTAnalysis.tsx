@@ -1,13 +1,12 @@
 /**
  * Unified PERT Analysis Component
- * Uses GanttPertDataService for data (clean architecture)
+ * Moteur PERT UNIQUE : `PertService` (aucun recalcul local).
  * Shows PERT metrics for both tasks and milestones
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   BarChart3, 
   Clock, 
@@ -15,9 +14,8 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { getGanttPertService, UnifiedPERTData } from '@/application/services/GanttPertDataService';
+import { PertService, type PertActivityInput } from '@/application/services/PertService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import { useQuery } from '@tanstack/react-query';
 
 interface UnifiedPERTAnalysisProps {
   projectId: string;
@@ -25,36 +23,43 @@ interface UnifiedPERTAnalysisProps {
 }
 
 const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
-  projectId,
   projectDetail
 }) => {
-  const { data: pertData, isLoading } = useQuery<UnifiedPERTData>({
-    queryKey: ['unified-pert', projectId],
-    queryFn: async () => {
-      const service = getGanttPertService();
-      return service.getUnifiedPERTData(projectId, projectDetail);
-    },
-    enabled: !!projectId && !!projectDetail,
-    staleTime: 30_000
-  });
+  const pertData = useMemo(() => {
+    const phaseInputs: PertActivityInput[] = (projectDetail?.phases || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      durationDays: p.estimatedDuration ?? null,
+    }));
+    const milestoneInputs: PertActivityInput[] = (projectDetail?.milestones || []).map((m) => ({
+      id: m.id,
+      name: m.title,
+      startDate: m.earlyStartDate ?? null,
+      endDate: m.targetDate ?? null,
+    }));
 
-  if (isLoading || !pertData) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-muted rounded w-1/3" />
-            <div className="h-32 bg-muted rounded" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+    const phaseResult = PertService.compute(phaseInputs);
+    const milestoneResult = PertService.compute(milestoneInputs);
+
+    const projectDurationDays = phaseResult.totalExpectedDuration;
+    const standardDeviation = phaseResult.standardDeviation;
+    const confidenceLevel95Days = Number((projectDurationDays + 1.645 * standardDeviation).toFixed(2));
+
+    return {
+      activities: [...phaseResult.activities, ...milestoneResult.activities],
+      milestoneActivities: milestoneResult.activities,
+      projectDurationDays,
+      standardDeviation,
+      confidenceLevel95Days,
+      criticalPath: phaseResult.criticalPath,
+    };
+  }, [projectDetail]);
 
   const { 
     activities, 
     milestoneActivities, 
-    totalExpectedDuration, 
     projectDurationDays,
     standardDeviation,
     confidenceLevel95Days,
@@ -62,7 +67,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
   } = pertData;
 
   // Risk assessment based on std deviation
-  const riskLevel = standardDeviation / projectDurationDays;
+  const riskLevel = projectDurationDays > 0 ? standardDeviation / projectDurationDays : 0;
   const riskStatus = riskLevel < 0.1 ? 'low' : riskLevel < 0.2 ? 'medium' : 'high';
 
   return (
