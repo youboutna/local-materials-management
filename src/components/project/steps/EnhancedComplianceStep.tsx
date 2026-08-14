@@ -991,28 +991,38 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               Gérez les polices d'assurance du projet
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 text-center">
-            <Shield className="h-16 w-16 mx-auto text-primary mb-4" />
-            <p className="text-muted-foreground mb-4">
-              Ajoutez ici l'attestation d'assurance, ou ouvrez l'interface dédiée pour le suivi complet.
-            </p>
-            <Button onClick={() => {
+          <ProjectInsuranceForm
+            projectId={projectId}
+            onCreated={(certificate) => {
+              handleAddInsurance(certificate);
               setIsInsuranceDialogOpen(false);
-              navigateToInsurancePage();
-            }}>
+              loadComplianceData();
+            }}
+            onCancel={() => setIsInsuranceDialogOpen(false)}
+          />
+          <div className="border-t pt-4">
+            <p className="mb-3 text-sm text-muted-foreground">
+              Vous pouvez également joindre des pièces justificatives d'assurance au projet.
+            </p>
+            <ProjectDocumentUpload
+              projectId={projectId}
+              context="compliance"
+              contextLabel="Assurance projet"
+              onDocumentUploaded={() => loadComplianceData()}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3"
+              onClick={() => {
+                setIsInsuranceDialogOpen(false);
+                navigateToInsurancePage();
+              }}
+            >
               <ExternalLink className="h-4 w-4 mr-2" />
               Ouvrir la Gestion des Assurances
             </Button>
           </div>
-          <ProjectDocumentUpload
-            projectId={projectId}
-            context="compliance"
-            contextLabel="Assurance projet"
-            onDocumentUploaded={() => {
-              setIsInsuranceDialogOpen(false);
-              loadComplianceData();
-            }}
-          />
         </DialogContent>
       </Dialog>
 
