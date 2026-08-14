@@ -990,7 +990,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   Progression globale pondérée: {metrics?.formatted.progress ?? "N/A"}
                 </p>
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  Source unique: phases ({metrics?.progressBasisLabel ?? "projet"})
+                  Source unique : {metrics?.progressBasisLabel ?? "projet (aucune phase)"}
                 </p>
               </CardContent>
             </Card>
