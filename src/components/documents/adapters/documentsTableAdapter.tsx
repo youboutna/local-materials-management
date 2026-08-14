@@ -20,7 +20,8 @@ export type DocumentsTableFilter =
   | { column: 'inspection_id'; value: string }
   | { column: 'supplier_id'; value: string }
   | { column: 'document_type'; value: string }
-  | { column: 'metadata_material_id'; value: string };
+  | { column: 'metadata_material_id'; value: string }
+  | { column: 'metadata_scope'; value: string };
 
 export interface DocumentsTableAdapterOptions {
   scopeLabel: string;
