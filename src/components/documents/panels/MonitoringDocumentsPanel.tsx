@@ -25,7 +25,9 @@ export function MonitoringDocumentsPanel({ scope, heading }: Props) {
             {heading ??
               (scope === 'bank_guarantee'
                 ? 'Documents associés aux garanties bancaires'
-                : "Documents associés aux polices d'assurance")}
+                : scope === 'insurance'
+                  ? "Documents associés aux polices d'assurance"
+                  : 'Documents associés aux paiements')}
           </h2>
           <p className="text-sm text-muted-foreground">
             Attestations, contrats de caution, certificats et avenants — consultables via la

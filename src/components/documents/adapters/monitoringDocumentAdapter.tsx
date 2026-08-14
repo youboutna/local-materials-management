@@ -6,7 +6,7 @@
 import { DocumentHubContract } from '../hub/types';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 
-export type MonitoringDocumentScope = 'bank_guarantee' | 'insurance';
+export type MonitoringDocumentScope = 'bank_guarantee' | 'insurance' | 'payment';
 
 const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: string; label: string }[]> = {
   bank_guarantee: [
@@ -19,10 +19,21 @@ const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: string; label: 
     { value: 'project_report', label: 'Avenant' },
     { value: 'other', label: 'Autre document' },
   ],
+  payment: [
+    { value: 'contract', label: 'Facture' },
+    { value: 'project_report', label: 'Bon de commande' },
+    { value: 'other', label: 'Attestation / Autre document' },
+  ],
+};
+
+const SCOPE_LABELS: Record<MonitoringDocumentScope, string> = {
+  bank_guarantee: 'Garanties bancaires',
+  insurance: "Polices d'assurance",
+  payment: 'Paiements',
 };
 
 export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): DocumentHubContract {
-  const scopeLabel = scope === 'bank_guarantee' ? 'Garanties bancaires' : "Polices d'assurance";
+  const scopeLabel = SCOPE_LABELS[scope];
 
   return useDocumentsTableAdapter({
     scopeLabel,
@@ -30,11 +41,9 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
     filters: [{ column: 'metadata_scope', value: scope }],
     pathPrefix: `monitoring/${scope}`,
     uploadCategoryOptions: CATEGORY_OPTIONS[scope],
-    categoryLabels: {
-      contract: scope === 'bank_guarantee' ? 'Contrat de caution' : 'Police / Certificat',
-      project_report: scope === 'bank_guarantee' ? 'Attestation bancaire' : 'Avenant',
-      other: 'Autre document',
-    },
+    categoryLabels: Object.fromEntries(
+      CATEGORY_OPTIONS[scope].map((o) => [o.value, o.label]),
+    ) as Record<string, string>,
     facets: [
       {
         key: 'category',
