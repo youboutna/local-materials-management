@@ -45,7 +45,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         contact_manager: workspace.contact?.manager,
         contact_phone: workspace.contact?.phone,
         facilities: workspace.facilities,
-        owner_id: ownerId,
+        ...(ownerId ? { owner_id: ownerId } : {}),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
