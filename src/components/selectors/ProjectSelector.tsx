@@ -154,6 +154,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
       )}
     </div>
   );
-};
+});
+ProjectSelector.displayName = "ProjectSelector";
 
 export default ProjectSelector;

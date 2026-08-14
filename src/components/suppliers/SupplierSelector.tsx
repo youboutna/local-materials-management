@@ -179,6 +179,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
       )}
     </div>
   );
-};
+});
+SupplierSelector.displayName = "SupplierSelector";
 
 export default SupplierSelector;
