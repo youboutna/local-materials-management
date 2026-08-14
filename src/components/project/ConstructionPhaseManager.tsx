@@ -163,6 +163,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   const effectiveProjectId = projectId || paramProjectId;
 
+  // Compteurs réels (matériaux alloués, rôles, métrés) — source base, pas DTO local.
+  const { getCounts: getPhaseCounts } = usePhaseResourceCountsHex(effectiveProjectId);
+
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
 
   const [phaseType, setPhaseType] = useState<'standard' | 'custom' | 'procurement'>('standard');
