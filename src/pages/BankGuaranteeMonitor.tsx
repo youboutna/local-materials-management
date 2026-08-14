@@ -13,6 +13,11 @@ import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuarantee
 import { AppLayout } from '@/components/layout';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
+import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import { Activity, FolderOpen, ListChecks } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Alert } from '@/domain/entities/Alert';
