@@ -69,6 +69,7 @@ import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { toDateInput } from '@/lib/utils';
+import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCountsHex';
 
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
