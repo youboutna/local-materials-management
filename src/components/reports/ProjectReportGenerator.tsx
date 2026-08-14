@@ -170,8 +170,22 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
 
 
+  // Perf : signature stable du projet — évite un re-fetch complet du rapport
+  // à chaque nouveau rendu parent (l'objet `project` change d'identité).
+  const projectSignature = useMemo(
+    () =>
+      [
+        (project as any)?.id,
+        (project as any)?.updatedAt ?? (project as any)?.updated_at,
+        (project as any)?.progress,
+        (project as any)?.budget,
+      ].join('|'),
+    [project],
+  );
+
   // Re-fetch report data when project, profile, or active sections change.
   useEffect(() => {
+
     const loadReportData = async () => {
       try {
         setLoading(true);
