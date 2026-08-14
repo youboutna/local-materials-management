@@ -81,6 +81,10 @@ const styles = StyleSheet.create({
     top: 10,
     left: 30,
     right: 30,
+  },
+  // Le filet de séparation est porté par le contenu rendu (pages ≥ 2) afin de
+  // ne jamais dessiner de bordure résiduelle en haut de la page 1.
+  lightHeaderInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e5e7eb',
     paddingBottom: 4,
   },
+
   lightHeaderTitle: {
     fontSize: 9,
     fontWeight: 'bold',
