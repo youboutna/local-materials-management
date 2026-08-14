@@ -1,5 +1,5 @@
 ALTER TABLE btp.project_milestones ADD COLUMN IF NOT EXISTS phase_id uuid;
-ALTER TABLE public.project_milestones ADD COLUMN IF NOT EXISTS phase_id uuid;
+--ALTER TABLE public.project_milestones ADD COLUMN IF NOT EXISTS phase_id uuid;
 
 DO $$
 BEGIN
@@ -14,4 +14,4 @@ BEGIN
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_btp_project_milestones_phase_id ON btp.project_milestones(phase_id);
-CREATE INDEX IF NOT EXISTS idx_project_milestones_phase_id ON public.project_milestones(phase_id);
+--CREATE INDEX IF NOT EXISTS idx_project_milestones_phase_id ON public.project_milestones(phase_id);
