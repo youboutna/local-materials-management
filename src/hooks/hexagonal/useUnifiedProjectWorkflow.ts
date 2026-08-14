@@ -159,6 +159,16 @@ export function useUnifiedProjectWorkflow(
           });
         }
         queryClient.invalidateQueries({ queryKey: ['project-workflow-data'] });
+        if (result.projectId) {
+          const id = result.projectId;
+          queryClient.invalidateQueries({ queryKey: ['project-summary', id] });
+          queryClient.invalidateQueries({ queryKey: ['project-detail', id] });
+          queryClient.invalidateQueries({ queryKey: ['project-phases-hex', id] });
+          queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs', id] });
+          queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] });
+          queryClient.invalidateQueries({ queryKey: ['boq-lines'] });
+          queryClient.invalidateQueries({ queryKey: ['project-actual-cost', id] });
+        }
       } else {
         const cleaned = (result.errors || []).filter((e) => typeof e === 'string' && e.trim().length > 0);
         const errs = cleaned.length > 0 ? cleaned : [result.message || "Une erreur est survenue."];

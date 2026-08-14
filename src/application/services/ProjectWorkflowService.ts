@@ -71,6 +71,7 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
 import { PROJECT_WORKFLOW_STEPS } from '@/config/referentials/projects/project-workflow-steps.referential';
+import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 // ============================================================
 // Types exportés
@@ -571,7 +572,7 @@ export class ProjectWorkflowService {
 
     }
     if (stepNumber === 4 && (!data.relatedData?.phases || data.relatedData.phases.length === 0)) {
-      warnings.push('Aucune phase définie. Utilisez un référentiel pour générer les phases.');
+      errors.push('Au moins une phase WBS est requise avant de poursuivre.');
     }
 
     return { isValid: errors.length === 0, errors, warnings };
@@ -625,8 +626,14 @@ export class ProjectWorkflowService {
 
         case 4:
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
-          await this.upsertPhases(projectId, data.relatedData?.phases || []);
-          await this.upsertPhaseRelations(projectId, data.relatedData?.phases || [], data.relatedData?.dqeLines || []);
+          {
+            const persistedPhases = await this.upsertPhases(projectId, data.relatedData?.phases || []);
+            await this.upsertPhaseRelations(projectId, persistedPhases, data.relatedData?.dqeLines || []);
+            // Existing takeoffs become BOQ lines and phase resources only after
+            // canonical phase UUIDs exist. Any failure keeps step 4 unsaved.
+            await getTakeoffToBoqService().syncProject(projectId);
+            await this.projectRepository.synchronizeProgress(projectId);
+          }
           break;
         case 5:
           if (!projectId) return { success: false, errors: ['Projet non créé'] };
@@ -793,10 +800,11 @@ export class ProjectWorkflowService {
     return created.id;
   }
 
-  private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<void> {
-    if (!phases.length) return;
+  private async upsertPhases(projectId: string, phases: PhaseDTO[]): Promise<PhaseDTO[]> {
+    if (!phases.length) return [];
     const { PhaseTransformer } = await import('@/dtos/transforms/PhaseTransformer');
     const existing = await this.phaseRepository.findByProjectId(projectId).catch(() => []);
+    const persisted: PhaseDTO[] = [];
     for (const phase of phases) {
       const raw = phase as unknown as Record<string, any>;
       // Normalisation centralisée : titre, budget (→ estimated_cost), champs libres
@@ -812,16 +820,18 @@ export class ProjectWorkflowService {
           (c.phaseName || c.name) === (raw.name ?? raw.phaseName ?? raw.title),
       );
       if (existingPhase) {
-        await this.phaseRepository.update(existingPhase.id, entity as unknown as Partial<Phase>);
+        const saved = await this.phaseRepository.update(existingPhase.id, entity as unknown as Partial<Phase>);
+        persisted.push({ ...phase, ...PhaseTransformer.toDTO(saved), id: saved.id });
       } else {
-        await this.phaseRepository.create(entity as unknown as Phase);
+        const saved = await this.phaseRepository.create(entity as unknown as Phase);
+        persisted.push({ ...phase, ...PhaseTransformer.toDTO(saved), id: saved.id });
       }
     }
+    return persisted;
   }
 
 
   private async upsertPhaseRelations(projectId: string, phases: PhaseDTO[], dqeLines: BoqLineDTO[]): Promise<void> {
-    // Implementation simplifiée
     for (const phase of phases) {
       if (phase.id && this.milestoneService) {
         for (const milestone of phase.milestones || []) {
@@ -833,6 +843,28 @@ export class ProjectWorkflowService {
           await this.taskAssignmentService.create({ projectId, phaseId: phase.id, name: task.title || task.name || 'Tâche', title: task.title || task.name || 'Tâche', description: task.description, status: task.status || 'PENDING', priority: task.priority || 'MEDIUM', dueDate: task.dueDate || task.due_date, assigneeId: task.assignedTo } as any).catch(() => {});
         }
       }
+    }
+
+    if (!dqeLines.length) return;
+    const existingLines = await boqRepository.list({ source: 'dqe', projectId });
+    for (const line of dqeLines) {
+      const phase = phases.find((candidate) =>
+        candidate.id === line.phaseId ||
+        candidate.phaseCode === line.phaseId ||
+        candidate.name === line.metadata?.phaseName
+      );
+      const payload: BoqLineDTO = {
+        ...line,
+        source: 'dqe',
+        contextId: projectId,
+        phaseId: phase?.id ?? line.phaseId ?? null,
+      };
+      const existingLine = existingLines.find((candidate) =>
+        (line.id && candidate.id === line.id) ||
+        (candidate.code && candidate.code === line.code && candidate.phaseId === payload.phaseId)
+      );
+      if (existingLine?.id) await boqRepository.update(existingLine.id, payload);
+      else await boqRepository.create(payload);
     }
   }
 
