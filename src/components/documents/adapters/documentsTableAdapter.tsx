@@ -121,7 +121,8 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
     // 2. Insert document row
     const filterDefaults: Record<string, unknown> = {};
     for (const f of filters) {
-      if (f.column !== 'metadata_material_id') filterDefaults[f.column] = f.value;
+      if (f.column === 'metadata_material_id' || f.column === 'metadata_scope') continue;
+      filterDefaults[f.column] = f.value;
     }
     const { data: userData } = await supabase.auth.getUser();
 
