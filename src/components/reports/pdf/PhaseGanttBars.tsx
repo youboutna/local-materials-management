@@ -52,7 +52,8 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
       {/* Barres de phases */}
       {gantt.phases.map((phase) => {
         const left = pct(phase.start);
-        const width = Math.max(1, pct(phase.end) - left);
+        const width = Math.min(100 - left, Math.max(1, pct(phase.end) - left));
+        const progressPct = clampPct(phase.progress);
         return (
           <View key={phase.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
             <View style={{ width: '30%' }}>
