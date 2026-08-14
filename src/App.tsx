@@ -88,6 +88,12 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Redirige /projects/:id/phases vers l'onglet WBS du détail projet. */
+function ProjectPhasesRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/projects/${id}?tab=phases` : '/projects'} replace />;
+}
+
 function App() {
   // En mode développement, ajouter automatiquement les rôles requis
   if (DEV_MODE) {
