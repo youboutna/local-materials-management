@@ -7,11 +7,11 @@ GRANT ALL ON btp.bank_guarantees TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.insurance_certificates TO authenticated;
 GRANT ALL ON btp.insurance_certificates TO service_role;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.bank_guarantees TO authenticated;
-GRANT ALL ON public.bank_guarantees TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON btp.bank_guarantees TO authenticated;
+GRANT ALL ON btp.bank_guarantees TO service_role;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.insurance_certificates TO authenticated;
-GRANT ALL ON public.insurance_certificates TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON btp.insurance_certificates TO authenticated;
+GRANT ALL ON btp.insurance_certificates TO service_role;
 
 -- Politique DELETE manquante
 DROP POLICY IF EXISTS "Authenticated users can delete btp.bank_guarantees" ON btp.bank_guarantees;
