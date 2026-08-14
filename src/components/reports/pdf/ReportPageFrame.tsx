@@ -178,10 +178,10 @@ export function ReportHeader({ title, subtitle, company, extra, showFullHeader =
         fixed
         render={({ pageNumber }: { pageNumber: number }) =>
           pageNumber === 1 ? null : (
-            <>
+            <View style={styles.lightHeaderInner}>
               <Text style={styles.lightHeaderTitle}>{title}</Text>
               <Text style={styles.lightHeaderDate}>{shortDate}</Text>
-            </>
+            </View>
           )
         }
       />
