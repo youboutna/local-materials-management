@@ -110,9 +110,9 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
 }) => {
   const overall = phase?.progress ?? metrics?.overallProgress ?? 0;
 
-  const physical = (progressMetrics?.physical ?? 66.5);
-  const quality = (progressMetrics?.quality ?? 45);
-  const docs = (progressMetrics?.docs ?? 12);
+  const physical = progressMetrics?.physical ?? 0;
+  const quality = progressMetrics?.quality ?? 0;
+  const docs = progressMetrics?.docs ?? 0;
 
   const [simWorkers, setSimWorkers] = React.useState<number>(0);
   const [simResult, setSimResult] = React.useState<string | null>(null);

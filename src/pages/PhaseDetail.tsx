@@ -234,7 +234,27 @@ const PhaseDetail: React.FC = () => {
                 <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" />Équipe</TabsTrigger>
               </TabsList>
               <TabsContent value="tasks"><PhaseTasks phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="gantt"><GanttChart projectId={projectId!} phaseId={phaseId} /></TabsContent>
+              <TabsContent value="gantt">
+                <GanttChart
+                  projectId={projectId!}
+                  phaseId={phaseId}
+                  projectData={{
+                    id: projectId,
+                    startDate,
+                    endDate,
+                    phases: [{
+                      id: phaseId,
+                      name: title,
+                      startDate,
+                      endDate,
+                      progress,
+                      budget,
+                      actualCost: vm.actualCost,
+                      status: vm.status,
+                    }],
+                  }}
+                />
+              </TabsContent>
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
