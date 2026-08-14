@@ -45,7 +45,8 @@ export class BoqResourcePropagationService {
     if (!projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
 
     const lines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, documentId });
-    const validated = lines.filter((line) => line.status === 'validated' || line.status === 'signed');
+    const validatedStatuses = new Set(['submitted', 'invoiced', 'paid']);
+    const validated = lines.filter((line) => validatedStatuses.has(String(line.status)));
 
     return this.propagateLines(projectId, validated);
   }
