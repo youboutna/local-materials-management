@@ -166,11 +166,21 @@ describe('TakeoffToBoqService.syncProject', () => {
 
   it('skips resource sync when a takeoff has no phase attached', async () => {
     const takeoff = makeTakeoff({ phase_id: null as unknown as string });
-    const { service, upserted } = makeService([], [takeoff]);
+    const base = makeService([], [takeoff]);
+    const phaseRepo = {
+      findByProjectId: vi.fn().mockResolvedValue([{ id: PHASE_ID }, { id: 'phase-2' }]),
+      findByProjectIdAndCode: vi.fn().mockResolvedValue(null),
+    } as unknown as import('@/domain/repositories/IPhaseRepository').IPhaseRepository;
+    const service = new TakeoffToBoqService(
+      (base.service as any).takeoffRepository,
+      base.boqRepo,
+      base.phaseMaterialRepo,
+      phaseRepo,
+    );
 
     const result = await service.syncProject(PROJECT_ID);
 
     expect(result.resourcesUpserted).toBe(0);
-    expect(upserted.length).toBe(0);
+    expect(base.upserted.length).toBe(0);
   });
 });
