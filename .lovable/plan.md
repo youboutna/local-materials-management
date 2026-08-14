@@ -1,20 +1,45 @@
-# Fix des incohérences de données des rapports projet
+# Plan P0 — Round-trip projet complet et preuve Lot 2
 
-## Constat (scan complet)
-- `SupabaseReportingAdapter.ts:259-261` : santé projet calculée avec **85 / 90 / 88 en dur**.
-- `SupabaseReportingAdapter.ts:58-60` : progression de phase écrasée par un calcul **temps écoulé**, dates manquantes remplacées par `new Date()`.
-- `reportCalculations.ts:145-160` : **7 activités PERT fictives** ("Fondations et terrassement"…) quand aucune phase n'est fournie → 1 485 j fantômes.
-- `CompactProjectReportGenerator.tsx:147` / `:254` : `calculatePERTAnalysis(project)` reçoit un **projet au lieu des phases** → déclenche exactement ce fallback fictif.
-- 3 implémentations EVM concurrentes (`ReportCalculations`, `ProjectCalculationService`, `ProjectAnalyticsService`) avec `CPI = 1` quand AC = 0 → "sous budget" alors que l'engagement est à 0 %.
-- `costVariance` affiché comme reste à consommer et non comme écart.
-- Progression globale = moyenne simple des tâches, le champ `weight` des phases (DB `btp.project_phases.weight`) n'est **jamais** utilisé.
-- `project_phases.estimated_cost` / `actual_cost` existent en base mais ne sont **jamais lus** par la chaîne de reporting.
-- `ProjectCalculationService` : `quality || 85`, `stakeholderSatisfaction = 75`, `risk = 100 - score` (métrique circulaire).
+## Constat vérifié
+- Le Lot 2 ciblé existe (`45bcdfdc-118e-4abc-9d2a-463c41977bf9`) avec une progression projet stockée à **66 %**, mais **0 phase**, **0 métré** et **0 ligne BOQ** en base.
+- L’orchestrateur reprend actuellement `project.progress` lorsqu’aucune phase existe : cela explique l’artefact **66 % sans WBS**.
+- L’étape WBS considère l’absence de phases comme un simple avertissement, alors que la page la déclare obligatoire.
+- Les métrés sont gérés dans un composant autonome et ne remontent pas dans `relatedData.dqeLines`; `upsertPhaseRelations` ne persiste d’ailleurs pas ses `dqeLines`.
+- Le détail lit les phases via deux requêtes/caches distincts, sans contrat atomique garantissant que WBS, métrés, ressources, Gantt et rapport utilisent le même état rafraîchi.
 
-## Travaux
-1. **`PhaseWeightingService`** (nouveau) : cascade de pondération — poids explicite → budget de phase → durée → poids égal, avec normalisation à 1.
-2. **`EvmService`** (nouveau, source unique) : PV/EV/AC, CV = EV − AC, SV = EV − PV, CPI/SPI **nullables** (`null` si AC = 0 ou PV = 0), EAC/ETC/VAC, statut coût/délai explicite (`n/a` possible).
-3. **`ReportCalculations`** : délègue l'EVM à `EvmService`, supprime les activités PERT fictives (retour vide + drapeau `isEstimated`).
-4. **`SupabaseReportingAdapter`** : suppression des 85/90/88, progression réelle (`??` et non `||`), plus de dates fabriquées, lecture de `estimated_cost` / `actual_cost` par phase, TEP pondéré.
-5. **`ProjectCalculationService`** : progression pondérée par phase, suppression des constantes 85/75, risque issu des risques réels.
-6. **Générateurs de rapports** : passage des phases réelles au PERT, progression pondérée unique côté PDF.
+## Corrections
+
+### 1. Création / édition : sauvegarde atomique de l’étape WBS
+- Rendre l’étape 4 invalide lorsqu’aucune phase n’est définie.
+- Après création des phases, récupérer leurs identifiants persistés et rattacher explicitement tâches, jalons, matériaux et lignes de métré.
+- Relier le composant de métrés au workflow par DTO, puis persister les lignes via le service BOQ existant avec `projectId` et `phaseId` réels.
+- Ne jamais considérer l’étape sauvegardée si une sous-persistance échoue; remonter une erreur métier précise.
+- Invalider ensemble les caches projet, détail, phases, métrés, ressources et métriques après succès.
+
+### 2. Hydratation unique pour édition et détail
+- Faire de `ProjectWorkflowService.initializeEditWorkflow` le round-trip complet : projet, phases, dates, ressources de phase et métrés.
+- Normaliser les phases une seule fois via les Transformers/DTO existants; supprimer les fallbacks divergents snake_case/camelCase dans les vues concernées.
+- Alimenter `ProjectDetailByDTO` depuis le même agrégat applicatif pour WBS, Gantt, métriques et rapport.
+
+### 3. Cohérence métriques / Gantt
+- Appliquer la règle canonique : **aucune phase persistée = progression métier 0 %**, quels que soient les anciens `projects.progress` résiduels.
+- Recalculer et synchroniser `projects.progress` depuis les phases après chaque mutation WBS; ne pas fabriquer de phase Gantt synthétique comme preuve de WBS.
+- Afficher le Gantt uniquement depuis les phases persistées et datées; les mêmes lignes alimentent le PDF.
+
+### 4. Données Lot 2
+- Corriger d’abord le flux générique, puis créer pour le Lot 2 les phases datées requises via le workflow/référentiel existant, sans insertion ad hoc contournant les services.
+- Importer/persister le métré demandé (dont **540 kg**) dans la phase choisie et vérifier son exposition comme ressource consommée/planifiée selon le modèle existant.
+- Recharger le projet depuis la base et vérifier que les données survivent à une nouvelle session/navigation.
+
+### 5. Tests et preuves
+- Ajouter des tests de round-trip : nouveau projet → phases → métré → rechargement; projet sans phase → 0 %; projet avec phases → progression pondérée et Gantt identiques UI/PDF.
+- Exécuter typecheck et tests ciblés puis suite complète.
+- Capturer dans la preview le Lot 2 : WBS daté, métré 540 kg, ressource liée, Gantt et progression cohérente.
+- Générer le PDF réel du Lot 2, le convertir en images avec `pdftoppm`, inspecter page 1, pagination et Gantt, puis fournir les artefacts visuels.
+
+## Fichiers principaux concernés
+- `src/pages/ProjectCreate.tsx`, `src/pages/ProjectEdit.tsx`, `src/pages/ProjectDetail.tsx`
+- `src/components/project/ProjectCreationWorkflow.tsx`, `ProjectDetailByDTO.tsx`, composants phases/métrés
+- `src/hooks/hexagonal/useUnifiedProjectWorkflow.ts`, hooks phases/métrés
+- `src/application/services/ProjectWorkflowService.ts`, `ProjectMetricsOrchestrator.ts`, services BOQ/ressources
+- Adapters/Transformers de phases, métrés et ressources, plus tests associés
