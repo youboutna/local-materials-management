@@ -244,6 +244,11 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
+                      {/* Liste des phases : pas de page dédiée, on redirige vers l'onglet WBS du projet */}
+                      <Route
+                        path="/projects/:id/phases"
+                        element={<ProjectPhasesRedirect />}
+                      />
                       <Route
                         path="/projects/:projectId/phases/:phaseId"
                         element={
