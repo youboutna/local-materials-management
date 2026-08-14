@@ -39,6 +39,7 @@ import {
     Plus,
     Trash2,
     Users,
+    Calculator,
     Zap
 } from 'lucide-react';
 
