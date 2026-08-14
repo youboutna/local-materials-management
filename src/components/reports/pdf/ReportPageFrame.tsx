@@ -103,7 +103,6 @@ const styles = StyleSheet.create({
   pageFooter: {
     position: 'absolute',
     lineHeight: 1,
-    height: 18,
     bottom: 14,
     left: 30,
     right: 30,
