@@ -47,6 +47,9 @@ export class TakeoffToBoqService {
     }
 
     const existingLines = await this.boqRepo.list({ source: 'quantity_takeoff', projectId });
+    const projectPhases = this.phaseRepository
+      ? await this.phaseRepository.findByProjectId(projectId)
+      : [];
     const existingByTakeoff = new Map(
       existingLines
         .map((line) => [this.extractTakeoffMarker(line.note), line] as const)
@@ -63,6 +66,11 @@ export class TakeoffToBoqService {
       }
       const unitPrice = takeoff.material?.price_per_unit ?? null;
       const quantity = Number(takeoff.quantity ?? 0);
+      const phaseId = await this.resolvePhaseId(
+        projectId,
+        (takeoff as { phase_id?: string | null }).phase_id ?? null,
+        projectPhases,
+      );
       const line: BoqLineDTO = {
         source: 'quantity_takeoff',
         contextId: projectId,
@@ -75,7 +83,7 @@ export class TakeoffToBoqService {
         quantity,
         unitPrice,
         materialId: takeoff.material_id ?? null,
-        phaseId: (takeoff as { phase_id?: string | null }).phase_id ?? null,
+        phaseId,
         resourceType: 'material',
         sourceType: 'import',
         note: this.buildTakeoffMarker(takeoff.id),
@@ -94,7 +102,7 @@ export class TakeoffToBoqService {
       await this.boqRepo.bulkCreate(toCreate);
     }
 
-    const resourcesUpserted = await this.syncPhaseResources(projectId, takeoffs);
+    const resourcesUpserted = await this.syncPhaseResources(projectId, takeoffs, projectPhases);
 
     const totalHt = toCreate.reduce((sum, l) => sum + (l.quantity * (l.unitPrice ?? 0)), 0)
       + existingLines.reduce((sum, l) => sum + (l.totalHt ?? 0), 0);
@@ -115,17 +123,16 @@ export class TakeoffToBoqService {
   private async syncPhaseResources(
     projectId: string,
     takeoffs: QuantityTakeoffWithDetails[],
+    projectPhases: Awaited<ReturnType<IPhaseRepository['findByProjectId']>>,
   ): Promise<number> {
     const byPhaseMaterial = new Map<string, { phaseId: string; materialId: string; quantity: number }>();
-    const projectPhases = this.phaseRepository
-      ? await this.phaseRepository.findByProjectId(projectId)
-      : [];
-    // Réparation sûre des métrés historiques : si le projet ne possède qu'une
-    // seule phase, cette phase est l'unique rattachement WBS possible.
-    const onlyPhaseId = projectPhases.length === 1 ? projectPhases[0].id : null;
 
     for (const t of takeoffs) {
-      const phaseId = (t as { phase_id?: string | null }).phase_id || onlyPhaseId;
+      const phaseId = await this.resolvePhaseId(
+        projectId,
+        (t as { phase_id?: string | null }).phase_id ?? null,
+        projectPhases,
+      );
       const materialId = t.material_id;
       if (!phaseId || !materialId) continue; // no WBS attachment -> cannot become a phase resource
       const key = `${phaseId}::${materialId}`;
@@ -144,6 +151,29 @@ export class TakeoffToBoqService {
       count += 1;
     }
     return count;
+  }
+
+  /**
+   * Historical takeoffs may store a WBS code (for example "gros-oeuvre")
+   * instead of the UUID required by phase_materials/boq_lines. Resolve that
+   * reference centrally and use the sole project phase as an unambiguous fallback.
+   */
+  private async resolvePhaseId(
+    projectId: string,
+    phaseReference: string | null,
+    projectPhases: Awaited<ReturnType<IPhaseRepository['findByProjectId']>>,
+  ): Promise<string | null> {
+    if (phaseReference) {
+      const phaseById = projectPhases.find((phase) => phase.id === phaseReference);
+      if (phaseById) return phaseById.id;
+
+      if (this.phaseRepository) {
+        const phaseByCode = await this.phaseRepository.findByProjectIdAndCode(projectId, phaseReference);
+        if (phaseByCode) return phaseByCode.id;
+      }
+    }
+
+    return projectPhases.length === 1 ? projectPhases[0].id : null;
   }
 
   private buildTakeoffMarker(takeoffId: string): string {

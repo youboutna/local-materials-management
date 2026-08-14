@@ -62,7 +62,11 @@ function makeService(existingLines: BoqLineDTO[] = [], takeoffs = [makeTakeoff()
     delete: vi.fn(),
   };
 
-  const service = new TakeoffToBoqService(takeoffRepo, boqRepo, phaseMaterialRepo);
+  const phaseRepo = {
+    findByProjectId: vi.fn().mockResolvedValue([{ id: PHASE_ID }]),
+    findByProjectIdAndCode: vi.fn().mockResolvedValue(null),
+  } as unknown as import('@/domain/repositories/IPhaseRepository').IPhaseRepository;
+  const service = new TakeoffToBoqService(takeoffRepo, boqRepo, phaseMaterialRepo, phaseRepo);
   return { service, boqRepo, phaseMaterialRepo, created, upserted };
 }
 
@@ -126,6 +130,7 @@ describe('TakeoffToBoqService.syncProject', () => {
     const base = makeService([], [takeoff]);
     const phaseRepo = {
       findByProjectId: vi.fn().mockResolvedValue([{ id: PHASE_ID }]),
+      findByProjectIdAndCode: vi.fn().mockResolvedValue(null),
     } as unknown as import('@/domain/repositories/IPhaseRepository').IPhaseRepository;
     const service = new TakeoffToBoqService(
       (base.service as any).takeoffRepository,
@@ -137,6 +142,26 @@ describe('TakeoffToBoqService.syncProject', () => {
     const result = await service.syncProject(PROJECT_ID);
     expect(result.resourcesUpserted).toBe(1);
     expect(base.upserted[0]).toMatchObject({ phaseId: PHASE_ID, quantity: 540 });
+  });
+
+  it('resolves a historical WBS phase code to the canonical phase UUID', async () => {
+    const takeoff = makeTakeoff({ phase_id: 'gros-oeuvre' });
+    const base = makeService([], [takeoff]);
+    const phaseRepo = {
+      findByProjectId: vi.fn().mockResolvedValue([{ id: 'phase-uuid' }, { id: 'other-phase' }]),
+      findByProjectIdAndCode: vi.fn().mockResolvedValue({ id: 'phase-uuid' }),
+    } as unknown as import('@/domain/repositories/IPhaseRepository').IPhaseRepository;
+    const service = new TakeoffToBoqService(
+      (base.service as any).takeoffRepository,
+      base.boqRepo,
+      base.phaseMaterialRepo,
+      phaseRepo,
+    );
+
+    const result = await service.syncProject(PROJECT_ID);
+    expect(result.resourcesUpserted).toBe(1);
+    expect(base.created[0].phaseId).toBe('phase-uuid');
+    expect(base.upserted[0]).toMatchObject({ phaseId: 'phase-uuid', quantity: 540 });
   });
 
   it('skips resource sync when a takeoff has no phase attached', async () => {
