@@ -60,6 +60,15 @@ describe('Unification des métriques projet', () => {
     expect(metrics.gantt.today).not.toBeNull();
   });
 
+  it('B — sans phase persistée, la progression est 0 % et le Gantt reste vide', () => {
+    const metrics = ProjectMetricsOrchestrator.compute({ project: { ...project, progress: 66 }, phases: [] });
+    expect(metrics.progress).toBe(0);
+    expect(metrics.formatted.progress).toBe('0,00%');
+    expect(metrics.gantt.isEmpty).toBe(true);
+    expect(metrics.gantt.hasRealPhases).toBe(false);
+    expect(metrics.gantt.phases).toEqual([]);
+  });
+
   it('C — un seul moteur PERT, durée de référence distincte de la durée PERT', () => {
     const metrics = ProjectMetricsOrchestrator.compute({ project, phases });
     const pert = PertService.compute([{ id: 'ph1', durationDays: 1461 }]);
