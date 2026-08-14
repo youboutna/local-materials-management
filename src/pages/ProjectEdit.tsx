@@ -438,7 +438,7 @@ const ProjectEdit = () => {
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}
             isSubmitting={isSubmitting}
-            initialData={memoizedInitialData} // ✅ Utilisation de la référence mémorisée
+            initialData={memoizedInitialData ?? undefined} // ✅ Utilisation de la référence mémorisée
           />
         </div>
 
