@@ -70,11 +70,15 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      const mappedFilters = filters.map((f) =>
-        f.column === 'metadata_material_id'
-          ? { column: 'material_id', value: f.value, op: 'contains' as const }
-          : { column: f.column, value: f.value, op: 'eq' as const }
-      );
+      const mappedFilters = filters.map((f) => {
+        if (f.column === 'metadata_material_id') {
+          return { column: 'material_id', value: f.value, op: 'contains' as const };
+        }
+        if (f.column === 'metadata_scope') {
+          return { column: 'scope', value: f.value, op: 'contains' as const };
+        }
+        return { column: f.column, value: f.value, op: 'eq' as const };
+      });
       return await documentRepository.findRawByFilters(mappedFilters);
     },
   });
