@@ -8,6 +8,8 @@
  * Utilise ProjectManagerProvider pour les alertes
  */
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 import { ActionsDropdown } from "@/components/actions/ActionsDropdown";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -598,11 +600,16 @@ const BankGuaranteeMonitor: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Seuils d'escalade */}
+      {/* Seuils d'escalade — widget dépliable (informatif, aucune donnée modifiée) */}
+      <Collapsible defaultOpen>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">{t('bank_guarantee.escalation_thresholds_title')}</CardTitle>
+        <CardHeader className="py-3">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 text-left">
+            <CardTitle className="text-sm">{t('bank_guarantee.escalation_thresholds_title')}</CardTitle>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=closed]:-rotate-90" />
+          </CollapsibleTrigger>
         </CardHeader>
+        <CollapsibleContent>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
@@ -631,7 +638,9 @@ const BankGuaranteeMonitor: React.FC = () => {
             </div>
           </div>
         </CardContent>
+        </CollapsibleContent>
       </Card>
+      </Collapsible>
     </div>
   );
 };
