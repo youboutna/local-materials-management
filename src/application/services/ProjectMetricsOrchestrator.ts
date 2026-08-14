@@ -199,9 +199,13 @@ export class ProjectMetricsOrchestrator {
 
     // --- 1. Pondération & avancement canonique ---
     const weighted = PhaseWeightingService.computeWeightedProgress(phases);
+    // A project without a persisted WBS has no measurable execution progress.
+    // `projects.progress` may contain a legacy/manual value; it must not leak into
+    // operational metrics until at least one phase exists.
+    const canonicalProjectProgress = phases.length > 0 ? project.progress ?? 0 : 0;
     const evm = EvmService.compute({
       budget: num(project.budget),
-      progress: project.progress ?? 0,
+      progress: canonicalProjectProgress,
       startDate: project.startDate ?? null,
       endDate: project.endDate ?? null,
       actualCost: input.actualCost ?? 0,
@@ -489,6 +493,21 @@ export class ProjectMetricsOrchestrator {
     const projectStart = project.startDate ? new Date(project.startDate as string).getTime() : NaN;
     const projectEnd = project.endDate ? new Date(project.endDate as string).getTime() : NaN;
 
+    // A Gantt represents persisted WBS phases, not a synthetic project bar.
+    // Project dates remain useful for the scale only when real dated phases exist.
+    if (rows.length === 0) {
+      return {
+        start: 0,
+        end: 0,
+        today: null,
+        years: [],
+        phases: [],
+        milestones: [],
+        isEmpty: true,
+        hasRealPhases: false,
+      };
+    }
+
     const candidateStarts = [...rows.map((r) => r.start), projectStart].filter((n) => Number.isFinite(n));
     const candidateEnds = [...rows.map((r) => r.end), projectEnd].filter((n) => Number.isFinite(n));
 
@@ -521,36 +540,15 @@ export class ProjectMetricsOrchestrator {
       date: start + (span * ratio) / 100,
     }));
 
-    // Aucune phase datée mais un calendrier projet exploitable : on trace une
-    // barre « projet » de synthèse pour que la frise reflète le calendrier réel
-    // (le Gantt ne doit jamais être vide quand le projet est daté).
-    const hasRealPhases = rows.length > 0;
-    const displayRows: GanttPhaseModel[] = hasRealPhases
-      ? rows
-      : [
-          {
-            id: project.id || 'project',
-            name: `${project.title || 'Projet'} (calendrier projet)`,
-            start,
-            end,
-            progress: clamp100(progress),
-            weight: 1,
-            weightBasis: 'project',
-            weightBasisLabel: WEIGHT_BASIS_LABELS.project,
-            status: null,
-            isSynthetic: true,
-          },
-        ];
-
     return {
       start,
       end,
       today: now >= start && now <= end ? now : null,
       years,
-      phases: displayRows,
+      phases: rows,
       milestones,
-      isEmpty: displayRows.length === 0,
-      hasRealPhases,
+      isEmpty: false,
+      hasRealPhases: true,
     };
   }
 }
