@@ -643,6 +643,38 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
       </CardHeader>
 
       <CardContent>
+        <ListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher (date, projet, contractant, montant…)"
+          resultCount={filteredPayments.length}
+        >
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="validated">Validés</SelectItem>
+              <SelectItem value="blocked">Bloqués</SelectItem>
+              <SelectItem value="rejected">Rejetés</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={methodFilter} onValueChange={setMethodFilter}>
+            <SelectTrigger className="w-[190px]">
+              <SelectValue placeholder="Méthode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les méthodes</SelectItem>
+              <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
+              <SelectItem value="cash">Espèces</SelectItem>
+              <SelectItem value="check">Chèque</SelectItem>
+              <SelectItem value="mobile_payment">Paiement mobile</SelectItem>
+            </SelectContent>
+          </Select>
+        </ListToolbar>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -656,21 +688,28 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                 <TableHead>Contractant</TableHead>
                 <TableHead>Montant</TableHead>
                 <TableHead>Méthode</TableHead>
+                <TableHead>Délai (jours)</TableHead>
                 <TableHead>Progression</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payments.length === 0 ? (
+              {filteredPayments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     Aucun paiement enregistré
                   </TableCell>
                 </TableRow>
               ) : (
-                payments.map((payment) => {
+                filteredPayments.map((payment) => {
                   const proj = payment.projectId ? projectLabelMap.get(payment.projectId) : undefined;
                   const projectLabel = proj?.ref || proj?.label || 'Projet non lié';
+                  const delay = getPaymentDelayDays(payment);
+                  const statusMeta = getStatusMeta(payment);
+                  const progress = typeof payment.progressAtPayment === 'number'
+                    ? Math.min(100, Math.max(0, payment.progressAtPayment))
+                    : null;
                   return (
                   <TableRow key={payment.id}>
                     <TableCell>
@@ -705,10 +744,43 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                         <span>{getPaymentMethodLabel(payment.paymentMethod || '')}</span>
                       </div>
                     </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {delay === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <span
+                          className={
+                            delay >= AUTO_BLOCK_DAYS
+                              ? 'text-destructive font-medium'
+                              : delay >= DELAY_WARNING_DAYS
+                                ? 'text-warning font-medium'
+                                : 'text-muted-foreground'
+                          }
+                          title={`Écart calculé depuis la date de paiement (seuil retard ${DELAY_WARNING_DAYS} j, blocage ${AUTO_BLOCK_DAYS} j)`}
+                        >
+                          {delay} j
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="min-w-[140px]">
+                      {progress === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className={`h-full rounded-full ${
+                                progress > 80 ? 'bg-success' : progress >= 50 ? 'bg-warning' : 'bg-destructive'
+                              }`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground">{progress}%</span>
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {typeof payment.progressAtPayment === 'number' ? `${payment.progressAtPayment}%` : '—'}
-                      </Badge>
+                      <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -716,6 +788,8 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => openEditDialog(payment)}
+                          title="Modifier le paiement"
+                          aria-label="Modifier le paiement"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -724,6 +798,8 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
                           size="sm"
                           onClick={() => handleDelete(payment)}
                           className="text-destructive hover:text-destructive"
+                          title="Supprimer le paiement"
+                          aria-label="Supprimer le paiement"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -737,6 +813,7 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
           </Table>
         )}
       </CardContent>
+
     </Card>
   );
 };
