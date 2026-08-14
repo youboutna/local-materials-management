@@ -789,9 +789,13 @@ const UnifiedInsuranceManager = () => {
                       <TableCell>{getCoverageTypeLabel(cert.coverageType || '')}</TableCell>
                       <TableCell>{cert.policyNumber}</TableCell>
                       <TableCell>{(cert.coverageAmount || 0).toLocaleString()} MRU</TableCell>
-                      <TableCell className="text-red-600">
+                      <TableCell className="text-destructive">
                         {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
                       </TableCell>
+                      <TableCell>
+                        <ExpiryCountdown expiryDate={cert.validUntil} />
+                      </TableCell>
+
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" onClick={() => {
