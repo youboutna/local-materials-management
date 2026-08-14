@@ -35,6 +35,12 @@ import {
     Eye
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
+import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import { PAYMENT_CONTROL_THRESHOLDS } from '@/config/referentials/payment-tolerance.referential';
+import { Activity, ChevronDown, FolderOpen, ListChecks, SlidersHorizontal } from 'lucide-react';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 // ============================================================
@@ -233,6 +239,30 @@ const PaymentControlContent = () => {
             </div>
           </div>
 
+          <Breadcrumb
+            className="mb-4"
+            items={[{ label: 'Finance' }, { label: 'Contrôle des Paiements' }]}
+          />
+
+          <Tabs defaultValue="surveillance" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="surveillance" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
+                <span className="sm:hidden">Alertes</span>
+              </TabsTrigger>
+              <TabsTrigger value="gestion" className="flex items-center gap-2">
+                <ListChecks className="h-4 w-4" />
+                <span className="hidden sm:inline">Gestion des Paiements</span>
+                <span className="sm:hidden">Gestion</span>
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                <span>Documents</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="surveillance" className="mt-6">
           {/* Statistiques rapides */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
@@ -344,16 +374,68 @@ const PaymentControlContent = () => {
             </CardContent>
           </Card>
 
-          {/* Payment Control Actions */}
-          <PaymentControlActionsContainer />
-
-          {/* Payment Blocking Interface */}
+          {/* Indicateurs de blocage + alertes de blocage */}
           <EnhancedPaymentBlockingInterface />
-          
-          {/* Payment CRUD */}
-          <div className="mt-8">
-            <PaymentCrud />
-          </div>
+
+          {/* Seuils de contrôle (référentiel) */}
+          <Collapsible defaultOpen className="mt-6">
+            <Card>
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-6 py-4 text-left">
+                <span className="flex items-center gap-2 font-semibold">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Seuils de contrôle
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="grid gap-3 pt-0 md:grid-cols-2">
+                  {PAYMENT_CONTROL_THRESHOLDS.map((threshold) => (
+                    <div
+                      key={threshold.key}
+                      className="flex items-start justify-between gap-3 rounded-md border border-border p-3"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${
+                              threshold.tone === 'critical'
+                                ? 'bg-destructive'
+                                : threshold.tone === 'high'
+                                  ? 'bg-warning'
+                                  : threshold.tone === 'warning'
+                                    ? 'bg-warning/70'
+                                    : 'bg-primary'
+                            }`}
+                          />
+                          <span className="font-medium">{threshold.label}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{threshold.description}</p>
+                      </div>
+                      <Badge variant="outline" className="whitespace-nowrap">
+                        {threshold.days === 0 ? 'Immédiat' : `≥ ${threshold.days} j`}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+            </TabsContent>
+
+            <TabsContent value="gestion" className="mt-6">
+              {/* Payment Control Actions */}
+              <PaymentControlActionsContainer />
+
+              {/* Payment CRUD */}
+              <div className="mt-8">
+                <PaymentCrud />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-6">
+              <MonitoringDocumentsPanel scope="payment" />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
