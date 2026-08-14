@@ -1,14 +1,14 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { ReportFooter, ReportHeader } from './ReportPageFrame';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-// Register fonts for better text rendering
-Font.register({
-  family: 'Helvetica',
-  src: 'https://fonts.gstatic.com/s/opensans/v17/mem8YaGs126MiZpBA-UFVZ0b.woff2'
-});
+// Perf : aucune police distante n'est enregistrée. Helvetica est une police
+// intégrée à react-pdf ; l'ancien Font.register vers fonts.gstatic.com
+// déclenchait un téléchargement réseau (woff2 non supporté) à chaque
+// génération, ce qui ralentissait fortement le rendu du rapport.
+
 
 const styles = StyleSheet.create({
   page: {
