@@ -30,7 +30,12 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
    */
   async create(workspace: Omit<Workspace, 'id' | 'createdAt' | 'updatedAt'>): Promise<Workspace> {
     try {
-      const workspaceData: BtpTablesInsert<'workspaces'> = {
+      // RLS : owner_id doit correspondre à l'utilisateur authentifié (jamais un UUID aléatoire).
+      const { supabase: authClient } = await import('@/integrations/supabase/client');
+      const { data: sessionData } = await authClient.auth.getUser();
+      const ownerId = sessionData?.user?.id ?? null;
+
+      const workspaceData = {
         id: workspace.workspaceId || crypto.randomUUID(),
         name: workspace.name,
         description: workspace.description,
@@ -40,10 +45,10 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         contact_manager: workspace.contact?.manager,
         contact_phone: workspace.contact?.phone,
         facilities: workspace.facilities,
-        owner_id: workspace.workspaceId || crypto.randomUUID(),
+        ...(ownerId ? { owner_id: ownerId } : {}),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      } as BtpTablesInsert<'workspaces'>;
 
       const { data, error } = await supabase
         .from('workspaces')

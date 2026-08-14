@@ -39,6 +39,7 @@ import {
     Plus,
     Trash2,
     Users,
+    Calculator,
     Zap
 } from 'lucide-react';
 
@@ -69,6 +70,7 @@ import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { toDateInput } from '@/lib/utils';
+import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCountsHex';
 
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
@@ -162,6 +164,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
 
   const effectiveProjectId = projectId || paramProjectId;
+
+  // Compteurs réels (matériaux alloués, rôles, métrés) — source base, pas DTO local.
+  const { getCounts: getPhaseCounts } = usePhaseResourceCountsHex(effectiveProjectId);
 
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
 
@@ -1447,7 +1452,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         <p className="text-xs text-gray-500">Matériaux</p>
 
-                        <p className="text-sm">{((phase as PhaseData).materials || []).length} éléments</p>
+                        <p className="text-sm">{getPhaseCounts(phase.id).materials} éléments</p>
 
                       </div>
 
@@ -1463,13 +1468,32 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         <p className="text-xs text-gray-500">Ressources</p>
 
-                        <p className="text-sm">{((phase as PhaseData).humanResources || []).length} rôles</p>
+                        <p className="text-sm">{getPhaseCounts(phase.id).employees} rôles</p>
+
+                      </div>
+
+                    </div>
+
+                    
+
+                    <div className="flex items-center gap-2">
+
+                      <Calculator className="h-4 w-4 text-gray-500" />
+
+                      <div>
+
+                        <p className="text-xs text-gray-500">Analyse métré</p>
+
+                        <p className="text-sm">{getPhaseCounts(phase.id).takeoffs} métré(s)</p>
 
                       </div>
 
                     </div>
 
                   </div>
+
+                  
+
 
                   
 
