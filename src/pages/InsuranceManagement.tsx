@@ -405,9 +405,17 @@ const InsuranceContent = () => {
               </CardContent>
             </Card>
           )}
+            </TabsContent>
 
-          {/* Composant principal - UnifiedInsuranceManager */}
-          <UnifiedInsuranceManager />
+            <TabsContent value="gestion" className="mt-6">
+              {/* Composant principal - UnifiedInsuranceManager */}
+              <UnifiedInsuranceManager />
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-6">
+              <MonitoringDocumentsPanel scope="insurance" />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
