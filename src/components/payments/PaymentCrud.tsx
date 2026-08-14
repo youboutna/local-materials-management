@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import ListToolbar from '@/components/common/ListToolbar';
+import { PAYMENT_CONTROL_THRESHOLDS } from '@/config/referentials/payment-tolerance.referential';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +33,34 @@ import { usePaymentCrud } from '@/hooks/hexagonal';
 import { useProjects } from '@/hooks/hexagonal/useProjectsHex';
 import type { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 
+const DELAY_WARNING_DAYS =
+  PAYMENT_CONTROL_THRESHOLDS.find((t) => t.key === 'payment_delay')?.days ?? 30;
+const AUTO_BLOCK_DAYS =
+  PAYMENT_CONTROL_THRESHOLDS.find((t) => t.key === 'auto_block')?.days ?? 45;
+
+/** Délai en jours depuis la date de paiement (calcul front, aucune persistance). */
+const getPaymentDelayDays = (payment: PaymentDTO): number | null => {
+  const status = (payment.status || '').toLowerCase();
+  if (!payment.paymentDate) return null;
+  if (['validated', 'completed', 'paid', 'approved'].includes(status)) return null;
+  const start = new Date(payment.paymentDate).getTime();
+  if (Number.isNaN(start)) return null;
+  const days = Math.floor((Date.now() - start) / 86400000);
+  return days > 0 ? days : 0;
+};
+
+const getStatusMeta = (
+  payment: PaymentDTO,
+): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
+  const status = (payment.status || 'pending').toLowerCase();
+  if (['validated', 'completed', 'paid', 'approved'].includes(status)) {
+    return { label: 'Validé', variant: 'default' };
+  }
+  if (status === 'blocked') return { label: 'Bloqué', variant: 'destructive' };
+  if (status === 'rejected') return { label: 'Rejeté', variant: 'outline' };
+  return { label: 'En attente', variant: 'secondary' };
+};
+
 interface PaymentCrudProps {
   projectId?: string;
   contractorId?: string;
@@ -45,6 +75,9 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [methodFilter, setMethodFilter] = useState<string>('all');
 
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -406,6 +439,40 @@ const PaymentCrud = ({ projectId, contractorId }: PaymentCrudProps) => {
   };
 
   const isLoading = paymentsLoading;
+
+  // Filtrage purement présentation (données déjà chargées)
+  const filteredPayments = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (payments || []).filter((payment) => {
+      const status = getStatusMeta(payment);
+      if (statusFilter !== 'all') {
+        const map: Record<string, string> = {
+          pending: 'En attente',
+          validated: 'Validé',
+          blocked: 'Bloqué',
+          rejected: 'Rejeté',
+        };
+        if (status.label !== map[statusFilter]) return false;
+      }
+      if (methodFilter !== 'all' && (payment.paymentMethod || '') !== methodFilter) return false;
+      if (!term) return true;
+      const proj = payment.projectId ? projectLabelMap.get(payment.projectId) : undefined;
+      const haystack = [
+        payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('fr-FR') : '',
+        proj?.label,
+        proj?.ref,
+        payment.contractorName,
+        payment.contractorContact,
+        String(payment.amount ?? ''),
+        getPaymentMethodLabel(payment.paymentMethod || ''),
+        payment.transactionId,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [payments, search, statusFilter, methodFilter, projectLabelMap]);
 
   return (
     <Card>
