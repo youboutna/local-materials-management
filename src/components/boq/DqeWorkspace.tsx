@@ -10,7 +10,8 @@
  *
  * Aucune requête directe Supabase — tout passe par les hooks hexagonaux.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +23,8 @@ import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqContextService, type BoqRouteContext } from '@/application/services/boq/BoqContextService';
+import { getBoqResourcePropagationService } from '@/application/services/boq/BoqResourcePropagationService';
+import { toast } from '@/hooks/use-toast';
 import type { ReferentialType } from '@/config/referentials';
 
 interface Props {
