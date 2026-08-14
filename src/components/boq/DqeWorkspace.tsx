@@ -61,6 +61,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
   const mode = MODE_BY_ROUTE[props.routeContext];
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Détail : lignes du document courant (pour la BoqActionsBar).
   const doc = useBoqDocument({
@@ -69,6 +70,46 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     projectId: props.projectId,
     documentId: selectedDocumentId ?? undefined,
   });
+
+  // Validation DQE projet -> propagation en ressources planifiées (phases + projet).
+  useEffect(() => {
+    if (props.routeContext !== 'project-dqe' || !props.projectId) return;
+
+    const handler = async (event: Event) => {
+      const detail = (event as CustomEvent).detail as { projectId?: string } | undefined;
+      if (detail?.projectId && detail.projectId !== props.projectId) return;
+
+      try {
+        const lines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
+        if (!lines.length) return;
+
+        const result = await getBoqResourcePropagationService().propagateLines(props.projectId as string, lines);
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['phase-resource-counts'] }),
+          queryClient.invalidateQueries({ queryKey: ['project-resources'] }),
+          queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] }),
+          queryClient.invalidateQueries({ queryKey: ['phase-employees'] }),
+          queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] }),
+        ]);
+
+        toast({
+          title: 'Ressources planifiées mises à jour',
+          description: `${result.phaseMaterials} matériau(x), ${result.phaseEmployees} rôle(s), ${result.projectResources} ressource(s) projet.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Propagation impossible',
+          description: error instanceof Error ? error.message : 'Erreur inconnue',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    window.addEventListener('boq-transfer-next', handler);
+    return () => window.removeEventListener('boq-transfer-next', handler);
+  }, [props.routeContext, props.projectId, doc.lines, queryClient]);
+
 
   // Comparaison optionnelle (projet uniquement).
   const dqeCompare = useBoqDocument({
