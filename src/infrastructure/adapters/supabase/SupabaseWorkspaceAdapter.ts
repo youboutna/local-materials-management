@@ -35,7 +35,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
       const { data: sessionData } = await authClient.auth.getUser();
       const ownerId = sessionData?.user?.id ?? null;
 
-      const workspaceData: BtpTablesInsert<'workspaces'> = {
+      const workspaceData = {
         id: workspace.workspaceId || crypto.randomUUID(),
         name: workspace.name,
         description: workspace.description,
@@ -48,7 +48,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
         ...(ownerId ? { owner_id: ownerId } : {}),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      } as BtpTablesInsert<'workspaces'>;
 
       const { data, error } = await supabase
         .from('workspaces')
