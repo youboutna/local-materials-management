@@ -4,6 +4,9 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+// `get_project_hierarchy` est une fonction du schéma `public` (pas `btp`) :
+// l'appeler via btpClient renvoie PGRST202 (function not found in schema cache).
+import { supabase as publicClient } from '@/integrations/supabase/client';
 
 // Import DTOs following Rule #4
 import {
@@ -126,7 +129,7 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
   // ============= Core CRUD Operations =============
 
   async getMembers(projectId: string): Promise<HierarchyMember[]> {
-    const { data, error } = await supabase
+    const { data, error } = await publicClient
       .rpc('get_project_hierarchy', { project_id_param: projectId });
 
     if (error) {
@@ -138,7 +141,7 @@ export class SupabaseHierarchyAdapter implements IHierarchyRepository {
   }
 
   async getProjectHierarchy(projectId: string): Promise<HierarchyNode[]> {
-    const { data, error } = await supabase
+    const { data, error } = await publicClient
       .rpc('get_project_hierarchy', { project_id_param: projectId });
 
     if (error) {
