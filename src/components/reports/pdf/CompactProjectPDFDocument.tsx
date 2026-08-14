@@ -29,11 +29,9 @@ type ProjectData = ProjectDTO & {
   stakeholders?: Array<{ role?: string; organization?: string }>;
 };
 
-// Register fonts
-Font.register({
-  family: 'Helvetica',
-  src: 'https://fonts.gstatic.com/s/opensans/v17/mem8YaGs126MiZpBA-UFVZ0b.woff2'
-});
+// Perf : pas de Font.register distant (Helvetica est intégrée à react-pdf).
+// Le téléchargement fonts.gstatic.com à chaque rendu ralentissait la génération.
+
 
 const colors = {
   primary: '#1e40af',
