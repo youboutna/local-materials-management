@@ -15,6 +15,8 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     padding: 30,
+    // marge basse réservée au pied de page fixe (pagination)
+    paddingBottom: 42,
     fontFamily: 'Helvetica',
     fontSize: 12,
     // lineHeight non hérité sur la Page : un lineHeight global masque les
@@ -191,7 +193,8 @@ export function PDFSection({ title, children, borderColor = '#2563eb' }: {
 }) {
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionHeader, { borderLeftColor: borderColor }]}>{title}</Text>
+      {/* minPresenceAhead : évite un titre de section orphelin en bas de page */}
+      <Text style={[styles.sectionHeader, { borderLeftColor: borderColor }]} minPresenceAhead={60}>{title}</Text>
       {children}
     </View>
   );
