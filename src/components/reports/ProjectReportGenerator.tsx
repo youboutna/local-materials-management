@@ -231,8 +231,9 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     };
 
     loadReportData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectSignature, reportConfig.reportType, sectionsSignature]);
-  }, [project, toast, reportConfig.reportType, sectionsSignature]);
+
 
 
   const generatePDF = async () => {
