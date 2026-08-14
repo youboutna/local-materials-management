@@ -25,7 +25,7 @@ interface ProjectSelectorProps {
   secureMode?: boolean;
 }
 
-const ProjectSelector: React.FC<ProjectSelectorProps> = ({
+const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>(({
   value,
   onChange,
   placeholder = "Sélectionner un projet",
@@ -33,7 +33,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   required = false,
   disabled = false,
   secureMode = false
-}) => {
+}, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: projects, isLoading } = useProjectsSelector({ searchTerm, secureMode });
@@ -57,7 +57,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div ref={ref} className="space-y-2">
       <Label>{label} {required && <span className="text-red-500">*</span>}</Label>
       
       <div className="relative">

@@ -24,13 +24,13 @@ interface SupplierSelectorProps {
   suppliers?: any[]; // Add suppliers prop
 }
 
-const SupplierSelector: React.FC<SupplierSelectorProps> = ({
+const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>(({
   value,
   onChange,
   allowCustom = true,
   disabled = false,
   suppliers: passedSuppliers
-}) => {
+}, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCustom, setIsCustom] = useState(!value?.id);
   const [customSupplier, setCustomSupplier] = useState({
@@ -85,7 +85,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={ref} className="space-y-4">
       <div>
         <Label>Fournisseur</Label>
         <div className="relative">
