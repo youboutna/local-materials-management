@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Trash2, Calculator, Save, DownloadCloud } from 'lucide-react';
-import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { usePagination } from '@/hooks/usePagination';
-import { useQuantityTakeoffsHex } from '@/hooks/hexagonal';
 import { TAKEOFF_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
+import { useQuantityTakeoffsHex } from '@/hooks/hexagonal';
+import { usePagination } from '@/hooks/usePagination';
+import { Calculator, DownloadCloud, Save, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -28,20 +28,34 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
 
   const [drafts, setDrafts] = useState<Record<string, RowDraft>>({});
 
+  // Fixed useEffect: Prevent infinite loop by checking if values actually changed
   useEffect(() => {
     if (!quantityTakeoffs) return;
+    
     setDrafts((prev) => {
+      let hasChanged = false;
       const next = { ...prev };
+      
       for (const t of quantityTakeoffs as QuantityTakeoffWithDetails[]) {
+        // Only overwrite if draft doesn't exist or is not dirty
         if (!next[t.id] || !next[t.id].dirty) {
-          next[t.id] = {
-            quantity: Number(t.quantity ?? 0),
-            unit_price: Number((t as { unit_price?: number }).unit_price ?? t.material?.price_per_unit ?? 0),
-            dirty: false,
-          };
+          const newQuantity = Number(t.quantity ?? 0);
+          const newUnitPrice = Number((t as { unit_price?: number }).unit_price ?? t.material?.price_per_unit ?? 0);
+          
+          // Check if value truly changed
+          if (!next[t.id] || next[t.id].quantity !== newQuantity || next[t.id].unit_price !== newUnitPrice) {
+            hasChanged = true;
+            next[t.id] = {
+              quantity: newQuantity,
+              unit_price: newUnitPrice,
+              dirty: false,
+            };
+          }
         }
       }
-      return next;
+      
+      // Critical fix: If no actual change occurred, return the previous state reference
+      return hasChanged ? next : prev;
     });
   }, [quantityTakeoffs]);
 
@@ -210,7 +224,6 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
               );
             })()}
           </div>
-
 
           <PaginationControls
             currentPage={currentPage}

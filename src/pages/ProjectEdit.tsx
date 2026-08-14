@@ -17,21 +17,21 @@
  * 8. Review - Validation
  */
 
+import { AppLayout } from "@/components/layout";
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import WorkflowMetricsPreview from "@/components/project/WorkflowMetricsPreview";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
-import { ArrowLeft, AlertCircle, CheckCircle, Workflow, RefreshCw } from "lucide-react";
-import { useState, useCallback, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { AppLayout } from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { WorkflowProvider } from "@/contexts/ProjectWorkflowContext";
 import type { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { useUnifiedProjectWorkflow } from "@/hooks/hexagonal/useUnifiedProjectWorkflow";
-import { WorkflowProvider } from "@/contexts/ProjectWorkflowContext";
+import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { AlertCircle, ArrowLeft, CheckCircle, RefreshCw, Workflow } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 interface SelectedMaterial {
   materialId: string;
@@ -84,6 +84,9 @@ const ProjectEdit = () => {
     workflowSteps,
     loadProjectData
   } = useUnifiedProjectWorkflow('edit', id);
+
+  // Mémorisation de formData pour éviter des re-rendus inutiles des composants enfants
+  const memoizedInitialData = useMemo(() => formData, [formData]);
 
   // ============================================================
   // Effets
@@ -435,7 +438,7 @@ const ProjectEdit = () => {
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}
             isSubmitting={isSubmitting}
-            initialData={formData}
+            initialData={memoizedInitialData} // ✅ Utilisation de la référence mémorisée
           />
         </div>
 

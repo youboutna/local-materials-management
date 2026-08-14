@@ -1,5 +1,5 @@
-import { useStakeholdersHex } from "@/hooks/hexagonal/useStakeholdersHex";
 import { useActiveEmployeesHex } from "@/hooks/hexagonal/useActiveEmployeesHex";
+import { useStakeholdersHex } from "@/hooks/hexagonal/useStakeholdersHex";
 import { useSuppliersHex } from "@/hooks/hexagonal/useSuppliersHex";
 
 import {
@@ -11,18 +11,17 @@ import {
 import React, { useMemo, useState } from "react";
 import EmployeeSelector from "../../selectors/EmployeeSelector";
 import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
-import StakeholderDocumentUpload from "../stakeholders/StakeholderDocumentUpload";
+import { Alert, AlertDescription } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Label } from "../../ui/label";
-import { Alert, AlertDescription } from "../../ui/alert";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
+import { Label } from "../../ui/label";
 import {
   Select,
   SelectContent,
@@ -30,20 +29,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../ui/select";
+import StakeholderDocumentUpload from "../stakeholders/StakeholderDocumentUpload";
 
 // Import entity DTOs (PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
-import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import {
-  StakeholderDTO,
   CreateStakeholderDTO,
-  StakeholderType,
+  StakeholderDTO,
+  StakeholderEntityType,
   StakeholderRole,
+  StakeholderType,
 } from "@/dtos/entities/StakeholderDTO";
 import {
   StakeholderUITransformer,
   type StakeholderFormData,
 } from "@/dtos/transforms/StakeholderUITransformer";
+import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 type Segment = "all" | "team" | "external" | "contractors";
 
@@ -61,12 +62,11 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
   const projectId = projectData.id;
 
-  // Hexagonal hooks (Core memory: no direct Supabase in UI)
+  // Hexagonal hooks
   useStakeholdersHex(projectId);
   const { data: employees = [] } = useActiveEmployeesHex();
   const { suppliers = [] } = useSuppliersHex();
 
-  // Initialize from workflow data if present (edit mode)
   const initial: StakeholderDTO[] =
     ((workflowData?.relatedData?.stakeholders as unknown) as StakeholderDTO[]) || [];
 
@@ -79,9 +79,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const [docsFor, setDocsFor] = useState<StakeholderDTO | null>(null);
 
   /**
-   * Hydratation (mode édition) : `workflowData` arrive de façon asynchrone après
-   * le premier rendu, or `useState(initial)` ne lit la valeur qu'au montage —
-   * les parties prenantes déjà persistées restaient donc invisibles.
+   * Hydratation (mode édition)
    */
   const hydratedKey = React.useRef<string>("");
   React.useEffect(() => {
@@ -92,7 +90,6 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     hydratedKey.current = key;
     setLocalStakeholders(persisted);
   }, [workflowData, projectId]);
-
 
   const notifyUpdate = (next: StakeholderDTO[]) => {
     onStepComplete({ stakeholders: next });
@@ -112,20 +109,21 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     return sup?.name || s.organization || "Entité";
   };
 
-  // UI → Transformer → DTO (Core memory: UI Data Mapping)
   const addStakeholder = () => {
+    // ✅ On cherche le nom du fournisseur directement dans la liste `suppliers`
+    const foundSupplier = suppliers.find(s => s.id === newStakeholder.organizationId);
+    const finalOrganization = foundSupplier?.name || newStakeholder.organization || "";
+    const finalName = newStakeholder.name || finalOrganization || getEmployeeName(newStakeholder.employeeId);
+
     const formData: StakeholderFormData = {
-      name:
-        newStakeholder.name ||
-        newStakeholder.organization ||
-        getEmployeeName(newStakeholder.employeeId),
+      name: finalName,
       stakeholderType: newStakeholder.stakeholderType as StakeholderType,
       role: (newStakeholder.role as string) || "",
       email: newStakeholder.email,
       phone: newStakeholder.phone,
       employeeId: newStakeholder.employeeId,
       organizationId: newStakeholder.organizationId,
-      organization: newStakeholder.organization,
+      organization: finalOrganization,
       position: newStakeholder.position,
       isActive: true,
     };
@@ -143,9 +141,22 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
       isPrimary: newStakeholder.isPrimary || false,
     };
 
+    // ✅ Construction explicite du DTO local, avec tous les champs requis par l'interface
     const created: StakeholderDTO = {
       id: Date.now().toString(),
-      ...dto,
+      projectId: projectId!, // ✅ Champ requis ajouté
+      entityType: formData.stakeholderType === StakeholderType.EMPLOYEE 
+        ? StakeholderEntityType.PERSON 
+        : StakeholderEntityType.ORGANIZATION, // ✅ Champ requis ajouté
+      name: formData.name,
+      organization: formData.organization,
+      stakeholderType: formData.stakeholderType,
+      role: formData.role as StakeholderRole,
+      email: formData.email,
+      phone: formData.phone,
+      employeeId: formData.employeeId,
+      organizationId: formData.organizationId,
+      position: formData.position,
       isPrimary: dto.isPrimary || false,
       isInternal: dto.isInternal || false,
       createdAt: new Date().toISOString(),
@@ -225,7 +236,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Aide documents requis (statique, condensée) */}
+        {/* Aide documents requis */}
         <Alert>
           <FileText className="h-4 w-4" />
           <AlertDescription className="text-xs">
@@ -321,15 +332,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     }
                     value={newStakeholder.organizationId}
                     onChange={(organizationId) => {
-                      const sup = suppliers?.find(
-                        (s) => s.id === organizationId
-                      );
+                      const sup = suppliers?.find((s) => s.id === organizationId);
                       setNewStakeholder({
                         ...newStakeholder,
                         organizationId,
-                        organization:
-                          sup?.name || newStakeholder.organization,
-                        name: sup?.name || newStakeholder.name,
+                        organization: sup?.name,
+                        name: sup?.name,
                       });
                     }}
                   />
