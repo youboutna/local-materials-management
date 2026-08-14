@@ -232,6 +232,30 @@ const InsuranceContent = () => {
             </div>
           </div>
 
+          <Breadcrumb
+            className="mb-4"
+            items={[{ label: 'Surveillance' }, { label: 'Gestion des Assurances' }]}
+          />
+
+          <Tabs defaultValue="surveillance" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="surveillance" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
+                <span className="sm:hidden">Alertes</span>
+              </TabsTrigger>
+              <TabsTrigger value="gestion" className="flex items-center gap-2">
+                <ListChecks className="h-4 w-4" />
+                <span className="hidden sm:inline">Gestion des Polices</span>
+                <span className="sm:hidden">Gestion</span>
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                <span>Documents</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="surveillance" className="mt-6">
           {/* Bandeau KPI unifié : polices + alertes (tous les indicateurs existants conservés) */}
           <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
             <Card>
