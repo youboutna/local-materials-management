@@ -58,6 +58,8 @@ function makeService(existingLines: BoqLineDTO[] = [], takeoffs = [makeTakeoff()
       upserted.push(input);
       return { id: 'pm1', ...input };
     }),
+    updateQuantity: vi.fn(),
+    delete: vi.fn(),
   };
 
   const service = new TakeoffToBoqService(takeoffRepo, boqRepo, phaseMaterialRepo);
