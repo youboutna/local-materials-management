@@ -16,7 +16,8 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
   if (!gantt || gantt.isEmpty) return null;
 
   const span = gantt.end - gantt.start || 1;
-  const pct = (t: number) => ((t - gantt.start) / span) * 100;
+  const clampPct = (v: number) => (Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0);
+  const pct = (t: number) => clampPct(((t - gantt.start) / span) * 100);
   const todayPct = gantt.today !== null ? pct(gantt.today) : null;
 
   return (
