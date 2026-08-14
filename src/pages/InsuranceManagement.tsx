@@ -13,6 +13,11 @@
  * - Domain Layer: Entités et DTOs
  */
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
+import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import { Activity, FolderOpen, ListChecks } from 'lucide-react';
+
 import { actionLabels } from '@/application/services/ProjectManagerService';
 import { getInsuranceService } from '@/application/services/InsuranceService';
 import { getProjectService } from '@/application/services/ProjectService';
