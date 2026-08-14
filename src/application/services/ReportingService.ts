@@ -68,9 +68,59 @@ export class ReportingService {
   ) {}
 
   /**
-   * Generate complete project report with all enhanced calculations
+   * Cache applicatif court (TTL) des rapports agrégés.
+   * Objectif perf : un rapport rouvert/regénéré sans changement de données
+   * source ne relance pas les ~10 requêtes d'agrégation.
+   * Clé = projet + signature de données + profil + sections actives.
+   * Invalidation : TTL, ou `invalidateProjectReportCache(projectId)` après écriture.
+   */
+  private static reportCache = new Map<string, { at: number; value: CompleteProjectReportResultDto }>();
+  private static readonly REPORT_CACHE_TTL_MS = 60_000;
+
+  private static buildCacheKey(request: GenerateCompleteProjectReportRequestDto): string {
+    const p: any = request.project ?? {};
+    const sections = request.sections
+      ? Object.keys(request.sections).filter(k => (request.sections as any)[k]).sort().join(',')
+      : '';
+    return [p.id, p.updatedAt ?? p.updated_at, p.progress, p.budget, request.profile ?? 'detailed', sections].join('|');
+  }
+
+  /** À appeler après toute écriture impactant un rapport projet. */
+  static invalidateProjectReportCache(projectId?: string): void {
+    if (!projectId) {
+      ReportingService.reportCache.clear();
+      return;
+    }
+    for (const key of [...ReportingService.reportCache.keys()]) {
+      if (key.startsWith(`${projectId}|`)) ReportingService.reportCache.delete(key);
+    }
+  }
+
+  /**
+   * Generate complete project report with all enhanced calculations (cache TTL).
    */
   async generateCompleteProjectReport(request: GenerateCompleteProjectReportRequestDto): Promise<CompleteProjectReportResultDto> {
+    const key = ReportingService.buildCacheKey(request);
+    const cached = ReportingService.reportCache.get(key);
+    if (cached && Date.now() - cached.at < ReportingService.REPORT_CACHE_TTL_MS) {
+      console.debug('[ReportingService] report cache hit', key);
+      return cached.value;
+    }
+
+    const startedAt = Date.now();
+    const value = await this.computeCompleteProjectReport(request);
+    console.debug(`[ReportingService] report computed in ${Date.now() - startedAt}ms`, key);
+
+    ReportingService.reportCache.set(key, { at: Date.now(), value });
+    // Bornage mémoire : on ne conserve que les 20 rapports les plus récents.
+    if (ReportingService.reportCache.size > 20) {
+      const oldest = [...ReportingService.reportCache.entries()].sort((a, b) => a[1].at - b[1].at)[0];
+      if (oldest) ReportingService.reportCache.delete(oldest[0]);
+    }
+    return value;
+  }
+
+  private async computeCompleteProjectReport(request: GenerateCompleteProjectReportRequestDto): Promise<CompleteProjectReportResultDto> {
     try {
       if (!request.project) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project data is required');
