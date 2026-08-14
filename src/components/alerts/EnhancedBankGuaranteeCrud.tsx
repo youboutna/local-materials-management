@@ -22,7 +22,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { format } from 'date-fns';
 import ListToolbar from '@/components/common/ListToolbar';
 import ExpiryCountdown from '@/components/common/ExpiryCountdown';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExpiryFilter, matchesExpiryFilter } from '@/lib/expiryUx';
 import {
   useBankGuaranteesList,
@@ -241,6 +241,7 @@ const EnhancedBankGuaranteeCrud = () => {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
@@ -543,6 +544,7 @@ const EnhancedBankGuaranteeCrud = () => {
         </Table>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 };
 

@@ -5,7 +5,7 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getExpiryInfo } from '@/lib/expiryUx';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,7 @@ export function ExpiryCountdown({ expiryDate, className }: ExpiryCountdownProps)
   const info = getExpiryInfo(expiryDate);
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Tooltip>
       <TooltipTrigger asChild>
         <div className={cn('min-w-[7.5rem] space-y-1', className)}>
@@ -35,6 +36,7 @@ export function ExpiryCountdown({ expiryDate, className }: ExpiryCountdownProps)
           : "Aucune date d'expiration renseignée"}
       </TooltipContent>
     </Tooltip>
+    </TooltipProvider>
   );
 }
 
