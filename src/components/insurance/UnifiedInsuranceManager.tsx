@@ -14,6 +14,7 @@ import { getInsuranceService, InsuranceService } from '@/application/services/In
 import { getDocumentService } from '@/application/services/DocumentService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import InsuranceDocumentCell from '@/components/insurance/InsuranceDocumentCell';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -720,6 +721,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}
@@ -779,6 +781,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}
@@ -872,6 +875,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" variant="destructive" onClick={() => handleDelete(cert.id!)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}
