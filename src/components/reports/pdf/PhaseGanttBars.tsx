@@ -78,9 +78,9 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
               >
                 <View
                   style={{
-                    width: `${phase.progress}%`,
+                    width: `${progressPct}%`,
                     height: 8,
-                    backgroundColor: phase.progress >= 100 ? '#10b981' : '#3b82f6',
+                    backgroundColor: progressPct >= 100 ? '#10b981' : '#3b82f6',
                   }}
                 />
               </View>
