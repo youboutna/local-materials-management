@@ -45,6 +45,7 @@ import { useWorkflowContext } from '@/contexts/ProjectWorkflowContext';
 import { BankGuaranteeDTO } from "@/dtos/entities/BankGuaranteeDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { DocumentDTO } from "@/dtos/entities/DocumentDTO";
+import { ProjectInsuranceForm } from "@/components/insurance/ProjectInsuranceForm";
 import { InsuranceCertificateDTO } from "@/dtos/entities/InsuranceDTO";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ComplianceDataDTO, ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
