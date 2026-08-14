@@ -232,69 +232,75 @@ const InsuranceContent = () => {
             </div>
           </div>
 
-          {/* Statistiques rapides */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          {/* Bandeau KPI unifié : polices + alertes (tous les indicateurs existants conservés) */}
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-primary">{insuranceStats.total}</div>
+                <div className="text-3xl font-bold text-primary">{insuranceStats.total}</div>
                 <p className="text-sm text-muted-foreground">Total polices</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-600">{insuranceStats.active}</div>
+                <div className="text-3xl font-bold text-success">{insuranceStats.active}</div>
                 <p className="text-sm text-muted-foreground">Actives</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-orange-500">{insuranceStats.expiring}</div>
+                <div className="text-3xl font-bold text-warning">{insuranceStats.expiring}</div>
                 <p className="text-sm text-muted-foreground">Expiration proche</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-red-600">{insuranceStats.expired}</div>
+                <div className="text-3xl font-bold text-destructive">{insuranceStats.expired}</div>
                 <p className="text-sm text-muted-foreground">Expirées</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-primary">
                   {formatAmount2(insuranceStats.coverageTotal)}
                 </div>
                 <p className="text-sm text-muted-foreground">Couverture totale</p>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Statistiques des alertes globales */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
+                <div className="text-3xl font-bold text-destructive">{stats.criticalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Alertes critiques</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-orange-500">{stats.highAlerts || 0}</div>
+                <div className="text-3xl font-bold text-warning">{stats.highAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes élevées</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-blue-500">{stats.openAlerts || 0}</div>
+                <div className="text-3xl font-bold text-primary">{stats.openAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-500">{stats.totalAlerts}</div>
+                <div className="text-3xl font-bold text-success">{stats.totalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Total alertes</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-3xl font-bold text-muted-foreground">
+                  {insuranceStats.total - insuranceStats.active - insuranceStats.expired}
+                </div>
+                <p className="text-sm text-muted-foreground">Autres statuts</p>
+              </CardContent>
+            </Card>
           </div>
+
 
           {/* Alertes d'assurance */}
           {insuranceAlerts.length > 0 && (
