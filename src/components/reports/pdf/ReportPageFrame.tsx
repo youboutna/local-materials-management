@@ -78,6 +78,9 @@ const styles = StyleSheet.create({
   // et laisse la page 1 vide).
   lightHeader: {
     position: 'absolute',
+    // lineHeight explicite : un lineHeight hérité de la Page (ex. 1.4) fait
+    // disparaître les blocs `fixed` positionnés en absolu dans react-pdf.
+    lineHeight: 1,
     top: 10,
     left: 30,
     right: 30,
@@ -99,6 +102,8 @@ const styles = StyleSheet.create({
   },
   pageFooter: {
     position: 'absolute',
+    lineHeight: 1,
+    height: 18,
     bottom: 14,
     left: 30,
     right: 30,
