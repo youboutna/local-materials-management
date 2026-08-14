@@ -11,7 +11,7 @@ import { formatRatio2 } from '@/utils/reportNumbers';
 
 import { ProjectDTO, ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import { ProjectReportDTO } from '@/dtos/entities/ProjectReportDTO';
-import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ProjectMiniMap } from './ProjectMiniMap';
@@ -29,11 +29,9 @@ type ProjectData = ProjectDTO & {
   stakeholders?: Array<{ role?: string; organization?: string }>;
 };
 
-// Register fonts
-Font.register({
-  family: 'Helvetica',
-  src: 'https://fonts.gstatic.com/s/opensans/v17/mem8YaGs126MiZpBA-UFVZ0b.woff2'
-});
+// Perf : pas de Font.register distant (Helvetica est intégrée à react-pdf).
+// Le téléchargement fonts.gstatic.com à chaque rendu ralentissait la génération.
+
 
 const colors = {
   primary: '#1e40af',

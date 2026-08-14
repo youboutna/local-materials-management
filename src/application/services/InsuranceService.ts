@@ -8,6 +8,7 @@ import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertifica
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Status and type constants for validation
@@ -212,62 +213,57 @@ export class InsuranceService {
     return service.getInsuranceStatistics(projectId);
   }
 
+  /**
+   * Persistance réelle du certificat (plus de mock).
+   * `projectId` est obligatoire : sans lui la ligne serait orpheline et
+   * disparaîtrait au rechargement (régression signalée en recette).
+   */
   async createInsuranceCertificate(data: CreateInsuranceCertificateDTO): Promise<InsuranceCertificateDTO> {
+    const projectId = (data as any).projectId || (data as any).project_id;
+    if (!projectId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, "Le projet (projectId) est obligatoire pour un certificat d'assurance");
+    }
+    if (!data.policyNumber && !(data as any).policy_number) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Le numéro de police est obligatoire');
+    }
+
     try {
-      // Use insuranceRepository methods correctly
-      const certificates = await this.insuranceRepository.getByProjectId(data.projectId);
-      const newCert = {
-        id: `cert-${Date.now()}`,
-        project_id: data.projectId,
-        contractor_id: data.contractorId,
-        contractor_name: data.contractorName,
-        insurance_company: data.insuranceCompany,
-        policy_number: data.policyNumber,
-        coverage_amount: data.coverageAmount,
-        coverage_type: data.insuranceType,
-        valid_from: data.validFrom,
-        valid_until: data.validUntil,
-        status: 'active' as const,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      return newCert as InsuranceCertificateDTO;
+      const entity = insuranceTransform.createDataToEntity({ ...data, projectId } as CreateInsuranceCertificateDTO);
+      const created = await this.insuranceRepository.create(entity);
+      return this.mapEntityToDTO(created);
     } catch (error) {
       console.error('InsuranceService.createInsuranceCertificate failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create insurance certificate');
+      throw error instanceof AppError
+        ? error
+        : new AppError(ErrorCode.DATABASE_ERROR, 'Failed to create insurance certificate');
     }
   }
 
   async updateInsuranceCertificate(id: string, data: UpdateInsuranceCertificateDTO): Promise<InsuranceCertificateDTO | null> {
     try {
-      // Return updated certificate as DTO
-      return {
-        id,
-        projectId: '',
-        contractorId: '',
-        contractorName: data.contractorName || '',
-        insuranceCompany: data.insuranceCompany || '',
-        insuranceType: (data.insuranceType || 'responsabilite_civile') as any,
-        policyNumber: data.policyNumber || '',
-        coverageAmount: data.coverageAmount || 0,
-        coverageType: (data.insuranceType as InsuranceType) || 'responsabilite_civile',
-        validFrom: data.validFrom || '',
-        validUntil: data.validUntil || '',
-        status: (data.status || 'active') as any
-      } as InsuranceCertificateDTO;
+      const patch = insuranceTransform.updateDataToEntity(data);
+      const cleaned = Object.fromEntries(
+        Object.entries(patch).filter(([, v]) => v !== undefined),
+      ) as Partial<InsuranceCertificateEntity>;
+      const updated = await this.insuranceRepository.update(id, cleaned);
+      return updated ? this.mapEntityToDTO(updated) : null;
     } catch (error) {
       console.error('InsuranceService.updateInsuranceCertificate failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update insurance certificate');
+      throw error instanceof AppError
+        ? error
+        : new AppError(ErrorCode.DATABASE_ERROR, 'Failed to update insurance certificate');
     }
   }
 
   async deleteInsuranceCertificate(id: string): Promise<boolean> {
     try {
-      // Simulate delete
+      await this.insuranceRepository.delete(id);
       return true;
     } catch (error) {
       console.error('InsuranceService.deleteInsuranceCertificate failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete insurance certificate');
+      throw error instanceof AppError
+        ? error
+        : new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete insurance certificate');
     }
   }
 

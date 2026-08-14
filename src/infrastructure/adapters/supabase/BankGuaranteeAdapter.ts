@@ -29,7 +29,7 @@ export class BankGuaranteeAdapter implements IBankGuaranteeRepository {
       currency: guarantee.currency ?? 'MRU',
       exchange_rate: guarantee.exchange_rate ?? 1,
       phase_id: guarantee.phaseId ?? guarantee.phase_id ?? null,
-      contractor_id: '',
+      contractor_id: (guarantee as any).contractorId ?? (guarantee as any).contractor_id ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

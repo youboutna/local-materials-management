@@ -76,10 +76,17 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
    * Map Entity to DB record
    */
   private mapToDB(entity: InsuranceCertificateEntity): Omit<InsuranceCertificateDB, 'id' | 'created_at' | 'updated_at'> {
+    // `contractor_id` est un uuid en base : une chaîne vide provoque une 400
+    // (invalid input syntax for type uuid). On normalise donc en null.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const contractorId = entity.contractor_id && UUID_RE.test(entity.contractor_id)
+      ? entity.contractor_id
+      : null;
+
     return {
       project_id: entity.project_id,
-      contractor_id: entity.contractor_id,
-      contractor_name: entity.contractor_name,
+      contractor_id: contractorId as unknown as string,
+      contractor_name: entity.contractor_name || null as unknown as string,
       insurance_company: entity.insurance_company,
       policy_number: entity.policy_number,
       coverage_amount: entity.coverage_amount,

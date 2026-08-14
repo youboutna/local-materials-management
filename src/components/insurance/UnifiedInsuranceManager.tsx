@@ -14,6 +14,7 @@ import { getInsuranceService, InsuranceService } from '@/application/services/In
 import { getDocumentService } from '@/application/services/DocumentService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import InsuranceDocumentCell from '@/components/insurance/InsuranceDocumentCell';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,9 @@ import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { usePagination } from '@/hooks/usePagination';
+import ListToolbar from '@/components/common/ListToolbar';
+import ExpiryCountdown from '@/components/common/ExpiryCountdown';
+import { ExpiryFilter, matchesExpiryFilter } from '@/lib/expiryUx';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -114,6 +118,8 @@ const UnifiedInsuranceManager = () => {
   const [selectedCertificate, setSelectedCertificate] = useState<InsuranceCertificateDTO | null>(null);
   const [activeTab, setActiveTab] = useState('alerts');
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [search, setSearch] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>('all');
 
   // Pagination
   const {
@@ -128,6 +134,19 @@ const UnifiedInsuranceManager = () => {
     itemsPerPage: 10
   });
 
+  // Recherche / filtres rapides (couche présentation : la liste complète reste
+  // accessible via « Tous », aucune colonne ni donnée n'est retirée).
+  const filteredCertificates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return certificates.filter((c) => {
+      if (!matchesExpiryFilter(c.validUntil, expiryFilter)) return false;
+      if (!q) return true;
+      return [c.projectId, c.contractorName, c.insuranceCompany, c.policyNumber, c.coverageType, c.status, c.notes]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    });
+  }, [certificates, search, expiryFilter]);
+
   const {
     currentData: paginatedCertificates,
     currentPage: certificatesPage,
@@ -136,7 +155,7 @@ const UnifiedInsuranceManager = () => {
     itemsPerPage: certificatesItemsPerPage,
     goToPage: goToCertificatesPage
   } = usePagination({
-    data: certificates,
+    data: filteredCertificates,
     itemsPerPage: 10
   });
 
@@ -669,6 +688,7 @@ const UnifiedInsuranceManager = () => {
                     <TableHead>Police</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Expiration</TableHead>
+                    <TableHead>Jours restants</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -687,6 +707,9 @@ const UnifiedInsuranceManager = () => {
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <ExpiryCountdown expiryDate={cert.validUntil} />
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -720,6 +743,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}
@@ -753,6 +777,7 @@ const UnifiedInsuranceManager = () => {
                     <TableHead>Police</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Expiration</TableHead>
+                    <TableHead>Jours restants</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -764,9 +789,13 @@ const UnifiedInsuranceManager = () => {
                       <TableCell>{getCoverageTypeLabel(cert.coverageType || '')}</TableCell>
                       <TableCell>{cert.policyNumber}</TableCell>
                       <TableCell>{(cert.coverageAmount || 0).toLocaleString()} MRU</TableCell>
-                      <TableCell className="text-red-600">
+                      <TableCell className="text-destructive">
                         {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
                       </TableCell>
+                      <TableCell>
+                        <ExpiryCountdown expiryDate={cert.validUntil} />
+                      </TableCell>
+
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" onClick={() => {
@@ -779,6 +808,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" onClick={() => handleRenewCertificate(cert)}>
                             Renouveler
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}
@@ -803,6 +833,14 @@ const UnifiedInsuranceManager = () => {
               <CardTitle>Tous les Certificats ({stats.total})</CardTitle>
             </CardHeader>
             <CardContent>
+              <ListToolbar
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Rechercher (projet, contractant, assureur, police…)"
+                expiryFilter={expiryFilter}
+                onExpiryFilterChange={setExpiryFilter}
+                resultCount={filteredCertificates.length}
+              />
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -812,6 +850,7 @@ const UnifiedInsuranceManager = () => {
                     <TableHead>Police</TableHead>
                     <TableHead>Montant</TableHead>
                     <TableHead>Expiration</TableHead>
+                    <TableHead>Jours restants</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -831,6 +870,9 @@ const UnifiedInsuranceManager = () => {
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <ExpiryCountdown expiryDate={cert.validUntil} />
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(cert.status || '')}>
@@ -872,6 +914,7 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" variant="destructive" onClick={() => handleDelete(cert.id!)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
                             entityType="insurance"
                             entityId={cert.id!}

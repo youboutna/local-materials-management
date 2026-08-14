@@ -39,11 +39,30 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       const projectEntity = this.createProjectEntity(project);
       
       // 2. Fetch related data from database using official Supabase types
-      const [phasesData, milestonesData, materialsData, inspectionsData] = await Promise.all([
+      // Perf : tous les accès DB sont désormais parallélisés (avant : 6 vagues
+      // séquentielles → 15-30 s sur les gros projets).
+      const [
+        phasesData,
+        milestonesData,
+        materialsData,
+        inspectionsData,
+        paymentsResponse,
+        analytics,
+        financialMetrics,
+        riskAssessment,
+        enhancedPhases,
+        constructionMilestones,
+      ] = await Promise.all([
         supabase.from('project_phases').select('*').eq('project_id', project.id),
         supabase.from('project_milestones').select('*').eq('project_id', project.id),
         supabase.from('project_materials').select('*').eq('project_id', project.id),
-        supabase.from('inspections').select('*').eq('project_id', project.id)
+        supabase.from('inspections').select('*').eq('project_id', project.id),
+        supabase.from('payments').select('amount').eq('project_id', project.id),
+        this.calculateProjectAnalytics(project),
+        this.calculateFinancialMetrics(project.id),
+        this.assessProjectRisks(project),
+        this.fetchEnhancedPhases(project.id),
+        this.fetchConstructionMilestones(project.id),
       ]);
 
       // 3. Calculate metrics using real data with proper typing
@@ -53,24 +72,11 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       const inspections = inspectionsData.data || [] as InspectionRow[];
 
       // 4. Use ReportCalculations for EVM metrics (Domain logic)
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('project_id', project.id);
-      
-      const actualCost = (paymentsData as PaymentRow[]).reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      const actualCost = ((paymentsResponse.data as PaymentRow[]) || []).reduce(
+        (sum, payment) => sum + (payment.amount || 0),
+        0,
+      );
       const evmMetrics = ReportCalculations.calculateEVMMetrics(projectEntity, actualCost, phases);
-
-      // 5. Use ProjectDataCalculations for project analytics (Domain logic)
-      const analytics = await this.calculateProjectAnalytics(project);
-
-      // 6. Calculate financial metrics and risk assessment
-      const financialMetrics = await this.calculateFinancialMetrics(project.id);
-      const riskAssessment = await this.assessProjectRisks(project);
-
-      // 7. Fetch enhanced phases and construction milestones
-      const enhancedPhases = await this.fetchEnhancedPhases(project.id);
-      const constructionMilestones = await this.fetchConstructionMilestones(project.id);
 
       // 8. Return final report DTO with all data
       return {

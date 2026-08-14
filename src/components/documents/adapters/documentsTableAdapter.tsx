@@ -20,7 +20,8 @@ export type DocumentsTableFilter =
   | { column: 'inspection_id'; value: string }
   | { column: 'supplier_id'; value: string }
   | { column: 'document_type'; value: string }
-  | { column: 'metadata_material_id'; value: string };
+  | { column: 'metadata_material_id'; value: string }
+  | { column: 'metadata_scope'; value: string };
 
 export interface DocumentsTableAdapterOptions {
   scopeLabel: string;
@@ -69,11 +70,15 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      const mappedFilters = filters.map((f) =>
-        f.column === 'metadata_material_id'
-          ? { column: 'material_id', value: f.value, op: 'contains' as const }
-          : { column: f.column, value: f.value, op: 'eq' as const }
-      );
+      const mappedFilters = filters.map((f) => {
+        if (f.column === 'metadata_material_id') {
+          return { column: 'material_id', value: f.value, op: 'contains' as const };
+        }
+        if (f.column === 'metadata_scope') {
+          return { column: 'scope', value: f.value, op: 'contains' as const };
+        }
+        return { column: f.column, value: f.value, op: 'eq' as const };
+      });
       return await documentRepository.findRawByFilters(mappedFilters);
     },
   });
@@ -116,7 +121,8 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
     // 2. Insert document row
     const filterDefaults: Record<string, unknown> = {};
     for (const f of filters) {
-      if (f.column !== 'metadata_material_id') filterDefaults[f.column] = f.value;
+      if (f.column === 'metadata_material_id' || f.column === 'metadata_scope') continue;
+      filterDefaults[f.column] = f.value;
     }
     const { data: userData } = await supabase.auth.getUser();
 

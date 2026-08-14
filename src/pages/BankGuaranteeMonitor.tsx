@@ -13,6 +13,11 @@ import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuarantee
 import { AppLayout } from '@/components/layout';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
+import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import { Activity, FolderOpen, ListChecks } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Alert } from '@/domain/entities/Alert';
@@ -78,78 +83,107 @@ const BankGuaranteeContent = () => {
         )
       }
     >
-      <div className="space-y-8">
-        {/* Statistiques rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
-              <p className="text-sm text-muted-foreground">Alertes critiques</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-orange-500">{stats.highAlerts || 0}</div>
-              <p className="text-sm text-muted-foreground">Alertes élevées</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-blue-500">{stats.openAlerts || 0}</div>
-              <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-green-500">{stats.totalAlerts}</div>
-              <p className="text-sm text-muted-foreground">Total alertes</p>
-            </CardContent>
-          </Card>
-        </div>
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Surveillance' },
+          { label: 'Garanties Bancaires' },
+        ]}
+      />
 
-        {/* Project Manager Alerts */}
-        {bankGuaranteeAlerts.length > 0 && (
-          <Card className="mb-8 border-red-200 bg-red-50">
-            <CardHeader>
-              <CardTitle className="text-red-800 flex items-center gap-2">
-                <span>🚨 Alertes Garanties Bancaires</span>
-                <Badge variant="destructive">{bankGuaranteeAlerts.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {bankGuaranteeAlerts.map((alert) => (
-                  <div key={alert.id} className="p-4 bg-white border border-red-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-red-800">{alert.message || alert.title || 'Alerte'}</p>
-                        <p className="text-sm text-red-600 mt-1">
-                          Sévérité: {alert.severity || 'medium'} | Type: {alert.type || 'unknown'}
-                        </p>
-                        <p className="text-xs text-red-500 mt-1">
-                          Détecté le: {new Date(alert.timestamp || alert.createdAt || Date.now()).toLocaleString('fr-FR')}
-                        </p>
+      <Tabs defaultValue="surveillance" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="surveillance" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
+            <span className="sm:hidden">Alertes</span>
+          </TabsTrigger>
+          <TabsTrigger value="gestion" className="flex items-center gap-2">
+            <ListChecks className="h-4 w-4" />
+            <span className="hidden sm:inline">Gestion des Garanties</span>
+            <span className="sm:hidden">Gestion</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4" />
+            <span>Documents</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="surveillance" className="mt-6 space-y-8">
+          {/* Statistiques rapides */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-destructive">{stats.criticalAlerts}</div>
+                <p className="text-sm text-muted-foreground">Alertes critiques</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-warning">{stats.highAlerts || 0}</div>
+                <p className="text-sm text-muted-foreground">Alertes élevées</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-primary">{stats.openAlerts || 0}</div>
+                <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-2xl font-bold text-success">{stats.totalAlerts}</div>
+                <p className="text-sm text-muted-foreground">Total alertes</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Project Manager Alerts */}
+          {bankGuaranteeAlerts.length > 0 && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardHeader>
+                <CardTitle className="text-destructive flex items-center gap-2">
+                  <span>🚨 Alertes Garanties Bancaires</span>
+                  <Badge variant="destructive">{bankGuaranteeAlerts.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {bankGuaranteeAlerts.map((alert) => (
+                    <div key={alert.id} className="p-4 bg-background border border-destructive/30 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-destructive">{alert.message || alert.title || 'Alerte'}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Sévérité: {alert.severity || 'medium'} | Type: {alert.type || 'unknown'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Détecté le: {new Date(alert.timestamp || alert.createdAt || Date.now()).toLocaleString('fr-FR')}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="destructive" onClick={() => handleAcknowledge(alert.id)}>
+                          Acquitter
+                        </Button>
                       </div>
-                      <button
-                        onClick={() => handleAcknowledge(alert.id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
-                      >
-                        Acquitter
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Composants de monitoring */}
-        <BankGuaranteeMonitor />
-        <div className="mt-8">
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Surveillance + seuils d'escalade */}
+          <BankGuaranteeMonitor />
+        </TabsContent>
+
+        <TabsContent value="gestion" className="mt-6">
           <EnhancedBankGuaranteeCrud />
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="documents" className="mt-6">
+          <MonitoringDocumentsPanel scope="bank_guarantee" />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };

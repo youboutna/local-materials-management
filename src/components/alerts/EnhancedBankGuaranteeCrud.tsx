@@ -3,7 +3,7 @@
  * Uses camelCase formData aligned with BankGuaranteeFormData from hooks
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,10 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { format } from 'date-fns';
+import ListToolbar from '@/components/common/ListToolbar';
+import ExpiryCountdown from '@/components/common/ExpiryCountdown';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ExpiryFilter, matchesExpiryFilter } from '@/lib/expiryUx';
 import {
   useBankGuaranteesList,
   useCreateBankGuarantee,
@@ -36,6 +40,9 @@ const EnhancedBankGuaranteeCrud = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuaranteeRow | null>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     projectId: '',
@@ -187,6 +194,20 @@ const EnhancedBankGuaranteeCrud = () => {
     }
   };
 
+  // Filtrage/recherche côté présentation : aucune donnée n'est retirée du modèle,
+  // la liste complète reste accessible via le filtre « Tous ».
+  const filteredGuarantees = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return guarantees.filter((g) => {
+      if (typeFilter !== 'all' && g.guaranteeType !== typeFilter) return false;
+      if (!matchesExpiryFilter(g.expiryDate, expiryFilter)) return false;
+      if (!q) return true;
+      return [g.projectId, g.bankName, g.guaranteeType, g.contractorName, g.status, g.notes]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    });
+  }, [guarantees, search, expiryFilter, typeFilter]);
+
   const getStatusColor = (status: string) => {
     return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
   };
@@ -220,6 +241,7 @@ const EnhancedBankGuaranteeCrud = () => {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
@@ -404,6 +426,27 @@ const EnhancedBankGuaranteeCrud = () => {
       </CardHeader>
       
       <CardContent>
+        <ListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher (projet, banque, type, contractant…)"
+          expiryFilter={expiryFilter}
+          onExpiryFilterChange={setExpiryFilter}
+          resultCount={filteredGuarantees.length}
+        >
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[15rem]">
+              <SelectValue placeholder="Type de garantie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              {guaranteeTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </ListToolbar>
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -412,12 +455,13 @@ const EnhancedBankGuaranteeCrud = () => {
               <TableHead>Type</TableHead>
               <TableHead>Montant</TableHead>
               <TableHead>Expiration</TableHead>
+              <TableHead>Jours restants</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {guarantees.map((guarantee) => (
+            {filteredGuarantees.map((guarantee) => (
               <TableRow key={guarantee.id}>
                 <TableCell className="font-medium">
                   {guarantee.projectId ? (
@@ -445,35 +489,54 @@ const EnhancedBankGuaranteeCrud = () => {
                   </div>
                 </TableCell>
                 <TableCell>
+                  <ExpiryCountdown expiryDate={guarantee.expiryDate} />
+                </TableCell>
+                <TableCell>
                   <Badge className={getStatusColor(guarantee.status)}>
                     {statusOptions.find(s => s.value === guarantee.status)?.label || guarantee.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleDelete(guarantee.id)}
-                      className="text-red-600 hover:text-red-700"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)} aria-label="Consulter">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Consulter la garantie</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)} aria-label="Modifier">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Modifier la garantie</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(guarantee.id)}
+                          className="text-destructive hover:text-destructive"
+                          disabled={deleteMutation.isPending}
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Supprimer la garantie</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
-            {guarantees.length === 0 && (
+            {filteredGuarantees.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Aucune garantie bancaire trouvée
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  Aucune garantie bancaire ne correspond aux filtres
                 </TableCell>
               </TableRow>
             )}
@@ -481,6 +544,7 @@ const EnhancedBankGuaranteeCrud = () => {
         </Table>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 };
 

@@ -13,6 +13,11 @@
  * - Domain Layer: Entités et DTOs
  */
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
+import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import { Activity, FolderOpen, ListChecks } from 'lucide-react';
+
 import { actionLabels } from '@/application/services/ProjectManagerService';
 import { getInsuranceService } from '@/application/services/InsuranceService';
 import { getProjectService } from '@/application/services/ProjectService';
@@ -232,69 +237,99 @@ const InsuranceContent = () => {
             </div>
           </div>
 
-          {/* Statistiques rapides */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <Breadcrumb
+            className="mb-4"
+            items={[{ label: 'Surveillance' }, { label: 'Gestion des Assurances' }]}
+          />
+
+          <Tabs defaultValue="surveillance" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="surveillance" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
+                <span className="sm:hidden">Alertes</span>
+              </TabsTrigger>
+              <TabsTrigger value="gestion" className="flex items-center gap-2">
+                <ListChecks className="h-4 w-4" />
+                <span className="hidden sm:inline">Gestion des Polices</span>
+                <span className="sm:hidden">Gestion</span>
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                <span>Documents</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="surveillance" className="mt-6">
+          {/* Bandeau KPI unifié : polices + alertes (tous les indicateurs existants conservés) */}
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-primary">{insuranceStats.total}</div>
+                <div className="text-3xl font-bold text-primary">{insuranceStats.total}</div>
                 <p className="text-sm text-muted-foreground">Total polices</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-600">{insuranceStats.active}</div>
+                <div className="text-3xl font-bold text-success">{insuranceStats.active}</div>
                 <p className="text-sm text-muted-foreground">Actives</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-orange-500">{insuranceStats.expiring}</div>
+                <div className="text-3xl font-bold text-warning">{insuranceStats.expiring}</div>
                 <p className="text-sm text-muted-foreground">Expiration proche</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-red-600">{insuranceStats.expired}</div>
+                <div className="text-3xl font-bold text-destructive">{insuranceStats.expired}</div>
                 <p className="text-sm text-muted-foreground">Expirées</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-primary">
                   {formatAmount2(insuranceStats.coverageTotal)}
                 </div>
                 <p className="text-sm text-muted-foreground">Couverture totale</p>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Statistiques des alertes globales */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
+                <div className="text-3xl font-bold text-destructive">{stats.criticalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Alertes critiques</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-orange-500">{stats.highAlerts || 0}</div>
+                <div className="text-3xl font-bold text-warning">{stats.highAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes élevées</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-blue-500">{stats.openAlerts || 0}</div>
+                <div className="text-3xl font-bold text-primary">{stats.openAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-500">{stats.totalAlerts}</div>
+                <div className="text-3xl font-bold text-success">{stats.totalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Total alertes</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-3xl font-bold text-muted-foreground">
+                  {insuranceStats.total - insuranceStats.active - insuranceStats.expired}
+                </div>
+                <p className="text-sm text-muted-foreground">Autres statuts</p>
+              </CardContent>
+            </Card>
           </div>
+
 
           {/* Alertes d'assurance */}
           {insuranceAlerts.length > 0 && (
@@ -375,9 +410,17 @@ const InsuranceContent = () => {
               </CardContent>
             </Card>
           )}
+            </TabsContent>
 
-          {/* Composant principal - UnifiedInsuranceManager */}
-          <UnifiedInsuranceManager />
+            <TabsContent value="gestion" className="mt-6">
+              {/* Composant principal - UnifiedInsuranceManager */}
+              <UnifiedInsuranceManager />
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-6">
+              <MonitoringDocumentsPanel scope="insurance" />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
