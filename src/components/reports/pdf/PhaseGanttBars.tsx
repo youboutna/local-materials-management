@@ -16,7 +16,8 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
   if (!gantt || gantt.isEmpty) return null;
 
   const span = gantt.end - gantt.start || 1;
-  const pct = (t: number) => ((t - gantt.start) / span) * 100;
+  const clampPct = (v: number) => (Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 0);
+  const pct = (t: number) => clampPct(((t - gantt.start) / span) * 100);
   const todayPct = gantt.today !== null ? pct(gantt.today) : null;
 
   return (
@@ -51,7 +52,8 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
       {/* Barres de phases */}
       {gantt.phases.map((phase) => {
         const left = pct(phase.start);
-        const width = Math.max(1, pct(phase.end) - left);
+        const width = Math.min(100 - left, Math.max(1, pct(phase.end) - left));
+        const progressPct = clampPct(phase.progress);
         return (
           <View key={phase.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
             <View style={{ width: '30%' }}>
@@ -76,9 +78,9 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
               >
                 <View
                   style={{
-                    width: `${phase.progress}%`,
+                    width: `${progressPct}%`,
                     height: 8,
-                    backgroundColor: phase.progress >= 100 ? '#10b981' : '#3b82f6',
+                    backgroundColor: progressPct >= 100 ? '#10b981' : '#3b82f6',
                   }}
                 />
               </View>

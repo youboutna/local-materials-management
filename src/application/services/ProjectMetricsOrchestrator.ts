@@ -531,7 +531,10 @@ export class ProjectMetricsOrchestrator {
 
     const startYear = new Date(start).getFullYear();
     const endYear = new Date(end).getFullYear();
-    const years = Array.from({ length: Math.max(1, endYear - startYear + 1) }, (_, i) => startYear + i);
+    // Garde-fou : des dates aberrantes (année 1970 ou 275760) produisaient une
+// longueur de tableau invalide et faisaient planter le rendu PDF.
+    const yearSpan = Number.isFinite(endYear - startYear) ? endYear - startYear + 1 : 1;
+    const years = Array.from({ length: Math.min(30, Math.max(1, yearSpan)) }, (_, i) => startYear + i);
 
     const milestones = [0, 25, 50, 75, 100].map((ratio) => ({
       label: `Jalon ${ratio}%`,

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -87,6 +87,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+/** Redirige /projects/:id/phases vers l'onglet WBS du détail projet. */
+function ProjectPhasesRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/projects/${id}?tab=phases` : '/projects'} replace />;
+}
 
 function App() {
   // En mode développement, ajouter automatiquement les rôles requis
@@ -243,6 +249,11 @@ function App() {
                             <ProjectEdit />
                           </RoleBasedRoute>
                         }
+                      />
+                      {/* Liste des phases : pas de page dédiée, on redirige vers l'onglet WBS du projet */}
+                      <Route
+                        path="/projects/:id/phases"
+                        element={<ProjectPhasesRedirect />}
                       />
                       <Route
                         path="/projects/:projectId/phases/:phaseId"
