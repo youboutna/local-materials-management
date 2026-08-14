@@ -17,7 +17,8 @@ const styles = StyleSheet.create({
     padding: 30,
     fontFamily: 'Helvetica',
     fontSize: 12,
-    lineHeight: 1.4,
+    // lineHeight non hérité sur la Page : un lineHeight global masque les
+    // blocs `fixed` positionnés en absolu (en-tête allégé, pied de page).
   },
   header: {
     flexDirection: 'row',
