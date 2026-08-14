@@ -8,6 +8,7 @@ import { InsuranceCertificateEntity } from '@/domain/entities/InsuranceCertifica
 import { IInsuranceRepository } from '@/domain/repositories/IInsuranceRepository';
 import { CreateInsuranceCertificateDTO, CreateInsuranceRequestDTO, InsuranceAlertDTO, InsuranceCertificateDTO, InsuranceStatisticsDTO, InsuranceStatus, InsuranceType, UpdateInsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { insuranceTransform } from '@/dtos/transforms/insuranceTransform';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Status and type constants for validation
