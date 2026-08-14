@@ -129,24 +129,44 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
   const judgement = judge(spiForJudgement, cpiForJudgement);
 
   // Écarts par phase (DeviationEngine en scope 'phase')
-  const phaseDeviations = useMemo(
-    () =>
-      targetPhases.map((p) => ({
-        phase: p,
-        results: DeviationEngine.compute(
-          {
-            plannedEndDate: p.endDate ?? null,
-            actualEndDate: p.actualEndDate ?? p.endDate ?? null,
-            plannedBudget: p.budget ?? null,
-            actualCost: p.actualCost ?? null,
-            plannedProgress: p.plannedProgress ?? null,
-            actualProgress: p.actualProgress ?? p.progress ?? null,
-          },
-          "phase",
-        ),
-      })),
-    [targetPhases],
-  );
+  const phaseDeviations = useMemo(() => {
+    const rows = targetPhases.map((p) => ({
+      phase: { id: p.id, name: p.name },
+      results: DeviationEngine.compute(
+        {
+          plannedEndDate: p.endDate ?? null,
+          actualEndDate: p.actualEndDate ?? p.endDate ?? null,
+          plannedBudget: p.budget ?? null,
+          actualCost: p.actualCost ?? null,
+          plannedProgress: p.plannedProgress ?? null,
+          actualProgress: p.actualProgress ?? p.progress ?? null,
+        },
+        "phase",
+      ),
+    }));
+
+    // Aucune phase WBS : on calcule l'écart au niveau projet afin que le suivi
+    // reste exploitable (même source unique de métriques).
+    if (rows.length === 0) {
+      return [
+        {
+          phase: { id: project.id, name: `${project.title} (projet — aucune phase)` },
+          results: DeviationEngine.compute(
+            {
+              plannedEndDate: project.endDate ?? null,
+              actualEndDate: project.endDate ?? null,
+              plannedBudget: metrics.budget || null,
+              actualCost: metrics.actualCost || null,
+              plannedProgress: metrics.evm.plannedProgress ?? null,
+              actualProgress: metrics.progress ?? null,
+            },
+            "project",
+          ),
+        },
+      ];
+    }
+    return rows;
+  }, [targetPhases, project, metrics]);
 
   const hasAnyDeviation = phaseDeviations.some((p) => p.results.length > 0);
 
@@ -206,8 +226,11 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Progression globale</p>
-          <Progress value={project.progress || 0} />
+          <p className="text-xs text-muted-foreground mb-1">
+            Progression globale ({metrics.formatted.progress} · source : {metrics.progressBasisLabel})
+          </p>
+          <Progress value={metrics.progress} />
+
         </div>
 
         {/* Tableau des écarts par phase */}

@@ -43,6 +43,12 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
         Calendrier réel du projet ({format(new Date(gantt.start), 'dd/MM/yyyy')} →{' '}
         {format(new Date(gantt.end), 'dd/MM/yyyy')})
       </p>
+      {gantt.hasRealPhases === false && (
+        <p className="text-xs text-warning">
+          Aucune phase datée : la frise affiche le calendrier projet. Ajoutez des phases WBS datées
+          pour obtenir le détail par phase.
+        </p>
+      )}
 
       {/* Échelle des années */}
       <div className="flex items-center gap-2">

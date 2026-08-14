@@ -103,6 +103,8 @@ export interface GanttPhaseModel {
   weightBasis: string;
   weightBasisLabel: string;
   status?: string | null;
+  /** true si la barre est déduite du calendrier projet (aucune phase datée). */
+  isSynthetic?: boolean;
 }
 
 export interface GanttModel {
@@ -114,6 +116,8 @@ export interface GanttModel {
   /** Jalons de progression (0/25/50/75/100) positionnés sur la frise. */
   milestones: Array<{ label: string; ratio: number; reached: boolean; date: number }>;
   isEmpty: boolean;
+  /** true si au moins une phase réelle datée alimente la frise. */
+  hasRealPhases: boolean;
 }
 
 export interface ProjectMetrics {
@@ -174,7 +178,7 @@ const WEIGHT_BASIS_LABELS: Record<string, string> = {
   budget: 'budget',
   duration: 'durée',
   equal: 'égal',
-  project: 'projet',
+  project: 'projet (aucune phase)',
 };
 
 const num = (value: unknown): number => {
@@ -489,7 +493,16 @@ export class ProjectMetricsOrchestrator {
     const candidateEnds = [...rows.map((r) => r.end), projectEnd].filter((n) => Number.isFinite(n));
 
     if (candidateStarts.length === 0 || candidateEnds.length === 0) {
-      return { start: 0, end: 0, today: null, years: [], phases: [], milestones: [], isEmpty: true };
+      return {
+        start: 0,
+        end: 0,
+        today: null,
+        years: [],
+        phases: [],
+        milestones: [],
+        isEmpty: true,
+        hasRealPhases: false,
+      };
     }
 
     const start = Math.min(...candidateStarts);
@@ -508,14 +521,36 @@ export class ProjectMetricsOrchestrator {
       date: start + (span * ratio) / 100,
     }));
 
+    // Aucune phase datée mais un calendrier projet exploitable : on trace une
+    // barre « projet » de synthèse pour que la frise reflète le calendrier réel
+    // (le Gantt ne doit jamais être vide quand le projet est daté).
+    const hasRealPhases = rows.length > 0;
+    const displayRows: GanttPhaseModel[] = hasRealPhases
+      ? rows
+      : [
+          {
+            id: project.id || 'project',
+            name: `${project.title || 'Projet'} (calendrier projet)`,
+            start,
+            end,
+            progress: clamp100(progress),
+            weight: 1,
+            weightBasis: 'project',
+            weightBasisLabel: WEIGHT_BASIS_LABELS.project,
+            status: null,
+            isSynthetic: true,
+          },
+        ];
+
     return {
       start,
       end,
       today: now >= start && now <= end ? now : null,
       years,
-      phases: rows,
+      phases: displayRows,
       milestones,
-      isEmpty: rows.length === 0,
+      isEmpty: displayRows.length === 0,
+      hasRealPhases,
     };
   }
 }
