@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,9 +75,119 @@ import {
   useSupplierPortalPaymentRequestsHex,
   useSupplierPortalDocumentsHex,
   useAddSupplierTaskCommentHex,
-
 } from "@/hooks/hexagonal";
-// Payment initiation data is now handled through notifications tab
+
+// ✅ Import du panneau réutilisable
+import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsPanel";
+
+// ✅ Import du GED centralisé (DocumentHub)
+import { DocumentHub } from "@/components/documents/hub/DocumentHub";
+import type { DocumentHubContract, DocumentItem } from "@/components/documents/hub/types";
+
+// ✅ Définition du contrat GED pour le fournisseur
+function createSupplierDocumentHubContract(
+  supplierId: string,
+  documents: any[],
+  refetch: () => void,
+  uploadDocument: (data: any) => void,
+  deleteDocument?: (id: string) => void
+): DocumentHubContract {
+  return {
+    scopeLabel: "Documents fournisseur",
+    canUpload: true,
+    facets: [
+      {
+        key: "documentType",
+        label: "Type",
+        options: [
+          { value: "inspection", label: "Inspection" },
+          { value: "plan", label: "Plan" },
+          { value: "photo", label: "Photo" },
+          { value: "invoice", label: "Facture" },
+          { value: "purchase_order", label: "Bon de commande" },
+          { value: "inquiry", label: "Demande" },
+          { value: "contract", label: "Contrat" },
+          { value: "report", label: "Rapport" },
+          { value: "certificate", label: "Certificat" },
+          { value: "specification", label: "Spécification" },
+          { value: "supplier_info", label: "Information fournisseur" },
+        ],
+      },
+      {
+        key: "status",
+        label: "Statut",
+        options: [
+          { value: "draft", label: "Brouillon" },
+          { value: "pending_review", label: "En révision" },
+          { value: "approved", label: "Approuvé" },
+          { value: "rejected", label: "Rejeté" },
+        ],
+      },
+    ],
+    categoryLabels: {
+      documentType: (value: string) => {
+        const map: Record<string, string> = {
+          inspection: "Inspection",
+          plan: "Plan",
+          photo: "Photo",
+          invoice: "Facture",
+          purchase_order: "Bon de commande",
+          inquiry: "Demande",
+          contract: "Contrat",
+          report: "Rapport",
+          certificate: "Certificat",
+          specification: "Spécification",
+          supplier_info: "Information fournisseur",
+        };
+        return map[value] || value;
+      },
+      status: (value: string) => {
+        const map: Record<string, string> = {
+          draft: "Brouillon",
+          pending_review: "En révision",
+          approved: "Approuvé",
+          rejected: "Rejeté",
+        };
+        return map[value] || value;
+      },
+    },
+    useDocuments: () => {
+      const items = documents.map((doc): DocumentItem => ({
+        id: doc.id,
+        title: doc.title,
+        fileName: doc.fileName || doc.file_name || doc.title,
+        fileUrl: doc.fileUrl || doc.file_url || doc.fileUrl,
+        fileSize: doc.fileSize || doc.file_size || 0,
+        mimeType: doc.mimeType || doc.mime_type || "application/octet-stream",
+        createdAt: doc.createdAt || doc.created_at || new Date().toISOString(),
+        updatedAt: doc.updatedAt || doc.updated_at || new Date().toISOString(),
+        facets: {
+          documentType: doc.documentType || doc.document_type || "other",
+          status: doc.status || "draft",
+        },
+        metadata: doc.metadata || {},
+        permissions: doc.permissions || { canView: true, canDownload: true },
+      }));
+      return { data: items, isLoading: false };
+    },
+    onUpload: async (file: File, metadata: Record<string, any>) => {
+      await uploadDocument({
+        file,
+        title: metadata.title || file.name,
+        description: metadata.description || "",
+        documentType: metadata.documentType || "other",
+        supplierId,
+      });
+      refetch();
+    },
+    onDelete: deleteDocument
+      ? async (item: DocumentItem) => {
+          await deleteDocument(item.id);
+          refetch();
+        }
+      : undefined,
+  };
+}
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -97,20 +207,15 @@ const UnifiedSupplierPortal = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "documents";
   const [activeTab, setActiveTab] = useState(initialTab);
-  // v3.2 : tender sélectionné pour créer un devis depuis l'onglet Appels d'Offres.
   const [selectedBidTenderId, setSelectedBidTenderId] = useState<string | null>(
     searchParams.get("tenderId"),
   );
 
-  // Keep tab state in sync with URL (e.g. redirect from /supplier-access after code secret validation).
   useEffect(() => {
     const urlTab = searchParams.get("tab");
     if (urlTab && urlTab !== activeTab) setActiveTab(urlTab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // Event bridge : EnhancedSupplierTenderPortal fires `boq-create-quote` with tenderId
-  // ⇒ on bascule vers l'onglet Devis avec le contexte pré-rempli.
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ tenderId?: string }>).detail;
@@ -143,15 +248,13 @@ const UnifiedSupplierPortal = () => {
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
-  // Use hexagonal hooks
   const { user, session, loading } = useSupplierPortalAuthHex();
   const { data: supplierProfile } = useFetchSupplierProfileHex(user);
   const { data: notificationsRaw } = useSupplierPortalNotificationsHex(supplierProfile?.id ?? "");
   const notifications = (notificationsRaw ?? []) as SupplierNotificationRow[];
   const { data: paymentRequests = [], refetch: refetchPaymentRequests } = useSupplierPortalPaymentRequestsHex(supplierProfile?.id ?? "");
-  const { data: documents = [] } = useSupplierPortalDocumentsHex(supplierProfile?.id ?? "");
+  const { data: documents = [], refetch: refetchDocuments } = useSupplierPortalDocumentsHex(supplierProfile?.id ?? "");
   
-  // Mutations
   const loginMutation = useSupplierLoginHex();
   const signUpMutation = useSupplierSignUpHex();
   const logoutMutation = useSupplierLogoutHex();
@@ -159,8 +262,6 @@ const UnifiedSupplierPortal = () => {
   const addTaskCommentMutation = useAddSupplierTaskCommentHex();
   const markTaskCompletedMutation = useMarkTaskCompletedHex();
 
-  // Fetch parsed invoices using hexagonal hook
-  // This replaces the direct Supabase "parsed_invoices" table call
   const { invoices: parsedInvoices = [], isLoading: invoicesLoading, refetch: refetchInvoices } = useParsedInvoicesHex(supplierProfile?.id || "");
   const { createInvoice, isCreating: isParsingInvoice } = useInvoiceMutationsHex();
   const [invoiceParsing, setInvoiceParsing] = useState(false);
@@ -174,8 +275,6 @@ const UnifiedSupplierPortal = () => {
       const up = await storageUpload(file, path);
       if (!up.success) throw new Error("Upload échoué");
 
-      // Utilise le parseur DQE unifié (PDF/Excel/CSV) — mêmes règles que l'import DQE
-      // avec détection TVA/taxes et alignement colonnes → BoqLineDTO.
       const { unifiedBoqParser } = await import('@/application/services/boq/UnifiedBoqParser');
       const { BoqImportOrchestrator } = await import('@/application/services/boq/BoqImportOrchestrator');
 
@@ -236,7 +335,6 @@ const UnifiedSupplierPortal = () => {
     }
   };
 
-  // Fetch inspections with service layer (stakeholder-based)
   const {
     inspections: supplierInspections = [],
     loading: inspectionsLoading,
@@ -258,7 +356,6 @@ const UnifiedSupplierPortal = () => {
   const handleFileUpload = async () => {
     if (!uploadFile || !uploadTitle.trim() || !user) return;
 
-    // Build a collision-free storage path: prefix + timestamp + random + original name.
     const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
     const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
     const uploadResult = await storageUpload(uploadFile, uniquePath);
@@ -276,7 +373,6 @@ const UnifiedSupplierPortal = () => {
       supplierId: supplierProfile?.id,
     });
 
-    // Reset form
     setUploadFile(null);
     setUploadTitle("");
     setUploadDescription("");
@@ -323,13 +419,10 @@ const UnifiedSupplierPortal = () => {
     (p) => p.status === "pending"
   ).length;
   const unreadNotifications = notifications.filter((n) => !n.used_at).length;
-  
-  // Count payment initiation notifications
   const paymentInitiationsCount = notifications.filter(
     (n) => n.notification_type === "payment_initiation" && !n.used_at
   ).length;
 
-  // Handle clicking on a payment initiation notification
   const handlePaymentInitiationClick = (notification: SupplierNotificationRow) => {
     const metadata = notification.metadata as any;
     setPrefillPaymentData({
@@ -341,8 +434,6 @@ const UnifiedSupplierPortal = () => {
     setActiveTab("payments");
   };
 
-  // Guest access via secret code (from /supplier-access redirect).
-  // MUST run before any early return to preserve hook order (React #310).
   const guestPayload = React.useMemo(() => {
     const tenderId = searchParams.get('tenderId');
     const secret = searchParams.get('secret');
@@ -365,6 +456,18 @@ const UnifiedSupplierPortal = () => {
     return null;
   }, [searchParams]);
 
+  // ✅ Construction du contrat GED fournisseur
+  const supplierDocumentHubContract = useMemo(() => {
+    if (!supplierProfile?.id) return null;
+    return createSupplierDocumentHubContract(
+      supplierProfile.id,
+      documents,
+      refetchDocuments,
+      uploadDocumentMutation.mutate,
+      undefined // pas de suppression pour l'instant
+    );
+  }, [supplierProfile, documents, refetchDocuments, uploadDocumentMutation]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -374,7 +477,6 @@ const UnifiedSupplierPortal = () => {
   }
 
   if (!user && guestPayload) {
-    // Guest via secret code — show a real tab shell (Appels d'offres + Documents partagés).
     const guestTab = searchParams.get("tab") === "documents" ? "documents" : "tenders";
     const setGuestTab = (v: string) => {
       const next = new URLSearchParams(searchParams);
@@ -428,7 +530,6 @@ const UnifiedSupplierPortal = () => {
       </div>
     );
   }
-
 
   if (!user) {
     return (
@@ -508,6 +609,7 @@ const UnifiedSupplierPortal = () => {
               Déconnexion
             </Button>
           </div>
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-l-4 border-l-green-500">
@@ -592,152 +694,37 @@ const UnifiedSupplierPortal = () => {
               <TabsTrigger value="invoices">Factures</TabsTrigger>
             </TabsList>
 
-
-            {/* Documents Tab */}
+            {/* ✅ ONGLET DOCUMENTS – Utilise le GED centralisé */}
             <TabsContent value="documents">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Documents Partagés
-                  </CardTitle>
-
-                  {/* Filters */}
-                  <div className="flex gap-4 mt-4">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Rechercher des documents..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full"
-                      />
+              {supplierDocumentHubContract ? (
+                <DocumentHub
+                  contract={supplierDocumentHubContract}
+                  heading={
+                    <div className="flex items-center justify-between px-4 py-2 border-b">
+                      <div>
+                        <h2 className="text-sm font-semibold">GED Fournisseur</h2>
+                        <p className="text-xs text-muted-foreground">
+                          Tous les documents liés à votre compte fournisseur
+                        </p>
+                      </div>
                     </div>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Statut" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous</SelectItem>
-                        <SelectItem value="draft">Brouillon</SelectItem>
-                        <SelectItem value="pending_review">
-                          En révision
-                        </SelectItem>
-                        <SelectItem value="approved">Approuvé</SelectItem>
-                        <SelectItem value="rejected">Rejeté</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous</SelectItem>
-                        <SelectItem value="inspection">Inspection</SelectItem>
-                        <SelectItem value="plan">Plan</SelectItem>
-                        <SelectItem value="photo">Photo</SelectItem>
-                        <SelectItem value="invoice">Facture</SelectItem>
-                        <SelectItem value="purchase_order">
-                          Bon de commande
-                        </SelectItem>
-                        <SelectItem value="inquiry">Demande</SelectItem>
-                        <SelectItem value="contract">Contrat</SelectItem>
-                        <SelectItem value="report">Rapport</SelectItem>
-                        <SelectItem value="certificate">Certificat</SelectItem>
-                        <SelectItem value="specification">
-                          Spécification
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {filteredDocuments.length > 0 ? (
-                      filteredDocuments.map((document) => (
-                        <div
-                          key={document.id}
-                          className="p-4 rounded-lg border bg-card"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-8 w-8 text-muted-foreground" />
-                              <div>
-                                <h3 className="font-medium">
-                                  {document.title}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {document.description}
-                                </p>
-                                <div className="flex gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {document.documentType}
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {document.createdAt
-                                    ? new Date(
-                                        document.createdAt
-                                      ).toLocaleDateString("fr-FR")
-                                    : "Date inconnue"}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={
-                                  document.status === "approved"
-                                    ? "default"
-                                    : "secondary"
-                                }
-                                className={
-                                  document.status === "approved"
-                                    ? "bg-green-100 text-green-800"
-                                    : document.status === "rejected"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-orange-100 text-orange-800"
-                                }
-                              >
-                                {document.status}
-                              </Badge>
-                              {document.fileUrl && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    openDocument(document, {
-                                      proxy: true,
-                                      allowStatusChange: false,
-                                      context: { portail: "Fournisseur" },
-                                    })
-                                  }
-                                  title="Consulter le document"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">
-                        Aucun document trouvé
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  }
+                />
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Chargement du hub documentaire...
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
-            {/* Tender Submissions Tab - New */}
+            {/* Tender Submissions Tab */}
             <TabsContent value="tenders">
               <EnhancedSupplierTenderPortal />
             </TabsContent>
 
-            {/* Devis Tab — BoqWorkspace en mode bid pour chiffrer / générer PDF signé */}
+            {/* Devis Tab */}
             <TabsContent value="devis">
               {supplierProfile?.id ? (
                 selectedBidTenderId ? (
@@ -756,8 +743,7 @@ const UnifiedSupplierPortal = () => {
               )}
             </TabsContent>
 
-
-            {/* Upload Tab */}
+            {/* Upload Tab – Conservé pour compatibilité / téléchargement rapide */}
             <TabsContent value="upload">
               <Card>
                 <CardHeader>
@@ -765,6 +751,9 @@ const UnifiedSupplierPortal = () => {
                     <Upload className="h-5 w-5" />
                     Télécharger un Document
                   </CardTitle>
+                  <CardDescription>
+                    Les documents seront également visibles dans l'onglet "Documents" via le hub GED.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -853,7 +842,7 @@ const UnifiedSupplierPortal = () => {
               </Card>
             </TabsContent>
 
-            {/* Payment Requests Tab */}
+            {/* Payments Tab */}
             <TabsContent value="payments">
               <div className="space-y-6">
                 {supplierProfile && (
@@ -863,6 +852,28 @@ const UnifiedSupplierPortal = () => {
                     onPrefillUsed={() => setPrefillPaymentData(null)}
                   />
                 )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Mes demandes de paiement
+                    </CardTitle>
+                    <CardDescription>
+                      Historique et suivi de vos demandes de paiement
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AssociatedPaymentsPanel
+                      entityType="supplier"
+                      entityId={supplierProfile?.id || ''}
+                      showActions={false}
+                      onPaymentCreated={() => {
+                        refetchPaymentRequests();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 
@@ -877,7 +888,6 @@ const UnifiedSupplierPortal = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Payment Initiation Notifications - Highlighted */}
                     {notifications
                       .filter((n) => n.notification_type === "payment_initiation")
                       .map((notification) => {
@@ -936,7 +946,6 @@ const UnifiedSupplierPortal = () => {
                         );
                       })}
 
-                    {/* Other Notifications */}
                     {notifications
                       .filter((n) => n.notification_type !== "payment_initiation")
                       .map((notification) => (
@@ -1100,7 +1109,7 @@ const UnifiedSupplierPortal = () => {
               />
             </TabsContent>
 
-            {/* Parsed Invoices Tab */}
+            {/* Invoices Tab */}
             <TabsContent value="invoices">
               {supplierProfile?.id ? (
                 <DqeWorkspace
@@ -1113,7 +1122,6 @@ const UnifiedSupplierPortal = () => {
                 <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
               )}
             </TabsContent>
-
           </Tabs>
         </div>
       </main>

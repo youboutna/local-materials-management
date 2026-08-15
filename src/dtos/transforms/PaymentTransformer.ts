@@ -2,7 +2,6 @@
  * Payment Transformer - Hexagonal Architecture
  * Transforms between Payment entities and DTOs
  * Following clean architecture principles with proper separation of concerns
- * Includes functionality from PaymentDomainTransformer
  */
 
 import { Payment, PaymentMethod, PaymentStatus } from '@/domain/entities/Payment';
@@ -39,15 +38,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static manyToDTO(payments: Payment[]): PaymentDTO[] {
     return payments.map(payment => this.toDTO(payment));
   }
+
   /**
    * Transform Payment entity to PaymentDTO (Domain Entity → DTO)
-   * Converts domain entity to data transfer object for UI layer
-  */
+   */
   static toDTO(entity: Payment): PaymentDTO {
     return {
       id: entity.id,
       projectId: entity.project?.id || '',
-      contractorId: '', // Cannot resolve without project context
+      contractorId: '',
       contractorName: entity.contractorName,
       contractorContact: entity.contractorContact,
       amount: entity.amount,
@@ -55,7 +54,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       paymentMethod: entity.paymentMethod,
       transactionId: entity.transactionId || '',
       progressAtPayment: entity.progressAtPayment,
-      inspectionId: '', // Would need to extract from entity
+      inspectionId: '',
       phaseId: entity.phase?.id || '',
       bankName: entity.bankName || '',
       accountNumber: entity.accountNumber || '',
@@ -63,51 +62,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       mobileNumber: entity.mobileNumber || '',
       mobileOperator: entity.mobileOperator || '',
       receiverName: entity.receiverName || '',
-      createdAt: entity.createdAt || new Date().toISOString(),
-      updatedAt: entity.updatedAt || new Date().toISOString()
-    };
-  }
-
-  /**
-   * Transform Payment entity to PaymentDTO with project context for contractor resolution
-   * (Domain Entity → DTO with relationship resolution)
-   */
-  static toDTOWithProjectContext(entity: Payment, project: Project): PaymentDTO {
-    // Derive contractorId from project relationships (suppliers or employees)
-    let contractorId = '';
-    if (entity.contractorName) {
-      // Try to find contractor in project suppliers first
-      const supplier = project.suppliers?.find((s) => s.name === entity.contractorName);
-      if (supplier) {
-        contractorId = supplier.id;
-      } else {
-        // If not found in suppliers, try employees
-        const employee = project.employees?.find((e) => e.fullName === entity.contractorName);
-        if (employee) {
-          contractorId = employee.id;
-        }
-      }
-    }
-
-    return {
-      id: entity.id,
-      projectId: entity.project?.id || '',
-      contractorId: contractorId, // Now properly derived from project relationships
-      contractorName: entity.contractorName,
-      contractorContact: entity.contractorContact,
-      amount: entity.amount,
-      paymentDate: entity.paymentDate, // This exists in PaymentDTO
-      paymentMethod: entity.paymentMethod,
-      transactionId: entity.transactionId || '',
-      progressAtPayment: entity.progressAtPayment,
-      inspectionId: '', // Would need to extract from entity
-      phaseId: entity.phase?.id || '',
-      bankName: entity.bankName || '',
-      accountNumber: entity.accountNumber || '',
-      checkNumber: entity.checkNumber || '',
-      mobileNumber: entity.mobileNumber || '',
-      mobileOperator: entity.mobileOperator || '',
-      receiverName: entity.receiverName || '',
+      status: entity.status,
       createdAt: entity.createdAt || new Date().toISOString(),
       updatedAt: entity.updatedAt || new Date().toISOString()
     };
@@ -115,17 +70,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Transform PaymentDTO to Payment entity (DTO → Domain Entity)
-   * Converts data transfer object to domain entity
-   * Following hexagonal architecture: Presentation → Application → Domain
    */
   static toEntity(dto: PaymentDTO): Payment {
     return Payment.create({
       id: dto.id,
-      project: null, // Would need to fetch from project repository
-      phase: null, // Would need to fetch from phase repository using dto.phaseId
-      inspection: null, // Would need to fetch from inspection repository using dto.inspectionId
+      project: null,
+      phase: null,
+      inspection: null,
       amount: dto.amount,
-      paymentMethod: dto.paymentMethod as PaymentMethod, // Proper enum conversion
+      paymentMethod: dto.paymentMethod as PaymentMethod,
       contractorName: dto.contractorName,
       contractorContact: dto.contractorContact,
       progressAtPayment: dto.progressAtPayment
@@ -134,19 +87,25 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Transform CreatePaymentDTO to Payment entity
+   * ✅ Génération automatique d'un ID si absent
    */
   static fromCreateDTOToEntity(dto: CreatePaymentDTO): Payment {
-    return Payment.create({
-      id: (dto as any).id || '',
-      project: null,
-      phase: null,
-      inspection: null,
-      amount: dto.amount,
-      paymentMethod: dto.paymentMethod as PaymentMethod,
-      contractorName: dto.contractorName,
-      contractorContact: dto.contractorContact || '',
-      progressAtPayment: dto.progressAtPayment
-    });
+  const id = (dto as any).id || crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  // Le statut est initialisé à 'pending' par défaut (géré par le constructeur Payment)
+  return Payment.create({
+    id,
+    project: null,
+    phase: null,
+    inspection: null,
+    amount: dto.amount,
+    paymentMethod: dto.paymentMethod as PaymentMethod,
+    contractorName: dto.contractorName,
+    contractorContact: dto.contractorContact || '',
+    progressAtPayment: dto.progressAtPayment,
+    // Le statut est géré par le constructeur Payment (status par défaut = 'pending')
+    createdBy: dto.createdBy || null
+  });
+  
   }
 
   /**
@@ -177,29 +136,23 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
    */
   static validatePaymentData(payment: Partial<Payment>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
     if (!payment.amount || payment.amount <= 0) {
       errors.push('Payment amount must be greater than 0');
     }
-    
     if (!payment.paymentDate) {
       errors.push('Payment date is required');
     } else if (new Date(payment.paymentDate) > new Date()) {
       errors.push('Payment date cannot be in the future');
     }
-    
     if (!payment.paymentMethod || payment.paymentMethod.trim() === '') {
       errors.push('Payment method is required');
     }
-    
     if (!payment.contractorName || payment.contractorName.trim() === '') {
       errors.push('Contractor name is required');
     }
-    
     if (payment.progressAtPayment !== undefined && (payment.progressAtPayment < 0 || payment.progressAtPayment > 100)) {
       errors.push('Progress at payment must be between 0 and 100');
     }
-    
     return {
       isValid: errors.length === 0,
       errors
@@ -214,22 +167,22 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const onTimePayments = payments.filter(p => {
       const paymentDate = new Date(p.paymentDate);
       const dueDate = new Date(p.paymentDate);
-      dueDate.setDate(dueDate.getDate() + 30); // Assume 30-day payment term
+      dueDate.setDate(dueDate.getDate() + 30);
       return paymentDate <= dueDate;
     }).length;
-    
+
     const paymentRate = totalPayments > 0 ? (onTimePayments / totalPayments) * 100 : 0;
     const onTimePaymentRate = paymentRate >= 90 ? 'Excellent' : paymentRate >= 70 ? 'Good' : 'Poor';
-    
+
     const daysOverdue = payments.reduce((total, payment) => {
       const paymentDate = new Date(payment.paymentDate);
       const dueDate = new Date(payment.paymentDate);
       dueDate.setDate(dueDate.getDate() + 30);
       return paymentDate > dueDate ? total + Math.floor((paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : total;
     }, 0);
-    
+
     const averagePaymentDelay = totalPayments > 0 ? daysOverdue / totalPayments : 0;
-    
+
     return {
       paymentRate,
       onTimePaymentRate,
@@ -244,46 +197,38 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static calculatePaymentRisk(payment: Payment): PaymentRiskResult {
     const riskFactors: string[] = [];
     const recommendations: string[] = [];
-    
-    // Check payment status - use valid PaymentStatus values
+
     if (payment.status === 'failed' || payment.status === 'cancelled') {
       riskFactors.push('Payment has issues');
       recommendations.push('Review payment status and resolve issues');
     }
-    
-    if (payment.status === 'pending' || payment.status === 'processing') {
+    if (payment.status === 'pending') {
       riskFactors.push('Payment is still processing');
       recommendations.push('Monitor payment progress');
     }
-    
-    // Check payment method risk
     if (payment.paymentMethod === 'cash') {
       riskFactors.push('Cash payment - higher risk');
       recommendations.push('Consider electronic payment methods');
     }
-    
-    // Check amount risk
     if (payment.amount > 100000) {
       riskFactors.push('High payment amount');
       recommendations.push('Require additional approval for large payments');
     }
-    
-    // Determine risk level
+
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
     if (riskFactors.length >= 3) {
       riskLevel = 'high';
     } else if (riskFactors.length >= 1) {
       riskLevel = 'medium';
     }
-    
-    // Financial health assessment
+
     let financialHealth = 'Good';
     if (riskLevel === 'high') {
       financialHealth = 'Poor';
     } else if (riskLevel === 'medium') {
       financialHealth = 'Fair';
     }
-    
+
     return {
       riskLevel,
       riskFactors,
@@ -299,15 +244,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const totalPaid = payments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0);
-    
+
     const totalDue = payments
-      .filter(p => p.status === 'pending' || p.status === 'processing')
+      .filter(p => p.status === 'pending')
       .reduce((sum, p) => sum + p.amount, 0);
-    
+
     const cashFlowVariance = totalDue > 0 ? ((totalPaid - totalDue) / totalDue) * 100 : 0;
-    
+
     const efficiency = PaymentTransformer.calculatePaymentEfficiency(payments);
-    
+
     return {
       totalPaid,
       totalDue,
@@ -323,7 +268,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static isOverdue(payment: Payment): boolean {
     const paymentDate = new Date(payment.paymentDate);
     const dueDate = new Date(payment.paymentDate);
-    dueDate.setDate(dueDate.getDate() + 30); // Assume 30-day payment term
+    dueDate.setDate(dueDate.getDate() + 30);
     return paymentDate > dueDate && payment.status !== 'completed';
   }
 
@@ -333,11 +278,11 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static paymentToRequestDTO(payment: Payment): PaymentRequestDTO {
     return {
       id: payment.id,
-      supplierId: payment.contractorName, // Use contractorName as supplierId
-      projectId: payment.project?.id || '', // Access through project relationship
+      supplierId: payment.contractorName,
+      projectId: payment.project?.id || '',
       amount: payment.amount,
-      description: '', // Payment entity doesn't have description
-      paymentReason: '', // Payment entity doesn't have paymentReason
+      description: '',
+      paymentReason: '',
       status: payment.status as 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled',
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt
@@ -417,13 +362,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return dtos.map(dto => PaymentTransformer.toEntity(dto));
   }
 
-  /**
-   * Convert DTO to domain entity (alias for toEntity)
-   * Rule #3: from dtos->DB
-   */
   static toDomain(dto: PaymentDTO | any): Payment {
-    // Handle both camelCase and snake_case properties from DTO
-    // Note: Payment domain entity may use different property names
     const payload = {
       ...dto,
       projectId: dto.projectId || dto.project_id || (dto.project && typeof dto.project === 'object' ? dto.project.id : ''),
@@ -432,16 +371,10 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return this.toEntity(payload);
   }
 
-  /**
-   * Batch: DTOs → Domain Entities
-   */
   static manyFromDTO(dtos: PaymentDTO[]): Payment[] {
     return dtos.map(dto => this.toEntity(dto));
   }
 
-  /**
-   * Convert multiple domain entities to DTOs
-   */
   static toDTOs(payments: Payment[]): PaymentDTO[] {
     return payments.map(payment => this.toDTO(payment));
   }
@@ -450,15 +383,12 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return rows.map(row => PaymentTransformer.toEntityFromDatabaseRow(row));
   }
 
-  /**
-   * Convert database row to Payment entity
-   */
   static toEntityFromDatabaseRow(row: Record<string, unknown>): Payment {
     return Payment.create({
       id: row.id as string,
-      project: null, // Would need to fetch from project repository
-      phase: null, // Would need to fetch from phase repository
-      inspection: null, // Would need to fetch from inspection repository
+      project: null,
+      phase: null,
+      inspection: null,
       amount: Number(row.amount),
       paymentMethod: row.payment_method as PaymentMethod,
       contractorName: row.contractor_name as string,
@@ -469,7 +399,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Payment Method-Specific Validation
-   * Validates payment data based on payment method requirements
    */
   static validatePaymentMethod(dto: Partial<PaymentDTO>): {
     isValid: boolean;
@@ -484,7 +413,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const method = dto.paymentMethod;
     const amount = dto.amount;
 
-    // Basic validation
     if (!method) {
       errors.push('Payment method is required');
       return { isValid: false, errors, warnings, requiredFields };
@@ -494,56 +422,36 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       errors.push('Payment amount must be greater than 0');
     }
 
-    // Method-specific validation
     switch (method) {
-      case 'bank_transfer':
+      case 'bank_transfer': {
         requiredFields.push('bankName', 'accountNumber');
-        if (!dto.bankName?.trim()) {
-          errors.push('Bank name is required for bank transfers');
-        }
-        if (!dto.accountNumber?.trim()) {
-          errors.push('Account number is required for bank transfers');
-        }
-        if (amount && amount > 100000) {
-          warnings.push('Large bank transfer - consider additional approval');
-        }
+        if (!dto.bankName?.trim()) errors.push('Bank name is required for bank transfers');
+        if (!dto.accountNumber?.trim()) errors.push('Account number is required for bank transfers');
+        if (amount && amount > 100000) warnings.push('Large bank transfer - consider additional approval');
         break;
-
-      case 'cash':
+      }
+      case 'cash': {
         requiredFields.push('receiverName');
-        if (!dto.receiverName?.trim()) {
-          errors.push('Receiver name is required for cash payments');
-        }
-        if (amount && amount > 5000) {
-          warnings.push('Large cash payment - consider electronic methods');
-        }
+        if (!dto.receiverName?.trim()) errors.push('Receiver name is required for cash payments');
+        if (amount && amount > 5000) warnings.push('Large cash payment - consider electronic methods');
         break;
-
-      case 'check':
+      }
+      case 'check': {
         requiredFields.push('checkNumber', 'bankName');
-        if (!dto.checkNumber?.trim()) {
-          errors.push('Check number is required for check payments');
-        }
-        if (!dto.bankName?.trim()) {
-          errors.push('Bank name is required for check payments');
-        }
+        if (!dto.checkNumber?.trim()) errors.push('Check number is required for check payments');
+        if (!dto.bankName?.trim()) errors.push('Bank name is required for check payments');
         break;
-
-      case 'mobile_payment':
+      }
+      case 'mobile_payment': {
         requiredFields.push('mobileNumber', 'mobileOperator', 'receiverName');
-        if (!dto.mobileNumber?.trim()) {
-          errors.push('Mobile number is required for mobile payments');
-        }
-        if (!dto.mobileOperator?.trim()) {
-          errors.push('Mobile operator is required for mobile payments');
-        }
-        if (!dto.receiverName?.trim()) {
-          errors.push('Receiver name is required for mobile payments');
-        }
+        if (!dto.mobileNumber?.trim()) errors.push('Mobile number is required for mobile payments');
+        if (!dto.mobileOperator?.trim()) errors.push('Mobile operator is required for mobile payments');
+        if (!dto.receiverName?.trim()) errors.push('Receiver name is required for mobile payments');
         break;
-
-      default:
+      }
+      default: {
         errors.push(`Unsupported payment method: ${method}`);
+      }
     }
 
     return {
@@ -556,7 +464,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * File Upload Processing for Payments
-   * Processes receipt and invoice file uploads
    */
   static processPaymentFiles(dto: Partial<PaymentDTO>): {
     receiptUrl?: string;
@@ -570,12 +477,10 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const missingDocuments: string[] = [];
     let hasRequiredDocuments = true;
 
-    // Business rules for document requirements
     if (!receiptUrl) {
       missingDocuments.push('receipt');
       hasRequiredDocuments = false;
     }
-
     if (!invoiceUrl) {
       missingDocuments.push('invoice');
       hasRequiredDocuments = false;
@@ -591,7 +496,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Payment Blocking Logic
-   * Validates if payment can proceed based on blocking rules
    */
   static validatePaymentBlocking(dto: PaymentDTO, projectContext?: Record<string, unknown>): {
     canProceed: boolean;
@@ -603,47 +507,35 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const warningReasons: string[] = [];
     const requiredActions: string[] = [];
 
-    // Amount-based blocking
     if (dto.amount && dto.amount > 500000) {
       blockingReasons.push('Payment amount exceeds maximum limit');
       requiredActions.push('Obtain director approval');
     }
-
-    // Progress validation
     if (dto.progressAtPayment && (dto.progressAtPayment < 0 || dto.progressAtPayment > 100)) {
       blockingReasons.push('Invalid progress percentage');
     }
-
-    // Contractor validation
     if (!dto.contractorId && !dto.contractorName) {
       blockingReasons.push('Contractor information is required');
     }
-
-    // Project validation
     if (!dto.projectId) {
       blockingReasons.push('Project information is required');
     }
 
-    // Document validation
     const fileValidation = PaymentTransformer.processPaymentFiles(dto);
     if (!fileValidation.hasRequiredDocuments) {
       blockingReasons.push(`Missing required documents: ${fileValidation.missingDocuments.join(', ')}`);
       requiredActions.push('Upload missing documents');
     }
 
-    // Payment method validation
     const methodValidation = PaymentTransformer.validatePaymentMethod(dto);
     if (!methodValidation.isValid) {
       blockingReasons.push(...methodValidation.errors);
     }
 
-    // Warnings for large amounts
     if (dto.amount && dto.amount > 100000) {
       warningReasons.push('Large payment amount - additional review recommended');
       requiredActions.push('Schedule additional review');
     }
-
-    // Warnings for incomplete information
     if (!dto.transactionId) {
       warningReasons.push('Transaction ID not provided - tracking may be difficult');
     }
@@ -657,8 +549,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   }
 
   /**
-   * Enhanced Payment Creation with Business Rules
-   * Creates payment with full validation and blocking logic
+   * Enhanced Payment Creation with Validation
    */
   static createPaymentWithValidation(dto: CreatePaymentDTO, projectContext?: Record<string, unknown>): {
     payment: Payment;
@@ -674,24 +565,20 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Convert to full DTO for validation
     const fullDTO: PaymentDTO = {
       ...dto,
       id: (dto as any).id || crypto.randomUUID(),
-      status: 'pending', // Default status for new payments
+      status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    // Run all validations
     const methodValidation = PaymentTransformer.validatePaymentMethod(fullDTO);
     const blockingValidation = PaymentTransformer.validatePaymentBlocking(fullDTO, projectContext);
 
-    // Aggregate results
     errors.push(...methodValidation.errors);
     warnings.push(...methodValidation.warnings, ...blockingValidation.warningReasons);
 
-    // Create payment entity
     const payment = PaymentTransformer.fromCreateDTOToEntity(dto);
 
     return {
@@ -709,7 +596,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Payment Status Workflow Management
-   * Manages payment status transitions with business rules
    */
   static validateStatusTransition(currentStatus: string, newStatus: string): {
     isValid: boolean;
@@ -720,14 +606,13 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Define allowed status transitions
     const statusTransitions: Record<string, string[]> = {
       'pending': ['processing', 'approved', 'cancelled'],
       'processing': ['completed', 'failed', 'cancelled'],
       'approved': ['processing', 'cancelled'],
-      'completed': ['cancelled'], // Final state, only cancellation allowed
-      'failed': ['pending', 'cancelled'], // Can retry or cancel
-      'cancelled': [] // Final state
+      'completed': ['cancelled'],
+      'failed': ['pending', 'cancelled'],
+      'cancelled': []
     };
 
     const allowedTransitions = statusTransitions[currentStatus] || [];
@@ -736,11 +621,9 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       errors.push(`Invalid status transition from ${currentStatus} to ${newStatus}`);
     }
 
-    // Business rule warnings
     if (currentStatus === 'completed' && newStatus === 'cancelled') {
       warnings.push('Cancelling a completed payment - ensure proper reversal procedures');
     }
-
     if (currentStatus === 'failed' && newStatus === 'completed') {
       warnings.push('Marking failed payment as completed - verify payment actually succeeded');
     }
@@ -755,7 +638,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Bulk Payment Processing
-   * Processes multiple payments with validation and blocking logic
    */
   static processBulkPayments(dtos: CreatePaymentDTO[], projectContext?: Record<string, unknown>): {
     payments: Payment[];
@@ -824,7 +706,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
 
   /**
    * Payment Analytics Generation
-   * Generates comprehensive payment analytics
    */
   static generatePaymentAnalytics(payments: PaymentDTO[]): {
     totalPayments: number;
@@ -841,7 +722,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const averagePaymentAmount = totalPayments > 0 ? totalAmount / totalPayments : 0;
 
-    // Group by payment method
     const paymentsByMethod = payments.reduce((acc, payment) => {
       const method = payment.paymentMethod || 'unknown';
       if (!acc[method]) acc[method] = { count: 0, amount: 0 };
@@ -850,7 +730,6 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       return acc;
     }, {} as Record<string, { count: number; amount: number }>);
 
-    // Group by status
     const paymentsByStatus = payments.reduce((acc, payment) => {
       const status = payment.status || 'unknown';
       if (!acc[status]) acc[status] = { count: 0, amount: 0 };
@@ -859,17 +738,15 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       return acc;
     }, {} as Record<string, { count: number; amount: number }>);
 
-    // Calculate metrics
     const overduePayments = payments.filter(p =>
       p.paymentDate && new Date(p.paymentDate) < new Date() &&
-      (p.status === 'pending' || p.status === 'processing')
+      (p.status === 'pending')
     ).length;
 
     const blockedPayments = payments.filter(p => p.status === 'blocked').length;
     const completedPayments = payments.filter(p => p.status === 'completed').length;
     const completionRate = totalPayments > 0 ? (completedPayments / totalPayments) * 100 : 0;
 
-    // Risk score based on overdue and blocked payments
     const riskScore = Math.min(100,
       (overduePayments * 10) +
       (blockedPayments * 20) +

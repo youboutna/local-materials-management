@@ -1,109 +1,183 @@
+// src/config/referentials/payment-origin.referential.ts
+
 /**
- * Référentiel « Origine & cycle de vie des demandes de paiement ».
- * Centralise les points d'entrée (auto inspection, projet, portail fournisseur, manuel),
- * les types de demande et leur statut initial, ainsi que les méthodes de paiement.
- * Aucun libellé ni seuil ne doit être codé en dur dans l'UI.
+ * Référentiel des origines de paiement
+ * Définit les types d'origine, les statuts initiaux, les méthodes de paiement par défaut
+ * Utilisé par le formulaire unifié de paiement et les hooks associés
  */
 
-export type PaymentOriginKey = 'auto_inspection' | 'project' | 'supplier_portal' | 'manual';
+// ============================================================
+// TYPES
+// ============================================================
 
-export interface PaymentOriginDef {
-  key: PaymentOriginKey;
-  label: string;
-  shortLabel: string;
-  description: string;
-  /** Type de paiement proposé par défaut */
-  defaultType: PaymentRequestTypeKey;
-  /** Le type est-il verrouillé pour ce point d'entrée ? */
-  lockType: boolean;
-  /** Libellé du bouton principal */
-  submitLabel: string;
-}
+export type PaymentOriginKey = 'auto-post-inspection' | 'project' | 'supplier-portal' | 'manual';
 
 export type PaymentRequestTypeKey = 'demande' | 'programme' | 'validation';
 
-export interface PaymentRequestTypeDef {
+export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'blocked' | 'paid';
+
+export interface PaymentOriginConfig {
+  label: string;
+  shortLabel: string;
+  initialStatus: PaymentStatus;
+  requestType: PaymentRequestTypeKey;
+  defaultType: PaymentRequestTypeKey;   // ✅ Ajouté
+  lockType?: boolean;                   // ✅ Ajouté (si on peut changer le type)
+  submitLabel: string;                 // ✅ Ajouté
+}
+
+export interface PaymentMethodOption {
+  value: string;
+  label: string;
+}
+
+export interface PaymentRequestTypeInfo {
   key: PaymentRequestTypeKey;
   label: string;
   description: string;
-  /** Statut applicatif initial (mappé sur les statuts existants du DTO) */
-  initialStatus: 'pending' | 'approved' | 'processed';
+  initialStatus: PaymentStatus;
 }
 
-export const PAYMENT_ORIGINS: Record<PaymentOriginKey, PaymentOriginDef> = {
-  auto_inspection: {
-    key: 'auto_inspection',
-    label: 'Automatique – post-inspection',
+// ============================================================
+// CONSTANTES
+// ============================================================
+
+export const PAYMENT_ORIGINS: Record<PaymentOriginKey, PaymentOriginConfig> = {
+  'auto-post-inspection': {
+    label: 'Auto post-inspection',
     shortLabel: 'Auto',
-    description: 'Demande pré-remplie à partir d’une inspection validée.',
-    defaultType: 'demande',
+    initialStatus: 'pending',
+    requestType: 'validation',
+    defaultType: 'validation',
     lockType: true,
     submitLabel: 'Confirmer la demande',
   },
-  project: {
-    key: 'project',
-    label: 'Gestionnaire – page projet',
+  'project': {
+    label: 'Projet',
     shortLabel: 'Projet',
-    description: 'Saisie par le chef de projet depuis le détail du projet.',
-    defaultType: 'demande',
+    initialStatus: 'pending',
+    requestType: 'programme',
+    defaultType: 'programme',
     lockType: false,
-    submitLabel: 'Enregistrer la demande',
+    submitLabel: 'Programmer le paiement',
   },
-  supplier_portal: {
-    key: 'supplier_portal',
+  'supplier-portal': {
     label: 'Portail fournisseur',
-    shortLabel: 'Portail',
-    description: 'Demande soumise par le contractant depuis son espace.',
+    shortLabel: 'Fournisseur',
+    initialStatus: 'pending',
+    requestType: 'demande',
     defaultType: 'demande',
     lockType: true,
     submitLabel: 'Soumettre ma demande',
   },
-  manual: {
-    key: 'manual',
-    label: 'Saisie manuelle',
+  'manual': {
+    label: 'Manuel',
     shortLabel: 'Manuel',
-    description: 'Création depuis la page Contrôle des Paiements.',
+    initialStatus: 'pending',
+    requestType: 'demande',
     defaultType: 'demande',
     lockType: false,
-    submitLabel: 'Enregistrer le paiement',
+    submitLabel: 'Enregistrer la demande',
   },
 };
 
-export const PAYMENT_REQUEST_TYPES: PaymentRequestTypeDef[] = [
+export const PAYMENT_STATUSES: Record<PaymentStatus, string> = {
+  pending: 'En attente',
+  approved: 'Approuvé',
+  rejected: 'Rejeté',
+  blocked: 'Bloqué',
+  paid: 'Payé',
+};
+
+// ✅ PAYMENT_REQUEST_TYPES est maintenant un tableau (pour .map())
+export const PAYMENT_REQUEST_TYPES: PaymentRequestTypeInfo[] = [
   {
     key: 'demande',
     label: 'Demande',
-    description: 'Soumise pour validation par le gestionnaire.',
+    description: 'Soumettre une demande de paiement (statut initial : En attente)',
     initialStatus: 'pending',
   },
   {
     key: 'programme',
     label: 'Programmé',
-    description: 'Demande acceptée et programmée à une date prévue.',
-    initialStatus: 'approved',
+    description: 'Paiement programmé (statut initial : En attente)',
+    initialStatus: 'pending',
   },
   {
     key: 'validation',
     label: 'Validation',
-    description: 'Paiement validé par le responsable financier.',
-    initialStatus: 'processed',
+    description: 'Validation de paiement (statut initial : En attente)',
+    initialStatus: 'pending',
   },
 ];
 
-export const PAYMENT_METHOD_OPTIONS = [
-  { value: 'virement', label: 'Virement bancaire' },
-  { value: 'cheque', label: 'Chèque' },
-  { value: 'mobile', label: 'Mobile Money' },
-  { value: 'especes', label: 'Espèces' },
-] as const;
+export const PAYMENT_METHOD_OPTIONS: PaymentMethodOption[] = [
+  { value: 'bank_transfer', label: 'Virement bancaire' },
+  { value: 'check', label: 'Chèque' },
+  { value: 'mobile_money', label: 'Mobile Money' },
+  { value: 'cash', label: 'Espèces' },
+  { value: 'card', label: 'Carte bancaire' },
+];
 
-/** Délai de livraison par défaut (jours) lorsqu'un paiement est lié à une livraison. */
-export const PAYMENT_DEFAULT_LEAD_TIME_DAYS = 7;
+export const PAYMENT_DEFAULT_LEAD_TIME_DAYS: number = 7;
 
-export function getPaymentOrigin(key: PaymentOriginKey): PaymentOriginDef {
-  return PAYMENT_ORIGINS[key] ?? PAYMENT_ORIGINS.manual;
+// ============================================================
+// FONCTIONS
+// ============================================================
+
+export function getPaymentOrigin(origin: PaymentOriginKey): PaymentOriginConfig | undefined {
+  return PAYMENT_ORIGINS[origin];
 }
 
-export function getPaymentRequestType(key: PaymentRequestTypeKey): PaymentRequestTypeDef {
-  return PAYMENT_REQUEST_TYPES.find((t) => t.key === key) ?? PAYMENT_REQUEST_TYPES[0];
+/**
+ * Retourne le type de demande par défaut pour une origine
+ */
+export function getDefaultRequestType(origin: PaymentOriginKey): PaymentRequestTypeKey {
+  return PAYMENT_ORIGINS[origin]?.defaultType || 'demande';
 }
+
+/**
+ * Retourne les informations complètes d’un type de demande
+ */
+export function getPaymentRequestType(typeKey: PaymentRequestTypeKey): PaymentRequestTypeInfo | undefined {
+  return PAYMENT_REQUEST_TYPES.find((t) => t.key === typeKey);
+}
+
+/**
+ * Retourne le statut initial pour une origine donnée
+ */
+export function getInitialStatusForOrigin(origin: PaymentOriginKey): PaymentStatus {
+  return PAYMENT_ORIGINS[origin]?.initialStatus || 'pending';
+}
+
+/**
+ * Retourne la méthode de paiement par défaut
+ */
+export function getDefaultPaymentMethod(): string {
+  return 'bank_transfer';
+}
+
+/**
+ * Retourne le délai de livraison par défaut (en jours)
+ */
+export function getDefaultDeliveryDelay(): number {
+  return PAYMENT_DEFAULT_LEAD_TIME_DAYS;
+}
+
+// ============================================================
+// EXPORT PAR DÉFAUT
+// ============================================================
+
+export default {
+  PAYMENT_ORIGINS,
+  PAYMENT_STATUSES,
+  PAYMENT_REQUEST_TYPES,
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_DEFAULT_LEAD_TIME_DAYS,
+  getPaymentOrigin,
+  getDefaultRequestType,
+  getPaymentRequestType,
+  getInitialStatusForOrigin,
+  getDefaultPaymentMethod,
+  getDefaultDeliveryDelay,
+};

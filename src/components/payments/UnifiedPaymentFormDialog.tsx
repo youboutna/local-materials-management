@@ -1,10 +1,8 @@
 /**
- * Formulaire unifié de paiement (présentation uniquement).
- * Un seul composant pour tous les points d'entrée : auto post-inspection,
- * gestionnaire projet, portail fournisseur, saisie manuelle.
- * Auto-complétion contextuelle (projet → phases/inspections, fournisseur → contact/RIB).
+ * Formulaire unifié de paiement (UI).
+ * Compatible avec le référentiel des origines et le hook contextuel.
+ * Version corrigée : gère le statut et created_by via le service.
  */
-
 import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
@@ -39,6 +37,7 @@ import {
   PaymentOriginKey,
   PaymentRequestTypeKey,
   getPaymentOrigin,
+  getDefaultRequestType,
   getPaymentRequestType,
 } from '@/config/referentials/payment-origin.referential';
 import {
@@ -65,9 +64,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   origin: PaymentOriginKey;
   defaults?: UnifiedPaymentFormDefaults;
-  /** Verrouille le projet (contexte projet / inspection) */
   lockProject?: boolean;
-  /** Verrouille le contractant (portail fournisseur) */
   lockContractor?: boolean;
   onCreated?: (paymentId: string) => void;
 }
@@ -86,7 +83,9 @@ export function UnifiedPaymentFormDialog({
   const { submitPayment, isPending } = useSubmitUnifiedPaymentHex();
   const documentsContract = useMonitoringDocumentAdapter('payment');
 
-  const [requestType, setRequestType] = useState<PaymentRequestTypeKey>(originDef.defaultType);
+  const [requestType, setRequestType] = useState<PaymentRequestTypeKey>(
+    getDefaultRequestType(origin)
+  );
   const [projectId, setProjectId] = useState<string | undefined>(defaults?.projectId);
   const [phaseId, setPhaseId] = useState<string>(defaults?.phaseId ?? '');
   const [inspectionId, setInspectionId] = useState<string>(defaults?.inspectionId ?? '');
@@ -109,10 +108,9 @@ export function UnifiedPaymentFormDialog({
     open ? contractorId : undefined,
   );
 
-  // Réinitialisation sur ouverture avec les valeurs du contexte d'appel
   useEffect(() => {
     if (!open) return;
-    setRequestType(originDef.defaultType);
+    setRequestType(getDefaultRequestType(origin));
     setProjectId(defaults?.projectId);
     setPhaseId(defaults?.phaseId ?? '');
     setInspectionId(defaults?.inspectionId ?? '');
@@ -123,10 +121,8 @@ export function UnifiedPaymentFormDialog({
     setFiles([]);
     setNotes('');
     setTransactionId('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, origin, defaults]);
 
-  // Auto-complétion depuis le fournisseur sélectionné (contact + RIB)
   useEffect(() => {
     if (!supplier) return;
     setContractorName((prev) => prev || supplier.name);
@@ -135,7 +131,6 @@ export function UnifiedPaymentFormDialog({
     setAccountNumber((prev) => prev || supplier.accountNumber || '');
   }, [supplier]);
 
-  // Auto-complétion depuis l'inspection sélectionnée (phase + progression)
   useEffect(() => {
     if (!inspectionId) return;
     const insp = inspections.find((i) => i.id === inspectionId);
@@ -151,6 +146,8 @@ export function UnifiedPaymentFormDialog({
 
   const canSubmit = Boolean(projectId) && Boolean(contractorName) && Boolean(contractorContact) && amount > 0;
 
+  const requestTypeInfo = getPaymentRequestType(requestType);
+
   const handleSubmit = async () => {
     if (!canSubmit || !projectId) {
       toast({
@@ -160,6 +157,8 @@ export function UnifiedPaymentFormDialog({
       });
       return;
     }
+
+    const initialStatus = requestTypeInfo?.initialStatus || 'pending';
 
     const dto: CreatePaymentDTO = {
       projectId,
@@ -181,10 +180,9 @@ export function UnifiedPaymentFormDialog({
     try {
       const created = await submitPayment({
         payment: dto,
-        initialStatus: getPaymentRequestType(requestType).initialStatus,
+        initialStatus,
       });
 
-      // Pièces justificatives → GED (scope « payment »)
       if (files.length && documentsContract.onUpload) {
         for (const file of files) {
           try {
@@ -203,7 +201,7 @@ export function UnifiedPaymentFormDialog({
 
       toast({
         title: 'Demande enregistrée',
-        description: `${getPaymentRequestType(requestType).label} de ${formatAmount2(amount)} enregistrée (${originDef.shortLabel}).`,
+        description: `${requestTypeInfo?.label || 'Demande'} de ${formatAmount2(amount)} enregistrée (${originDef?.shortLabel || 'Manuel'}).`,
       });
       onOpenChange(false);
       onCreated?.(created.id);
@@ -224,15 +222,15 @@ export function UnifiedPaymentFormDialog({
             <Wallet className="h-5 w-5" />
             Nouvelle demande / paiement
           </DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge variant="outline" className="gap-1">
               <Sparkles className="h-3 w-3" />
-              Origine : {originDef.label}
+              Origine : {originDef?.label || 'Manuel'}
             </Badge>
             {defaults?.contextLabel && (
               <span className="text-xs text-muted-foreground">{defaults.contextLabel}</span>
             )}
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -242,7 +240,7 @@ export function UnifiedPaymentFormDialog({
             <Select
               value={requestType}
               onValueChange={(v) => setRequestType(v as PaymentRequestTypeKey)}
-              disabled={originDef.lockType}
+              disabled={originDef?.lockType}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -256,7 +254,7 @@ export function UnifiedPaymentFormDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {getPaymentRequestType(requestType).description}
+              {requestTypeInfo?.description || 'Choisissez le type de demande'}
             </p>
           </div>
 
@@ -494,7 +492,7 @@ export function UnifiedPaymentFormDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !canSubmit}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {originDef.submitLabel}
+            {originDef?.submitLabel || 'Enregistrer'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,49 +1,21 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
 import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
-/**
- * Payment Service
- * Handles payment operations with hexagonal architecture
- * Following clean architecture principles
- */
-
 import { Payment } from '@/domain/entities/Payment';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import {
+  PaymentBlockDTO,
+  CreatePaymentBlockRequestDto,
+  ResolvePaymentBlockRequestDto,
+  CreatePaymentControlActionRequestDto,
+  PaymentControlActionDTO,
+  PaymentEligibilityValidationDto,
+} from '@/dtos/entities/PaymentDTO';
+import { PaymentBlockingValidation } from '@/dtos/utils/PaymentBlockingValidation';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-
-// Types pour les méthodes étendues
-export interface PaymentBlockDTO {
-  id: string;
-  payment_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
-  blocked_amount: number;
-  status: 'active' | 'resolved' | 'cancelled';
-  created_by: string;
-  created_at: string;
-  resolved_at?: string;
-}
-
-export interface CreatePaymentBlockRequestDto {
-  payment_id: string;
-  block_reason: string;
-  block_type: PaymentBlockDTO['block_type'];
-  blocked_amount: number;
-  created_by: string;
-}
-
-export interface PaymentControlActionDTO {
-  id: string;
-  payment_id: string;
-  action_type: 'verify' | 'approve' | 'reject' | 'block' | 'unblock';
-  description: string;
-  performed_by: string;
-  performed_at: string;
-  result: 'success' | 'failure';
-  notes?: string;
-}
+import { getAuthService } from '@/application/services/AuthService';
 
 export enum PaymentStatusEnum {
   PENDING = 'pending',
@@ -53,10 +25,9 @@ export enum PaymentStatusEnum {
   FAILED = 'failed',
   BLOCKED = 'blocked',
   REJECTED = 'rejected',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
-// Status transition validation (moved outside class)
 function isValidPaymentStatusTransition(
   current: PaymentStatusEnum,
   next: PaymentStatusEnum
@@ -69,7 +40,7 @@ function isValidPaymentStatusTransition(
     [PaymentStatusEnum.REJECTED]: [],
     [PaymentStatusEnum.CANCELLED]: [],
     [PaymentStatusEnum.COMPLETED]: [],
-    [PaymentStatusEnum.FAILED]: []
+    [PaymentStatusEnum.FAILED]: [],
   };
   return validTransitions[current]?.includes(next) ?? false;
 }
@@ -78,20 +49,15 @@ export class PaymentService {
   constructor(
     private paymentRepository: IPaymentRepository,
     private paymentBlockRepository: IPaymentBlockRepository = RepositoryFactory.getPaymentBlockRepository(),
-    private paymentControlActionRepository: IPaymentControlActionRepository = RepositoryFactory.getPaymentControlActionRepository()
+    private paymentControlActionRepository: IPaymentControlActionRepository = RepositoryFactory.getPaymentControlActionRepository(),
   ) {}
 
-  /**
-   * Get payments by phase ID
-   */
   async getPaymentsByPhase(phaseId: string): Promise<{ data: PaymentDTO[] }> {
     try {
-      // Utiliser le repository pour filtrer les paiements par phase
       const allPayments = await this.paymentRepository.findAll();
       const phasePayments = allPayments.filter(payment => payment.phase?.id === phaseId);
-      
       return {
-        data: phasePayments.map(payment => PaymentTransformer.toDTO(payment))
+        data: phasePayments.map(payment => PaymentTransformer.toDTO(payment)),
       };
     } catch (error) {
       console.error('PaymentService.getPaymentsByPhase failed:', error);
@@ -99,9 +65,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Get all payments
-   */
   async getAllPayments(): Promise<PaymentDTO[]> {
     try {
       const payments = await this.paymentRepository.findAll();
@@ -112,9 +75,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Get payment by ID
-   */
   async getPaymentById(id: string): Promise<PaymentDTO | null> {
     try {
       const payment = await this.paymentRepository.findById(id);
@@ -125,28 +85,27 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Create a new payment
-   */
   async createPayment(data: CreatePaymentDTO): Promise<PaymentDTO> {
     try {
-      // Validate required fields
       if (!data.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
       }
-      
-      const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(data);
-      
-      // Save entity
+
+      // Récupérer l'utilisateur courant pour created_by
+      const authService = getAuthService();
+      const user = await authService.getCurrentUser();
+      const userId = user?.id;
+
+      const dtoWithUser = { ...data, createdBy: userId };
+      const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(dtoWithUser);
       await this.paymentRepository.save(paymentEntity);
-      
-      // Transform back to DTO and add missing properties
+
       const paymentDTO = PaymentTransformer.toDTO(paymentEntity);
       return {
         ...paymentDTO,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        id: paymentEntity.id
+        id: paymentEntity.id,
+        createdAt: paymentEntity.createdAt || new Date().toISOString(),
+        updatedAt: paymentEntity.updatedAt || new Date().toISOString(),
       };
     } catch (error) {
       console.error('[PaymentService] Error creating payment:', error);
@@ -154,18 +113,12 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Update an existing payment
-   */
   async updatePayment(id: string, data: UpdatePaymentDTO): Promise<void> {
     try {
-      // Get existing payment
       const existingPayment = await this.paymentRepository.findById(id);
       if (!existingPayment) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
-
-      // Transform update data to partial entity - use 'as any' for compatibility
       const updateData = {
         contractorName: data.contractorName,
         contractorContact: data.contractorContact,
@@ -180,10 +133,8 @@ export class PaymentService {
         mobileNumber: data.mobileNumber,
         mobileOperator: data.mobileOperator,
         receiverName: data.receiverName,
-        ...(data.status ? { status: data.status } : {})
+        status: data.status,
       } as Partial<Payment>;
-      
-      // Update entity
       await this.paymentRepository.update(id, updateData);
     } catch (error) {
       console.error('[PaymentService] Error updating payment:', error);
@@ -191,16 +142,12 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Delete a payment
-   */
   async deletePayment(id: string): Promise<void> {
     try {
       const existingPayment = await this.paymentRepository.findById(id);
       if (!existingPayment) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
-
       await this.paymentRepository.delete(id);
     } catch (error) {
       console.error('[PaymentService] Error deleting payment:', error);
@@ -208,9 +155,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Get payments by project
-   */
   async getPaymentsByProject(projectId: string): Promise<PaymentDTO[]> {
     try {
       const payments = await this.paymentRepository.findByProjectId(projectId);
@@ -221,12 +165,9 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Get payments by status
-   */
-   async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
+  async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum.PENDING);
+      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
@@ -234,9 +175,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Get payment summary for project
-   */
   async getPaymentSummary(projectId: string): Promise<{
     total: number;
     paid: number;
@@ -251,127 +189,143 @@ export class PaymentService {
     }
   }
 
-  // ========================================
-  // MÉTHODES ÉTENDUES - Remplacement des services spécialisés
-  // ========================================
-
-  /**
-   * WORKFLOW BLOCKING (remplace PaymentBlockingService)
-   * Bloquer un paiement
-   */
-  async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
+  async getPaymentsByEntity(entityType: string, entityId: string): Promise<PaymentDTO[]> {
     try {
-      // Vérifier que le paiement existe
-      const payment = await this.getPaymentById(request.payment_id);
-      if (!payment) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
+      let payments: Payment[] = [];
+      switch (entityType) {
+        case 'project': {
+          payments = await this.paymentRepository.findByProjectId(entityId);
+          break;
+        }
+        case 'inspection': {
+          payments = await this.paymentRepository.findByInspectionId(entityId);
+          break;
+        }
+        case 'supplier': {
+          payments = await this.paymentRepository.findByContractor(entityId);
+          break;
+        }
+        case 'validation': {
+          const { getProjectService } = await import('@/application/services/ProjectService');
+          const projectService = getProjectService();
+          const projects = await projectService.getProjectsByConsultantId(entityId);
+          const projectIds = projects.map(p => p.id);
+          if (projectIds.length === 0) return [];
+          const allPayments = await this.paymentRepository.findAll();
+          payments = allPayments.filter(p => projectIds.includes(p.projectId));
+          break;
+        }
+        default: {
+          throw new AppError(ErrorCode.VALIDATION_ERROR, `Unsupported entity type: ${entityType}`);
+        }
       }
+      return payments.map(payment => PaymentTransformer.toDTO(payment));
+    } catch (error) {
+      console.error('[PaymentService] getPaymentsByEntity failed:', error);
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch payments by entity');
+    }
+  }
 
-      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
-      const record = await this.paymentBlockRepository.create({
+  async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
+    PaymentBlockingValidation.validateCreatePaymentBlockRequest(request);
+    const payment = await this.getPaymentById(request.payment_request_id);
+    if (!payment) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
+    }
+    const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+    const record = await this.paymentBlockRepository.create({
+      projectId: payment.projectId,
+      contractorId,
+      amount: request.blocked_amount,
+      blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
+      blockedBy: 'system',
+      notes: `payment_id:${request.payment_request_id}`,
+    });
+    const block: PaymentBlockDTO = {
+      id: record.id,
+      payment_request_id: request.payment_request_id,
+      block_reason: request.block_reason,
+      block_type: request.block_type,
+      blocked_amount: record.amount,
+      status: 'active',
+      created_at: record.blockedAt,
+      updated_at: record.blockedAt,
+    };
+    await this.updatePayment(request.payment_request_id, { status: 'blocked' });
+    console.log(`Payment ${request.payment_request_id} blocked: ${request.block_reason}`);
+    return block;
+  }
+
+  async resolvePaymentBlock(request: ResolvePaymentBlockRequestDto): Promise<void> {
+    PaymentBlockingValidation.validateResolvePaymentBlockRequest(request);
+    const block = await this.paymentBlockRepository.findById(request.block_id);
+    if (!block) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
+    }
+    await this.paymentBlockRepository.updateStatus(request.block_id, 'resolved', request.resolved_by, request.resolution_notes);
+    const payment = await this.getPaymentById(block.payment_id);
+    if (payment) {
+      await this.updatePayment(block.payment_id, { status: 'pending' });
+    }
+    console.log(`Payment block ${request.block_id} resolved`);
+  }
+
+  async addControlAction(request: CreatePaymentControlActionRequestDto): Promise<PaymentControlActionDTO> {
+    PaymentBlockingValidation.validateCreatePaymentControlActionRequest(request);
+    const block = await this.paymentBlockRepository.findById(request.payment_block_id);
+    if (!block) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
+    }
+    const payment = await this.getPaymentById(block.payment_id);
+    if (!payment) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
+    }
+    const contractorId = payment.contractorId || payment.contractorName || 'unknown';
+    const blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectId, contractorId);
+    let blockId: string;
+    if (blocks.length > 0) {
+      blockId = blocks[0].id;
+    } else {
+      const anchorBlock = await this.paymentBlockRepository.create({
         projectId: payment.projectId,
         contractorId,
-        amount: request.blocked_amount,
-        blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
-        blockedBy: request.created_by,
-        notes: `payment_id:${request.payment_id}`
+        amount: payment.amount,
+        blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
+        blockedBy: request.created_by || 'system',
+        notes: `payment_id:${payment.id}`,
       });
-
-      const block: PaymentBlockDTO = {
-        id: record.id,
-        payment_id: request.payment_id,
-        block_reason: request.block_reason,
-        block_type: request.block_type,
-        blocked_amount: record.amount,
-        status: 'active',
-        created_by: request.created_by,
-        created_at: record.blockedAt
-      };
-
-      // Mettre à jour le statut du paiement
-      await this.updatePayment(request.payment_id, { status: 'blocked' });
-
-      console.log(`Payment ${request.payment_id} blocked: ${request.block_reason}`);
-      return block;
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to block payment');
+      blockId = anchorBlock.id;
     }
+    const actionRecord = await this.paymentControlActionRepository.create({
+      paymentBlockId: blockId,
+      actionType: request.action_type,
+      description: request.description,
+      createdBy: request.created_by || 'system',
+      status: 'pending',
+    });
+    const controlAction: PaymentControlActionDTO = {
+      id: actionRecord.id,
+      payment_block_id: request.payment_block_id,
+      action_type: request.action_type,
+      description: request.description,
+      assigned_to: request.assigned_to,
+      due_date: request.due_date,
+      status: 'pending',
+      created_by: request.created_by || 'system',
+      created_at: actionRecord.createdAt,
+    };
+    console.log(`Control action added to block ${request.payment_block_id}: ${request.action_type}`);
+    return controlAction;
   }
 
-  /**
-   * WORKFLOW CONTROL ACTIONS (remplace PaymentControlActionsService)
-   * Ajouter une action de contrôle sur un paiement
-   */
-  async addControlAction(paymentId: string, action: Omit<PaymentControlActionDTO, 'id' | 'payment_id' | 'performed_at'>): Promise<PaymentControlActionDTO> {
-    try {
-      // Vérifier que le paiement existe
-      const payment = await this.getPaymentById(paymentId);
-      if (!payment) {
-        throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
-      }
-
-      const contractorId = payment.contractorId || payment.contractorName || 'unknown';
-      let blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectId, contractorId);
-      let blockId: string;
-      if (blocks.length > 0) {
-        blockId = blocks[0].id;
-      } else {
-        // Ancrer l'action de contrôle sur un bloc de suivi (contrainte FK payment_control_actions -> payment_blocks)
-        const anchorBlock = await this.paymentBlockRepository.create({
-          projectId: payment.projectId,
-          contractorId,
-          amount: payment.amount,
-          blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
-          blockedBy: action.performed_by,
-          notes: `payment_id:${paymentId}`
-        });
-        blockId = anchorBlock.id;
-      }
-
-      const actionRecord = await this.paymentControlActionRepository.create({
-        paymentBlockId: blockId,
-        actionType: action.action_type,
-        description: action.description,
-        createdBy: action.performed_by,
-        status: action.result === 'success' ? 'completed' : 'pending'
-      });
-
-      const controlAction: PaymentControlActionDTO = {
-        id: actionRecord.id,
-        payment_id: paymentId,
-        action_type: action.action_type,
-        description: action.description,
-        performed_by: action.performed_by,
-        performed_at: actionRecord.createdAt,
-        result: action.result,
-        notes: action.notes
-      };
-
-      console.log(`Control action added to payment ${paymentId}: ${action.action_type}`);
-      return controlAction;
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add control action');
-    }
-  }
-
-  /**
-   * WORKFLOW SUPPLIER PAYMENTS (remplace SupplierPaymentService)
-   * Créer un paiement fournisseur
-   */
   async createSupplierPayment(request: CreatePaymentDTO, supplierId: string): Promise<PaymentDTO> {
     try {
-      // Ajouter le supplierId aux données du paiement
       const supplierPaymentRequest: CreatePaymentDTO = {
         ...request,
         supplierId,
-        contractorId: request.contractorId || supplierId
+        contractorId: request.contractorId || supplierId,
       };
-
-      // Créer le paiement
       const payment = await this.createPayment(supplierPaymentRequest);
-      
       console.log(`Supplier payment created for supplier ${supplierId}`);
       return payment;
     } catch (error) {
@@ -380,36 +334,25 @@ export class PaymentService {
     }
   }
 
-  /**
-   * WORKFLOW COMPLET - Traitement de paiement avec contrôles
-   */
   async processPaymentWithControls(paymentId: string, performedBy: string): Promise<PaymentDTO> {
     try {
-      // 1. Ajouter l'action de contrôle
-      await this.addControlAction(paymentId, {
-        action_type: 'verify',
+      await this.addControlAction({
+        payment_block_id: paymentId,
+        action_type: 'review',
         description: 'Payment verification before processing',
-        performed_by: performedBy,
-        result: 'success'
+        created_by: performedBy,
       });
-
-      // 2. Approuver le paiement
       await this.updatePayment(paymentId, { status: 'approved' });
-      
-      // Récupérer le paiement mis à jour
       const updatedPayment = await this.getPaymentById(paymentId);
       if (!updatedPayment) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found after update');
       }
-
-      // 3. Ajouter l'action d'approbation
-      await this.addControlAction(paymentId, {
+      await this.addControlAction({
+        payment_block_id: paymentId,
         action_type: 'approve',
         description: 'Payment approved and processed',
-        performed_by: performedBy,
-        result: 'success'
+        created_by: performedBy,
       });
-
       console.log(`Payment ${paymentId} processed successfully`);
       return updatedPayment;
     } catch (error) {
@@ -418,16 +361,23 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Obtenir les paiements bloqués actifs
-   */
   async getActiveBlockedPayments(): Promise<PaymentDTO[]> {
-    try {
-      return await this.getPaymentsByStatus(PaymentStatusEnum.BLOCKED);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get active blocked payments');
-    }
+    return await this.getPaymentsByStatus(PaymentStatusEnum.BLOCKED);
+  }
+
+  async validatePaymentEligibility(projectId: string, paymentId?: string): Promise<PaymentEligibilityValidationDto> {
+    const blocks = await this.paymentBlockRepository.findActiveByProject(projectId);
+    const blockingReasons = blocks.map(b => ({
+      type: b.block_reason,
+      description: b.block_reason,
+      severity: 'critical' as const,
+      actionRequired: 'Resolve active block',
+    }));
+    return {
+      canProceed: blocks.length === 0,
+      blockingReasons: blockingReasons.length > 0 ? blockingReasons : undefined,
+      warningReasons: undefined,
+    };
   }
 }
 

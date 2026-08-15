@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -20,4 +20,25 @@ export function toDateInput(value: unknown): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
   const parsed = new Date(raw);
   return isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+}
+
+/**
+ * Formate une date en chaîne lisible (DD/MM/YYYY).
+ * Accepte une chaîne ISO, un objet Date, ou null/undefined.
+ */
+export function formatDate(value: unknown): string {
+  if (!value) return "";
+  let date: Date;
+  if (value instanceof Date) {
+    date = value;
+  } else {
+    const raw = String(value);
+    const parsed = new Date(raw);
+    if (isNaN(parsed.getTime())) return "";
+    date = parsed;
+  }
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }

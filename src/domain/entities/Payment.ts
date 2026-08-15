@@ -1,11 +1,8 @@
-// Domain Entity: Payment
-// Pure business logic without infrastructure concerns
-
 import { Project } from './Project';
 import { Phase } from './Phase';
 import { Inspection } from './Inspection';
 
-export type PaymentMethod = 
+export type PaymentMethod =
   | 'cash'
   | 'check'
   | 'bank_transfer'
@@ -13,7 +10,7 @@ export type PaymentMethod =
   | 'credit_card'
   | 'other';
 
-export type PaymentStatus = 
+export type PaymentStatus =
   | 'requested'
   | 'pending_validation'
   | 'validated'
@@ -37,7 +34,6 @@ export interface PaymentDocument {
 }
 
 export class Payment {
-  // Private fields for encapsulation
   private _id: string;
   private _project: Project | null;
   private _phase: Phase | null;
@@ -59,6 +55,7 @@ export class Payment {
   private _documents: PaymentDocument[];
   private _createdAt: string;
   private _updatedAt: string;
+  private _createdBy: string | null; // ✅ Ajouté
 
   constructor(
     id: string,
@@ -81,9 +78,9 @@ export class Payment {
     receiverName: string | null,
     documents: PaymentDocument[],
     createdAt: string,
-    updatedAt: string
+    updatedAt: string,
+    createdBy: string | null = null
   ) {
-    // Validate and assign private fields
     this._id = this.validateId(id);
     this._project = project;
     this._phase = phase;
@@ -105,9 +102,10 @@ export class Payment {
     this._documents = documents || [];
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
+    this._createdBy = createdBy;
   }
 
-  // ============= Getters =============
+  // Getters
   get id(): string { return this._id; }
   get project(): Project | null { return this._project; }
   get phase(): Phase | null { return this._phase; }
@@ -129,8 +127,8 @@ export class Payment {
   get documents(): PaymentDocument[] { return this._documents; }
   get createdAt(): string { return this._createdAt; }
   get updatedAt(): string { return this._updatedAt; }
+  get createdBy(): string | null { return this._createdBy; } // ✅ Nouveau getter
 
-  // ============= Getters with Business Logic =============
   get displayName(): string {
     return `${this._contractorName} - ${this._amount}`;
   }
@@ -153,7 +151,7 @@ export class Payment {
 
   hasAllRequiredDocuments(): boolean {
     const required = this.getRequiredDocumentTypes();
-    return required.every(type => 
+    return required.every(type =>
       this._documents.some(doc => doc.type === type)
     );
   }
@@ -170,23 +168,23 @@ export class Payment {
     return ['requested', 'pending_validation', 'validated', 'approved'].includes(this._status);
   }
 
-  // ============= Setters with Validation =============
-  set amount(value: number) { 
-    this._amount = this.validateAmount(value); 
+  // Setters with validation
+  set amount(value: number) {
+    this._amount = this.validateAmount(value);
     this._updatedAt = new Date().toISOString();
   }
 
-  set status(value: PaymentStatus) { 
-    this._status = this.validateStatus(value); 
+  set status(value: PaymentStatus) {
+    this._status = this.validateStatus(value);
     this._updatedAt = new Date().toISOString();
   }
 
-  set progressAtPayment(value: number) { 
-    this._progressAtPayment = this.validateProgress(value); 
+  set progressAtPayment(value: number) {
+    this._progressAtPayment = this.validateProgress(value);
     this._updatedAt = new Date().toISOString();
   }
 
-  // ============= Business Logic Methods =============
+  // Business logic
   canBeValidated(): boolean {
     return this._status === 'requested' || this._status === 'pending_validation';
   }
@@ -199,7 +197,7 @@ export class Payment {
     return this._status === 'approved';
   }
 
-  // ============= Immutability Methods =============
+  // Immutability methods
   withStatus(newStatus: PaymentStatus): Payment {
     return new Payment(
       this._id,
@@ -222,7 +220,8 @@ export class Payment {
       this._receiverName,
       this._documents,
       this._createdAt,
-      new Date().toISOString()
+      new Date().toISOString(),
+      this._createdBy
     );
   }
 
@@ -248,11 +247,12 @@ export class Payment {
       this._receiverName,
       this._documents,
       this._createdAt,
-      new Date().toISOString()
+      new Date().toISOString(),
+      this._createdBy
     );
   }
 
-  // ============= Factory Methods =============
+  // Factory
   static create(params: {
     id: string;
     project: Project | null;
@@ -263,6 +263,7 @@ export class Payment {
     contractorName: string;
     contractorContact: string;
     progressAtPayment?: number;
+    createdBy?: string | null;
   }): Payment {
     return new Payment(
       params.id,
@@ -274,22 +275,22 @@ export class Payment {
       params.paymentMethod,
       'requested',
       params.progressAtPayment || 0,
-      null, // transactionId
+      null,
       params.contractorName,
       params.contractorContact,
-      null, // bankName
-      null, // accountNumber
-      null, // checkNumber
-      null, // mobileNumber
-      null, // mobileOperator
-      null, // receiverName
-      [],   // documents
-      new Date().toISOString(), // createdAt
-      new Date().toISOString()  // updatedAt
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      [],
+      new Date().toISOString(),
+      new Date().toISOString(),
+      params.createdBy || null
     );
   }
 
-  // ============= Data Transformation Methods =============
   toPlainObject(): Record<string, unknown> {
     return {
       id: this._id,
@@ -312,11 +313,12 @@ export class Payment {
       receiver_name: this._receiverName,
       documents: this._documents.map(d => ({ ...d })),
       created_at: this._createdAt,
-      updated_at: this._updatedAt
+      updated_at: this._updatedAt,
+      created_by: this._createdBy, // ✅ Ajouté
     };
   }
 
-  // ============= Validation Methods =============
+  // Validations
   private validateId(id: string): string {
     if (!id || id.trim().length === 0) {
       throw new Error('Payment ID is required');
@@ -339,7 +341,6 @@ export class Payment {
       'requested', 'pending_validation', 'validated', 'approved', 'rejected', 'paid', 'cancelled',
       'pending', 'processing', 'completed', 'failed', 'refunded', 'manual', 'blocked'
     ];
-    
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid payment status: ${status}`);
     }

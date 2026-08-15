@@ -20,7 +20,10 @@ import {
   Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import InitiatePaymentModal from "@/components/payment/InitiatePaymentModal";
+
+// ✅ Nouvel import
+import { UnifiedPaymentFormDialog } from "@/components/payments/UnifiedPaymentFormDialog";
+import { PaymentOriginKey } from "@/config/referentials/payment-origin.referential";
 
 // Hooks
 import { PhaseDTO, PhaseMilestoneDTO, PhaseStepDTO, PhaseStatus } from '@/dtos/entities/PhaseDTO';
@@ -49,8 +52,6 @@ import PhaseStakeholdersTab from "./phase/PhaseStakeholdersTab";
 import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
 
 // Phase UI interface for component layer with proper DTO support
-// This interface represents the phase data structure needed by the UI layer
-// It bridges between raw data from services and the UI display requirements
 interface PhaseUIData {
   id: string;
   name: string;
@@ -85,7 +86,9 @@ const PhaseDetailsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // ✅ État pour le dialogue unifié (remplace showPaymentModal)
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentOrigin, setPaymentOrigin] = useState<PaymentOriginKey>('project');
   const [inspectionContext, setInspectionContext] = useState({});
 
   const { phase: rawPhase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
@@ -166,9 +169,11 @@ const PhaseDetailsPage: React.FC = () => {
     setShowScheduleModal(true);
   };
 
+  // ✅ Handler pour ouvrir le dialogue unifié
   const handleRequestPayment = (stepId?: string, milestoneId?: string) => {
-    // On peut utiliser le contexte pour pré-remplir le modal
-    setShowPaymentModal(true);
+    // On peut utiliser le contexte pour pré-remplir le dialogue
+    setPaymentOrigin('project'); // ou 'manual' selon le contexte
+    setIsPaymentDialogOpen(true);
   };
 
   const handleMilestoneAction = (action: string, milestone: any, stepId?: string) => {
@@ -181,7 +186,6 @@ const PhaseDetailsPage: React.FC = () => {
         handleRequestPayment(stepId, milestone.id);
         break;
       case 'validate':
-        // Validation = planifier une inspection sur le jalon
         handleScheduleInspection(stepId, milestone.id);
         break;
       case 'view':
@@ -195,6 +199,11 @@ const PhaseDetailsPage: React.FC = () => {
   const handleInspectionScheduled = () => {
     refreshAll();
     setInspectionContext({});
+  };
+
+  const handlePaymentCreated = () => {
+    refreshAll();
+    setIsPaymentDialogOpen(false);
   };
 
   // Détermine si la phase a des étapes ou des jalons directs
@@ -271,11 +280,11 @@ const PhaseDetailsPage: React.FC = () => {
         metrics={phaseMetrics}
         onEdit={() => setIsEditing(true)}
         onScheduleInspection={() => handleScheduleInspection()}
-        onRequestPayment={() => setShowPaymentModal(true)}
+        onRequestPayment={() => handleRequestPayment()}
         canRequestPayment={canRequestPayment}
       />
 
-      {/* Tabs de navigation — alignées sur le cycle de vie d'une phase */}
+      {/* Tabs de navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-6 mb-4">
           <TabsTrigger value="hierarchy" className="flex items-center gap-2">
@@ -383,7 +392,7 @@ const PhaseDetailsPage: React.FC = () => {
           />
         </TabsContent>
 
-        {/* Tab Ressources : matériaux + main d'œuvre */}
+        {/* Tab Ressources */}
         <TabsContent value="resources" className="space-y-6">
           <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
@@ -397,7 +406,7 @@ const PhaseDetailsPage: React.FC = () => {
           />
         </TabsContent>
 
-        {/* Tab Parties prenantes filtrées par concern métier */}
+        {/* Tab Parties prenantes */}
         <TabsContent value="stakeholders" className="space-y-6">
           <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
         </TabsContent>
@@ -462,19 +471,20 @@ const PhaseDetailsPage: React.FC = () => {
         onSuccess={handleInspectionScheduled}
       />
 
-      {/* Modal d'initiation de paiement */}
-      <InitiatePaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        projectId={projectId || ''}
-        phaseId={phaseId}
-        inspectionId={latestApprovedInspection?.id}
-        suggestedAmount={estimatedCost}
-        initiatorRole="project_manager"
-        onSuccess={() => {
-          refreshAll();
-          setShowPaymentModal(false);
+      {/* ✅ Modal d'initiation de paiement unifiée */}
+      <UnifiedPaymentFormDialog
+        open={isPaymentDialogOpen}
+        onOpenChange={setIsPaymentDialogOpen}
+        origin={paymentOrigin}
+        defaults={{
+          projectId: projectId || '',
+          phaseId: phaseId,
+          inspectionId: latestApprovedInspection?.id,
+          amount: estimatedCost,
+          contextLabel: `Phase ${phaseName}`,
         }}
+        lockProject={!!projectId}
+        onCreated={handlePaymentCreated}
       />
     </div>
   );

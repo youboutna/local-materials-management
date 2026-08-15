@@ -14,6 +14,7 @@ import { useInspectionHex } from '@/hooks/hexagonal';
 import FieldInspectionExecutor from '@/components/inspections/FieldInspectionExecutor';
 import InspectionPVGenerator from '@/components/inspections/InspectionPVGenerator';
 import { useQueryClient } from '@tanstack/react-query';
+import { AssociatedPaymentsPanel } from '@/components/common/AssociatedPaymentsPanel'; // ✅ Import ajouté
 
 const InspectionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +40,6 @@ const InspectionDetail = () => {
       rejected: { label: 'Rejetée', variant: 'destructive' as const },
       requires_changes: { label: 'Modifications requises', variant: 'secondary' as const },
     };
-    
     const config = statusConfig[status as keyof typeof statusConfig] || { label: status, variant: 'outline' as const };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
@@ -78,7 +78,6 @@ const InspectionDetail = () => {
 
   const projectTitle = inspection.projectTitle || 'Projet non spécifié';
 
-  // Transform to snake_case for legacy components
   const executorInspectionData = {
     id: inspection.id,
     project_id: inspection.projectId ?? undefined,
@@ -125,7 +124,7 @@ const InspectionDetail = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="details" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Détails
@@ -139,6 +138,10 @@ const InspectionDetail = () => {
               <TabsTrigger value="pv" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Procès-Verbal
+              </TabsTrigger>
+              <TabsTrigger value="payments" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Paiements
               </TabsTrigger>
             </TabsList>
 
@@ -154,6 +157,7 @@ const InspectionDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* ... contenu existant ... */}                
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-muted-foreground">
@@ -164,7 +168,6 @@ const InspectionDetail = () => {
                         {format(new Date(inspection.date), 'PPP', { locale: fr })}
                       </p>
                     </div>
-
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-muted-foreground">
                         <User className="h-4 w-4 mr-2" />
@@ -172,7 +175,6 @@ const InspectionDetail = () => {
                       </div>
                       <p className="text-lg font-medium">{inspection.inspector}</p>
                     </div>
-
                     {inspection.progressAtInspection !== null && (
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-muted-foreground">
@@ -183,7 +185,6 @@ const InspectionDetail = () => {
                       </div>
                     )}
                   </div>
-
                   {inspection.comments && (
                     <>
                       <Separator />
@@ -192,15 +193,11 @@ const InspectionDetail = () => {
                           <FileText className="h-4 w-4 mr-2" />
                           Commentaires
                         </div>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {inspection.comments}
-                        </p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{inspection.comments}</p>
                       </div>
                     </>
                   )}
-
                   <Separator />
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                     <div>
                       <span className="font-medium">Créé le:</span>{' '}
@@ -211,9 +208,7 @@ const InspectionDetail = () => {
                       {format(new Date(inspection.updatedAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="flex flex-wrap gap-2">
                     {inspection.projectId && (
                       <Button variant="outline" size="sm" asChild>
@@ -254,6 +249,18 @@ const InspectionDetail = () => {
                 projectTitle={projectTitle}
                 onGenerated={(pv, url) => {
                   console.log('PV generated:', pv.pv_number);
+                }}
+              />
+            </TabsContent>
+
+            <TabsContent value="payments">
+              <AssociatedPaymentsPanel
+                entityType="inspection"
+                entityId={id || ''}
+                showActions
+                onPaymentCreated={() => {
+                  refetch();
+                  queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
                 }}
               />
             </TabsContent>

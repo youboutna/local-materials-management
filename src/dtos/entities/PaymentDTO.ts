@@ -1,7 +1,8 @@
 /**
  * Payment Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
- */
+ src/dtos/entities/PaymentDTO.ts
+*/
 
 import { BaseEntityDTO, MonetaryDTO } from '../shared';
 
@@ -17,13 +18,14 @@ export interface PaymentDTO extends BaseEntityDTO {
   progressAtPayment: number;
   inspectionId?: string;
   phaseId?: string;
-  status?: string; // Add status property to match domain entity
+  status?: string;
   bankName?: string;
   accountNumber?: string;
   checkNumber?: string;
   mobileNumber?: string;
   mobileOperator?: string;
   receiverName?: string;
+  createdBy?: string; // ✅ Ajouté pour RLS
 }
 
 export interface PaymentBlockDetailDTO extends BaseEntityDTO {
@@ -86,6 +88,7 @@ export interface CreatePaymentDTO {
   mobileOperator?: string;
   receiverName?: string;
   supplierId?: string;
+  createdBy?: string; // ✅ Ajouté pour RLS
 }
 
 export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
@@ -112,6 +115,7 @@ export interface PaymentRequestDTO {
   status: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: string; // ✅ Ajouté pour RLS
 }
 
 export interface CreatePaymentRequestDTO {
@@ -120,6 +124,7 @@ export interface CreatePaymentRequestDTO {
   amount: number;
   description?: string;
   paymentReason?: string;
+  createdBy?: string; // ✅ Ajouté pour RLS
 }
 
 export interface UpdatePaymentRequestDTO {
@@ -128,9 +133,10 @@ export interface UpdatePaymentRequestDTO {
   paymentReason?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   notes?: string;
+  updatedBy?: string; // ✅ Ajouté pour RLS
 }
 
-// Payment Blocking Types (merged from PaymentBlockingDTO.ts)
+// Payment Blocking Types
 export interface PaymentBlockDTO {
   id: string;
   payment_request_id: string;
@@ -143,6 +149,7 @@ export interface PaymentBlockDTO {
   resolved_at?: string;
   created_at: string;
   updated_at: string;
+  createdBy?: string; // ✅ Ajouté pour RLS
 }
 
 export interface PaymentControlActionDTO {
@@ -181,7 +188,6 @@ export interface CreatePaymentControlActionRequestDto {
   created_by?: string;
 }
 
-// Response DTOs
 export interface GetPaymentBlockStatsRequestDto {
   total: number;
   active: number;
@@ -217,7 +223,6 @@ export interface PaymentProcessingResultDto {
   blockReasons?: string[];
 }
 
-// Query DTOs
 export interface GetPaymentBlocksRequestDto {
   payment_request_id?: string;
   status?: string;
@@ -229,7 +234,7 @@ export interface GetPaymentControlActionsRequestDto {
   status?: string;
 }
 
-// Legacy compatibility types from transforms
+// Legacy compatibility types
 export interface PaymentDocumentDTO {
   id: string;
   type: string;
@@ -241,7 +246,6 @@ export interface PaymentDocumentDTO {
   status: 'pending' | 'approved' | 'rejected';
 }
 
-// Legacy request DTOs for backward compatibility
 export interface LegacyCreatePaymentRequestDTO {
   projectId: string;
   phaseId?: string;
@@ -257,7 +261,7 @@ export interface LegacyCreatePaymentRequestDTO {
   recipientBankInfo?: string;
   documents?: PaymentDocumentDTO[];
   
-  // Legacy snake_case for backward compatibility
+  // Legacy snake_case
   phase_id?: string;
   milestone_id?: string;
   payment_type?: 'bank_transfer' | 'cash' | 'check' | 'mobile_money' | 'crypto';
@@ -280,7 +284,7 @@ export interface LegacyUpdatePaymentRequestDTO {
   recipientBankInfo?: string;
   documents?: PaymentDocumentDTO[];
   
-  // Legacy snake_case for backward compatibility
+  // Legacy snake_case
   due_date?: string;
   paid_date?: string;
   recipient_id?: string;

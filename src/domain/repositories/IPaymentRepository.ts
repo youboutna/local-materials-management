@@ -1,4 +1,5 @@
-// Repository interface for Payment entity
+// src/domain/repositories/IPaymentRepository.ts
+
 import { Payment, PaymentStatus } from '../entities/Payment';
 
 export interface IPaymentRepository {
@@ -14,8 +15,10 @@ export interface IPaymentRepository {
   findByPhaseId(phaseId: string): Promise<Payment[]>;
   findByStepId(stepId: string): Promise<Payment[]>;
   findByStatus(status: PaymentStatus): Promise<Payment[]>;
+  
+  // ✅ Ajout des méthodes nécessaires pour getPaymentsByEntity
   findByInspectionId(inspectionId: string): Promise<Payment[]>;
-  findByContractor(contractorName: string): Promise<Payment[]>;
+  findByContractor(contractorIdOrName: string): Promise<Payment[]>;
   
   // Date-based queries
   findBetweenDates(startDate: string, endDate: string): Promise<Payment[]>;

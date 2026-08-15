@@ -75,7 +75,7 @@ import MergedNavbar from "./components/MergedNavbar";
 
 import { DEV_MODE } from "./config/constants";
 import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
-
+import ConsultantDashboard from "./pages/ConsultantPortal/ConsultantDashboard";
 // Force rebuild - updated 2026-01-07
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -560,6 +560,17 @@ function App() {
                       />
 
                       <Route path="*" element={<NotFound />} />
+                    {/* Consultant Portal */}
+                    <Route
+                      path="/consultant-portal"
+                      element={
+                        <RoleBasedRoute
+                          allowedRoles={["engineering_consultant", "consultant", "admin"]}
+                        >
+                          <ConsultantDashboard />
+                        </RoleBasedRoute>
+                      }
+                    />
                     </Routes>
                   </main>
                   <Footer />

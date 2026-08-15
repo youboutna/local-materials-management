@@ -4,6 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectDetailByDTO from "@/components/project/ProjectDetailByDTO";
 import InspectionPaymentValidation from "@/components/inspections/InspectionPaymentValidation";
 import { AppLayout } from "@/components/layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsPanel";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -23,7 +25,6 @@ const ProjectDetail = () => {
     return null;
   }
 
-  // If tab is inspections and we have an inspection ID, show validation form
   if (tab === 'inspections' && inspectionId) {
     return (
       <AppLayout pageTitle={t("nav.projects")}>
@@ -34,7 +35,31 @@ const ProjectDetail = () => {
 
   return (
     <AppLayout pageTitle={t("nav.projects")}>
-      <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
+      <Tabs defaultValue="info" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="info" className="flex items-center gap-2">
+            Informations
+          </TabsTrigger>
+          <TabsTrigger value="finance" className="flex items-center gap-2">
+            Finance &amp; Paiements
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="info" className="mt-6">
+          <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
+        </TabsContent>
+
+        <TabsContent value="finance" className="mt-6">
+          <AssociatedPaymentsPanel
+            entityType="project"
+            entityId={id}
+            showActions
+            onPaymentCreated={() => {
+              // Invalider les caches si nécessaire
+            }}
+          />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };
