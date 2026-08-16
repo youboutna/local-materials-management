@@ -64,7 +64,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     const phaseFinancials: PhaseFinancials[] = [];
 
     for (const phase of phases) {
-      const phasePayments = payments.filter(payment => payment.phase?.id === phase.id);
+      const phasePayments = payments.filter(payment => payment.phaseRef?.id === phase.id);
       const totalPaid = phasePayments.reduce((sum, payment) => sum + payment.amount, 0);
 
       phaseFinancials.push({
@@ -164,8 +164,8 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
       const retentionAmount = payment.amount - payment.getNetAmount();
       return {
         id: payment.id,
-        project_id: payment.project?.id || projectId,
-        phase_id: payment.phase?.id,
+        project_id: payment.projectRef?.id || projectId,
+        phase_id: payment.phaseRef?.id,
         decompte_number: 0,
         decompte_type: 'progress',
         contract_amount: 0,
@@ -306,7 +306,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
       null,
       '',
       '',
-      null,
+      '',
       null,
       null,
       null,

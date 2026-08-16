@@ -241,6 +241,25 @@ export class ProjectService {
   }
 
   /**
+   * Get projects where the given user acts as engineering consultant / technical validator.
+   */
+  async getProjectsByConsultantId(consultantId: string): Promise<ProjectDTO[]> {
+    try {
+      const allProjects = await this.projectRepository.findAll();
+      const filtered = allProjects.filter(p => {
+        const consultant = p.engineeringConsultant as { id?: string } | undefined;
+        return consultant?.id === consultantId;
+      });
+      return ProjectTransformer.manyToDTO(filtered);
+    } catch (error) {
+      throw new ProjectServiceError(
+        `Failed to get projects by consultant: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'GET_BY_CONSULTANT_ERROR'
+      );
+    }
+  }
+
+  /**
    * Returns the list of projects relevant for insurance monitoring.
    * Currently aliases "active" projects (status = en cours / EN_COURS).
    * Provided as a dedicated method so UI layers don't hardcode status filters.
