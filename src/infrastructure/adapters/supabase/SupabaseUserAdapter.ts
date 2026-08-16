@@ -53,10 +53,19 @@ export class SupabaseUserAdapter implements IUserRepository {
 
       // Fallback: Try to get current user if it matches the requested ID
       const { data: authUser, error: authError } = await supabase.auth.getUser();
-      
+
+      // ✅ IGNORER les erreurs d'authentification (token expiré, pas de session, etc.)
+      // Ces erreurs se produisent normalement lors de la déconnexion.
       if (authError || !authUser.user) {
-        ErrorLogger.log(new Error('User not found'), 'SupabaseUserAdapter.findById failed');
-        return null; // Return null instead of throwing error
+        // Ne logguer que si ce n'est pas une erreur d'authentification
+        const isAuthError = authError?.status === 401 ||
+                           authError?.message?.includes('not authenticated') ||
+                           authError?.message?.includes('invalid token') ||
+                           authError?.message?.includes('session not found');
+        if (!isAuthError) {
+          ErrorLogger.log(new Error('User not found'), 'SupabaseUserAdapter.findById failed');
+        }
+        return null; // Return null silently for auth errors
       }
 
       // Only return data if it matches the requested ID
@@ -247,25 +256,25 @@ export class SupabaseUserAdapter implements IUserRepository {
   }
 
   // Add better error handling
-private async getUserEmail(id: string): Promise<string> {
-  try {
-    // Try to get from session
-    const { data: sessionData } = await supabase.auth.getUser();
-    if (sessionData?.user?.email && sessionData.user.id === id) {
-      return sessionData.user.email;
+  private async getUserEmail(id: string): Promise<string> {
+    try {
+      // Try to get from session
+      const { data: sessionData } = await supabase.auth.getUser();
+      if (sessionData?.user?.email && sessionData.user.id === id) {
+        return sessionData.user.email;
+      }
+      
+      // Try admin API (requires service role)
+      const { data: adminData, error: adminError } = await supabase.auth.admin.getUserById(id);
+      if (adminData?.user?.email && !adminError) {
+        return adminData.user.email;
+      }
+      
+      console.warn(`No email found for user ${id}`);
+      return ''; // Return empty and handle in User constructor
+    } catch (error) {
+      console.error('Error fetching user email:', error);
+      return '';
     }
-    
-    // Try admin API (requires service role)
-    const { data: adminData, error: adminError } = await supabase.auth.admin.getUserById(id);
-    if (adminData?.user?.email && !adminError) {
-      return adminData.user.email;
-    }
-    
-    console.warn(`No email found for user ${id}`);
-    return ''; // Return empty and handle in User constructor
-  } catch (error) {
-    console.error('Error fetching user email:', error);
-    return '';
   }
-}
 }
