@@ -26,6 +26,14 @@ export interface PaymentDTO extends BaseEntityDTO {
   receiverName?: string;
   notes?: string;
   documentIds?: string[];
+// ✅ Nouveaux champs pour la cohérence avec le domaine et les composants UI
+  projectRef?: { id: string } | null;
+  phaseRef?: { id: string } | null;
+  inspectionRef?: { id: string } | null;
+  origin?: string;          // provenance (ex: 'decompte', 'inspection', 'manual')
+  date?: string;            // date alternative (peut être la même que paymentDate)
+  projectName?: string;     // nom du projet dénormalisé
+  contractor?: string;      // alias de contractorName
 }
 
 export interface CreatePaymentDTO {
@@ -50,6 +58,14 @@ export interface CreatePaymentDTO {
   createdBy?: string;
   notes?: string;
   documentIds?: string[];
+  // ✅ Nouveaux champs pour la cohérence avec le domaine et les composants UI
+  projectRef?: { id: string } | null;
+  phaseRef?: { id: string } | null;
+  inspectionRef?: { id: string } | null;
+  origin?: string;          // provenance (ex: 'decompte', 'inspection', 'manual')
+  date?: string;            // date alternative (peut être la même que paymentDate)
+  projectName?: string;     // nom du projet dénormalisé
+  contractor?: string;      // alias de contractorName
 }
 
 export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
@@ -57,6 +73,14 @@ export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
   supplierId?: string;
   notes?: string;
   documentIds?: string[];
+    // ✅ Nouveaux champs pour la cohérence avec le domaine et les composants UI
+  projectRef?: { id: string } | null;
+  phaseRef?: { id: string } | null;
+  inspectionRef?: { id: string } | null;
+  origin?: string;          // provenance (ex: 'decompte', 'inspection', 'manual')
+  date?: string;            // date alternative (peut être la même que paymentDate)
+  projectName?: string;     // nom du projet dénormalisé
+  contractor?: string;      // alias de contractorName
 }
 
 export interface PaymentBlockDetailDTO extends BaseEntityDTO {
@@ -74,6 +98,14 @@ export interface PaymentBlockDetailDTO extends BaseEntityDTO {
   resolvedBy?: string;
   notes?: string;
   documentIds?: string[];
+    // ✅ Nouveaux champs pour la cohérence avec le domaine et les composants UI
+  projectRef?: { id: string } | null;
+  phaseRef?: { id: string } | null;
+  inspectionRef?: { id: string } | null;
+  origin?: string;          // provenance (ex: 'decompte', 'inspection', 'manual')
+  date?: string;            // date alternative (peut être la même que paymentDate)
+  projectName?: string;     // nom du projet dénormalisé
+  contractor?: string;      // alias de contractorName
   
 }
 

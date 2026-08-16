@@ -8,6 +8,7 @@ import { Payment, PaymentMethod, PaymentStatus } from '@/domain/entities/Payment
 import { CreatePaymentDTO, PaymentDTO, PaymentRequestDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
+export type PaymentOrigin = 'decompte' | 'inspection' | 'manual' | 'import';
 export interface PaymentEfficiencyResult {
   paymentRate: number;
   onTimePaymentRate: string;
@@ -419,7 +420,18 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       progressAtPayment: Number(row.progress_at_payment) || 0
     });
   }
-
+  /**
+   * Transform Payment entity to PaymentDTO with project context
+   * (used by components that need project name alongside payment)
+   */
+  static toDTOWithProjectContext(payment: Payment, projectContext: { id: string; name: string }): PaymentDTO {
+    const dto = PaymentTransformer.toDTO(payment);
+    return {
+      ...dto,
+      projectName: projectContext.name,
+      projectRef: { id: projectContext.id },
+    };
+  }
   /**
    * Payment Method-Specific Validation
    */
