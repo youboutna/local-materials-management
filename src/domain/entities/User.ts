@@ -4,16 +4,18 @@
  * Architecture hexagonale pure - aucune dépendance externe
  *
  * // Domain Entity: User
-// Pure business logic without infrastructure concerns
-*/
+ * // Pure business logic without infrastructure concerns
+ */
 
 // SOMELEC Role Enum - Centralized from UserRoleSomelec
 export enum SomelecRole {
   ADMIN = 'admin',
-  MANAGER = 'manager', 
+  MANAGER = 'manager',
   DIRECTOR = 'director',
   AGENT = 'agent',
-  SUPPLIER = 'supplier'
+  SUPPLIER = 'supplier',
+  CONSULTANT = 'consultant',
+  ENGINEERING_CONSULTANT = 'engineering_consultant'
 }
 
 export enum UserRoleStatus {
@@ -133,8 +135,8 @@ export class UserRoleEntity {
   }
 
   isRevoked(): boolean {
-    return this._status === UserRoleStatus.REVOKED || 
-           (this._revokedAt !== undefined && new Date() > this._revokedAt);
+    return this._status === UserRoleStatus.REVOKED ||
+      (this._revokedAt !== undefined && new Date() > this._revokedAt);
   }
 
   canBeUsed(): boolean {
@@ -177,9 +179,11 @@ export class UserRoleEntity {
       [SomelecRole.DIRECTOR]: 4,
       [SomelecRole.MANAGER]: 3,
       [SomelecRole.AGENT]: 2,
-      [SomelecRole.SUPPLIER]: 1
+      [SomelecRole.SUPPLIER]: 1,
+      [SomelecRole.CONSULTANT]: 1,
+      [SomelecRole.ENGINEERING_CONSULTANT]: 1
     };
-    
+
     return priority[this._roleName] > priority[otherRole];
   }
 
@@ -273,7 +277,7 @@ export class User {
   private _updatedAt: Date;
   private _userRoles: UserRoleEntity[]; // Add support for multiple roles
   private _fullName: string; // Additional field for backward compatibility
-  private _avatar: string; // Additional field for backward compatibility  
+  private _avatar: string; // Additional field for backward compatibility
   private _lastLogin?: Date; // Additional field for backward compatibility
 
   constructor(
@@ -443,11 +447,13 @@ export class User {
 
   // Role priority mapping
   private static readonly ROLE_PRIORITY = {
-    [ SomelecRole.ADMIN]: 5,
-    [ SomelecRole.DIRECTOR]: 4,
-    [ SomelecRole.MANAGER]: 3,
+    [SomelecRole.ADMIN]: 5,
+    [SomelecRole.DIRECTOR]: 4,
+    [SomelecRole.MANAGER]: 3,
     [SomelecRole.AGENT]: 2,
-    [SomelecRole.SUPPLIER]: 1
+    [SomelecRole.SUPPLIER]: 1,
+    [SomelecRole.CONSULTANT]: 1,
+    [SomelecRole.ENGINEERING_CONSULTANT]: 1
   };
 
   // Role priority mapping for UserRoleEntity
@@ -456,19 +462,21 @@ export class User {
     [SomelecRole.DIRECTOR]: 4,
     [SomelecRole.MANAGER]: 3,
     [SomelecRole.AGENT]: 2,
-    [SomelecRole.SUPPLIER]: 1
+    [SomelecRole.SUPPLIER]: 1,
+    [SomelecRole.CONSULTANT]: 1,
+    [SomelecRole.ENGINEERING_CONSULTANT]: 1
   };
 
   static getHighestRole(roles: UserRole[]): UserRole {
     const priority = User.ROLE_PRIORITY;
-    return roles.reduce((highest, current) => 
+    return roles.reduce((highest, current) =>
       priority[current] > priority[highest] ? current : highest
     );
   }
 
   static getHighestRoleEntity(roles: UserRoleEntity[]): UserRoleEntity {
     const priority = User.ROLE_PRIORITY_ENTITY;
-    return roles.reduce((highest, current) => 
+    return roles.reduce((highest, current) =>
       priority[current.roleName] > priority[highest.roleName] ? current : highest
     );
   }
@@ -611,7 +619,7 @@ export class User {
   }
 }
 
-export type UserRoleType = 'admin' | 'manager' | 'employee' | 'supplier' | 'inspector' | 'engineer' | 'user';
+export type UserRoleType = 'admin' | 'manager' | 'employee' | 'supplier' | 'inspector' | 'engineer' | 'user' | 'consultant' | 'engineering_consultant';
 
 export interface AuthSession {
   user: User;
