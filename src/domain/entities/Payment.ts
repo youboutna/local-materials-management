@@ -1,6 +1,8 @@
-import { Project } from './Project';
-import { Phase } from './Phase';
-import { Inspection } from './Inspection';
+/**
+ * Domain Entity: Payment
+ * Pure business logic without infrastructure concerns
+ * ✅ Utilise des références par ID (projectRef, phaseRef, inspectionRef)
+ */
 
 export type PaymentMethod =
   | 'cash'
@@ -35,15 +37,16 @@ export interface PaymentDocument {
 
 export class Payment {
   private _id: string;
-  private _project: Project | null;
-  private _phase: Phase | null;
-  private _inspection: Inspection | null;
+  private _projectRef: { id: string } | null;
+  private _phaseRef: { id: string } | null;
+  private _inspectionRef: { id: string } | null;
   private _amount: number;
   private _paymentDate: string;
   private _paymentMethod: PaymentMethod;
   private _status: PaymentStatus;
   private _progressAtPayment: number;
   private _transactionId: string | null;
+  private _contractorId: string | null;
   private _contractorName: string;
   private _contractorContact: string;
   private _bankName: string | null;
@@ -55,19 +58,21 @@ export class Payment {
   private _documents: PaymentDocument[];
   private _createdAt: string;
   private _updatedAt: string;
-  private _createdBy: string | null; // ✅ Ajouté
+  private _createdBy: string | null;
+  private _notes: string | null;
 
   constructor(
     id: string,
-    project: Project | null,
-    phase: Phase | null,
-    inspection: Inspection | null,
+    projectRef: { id: string } | null,
+    phaseRef: { id: string } | null,
+    inspectionRef: { id: string } | null,
     amount: number,
     paymentDate: string,
     paymentMethod: PaymentMethod,
     status: PaymentStatus,
     progressAtPayment: number,
     transactionId: string | null,
+    contractorId: string | null,
     contractorName: string,
     contractorContact: string,
     bankName: string | null,
@@ -79,20 +84,22 @@ export class Payment {
     documents: PaymentDocument[],
     createdAt: string,
     updatedAt: string,
-    createdBy: string | null = null
+    createdBy: string | null = null,
+    notes: string | null = null
   ) {
-    this._id = this.validateId(id);
-    this._project = project;
-    this._phase = phase;
-    this._inspection = inspection;
-    this._amount = this.validateAmount(amount);
+    this._id = id;
+    this._projectRef = projectRef;
+    this._phaseRef = phaseRef;
+    this._inspectionRef = inspectionRef;
+    this._amount = amount;
     this._paymentDate = paymentDate;
     this._paymentMethod = paymentMethod;
-    this._status = this.validateStatus(status);
-    this._progressAtPayment = this.validateProgress(progressAtPayment);
+    this._status = status;
+    this._progressAtPayment = progressAtPayment;
     this._transactionId = transactionId;
-    this._contractorName = this.validateContractorName(contractorName);
-    this._contractorContact = this.validateContractorContact(contractorContact);
+    this._contractorId = contractorId;
+    this._contractorName = contractorName;
+    this._contractorContact = contractorContact;
     this._bankName = bankName;
     this._accountNumber = accountNumber;
     this._checkNumber = checkNumber;
@@ -103,19 +110,24 @@ export class Payment {
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
     this._createdBy = createdBy;
+    this._notes = notes;
   }
 
   // Getters
   get id(): string { return this._id; }
-  get project(): Project | null { return this._project; }
-  get phase(): Phase | null { return this._phase; }
-  get inspection(): Inspection | null { return this._inspection; }
+  get projectRef(): { id: string } | null { return this._projectRef; }
+  get phaseRef(): { id: string } | null { return this._phaseRef; }
+  get inspectionRef(): { id: string } | null { return this._inspectionRef; }
+  get projectId(): string | null { return this._projectRef?.id ?? null; }
+  get phaseId(): string | null { return this._phaseRef?.id ?? null; }
+  get inspectionId(): string | null { return this._inspectionRef?.id ?? null; }
   get amount(): number { return this._amount; }
   get paymentDate(): string { return this._paymentDate; }
   get paymentMethod(): PaymentMethod { return this._paymentMethod; }
   get status(): PaymentStatus { return this._status; }
   get progressAtPayment(): number { return this._progressAtPayment; }
   get transactionId(): string | null { return this._transactionId; }
+  get contractorId(): string | null { return this._contractorId; }
   get contractorName(): string { return this._contractorName; }
   get contractorContact(): string { return this._contractorContact; }
   get bankName(): string | null { return this._bankName; }
@@ -127,8 +139,10 @@ export class Payment {
   get documents(): PaymentDocument[] { return this._documents; }
   get createdAt(): string { return this._createdAt; }
   get updatedAt(): string { return this._updatedAt; }
-  get createdBy(): string | null { return this._createdBy; } // ✅ Nouveau getter
+  get createdBy(): string | null { return this._createdBy; }
+  get notes(): string | null { return this._notes; }
 
+  // Business logic methods
   get displayName(): string {
     return `${this._contractorName} - ${this._amount}`;
   }
@@ -141,12 +155,7 @@ export class Payment {
   }
 
   getRequiredDocumentTypes(): string[] {
-    return [
-      'pv_service_fait',
-      'decompte',
-      'facture',
-      'attestation_avancement'
-    ];
+    return ['pv_service_fait', 'decompte', 'facture', 'attestation_avancement'];
   }
 
   hasAllRequiredDocuments(): boolean {
@@ -201,15 +210,16 @@ export class Payment {
   withStatus(newStatus: PaymentStatus): Payment {
     return new Payment(
       this._id,
-      this._project,
-      this._phase,
-      this._inspection,
+      this._projectRef,
+      this._phaseRef,
+      this._inspectionRef,
       this._amount,
       this._paymentDate,
       this._paymentMethod,
       newStatus,
       this._progressAtPayment,
       this._transactionId,
+      this._contractorId,
       this._contractorName,
       this._contractorContact,
       this._bankName,
@@ -221,22 +231,24 @@ export class Payment {
       this._documents,
       this._createdAt,
       new Date().toISOString(),
-      this._createdBy
+      this._createdBy,
+      this._notes
     );
   }
 
   withAmount(newAmount: number): Payment {
     return new Payment(
       this._id,
-      this._project,
-      this._phase,
-      this._inspection,
+      this._projectRef,
+      this._phaseRef,
+      this._inspectionRef,
       this.validateAmount(newAmount),
       this._paymentDate,
       this._paymentMethod,
       this._status,
       this._progressAtPayment,
       this._transactionId,
+      this._contractorId,
       this._contractorName,
       this._contractorContact,
       this._bankName,
@@ -248,61 +260,75 @@ export class Payment {
       this._documents,
       this._createdAt,
       new Date().toISOString(),
-      this._createdBy
+      this._createdBy,
+      this._notes
     );
   }
 
   // Factory
   static create(params: {
     id: string;
-    project: Project | null;
-    phase?: Phase | null;
-    inspection?: Inspection | null;
+    projectRef?: { id: string } | null;
+    phaseRef?: { id: string } | null;
+    inspectionRef?: { id: string } | null;
     amount: number;
     paymentMethod: PaymentMethod;
+    contractorId?: string | null;
     contractorName: string;
     contractorContact: string;
     progressAtPayment?: number;
+    paymentDate?: string;
+    transactionId?: string | null;
+    bankName?: string | null;
+    accountNumber?: string | null;
+    checkNumber?: string | null;
+    mobileNumber?: string | null;
+    mobileOperator?: string | null;
+    receiverName?: string | null;
     createdBy?: string | null;
+    notes?: string | null;
   }): Payment {
     return new Payment(
       params.id,
-      params.project,
-      params.phase || null,
-      params.inspection || null,
+      params.projectRef ?? null,
+      params.phaseRef ?? null,
+      params.inspectionRef ?? null,
       params.amount,
-      new Date().toISOString(),
+      params.paymentDate || new Date().toISOString(),
       params.paymentMethod,
       'requested',
       params.progressAtPayment || 0,
-      null,
+      params.transactionId || null,
+      params.contractorId || null,
       params.contractorName,
       params.contractorContact,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
+      params.bankName || null,
+      params.accountNumber || null,
+      params.checkNumber || null,
+      params.mobileNumber || null,
+      params.mobileOperator || null,
+      params.receiverName || null,
       [],
       new Date().toISOString(),
       new Date().toISOString(),
-      params.createdBy || null
+      params.createdBy || null,
+      params.notes || null
     );
   }
 
   toPlainObject(): Record<string, unknown> {
     return {
       id: this._id,
-      project_id: this._project?.id || null,
-      phase_id: this._phase?.id || null,
-      inspection_id: this._inspection?.id || null,
+      project_id: this._projectRef?.id ?? null,
+      phase_id: this._phaseRef?.id ?? null,
+      inspection_id: this._inspectionRef?.id ?? null,
       amount: this._amount,
       payment_date: this._paymentDate,
       payment_method: this._paymentMethod,
       status: this._status,
       progress_at_payment: this._progressAtPayment,
       transaction_id: this._transactionId,
+      contractor_id: this._contractorId,
       contractor_name: this._contractorName,
       contractor_contact: this._contractorContact,
       bank_name: this._bankName,
@@ -311,10 +337,10 @@ export class Payment {
       mobile_number: this._mobileNumber,
       mobile_operator: this._mobileOperator,
       receiver_name: this._receiverName,
-      documents: this._documents.map(d => ({ ...d })),
       created_at: this._createdAt,
       updated_at: this._updatedAt,
-      created_by: this._createdBy, // ✅ Ajouté
+      created_by: this._createdBy,
+      notes: this._notes,
     };
   }
 
@@ -352,21 +378,5 @@ export class Payment {
       throw new Error('Progress must be between 0 and 100');
     }
     return progress;
-  }
-
-  private validateContractorName(name: string): string {
-    if (!name || name.trim().length === 0) {
-      console.warn('[Payment] contractorName missing — defaulting to "—"');
-      return '—';
-    }
-    return name.trim();
-  }
-
-  private validateContractorContact(contact: string): string {
-    if (!contact || contact.trim().length === 0) {
-      console.warn('[Payment] contractorContact missing — defaulting to "—"');
-      return '—';
-    }
-    return contact.trim();
   }
 }

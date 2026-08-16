@@ -1,21 +1,16 @@
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+// src/application/services/PaymentService.ts
+
+import { getAuthService } from '@/application/services/AuthService';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { Payment } from '@/domain/entities/Payment';
 import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
 import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
-import { Payment } from '@/domain/entities/Payment';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { CreatePaymentBlockRequestDto, CreatePaymentControlActionRequestDto, CreatePaymentDTO, PaymentBlockDTO, PaymentControlActionDTO, PaymentDTO, PaymentEligibilityValidationDto, ResolvePaymentBlockRequestDto, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
-import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
-import {
-  PaymentBlockDTO,
-  CreatePaymentBlockRequestDto,
-  ResolvePaymentBlockRequestDto,
-  CreatePaymentControlActionRequestDto,
-  PaymentControlActionDTO,
-  PaymentEligibilityValidationDto,
-} from '@/dtos/entities/PaymentDTO';
 import { PaymentBlockingValidation } from '@/dtos/utils/PaymentBlockingValidation';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { getAuthService } from '@/application/services/AuthService';
 
 export enum PaymentStatusEnum {
   PENDING = 'pending',
@@ -52,10 +47,14 @@ export class PaymentService {
     private paymentControlActionRepository: IPaymentControlActionRepository = RepositoryFactory.getPaymentControlActionRepository(),
   ) {}
 
+  // ============================================================
+  // CRUD de base
+  // ============================================================
+
   async getPaymentsByPhase(phaseId: string): Promise<{ data: PaymentDTO[] }> {
     try {
       const allPayments = await this.paymentRepository.findAll();
-      const phasePayments = allPayments.filter(payment => payment.phase?.id === phaseId);
+      const phasePayments = allPayments.filter(payment => payment.phaseRef?.id === phaseId);
       return {
         data: phasePayments.map(payment => PaymentTransformer.toDTO(payment)),
       };
@@ -85,33 +84,56 @@ export class PaymentService {
     }
   }
 
+  // ============================================================
+  // ✅ CORRIGÉ : Création d'un paiement avec tous les champs
+  // ============================================================
+
   async createPayment(data: CreatePaymentDTO): Promise<PaymentDTO> {
-    try {
-      if (!data.projectId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
-      }
+    console.log('[PaymentService] createPayment received:', data);
 
-      // Récupérer l'utilisateur courant pour created_by
-      const authService = getAuthService();
-      const user = await authService.getCurrentUser();
-      const userId = user?.id;
-
-      const dtoWithUser = { ...data, createdBy: userId };
-      const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(dtoWithUser);
-      await this.paymentRepository.save(paymentEntity);
-
-      const paymentDTO = PaymentTransformer.toDTO(paymentEntity);
-      return {
-        ...paymentDTO,
-        id: paymentEntity.id,
-        createdAt: paymentEntity.createdAt || new Date().toISOString(),
-        updatedAt: paymentEntity.updatedAt || new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error('[PaymentService] Error creating payment:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create payment');
+    if (!data.projectId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required for payment creation');
     }
+
+    // Récupérer l'utilisateur courant pour created_by (RLS)
+    const authService = getAuthService();
+    const user = await authService.getCurrentUser();
+    const userId = user?.id;
+
+    const dtoWithUser = { ...data, createdBy: userId };
+
+    // ✅ Le transformer utilise projectRef, phaseRef, inspectionRef
+    const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(dtoWithUser);
+
+    console.log('[PaymentService] entity created:', {
+      projectId: paymentEntity.projectRef?.id,
+      phaseId: paymentEntity.phaseRef?.id,
+      inspectionId: paymentEntity.inspectionRef?.id,
+      contractorId: paymentEntity.contractorId,
+      receiverName: paymentEntity.receiverName,
+      notes: paymentEntity.notes,
+      bankName: paymentEntity.bankName,
+      accountNumber: paymentEntity.accountNumber,
+    });
+
+    await this.paymentRepository.save(paymentEntity);
+
+    // Lier les documents si présents
+    if (data.documentIds?.length) {
+      try {
+        const documentService = getDocumentService();
+        await documentService.linkDocumentsToPayment(paymentEntity.id, data.documentIds);
+      } catch (linkError) {
+        console.warn('[PaymentService] Erreur liaison documents:', linkError);
+      }
+    }
+
+    return PaymentTransformer.toDTO(paymentEntity);
   }
+
+  // ============================================================
+  // ✅ CORRIGÉ : Mise à jour d'un paiement (tous les champs + documents)
+  // ============================================================
 
   async updatePayment(id: string, data: UpdatePaymentDTO): Promise<void> {
     try {
@@ -119,6 +141,7 @@ export class PaymentService {
       if (!existingPayment) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
       }
+
       const updateData = {
         contractorName: data.contractorName,
         contractorContact: data.contractorContact,
@@ -133,9 +156,32 @@ export class PaymentService {
         mobileNumber: data.mobileNumber,
         mobileOperator: data.mobileOperator,
         receiverName: data.receiverName,
+        contractorId: data.contractorId,
+        notes: data.notes,
         status: data.status,
       } as Partial<Payment>;
+
+      if (data.projectId !== undefined) {
+        updateData.projectRef = data.projectId ? { id: data.projectId } : null;
+      }
+      if (data.phaseId !== undefined) {
+        updateData.phaseRef = data.phaseId ? { id: data.phaseId } : null;
+      }
+      if (data.inspectionId !== undefined) {
+        updateData.inspectionRef = data.inspectionId ? { id: data.inspectionId } : null;
+      }
+
       await this.paymentRepository.update(id, updateData);
+
+      // Mettre à jour les documents si nécessaire
+      if (data.documentIds !== undefined) {
+        try {
+          const documentService = getDocumentService();
+          await documentService.replacePaymentDocuments(id, data.documentIds);
+        } catch (linkError) {
+          console.warn('[PaymentService] Erreur mise à jour documents:', linkError);
+        }
+      }
     } catch (error) {
       console.error('[PaymentService] Error updating payment:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update payment');
@@ -154,6 +200,10 @@ export class PaymentService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete payment');
     }
   }
+
+  // ============================================================
+  // Méthodes de requête
+  // ============================================================
 
   async getPaymentsByProject(projectId: string): Promise<PaymentDTO[]> {
     try {
@@ -212,7 +262,7 @@ export class PaymentService {
           const projectIds = projects.map(p => p.id);
           if (projectIds.length === 0) return [];
           const allPayments = await this.paymentRepository.findAll();
-          payments = allPayments.filter(p => projectIds.includes(p.projectId));
+          payments = allPayments.filter(p => projectIds.includes(p.projectRef?.id ?? ''));
           break;
         }
         default: {
@@ -226,6 +276,10 @@ export class PaymentService {
     }
   }
 
+  // ============================================================
+  // Payment Blocking
+  // ============================================================
+
   async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
     PaymentBlockingValidation.validateCreatePaymentBlockRequest(request);
     const payment = await this.getPaymentById(request.payment_request_id);
@@ -234,7 +288,7 @@ export class PaymentService {
     }
     const contractorId = payment.contractorId || payment.contractorName || 'unknown';
     const record = await this.paymentBlockRepository.create({
-      projectId: payment.projectId,
+      projectId: payment.projectRef?.id ?? '',
       contractorId,
       amount: request.blocked_amount,
       blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
@@ -281,13 +335,13 @@ export class PaymentService {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
     }
     const contractorId = payment.contractorId || payment.contractorName || 'unknown';
-    const blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectId, contractorId);
+    const blocks = await this.paymentBlockRepository.findActiveByProjectAndContractor(payment.projectRef?.id ?? '', contractorId);
     let blockId: string;
     if (blocks.length > 0) {
       blockId = blocks[0].id;
     } else {
       const anchorBlock = await this.paymentBlockRepository.create({
-        projectId: payment.projectId,
+        projectId: payment.projectRef?.id ?? '',
         contractorId,
         amount: payment.amount,
         blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
@@ -317,6 +371,10 @@ export class PaymentService {
     console.log(`Control action added to block ${request.payment_block_id}: ${request.action_type}`);
     return controlAction;
   }
+
+  // ============================================================
+  // Supplier Payments & Workflow
+  // ============================================================
 
   async createSupplierPayment(request: CreatePaymentDTO, supplierId: string): Promise<PaymentDTO> {
     try {

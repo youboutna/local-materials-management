@@ -1,242 +1,333 @@
+// ============================================================
+// src/components/payments/PaymentCrud.tsx
+// ============================================================
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useQueryClient } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Edit, Trash2, Plus, ExternalLink, Download } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { usePaymentCrud, useProjects } from '@/hooks/hexagonal';
-import ListToolbar from '@/components/common/ListToolbar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PAYMENT_CONTROL_THRESHOLDS } from '@/config/referentials/payment-tolerance.referential';
-import { PAYMENT_ORIGINS } from '@/config/referentials/payment-origin.referential';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Input } from '@/components/ui/input';
+import { Download, Edit, Lock, Unlock, FileText, Check, X, Trash2 } from 'lucide-react';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { PaymentOriginKey, PAYMENT_ORIGINS } from '@/config/referentials/payment-origin.referential';
 import { exportToCSV } from '@/lib/export';
+import { useToast } from '@/hooks/use-toast';
+import { usePaymentCrud, useProjects } from '@/hooks/hexagonal';
+import { useDocumentViewer } from '@/components/documents/viewer';
+import { useDocumentsHex } from '@/hooks/hexagonal';
+import { UnifiedPaymentFormDialog } from '@/components/payments/UnifiedPaymentFormDialog';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { toDateInput } from '@/lib/utils';
 
 interface PaymentCrudProps {
-  projectId?: string;
-  contractorId?: string;
   onCreatePayment?: () => void;
 }
 
-const DELAY_WARNING_DAYS = PAYMENT_CONTROL_THRESHOLDS.find(t => t.key === 'payment_delay')?.days ?? 30;
-const AUTO_BLOCK_DAYS = PAYMENT_CONTROL_THRESHOLDS.find(t => t.key === 'auto_block')?.days ?? 45;
-
-const getPaymentDelayDays = (payment: PaymentDTO): number | null => {
-  if (!payment.paymentDate) return null;
-  const status = (payment.status || '').toLowerCase();
-  if (['validated', 'completed', 'paid', 'approved'].includes(status)) return null;
-  const start = new Date(payment.paymentDate).getTime();
-  if (Number.isNaN(start)) return null;
-  const days = Math.floor((Date.now() - start) / 86400000);
-  return days > 0 ? days : 0;
-};
-
-const getStatusMeta = (payment: PaymentDTO) => {
-  const status = (payment.status || 'pending').toLowerCase();
-  if (['validated', 'completed', 'paid', 'approved'].includes(status))
-    return { label: 'Validé', variant: 'default' as const };
-  if (status === 'blocked') return { label: 'Bloqué', variant: 'destructive' as const };
-  if (status === 'rejected') return { label: 'Rejeté', variant: 'outline' as const };
-  return { label: 'En attente', variant: 'secondary' as const };
-};
-
-export const PaymentCrud = ({ projectId, contractorId, onCreatePayment }: PaymentCrudProps) => {
+export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
   const { toast } = useToast();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [methodFilter, setMethodFilter] = useState('all');
+  const queryClient = useQueryClient();
+  const { openDocument } = useDocumentViewer();
+  const { getDocumentsByIds } = useDocumentsHex();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [editingPayment, setEditingPayment] = useState<PaymentDTO | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const { payments, loading, deletePayment } = usePaymentCrud();
-  const { projects: allProjects } = useProjects();
+  const { payments, loading, deletePayment, updatePayment } = usePaymentCrud();
+  const { projects, isLoading: projectsLoading } = useProjects();
 
+  // Map projet pour afficher le titre et la référence
   const projectLabelMap = useMemo(() => {
-    const map = new Map();
-    (allProjects || []).forEach((p: any) => {
-      const ref = p.projectReference || p.reference;
-      const label = p.title || p.name || ref || 'Projet';
+    const map = new Map<string, { label: string; ref?: string }>();
+    (projects || []).forEach((p: any) => {
+      const label = p.title || p.name || p.projectReference || p.reference || 'Projet';
+      const ref = p.projectReference || p.reference || '';
       map.set(p.id, { label, ref });
     });
     return map;
-  }, [allProjects]);
+  }, [projects]);
 
-  const filteredPayments = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (payments || []).filter(p => {
-      if (statusFilter !== 'all') {
-        const statusMap: Record<string, string> = {
-          pending: 'En attente',
-          validated: 'Validé',
-          blocked: 'Bloqué',
-          rejected: 'Rejeté',
-        };
-        if (getStatusMeta(p).label !== statusMap[statusFilter]) return false;
-      }
-      if (methodFilter !== 'all' && (p.paymentMethod || '') !== methodFilter) return false;
-      if (!term) return true;
-      const proj = p.projectId ? projectLabelMap.get(p.projectId) : undefined;
-      const haystack = [
-        p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('fr-FR') : '',
-        proj?.label, proj?.ref, p.contractorName, p.contractorContact,
-        String(p.amount ?? ''), p.paymentMethod, p.transactionId
-      ].filter(Boolean).join(' ').toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [payments, search, statusFilter, methodFilter, projectLabelMap]);
-
-  const formatAmount = (n?: number) =>
-    typeof n === 'number' && !Number.isNaN(n)
-      ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)
-      : '—';
-
-  const handleDelete = async (payment: PaymentDTO) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
-    try {
-      await deletePayment(payment.id);
-      toast({ title: 'Succès', description: 'Paiement supprimé' });
-    } catch (error) {
-      toast({ title: 'Erreur', description: 'Échec de la suppression', variant: 'destructive' });
+  const filteredData = useMemo(() => {
+    if (!payments) return [];
+    let filtered = payments;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.contractorName?.toLowerCase().includes(term) ||
+        p.projectId?.toLowerCase().includes(term) ||
+        p.amount?.toString().includes(term)
+      );
     }
-  };
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(p => (p.status || 'pending') === statusFilter);
+    }
+    return filtered;
+  }, [payments, searchTerm, statusFilter]);
 
   const handleExport = () => {
-    if (filteredPayments.length === 0) {
-      toast({ title: 'Aucune donnée', description: 'Aucun paiement à exporter.', variant: 'destructive' });
+    if (filteredData.length === 0) {
+      toast({ title: 'Aucune donnée', description: 'Il n\'y a pas de paiements à exporter.', variant: 'destructive' });
       return;
     }
-    exportToCSV(filteredPayments);
+    exportToCSV(filteredData);
     toast({ title: 'Export lancé', description: 'Le fichier CSV a été téléchargé.' });
   };
 
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          Gestion des Paiements
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-1" /> Exporter CSV
-          </Button>
-          <Button onClick={onCreatePayment} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nouveau Paiement
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ListToolbar
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Rechercher (date, projet, contractant, montant…)"
-          resultCount={filteredPayments.length}
-        >
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="validated">Validés</SelectItem>
-              <SelectItem value="blocked">Bloqués</SelectItem>
-              <SelectItem value="rejected">Rejetés</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={methodFilter} onValueChange={setMethodFilter}>
-            <SelectTrigger className="w-[190px]">
-              <SelectValue placeholder="Méthode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les méthodes</SelectItem>
-              <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-              <SelectItem value="cash">Espèces</SelectItem>
-              <SelectItem value="check">Chèque</SelectItem>
-              <SelectItem value="mobile_payment">Paiement mobile</SelectItem>
-            </SelectContent>
-          </Select>
-        </ListToolbar>
+  const handleEdit = (payment: PaymentDTO) => {
+    setEditingPayment(payment);
+    setIsEditDialogOpen(true);
+  };
 
-        {loading ? (
-          <div className="flex justify-center py-8"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Projet</TableHead>
-                <TableHead>Contractant</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Méthode</TableHead>
-                <TableHead>Délai (jours)</TableHead>
-                <TableHead>Progression</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Origine</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPayments.length === 0 ? (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Aucun paiement enregistré</TableCell></TableRow>
-              ) : (
-                filteredPayments.map(p => {
-                  const proj = p.projectId ? projectLabelMap.get(p.projectId) : null;
-                  const delay = getPaymentDelayDays(p);
-                  const status = getStatusMeta(p);
-                  const progress = typeof p.progressAtPayment === 'number' ? Math.min(100, Math.max(0, p.progressAtPayment)) : null;
-                  const originLabel = PAYMENT_ORIGINS[p.origin as keyof typeof PAYMENT_ORIGINS]?.shortLabel || p.origin || 'manuel';
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell>{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('fr-FR') : '—'}</TableCell>
-                      <TableCell>
-                        {p.projectId ? (
-                          <Link to={`/projects/${p.projectId}`} className="text-primary hover:underline inline-flex items-center gap-1">
-                            <span className="truncate max-w-[180px]">{proj?.ref || proj?.label || 'Projet'}</span>
-                            <ExternalLink className="h-3 w-3 shrink-0" />
-                          </Link>
-                        ) : '—'}
-                      </TableCell>
-                      <TableCell><div className="font-medium">{p.contractorName || '—'}</div></TableCell>
-                      <TableCell className="font-medium whitespace-nowrap">{formatAmount(p.amount)} MRU</TableCell>
-                      <TableCell>{p.paymentMethod || '—'}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {delay === null ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <span className={delay >= AUTO_BLOCK_DAYS ? 'text-destructive font-medium' : delay >= DELAY_WARNING_DAYS ? 'text-warning font-medium' : 'text-muted-foreground'}>
-                            {delay} j
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="min-w-[140px]">
-                        {progress === null ? '—' : (
-                          <div className="space-y-1">
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                              <div className={`h-full rounded-full ${progress > 80 ? 'bg-success' : progress >= 50 ? 'bg-warning' : 'bg-destructive'}`} style={{ width: `${progress}%` }} />
-                            </div>
-                            <span className="text-xs text-muted-foreground">{progress}%</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell><Badge variant={status.variant}>{status.label}</Badge></TableCell>
-                      <TableCell><Badge variant="outline">{originLabel}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => { /* éditer */ }}><Edit className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(p)}><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+  const handleToggleBlock = async (payment: PaymentDTO) => {
+    try {
+      const newStatus = payment.status === 'blocked' ? 'pending' : 'blocked';
+      await updatePayment(payment.id, { status: newStatus });
+      toast({ title: newStatus === 'blocked' ? 'Paiement bloqué' : 'Paiement débloqué' });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de modifier le statut.', variant: 'destructive' });
+    }
+  };
+
+  const handleApprove = async (payment: PaymentDTO) => {
+    try {
+      await updatePayment(payment.id, { status: 'approved' });
+      toast({ title: 'Paiement approuvé' });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible d\'approuver.', variant: 'destructive' });
+    }
+  };
+
+  const handleReject = async (payment: PaymentDTO) => {
+    if (!confirm('Confirmer le rejet ?')) return;
+    try {
+      await updatePayment(payment.id, { status: 'rejected' });
+      toast({ title: 'Paiement rejeté' });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de rejeter.', variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async (payment: PaymentDTO) => {
+    if (!confirm('Supprimer définitivement ?')) return;
+    try {
+      await deletePayment(payment.id);
+      toast({ title: 'Paiement supprimé' });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de supprimer.', variant: 'destructive' });
+    }
+  };
+
+  const handleViewDocuments = async (payment: PaymentDTO) => {
+    const docIds = payment.documentIds || [];
+    if (docIds.length === 0) {
+      toast({ title: 'Aucun document', description: 'Ce paiement n\'a pas de documents joints.' });
+      return;
+    }
+    try {
+      const docs = await getDocumentsByIds(docIds);
+      if (docs.length === 0) {
+        toast({ title: 'Aucun document trouvé' });
+        return;
+      }
+      openDocument(docs[0], { allowStatusChange: false });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de charger les documents.', variant: 'destructive' });
+    }
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    try { return format(new Date(dateStr), 'dd/MM/yyyy', { locale: fr }); } catch { return dateStr; }
+  };
+
+  const getPaymentMethodLabel = (method?: string) => {
+    const labels: Record<string, string> = {
+      bank_transfer: 'Virement bancaire',
+      check: 'Chèque',
+      mobile_money: 'Mobile Money',
+      cash: 'Espèces',
+      card: 'Carte bancaire',
+    };
+    return labels[method || ''] || method || '—';
+  };
+
+  const getProgressColor = (progress?: number) => {
+    if (!progress) return 'bg-gray-300';
+    if (progress >= 80) return 'bg-green-600';
+    if (progress >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  if (loading || projectsLoading) return <div className="py-8 text-center">Chargement des paiements...</div>;
+  if (!payments) return <div className="py-8 text-center text-red-500">Erreur de chargement</div>;
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-4 items-center mb-4">
+        <Input
+          placeholder="Rechercher (date, projet, contractant, montant...)"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-64"
+        />
+        <ToggleGroup type="single" value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'all')}>
+          <ToggleGroupItem value="all">Tous</ToggleGroupItem>
+          <ToggleGroupItem value="pending">En attente</ToggleGroupItem>
+          <ToggleGroupItem value="approved">Validés</ToggleGroupItem>
+          <ToggleGroupItem value="blocked">Bloqués</ToggleGroupItem>
+          <ToggleGroupItem value="rejected">Rejetés</ToggleGroupItem>
+        </ToggleGroup>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-1" /> Exporter CSV
+        </Button>
+        {onCreatePayment && (
+          <Button onClick={onCreatePayment} className="ml-auto">
+            + Nouveau Paiement
+          </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Projet</TableHead>
+            <TableHead>Contractant</TableHead>
+            <TableHead>Montant</TableHead>
+            <TableHead>Méthode</TableHead>
+            <TableHead>Délai (jours)</TableHead>
+            <TableHead>Progression</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Origine</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredData.length === 0 ? (
+            <TableRow><TableCell colSpan={10} className="text-center">Aucun paiement enregistré</TableCell></TableRow>
+          ) : (
+            filteredData.map((payment) => {
+              const projectInfo = payment.projectId ? projectLabelMap.get(payment.projectId) : null;
+              const projectDisplay = projectInfo?.label || payment.projectId || '—';
+              const isBlocked = payment.status === 'blocked';
+              const isPending = payment.status === 'pending';
+              const isApproved = payment.status === 'approved';
+              const isRejected = payment.status === 'rejected';
+              const isEditable = !isApproved && !isRejected && !isBlocked;
+              const hasDocs = (payment.documentIds?.length || 0) > 0;
+
+              const daysOverdue = payment.paymentDate
+                ? Math.max(0, Math.floor((Date.now() - new Date(payment.paymentDate).getTime()) / (1000 * 60 * 60 * 24)))
+                : null;
+
+              return (
+                <TableRow key={payment.id}>
+                  <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                  <TableCell>{projectDisplay}</TableCell>
+                  <TableCell>{payment.contractorName || '—'}</TableCell>
+                  <TableCell className="font-medium">{payment.amount?.toLocaleString('fr-FR')} MRU</TableCell>
+                  <TableCell>{getPaymentMethodLabel(payment.paymentMethod)}</TableCell>
+                  <TableCell>{daysOverdue !== null ? `${daysOverdue} j` : '—'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${getProgressColor(payment.progressAtPayment)}`}
+                          style={{ width: `${Math.min(payment.progressAtPayment || 0, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground">{payment.progressAtPayment || 0}%</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={payment.status === 'approved' ? 'default' : 'secondary'}>
+                      {payment.status || 'pending'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {PAYMENT_ORIGINS[payment.origin as PaymentOriginKey]?.shortLabel || payment.origin || 'manuel'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {isEditable && (
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(payment)} title="Modifier">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleBlock(payment)} title={isBlocked ? 'Débloquer' : 'Bloquer'}>
+                        {isBlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                      </Button>
+                      {isPending && (
+                        <Button variant="ghost" size="sm" onClick={() => handleApprove(payment)} title="Valider" className="text-green-600 hover:text-green-700">
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isPending && (
+                        <Button variant="ghost" size="sm" onClick={() => handleReject(payment)} title="Rejeter" className="text-red-600 hover:text-red-700">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => handleViewDocuments(payment)} title={hasDocs ? 'Voir les documents' : 'Aucun document'} disabled={!hasDocs}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(payment)} title="Supprimer" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+
+      {editingPayment && (
+        <UnifiedPaymentFormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          origin="manual"
+          isEdit={true}
+          defaults={{
+            id: editingPayment.id,
+            projectId: editingPayment.projectId,
+            projectTitle: editingPayment.projectId ? projectLabelMap.get(editingPayment.projectId)?.label : undefined,
+            contractorId: editingPayment.contractorId,
+            contractorName: editingPayment.contractorName,
+            contractorContact: editingPayment.contractorContact,
+            amount: editingPayment.amount,
+            paymentMethod: editingPayment.paymentMethod,
+            paymentDate: editingPayment.paymentDate ? toDateInput(editingPayment.paymentDate) : undefined,
+            transactionId: editingPayment.transactionId,
+            progressAtPayment: editingPayment.progressAtPayment,
+            bankName: editingPayment.bankName,
+            accountNumber: editingPayment.accountNumber,
+            checkNumber: editingPayment.checkNumber,
+            mobileNumber: editingPayment.mobileNumber,
+            mobileOperator: editingPayment.mobileOperator,
+            receiverName: editingPayment.receiverName,
+            documentIds: editingPayment.documentIds,
+            notes: editingPayment.notes,
+            contextLabel: `Édition du paiement ${editingPayment.id.slice(0, 8)}`,
+          }}
+          lockProject={false}
+          lockContractor={false}
+          onUpdated={() => {
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            setIsEditDialogOpen(false);
+            setEditingPayment(null);
+          }}
+        />
+      )}
+    </div>
   );
 };
 

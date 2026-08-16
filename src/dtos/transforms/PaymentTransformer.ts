@@ -1,12 +1,11 @@
 /**
  * Payment Transformer - Hexagonal Architecture
  * Transforms between Payment entities and DTOs
- * Following clean architecture principles with proper separation of concerns
+ * ✅ CORRIGÉ : fromCreateDTOToEntity utilise projectRef, phaseRef, inspectionRef
  */
 
 import { Payment, PaymentMethod, PaymentStatus } from '@/domain/entities/Payment';
-import { PaymentDTO, CreatePaymentDTO, UpdatePaymentDTO, PaymentRequestDTO } from '@/dtos/entities/PaymentDTO';
-import { Project } from '@/domain/entities/Project';
+import { CreatePaymentDTO, PaymentDTO, PaymentRequestDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 
 export interface PaymentEfficiencyResult {
@@ -45,8 +44,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static toDTO(entity: Payment): PaymentDTO {
     return {
       id: entity.id,
-      projectId: entity.project?.id || '',
-      contractorId: '',
+      projectId: entity.projectRef?.id ?? '',
+      contractorId: entity.contractorId || '',
       contractorName: entity.contractorName,
       contractorContact: entity.contractorContact,
       amount: entity.amount,
@@ -54,8 +53,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       paymentMethod: entity.paymentMethod,
       transactionId: entity.transactionId || '',
       progressAtPayment: entity.progressAtPayment,
-      inspectionId: '',
-      phaseId: entity.phase?.id || '',
+      inspectionId: entity.inspectionRef?.id ?? '',
+      phaseId: entity.phaseRef?.id ?? '',
       bankName: entity.bankName || '',
       accountNumber: entity.accountNumber || '',
       checkNumber: entity.checkNumber || '',
@@ -63,6 +62,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       mobileOperator: entity.mobileOperator || '',
       receiverName: entity.receiverName || '',
       status: entity.status,
+      notes: entity.notes || '',
       createdAt: entity.createdAt || new Date().toISOString(),
       updatedAt: entity.updatedAt || new Date().toISOString()
     };
@@ -74,38 +74,55 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static toEntity(dto: PaymentDTO): Payment {
     return Payment.create({
       id: dto.id,
-      project: null,
-      phase: null,
-      inspection: null,
+      projectRef: dto.projectId ? { id: dto.projectId } : null,
+      phaseRef: dto.phaseId ? { id: dto.phaseId } : null,
+      inspectionRef: dto.inspectionId ? { id: dto.inspectionId } : null,
       amount: dto.amount,
       paymentMethod: dto.paymentMethod as PaymentMethod,
+      contractorId: dto.contractorId || null,
       contractorName: dto.contractorName,
       contractorContact: dto.contractorContact,
-      progressAtPayment: dto.progressAtPayment
+      progressAtPayment: dto.progressAtPayment,
+      paymentDate: dto.paymentDate || new Date().toISOString(),
+      transactionId: dto.transactionId || null,
+      bankName: dto.bankName || null,
+      accountNumber: dto.accountNumber || null,
+      checkNumber: dto.checkNumber || null,
+      mobileNumber: dto.mobileNumber || null,
+      mobileOperator: dto.mobileOperator || null,
+      receiverName: dto.receiverName || null,
+      notes: dto.notes || null,
     });
   }
 
   /**
-   * Transform CreatePaymentDTO to Payment entity
-   * ✅ Génération automatique d'un ID si absent
+   * ✅ CORRIGÉ : Transform CreatePaymentDTO to Payment entity
+   * Utilise projectRef, phaseRef, inspectionRef pour les références
    */
   static fromCreateDTOToEntity(dto: CreatePaymentDTO): Payment {
-  const id = (dto as any).id || crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  // Le statut est initialisé à 'pending' par défaut (géré par le constructeur Payment)
-  return Payment.create({
-    id,
-    project: null,
-    phase: null,
-    inspection: null,
-    amount: dto.amount,
-    paymentMethod: dto.paymentMethod as PaymentMethod,
-    contractorName: dto.contractorName,
-    contractorContact: dto.contractorContact || '',
-    progressAtPayment: dto.progressAtPayment,
-    // Le statut est géré par le constructeur Payment (status par défaut = 'pending')
-    createdBy: dto.createdBy || null
-  });
-  
+    const id = (dto as any).id || crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    return Payment.create({
+      id,
+      projectRef: dto.projectId ? { id: dto.projectId } : null,
+      phaseRef: dto.phaseId ? { id: dto.phaseId } : null,
+      inspectionRef: dto.inspectionId ? { id: dto.inspectionId } : null,
+      amount: dto.amount,
+      paymentMethod: dto.paymentMethod as PaymentMethod,
+      contractorId: dto.contractorId || null,
+      contractorName: dto.contractorName,
+      contractorContact: dto.contractorContact || '',
+      progressAtPayment: dto.progressAtPayment,
+      paymentDate: dto.paymentDate || new Date().toISOString(),
+      transactionId: dto.transactionId || null,
+      bankName: dto.bankName || null,
+      accountNumber: dto.accountNumber || null,
+      checkNumber: dto.checkNumber || null,
+      mobileNumber: dto.mobileNumber || null,
+      mobileOperator: dto.mobileOperator || null,
+      receiverName: dto.receiverName || null,
+      createdBy: dto.createdBy || null,
+      notes: dto.notes || null,
+    });
   }
 
   /**
@@ -118,6 +135,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       paymentMethod: dto.paymentMethod as PaymentMethod,
       progressAtPayment: dto.progressAtPayment,
       transactionId: dto.transactionId,
+      contractorId: dto.contractorId,
       contractorName: dto.contractorName,
       contractorContact: dto.contractorContact,
       bankName: dto.bankName,
@@ -127,6 +145,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       receiverName: dto.receiverName,
       mobileOperator: dto.mobileOperator,
       status: dto.status as PaymentStatus | undefined,
+      notes: dto.notes,
       updatedAt: new Date().toISOString()
     };
   }
@@ -279,7 +298,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     return {
       id: payment.id,
       supplierId: payment.contractorName,
-      projectId: payment.project?.id || '',
+      projectId: payment.projectRef?.id ?? '',
       amount: payment.amount,
       description: '',
       paymentReason: '',
@@ -292,7 +311,7 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static requestDTOToPayment(dto: PaymentRequestDTO): Payment {
     return Payment.create({
       id: dto.id,
-      project: null,
+      projectRef: dto.projectId ? { id: dto.projectId } : null,
       contractorName: dto.supplierId,
       contractorContact: '',
       amount: dto.amount,
@@ -301,7 +320,10 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
     });
   }
 
-  // EntityToDTOMapper interface implementation
+  // ============================================================
+  // Interface EntityToDTOMapper
+  // ============================================================
+
   toDTO(entity: Payment): PaymentDTO {
     return PaymentTransformer.toDTO(entity);
   }
@@ -341,7 +363,8 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
       checkNumber: dto.checkNumber,
       mobileNumber: dto.mobileNumber,
       receiverName: dto.receiverName,
-      mobileOperator: dto.mobileOperator
+      mobileOperator: dto.mobileOperator,
+      notes: dto.notes,
     };
   }
 
@@ -386,9 +409,9 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   static toEntityFromDatabaseRow(row: Record<string, unknown>): Payment {
     return Payment.create({
       id: row.id as string,
-      project: null,
-      phase: null,
-      inspection: null,
+      projectRef: row.project_id ? { id: row.project_id as string } : null,
+      phaseRef: row.phase_id ? { id: row.phase_id as string } : null,
+      inspectionRef: row.inspection_id ? { id: row.inspection_id as string } : null,
       amount: Number(row.amount),
       paymentMethod: row.payment_method as PaymentMethod,
       contractorName: row.contractor_name as string,

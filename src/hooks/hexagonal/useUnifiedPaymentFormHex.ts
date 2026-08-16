@@ -1,133 +1,280 @@
 /**
- * Hexagonal hook: contexte d'auto-complétion du formulaire unifié de paiement.
- * UI -> Hook -> Services (Phase / Inspection / Supplier / Payment) -> Repositories
- * Aucun accès direct à Supabase ici.
+ * Hexagonal hooks for the unified payment form
+ * Manages form context (phases, inspections, supplier) and submission/update
+ * 
+ * Utilisé par UnifiedPaymentFormDialog pour :
+ * - Récupérer les phases, inspections, fournisseur et projet en fonction du contexte
+ * - Soumettre un nouveau paiement (create)
+ * - Mettre à jour un paiement existant (update)
  */
 
-import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getInspectionService } from '@/application/services/InspectionService';
-import { getPaymentService } from '@/application/services/PaymentService';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+
+// Services
 import { getProjectService } from '@/application/services/ProjectService';
 import { getSupplierService } from '@/application/services/SupplierService';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import type { CreatePaymentDTO, PaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { getInspectionService } from '@/application/services/InspectionService';
+import { getPhaseService } from '@/application/services/PhaseService';
+import { getPaymentService } from '@/application/services/PaymentService';
+import { getDocumentService } from '@/application/services/DocumentService';
 
-export interface PaymentFormPhaseOption {
-  id: string;
-  name: string;
+// DTOs
+import { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
+
+// Types
+import { PaymentOrigin, getInitialStatusForOrigin } from '@/config/referentials/payment-origin.referential';
+
+// ============================================================
+// Hook : Contexte du formulaire (phases, inspections, supplier, project)
+// ============================================================
+
+interface FormContextState {
+  phases: Array<{ id: string; name: string; phaseType?: string; status?: string }>;
+  inspections: Array<{ id: string; label: string; phaseId?: string; progress?: number; date?: string }>;
+  supplier: {
+    id: string;
+    name: string;
+    contact: string;
+    bankName?: string;
+    accountNumber?: string;
+    rib?: string;
+  } | null;
+  project: {
+    id: string;
+    title: string;
+    reference?: string;
+    status?: string;
+    budget?: number;
+  } | null;
+  isLoading: boolean;
+  error: Error | null;
 }
 
-export interface PaymentFormInspectionOption {
-  id: string;
-  label: string;
-  phaseId?: string;
-  date?: string;
-  progress?: number;
-}
+export function usePaymentFormContextHex(
+  projectId?: string,
+  contractorId?: string,
+  phaseId?: string,
+  inspectionId?: string
+): FormContextState & { refetch: () => void } {
+  const [state, setState] = useState<FormContextState>({
+    phases: [],
+    inspections: [],
+    supplier: null,
+    project: null,
+    isLoading: false,
+    error: null,
+  });
 
-export interface PaymentFormSupplierContext {
-  id: string;
-  name: string;
-  contact: string;
-  bankName?: string;
-  accountNumber?: string;
-}
+  const projectService = useMemo(() => getProjectService(), []);
+  const supplierService = useMemo(() => getSupplierService(), []);
+  const inspectionService = useMemo(() => getInspectionService(), []);
+  const phaseService = useMemo(() => getPhaseService(), []);
 
-export function usePaymentFormContextHex(projectId?: string, supplierId?: string) {
-  const phaseRepository = useMemo(() => RepositoryFactory.getPhaseRepository(), []);
+  const loadContext = useCallback(async () => {
+    if (!projectId && !contractorId) {
+      setState(prev => ({ ...prev, isLoading: false, error: null }));
+      return;
+    }
 
-  const phasesQuery = useQuery<PaymentFormPhaseOption[]>({
-    queryKey: ['payment-form', 'phases', projectId],
-    enabled: Boolean(projectId),
-    queryFn: async () => {
-      const phases = await phaseRepository.findByProjectId(projectId as string);
-      return (phases ?? []).map((p: any) => ({
-        id: String(p.id),
-        name: String(p.name ?? p.phaseName ?? p.phase_name ?? 'Phase'),
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const results = await Promise.allSettled([
+        projectId ? projectService.getProjectById(projectId) : Promise.resolve(null),
+        projectId ? phaseService.getPhasesByProject(projectId) : Promise.resolve([]),
+        projectId ? inspectionService.getInspectionsByProject(projectId) : Promise.resolve([]),
+        contractorId ? supplierService.getSupplierById(contractorId) : Promise.resolve(null),
+      ]);
+
+      const [projectResult, phasesResult, inspectionsResult, supplierResult] = results;
+
+      const project = projectResult.status === 'fulfilled' ? projectResult.value : null;
+      const phases = phasesResult.status === 'fulfilled' ? phasesResult.value : [];
+      const inspections = inspectionsResult.status === 'fulfilled' ? inspectionsResult.value : [];
+      const supplier = supplierResult.status === 'fulfilled' ? supplierResult.value : null;
+
+      const formattedPhases = Array.isArray(phases) ? phases.map((p: any) => ({
+        id: p.id,
+        name: p.name || p.phaseName || p.title || 'Phase',
+        phaseType: p.phaseType || p.type,
+        status: p.status,
+      })) : [];
+
+      const formattedInspections = Array.isArray(inspections) ? inspections.map((i: any) => ({
+        id: i.id,
+        label: i.label || i.title || `Inspection ${i.id.slice(0, 8)}`,
+        phaseId: i.phaseId || i.phase_id,
+        progress: i.progressAtInspection || i.progress || i.progress_at_inspection,
+        date: i.date || i.inspectionDate,
+      })) : [];
+
+      const formattedSupplier = supplier ? {
+        id: supplier.id,
+        name: supplier.name || supplier.companyName || 'Fournisseur',
+        contact: supplier.contact || supplier.contactPerson || supplier.email || '',
+        bankName: supplier.bankName || supplier.bank_name || '',
+        accountNumber: supplier.accountNumber || supplier.account_number || '',
+        rib: supplier.rib || '',
+      } : null;
+
+      const formattedProject = project ? {
+        id: project.id,
+        title: project.title || project.name || 'Projet',
+        reference: project.reference || project.projectReference,
+        status: project.status,
+        budget: project.budget,
+      } : null;
+
+      setState({
+        phases: formattedPhases,
+        inspections: formattedInspections,
+        supplier: formattedSupplier,
+        project: formattedProject,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('[usePaymentFormContextHex] Error loading context:', error);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error : new Error('Erreur de chargement du contexte'),
       }));
-    },
-  });
+    }
+  }, [projectId, contractorId, projectService, supplierService, inspectionService, phaseService]);
 
-  const inspectionsQuery = useQuery<PaymentFormInspectionOption[]>({
-    queryKey: ['payment-form', 'inspections', projectId],
-    enabled: Boolean(projectId),
-    queryFn: async () => {
-      const inspections = await getInspectionService().getInspectionsByProject(projectId as string);
-      return (inspections ?? []).map((i: any) => ({
-        id: String(i.id),
-        label: `${String(i.status ?? 'inspection')} — ${String(i.date ?? '').slice(0, 10)}`,
-        phaseId: i.phaseId ?? undefined,
-        date: i.date ?? undefined,
-        progress: typeof i.progressAtInspection === 'number' ? i.progressAtInspection : undefined,
-      }));
-    },
-  });
-
-  const supplierQuery = useQuery<PaymentFormSupplierContext | null>({
-    queryKey: ['payment-form', 'supplier', supplierId],
-    enabled: Boolean(supplierId),
-    queryFn: async () => {
-      const supplier: any = await getSupplierService().getSupplierById(supplierId as string);
-      if (!supplier) return null;
-      return {
-        id: String(supplier.id),
-        name: String(supplier.name ?? ''),
-        contact: String(supplier.contactPerson ?? supplier.email ?? supplier.phone ?? ''),
-        bankName: supplier.bankName ?? undefined,
-        accountNumber: supplier.accountNumber ?? supplier.rib ?? undefined,
-      };
-    },
-  });
-
-  const projectQuery = useQuery({
-    queryKey: ['payment-form', 'project', projectId],
-    enabled: Boolean(projectId),
-    queryFn: async () => getProjectService().getProjectById(projectId as string),
-  });
+  useEffect(() => {
+    loadContext();
+  }, [loadContext]);
 
   return {
-    phases: phasesQuery.data ?? [],
-    inspections: inspectionsQuery.data ?? [],
-    supplier: supplierQuery.data ?? null,
-    project: projectQuery.data ?? null,
-    isLoading:
-      phasesQuery.isLoading ||
-      inspectionsQuery.isLoading ||
-      supplierQuery.isLoading ||
-      projectQuery.isLoading,
+    ...state,
+    refetch: loadContext,
   };
 }
 
-export interface SubmitUnifiedPaymentInput {
+// ============================================================
+// Hook : Soumission et mise à jour des paiements
+// ============================================================
+
+interface SubmitPaymentParams {
   payment: CreatePaymentDTO;
-  /** Statut initial issu du référentiel (type de demande) */
-  initialStatus?: UpdatePaymentDTO['status'];
+  initialStatus: string;
 }
 
 export function useSubmitUnifiedPaymentHex() {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  const mutation = useMutation({
-    mutationFn: async ({ payment, initialStatus }: SubmitUnifiedPaymentInput): Promise<PaymentDTO> => {
-      const paymentService = getPaymentService();
-      const created = await paymentService.createPayment(payment);
-      if (initialStatus && created?.id) {
-        await paymentService.updatePayment(created.id, { status: initialStatus });
+  const paymentService = useMemo(() => getPaymentService(), []);
+  const documentService = useMemo(() => getDocumentService(), []);
+
+  /**
+   * Créer un nouveau paiement
+   */
+  const submitPayment = useCallback(
+    async ({ payment, initialStatus }: SubmitPaymentParams) => {
+      setIsPending(true);
+      try {
+        const paymentData = {
+          ...payment,
+          status: initialStatus || 'pending',
+        };
+
+        const created = await paymentService.createPayment(paymentData);
+
+        if (payment.documentIds?.length) {
+          try {
+            await documentService.linkDocumentsToPayment(created.id, payment.documentIds);
+          } catch (linkError) {
+            console.warn('[useSubmitUnifiedPaymentHex] Erreur liaison documents:', linkError);
+          }
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
+
+        toast({
+          title: 'Paiement créé',
+          description: `Le paiement de ${payment.amount?.toLocaleString()} MRU a été enregistré.`,
+        });
+
+        return created;
+      } catch (error) {
+        console.error('[useSubmitUnifiedPaymentHex] Error creating payment:', error);
+        toast({
+          title: 'Erreur',
+          description: error instanceof Error ? error.message : 'Impossible de créer le paiement.',
+          variant: 'destructive',
+        });
+        throw error;
+      } finally {
+        setIsPending(false);
       }
-      return created;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['payment-blocks'] });
-      queryClient.invalidateQueries({ queryKey: ['project-with-payments', variables.payment.projectId] });
-      queryClient.invalidateQueries({ queryKey: ['project', variables.payment.projectId] });
+    [paymentService, documentService, queryClient, toast]
+  );
+
+  /**
+   * Mettre à jour un paiement existant
+   */
+  const updatePayment = useCallback(
+    async (paymentId: string, data: UpdatePaymentDTO) => {
+      setIsPending(true);
+      try {
+        await paymentService.updatePayment(paymentId, data);
+
+        if (data.documentIds !== undefined) {
+          try {
+            await documentService.replacePaymentDocuments(paymentId, data.documentIds);
+          } catch (linkError) {
+            console.warn('[useSubmitUnifiedPaymentHex] Erreur mise à jour documents:', linkError);
+          }
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
+
+        toast({
+          title: 'Paiement mis à jour',
+          description: 'Les modifications ont été enregistrées.',
+        });
+
+        return true;
+      } catch (error) {
+        console.error('[useSubmitUnifiedPaymentHex] Error updating payment:', error);
+        toast({
+          title: 'Erreur',
+          description: error instanceof Error ? error.message : 'Impossible de mettre à jour le paiement.',
+          variant: 'destructive',
+        });
+        throw error;
+      } finally {
+        setIsPending(false);
+      }
     },
-  });
+    [paymentService, documentService, queryClient, toast]
+  );
+
+  /**
+   * Soumettre avec origine (pour compatibilité avec le formulaire)
+   */
+  const submitWithOrigin = useCallback(
+    async (payment: CreatePaymentDTO, origin: PaymentOrigin = 'manual') => {
+      const initialStatus = getInitialStatusForOrigin(origin);
+      return submitPayment({ payment, initialStatus });
+    },
+    [submitPayment]
+  );
 
   return {
-    submitPayment: mutation.mutateAsync,
-    isPending: mutation.isPending,
-    error: mutation.error as Error | null,
+    submitPayment,
+    updatePayment,
+    submitWithOrigin,
+    isPending,
   };
 }

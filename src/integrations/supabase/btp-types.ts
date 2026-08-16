@@ -1885,7 +1885,7 @@ export type BtpDatabase = {
             foreignKeyName: "payments_phase_id_fkey"
             columns: ["phase_id"]
             isOneToOne: false
-            referencedRelation: "phases"
+            referencedRelation: "project_phases"
             referencedColumns: ["id"]
           },
           {

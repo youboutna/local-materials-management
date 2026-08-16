@@ -1,8 +1,7 @@
 /**
  * Payment Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
- src/dtos/entities/PaymentDTO.ts
-*/
+ */
 
 import { BaseEntityDTO, MonetaryDTO } from '../shared';
 
@@ -25,7 +24,39 @@ export interface PaymentDTO extends BaseEntityDTO {
   mobileNumber?: string;
   mobileOperator?: string;
   receiverName?: string;
-  createdBy?: string; // ✅ Ajouté pour RLS
+  notes?: string;
+  documentIds?: string[];
+}
+
+export interface CreatePaymentDTO {
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  contractorContact: string;
+  amount: number;
+  paymentMethod: string;
+  paymentDate: string;
+  transactionId: string;
+  progressAtPayment: number;
+  inspectionId?: string;
+  phaseId?: string;
+  bankName?: string;
+  accountNumber?: string;
+  checkNumber?: string;
+  mobileNumber?: string;
+  mobileOperator?: string;
+  receiverName?: string;
+  supplierId?: string;
+  createdBy?: string;
+  notes?: string;
+  documentIds?: string[];
+}
+
+export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
+  status?: 'pending' | 'approved' | 'blocked' | 'processed' | 'completed' | 'failed' | 'rejected' | 'cancelled';
+  supplierId?: string;
+  notes?: string;
+  documentIds?: string[];
 }
 
 export interface PaymentBlockDetailDTO extends BaseEntityDTO {
@@ -42,6 +73,8 @@ export interface PaymentBlockDetailDTO extends BaseEntityDTO {
   resolvedAt?: string;
   resolvedBy?: string;
   notes?: string;
+  documentIds?: string[];
+  
 }
 
 export interface PaymentActionDTO extends BaseEntityDTO {
@@ -69,33 +102,6 @@ export interface PaymentSummaryDTO {
   completedPayments: PaymentDTO[];
 }
 
-export interface CreatePaymentDTO {
-  projectId: string;
-  contractorId: string;
-  contractorName: string;
-  contractorContact: string;
-  amount: number;
-  paymentMethod: string;
-  paymentDate: string;
-  transactionId: string;
-  progressAtPayment: number;
-  inspectionId?: string;
-  phaseId?: string;
-  bankName?: string;
-  accountNumber?: string;
-  checkNumber?: string;
-  mobileNumber?: string;
-  mobileOperator?: string;
-  receiverName?: string;
-  supplierId?: string;
-  createdBy?: string; // ✅ Ajouté pour RLS
-}
-
-export interface UpdatePaymentDTO extends Partial<CreatePaymentDTO> {
-  status?: 'pending' | 'approved' | 'blocked' | 'processed' | 'completed' | 'failed' | 'rejected' | 'cancelled';
-  supplierId?: string;
-}
-
 export interface PaymentValidationDTO {
   isValid: boolean;
   errors: string[];
@@ -103,6 +109,7 @@ export interface PaymentValidationDTO {
   paymentMethod: string;
   requiredFields: string[];
   optionalFields: string[];
+  documentIds?: string[];
 }
 
 export interface PaymentRequestDTO {
@@ -115,7 +122,8 @@ export interface PaymentRequestDTO {
   status: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   createdAt?: string;
   updatedAt?: string;
-  createdBy?: string; // ✅ Ajouté pour RLS
+  createdBy?: string;
+  documentIds?: string[];
 }
 
 export interface CreatePaymentRequestDTO {
@@ -124,7 +132,8 @@ export interface CreatePaymentRequestDTO {
   amount: number;
   description?: string;
   paymentReason?: string;
-  createdBy?: string; // ✅ Ajouté pour RLS
+  createdBy?: string;
+  documentIds?: string[];
 }
 
 export interface UpdatePaymentRequestDTO {
@@ -133,7 +142,8 @@ export interface UpdatePaymentRequestDTO {
   paymentReason?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
   notes?: string;
-  updatedBy?: string; // ✅ Ajouté pour RLS
+  updatedBy?: string;
+  documentIds?: string[];
 }
 
 // Payment Blocking Types
@@ -149,7 +159,8 @@ export interface PaymentBlockDTO {
   resolved_at?: string;
   created_at: string;
   updated_at: string;
-  createdBy?: string; // ✅ Ajouté pour RLS
+  createdBy?: string;
+  documentIds?: string[];
 }
 
 export interface PaymentControlActionDTO {

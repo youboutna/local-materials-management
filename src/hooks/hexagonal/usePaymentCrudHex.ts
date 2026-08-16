@@ -2,6 +2,7 @@
  * Hexagonal hooks for Payment CRUD operations
  * Compatible avec le formulaire unifié et le référentiel des origines
  * Utilise les services applicatifs (src/application/services/)
+ * ✅ Version corrigée : utilise useQuery pour une synchronisation automatique
  */
 
 import { PaymentService, getPaymentService } from '@/application/services/PaymentService';
@@ -19,15 +20,13 @@ import {
   getDefaultPaymentMethod,
   PaymentOrigin,
 } from '@/config/referentials/payment-origin.referential';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export type Payment = PaymentDTO;
 export type PaymentFormData = CreatePaymentDTO;
 
 export function usePaymentCrud() {
-  const [payments, setPayments] = useState<PaymentDTO[]>([]);
-  const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
 
   const paymentService = useMemo(() => getPaymentService(), []);
@@ -36,23 +35,16 @@ export function usePaymentCrud() {
     [],
   );
 
-  const fetchPayments = useCallback(async () => {
-    try {
-      setLoading(true);
-      const paymentData = await paymentService.getAllPayments();
-      setPayments(paymentData);
-      return paymentData;
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [paymentService]);
-
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
+  const {
+    data: payments = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['payments'],
+    queryFn: () => paymentService.getAllPayments(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const validatePayment = useCallback(
     async (projectId: string, contractorId: string): Promise<boolean> => {
@@ -81,48 +73,46 @@ export function usePaymentCrud() {
 
       try {
         const created = await paymentService.createPayment(paymentData);
-        queryClient.invalidateQueries({ queryKey: ['payments'] });
-        queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
-        setPayments((prev) => [...prev, created]);
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
+        await refetch();
         return created;
       } catch (error) {
         console.error('Error creating payment:', error);
         throw error;
       }
     },
-    [paymentService, queryClient],
+    [paymentService, queryClient, refetch],
   );
 
   const updatePayment = useCallback(
     async (paymentId: string, formData: UpdatePaymentDTO): Promise<void> => {
       try {
         await paymentService.updatePayment(paymentId, formData);
-        queryClient.invalidateQueries({ queryKey: ['payments'] });
-        queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
-        setPayments((prev) =>
-          prev.map((p) => (p.id === paymentId ? { ...p, ...formData } : p)),
-        );
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
+        await refetch();
       } catch (error) {
         console.error('Error updating payment:', error);
         throw error;
       }
     },
-    [paymentService, queryClient],
+    [paymentService, queryClient, refetch],
   );
 
   const deletePayment = useCallback(
     async (paymentId: string): Promise<void> => {
       try {
         await paymentService.deletePayment(paymentId);
-        queryClient.invalidateQueries({ queryKey: ['payments'] });
-        queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
-        setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['associated-payments'] });
+        await refetch();
       } catch (error) {
         console.error('Error deleting payment:', error);
         throw error;
       }
     },
-    [paymentService, queryClient],
+    [paymentService, queryClient, refetch],
   );
 
   const uploadReceipt = useCallback(
@@ -168,16 +158,12 @@ export function usePaymentCrud() {
   );
 
   const getPaymentsByOrigin = useCallback(
-    (origin: PaymentOrigin): PaymentDTO[] => {
-      return payments.filter((p) => p.origin === origin);
-    },
+    (origin: PaymentOrigin): PaymentDTO[] => payments.filter((p) => p.origin === origin),
     [payments],
   );
 
   const getPaymentsByStatus = useCallback(
-    (status: string): PaymentDTO[] => {
-      return payments.filter((p) => p.status === status);
-    },
+    (status: string): PaymentDTO[] => payments.filter((p) => p.status === status),
     [payments],
   );
 
@@ -185,16 +171,14 @@ export function usePaymentCrud() {
     return payments.filter((p) => p.status === 'pending' || p.status === 'requested');
   }, [payments]);
 
-  const reset = useCallback(() => {
-    setPayments([]);
-    setLoading(true);
-    fetchPayments();
-  }, [fetchPayments]);
+  const reset = useCallback(() => { refetch(); }, [refetch]);
 
   return {
     payments,
     loading,
-    fetchPayments,
+    error,
+    refetch,
+    fetchPayments: refetch,
     validatePayment,
     createPayment,
     updatePayment,
