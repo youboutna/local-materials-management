@@ -131,7 +131,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
           inspectionService.getInspectionsByPhase(phaseId),
           employeeService.getEmployeesByPhase(phaseId),
           paymentService.getPaymentsByPhase(phaseId),
-          documentService.getDocumentsByPhase(phaseId),
+          documentService.getPhaseDocuments(phaseId),
         ]);
 
         // Calcul des coûts des matériaux

@@ -188,6 +188,9 @@ export interface CreateDocumentDTO {
   documentType: DocumentTypeUnion;     // ✅ Requis, pas null
   status?: DocumentStatusUnion;        // ✅ Optionnel, défaut DRAFT
   priority?: DocumentPriorityUnion;    // ✅ Optionnel
+  file?: File;                         // ✅ Fichier à uploader (optionnel)
+  accessLevel?: string;                // ✅ Niveau d'accès (stocké dans metadata)
+  approvalStatus?: string;             // ✅ Statut d'approbation (stocké dans metadata)
   projectId?: string | null;
   phaseId?: string | null;
   inspectionId?: string | null;
@@ -223,6 +226,8 @@ export interface UpdateDocumentDTO {
   documentType?: DocumentTypeUnion;     // ✅ Optionnel
   status?: DocumentStatusUnion;         // ✅ Optionnel
   priority?: DocumentPriorityUnion;     // ✅ Optionnel
+  accessLevel?: string;                 // ✅ Niveau d'accès (stocké dans metadata)
+  approvalStatus?: string;              // ✅ Statut d'approbation (stocké dans metadata)
   projectId?: string | null;
   phaseId?: string | null;
   inspectionId?: string | null;

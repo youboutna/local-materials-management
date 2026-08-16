@@ -105,7 +105,7 @@ export const useSupplierDocumentsHex = (userId: string | null, supplierName: str
       // This is a temporary solution until proper supplier document methods exist
       let documents: any[] = [];
       if (userId) {
-        documents = await documentService.getDocumentsByPhase(userId) as any[];
+        documents = await documentService.getPhaseDocuments(userId) as any[];
       }
       
       return documents || [];

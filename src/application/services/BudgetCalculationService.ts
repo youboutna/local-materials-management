@@ -150,7 +150,7 @@ export class BudgetCalculationService {
       // Calculate average monthly spend - convert to PaymentDTO format
       const paymentDTOs = paidPayments.map(p => ({
         id: p.id,
-        projectId: p.project?.id || '',
+        projectId: p.projectRef?.id || '',
         contractorId: '',
         amount: p.amount,
         paymentDate: p.paymentDate,
