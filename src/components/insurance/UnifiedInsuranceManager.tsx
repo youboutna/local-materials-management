@@ -942,6 +942,60 @@ const UnifiedInsuranceManager = () => {
                'Ajouter un nouveau certificat d\'assurance'}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Synthèse lecture seule + actions contextuelles (mode consultation) */}
+          {isViewMode && selectedCertificate && (
+            <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Statut</p>
+                  <Badge className={getStatusColor(selectedCertificate.status || '')}>
+                    {getStatusLabel(selectedCertificate.status || '')}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Expiration</p>
+                  <p className="font-medium">
+                    {selectedCertificate.validUntil
+                      ? new Date(selectedCertificate.validUntil).toLocaleDateString('fr-FR')
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Jours restants</p>
+                  <ExpiryCountdown expiryDate={selectedCertificate.validUntil} />
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Montant couvert</p>
+                  <p className="font-medium">
+                    {(selectedCertificate.coverageAmount || 0).toLocaleString('fr-FR', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} MRU
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <InsuranceDocumentCell certificate={selectedCertificate} onChanged={loadInsuranceData} />
+                <Button size="sm" variant="outline" onClick={() => openEditDialog(selectedCertificate)}>
+                  <Edit className="h-4 w-4 mr-1" />
+                  Modifier
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(selectedCertificate)}>
+                  Renouveler
+                </Button>
+                <ActionsDropdown
+                  entityType="insurance"
+                  entityId={selectedCertificate.id!}
+                  projectId={selectedCertificate.projectId}
+                  contractorId={selectedCertificate.contractorId}
+                  onActionComplete={loadInsuranceData}
+                />
+              </div>
+            </div>
+          )}
+
+
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
