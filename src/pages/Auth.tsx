@@ -1,4 +1,3 @@
-import { getAuthService } from '@/application/services/AuthService';
 import OAuthErrorHandler from "@/components/auth/OAuthErrorHandler";
 import OAuthLogin from "@/components/auth/OAuthLogin";
 import PasswordResetForm from "@/components/auth/PasswordResetForm";
@@ -8,9 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
-import { useAuth } from '@/hooks/hexagonal';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { useMutation } from '@tanstack/react-query';
+import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import {
     Eye,
     EyeOff,
@@ -21,7 +18,7 @@ import {
     User,
     UserPlus,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
@@ -36,7 +33,25 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, refetch } = useAuth();
+  
+  // 🔥 Utilisation du contexte hexagonal
+  const { 
+    user, 
+    refetch,
+    login,
+    register,
+    logout,
+    isLoading: authLoading,
+    showEmailEditor,
+    unconfirmedEmail,
+    updateEmail,
+    cancelEmailEdit,
+    triggerEmailEditor
+  } = useHexagonalAuth();
+
+  // Refs pour l'éditeur d'email
+  const newEmailRef = useRef<HTMLInputElement>(null);
+  const newPasswordRef = useRef<HTMLInputElement>(null);
 
   // Check for mode from URL params (login, register, reset-password)
   useEffect(() => {
@@ -51,7 +66,7 @@ const Auth = () => {
     }
   }, [location]);
 
-  // Redirect if already authenticated
+  // ✅ Redirection si déjà authentifié
   useEffect(() => {
     if (user) {
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
@@ -59,66 +74,72 @@ const Auth = () => {
     }
   }, [user, navigate, location]);
 
-  // Create unified authentication service
-  const authService = getAuthService();
-
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const result = await authService.login(credentials);
-      return result;
-    },
-    onSuccess: (data) => {
-      toast.success(`Bienvenue ${(data.user as { name?: string; email?: string } | undefined)?.name || data.user?.email || ''}!`);
-      refetch();
-      navigate('/dashboard');
-    },
-    onError: (error: any) => {
-      console.error('Login error:', error);
-      toast.error(error?.message || "Échec de la connexion. Veuillez vérifier vos identifiants.");
+  // ✅ Reset du formulaire quand l'utilisateur se déconnecte
+  useEffect(() => {
+    if (!user) {
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setPhone('');
+      setNationalId('');
     }
-  });
+  }, [user]);
 
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: async (userData: { 
-      email: string; 
-      password: string; 
-      full_name: string; 
-      phone?: string; 
-      national_id?: string; 
-    }) => {
-      const result = await authService.register(userData);
-      return result;
-    },
-    onSuccess: (data) => {
-      toast.success("Compte créé avec succès!");
-      refetch();
-      navigate('/dashboard');
-    },
-    onError: (error: Error) => {
-      console.error('Registration error:', error);
-      toast.error("Échec de l'inscription. Veuillez réessayer.");
-    }
-  });
-
+  // 🔥 Gestionnaire de connexion (avec déclenchement de l'éditeur en cas d'erreur)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await loginMutation.mutateAsync({ email, password });
+    try {
+      await login({ email, password });
+    } catch (error: any) {
+      // Si l'erreur est "Email not confirmed", on déclenche l'éditeur
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('Email not confirmed') || errorMessage.includes('Veuillez confirmer votre email')) {
+        triggerEmailEditor(email);
+      }
+      // L'erreur est déjà gérée par le toast dans le contexte
+    }
   };
 
+  // 🔥 Gestionnaire d'inscription
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    await registerMutation.mutateAsync({
-      email,
-      password,
-      full_name: fullName,
-      phone,
-      national_id: nationalId,
-    });
+    try {
+      await register({
+        email,
+        password,
+        full_name: fullName,
+        phone,
+        national_id: nationalId,
+      });
+    } catch (error) {
+      // Géré par le contexte
+    }
   };
 
-  const loading = loginMutation.isPending || registerMutation.isPending;
+  // 🔥 Gestion de la mise à jour de l'email + reconnexion
+  const handleUpdateAndLogin = async () => {
+    const newEmail = newEmailRef.current?.value?.trim();
+    const newPassword = newPasswordRef.current?.value?.trim();
+
+    if (!newEmail) {
+      toast.error("Veuillez saisir un nouvel email.");
+      return;
+    }
+
+    try {
+      // Étape 1 : Mettre à jour l'email
+      await updateEmail(newEmail);
+      
+      // Étape 2 : Tenter la connexion avec les nouvelles identifiants
+      await login({ email: newEmail, password: newPassword || password });
+      
+      // Si succès, l'éditeur se ferme automatiquement via le contexte
+    } catch (error) {
+      // Les erreurs sont déjà gérées dans les mutations du contexte
+    }
+  };
+
+  const loading = authLoading;
 
   const handleDevLogin = async (roleKey: keyof typeof DEV_USERS) => {
     const profile = DEV_USERS[roleKey];
@@ -127,10 +148,8 @@ const Auth = () => {
     setEmail(profile.email);
     setPassword(profile.password || '');
     toast.success(`DEV login → ${profile.user_metadata.full_name} (${profile.user_metadata.role})`);
-    await loginMutation.mutateAsync({ email: profile.email, password: profile.password || 'dev' });
+    await login({ email: profile.email, password: profile.password || 'dev' });
   };
-
-
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
@@ -176,6 +195,43 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="login">
+                {/* 🔥 Éditeur d'email / mot de passe (s'affiche si email non confirmé) */}
+                {showEmailEditor && (
+                  <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
+                    <h3 className="font-semibold text-yellow-800">Email non confirmé</h3>
+                    <p className="text-sm text-yellow-700">
+                      L'email <strong>{unconfirmedEmail}</strong> n'a pas été confirmé.
+                      Vous pouvez corriger votre email et/ou votre mot de passe ci‑dessous.
+                    </p>
+                    <div className="mt-3 flex flex-col gap-3">
+                      <Input
+                        type="email"
+                        defaultValue={unconfirmedEmail || ''}
+                        ref={newEmailRef}
+                        placeholder="Nouvel email"
+                        className="w-full"
+                      />
+                      <Input
+                        type="password"
+                        ref={newPasswordRef}
+                        placeholder="Nouveau mot de passe (optionnel)"
+                        className="w-full"
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={handleUpdateAndLogin} disabled={loading}>
+                          {loading ? 'Mise à jour...' : 'Mettre à jour et se connecter'}
+                        </Button>
+                        <Button variant="outline" onClick={cancelEmailEdit}>
+                          Annuler
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Un nouveau lien de confirmation sera envoyé à la nouvelle adresse.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -189,6 +245,7 @@ const Auth = () => {
                         placeholder="votre@email.com"
                         className="pl-10"
                         required
+                        disabled={showEmailEditor}
                       />
                     </div>
                   </div>
@@ -205,6 +262,7 @@ const Auth = () => {
                         placeholder="Votre mot de passe"
                         className="pl-10 pr-10"
                         required
+                        disabled={showEmailEditor}
                       />
                       <Button
                         type="button"
@@ -212,6 +270,7 @@ const Auth = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={showEmailEditor}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -222,7 +281,7 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading || showEmailEditor}>
                     {loading ? "Connexion..." : "Se connecter"}
                   </Button>
 
@@ -265,7 +324,6 @@ const Auth = () => {
                   )}
                 </form>
               </TabsContent>
-
 
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">

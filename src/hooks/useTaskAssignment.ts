@@ -23,7 +23,7 @@ import {
   TaskPriority,
   TaskStatus
 } from '@/dtos/entities/TaskAssignmentDTO';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';

@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Upload, FileCheck, Info, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { getComplianceService } from '@/application/services/ComplianceService';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';

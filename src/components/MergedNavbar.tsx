@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from '@/contexts/use-auth';
-import { useKeycloakAuth } from "@/contexts/KeycloakAuthContext";
+import { useAuth } from '@/hooks/hexagonal/useAuth';;
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrentUserRoles } from "@/hooks/useUserRoles";
 import { DEV_MODE } from "@/config/constants";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Menu,
   X,
@@ -23,8 +21,6 @@ import {
   Shield,
   Lock,
   Cog,
-  Database,
-  Globe,
   ChevronDown,
   MoreHorizontal,
 } from "lucide-react";
@@ -43,7 +39,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -52,19 +47,23 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 const MergedNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user: authUser, signOut } = useAuth();
-  const { user: keycloakUser, isAuthenticated, logout } = useKeycloakAuth();
-  const { hasRole, hasAnyRole } = useCurrentUserRoles();
+
+  // 🔥 Utilisation unique du hook hexagonal
+  const { user, isAuthenticated, logout, hasRole, hasAnyRole } = useAuth();
+
+  // Alias pour compatibilité avec l'ancien code
+  const authUser = user;
+  const signOut = logout;
+
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check authentication
-  const isUserAuthenticated = !!authUser || isAuthenticated;
-  const canManageUsers = hasAnyRole(["admin", "director"]);
-  const isSupplier = hasAnyRole(["supplier"]);
+  // Vérification des rôles
+  const canManageUsers = hasAnyRole?.(["admin", "director"]) ?? false;
+  const isSupplier = hasAnyRole?.(["supplier"]) ?? false;
   const isSupplierOnly =
-    isSupplier && !hasAnyRole(["admin", "director", "manager", "agent"]);
+    isSupplier && !hasAnyRole?.(["admin", "director", "manager", "agent"]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,8 +75,7 @@ const MergedNavbar = () => {
 
   const handleLogout = async () => {
     try {
-      if (authUser) await signOut();
-      if (keycloakUser || isAuthenticated) logout();
+      await logout();
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -94,25 +92,22 @@ const MergedNavbar = () => {
   };
 
   const getUserDisplayName = () => {
-    const user = authUser || keycloakUser;
-    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.fullName) return user.fullName;
     if (user?.email) return user.email.split("@")[0];
     return "User";
   };
 
   const getUserAvatarUrl = () => {
-    const user = authUser || keycloakUser;
-    return user?.user_metadata?.avatar_url || "";
+    return user?.avatarUrl || "";
   };
 
-  // Core navigation items (always visible)
+  // Items de navigation (inchangés)
   const coreNavItems = [
     { name: t("dashboard.title"), href: "/dashboard", icon: Home },
     { name: t("nav.projects"), href: "/projects", icon: Briefcase },
     { name: t("nav.materials"), href: "/materials", icon: Package },
   ];
 
-  // Additional navigation items (in dropdown)
   const additionalNavItems = [
     { name: t("nav.home"), href: "/", icon: Home },
     { name: t("project_import.title"), href: "/projects/import", icon: Upload },
@@ -128,7 +123,6 @@ const MergedNavbar = () => {
     },
   ];
 
-  // Supplier specific items
   const supplierNavItems = [
     {
       name: t("nav.supplier_portal"),
@@ -152,7 +146,6 @@ const MergedNavbar = () => {
     },
   ];
 
-  // Project dropdown items
   const projectDropdownItems = [
     {
       name: t("projects.all"),
@@ -228,7 +221,7 @@ const MergedNavbar = () => {
           </Link>
 
           {/* Desktop Navigation - Core Items */}
-          {isUserAuthenticated && !isSupplierOnly && (
+          {isAuthenticated && !isSupplierOnly && (
             <div className="hidden lg:flex items-center justify-center flex-1 max-w-2xl">
               <NavigationMenu className="flex-1 justify-center">
                 <NavigationMenuList className="gap-1">
@@ -370,7 +363,7 @@ const MergedNavbar = () => {
           )}
 
           {/* Supplier Navigation */}
-          {isUserAuthenticated && isSupplierOnly && (
+          {isAuthenticated && isSupplierOnly && (
             <div className="hidden lg:flex items-center justify-center flex-1 max-w-2xl">
               <NavigationMenu className="flex-1 justify-center">
                 <NavigationMenuList className="gap-2">
@@ -403,10 +396,10 @@ const MergedNavbar = () => {
             <LanguageSwitcher />
 
             {/* Notifications */}
-            {isUserAuthenticated && <NotificationDropdown />}
+            {isAuthenticated && <NotificationDropdown />}
 
             {/* User Menu / Auth Buttons */}
-            {isUserAuthenticated ? (
+            {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -430,7 +423,7 @@ const MergedNavbar = () => {
                       {getUserDisplayName()}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {(authUser || keycloakUser)?.email}
+                      {user?.email}
                     </p>
                   </div>
                   <DropdownMenuSeparator />
@@ -522,7 +515,7 @@ const MergedNavbar = () => {
 
                     {/* User Section */}
                     <div className="px-4 py-3 space-y-3">
-                      {isUserAuthenticated ? (
+                      {isAuthenticated ? (
                         <>
                           <div className="flex items-center space-x-3 p-2 rounded-md bg-gray-50">
                             <Avatar className="h-8 w-8">
@@ -539,7 +532,7 @@ const MergedNavbar = () => {
                                 {getUserDisplayName()}
                               </p>
                               <p className="text-xs text-gray-500 truncate">
-                                {(authUser || keycloakUser)?.email}
+                                {user?.email}
                               </p>
                             </div>
                           </div>

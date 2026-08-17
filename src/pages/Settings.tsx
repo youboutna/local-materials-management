@@ -25,7 +25,7 @@ import {
   setActiveDevRole,
 } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { useAppConfig } from '@/hooks/useAppConfig';
 import {

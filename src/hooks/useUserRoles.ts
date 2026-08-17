@@ -8,7 +8,7 @@ import { getAuthService } from '@/application/services/AuthService';
 import { getUserService } from '@/application/services/UserService';
 import { DEV_MODE, getActiveDevRole } from '@/config/constants';
 import { toast } from '@/hooks/use-toast';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -97,7 +97,7 @@ export const useUserRoles = (userId?: string) => {
 
 export const useCurrentUserRoles = () => {
   const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
-  const { user, isAuthenticated } = useUnifiedAuth();
+  const { user, isAuthenticated } = useAuth();
   const { authService, userService } = getServices();
 
   const loadCurrentUser = useCallback(async () => {

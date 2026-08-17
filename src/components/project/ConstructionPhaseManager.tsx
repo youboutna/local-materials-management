@@ -50,7 +50,7 @@ import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
 type ProcurementPhase = string;
 type ProcurementStage = string;
 
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 import { toast } from '@/hooks/use-toast';
 

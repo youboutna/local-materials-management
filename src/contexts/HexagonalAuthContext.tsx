@@ -1,60 +1,35 @@
 /**
- * Hexagonal Auth Context
- * Unified authentication context following hexagonal architecture
- * Replaces multiple auth contexts with a single, provider-agnostic solution
- * Following PROMPTS.md: UI Component → Transformer → DTO → Service → Domain ← Adapter → DB
+ * Hexagonal Auth Context - Provider
+ * Exporte le contexte et le Provider UNIQUEMENT
  */
 
-import { OAuthLoginData, getUnifiedAuthService, UnifiedAuthSession, UnifiedAuthUser } from '@/application/services/UnifiedAuthService';
-import { AuthProvider } from '@/config/app';
-import { AUTH_ERROR_MESSAGES } from '@/config/auth';
+import React, { createContext, ReactNode, useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { getUnifiedAuthService, OAuthLoginData } from '@/application/services/UnifiedAuthService';
+import { AuthProvider, AuthManagerConfig } from '@/config/app';
+import { AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '@/config/auth';
 import { DEV_MODE } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
-import { supabase } from '@/integrations/supabase/client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, ReactNode, useCallback, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { HexagonalAuthContextType } from './HexagonalAuthContext.types';
 
-export interface HexagonalAuthContextType {
-  // Core auth state
-  user: UnifiedAuthUser | null;
-  session: UnifiedAuthSession | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+// Création du contexte
+export const HexagonalAuthContext = createContext<HexagonalAuthContextType | undefined>(undefined);
 
-  // Auth actions
-  login: (credentials: LoginCredentials) => Promise<void>;
-  loginWithOAuth: (oAuthData: OAuthLoginData) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => Promise<void>;
-  
-  // OAuth specific
-  getOAuthProviders: () => Promise<any[]>;
-  generateOAuthUrl: (provider: string, redirectUri: string) => Promise<string>;
-  
-  // Session management
-  refetch: () => void;
-  getCurrentProvider: () => AuthProvider;
-  
-  // Utility
-  hasRole: (roleName: string) => boolean;
-  hasAnyRole: (roleNames: string[]) => boolean;
-}
-
-const HexagonalAuthContext = createContext<HexagonalAuthContextType | undefined>(undefined);
-
+// Provider
 export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t } = useLanguage();
   
-  // Initialize unified auth service
+  const [showEmailEditor, setShowEmailEditor] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  
   const unifiedAuthService = getUnifiedAuthService();
 
-  // Query for current session
   const {
     data: sessionData,
     isLoading,
@@ -71,7 +46,7 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
         return { user: null, session: null };
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
     refetchOnMount: true,
     refetchOnWindowFocus: false
@@ -81,7 +56,11 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   const session = sessionData?.session || null;
   const isAuthenticated = !!user && !!session;
 
-  // Login mutation
+  const triggerEmailEditor = useCallback((email: string) => {
+    setUnconfirmedEmail(email);
+    setShowEmailEditor(true);
+  }, []);
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
       const result = await unifiedAuthService.login(credentials);
@@ -92,14 +71,20 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
       const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
       toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
+      setShowEmailEditor(false);
+      setUnconfirmedEmail(null);
     },
     onError: (error: any) => {
       console.error('Login error:', error);
-      toast.error(error?.message || AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('Email not confirmed') || errorMessage.includes(AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED)) {
+        toast.warning(AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED);
+      } else {
+        toast.error(error?.message || AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
+      }
     }
   });
 
-  // OAuth login mutation
   const oAuthLoginMutation = useMutation({
     mutationFn: async (oAuthData: OAuthLoginData) => {
       const result = await unifiedAuthService.loginWithOAuth(oAuthData);
@@ -110,6 +95,8 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
       const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
       toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
+      setShowEmailEditor(false);
+      setUnconfirmedEmail(null);
     },
     onError: (error: any) => {
       console.error('OAuth login error:', error);
@@ -117,7 +104,6 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
       const result = await unifiedAuthService.register(userData);
@@ -128,6 +114,8 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
       const userName = data?.fullName || data?.email || 'Utilisateur';
       toast.success(`Compte créé avec succès! Bienvenue ${userName}!`);
       navigate('/dashboard');
+      setShowEmailEditor(false);
+      setUnconfirmedEmail(null);
     },
     onError: (error: any) => {
       console.error('Registration error:', error);
@@ -135,7 +123,6 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await unifiedAuthService.logout();
@@ -144,6 +131,8 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
       queryClient.clear();
       toast.success("Déconnexion réussie");
       navigate('/auth');
+      setShowEmailEditor(false);
+      setUnconfirmedEmail(null);
     },
     onError: (error: any) => {
       console.error('Logout error:', error);
@@ -151,9 +140,31 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Auth action handlers
+  const updateEmail = useCallback(async (newEmail: string) => {
+    if (!unconfirmedEmail) {
+      toast.error("Aucun email à modifier.");
+      return;
+    }
+    try {
+      await unifiedAuthService.updateEmail(unconfirmedEmail, newEmail);
+      toast.success(AUTH_SUCCESS_MESSAGES.EMAIL_UPDATED.replace('{email}', newEmail));
+      setShowEmailEditor(false);
+      setUnconfirmedEmail(null);
+    } catch (error: any) {
+      console.error('Update email error:', error);
+      toast.error(error?.message || AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED);
+    }
+  }, [unconfirmedEmail, unifiedAuthService]);
+
+  const cancelEmailEdit = useCallback(() => {
+    setShowEmailEditor(false);
+    setUnconfirmedEmail(null);
+  }, []);
+
   const login = useCallback(async (credentials: LoginCredentials) => {
-    await loginMutation.mutateAsync(credentials);
+    try {
+      await loginMutation.mutateAsync(credentials);
+    } catch (error) { throw error; }
   }, [loginMutation]);
 
   const loginWithOAuth = useCallback(async (oAuthData: OAuthLoginData) => {
@@ -168,7 +179,6 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     await logoutMutation.mutateAsync();
   }, [logoutMutation]);
 
-  // OAuth helpers
   const getOAuthProviders = useCallback(async () => {
     return await unifiedAuthService.getAvailableOAuthProviders();
   }, [unifiedAuthService]);
@@ -177,7 +187,6 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     return await unifiedAuthService.generateOAuthLoginUrl(provider, redirectUri);
   }, [unifiedAuthService]);
 
-  // Utility functions
   const getCurrentProvider = useCallback((): AuthProvider => {
     return session?.provider || 'supabase';
   }, [session]);
@@ -189,15 +198,73 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
 
   const hasAnyRole = useCallback((roleNames: string[]): boolean => {
     if (!user?.role) return false;
-    return roleNames.some(role => 
-      String(user.role).toLowerCase() === role.toLowerCase()
-    );
+    return roleNames.some(role => String(user.role).toLowerCase() === role.toLowerCase());
   }, [user]);
 
-  // Set up auth state listener for real-time updates
+  // Switch Provider (avec fallback)
+  const switchProvider = useCallback(async (config: AuthManagerConfig) => {
+    try {
+      setLoading(true);
+      console.log('🔄 Switching to provider:', config.provider);
+      
+      const { getAuthManager } = await import('@/application/services/AuthManager');
+      const authManager = getAuthManager();
+      
+      if (typeof authManager.switchProvider === 'function') {
+        await authManager.switchProvider(config);
+      } else {
+        console.warn('⚠️ authManager.switchProvider is not a function. Using fallback.');
+        setCurrentProvider(config.provider);
+        toast({
+          title: t('common.success'),
+          description: `Provider changed to ${config.provider} (local).`,
+        });
+        setLoading(false);
+        return;
+      }
+      
+      setCurrentProvider(config.provider);
+      const sessionResult = await unifiedAuthService.getCurrentSession();
+      const userResult = await unifiedAuthService.getCurrentUser();
+      if (sessionResult.session && userResult.user) {
+        const unifiedSession = {
+          user: {
+            id: userResult.user.id,
+            email: userResult.user.email || '',
+            full_name: userResult.user.full_name,
+            phone: userResult.user.phone,
+            national_id: userResult.user.national_id,
+            role: userResult.user.role,
+            avatar_url: undefined,
+            metadata: {}
+          },
+          expires_at: sessionResult.session.expiresAt ? String(sessionResult.session.expiresAt) : undefined,
+          provider: config.provider
+        };
+        setSession(unifiedSession);
+        setUser(unifiedSession.user);
+      }
+      
+      toast({
+        title: t('common.success'),
+        description: `Fournisseur changé pour ${config.provider}.`,
+      });
+    } catch (error) {
+      console.error('❌ Error switching provider:', error);
+      toast({
+        title: t('common.error'),
+        description: "Échec du changement de fournisseur d'authentification.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [unifiedAuthService, toast, t]);
+
+  // Listener Supabase avec reset de l'éditeur
   useEffect(() => {
     if (DEV_MODE) {
-      console.log('🛠️ DEV_MODE=true — skipping Supabase listener; local session remains login-gated.');
+      console.log('🛠️ DEV_MODE=true — skipping Supabase listener.');
       return;
     }
     console.log('🔧 Setting up hexagonal auth state listener...');
@@ -205,51 +272,40 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 Hexagonal auth state changed:', event, session?.user?.email || 'no user');
-        
-        // Invalidate and refetch session data
         queryClient.invalidateQueries({ queryKey: ['unified-auth'] });
-        
-        // Handle specific auth events
         if (event === 'SIGNED_OUT') {
           queryClient.clear();
+          setShowEmailEditor(false);
+          setUnconfirmedEmail(null);
         } else if (event === 'SIGNED_IN' && session) {
-          // Trigger refetch to get updated session data
           setTimeout(() => refetch(), 100);
         }
       }
     );
-
-    return () => {
-      console.log('🧹 Cleaning up hexagonal auth subscription');
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [queryClient, refetch]);
 
   const contextValue: HexagonalAuthContextType = {
-    // Core auth state
     user,
     session,
     isAuthenticated,
     isLoading: isLoading || loginMutation.isPending || registerMutation.isPending,
     error: error?.message || null,
-
-    // Auth actions
     login,
     loginWithOAuth,
     register,
     logout,
-
-    // OAuth specific
     getOAuthProviders,
     generateOAuthUrl,
-
-    // Session management
     refetch,
     getCurrentProvider,
-
-    // Utility
     hasRole,
-    hasAnyRole
+    hasAnyRole,
+    showEmailEditor,
+    unconfirmedEmail,
+    updateEmail,
+    cancelEmailEdit,
+    triggerEmailEditor,
   };
 
   return (
@@ -258,15 +314,3 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     </HexagonalAuthContext.Provider>
   );
 }
-
-// Hook for using hexagonal auth context
-export function useHexagonalAuth(): HexagonalAuthContextType {
-  const context = useContext(HexagonalAuthContext);
-  if (context === undefined) {
-    throw new Error('useHexagonalAuth must be used within a HexagonalAuthProvider');
-  }
-  return context;
-}
-
-// Export context for compatibility
-export { HexagonalAuthContext };

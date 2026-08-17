@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import UserManagementDialog from "@/components/users/UserManagementDialog";
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";

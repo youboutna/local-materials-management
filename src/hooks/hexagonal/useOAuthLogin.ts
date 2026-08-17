@@ -1,12 +1,12 @@
 /**
  * OAuth Login Hook
  * Implements OAuth login functionality following hexagonal architecture
- * Following PROMPTS.md rules: UI Component → Service → Domain ← Adapter → DB
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useHexagonalAuth } from '@/contexts/HexagonalAuthContext';
+// ✅ Bon import : uniquement le hook, pas le contexte
+import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { toast } from 'sonner';
 
@@ -32,7 +32,6 @@ export function useOAuthLogin(): UseOAuthLoginResult {
       const provider = urlParams.get('provider') || sessionStorage.getItem('oauth_provider');
       const error = urlParams.get('error');
 
-      // Handle OAuth errors
       if (error) {
         const errorDescription = urlParams.get('error_description');
         throw new AppError(
@@ -47,7 +46,6 @@ export function useOAuthLogin(): UseOAuthLoginResult {
 
       console.log('🔄 Handling OAuth callback for provider:', provider);
 
-      // Prepare OAuth login data
       const oAuthData = {
         provider,
         code,
@@ -55,26 +53,20 @@ export function useOAuthLogin(): UseOAuthLoginResult {
         redirectUri: `${window.location.origin}${window.location.pathname}`
       };
 
-      // Perform OAuth login
       await loginWithOAuth(oAuthData);
 
-      // Clear OAuth state from session storage
       sessionStorage.removeItem('oauth_provider');
       sessionStorage.removeItem('oauth_state');
 
-      // Clean up URL
       navigate(location.pathname, { replace: true });
 
     } catch (error) {
       console.error('OAuth callback error:', error);
-      
       if (error instanceof AppError) {
         toast.error(error.message);
       } else {
         toast.error('Erreur lors de la connexion OAuth');
       }
-
-      // Redirect to auth page on error
       navigate('/auth', { replace: true });
     }
   }, [location, navigate, loginWithOAuth]);
@@ -86,21 +78,17 @@ export function useOAuthLogin(): UseOAuthLoginResult {
 
       const redirectUri = `${window.location.origin}/auth?provider=${provider}`;
       
-      // Store provider in session for callback
       sessionStorage.setItem('oauth_provider', provider);
       sessionStorage.setItem('oauth_redirect_uri', redirectUri);
 
-      // Generate OAuth URL
       const oAuthUrl = await generateOAuthUrl(provider, redirectUri);
 
       console.log('🔗 Redirecting to OAuth URL:', oAuthUrl);
 
-      // Redirect to OAuth provider
       window.location.href = oAuthUrl;
 
     } catch (error) {
       console.error('OAuth initiation error:', error);
-      
       if (error instanceof AppError) {
         toast.error(error.message);
       } else {
@@ -132,7 +120,7 @@ export function useOAuthLogin(): UseOAuthLoginResult {
   return {
     initiateOAuthLogin,
     handleOAuthCallback,
-    isHandlingCallback: false, // Could be enhanced with loading state
+    isHandlingCallback: false,
     availableProviders,
     getOAuthProviders
   };

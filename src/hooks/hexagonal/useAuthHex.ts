@@ -243,7 +243,6 @@ export function useAuthHex(): UseAuthHexResult {
     const totalLogins = targetUser?.totalLogins || 1;
     const avgSessionDuration = targetUser?.avgSessionDuration || 0;
     
-    // Score based on recent activity and engagement
     const activityScore = Math.max(0, 100 - daysSinceLastLogin * 2);
     const engagementScore = Math.min(100, totalLogins * 5);
     const durationScore = Math.min(100, avgSessionDuration / 60 * 10);

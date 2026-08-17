@@ -1,7 +1,7 @@
 
 import { ReactNode, useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,7 +22,7 @@ const RoleBasedRoute = ({
   publicInDev = false 
 }: RoleBasedRouteProps) => {
   const { t } = useLanguage();
-  const { isAuthenticated, user, loading } = useUnifiedAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 

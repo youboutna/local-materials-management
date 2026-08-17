@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '@/contexts/use-auth';
-import { useKeycloakAuth } from "@/contexts/KeycloakAuthContext";
+import { useAuth } from '@/hooks/hexagonal/useAuth'; // ✅ un seul import
 import MergedNavbar from "@/components/MergedNavbar";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
@@ -33,23 +32,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 
 const Index = () => {
-  const { user: authUser, loading } = useAuth();
-  const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+  const { user, loading, isAuthenticated } = useAuth(); // ✅ un seul appel
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   console.log("🔍 Index - t function:", typeof t, t);
   console.log(
-    "🔍 Index - authUser:",
-    !!authUser,
-    "keycloakUser:",
-    !!keycloakUser,
+    "🔍 Index - user:",
+    !!user,
     "isAuthenticated:",
     isAuthenticated
   );
 
-  // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
-  const isUserAuthenticated = !!authUser || isAuthenticated;
+  // ✅ On utilise le même utilisateur pour les deux (plus besoin de authUser vs keycloakUser)
+  const isUserAuthenticated = !!user || isAuthenticated;
 
   // Safe translation function with fallback
   const safeT = (key: string, fallback: string = "") => {

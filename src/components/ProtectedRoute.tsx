@@ -1,7 +1,7 @@
 
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) => {
-  const { isAuthenticated, user, loading } = useKeycloakAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
 
   // DEV_MODE no longer bypasses authentication. Users must sign in via /auth

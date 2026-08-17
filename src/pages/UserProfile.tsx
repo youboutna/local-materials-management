@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useKeycloakAuth } from "@/contexts/KeycloakAuthContext";
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, User, Shield } from "lucide-react";
 
 const UserProfile = () => {
-  const { user, logout } = useKeycloakAuth();
+  const { user, logout } = useAuth();
   const [initials, setInitials] = useState("");
 
   useEffect(() => {
