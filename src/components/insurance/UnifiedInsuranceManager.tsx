@@ -398,6 +398,39 @@ const UnifiedInsuranceManager = () => {
     setIsDialogOpen(true);
   };
 
+  // ============================================================
+  // Ouverture du dialogue (P0 : hydratation systématique depuis la ligne cliquée)
+  // ============================================================
+  const certToFormValues = (cert: InsuranceCertificateDTO): InsuranceFormValues => ({
+    projectId: cert.projectId || '',
+    contractorId: cert.contractorId || '',
+    contractorName: cert.contractorName || '',
+    insuranceCompany: cert.insuranceCompany || '',
+    policyNumber: cert.policyNumber || '',
+    coverageAmount: cert.coverageAmount || 0,
+    coverageType: cert.coverageType || 'responsabilite_civile',
+    validFrom: (cert.validFrom || '').slice(0, 10),
+    validUntil: (cert.validUntil || '').slice(0, 10),
+    notes: cert.notes || ''
+  });
+
+  const openViewDialog = useCallback((cert: InsuranceCertificateDTO) => {
+    setSelectedCertificate(cert);
+    setIsEditing(false);
+    setIsViewMode(true);
+    form.reset(certToFormValues(cert));
+    setIsDialogOpen(true);
+  }, [form]);
+
+  const openEditDialog = useCallback((cert: InsuranceCertificateDTO) => {
+    setSelectedCertificate(cert);
+    setIsEditing(true);
+    setIsViewMode(false);
+    form.reset(certToFormValues(cert));
+    setIsDialogOpen(true);
+  }, [form]);
+
+
   const handleInsuranceAction = async (certificateId: string, actionType: string) => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
