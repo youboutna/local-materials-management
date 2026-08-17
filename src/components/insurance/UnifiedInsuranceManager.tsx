@@ -663,11 +663,7 @@ const UnifiedInsuranceManager = () => {
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" onClick={() => {
                           const cert = certificates.find(c => c.policyNumber === alert.policyNumber);
-                          if (cert) {
-                            setSelectedCertificate(cert);
-                            setIsViewMode(true);
-                            setIsDialogOpen(true);
-                          }
+                          if (cert) openViewDialog(cert);
                         }}>
                           <Eye className="h-4 w-4 mr-1" />
                           Voir
@@ -746,31 +742,10 @@ const UnifiedInsuranceManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedCertificate(cert);
-                            setIsViewMode(true);
-                            setIsDialogOpen(true);
-                          }}>
+                          <Button size="sm" variant="outline" onClick={() => openViewDialog(cert)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedCertificate(cert);
-                            setIsEditing(true);
-                            setIsViewMode(false);
-                            form.reset({
-                              projectId: cert.projectId || '',
-                              contractorId: cert.contractorId || '',
-                              contractorName: cert.contractorName || '',
-                              insuranceCompany: cert.insuranceCompany || '',
-                              policyNumber: cert.policyNumber || '',
-                              coverageAmount: cert.coverageAmount || 0,
-                              coverageType: cert.coverageType || 'responsabilite_civile',
-                              validFrom: cert.validFrom || '',
-                              validUntil: cert.validUntil || '',
-                              notes: cert.notes || ''
-                            });
-                            setIsDialogOpen(true);
-                          }}>
+                          <Button size="sm" variant="outline" onClick={() => openEditDialog(cert)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
@@ -831,11 +806,7 @@ const UnifiedInsuranceManager = () => {
 
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedCertificate(cert);
-                            setIsViewMode(true);
-                            setIsDialogOpen(true);
-                          }}>
+                          <Button size="sm" variant="outline" onClick={() => openViewDialog(cert)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button size="sm" onClick={() => handleRenewCertificate(cert)}>
@@ -914,31 +885,10 @@ const UnifiedInsuranceManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedCertificate(cert);
-                            setIsViewMode(true);
-                            setIsDialogOpen(true);
-                          }}>
+                          <Button size="sm" variant="outline" onClick={() => openViewDialog(cert)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setSelectedCertificate(cert);
-                            setIsEditing(true);
-                            setIsViewMode(false);
-                            form.reset({
-                              projectId: cert.projectId || '',
-                              contractorId: cert.contractorId || '',
-                              contractorName: cert.contractorName || '',
-                              insuranceCompany: cert.insuranceCompany || '',
-                              policyNumber: cert.policyNumber || '',
-                              coverageAmount: cert.coverageAmount || 0,
-                              coverageType: cert.coverageType || 'responsabilite_civile',
-                              validFrom: cert.validFrom || '',
-                              validUntil: cert.validUntil || '',
-                              notes: cert.notes || ''
-                            });
-                            setIsDialogOpen(true);
-                          }}>
+                          <Button size="sm" variant="outline" onClick={() => openEditDialog(cert)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
