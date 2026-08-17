@@ -1,280 +1,215 @@
 /**
  * Supabase User Adapter
- * Implements IUserRepository using Supabase
- * Following hexagonal architecture principles
+ * Implements IAuthRepository using Supabase
+ * Delegates profile operations to SupabaseUserProfileAdapter
+ * Uses UserTransformer for mapping
  */
 
-import { User } from '@/domain/entities/User';
-import { IUserRepository, SearchUsersOptions, SearchUsersResult } from '@/domain/repositories/IUserRepository';
-import { UserTransformer } from '@/dtos/transforms/UserTransformer';
+import { UserProfile } from '@/domain/entities/UserProfile';
+import { AuthSession, AuthUser, IAuthRepository, LoginCredentials, OAuthSignInParams, RegisterData } from '@/domain/repositories/IAuthRepository';
 import { supabase } from '@/integrations/supabase/client';
-import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
+import { SupabaseUserProfileAdapter } from './SupabaseUserProfileAdapter';
 
-export class SupabaseUserAdapter implements IUserRepository {
-  
-  async findById(id: string): Promise<User | null> {
+export class SupabaseUserAdapter implements IAuthRepository {
+  private profileAdapter: SupabaseUserProfileAdapter;
+
+  constructor() {
+    this.profileAdapter = new SupabaseUserProfileAdapter();
+  }
+
+  // ============================
+  // Session
+  // ============================
+  async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
     try {
-      // First try to get from profiles table (most reliable for user data)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) return { session: null, error: new Error(error.message) };
+      if (!session) return { session: null, error: null };
+      return { session: this.mapSession(session), error: null };
+    } catch (error) {
+      return { session: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-      // If profile exists, use it as primary source
-      if (profile && !profileError) {
-        // Get roles from user_roles table
-        const { data: userRoles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role_name')
-          .eq('user_id', id);
+  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+      if (error) return { session: null, error: new Error(error.message) };
+      if (!data.session) return { session: null, error: new Error('No session returned') };
+      return { session: this.mapSession(data.session), error: null };
+    } catch (error) {
+      return { session: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-        const roles = userRoles?.map(ur => ur.role_name) || [];
-        const email = await this.getUserEmail(profile.id);
-  
-        const mergedData = {
-          id: profile.id,
-          email: email, // Email not in profiles table, will be filled by auth fallback
-          full_name: profile.full_name || '',
-          role: roles[0] || profile.role || 'user',
-          phone: profile.phone || null,
-          national_id: profile.national_id || null,
-          avatar_url: profile.avatar_url || null,
-          is_admin: profile.is_admin || false,
-          last_login: profile.updated_at, // Use updated_at as fallback
-          created_at: profile.created_at || new Date().toISOString(),
-          updated_at: profile.updated_at || new Date().toISOString(),
-          user_metadata: {}, // Not in profiles table
-          roles: roles
-        };
+  async signInWithIdToken(params: OAuthSignInParams): Promise<{ session: AuthSession | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: params.provider as any,
+        token: params.token,
+        nonce: params.nonce,
+      });
+      if (error) return { session: null, error: new Error(error.message) };
+      if (!data.session) return { session: null, error: new Error('No session returned') };
+      return { session: this.mapSession(data.session), error: null };
+    } catch (error) {
+      return { session: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-        return UserTransformer.toDomain(mergedData);
-      }
+  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.full_name,
+            phone: data.phone,
+            national_id: data.national_id,
+            role: data.role,
+          },
+        },
+      });
+      if (error) return { user: null, error: new Error(error.message) };
+      if (!authData.user) return { user: null, error: new Error('No user returned') };
+      return { user: this.mapUser(authData.user), error: null };
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-      // Fallback: Try to get current user if it matches the requested ID
-      const { data: authUser, error: authError } = await supabase.auth.getUser();
+  async signOut(): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase.auth.signOut();
+      return { error: error ? new Error(error.message) : null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-      // ✅ IGNORER les erreurs d'authentification (token expiré, pas de session, etc.)
-      // Ces erreurs se produisent normalement lors de la déconnexion.
-      if (authError || !authUser.user) {
-        // Ne logguer que si ce n'est pas une erreur d'authentification
-        const isAuthError = authError?.status === 401 ||
-                           authError?.message?.includes('not authenticated') ||
-                           authError?.message?.includes('invalid token') ||
-                           authError?.message?.includes('session not found');
-        if (!isAuthError) {
-          ErrorLogger.log(new Error('User not found'), 'SupabaseUserAdapter.findById failed');
-        }
-        return null; // Return null silently for auth errors
-      }
+  async resetPassword(email: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      return { error: error ? new Error(error.message) : null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-      // Only return data if it matches the requested ID
-      if (authUser.user.id !== id) {
-        return null;
-      }
+  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      return { error: error ? new Error(error.message) : null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
 
-      // Get roles from user_roles table
-      const { data: userRoles, error: rolesError } = await supabase
+  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) return { user: null, error: new Error(error.message) };
+      if (!user) return { user: null, error: null };
+      return { user: this.mapUser(user), error: null };
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      const { error: upsertError } = await supabase
         .from('user_roles')
-        .select('role_name')
-        .eq('user_id', id);
-
-      const roles = userRoles?.map(ur => ur.role_name) || [];
-
-      const mergedData = {
-        id: authUser.user.id,
-        email: authUser.user.email || '',
-        full_name: authUser.user.user_metadata?.full_name || '',
-        role: roles[0] || authUser.user.user_metadata?.role || 'user',
-        phone: authUser.user.phone || null,
-        national_id: authUser.user.user_metadata?.national_id || null,
-        avatar_url: authUser.user.user_metadata?.avatar_url || null,
-        is_admin: authUser.user.user_metadata?.is_admin || false,
-        last_login: authUser.user.last_sign_in_at,
-        created_at: authUser.user.created_at,
-        updated_at: authUser.user.updated_at,
-        user_metadata: authUser.user.user_metadata || {},
-        roles: roles
-      };
-
-      return UserTransformer.toDomain(mergedData);
+        .upsert({ user_id: userId, role_name: role, assigned_at: new Date().toISOString(), status: 'active' });
+      if (upsertError) return { user: null, error: new Error(upsertError.message) };
+      await supabase.from('users' as any).update({ role }).eq('id', userId);
+      return this.getCurrentUser();
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.findById unexpected error');
-      return null;
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async searchUsers(options: SearchUsersOptions = {}): Promise<SearchUsersResult> {
+  // ============================
+  // Email confirmation
+  // ============================
+  async resendConfirmationEmail(email: string): Promise<{ error: Error | null }> {
     try {
-      let query = supabase
-        .from('users' as any)
-        .select('id, full_name, phone, national_id, role, created_at, updated_at, is_admin')
-        .order('full_name', { ascending: true });
-
-      // Apply search filter
-      if (options.searchTerm) {
-        query = query.or(
-          `full_name.ilike.%${options.searchTerm}%,phone.ilike.%${options.searchTerm}%,national_id.ilike.%${options.searchTerm}%`
-        );
-      }
-
-      // Apply role filter
-      if (options.roleFilter?.length) {
-        query = query.in('role', options.roleFilter as any);
-      }
-
-      // Apply active filter (use is_admin as fallback since is_active doesn't exist)
-      if (options.isActive !== undefined) {
-        if (options.isActive) {
-          query = query.eq('is_admin', true);
-        }
-      }
-
-      // Apply limit
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.searchUsers failed');
-        throw new AppError(ErrorCode.USER_SEARCH_ERROR, error.message, error);
-      }
-
-      const users = data ? data.map(UserTransformer.toDomain) : [];
-
-      return {
-        users,
-        total: users.length
-      };
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      return { error: error ? new Error(error.message) : null };
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.searchUsers unexpected error');
-      throw new AppError(ErrorCode.USER_SEARCH_ERROR, 'Failed to search users', error);
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async findAll(): Promise<User[]> {
+  async confirmUserEmail(userId: string): Promise<{ error: Error | null }> {
     try {
-      const { data, error } = await supabase
-        .from('users' as any)
-        .select('*')
-        .order('full_name', { ascending: true });
-
-      if (error) {
-        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.findAll failed');
-        throw new AppError(ErrorCode.USER_FIND_ALL_ERROR, error.message, error);
-      }
-
-      return data ? data.map(UserTransformer.toDomain) : [];
+      const { error } = await supabase.auth.admin.updateUserById(userId, { email_confirm: true });
+      return { error: error ? new Error(error.message) : null };
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.findAll unexpected error');
-      throw new AppError(ErrorCode.USER_FIND_ALL_ERROR, 'Failed to get all users', error);
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async create(userData: Omit<User, 'id'>): Promise<User> {
+  // ============================
+  // Profile (delegation to profile adapter)
+  // ============================
+  async getProfile(userId: string): Promise<{ profile: UserProfile | null; error: Error | null }> {
     try {
-      const dbData = UserTransformer.toSupabaseRow(userData as User);
-      
-      const { data, error } = await supabase
-        .from('users' as any)
-        .insert(dbData)
-        .select()
-        .single();
-
-      if (error) {
-        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.create failed');
-        throw new AppError(ErrorCode.USER_CREATE_ERROR, error.message, error);
-      }
-
-      if (!data) {
-        throw new AppError(ErrorCode.USER_CREATE_ERROR, 'Failed to create user');
-      }
-
-      return UserTransformer.toDomain(data);
+      const profile = await this.profileAdapter.getProfileByUserId(userId);
+      return { profile, error: null };
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.create unexpected error');
-      throw new AppError(ErrorCode.USER_CREATE_ERROR, 'Failed to create user', error);
+      return { profile: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async update(id: string, userData: Partial<User>): Promise<User> {
+  async upsertProfile(profile: UserProfile): Promise<{ error: Error | null }> {
     try {
-      const dbData = UserTransformer.toSupabaseRow(userData as User);
-      
-      const { data, error } = await supabase
-        .from('users' as any)
-        .update(dbData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.update failed');
-        throw new AppError(ErrorCode.USER_UPDATE_ERROR, error.message, error);
-      }
-
-      if (!data) {
-        throw new AppError(ErrorCode.USER_UPDATE_ERROR, 'Failed to update user');
-      }
-
-      return UserTransformer.toDomain(data);
+      await this.profileAdapter.saveProfile(profile);
+      return { error: null };
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.update unexpected error');
-      throw new AppError(ErrorCode.USER_UPDATE_ERROR, 'Failed to update user', error);
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async delete(id: string): Promise<void> {
+  // ============================
+  // Session cleanup
+  // ============================
+  async clearSessions(userId: string): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase
-        .from('users' as any)
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        ErrorLogger.log(new Error(error.message), 'SupabaseUserAdapter.delete failed');
-        throw new AppError(ErrorCode.USER_DELETE_ERROR, error.message, error);
-      }
+      const { error } = await supabase.from('auth_sessions').delete().eq('user_id', userId);
+      return { error: error ? new Error(error.message) : null };
     } catch (error) {
-      ErrorLogger.log(error instanceof Error ? error : new Error('Unexpected error'), 'SupabaseUserAdapter.delete unexpected error');
-      throw new AppError(ErrorCode.USER_DELETE_ERROR, 'Failed to delete user', error);
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  async findByRole(role: string): Promise<User[]> {
-    return this.searchUsers({ roleFilter: [role] }).then(result => result.users as User[]);
+  // ============================
+  // Mapping helpers
+  // ============================
+  private mapUser(user: any): AuthUser {
+    return {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name,
+      role: user.user_metadata?.role,
+      phone: user.phone,
+      national_id: user.user_metadata?.national_id,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
   }
 
-  async findActive(): Promise<User[]> {
-    return this.searchUsers({ isActive: true }).then(result => result.users as User[]);
-  }
-
-  private mapToUser(data: any): User {
-    return UserTransformer.toDomain(data);
-  }
-
-  // Add better error handling
-  private async getUserEmail(id: string): Promise<string> {
-    try {
-      // Try to get from session
-      const { data: sessionData } = await supabase.auth.getUser();
-      if (sessionData?.user?.email && sessionData.user.id === id) {
-        return sessionData.user.email;
-      }
-      
-      // Try admin API (requires service role)
-      const { data: adminData, error: adminError } = await supabase.auth.admin.getUserById(id);
-      if (adminData?.user?.email && !adminError) {
-        return adminData.user.email;
-      }
-      
-      console.warn(`No email found for user ${id}`);
-      return ''; // Return empty and handle in User constructor
-    } catch (error) {
-      console.error('Error fetching user email:', error);
-      return '';
-    }
+  private mapSession(session: any): AuthSession {
+    const user = this.mapUser(session.user);
+    return {
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: new Date(session.expires_at || '').toISOString(),
+      user
+    };
   }
 }

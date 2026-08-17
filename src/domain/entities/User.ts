@@ -2,21 +2,13 @@
  * User Entity
  * Représente un utilisateur complet dans le domaine SOMELEC
  * Architecture hexagonale pure - aucune dépendance externe
- *
- * // Domain Entity: User
- * // Pure business logic without infrastructure concerns
+ * Centralise les concepts de rôle via UserRoleEntity (riche) et SomelecRole (alias)
  */
 
-// SOMELEC Role Enum - Centralized from UserRoleSomelec
-export enum SomelecRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  DIRECTOR = 'director',
-  AGENT = 'agent',
-  SUPPLIER = 'supplier',
-  CONSULTANT = 'consultant',
-  ENGINEERING_CONSULTANT = 'engineering_consultant'
-}
+import { UserProfile } from './UserProfile';
+
+// Alias pour la compatibilité avec l'existant – il s'agit du nom du rôle
+export type SomelecRole = string; // ou enum restreint si souhaité
 
 export enum UserRoleStatus {
   ACTIVE = 'active',
@@ -25,21 +17,11 @@ export enum UserRoleStatus {
   PENDING = 'pending'
 }
 
-// Legacy UserRole enum for backward compatibility
-export enum UserRole {
-  Admin = "admin",
-  Manager = "manager",
-  FieldAgent = "field_agent",
-  Inspector = "inspector",
-  Viewer = "viewer",
-}
-
-// UserRole Entity from UserRoleSomelec - Enhanced domain entity
-// Props interface for UserRoleEntity factory
+// UserRoleEntity – instance d'un rôle attribué à un utilisateur
 export interface UserRoleEntityProps {
   id: string;
   userId: string;
-  roleName: SomelecRole;
+  roleName: string; // correspond au nom du rôle (ex: 'admin', 'supplier')
   status?: UserRoleStatus;
   assignedAt?: Date;
   assignedBy?: string;
@@ -50,7 +32,7 @@ export interface UserRoleEntityProps {
 export class UserRoleEntity {
   private readonly _id: string;
   private readonly _userId: string;
-  private readonly _roleName: SomelecRole;
+  private readonly _roleName: string;
   private _status: UserRoleStatus;
   private readonly _assignedAt: Date;
   private readonly _assignedBy?: string;
@@ -60,7 +42,7 @@ export class UserRoleEntity {
   constructor(
     id: string,
     userId: string,
-    roleName: SomelecRole,
+    roleName: string,
     status: UserRoleStatus = UserRoleStatus.ACTIVE,
     assignedAt: Date = new Date(),
     assignedBy?: string,
@@ -77,7 +59,6 @@ export class UserRoleEntity {
     this._expiresAt = expiresAt ? new Date(expiresAt) : undefined;
   }
 
-  // ============= Factory Method =============
   static create(props: UserRoleEntityProps): UserRoleEntity {
     return new UserRoleEntity(
       props.id,
@@ -91,555 +72,179 @@ export class UserRoleEntity {
     );
   }
 
-  // Getters
-  get id(): string {
-    return this._id;
-  }
+  get id(): string { return this._id; }
+  get userId(): string { return this._userId; }
+  get roleName(): string { return this._roleName; }
+  get status(): UserRoleStatus { return this._status; }
+  get assignedAt(): Date { return new Date(this._assignedAt); }
+  get assignedBy(): string | undefined { return this._assignedBy; }
+  get revokedAt(): Date | undefined { return this._revokedAt ? new Date(this._revokedAt) : undefined; }
+  get expiresAt(): Date | undefined { return this._expiresAt ? new Date(this._expiresAt) : undefined; }
 
-  get userId(): string {
-    return this._userId;
-  }
-
-  get roleName(): SomelecRole {
-    return this._roleName;
-  }
-
-  get status(): UserRoleStatus {
-    return this._status;
-  }
-
-  get assignedAt(): Date {
-    return new Date(this._assignedAt);
-  }
-
-  get assignedBy(): string | undefined {
-    return this._assignedBy;
-  }
-
-  get revokedAt(): Date | undefined {
-    return this._revokedAt ? new Date(this._revokedAt) : undefined;
-  }
-
-  get expiresAt(): Date | undefined {
-    return this._expiresAt ? new Date(this._expiresAt) : undefined;
-  }
-
-  // Business logic methods
-  isActive(): boolean {
-    return this._status === UserRoleStatus.ACTIVE && !this.isExpired() && !this.isRevoked();
-  }
-
-  isExpired(): boolean {
-    if (!this._expiresAt) return false;
-    return new Date() > this._expiresAt;
-  }
-
-  isRevoked(): boolean {
-    return this._status === UserRoleStatus.REVOKED ||
-      (this._revokedAt !== undefined && new Date() > this._revokedAt);
-  }
-
-  canBeUsed(): boolean {
-    return this.isActive() && !this.isExpired() && !this.isRevoked();
-  }
+  isActive(): boolean { return this._status === UserRoleStatus.ACTIVE && !this.isExpired() && !this.isRevoked(); }
+  isExpired(): boolean { return this._expiresAt ? new Date() > this._expiresAt : false; }
+  isRevoked(): boolean { return this._status === UserRoleStatus.REVOKED || (this._revokedAt !== undefined && new Date() > this._revokedAt); }
+  canBeUsed(): boolean { return this.isActive() && !this.isExpired() && !this.isRevoked(); }
 
   revoke(): void {
-    if (this._status === UserRoleStatus.REVOKED) {
-      throw new Error('Role is already revoked');
-    }
+    if (this._status === UserRoleStatus.REVOKED) throw new Error('Role is already revoked');
     this._status = UserRoleStatus.REVOKED;
     this._revokedAt = new Date();
   }
-
   reactivate(): void {
-    if (this._status !== UserRoleStatus.INACTIVE && this._status !== UserRoleStatus.REVOKED) {
-      throw new Error('Role cannot be reactivated from current status');
-    }
+    if (this._status !== UserRoleStatus.INACTIVE && this._status !== UserRoleStatus.REVOKED) throw new Error('Cannot reactivate');
     this._status = UserRoleStatus.ACTIVE;
     this._revokedAt = undefined;
   }
-
   deactivate(): void {
-    if (this._status === UserRoleStatus.INACTIVE) {
-      throw new Error('Role is already inactive');
-    }
+    if (this._status === UserRoleStatus.INACTIVE) throw new Error('Already inactive');
     this._status = UserRoleStatus.INACTIVE;
   }
-
   extendExpiry(newExpiryDate: Date): void {
-    if (newExpiryDate <= new Date()) {
-      throw new Error('Expiry date must be in the future');
-    }
+    if (newExpiryDate <= new Date()) throw new Error('Expiry date must be in the future');
     this._expiresAt = new Date(newExpiryDate);
   }
 
-  hasHigherPriorityThan(otherRole: SomelecRole): boolean {
-    const priority = {
-      [SomelecRole.ADMIN]: 5,
-      [SomelecRole.DIRECTOR]: 4,
-      [SomelecRole.MANAGER]: 3,
-      [SomelecRole.AGENT]: 2,
-      [SomelecRole.SUPPLIER]: 1,
-      [SomelecRole.CONSULTANT]: 1,
-      [SomelecRole.ENGINEERING_CONSULTANT]: 1
-    };
-
-    return priority[this._roleName] > priority[otherRole];
-  }
-
-  // Validation
   validate(): boolean {
-    return (
-      this._id.length > 0 &&
-      this._userId.length > 0 &&
-      Object.values(SomelecRole).includes(this._roleName) &&
-      Object.values(UserRoleStatus).includes(this._status) &&
-      this._assignedAt <= new Date()
-    );
+    return this._id.length > 0 && this._userId.length > 0 && this._roleName.length > 0 && Object.values(UserRoleStatus).includes(this._status);
   }
 
-  // Legacy factory methods (delegate to create)
-  static assign(
-    id: string,
-    userId: string,
-    roleName: SomelecRole,
-    assignedBy?: string,
-    expiresAt?: Date
-  ): UserRoleEntity {
-    return UserRoleEntity.create({
-      id,
-      userId,
-      roleName,
-      status: UserRoleStatus.ACTIVE,
-      assignedAt: new Date(),
-      assignedBy,
-      expiresAt
-    });
-  }
-
-  static createTemporary(
-    id: string,
-    userId: string,
-    roleName: SomelecRole,
-    expiresAt: Date,
-    assignedBy?: string
-  ): UserRoleEntity {
-    return UserRoleEntity.create({
-      id,
-      userId,
-      roleName,
-      status: UserRoleStatus.ACTIVE,
-      assignedAt: new Date(),
-      assignedBy,
-      expiresAt
-    });
-  }
-
-  // Comparison
   equals(other: UserRoleEntity): boolean {
-    return (
-      this._id === other._id &&
-      this._userId === other._userId &&
-      this._roleName === other._roleName
-    );
-  }
-
-  // System info
-  getSystemInfo(): Record<string, unknown> {
-    return {
-      id: this._id,
-      userId: this._userId,
-      roleName: this._roleName,
-      status: this._status,
-      assignedAt: this._assignedAt.toISOString(),
-      assignedBy: this._assignedBy,
-      revokedAt: this._revokedAt?.toISOString(),
-      expiresAt: this._expiresAt?.toISOString(),
-      isActive: this.isActive(),
-      isExpired: this.isExpired(),
-      isRevoked: this.isRevoked(),
-      canBeUsed: this.canBeUsed()
-    };
+    return this._id === other._id && this._userId === other._userId && this._roleName === other._roleName;
   }
 }
 
+// Entité User principale
 export class User {
-  // Private fields for encapsulation
   private _id: string;
-  private _name: string;
   private _email: string;
-  private _phone: string;
-  private _role: SomelecRole;
-  private _image: string;
-  private _workspaceIds: string[];
+  private _fullName: string;
+  private _phone?: string;
+  private _nationalId?: string;
+  private _avatarUrl?: string;
   private _isActive: boolean;
   private _createdAt: Date;
   private _updatedAt: Date;
-  private _userRoles: UserRoleEntity[]; // Add support for multiple roles
-  private _fullName: string; // Additional field for backward compatibility
-  private _avatar: string; // Additional field for backward compatibility
-  private _lastLogin?: Date; // Additional field for backward compatibility
+  private _lastLogin?: Date;
+  private _userRoles: UserRoleEntity[];
+  private _profile?: UserProfile; // Profil associé
 
   constructor(
     id: string,
-    name: string,
     email: string,
-    phone: string,
-    role: SomelecRole, // Changed from UserRole to SomelecRole
-    image: string,
-    workspaceIds: string[],
-    isActive?: boolean,
-    createdAt?: Date,
-    updatedAt?: Date,
-    userRoles?: UserRoleEntity[], // Add userRoles parameter
-    fullName?: string, // Additional field for backward compatibility
-    avatar?: string, // Additional field for backward compatibility
-    lastLogin?: Date // Additional field for backward compatibility
+    fullName: string,
+    phone?: string,
+    nationalId?: string,
+    avatarUrl?: string,
+    isActive: boolean = true,
+    createdAt: Date = new Date(),
+    updatedAt: Date = new Date(),
+    lastLogin?: Date,
+    userRoles: UserRoleEntity[] = [],
+    profile?: UserProfile
   ) {
     this._id = this.validateId(id);
-    this._name = this.validateName(name);
     this._email = this.validateEmail(email);
-    this._phone = this.validatePhone(phone);
-    this._role = this.validateRole(role);
-    this._image = image;
-    this._workspaceIds = workspaceIds || [];
-    this._isActive = isActive !== undefined ? isActive : true;
-    this._createdAt = createdAt || new Date();
-    this._updatedAt = updatedAt || new Date();
-    this._userRoles = userRoles || [];
-    this._fullName = fullName || name; // Initialize with fallback
-    this._avatar = avatar || image; // Initialize with fallback
-    this._lastLogin = lastLogin; // Initialize optional field
+    this._fullName = fullName.trim();
+    this._phone = phone?.trim();
+    this._nationalId = nationalId?.trim();
+    this._avatarUrl = avatarUrl?.trim();
+    this._isActive = isActive;
+    this._createdAt = new Date(createdAt);
+    this._updatedAt = new Date(updatedAt);
+    this._lastLogin = lastLogin ? new Date(lastLogin) : undefined;
+    this._userRoles = userRoles;
+    this._profile = profile;
   }
 
-  // Validation methods
-  private validateId(id: string): string {
-    if (!id || id.trim().length === 0) {
-      throw new Error('User ID is required');
-    }
-    return id;
+  // Getters
+  get id(): string { return this._id; }
+  get email(): string { return this._email; }
+  get fullName(): string { return this._fullName; }
+  get phone(): string | undefined { return this._phone; }
+  get nationalId(): string | undefined { return this._nationalId; }
+  get avatarUrl(): string | undefined { return this._avatarUrl; }
+  get isActive(): boolean { return this._isActive; }
+  get createdAt(): Date { return new Date(this._createdAt); }
+  get updatedAt(): Date { return new Date(this._updatedAt); }
+  get lastLogin(): Date | undefined { return this._lastLogin ? new Date(this._lastLogin) : undefined; }
+  get userRoles(): UserRoleEntity[] { return this._userRoles; }
+  get profile(): UserProfile | undefined { return this._profile; }
+
+  // Rôle principal (le premier actif ou le plus élevé)
+  get primaryRole(): string {
+    const activeRoles = this._userRoles.filter(r => r.isActive());
+    if (activeRoles.length === 0) return 'user';
+    // Priorité par nom (admin > director > manager > ...)
+    const priority: Record<string, number> = { admin: 10, director: 8, manager: 6, engineering_consultant: 5, supervisor: 4, inspector: 4, finance_manager: 7, supplier: 3, worker: 2, consultant: 1, agent: 1 };
+    return activeRoles.reduce((a, b) => (priority[a.roleName] || 0) > (priority[b.roleName] || 0) ? a : b).roleName;
   }
 
-  private validateName(name: string): string {
-    if (!name || name.trim().length === 0) {
-      throw new Error('User name is required');
-    }
-    return name;
+  // Méthodes métier
+  hasRole(roleName: string): boolean {
+    return this._userRoles.some(r => r.roleName === roleName && r.isActive());
   }
-
-  private validateEmail(email: string): string {
-    if (!email || email.trim().length === 0) {
-      throw new Error('User email is required');
-    }
-    return email;
+  hasAnyRole(roleNames: string[]): boolean {
+    return roleNames.some(r => this.hasRole(r));
   }
-
-  private validatePhone(phone: string): string {
-    // Phone is now optional - return as-is or empty string
-    return phone || '';
-  }
-
-  private validateRole(role: SomelecRole): SomelecRole {
-    const validRoles = Object.values(SomelecRole);
-    if (!validRoles.includes(role)) {
-      throw new Error(`Invalid user role: ${role}`);
-    }
-    return role;
-  }
-
-  private validateRoleEntity(role: UserRoleEntity): UserRoleEntity {
-    const validRoles = Object.values(SomelecRole);
-    if (!validRoles.includes(role.roleName)) {
-      throw new Error(`Invalid user role: ${role.roleName}`);
-    }
-    return role;
-  }
-
-  // Public getters
-  get id(): string {
-    return this._id;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get email(): string {
-    return this._email;
-  }
-
-  get phone(): string {
-    return this._phone;
-  }
-
-  get role(): SomelecRole {
-    return this._role;
-  }
-
-  get image(): string {
-    return this._image;
-  }
-
-  get workspaceIds(): string[] {
-    return this._workspaceIds;
-  }
-
-  get isActive(): boolean {
-    return this._isActive;
-  }
-
-  get createdAt(): Date {
-    return this._createdAt;
-  }
-
-  get updatedAt(): Date {
-    return this._updatedAt;
-  }
-
-  get userRoles(): UserRoleEntity[] {
-    return this._userRoles;
-  }
-
-  // Additional getters for backward compatibility
-  get fullName(): string {
-    return this._name;
-  }
-
-  get avatar(): string {
-    return this._image;
-  }
-
-  get lastLogin(): Date | undefined {
-    return this._lastLogin;
-  }
-
-  // Business logic methods
-  updateRole(newRole: SomelecRole): void {
-    this._role = this.validateRole(newRole);
-    this._updatedAt = new Date();
-  }
-
-  updateUserRole(newRole: UserRoleEntity): void {
-    // Find and update the role in userRoles array
-    const existingIndex = this._userRoles.findIndex(role => role.id === newRole.id);
-    if (existingIndex > -1) {
-      this._userRoles[existingIndex] = newRole;
-    }
-    this._updatedAt = new Date();
-  }
-
-  // Role checking methods
-  hasRole(role: SomelecRole): boolean {
-    return this._userRoles.some(userRole => userRole.roleName === role && userRole.isActive());
-  }
-
-  hasAnyRole(roles: SomelecRole[]): boolean {
-    return roles.some(role => this.hasRole(role));
-  }
-
-  hasRoleEntity(role: UserRoleEntity): boolean {
-    return this._userRoles.some(userRole => userRole.id === role.id && userRole.isActive());
-  }
-
-  hasAnyRoleEntity(roles: UserRoleEntity[]): boolean {
-    return roles.some(role => this.hasRoleEntity(role));
-  }
-
-  // Role priority mapping
-  private static readonly ROLE_PRIORITY = {
-    [SomelecRole.ADMIN]: 5,
-    [SomelecRole.DIRECTOR]: 4,
-    [SomelecRole.MANAGER]: 3,
-    [SomelecRole.AGENT]: 2,
-    [SomelecRole.SUPPLIER]: 1,
-    [SomelecRole.CONSULTANT]: 1,
-    [SomelecRole.ENGINEERING_CONSULTANT]: 1
-  };
-
-  // Role priority mapping for UserRoleEntity
-  private static readonly ROLE_PRIORITY_ENTITY = {
-    [SomelecRole.ADMIN]: 5,
-    [SomelecRole.DIRECTOR]: 4,
-    [SomelecRole.MANAGER]: 3,
-    [SomelecRole.AGENT]: 2,
-    [SomelecRole.SUPPLIER]: 1,
-    [SomelecRole.CONSULTANT]: 1,
-    [SomelecRole.ENGINEERING_CONSULTANT]: 1
-  };
-
-  static getHighestRole(roles: UserRole[]): UserRole {
-    const priority = User.ROLE_PRIORITY;
-    return roles.reduce((highest, current) =>
-      priority[current] > priority[highest] ? current : highest
-    );
-  }
-
-  static getHighestRoleEntity(roles: UserRoleEntity[]): UserRoleEntity {
-    const priority = User.ROLE_PRIORITY_ENTITY;
-    return roles.reduce((highest, current) =>
-      priority[current.roleName] > priority[highest.roleName] ? current : highest
-    );
-  }
-
-  isAdmin(): boolean {
-    return this.hasRole(SomelecRole.ADMIN);
-  }
-
-  isDirector(): boolean {
-    return this.hasRole(SomelecRole.DIRECTOR);
-  }
-
-  isManager(): boolean {
-    return this.hasRole(SomelecRole.MANAGER);
-  }
-
-  isAgent(): boolean {
-    return this.hasRole(SomelecRole.AGENT);
-  }
-
-  isSupplier(): boolean {
-    return this.hasRole(SomelecRole.SUPPLIER);
-  }
+  isAdmin(): boolean { return this.hasRole('admin'); }
+  isDirector(): boolean { return this.hasRole('director'); }
+  isManager(): boolean { return this.hasRole('manager'); }
+  isSupplier(): boolean { return this.hasRole('supplier'); }
 
   canAccessDashboard(): boolean {
-    return this.hasAnyRole([SomelecRole.ADMIN, SomelecRole.DIRECTOR, SomelecRole.MANAGER]);
+    return this.hasAnyRole(['admin', 'director', 'manager']);
   }
-
   canManageProjects(): boolean {
-    return this.hasAnyRole([SomelecRole.ADMIN, SomelecRole.DIRECTOR, SomelecRole.MANAGER]);
+    return this.hasAnyRole(['admin', 'director', 'manager']);
   }
 
-  canViewReports(): boolean {
-    return this.hasAnyRole([SomelecRole.ADMIN, SomelecRole.DIRECTOR, SomelecRole.MANAGER]);
-  }
+  updateFullName(newFullName: string): void { this._fullName = newFullName.trim(); }
+  updatePhone(newPhone?: string): void { this._phone = newPhone?.trim(); }
+  updateEmail(newEmail: string): void { this._email = this.validateEmail(newEmail); }
+  updateAvatar(newAvatarUrl?: string): void { this._avatarUrl = newAvatarUrl?.trim(); }
+  activate(): void { this._isActive = true; }
+  deactivate(): void { this._isActive = false; }
+  updateLastLogin(): void { this._lastLogin = new Date(); }
 
-  addRole(userRole: UserRoleEntity): void {
-    if (!this._userRoles.some(existing => existing.id === userRole.id)) {
-      this._userRoles.push(userRole);
+  addRole(role: UserRoleEntity): void {
+    if (!this._userRoles.some(r => r.id === role.id)) {
+      this._userRoles.push(role);
     }
   }
-
   removeRole(roleId: string): void {
-    const index = this._userRoles.findIndex(role => role.id === roleId);
-    if (index > -1) {
-      this._userRoles.splice(index, 1);
-    }
+    this._userRoles = this._userRoles.filter(r => r.id !== roleId);
   }
 
-  updateFullName(newFullName: string): void {
-    this._fullName = newFullName;
-  }
+  setProfile(profile: UserProfile): void { this._profile = profile; }
 
-  updatePhone(newPhone?: string): void {
-    this._phone = newPhone || '';
-  }
-
-  updateAvatar(newAvatar?: string): void {
-    this._avatar = newAvatar || '';
-  }
-
-  activate(): void {
-    this._isActive = true;
-  }
-
-  deactivate(): void {
-    this._isActive = false;
-  }
-
-  updateLastLogin(): void {
-    this._lastLogin = new Date();
-  }
-
-  // Validation
   validate(): boolean {
     return (
       this._id.length > 0 &&
       this._email.includes('@') &&
       this._fullName.length > 0 &&
-      this._userRoles.every(role => role.validate())
+      this._userRoles.every(r => r.validate())
     );
   }
 
-  // Factory methods
-  static withRoles(
-    id: string,
-    email: string,
-    fullName: string,
-    primaryRole: SomelecRole, // Changed from UserRole to SomelecRole
-    userRoles: UserRoleEntity[]
-  ): User {
-    return new User(
-      id,
-      fullName,
-      email,
-      '',
-      primaryRole,
-      '',
-      [],
-      true,
-      undefined,
-      undefined,
-      userRoles,
-      fullName,
-      '',
-      undefined
-    );
-  }
-
+  // Factory
   static create(
     id: string,
     email: string,
     fullName: string,
-    primaryRole: SomelecRole, // Changed from UserRole to SomelecRole
-    image?: string,
-    workspaceIds?: string[],
-    isActive?: boolean,
-    createdAt?: Date,
-    updatedAt?: Date,
-    userRoles?: UserRoleEntity[],
-    avatar?: string,
-    lastLogin?: Date
+    phone?: string,
+    nationalId?: string,
+    avatarUrl?: string
   ): User {
-    return new User(
-      id,
-      fullName,
-      email,
-      '',
-      primaryRole,
-      image || '',
-      workspaceIds || [],
-      isActive !== undefined ? isActive : true,
-      createdAt || new Date(),
-      updatedAt || new Date(),
-      userRoles || [],
-      fullName,
-      avatar || '',
-      lastLogin
-    );
+    return new User(id, email, fullName, phone, nationalId, avatarUrl);
   }
-}
 
-export type UserRoleType = 'admin' | 'manager' | 'employee' | 'supplier' | 'inspector' | 'engineer' | 'user' | 'consultant' | 'engineering_consultant';
-
-export interface AuthSession {
-  user: User;
-  token: string;
-  refreshToken: string;
-  expiresAt: Date;
-}
-
-// Legacy interface for backward compatibility
-export interface UserProfile {
-  id: string;
-  full_name?: string | null;
-  phone?: string | null;
-  national_id?: string | null;
-  role?: string | null;
-  email?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  is_active?: boolean;
-  userRoles?: UserRole[]; // Add support for multiple roles
-  primaryRole?: string; // Add primary role for multi-role support
-  avatar_url?: string | null;
+  private validateId(id: string): string {
+    if (!id || id.trim().length === 0) throw new Error('User ID is required');
+    return id;
+  }
+  private validateEmail(email: string): string {
+    if (!email || !email.includes('@')) throw new Error('Invalid email');
+    return email;
+  }
 }

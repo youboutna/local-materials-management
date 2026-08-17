@@ -4,6 +4,8 @@
  * Following hexagonal architecture principles
  */
 
+import { UserProfile } from '@/domain/entities/UserProfile';
+
 export interface AuthUser {
   id: string;
   email?: string;
@@ -36,44 +38,32 @@ export interface RegisterData {
   role?: string;
 }
 
+export interface OAuthSignInParams {
+  provider: string;
+  token: string;
+  nonce?: string;
+}
+
 export interface IAuthRepository {
-  /**
-   * Get current session
-   */
+  // Session
   getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }>;
-
-  /**
-   * Sign in with credentials
-   */
   signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }>;
-
-  /**
-   * Sign up new user
-   */
+  signInWithIdToken(params: OAuthSignInParams): Promise<{ session: AuthSession | null; error: Error | null }>;
   signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }>;
-
-  /**
-   * Sign out current user
-   */
   signOut(): Promise<{ error: Error | null }>;
-
-  /**
-   * Reset password
-   */
   resetPassword(email: string): Promise<{ error: Error | null }>;
-
-  /**
-   * Update password
-   */
   updatePassword(newPassword: string): Promise<{ error: Error | null }>;
-
-  /**
-   * Get current user
-   */
   getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }>;
-
-  /**
-   * Update user role
-   */
   updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }>;
+
+  // Email confirmation
+  resendConfirmationEmail(email: string): Promise<{ error: Error | null }>;
+  confirmUserEmail(userId: string): Promise<{ error: Error | null }>;
+
+  // Profile
+  getProfile(userId: string): Promise<{ profile: UserProfile | null; error: Error | null }>;
+  upsertProfile(profile: UserProfile): Promise<{ error: Error | null }>;
+
+  // Session cleanup
+  clearSessions(userId: string): Promise<{ error: Error | null }>;
 }

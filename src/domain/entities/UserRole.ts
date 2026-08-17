@@ -17,7 +17,6 @@ export class UserRole {
     public readonly updatedAt: string = new Date().toISOString()
   ) {}
 
-  // Dynamic permission checking
   hasPermission(permission: Permission): boolean {
     return this.permissions.includes(permission);
   }
@@ -30,7 +29,6 @@ export class UserRole {
     return permissions.some(p => this.hasPermission(p));
   }
 
-  // Role comparison
   isSeniorTo(otherRole: UserRole): boolean {
     return this.level > otherRole.level;
   }
@@ -43,15 +41,12 @@ export class UserRole {
     return this.level === otherRole.level;
   }
 
-  // Role validation
   isValid(): boolean {
     return !!(this.id && this.name && this.displayName && this.level > 0);
   }
 
-  // Permission management (returns new instance - immutable)
   withPermission(permission: Permission): UserRole {
     if (this.hasPermission(permission)) return this;
-    
     return new UserRole(
       this.id,
       this.name,
@@ -68,7 +63,6 @@ export class UserRole {
 
   withoutPermission(permission: Permission): UserRole {
     if (!this.hasPermission(permission)) return this;
-    
     return new UserRole(
       this.id,
       this.name,
@@ -98,7 +92,6 @@ export class UserRole {
     );
   }
 
-  // Role metadata
   getPermissionCount(): number {
     return this.permissions.length;
   }
@@ -107,7 +100,6 @@ export class UserRole {
     return this.permissions;
   }
 
-  // Factory methods
   static create(params: {
     id: string;
     name: string;
@@ -128,7 +120,6 @@ export class UserRole {
     );
   }
 
-  // Predefined role factory methods
   static admin(): UserRole {
     return new UserRole(
       'admin',
@@ -261,7 +252,6 @@ export class UserRole {
     );
   }
 
-  // Serialization
   toJSON() {
     return {
       id: this.id,
