@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, XCircle, AlertTriangle, Shield, User, Clock, RefreshCw } from 'lucide-react';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { AUTH_PROVIDERS } from '@/config/auth';
 
@@ -33,7 +33,7 @@ export function AuthStatus({
     isAuthenticated, 
     loading, 
     currentProvider 
-  } = useUnifiedAuth();
+  } = useAuth();
   
   const { userRoles, hasAnyRole } = useCurrentUserRoles();
 

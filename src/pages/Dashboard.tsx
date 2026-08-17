@@ -19,7 +19,7 @@ import { DEV_MODE } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex } from "@/hooks/hexagonal";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
-import { useAuth } from "@/contexts/use-auth";
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {

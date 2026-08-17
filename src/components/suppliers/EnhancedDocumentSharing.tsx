@@ -8,11 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/hooks/hexagonal/useAuthSimple';
+import { useAuthHex } from '@/hooks/hexagonal/useAuthHex';
 import { useDocumentsHex } from '@/hooks/hexagonal/useDocumentsHex';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Send, Upload } from 'lucide-react';
 import React, { useState } from 'react';
@@ -74,7 +73,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
-  const { user } = useAuth();
+  const { user } = useAuthHex();
   const { documents, isLoading, createDocument } = useDocumentsHex();
 
   // Filter documents based on search and filters

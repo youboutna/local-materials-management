@@ -2,9 +2,6 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "./contexts/LanguageContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
-import { KeycloakAuthProvider } from "./contexts/KeycloakAuthContext";
 import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
 import { DocumentViewerProvider } from "@/components/documents/viewer";
 import MainNavbar from "./components/MainNavbar";
@@ -105,9 +102,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <LanguageProvider>
-          <AuthProvider>
-            <UnifiedAuthProvider>
-              <KeycloakAuthProvider>
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <HexagonalAuthProvider>
                   <DocumentViewerProvider>
@@ -580,9 +574,6 @@ function App() {
                   </DocumentViewerProvider>
                 </HexagonalAuthProvider>
                 </BrowserRouter>
-              </KeycloakAuthProvider>
-            </UnifiedAuthProvider>
-          </AuthProvider>
         </LanguageProvider>
       </ErrorBoundary>
     </QueryClientProvider>

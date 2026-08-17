@@ -15,7 +15,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 interface InspectionDetailsStepProps {
   projectId: string;

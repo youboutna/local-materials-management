@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles'; // Import the correct role hook
-import { useAuth } from '@/contexts/use-auth'; // Import auth context
+import { useAuth } from '@/hooks/hexagonal/useAuth'; // Import auth context
 import { 
   useInspectionMonitoringHex,
   type MonitoringInspection

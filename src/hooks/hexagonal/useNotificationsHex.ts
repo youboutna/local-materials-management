@@ -11,7 +11,7 @@
  */
 
 import { NotificationService } from '@/application/services/NotificationService';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { CreateNotificationRequestDTO, NotificationDTO, UpdateNotificationRequestDTO } from '@/dtos/entities/NotificationDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

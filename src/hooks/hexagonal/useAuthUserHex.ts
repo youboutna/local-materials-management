@@ -1,21 +1,26 @@
 /**
- * Hexagonal Hook: useAuthUserHex - Uses AuthContext Provider
- * Gets user data from AuthContext instead of direct Supabase calls
+ * Hexagonal Hook: useAuthUserHex - Wrapper autour du contexte hexagonal
+ * Fournit un accès simplifié aux données utilisateur
+ * 
+ * Ce hook utilise le contexte HexagonalAuthContext pour obtenir l'utilisateur courant.
+ * Il est conçu comme une couche de compatibilité pour les composants qui attendent
+ * une interface similaire à l'ancien AuthContext.
  */
-import { useAuth } from '@/contexts/use-auth';
+
+import { useHexagonalAuth } from './useHexagonalAuth';
 
 export function useAuthUserHex() {
-  // Use the existing useAuth hook from AuthContext
-  const authContext = useAuth();
+  const { user, isLoading, isAuthenticated } = useHexagonalAuth();
 
   return {
-    user: authContext.user,
-    userId: authContext.user?.id,
-    isAuthenticated: !!authContext.user,
-    isLoading: authContext.loading,
-    error: null, // AuthContext handles errors internally
+    user: user ?? null,
+    userId: user?.id ?? null,
+    isAuthenticated,
+    isLoading,
+    error: null, // Les erreurs sont gérées dans le contexte
     refetch: () => {
-      // AuthContext doesn't expose refetch - session updates automatically
+      // Le contexte gère les rafraîchissements automatiquement via React Query
+      // On retourne une promesse résolue pour compatibilité
       return Promise.resolve();
     },
   };

@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { AUTH_PROVIDERS, AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '@/config/auth';
 import { AuthProvider } from '@/config/app';
@@ -33,7 +33,7 @@ export function ProviderSwitcher({
     supportedProviders, 
     switchProvider, 
     loading 
-  } = useUnifiedAuth();
+  } = useAuth();
   
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>(currentProvider || 'supabase');

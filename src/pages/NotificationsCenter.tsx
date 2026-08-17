@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationsHex } from '@/hooks/hexagonal';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { AppLayout } from '@/components/layout';
 import {
     AlertTriangle,

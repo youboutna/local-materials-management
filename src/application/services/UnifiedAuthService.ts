@@ -2,8 +2,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Unified Auth Service
  * Implements unified authentication logic for multiple providers
- * Following hexagonal architecture principles from PROMPTS.md
- * UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adapter(snake_case) → DB
+ * CORRIGÉ : getCurrentSession ne bloque plus sur erreur de session
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
@@ -60,8 +59,7 @@ export class UnifiedAuthService {
   }
 
   /**
-   * DEV MODE bypass — synthesize a UnifiedAuthUser/Session from DEV_USER,
-   * without any Supabase round-trip. Applied to getCurrentSession and login.
+   * DEV MODE bypass
    */
   private buildDevSession(): { user: UnifiedAuthUser; session: UnifiedAuthSession } {
     const role = getActiveDevRole().role;
@@ -87,10 +85,6 @@ export class UnifiedAuthService {
     return { user: unifiedUser, session: unifiedSession };
   }
 
-  /**
-   * Map a snake_case adapter session to a camelCase UnifiedAuthSession.
-   * Used for the DEV path where no Supabase profile lookup is available.
-   */
   private toUnifiedSessionFromAdapter(
     session: AuthSession
   ): { user: UnifiedAuthUser; session: UnifiedAuthSession } {
@@ -117,6 +111,7 @@ export class UnifiedAuthService {
 
   /**
    * Get current session with provider info
+   * 🔥 CORRIGÉ : retourne null sans erreur si aucune session ou erreur non critique
    */
   async getCurrentSession(): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
     if (DEV_MODE) {
@@ -127,17 +122,24 @@ export class UnifiedAuthService {
     try {
       const result = await this.authRepository.getCurrentSession();
       
+      // ✅ Si l'adaptateur renvoie une erreur, on loggue mais on ne bloque pas
       if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current session', result.error);
+        console.warn('AuthRepository getCurrentSession error (non-fatale):', result.error);
+        return { user: null, session: null };
       }
 
       if (!result.session) {
         return { user: null, session: null };
       }
 
-      // Get profile data with provider info
-      const profile = await this.getUserProfile(result.session.user.id);
-      
+      // Récupération du profil (optionnel, peut échouer)
+      let profile = null;
+      try {
+        profile = await this.getUserProfile(result.session.user.id);
+      } catch (profileError) {
+        console.warn('Could not fetch profile, using session data:', profileError);
+      }
+
       const unifiedUser: UnifiedAuthUser = {
         id: result.session.user.id,
         email: result.session.user.email,
@@ -163,9 +165,9 @@ export class UnifiedAuthService {
 
       return { user: unifiedUser, session: unifiedSession };
     } catch (error) {
-      console.error('UnifiedAuthService.getCurrentSession failed:', error);
-      if (error instanceof AppError) throw error;
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get current session', error);
+      console.error('UnifiedAuthService.getCurrentSession unexpected error:', error);
+      // ✅ On retourne null plutôt que de lever une exception
+      return { user: null, session: null };
     }
   }
 
@@ -193,26 +195,18 @@ export class UnifiedAuthService {
         ...credentials,
         email: String(credentials.email || '').trim(),
       };
-
       const result = await this.authRepository.signIn(normalized);
-
       if (result.error) {
         const rawMessage = String((result.error as any)?.message || '');
-
         if (rawMessage.includes('Invalid login credentials')) {
           throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS, result.error);
         }
         if (rawMessage.toLowerCase().includes('email not confirmed')) {
           throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED, result.error);
         }
-
         throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.CONNECTION_FAILED, result.error);
       }
-
-      if (!result.session) {
-        return { user: null, session: null };
-      }
-
+      if (!result.session) return { user: null, session: null };
       return await this.getCurrentSession();
     } catch (error) {
       console.error('UnifiedAuthService.login failed:', error);
@@ -226,40 +220,24 @@ export class UnifiedAuthService {
    */
   async loginWithOAuth(oAuthData: OAuthLoginData): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
     try {
-      // Get OAuth provider configuration
       const provider = await this.oAuthService.getOAuthProviderByName(oAuthData.provider);
       if (!provider || !provider.enabled) {
         throw new AppError(ErrorCode.PROVIDER_NOT_ENABLED, `OAuth provider ${oAuthData.provider} is not enabled`);
       }
-
-      // Exchange code for tokens
       const tokens = await this.oAuthService.exchangeOAuthCode(
         provider,
         oAuthData.code,
         oAuthData.redirectUri
       );
-
-      // Get user info from OAuth provider
       const userInfo = await this.oAuthService.getOAuthUserInfo(provider, tokens.accessToken);
-
-      // Sign in with Supabase using OAuth
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: oAuthData.provider as any,
         token: tokens.accessToken,
         nonce: oAuthData.state
       });
-
-      if (error) {
-        throw new AppError(ErrorCode.UNAUTHORIZED, 'OAuth login failed', error);
-      }
-
-      if (!data.session) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'No session created from OAuth login');
-      }
-
-      // Update profile with OAuth data
+      if (error) throw new AppError(ErrorCode.UNAUTHORIZED, 'OAuth login failed', error);
+      if (!data.session) throw new AppError(ErrorCode.INTERNAL_ERROR, 'No session created from OAuth login');
       await this.updateProfileWithOAuthData(data.user!.id, oAuthData.provider, userInfo, tokens);
-
       return await this.getCurrentSession();
     } catch (error) {
       console.error('UnifiedAuthService.loginWithOAuth failed:', error);
@@ -274,13 +252,8 @@ export class UnifiedAuthService {
   async register(data: RegisterData): Promise<UnifiedAuthUser | null> {
     try {
       const result = await this.authRepository.signUp(data);
-      
-      if (result.error) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Registration failed', result.error);
-      }
-
+      if (result.error) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Registration failed', result.error);
       if (!result.user) return null;
-
       return await this.transformToUnifiedUser(result.user);
     } catch (error) {
       console.error('UnifiedAuthService.register failed:', error);
@@ -295,12 +268,7 @@ export class UnifiedAuthService {
   async logout(): Promise<void> {
     try {
       const result = await this.authRepository.signOut();
-      
-      if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to logout', result.error);
-      }
-
-      // Clear auth sessions
+      if (result.error) throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to logout', result.error);
       await this.clearAuthSessions();
     } catch (error) {
       console.error('UnifiedAuthService.logout failed:', error);
@@ -324,17 +292,29 @@ export class UnifiedAuthService {
     if (!provider || !provider.enabled) {
       throw new AppError(ErrorCode.PROVIDER_NOT_ENABLED, `OAuth provider ${providerName} is not available`);
     }
-
     const state = this.generateState();
     return this.oAuthService.generateOAuthUrl(provider, redirectUri, state);
   }
 
-  // Private helper methods
-  private async getUserProfile(userId: string): Promise<any> {
-    // Le preview passe par Cloudflare : un `fetch` peut échouer ponctuellement
-    // (NetworkError). On retente avant de renoncer, sans bruit console.
-    const maxAttempts = 3;
+  /**
+   * 🔥 Met à jour l'email d'un utilisateur sans session (via Edge Function)
+   */
+  async updateEmail(oldEmail: string, newEmail: string): Promise<void> {
+    try {
+      const result = await this.authRepository.updateEmail(oldEmail, newEmail);
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED, result.error);
+      }
+    } catch (error) {
+      console.error('UnifiedAuthService.updateEmail failed:', error);
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.INTERNAL_ERROR, AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED, error);
+    }
+  }
 
+  // Private helpers
+  private async getUserProfile(userId: string): Promise<any> {
+    const maxAttempts = 3;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const { data, error } = await supabase
@@ -342,28 +322,21 @@ export class UnifiedAuthService {
           .select('*')
           .eq('id', userId)
           .maybeSingle();
-
         if (error) throw error;
         return data ?? null;
       } catch (error) {
         const message = error instanceof Error ? error.message : String((error as any)?.message ?? error);
         const isNetworkError = /NetworkError|Failed to fetch|network/i.test(message);
-
         if (attempt < maxAttempts && isNetworkError) {
           await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
           continue;
         }
-
-        if (!isNetworkError) {
-          console.warn('Failed to fetch user profile:', message);
-        }
+        if (!isNetworkError) console.warn('Failed to fetch user profile:', message);
         return null;
       }
     }
-
     return null;
   }
-
 
   private async updateProfileWithOAuthData(
     userId: string, 
@@ -385,7 +358,6 @@ export class UnifiedAuthService {
         });
     } catch (error) {
       console.error('Failed to update profile with OAuth data:', error);
-      // Don't throw here - profile update failure shouldn't block login
     }
   }
 
@@ -400,7 +372,6 @@ export class UnifiedAuthService {
       }
     } catch (error) {
       console.warn('Failed to clear auth sessions:', error);
-      // Don't throw - session cleanup failure shouldn't block logout
     }
   }
 
@@ -413,7 +384,6 @@ export class UnifiedAuthService {
 
   private async transformToUnifiedUser(authUser: AuthUser): Promise<UnifiedAuthUser> {
     const profile = await this.getUserProfile(authUser.id);
-    
     return {
       id: authUser.id,
       email: authUser.email,

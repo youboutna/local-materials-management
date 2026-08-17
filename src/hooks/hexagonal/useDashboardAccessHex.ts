@@ -3,7 +3,7 @@
  * Checks user roles and permissions
  */
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE, DEV_CONFIG } from '@/config/constants';
 

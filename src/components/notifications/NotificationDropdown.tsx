@@ -17,7 +17,7 @@ import { getTaskLink, getPriorityColor, getNotificationLink } from '@/utils/noti
 import { NotificationType } from '@/dtos/entities/ProjectReportDTO';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 export function NotificationDropdown() {
   const { user } = useAuth();

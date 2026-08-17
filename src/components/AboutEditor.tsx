@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/use-auth';
-import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 
 const AboutEditor = () => {
   const { user: authUser } = useAuth();
-  const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+  const { user: keycloakUser, isAuthenticated } = useAuth();
   const { t } = useLanguage(); // Add translation hook
   const [isEditing, setIsEditing] = useState(false);
   const [aboutContent, setAboutContent] = useState(`

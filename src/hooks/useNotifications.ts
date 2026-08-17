@@ -1,5 +1,5 @@
 import { getNotificationService } from '@/application/services/NotificationService';
-import { useAuth } from '@/contexts/use-auth';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { NotificationDTO } from '@/dtos/entities/NotificationDTO';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
