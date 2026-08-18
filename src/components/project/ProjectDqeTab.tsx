@@ -11,16 +11,20 @@ interface Props {
   projectId: string;
   projectName?: string;
   referentialCode?: ReferentialType;
+  /** Budget restant du projet (pour l'alerte d'écart au moment de la demande de validation). */
+  remainingBudget?: number | null;
 }
 
-const ProjectDqeTab: React.FC<Props> = ({ projectId, projectName, referentialCode }) => (
+const ProjectDqeTab: React.FC<Props> = ({ projectId, projectName, referentialCode, remainingBudget }) => (
   <DqeWorkspace
     routeContext="project-dqe"
     projectId={projectId}
     projectName={projectName}
     referentialCode={referentialCode}
+    remainingBudget={remainingBudget}
     showComparison
   />
 );
+
 
 export default ProjectDqeTab;

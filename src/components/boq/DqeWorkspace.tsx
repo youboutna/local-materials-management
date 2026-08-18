@@ -23,7 +23,7 @@ import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqContextService, type BoqRouteContext } from '@/application/services/boq/BoqContextService';
-import { getBoqResourcePropagationService } from '@/application/services/boq/BoqResourcePropagationService';
+import { getBoqDispatchService } from '@/application/services/boq/BoqDispatchService';
 import { toast } from '@/hooks/use-toast';
 import type { ReferentialType } from '@/config/referentials';
 
@@ -35,6 +35,9 @@ interface Props {
   submissionId?: string;
   senderId?: string;
   referentialCode?: ReferentialType;
+  /** Budget restant du projet, utilisé pour l'alerte d'écart lors de la demande de validation. */
+  remainingBudget?: number | null;
+
   recipientEmail?: string;
   showComparison?: boolean;
   onAttachToSubmission?: () => void;
@@ -71,44 +74,75 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     documentId: selectedDocumentId ?? undefined,
   });
 
-  // Validation DQE projet -> propagation en ressources planifiées (phases + projet).
+  // Étape explicite « Transférer vers les phases » : phases + jalons + tâches + ressources.
   useEffect(() => {
     if (props.routeContext !== 'project-dqe' || !props.projectId) return;
 
-    const handler = async (event: Event) => {
+    const invalidate = () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['project-phases'] }),
+      queryClient.invalidateQueries({ queryKey: ['phase-resource-counts'] }),
+      queryClient.invalidateQueries({ queryKey: ['project-resources'] }),
+      queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] }),
+      queryClient.invalidateQueries({ queryKey: ['phase-employees'] }),
+      queryClient.invalidateQueries({ queryKey: ['project-milestones'] }),
+      queryClient.invalidateQueries({ queryKey: ['task-assignments'] }),
+      queryClient.invalidateQueries({ queryKey: ['project-metrics'] }),
+      queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] }),
+    ]);
+
+    const dispatchHandler = async (event: Event) => {
       const detail = (event as CustomEvent).detail as { projectId?: string } | undefined;
       if (detail?.projectId && detail.projectId !== props.projectId) return;
-
       try {
-        const lines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
-        if (!lines.length) return;
-
-        const result = await getBoqResourcePropagationService().propagateLines(props.projectId as string, lines);
-
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['phase-resource-counts'] }),
-          queryClient.invalidateQueries({ queryKey: ['project-resources'] }),
-          queryClient.invalidateQueries({ queryKey: ['phase-materials-hex'] }),
-          queryClient.invalidateQueries({ queryKey: ['phase-employees'] }),
-          queryClient.invalidateQueries({ queryKey: ['quantity-takeoffs'] }),
-        ]);
-
+        const result = await getBoqDispatchService().dispatchToWbs(props.projectId as string, doc.lines ?? []);
+        await invalidate();
+        window.dispatchEvent(new CustomEvent('boq-kpi-refresh'));
         toast({
-          title: 'Ressources planifiées mises à jour',
-          description: `${result.phaseMaterials} matériau(x), ${result.phaseEmployees} rôle(s), ${result.projectResources} ressource(s) projet.`,
+          title: 'DQE transféré vers le WBS',
+          description: `${result.phasesCreated} phase(s) créée(s), ${result.phasesReused} réutilisée(s), ${result.milestonesCreated} jalon(s), ${result.tasksCreated} tâche(s), ${result.phaseMaterials} matériau(x), ${result.phaseEmployees} rôle(s), ${result.projectResources} ressource(s) projet.`,
         });
       } catch (error) {
         toast({
-          title: 'Propagation impossible',
+          title: 'Transfert impossible',
           description: error instanceof Error ? error.message : 'Erreur inconnue',
           variant: 'destructive',
         });
       }
     };
 
-    window.addEventListener('boq-transfer-next', handler);
-    return () => window.removeEventListener('boq-transfer-next', handler);
-  }, [props.routeContext, props.projectId, doc.lines, queryClient]);
+    const validationHandler = async (event: Event) => {
+      const detail = (event as CustomEvent).detail as { projectId?: string } | undefined;
+      if (detail?.projectId && detail.projectId !== props.projectId) return;
+      try {
+        const result = await getBoqDispatchService().requestValidation(
+          props.projectId as string,
+          doc.lines ?? [],
+          props.remainingBudget,
+        );
+        await queryClient.invalidateQueries({ queryKey: ['project-alerts'] });
+        toast({
+          title: 'Demande de validation créée',
+          description: result.alertId
+            ? `Écart budgétaire ${result.discrepancy.toFixed(2)} MRU (${(result.ratio * 100).toFixed(2)} %) — arbitrage A/B/C requis dans l'onglet Contrôle.`
+            : 'Aucun écart budgétaire significatif : validation en attente du responsable.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Demande de validation impossible',
+          description: error instanceof Error ? error.message : 'Erreur inconnue',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    window.addEventListener('boq-dispatch-wbs', dispatchHandler);
+    window.addEventListener('boq-request-validation', validationHandler);
+    return () => {
+      window.removeEventListener('boq-dispatch-wbs', dispatchHandler);
+      window.removeEventListener('boq-request-validation', validationHandler);
+    };
+  }, [props.routeContext, props.projectId, props.remainingBudget, doc.lines, queryClient]);
+
 
 
   // Comparaison optionnelle (projet uniquement).

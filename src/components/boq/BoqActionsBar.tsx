@@ -9,7 +9,7 @@
  */
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle } from 'lucide-react';
+import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle, Layers, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -122,8 +122,25 @@ export const BoqActionsBar: React.FC<Props> = ({
     toast({ title: TRANSFER_LABEL[ctx.routeContext], description: `${lines.length} ligne(s) transférée(s).` });
   });
 
+  // Étape explicite « DQE -> WBS » : phases, jalons, tâches et ressources.
+  const handleDispatch = () => withGuard('dispatch', async () => {
+    window.dispatchEvent(new CustomEvent('boq-dispatch-wbs', {
+      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+    }));
+  });
+
+  // Workflow de validation : alerte budgétaire + options A/B/C.
+  const handleRequestValidation = () => withGuard('validation', async () => {
+    window.dispatchEvent(new CustomEvent('boq-request-validation', {
+      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+    }));
+  });
+
+  const isProjectDqe = ctx.routeContext === 'project-dqe';
+
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
   const L = DOC_LABELS[ctx.routeContext];
+
 
   return (
     <>
@@ -158,12 +175,27 @@ export const BoqActionsBar: React.FC<Props> = ({
             Diffuser
           </Button>
         )}
+        {isProjectDqe && (
+          <>
+            <Button size="sm" variant="outline" onClick={handleDispatch} disabled={disabled || busy !== null}
+              title="Créer les phases, jalons, tâches et ressources depuis les lignes DQE">
+              {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
+              Transférer vers les phases
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRequestValidation} disabled={disabled || busy !== null}
+              title="Créer le workflow de validation (alerte budgétaire, options A/B/C)">
+              {iconOf('validation') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
+              Demander validation
+            </Button>
+          </>
+        )}
         {can('transfer') && (
           <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null}>
             {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
             {TRANSFER_LABEL[ctx.routeContext]}
           </Button>
         )}
+
         {can('attachToSubmission') && onAttachToSubmission && (
           <Button size="sm" variant="outline" onClick={onAttachToSubmission} disabled={disabled || busy !== null}>
             <Paperclip className="h-4 w-4 mr-2" />
