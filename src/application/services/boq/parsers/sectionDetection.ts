@@ -64,12 +64,15 @@ export function isRepeatedHeaderRow(cells: (string | number | null | undefined)[
  * afin que les lignes suivantes restent alignées sur le mapping global.
  */
 const SECONDARY_HEADER_ROLES: { key: 'designation' | 'quantity' | 'unitPrice' | 'total' | 'unit'; rx: RegExp }[] = [
-  { key: 'designation', rx: /^(r[ôo]le|poste|profil|d[eé]signation|description|intitul)/i },
-  { key: 'quantity', rx: /(nb\s*jours?|nombre|quantit|^qt[eé]?$|effectif|jours?)/i },
-  { key: 'unitPrice', rx: /(taux|prix\s*unit|^p\.?\s*u\.?|co[ûu]t\s*(journalier|unitaire)|salaire)/i },
-  { key: 'total', rx: /(total|montant)/i },
+  { key: 'designation', rx: /^(r[ôo]les?|profils?|d[eé]signation|description|intitul)/i },
   { key: 'unit', rx: /^unit[eé]?$/i },
+  { key: 'unitPrice', rx: /(taux|prix\s*unit|^p\.?\s*u\.?|co[ûu]t\s*(journalier|unitaire)|salaire)/i },
+  { key: 'quantity', rx: /(nb\s*jours?|nombre|quantit|^qt[eé]?$|effectif|^jours?$)/i },
+  { key: 'total', rx: /(^total|montant)/i },
 ];
+
+/** Une cellule d'en-tête ne contient jamais de valeur numérique. */
+const NUMERIC_CELL = /^[\s(]*-?[\d][\d\s.,]*[)\s%]*$/;
 
 export function detectSecondaryHeader(
   cells: (string | number | null | undefined)[],
@@ -77,6 +80,8 @@ export function detectSecondaryHeader(
 ): Record<number, string> | null {
   const labels = cells.map((c) => String(c ?? '').trim());
   if (labels.filter(Boolean).length < 2) return null;
+  // Ligne de données (contient un nombre) → jamais un en-tête.
+  if (labels.some((l) => l && NUMERIC_CELL.test(l))) return null;
   const remap: Record<number, string> = {};
   let matched = 0;
   labels.forEach((label, idx) => {
