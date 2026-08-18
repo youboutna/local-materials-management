@@ -15,6 +15,7 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
   private profileAdapter: SupabaseUserProfileAdapter;
 
   constructor() {
+    super();
     this.profileAdapter = new SupabaseUserProfileAdapter();
   }
 

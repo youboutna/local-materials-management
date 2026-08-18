@@ -19,6 +19,7 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
   private config?: AuthManagerConfig;
 
   constructor(config?: AuthManagerConfig) {
+    super();
     this.config = config;
   }
 
