@@ -32,6 +32,7 @@ function detectFormat(file: File): MeterInputSourceFormat {
   if (name.endsWith('.xlsx')) return 'xlsx';
   if (name.endsWith('.xls')) return 'xls';
   if (name.endsWith('.csv')) return 'csv';
+  if (name.endsWith('.json')) return 'json';
   return 'xlsx';
 }
 

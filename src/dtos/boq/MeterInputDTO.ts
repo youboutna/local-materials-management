@@ -8,7 +8,7 @@
  */
 import type { BoqLineDTO } from './BoqLineDTO';
 
-export type MeterInputSourceFormat = 'pdf' | 'xlsx' | 'xls' | 'csv' | 'calculator';
+export type MeterInputSourceFormat = 'pdf' | 'xlsx' | 'xls' | 'csv' | 'json' | 'calculator';
 
 export interface MeterInputProvenance {
   format: MeterInputSourceFormat;
