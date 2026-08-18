@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) =
 
   // Check for required roles if specified
   if (requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some(role => user.roles.includes(role));
+    const hasRequiredRole = requiredRoles.some(role => (user.roles ?? []).includes(role));
     
     if (!hasRequiredRole) {
       return (

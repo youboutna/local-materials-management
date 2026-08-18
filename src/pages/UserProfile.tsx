@@ -66,7 +66,7 @@ const UserProfile = () => {
                   <p className="text-gray-500 mt-1">{user.email}</p>
                 )}
                 <div className="flex justify-center gap-2 mt-3">
-                  {user.roles.map((role) => (
+                  {(user.roles ?? []).map((role) => (
                     <Badge
                       key={role}
                       variant={role === "admin" ? "default" : "outline"}
@@ -93,8 +93,8 @@ const UserProfile = () => {
                     <div className="font-medium text-gray-500">ID Keycloak</div>
                     <div className="col-span-2">
                       <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
-                        {user.keycloakId.slice(0, 8)}...
-                        {user.keycloakId.slice(-8)}
+                        {(user.keycloakId ?? '').slice(0, 8)}...
+                        {(user.keycloakId ?? '').slice(-8)}
                       </code>
                     </div>
                   </div>
@@ -106,13 +106,13 @@ const UserProfile = () => {
                     Permissions
                   </h3>
                   <ul className="list-disc list-inside text-sm space-y-1 text-gray-600">
-                    {user.roles.includes("admin") && (
+                    {(user.roles ?? []).includes("admin") && (
                       <li>Accès complet à la gestion de projets</li>
                     )}
-                    {user.roles.includes("user") && (
+                    {(user.roles ?? []).includes("user") && (
                       <li>Accès à la visualisation des projets</li>
                     )}
-                    {user.roles.includes("material-manager") && (
+                    {(user.roles ?? []).includes("material-manager") && (
                       <li>Gestion des matériaux</li>
                     )}
                   </ul>

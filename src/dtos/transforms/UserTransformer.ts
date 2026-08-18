@@ -73,7 +73,7 @@ export class UserTransformer {
     return UserRoleEntity.create({
       id: id || '',
       userId: dto.userId || '',
-      roleName: dto.roleName,
+      roleName: dto.roleName || 'user',
       status: status,
       assignedAt: new Date(),
       assignedBy: dto.assignedBy,
