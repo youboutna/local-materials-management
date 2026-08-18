@@ -295,6 +295,26 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         {parseResult && (
           <>
+            {(parseResult.parties?.supplier || parseResult.parties?.organization) && (
+              <section className="rounded-md border p-3 grid grid-cols-1 md:grid-cols-2 gap-3 bg-muted/30">
+                {([
+                  { label: 'Fournisseur (expéditeur)', party: parseResult.parties?.supplier },
+                  { label: 'Organisation (destinataire)', party: parseResult.parties?.organization },
+                ] as const).map(({ label, party }) => (
+                  <div key={label} className="space-y-0.5">
+                    <Label className="text-xs font-medium">{label}</Label>
+                    <p className="text-sm font-medium truncate">{party?.name ?? '—'}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {[party?.taxId && `NIF ${party.taxId}`, party?.phone, party?.email].filter(Boolean).join(' • ') || 'Aucun contact détecté'}
+                    </p>
+                    {party?.address && (
+                      <p className="text-[11px] text-muted-foreground truncate">{party.address}</p>
+                    )}
+                  </div>
+                ))}
+              </section>
+            )}
+
             <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
