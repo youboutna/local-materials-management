@@ -67,6 +67,19 @@ export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> =
   dqe: 'estimate',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Les phases/jalons/tâches peuvent venir d'un référentiel (codes texte) ou du
+ * projet réel (UUID). Les colonnes `*_id` sont typées uuid : on route les codes
+ * vers `*_code` pour éviter l'erreur 22P02 à l'insertion.
+ */
+const idOrCode = (value?: string | null): { id: string | null; code: string | null } => {
+  const v = String(value ?? '').trim();
+  if (!v) return { id: null, code: null };
+  return UUID_RE.test(v) ? { id: v, code: null } : { id: null, code: v };
+};
+
+
 export class BoqLineMapper {
   static fromDb(row: BoqDbRow, source: BoqSource): BoqLineDTO {
     const contextId =
