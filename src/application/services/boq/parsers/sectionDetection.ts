@@ -33,9 +33,12 @@ export interface DetectedSection {
  * exploitable dans ses autres cellules (sinon c'est un total de lot).
  */
 export function detectSection(cells: (string | number | null | undefined)[]): DetectedSection | null {
-  const first = String(cells[0] ?? '').trim();
-  if (!first) return null;
-  const others = cells.slice(1).map((c) => String(c ?? '').trim()).filter(Boolean);
+  // Les classeurs réels laissent souvent la colonne A vide (mise en page) :
+  // le titre de section est porté par la première cellule non vide.
+  const firstIdx = cells.findIndex((c) => String(c ?? '').trim());
+  if (firstIdx < 0) return null;
+  const first = String(cells[firstIdx]).trim();
+  const others = cells.slice(firstIdx + 1).map((c) => String(c ?? '').trim()).filter(Boolean);
 
   // Bloc RH : titre seul, sans montant sur la même ligne.
   if (LABOUR_SECTION_RE.test(first) && others.length === 0) {
