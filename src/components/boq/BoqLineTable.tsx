@@ -108,7 +108,9 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="min-w-[150px]">Phase</TableHead>
               <TableHead className="min-w-[150px]">Jalon</TableHead>
               <TableHead className="min-w-[150px]">Tâche</TableHead>
+              <TableHead className="min-w-[140px]">Nature</TableHead>
               <TableHead className="min-w-[140px]">Type ouvrage</TableHead>
+              <TableHead className="min-w-[160px]">Intervenant</TableHead>
               <TableHead>Unité</TableHead>
               <TableHead className="text-right">L</TableHead>
               <TableHead className="text-right">l</TableHead>
