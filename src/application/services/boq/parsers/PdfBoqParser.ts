@@ -166,7 +166,7 @@ export class PdfBoqParser implements IDocumentParser {
       const secondary = detectSecondaryHeader(cells, canonical);
       if (secondary) { remap = secondary; continue; }
 
-      if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc)/i.test(label)) {
+      if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+(?:mat[eé]riel|hr|rh|g[eé]n[eé]ral)?\s*(?:ht|ttc)?)/i.test(label)) {
         extractFiscalFromRow(cells, detectedFiscal);
         continue;
       }
