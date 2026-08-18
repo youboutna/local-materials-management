@@ -27,6 +27,10 @@ export interface ImportMapping {
   height?: string;
   material?: string;
   category?: string;
+  /** Colonne de montant total ligne (Montant / Total) lorsqu'aucun PU n'est fourni. */
+  total?: string;
+  /** Colonne (réelle ou synthétique) portant le lot / chapitre du DQE. */
+  lot?: string;
 }
 
 const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
@@ -35,12 +39,14 @@ const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
   quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i, /nombre/i],
   unitPrice: [/prix\s*unit/i, /^pu$/i, /unit\s*price/i, /prix\s*u/i, /p\.?u\.?/i],
   elementType: [/type/i, /^element$/i, /ouvrage/i, /nature/i],
-  phaseId: [/phase/i, /^lot$/i, /chapitre/i],
+  phaseId: [/phase/i],
   length: [/longueur/i, /^long\.?$/i, /^l\.?$/i, /length/i],
   width: [/largeur/i, /^larg\.?$/i, /^la\.?$/i, /width/i],
   height: [/hauteur|[eé]paisseur/i, /^haut\.?$/i, /^h\.?$/i, /height/i],
   material: [/mat[eé]riau/i, /material/i, /composant/i],
   category: [/cat[eé]gorie/i, /category/i, /poste/i, /rubrique/i],
+  total: [/^montant/i, /montant/i, /^total/i, /prix\s*total/i, /^p\.?\s*t\.?$/i],
+  lot: [/^lot$/i, /^lot\s/i, /chapitre/i, /^section$/i],
 };
 
 export class BoqImportOrchestrator {
@@ -69,6 +75,8 @@ export class BoqImportOrchestrator {
       'material',
       'elementType',
       'category',
+      'total',
+      'lot',
       'phaseId',
     ];
 
@@ -97,6 +105,7 @@ export class BoqImportOrchestrator {
         return Number.isFinite(n) ? n : null;
       };
       const rawQty = num(get(mapping.quantity));
+      const rawTotal = num(get(mapping.total));
       const pu = num(get(mapping.unitPrice));
       const designation = String(get(mapping.designation) ?? '').trim();
       const length = num(get(mapping.length));
@@ -111,8 +120,13 @@ export class BoqImportOrchestrator {
       const widthN = width != null ? width * factor : null;
       const heightN = height != null ? height * factor : null;
 
-      const quantity = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
-      if (!designation && !quantity) continue;
+      const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
+      // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
+      const quantity = computed || (rawTotal != null ? 1 : computed);
+      if (!designation && !quantity && rawTotal == null) continue;
+      const unitPrice = pu ?? (rawTotal != null && quantity ? rawTotal / quantity : null);
+      const totalHt = rawTotal ?? (unitPrice != null ? quantity * unitPrice : null);
+      const lotKey = mapping.lot ? String(get(mapping.lot) ?? '').trim() || null : null;
 
       // Explicit phase from source column, else fallback to ctx.phaseId, else infer
       // via the project referential (SOMELEC / PNDS / …) or static WBS keywords.
@@ -136,9 +150,11 @@ export class BoqImportOrchestrator {
         length: lengthN,
         width: widthN,
         height: heightN,
-        unitPrice: pu ?? null,
+        unitPrice: unitPrice ?? null,
         vatRate: effectiveVat,
-        totalHt: pu != null ? quantity * pu : null,
+        totalHt,
+        category: lotKey ?? null,
+        metadata: lotKey ? { lot: lotKey } : null,
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
