@@ -5,7 +5,7 @@ export const exportToCSV = (data: any[], filename = 'payments.csv') => {
   }
 
   const headers = Object.keys(data[0]);
-  const csvRows = [];
+  const csvRows: string[] = [];
   csvRows.push(headers.join(','));
 
   for (const row of data) {

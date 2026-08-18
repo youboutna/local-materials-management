@@ -516,8 +516,8 @@ export class RepositoryFactory {
   // ---------- USER ----------
   static getUserRepository(): IUserRepository {
     if (registry.user) return registry.user;
-    registry.user = new SupabaseUserAdapter();
-    return registry.user;
+    registry.user = new SupabaseUserAdapter() as unknown as IUserRepository;
+    return registry.user as IUserRepository;
   }
 
   // ---------- EMPLOYEE ----------

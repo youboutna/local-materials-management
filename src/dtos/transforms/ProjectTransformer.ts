@@ -1261,7 +1261,7 @@ export class ProjectTransformer {
   static toDetailDTO(project: Project): ProjectDetailDTO {
     const baseDTO = this.toDTO(project);
     const phases = project.phases?.map(phase => PhaseTransformer.toDTO(phase)) || [];
-    const payments = project.payments?.map(payment => PaymentTransformer.toDTOWithProjectContext(payment, project)) || [];
+    const payments = project.payments?.map(payment => PaymentTransformer.toDTOWithProjectContext(payment, { id: project.id, name: project.title })) || [];
 
     return {
       ...baseDTO,

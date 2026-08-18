@@ -243,7 +243,7 @@ export const useRoleManagement = () => {
         }
         
         // Update user role via service
-        await authService.assignUserRole(userId, roleName);
+        await getAuthService().assignUserRole(userId, roleName);
       } catch (error) {
         console.error('Error assigning role:', error);
         throw error;
@@ -273,7 +273,7 @@ export const useRoleManagement = () => {
         if (!user) throw new Error('User not found');
         
         // Reset to default role
-        await authService.assignUserRole(userId, 'agent');
+        await getAuthService().assignUserRole(userId, 'agent');
       } catch (error) {
         console.error('Error removing role:', error);
         throw error;
