@@ -20,6 +20,8 @@ export class SupabaseBoqRepository implements IBoqRepository {
     else if (filter.source === 'dqe' && (filter.projectId || filter.contextId)) q = q.eq('project_id', filter.projectId ?? filter.contextId);
     else if (filter.source === 'tender_estimate' && (filter.tenderId || filter.contextId)) q = q.eq('tender_id', filter.tenderId ?? filter.contextId);
     else if ((filter.source === 'supplier_bid' || filter.source === 'invoice') && (filter.contextId || filter.estimateId)) q = q.eq('submission_id', filter.contextId ?? filter.estimateId);
+    // Lecture côté projet / consultant : les décomptes et devis d'un projet (pas d'une soumission précise).
+    else if ((filter.source === 'supplier_bid' || filter.source === 'invoice') && filter.projectId) q = q.eq('project_id', filter.projectId);
     if (filter.phaseId) q = q.eq('phase_id', filter.phaseId);
     if (filter.resourceType) q = q.eq('resource_kind', filter.resourceType);
     const { data, error } = await q;

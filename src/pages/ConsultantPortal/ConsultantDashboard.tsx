@@ -5,7 +5,7 @@
  *  - déclenche une demande de paiement (décompte) à 100 % ou en réception définitive,
  *  - reçoit alertes (retard, garantie bancaire, assurance) et notifications de paiement.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout';
 import {
   Breadcrumb,
@@ -19,7 +19,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Bell, CheckCircle2, DollarSign, FileText, FolderKanban, ShieldAlert } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertTriangle, Bell, CheckCircle2, DollarSign, FileSpreadsheet, FileText, FolderKanban, ShieldAlert } from 'lucide-react';
+import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 import { useConsultantPortalHex } from '@/hooks/hexagonal/useConsultantPortalHex';
 import { ConsultantValidationPanel } from '@/components/invoices/ConsultantValidationPanel';
@@ -75,6 +78,9 @@ const ConsultantDashboard = () => {
   } = useConsultantPortalHex(userId ?? undefined);
 
   const hasScope = projects.length > 0;
+
+  // Projet ciblé pour l'analyse des décomptes via le module DQE.
+  const [invoiceProjectId, setInvoiceProjectId] = useState<string | null>(null);
 
   const unreadPaymentNotifications = useMemo(
     () => paymentNotifications.filter((n) => !n.read),
@@ -165,7 +171,60 @@ const ConsultantDashboard = () => {
             <ConsultantProgressValidation projects={projects} />
           </TabsContent>
 
-          <TabsContent value="invoices">
+          <TabsContent value="invoices" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FileSpreadsheet className="h-5 w-5" aria-hidden="true" />
+                  Analyse des décomptes (module DQE)
+                </CardTitle>
+                <CardDescription>
+                  Sélectionnez un projet pour analyser les décomptes / factures ligne par ligne,
+                  avec le même moteur de calcul et de parsing que le portail fournisseur.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {hasScope ? (
+                  <>
+                    <div className="max-w-md space-y-1">
+                      <Label htmlFor="consultant-invoice-project">Projet</Label>
+                      <Select
+                        value={invoiceProjectId ?? ''}
+                        onValueChange={(v) => setInvoiceProjectId(v)}
+                      >
+                        <SelectTrigger id="consultant-invoice-project">
+                          <SelectValue placeholder="Choisir un projet…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.title ?? p.id}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {invoiceProjectId ? (
+                      <DqeWorkspace
+                        routeContext="supplier-invoice"
+                        projectId={invoiceProjectId}
+                        projectName={projects.find((p) => p.id === invoiceProjectId)?.title}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Aucun projet sélectionné.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Vous n'êtes assigné à aucun projet en tant que consultant.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             <ConsultantValidationPanel />
           </TabsContent>
 
