@@ -12,10 +12,12 @@
 import * as XLSX from 'xlsx';
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
+import { extractDocumentParties } from './headerDetection';
 import {
   detectSection,
   isRepeatedHeaderRow,
   SECTION_LABEL_COLUMN,
+  SECTION_KIND_COLUMN,
   SECTION_LOT_COLUMN,
   type DetectedSection,
 } from './sectionDetection';
@@ -76,7 +78,12 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       const s = c == null ? '' : String(c).trim();
       return s || `col_${i + 1}`;
     });
-    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN];
+    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN, SECTION_KIND_COLUMN];
+
+    // En-tête administratif (client / prestataire) : balayage du document entier
+    // car dans les devis Excel l'émetteur figure souvent en pied de page.
+    const textMatrix: string[][] = matrix.map((line) => (line ?? []).map((c) => (c == null ? '' : String(c))));
+    const parties = extractDocumentParties(textMatrix, headerIdx);
 
     const rows: ParsedBoqRow[] = [];
     const detectedFiscal: DetectedFiscal = {};
@@ -105,11 +112,12 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       });
       raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
       raw[SECTION_LABEL_COLUMN] = section?.label ?? null;
+      raw[SECTION_KIND_COLUMN] = section?.kind ?? null;
       rows.push({ raw });
     }
 
     if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows, columns, warnings, detectedFiscal };
+    return { rows, columns, warnings, detectedFiscal, parties };
   }
 }
