@@ -48,7 +48,29 @@ const PhaseDetail: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   useLanguage();
 
-  const { phase, isLoading: loading, error, updatePhaseAsync, isUpdatingPhase } = usePhaseDetails(phaseId);
+  const {
+    phase,
+    isLoading: loading,
+    error,
+    updatePhaseAsync,
+    isUpdatingPhase,
+    addStep,
+    updateStep,
+    deleteStep,
+    addTask,
+    updateTask,
+    deleteTask,
+    isUpdating,
+  } = usePhaseDetails(phaseId);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
+
+  const steps = useMemo(
+    () => ((phase as unknown as { steps?: PhaseStepDTO[] })?.steps ?? []) as PhaseStepDTO[],
+    [phase]
+  );
+
 
   const vm = useMemo(() => (phase ? toPhaseViewModel(phase as unknown as Record<string, unknown>) : null), [phase]);
 
