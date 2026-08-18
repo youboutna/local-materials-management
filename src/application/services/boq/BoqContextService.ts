@@ -59,6 +59,9 @@ export const BoqContextService = {
       input.routeContext === 'project-dqe' ? (input.projectId ?? '')
       : input.routeContext === 'tender-estimate' ? (input.tenderId ?? '')
       : (input.submissionId ?? input.senderId ?? '');
+    // Consultant / chef de projet : consultation des décomptes à l'échelle projet
+    // (aucune soumission fournisseur ciblée) -> le projet devient le contexte.
+    const effectiveContextId = contextId || (input.projectId ?? '');
     return {
       routeContext: input.routeContext,
       source: cfg.source,
