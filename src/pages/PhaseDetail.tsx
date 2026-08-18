@@ -284,18 +284,45 @@ const PhaseDetail: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Planification: tasks, planning (gantt/pert), milestones, team */}
+          {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
           <TabsContent value="planification" className="space-y-6">
-            <Tabs defaultValue="tasks" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="tasks"><Layers className="h-3 w-3 mr-1" />Tâches</TabsTrigger>
+            <Tabs defaultValue="steps" className="space-y-4">
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" />Étapes</TabsTrigger>
+                <TabsTrigger value="tasks">Tâches</TabsTrigger>
+                <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
+                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" />Intervenants</TabsTrigger>
                 <TabsTrigger value="gantt">Gantt</TabsTrigger>
                 <TabsTrigger value="pert">PERT</TabsTrigger>
                 <TabsTrigger value="critical">Chemin critique</TabsTrigger>
                 <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" />Jalons</TabsTrigger>
                 <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" />Équipe</TabsTrigger>
               </TabsList>
+              <TabsContent value="steps">
+                <PhaseStepsManager
+                  steps={steps}
+                  onAddStep={(step) => addStep(step as Omit<PhaseStepDTO, 'id'>)}
+                  onUpdateStep={(stepId, updates) => updateStep(stepId, updates)}
+                  onDeleteStep={(stepId) => deleteStep(stepId)}
+                  onAddTask={(stepId, task) => addTask(stepId, task as Omit<PhaseTaskDTO, 'id'>)}
+                  onUpdateTask={(stepId, taskId, updates) => updateTask(stepId, taskId, updates)}
+                  onDeleteTask={(stepId, taskId) => deleteTask(stepId, taskId)}
+                  isUpdating={isUpdating}
+                  projectId={projectId!}
+                  phaseId={phaseId!}
+                />
+              </TabsContent>
               <TabsContent value="tasks"><PhaseTasks phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="metre">
+                <PhaseQuantityTakeoffTab phaseId={phaseId!} projectId={projectId!} phaseName={title} />
+              </TabsContent>
+              <TabsContent value="resources">
+                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+              </TabsContent>
+              <TabsContent value="stakeholders">
+                <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
+              </TabsContent>
               <TabsContent value="gantt">
                 <GanttChart
                   projectId={projectId!}
@@ -320,23 +347,34 @@ const PhaseDetail: React.FC = () => {
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team"><PhaseEmployees phaseId={phaseId!} /></TabsContent>
+              <TabsContent value="team"><PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
             </Tabs>
           </TabsContent>
 
-          {/* Exécution: materials, documents (livrables), payments échéances */}
+          {/* Exécution: ressources consommées, finances, livrables, échéances */}
           <TabsContent value="execution" className="space-y-6">
-            <Tabs defaultValue="materials" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="materials"><Package className="h-3 w-3 mr-1" />Matériaux</TabsTrigger>
+            <Tabs defaultValue="resources" className="space-y-4">
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
+                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" />Finances</TabsTrigger>
                 <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" />Livrables</TabsTrigger>
                 <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" />Échéances</TabsTrigger>
               </TabsList>
-              <TabsContent value="materials"><PhaseMaterials phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="resources">
+                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+              </TabsContent>
+              <TabsContent value="finances">
+                <PhaseFinancesTab
+                  phase={phase as unknown as PhaseDTO}
+                  projectId={projectId!}
+                  phaseId={phaseId!}
+                />
+              </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
               <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
             </Tabs>
           </TabsContent>
+
 
           {/* Contrôle: inspections + conformité */}
           <TabsContent value="controle" className="space-y-6">
