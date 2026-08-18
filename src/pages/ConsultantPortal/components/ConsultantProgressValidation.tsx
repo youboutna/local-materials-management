@@ -155,7 +155,7 @@ export function ConsultantProgressValidation({ projects }: Props) {
                   return (
                     <TableRow key={phase.id}>
                       <TableCell className="font-medium">
-                        {phase.phaseName ?? phase.name ?? 'Phase'}
+                        {phase.phaseName ?? 'Phase'}
                       </TableCell>
                       <TableCell>
                         <Badge variant={current >= 100 ? 'default' : 'secondary'}>
@@ -172,7 +172,7 @@ export function ConsultantProgressValidation({ projects }: Props) {
                           min={0}
                           max={100}
                           value={draft}
-                          aria-label={`Progression validée pour ${phase.phaseName ?? phase.name}`}
+                          aria-label={`Progression validée pour ${phase.phaseName}`}
                           onChange={(e) =>
                             setDrafts((prev) => ({ ...prev, [phase.id]: e.target.value }))
                           }
