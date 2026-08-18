@@ -17,6 +17,9 @@ export { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
 // Services
 export { AlignmentService, getAlignmentService, InMemoryAlignmentRepository, setAlignmentRepository } from '@/application/services/boq/AlignmentService';
 export { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
+export { EdbValidationService } from '@/application/services/boq/EdbValidationService';
+export type { EdbBudgetDecision, EdbBudgetDiscrepancy, EdbLineError, EdbValidationReport } from '@/dtos/boq/EdbValidationDTO';
+export { EdbValidationPanel } from './EdbValidationPanel';
 export { boqImportOrchestrator, BoqImportOrchestrator, type ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 export { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 export { DevisGenerator } from '@/application/services/boq/DevisGenerator';
