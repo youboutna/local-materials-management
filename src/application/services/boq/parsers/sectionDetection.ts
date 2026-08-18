@@ -12,7 +12,7 @@
 export const SECTION_LOT_COLUMN = 'Lot';
 export const SECTION_LABEL_COLUMN = 'Lot libellé';
 
-const SECTION_RE = /^\s*(?:lot|chapitre|section|partie)\s*[:\-]?\s*([A-Z]?\d+[A-Za-z]?)\s*[:.\-–]?\s*(.*)$/i;
+const SECTION_RE = /^\s*(?:lot|chapitre|section|partie|phase|tranche)\s*[:\-]?\s*([A-Z]?\d+[A-Za-z]?)\s*[:.\-–]?\s*(.*)$/i;
 
 export interface DetectedSection {
   /** Clé normalisée du lot (ex. `L2`). */

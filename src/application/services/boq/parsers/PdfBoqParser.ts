@@ -7,6 +7,7 @@
  * `col_1..col_N` derived from detected column bands).
  */
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
+import { extractDocumentParties } from './headerDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import {
   detectSection,
@@ -125,6 +126,15 @@ export class PdfBoqParser implements IDocumentParser {
       : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
     const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN];
 
+    // En-tête administratif (Expéditeur → fournisseur / Destinataire → organisation).
+    const parties = extractDocumentParties(rowsAcc, headerIdx >= 0 ? headerIdx : undefined);
+    const consumed = new Set(parties.consumedRows);
+    if (parties.supplier?.name || parties.organization?.name) {
+      warnings.push(
+        `En-tête détecté : fournisseur « ${parties.supplier?.name ?? '—'} », organisation « ${parties.organization?.name ?? '—'} ».`,
+      );
+    }
+
     // Les lignes « LOT … » précédant l'en-tête doivent rester visibles pour le
     // contexte : on parcourt donc toutes les lignes et on saute l'en-tête détecté.
     const detectedFiscal: DetectedFiscal = {};
@@ -132,7 +142,7 @@ export class PdfBoqParser implements IDocumentParser {
     let section: DetectedSection | null = null;
     let sectionsFound = 0;
     for (let i = 0; i < rowsAcc.length; i++) {
-      if (i === headerIdx) continue;
+      if (i === headerIdx || consumed.has(i)) continue;
       const cells = rowsAcc[i];
       const label = String(cells[0] ?? '').trim();
 
@@ -154,7 +164,7 @@ export class PdfBoqParser implements IDocumentParser {
     if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
     if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows: parsedRows, columns, warnings, detectedFiscal };
+    return { rows: parsedRows, columns, warnings, detectedFiscal, parties };
   }
 }
 
