@@ -9,6 +9,7 @@
  */
 import { NUMBER_FORMAT_OPTIONS, type NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
+import { mergeDimensions } from '@/application/services/boq/parsers/dimensionExtraction';
 import { EdbValidationService } from '@/application/services/boq/EdbValidationService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { getProjectService } from '@/application/services/ProjectService';
@@ -53,13 +54,14 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   const issues: RowIssue[] = [];
   lines.forEach((l, i) => {
     // Skip strict materialId check for imports (may be filled later)
+    const dims = mergeDimensions({ length: l.length ?? null, width: l.width ?? null, height: l.height ?? null }, l.designation);
     const res = BoqValidatorService.validate({
       materialId: l.materialId ?? 'import-placeholder',
       elementType: l.elementType ?? l.designation,
       unit: l.unit,
-      length: l.length ?? l.quantity,
-      width: l.width,
-      height: l.height,
+      length: dims.length ?? l.quantity,
+      width: dims.width,
+      height: dims.height,
       unitPrice: l.unitPrice,
     });
     if (!res.ok) {

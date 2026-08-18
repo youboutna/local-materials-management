@@ -9,6 +9,7 @@
 import { computeQuantityByElementType } from '@/config/referentials/boq/formulas.referential';
 import { getElementType, detectElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import type { MeterInputDTO, MeterOpening } from '@/dtos/boq/MeterInputDTO';
+import { mergeDimensions } from './parsers/dimensionExtraction';
 
 export type OpeningUnit = 'm' | 'cm' | 'mm';
 
@@ -54,10 +55,15 @@ export function computeAdvancedMeter(input: {
     (input.elementType as ElementTypeCode) ||
     detectElementType(input.designation ?? '');
   const def = getElementType(code);
+  // Dimensions manquantes ? on les récupère dans le libellé (« Larg. 1.0m »).
+  const dims = mergeDimensions(
+    { length: input.length ?? null, width: input.width ?? null, height: input.height ?? null },
+    input.designation,
+  );
   const gross = computeQuantityByElementType(code, {
-    length: input.length,
-    width: input.width,
-    height: input.height,
+    length: dims.length,
+    width: dims.width,
+    height: dims.height,
   });
   const openings = input.openings ?? [];
   const openingsArea = openings.reduce(
