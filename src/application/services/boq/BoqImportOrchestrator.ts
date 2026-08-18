@@ -189,6 +189,7 @@ export class BoqImportOrchestrator {
         category: lotKey ?? null,
         metadata: {
           ...(lotKey ? { lot: lotKey } : {}),
+          ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
           ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
           ...(partyMeta.supplierName || partyMeta.organizationName
