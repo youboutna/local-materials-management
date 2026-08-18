@@ -5,9 +5,11 @@ import { useSuppliersHex } from "@/hooks/hexagonal/useSuppliersHex";
 import {
   FileText,
   Plus,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
+
 import React, { useMemo, useState } from "react";
 import EmployeeSelector from "../../selectors/EmployeeSelector";
 import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
