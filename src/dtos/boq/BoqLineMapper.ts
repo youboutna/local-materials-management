@@ -39,6 +39,10 @@ export interface BoqDbRow {
   phase_id?: string | null;
   milestone_id?: string | null;
   task_id?: string | null;
+  phase_code?: string | null;
+  milestone_code?: string | null;
+  task_code?: string | null;
+
   resource_type?: string | null;
   note?: string | null;
   category?: string | null;
@@ -67,6 +71,19 @@ export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> =
   dqe: 'estimate',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Les phases/jalons/tâches peuvent venir d'un référentiel (codes texte) ou du
+ * projet réel (UUID). Les colonnes `*_id` sont typées uuid : on route les codes
+ * vers `*_code` pour éviter l'erreur 22P02 à l'insertion.
+ */
+const idOrCode = (value?: string | null): { id: string | null; code: string | null } => {
+  const v = String(value ?? '').trim();
+  if (!v) return { id: null, code: null };
+  return UUID_RE.test(v) ? { id: v, code: null } : { id: null, code: v };
+};
+
+
 export class BoqLineMapper {
   static fromDb(row: BoqDbRow, source: BoqSource): BoqLineDTO {
     const contextId =
@@ -94,9 +111,10 @@ export class BoqLineMapper {
       fees: row.fees ?? 0,
       totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
       materialId: row.resource_id ?? row.material_id ?? null,
-      phaseId: row.phase_id ?? null,
-      milestoneId: row.milestone_id ?? null,
-      taskId: row.task_id ?? null,
+      phaseId: row.phase_id ?? row.phase_code ?? null,
+      milestoneId: row.milestone_id ?? row.milestone_code ?? null,
+      taskId: row.task_id ?? row.task_code ?? null,
+
       resourceType: ((row.resource_kind ?? row.resource_type) as BoqLineDTO['resourceType']) ?? 'material',
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
@@ -134,9 +152,13 @@ export class BoqLineMapper {
       vat_rate: dto.vatRate ?? 0,
       ras_rate: dto.rasRate ?? 0,
       fees: dto.fees ?? 0,
-      phase_id: dto.phaseId ?? null,
-      milestone_id: dto.milestoneId ?? null,
-      task_id: dto.taskId ?? null,
+      phase_id: idOrCode(dto.phaseId).id,
+      phase_code: idOrCode(dto.phaseId).code,
+      milestone_id: idOrCode(dto.milestoneId).id,
+      milestone_code: idOrCode(dto.milestoneId).code,
+      task_id: idOrCode(dto.taskId).id,
+      task_code: idOrCode(dto.taskId).code,
+
       note: dto.note ?? null,
       source_type: dto.source === 'dqe' ? 'dqe' : dto.sourceType ?? null,
       btp_code: dto.btpCode ?? dto.code ?? null,

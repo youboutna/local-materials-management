@@ -94,11 +94,33 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string; detectedVatRate?: number | null; numberFormat?: NumberFormatMode },
+    ctx: {
+      source: BoqSource;
+      contextId: string;
+      phaseId?: string;
+      referentialCode?: ReferentialType;
+      fiscalProfileCode?: string;
+      detectedVatRate?: number | null;
+      numberFormat?: NumberFormatMode;
+      /** Fiscalité détectée (double bloc travaux / prestations intellectuelles). */
+      detectedFiscal?: import('./parsers/IDocumentParser').DetectedFiscal | null;
+      /** En-tête administratif : fournisseur (expéditeur) & organisation (destinataire). */
+      parties?: import('./parsers/headerDetection').DocumentParties | null;
+    },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
     const fiscal = getFiscalProfile(ctx.fiscalProfileCode);
-    const effectiveVat = ctx.detectedVatRate ?? fiscal.vatRate;
+    const detected = ctx.detectedFiscal ?? null;
+    const effectiveVat = ctx.detectedVatRate ?? detected?.vatRate ?? fiscal.vatRate;
+    // Les prestations intellectuelles / RH ont légitimement une fiscalité propre
+    // (TVA 16 % + traitement sur salaire) distincte des travaux (TVA 5 %).
+    const labourVat = detected?.laborVatRate ?? effectiveVat;
+    const labourPayroll = detected?.laborPayrollTaxRate ?? null;
+    const partyMeta = {
+      supplierName: ctx.parties?.supplier?.name ?? null,
+      organizationName: ctx.parties?.organization?.name ?? null,
+    };
+
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
       const num = (v: unknown): number | null => parseLocaleNumber(v, ctx.numberFormat ?? 'auto');
@@ -142,6 +164,11 @@ export class BoqImportOrchestrator {
         ? String(get(mapping.elementType) ?? '').trim()
         : detectElementType(designation);
 
+      const isLabour = sectionKind === 'labour';
+      const resourceType: BoqResourceType = isLabour
+        ? 'labor'
+        : ((resolved.resourceType as BoqResourceType) ?? 'material');
+
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
@@ -153,17 +180,23 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: unitPrice ?? null,
-        vatRate: effectiveVat,
+        vatRate: isLabour ? labourVat : effectiveVat,
         totalHt,
         category: lotKey ?? null,
-        metadata: lotKey ? { lot: lotKey } : null,
+        metadata: {
+          ...(lotKey ? { lot: lotKey } : {}),
+          fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
+          ...(partyMeta.supplierName || partyMeta.organizationName
+            ? { parties: partyMeta }
+            : {}),
+        },
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
-        resourceType: sectionKind === 'labour'
-          ? 'labor'
-          : ((resolved.resourceType as BoqResourceType) ?? 'material'),
+        resourceType,
       };
+
       out.push(dto);
     }
     return out;

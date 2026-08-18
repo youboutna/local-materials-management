@@ -3,6 +3,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -14,12 +15,20 @@ import { getPhasesForReferential, type ReferentialType } from '@/config/referent
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
+export interface StakeholderOption {
+  id: string;
+  name: string;
+  type: 'organization' | 'employee' | 'supplier';
+}
+
 interface Props {
   lines: BoqLineDTO[];
   emptyLabel?: string;
   editable?: boolean;
   referentialCode?: ReferentialType;
   phases?: WbsPhase[];
+  /** Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur). */
+  stakeholders?: StakeholderOption[];
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
   pageSize?: number;
@@ -29,9 +38,23 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 15;
+const DATA_COLS = 17;
+const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
+  { value: 'material', label: 'Métré / matériau' },
+  { value: 'labor', label: "RH / prestation" },
+  { value: 'equipment', label: 'Équipement' },
+];
+const STAKEHOLDER_GROUPS: { type: StakeholderOption['type']; label: string }[] = [
+  { type: 'organization', label: 'Organisations' },
+  { type: 'employee', label: 'Employés' },
+  { type: 'supplier', label: 'Fournisseurs' },
+];
 
-export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, onChange, onRemove, pageSize = 10 }: Props) {
+const stakeholderOf = (l: BoqLineDTO) =>
+  (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
+
+export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10 }: Props) {
+
   const [page, setPage] = useState(0);
   useEffect(() => { setPage(0); }, [lines.length]);
 
@@ -85,7 +108,9 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="min-w-[150px]">Phase</TableHead>
               <TableHead className="min-w-[150px]">Jalon</TableHead>
               <TableHead className="min-w-[150px]">Tâche</TableHead>
+              <TableHead className="min-w-[140px]">Nature</TableHead>
               <TableHead className="min-w-[140px]">Type ouvrage</TableHead>
+              <TableHead className="min-w-[160px]">Intervenant</TableHead>
               <TableHead>Unité</TableHead>
               <TableHead className="text-right">L</TableHead>
               <TableHead className="text-right">l</TableHead>
@@ -118,7 +143,9 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <TableCell>{editable ? <Select value={l.phaseId ?? NONE} onValueChange={(v) => patch(i, { phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent></Select> : phase ? <Badge variant="secondary">{phase.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.milestoneId ?? NONE} onValueChange={(v) => patch(i, { milestoneId: v === NONE ? null : v, taskId: null })} disabled={!l.phaseId}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}</SelectContent></Select> : milestone ? <Badge variant="outline">{milestone.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.taskId ?? NONE} onValueChange={(v) => patch(i, { taskId: v === NONE ? null : v })} disabled={!l.milestoneId}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{tasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}</SelectContent></Select> : task ? <span className="text-xs">{task.label}</span> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                  <TableCell>{editable ? <Select value={l.elementType ?? 'generic'} onValueChange={(v) => patch(i, { elementType: v === 'generic' ? null : v })}><SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="generic">— saisie —</SelectItem>{ELEMENT_TYPES.map((e) => <SelectItem key={e.code} value={e.code}>{e.label}</SelectItem>)}</SelectContent></Select> : <Badge variant="outline">{l.elementType ?? l.resourceType ?? '—'}</Badge>}</TableCell>
+                  <TableCell>{editable ? <Select value={l.resourceType ?? 'material'} onValueChange={(v) => patch(i, { resourceType: v as BoqResourceType })}><SelectTrigger className="h-8 w-[140px]"><SelectValue /></SelectTrigger><SelectContent>{RESOURCE_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select> : <Badge variant={l.resourceType === 'labor' ? 'default' : 'secondary'}>{RESOURCE_TYPES.find((r) => r.value === (l.resourceType ?? 'material'))?.label}</Badge>}</TableCell>
+                  <TableCell>{editable ? <Select value={l.elementType ?? 'generic'} onValueChange={(v) => patch(i, { elementType: v === 'generic' ? null : v })}><SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="generic">— saisie —</SelectItem>{ELEMENT_TYPES.map((e) => <SelectItem key={e.code} value={e.code}>{e.label}</SelectItem>)}</SelectContent></Select> : <Badge variant="outline">{l.elementType ?? '—'}</Badge>}</TableCell>
+                  <TableCell>{editable ? <Select value={stakeholderOf(l)?.id ?? NONE} onValueChange={(v) => { const opt = stakeholders.find((s) => s.id === v); patch(i, { metadata: { ...(l.metadata ?? {}), stakeholder: v === NONE || !opt ? null : { id: opt.id, name: opt.name, type: opt.type } } }); }}><SelectTrigger className="h-8 w-[160px]"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{STAKEHOLDER_GROUPS.map(({ type, label }) => { const opts = stakeholders.filter((s) => s.type === type); if (!opts.length) return null; return [<SelectItem key={`${type}-h`} value={`__group_${type}`} disabled>{label}</SelectItem>, ...opts.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)]; })}</SelectContent></Select> : <span className="text-xs">{stakeholderOf(l)?.name ?? '—'}</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.unit ?? 'u'} onValueChange={(v) => patch(i, { unit: v })}><SelectTrigger className="h-8 w-[80px]"><SelectValue /></SelectTrigger><SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select> : l.unit}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.length ?? ''} onChange={(e) => patch(i, { length: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.length ?? '—')}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.width ?? ''} onChange={(e) => patch(i, { width: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.width ?? '—')}</TableCell>

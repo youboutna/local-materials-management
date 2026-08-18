@@ -63,7 +63,10 @@ export class UnifiedBoqParser {
     const dtos = BoqImportOrchestrator.toDtos(parsed.rows, mapping, {
       ...ctx,
       detectedVatRate: parsed.detectedFiscal?.vatRate ?? null,
+      detectedFiscal: parsed.detectedFiscal ?? null,
+      parties: parsed.parties ?? null,
     });
+
     return dtos.map((dto, idx) => ({
       ...dto,
       provenance: {

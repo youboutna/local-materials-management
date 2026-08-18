@@ -41,6 +41,10 @@ import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
+import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
+import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import type { StakeholderOption } from './BoqLineTable';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -100,6 +104,16 @@ export function BoqWorkspace({
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
+
+  // Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur).
+  const { data: organizations = [] } = useOrganizations();
+  const { data: activeEmployees = [] } = useActiveEmployeesHex();
+  const { data: activeSuppliers = [] } = useActiveSuppliersHex();
+  const stakeholders = useMemo<StakeholderOption[]>(() => [
+    ...organizations.map((o) => ({ id: o.id, name: o.name, type: 'organization' as const })),
+    ...activeEmployees.map((e) => ({ id: e.id, name: e.full_name, type: 'employee' as const })),
+    ...activeSuppliers.map((s) => ({ id: s.id, name: s.name, type: 'supplier' as const })),
+  ], [organizations, activeEmployees, activeSuppliers]);
   const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
@@ -527,6 +541,7 @@ export function BoqWorkspace({
                     value={wbs}
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
+          
                     referentialCode={activeReferential}
                   />
                 </div>
@@ -678,6 +693,7 @@ export function BoqWorkspace({
           editable
           referentialCode={activeReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
+          stakeholders={stakeholders}
           onChange={handlePatch}
           onRemove={handleRemove}
         />
