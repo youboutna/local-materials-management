@@ -113,7 +113,7 @@ export const useCurrentUserRoles = () => {
     }
     const userData = await userService.getUserById(user.id);
     setCurrentUser(userData ? {
-      roleName: String(userData.role || ''),
+      roleName: String(userData.primaryRole || ''),
       id: userData.id || user.id,
       created_at: userData.createdAt?.toISOString?.() || new Date().toISOString(),
       updated_at: userData.updatedAt?.toISOString?.() || new Date().toISOString(),
@@ -135,7 +135,7 @@ export const useCurrentUserRoles = () => {
         return Array.from(new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean)));
       }
 
-      const fallbackRoles = user?.role ? [String(user.primaryRole).toLowerCase()] : [];
+      const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
 
       const userId = currentUser?.id || user?.id;
       if (!userId) return fallbackRoles;
@@ -167,7 +167,7 @@ export const useCurrentUserRoles = () => {
     staleTime: 5 * 60 * 1000,
     placeholderData: () => {
       if (DEV_MODE) return [getActiveDevRole().role];
-      return user?.role ? [String(user.primaryRole).toLowerCase()] : [];
+      return user?.role ? [String(user.role).toLowerCase()] : [];
     }
   });
 
