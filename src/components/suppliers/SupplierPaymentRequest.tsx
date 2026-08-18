@@ -129,15 +129,16 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
     try {
       // Use DocumentService uploadDocument method
-      const uploadedDocument = await documentService.uploadDocument({
+      const uploadedDocument = await documentService.createDocument({
         title: file.name,
         file: file,
-        type: 'supporting_document' as any,
+        documentType: 'supporting_document' as any,
         projectId: projectId || undefined,
         description: 'Document support pour demande de paiement',
-      }, user?.id || 'anonymous');
+        uploadedBy: user?.id || 'anonymous',
+      });
       
-      setUploadedDocuments(prev => [...prev, uploadedDocument.url || '']);
+      setUploadedDocuments(prev => [...prev, uploadedDocument.fileUrl || '']);
       toast({
         title: 'Document téléchargé',
         description: 'Le document a été ajouté à votre demande',

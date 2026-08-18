@@ -23,7 +23,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
 
   useEffect(() => {
     if (!projectId) return;
-    DocumentService.getProjectDocuments(projectId)
+    getDocumentService().getProjectDocuments(projectId)
       .then((docs) => setDocuments(docs || []))
       .catch((e) => console.error('fetch documents', e));
   }, [projectId]);
@@ -63,7 +63,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
        const created = await getDocumentService().createDocument(payload);
        // refresh local documents
        if (projectId) {
-         const docs = await DocumentService.getProjectDocuments(projectId);
+         const docs = await getDocumentService().getProjectDocuments(projectId);
          setDocuments(docs || []);
        }
        if (onActionComplete) onActionComplete(created);

@@ -217,7 +217,7 @@ export class PaymentService {
 
   async getPaymentsByStatus(status: PaymentStatusEnum | string): Promise<PaymentDTO[]> {
     try {
-      const payments = await this.paymentRepository.findByStatus(status as PaymentStatusEnum);
+      const payments = await this.paymentRepository.findByStatus(status as unknown as import('@/domain/entities/Payment').PaymentStatus);
       return payments.map(payment => PaymentTransformer.toDTO(payment));
     } catch (error) {
       console.error('[PaymentService] Error fetching payments by status:', error);
@@ -317,9 +317,12 @@ export class PaymentService {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
     }
     await this.paymentBlockRepository.updateStatus(request.block_id, 'resolved', request.resolved_by, request.resolution_notes);
-    const payment = await this.getPaymentById(block.payment_id);
-    if (payment) {
-      await this.updatePayment(block.payment_id, { status: 'pending' });
+    const paymentId = block.paymentId;
+    if (paymentId) {
+      const payment = await this.getPaymentById(paymentId);
+      if (payment) {
+        await this.updatePayment(paymentId, { status: 'pending' });
+      }
     }
     console.log(`Payment block ${request.block_id} resolved`);
   }
@@ -330,7 +333,11 @@ export class PaymentService {
     if (!block) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
     }
-    const payment = await this.getPaymentById(block.payment_id);
+    const blockPaymentId = block.paymentId;
+    if (!blockPaymentId) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
+    }
+    const payment = await this.getPaymentById(blockPaymentId);
     if (!payment) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
     }
@@ -426,8 +433,8 @@ export class PaymentService {
   async validatePaymentEligibility(projectId: string, paymentId?: string): Promise<PaymentEligibilityValidationDto> {
     const blocks = await this.paymentBlockRepository.findActiveByProject(projectId);
     const blockingReasons = blocks.map(b => ({
-      type: b.block_reason,
-      description: b.block_reason,
+      type: b.blockingReasons[0]?.reason ?? 'blocked',
+      description: b.blockingReasons[0]?.description ?? b.blockingReasons[0]?.reason ?? 'Payment blocked',
       severity: 'critical' as const,
       actionRequired: 'Resolve active block',
     }));

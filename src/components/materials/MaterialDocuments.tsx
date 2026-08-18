@@ -81,7 +81,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   const { uploadFile, uploading } = useDocumentStorage();
 
   const documentService = useMemo(() => 
-    DocumentService.getDocumentService(), []);
+    getDocumentService(), []);
 
   const [formData, setFormData] = useState({
     documentType: 'invoice' as MaterialDocument['documentType'],

@@ -312,6 +312,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
       null,
       null,
       null,
+      null,
       [],
       now,
       now

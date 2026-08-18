@@ -127,7 +127,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     }
 
     try {
-      const documentService = DocumentService.getDocumentService();
+      const documentService = getDocumentService();
       const docPayload = {
         projectId: projectId,
         phaseId: undefined,
@@ -172,7 +172,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     if (!confirm(t("confirm.delete_document"))) return;
 
     try {
-      const documentService = DocumentService.getDocumentService();
+      const documentService = getDocumentService();
       await documentService.deleteDocument(documentId);
       toast({
         title: t("success.title"),

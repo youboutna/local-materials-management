@@ -10,7 +10,16 @@ import { fr } from 'date-fns/locale';
 const EnhancedPaymentBlockingInterface = () => {
   const { t } = useLanguage();
   // ✅ Défaut de tableau vide pour éviter l'erreur
-  const { stats, recentBlocks = [], isLoading } = usePaymentStatsHex();
+  const { stats, isLoading } = usePaymentStatsHex();
+  // Pas de source de "blocs récents" détaillée disponible via ce hook pour le moment.
+  const recentBlocks: Array<{
+    id: string;
+    contractorName: string;
+    projectTitle: string;
+    amount: number;
+    reason: string;
+    blockedAt: string;
+  }> = [];
 
   if (isLoading) {
     return <div className="text-center py-8">Chargement des statistiques...</div>;
