@@ -185,6 +185,44 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     notifyUpdate(next);
   };
 
+  /**
+   * Désignation du consultant (référentiel, sans hardcode) :
+   * accessible au chef de projet, directeur ou administrateur.
+   */
+  const isConsultantStakeholder = (s: StakeholderDTO) =>
+    isConsultantBusinessCode(String(s.role ?? "")) ||
+    isConsultantBusinessCode(String(s.stakeholderType ?? ""));
+
+  const toggleConsultant = (target: StakeholderDTO) => {
+    if (!canDesignate) return;
+    const makeConsultant = !isConsultantStakeholder(target);
+    const next = localStakeholders.map((s) => {
+      if (s.id === target.id) {
+        return {
+          ...s,
+          role: (makeConsultant
+            ? CONSULTANT_DESIGNATION_REFERENTIAL.canonicalCode
+            : CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode) as StakeholderRole,
+        };
+      }
+      // Un seul consultant principal par projet
+      if (
+        makeConsultant &&
+        CONSULTANT_DESIGNATION_REFERENTIAL.singleConsultantPerProject &&
+        isConsultantStakeholder(s)
+      ) {
+        return {
+          ...s,
+          role: CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode as StakeholderRole,
+        };
+      }
+      return s;
+    });
+    setLocalStakeholders(next);
+    notifyUpdate(next);
+  };
+
+
   const isContractor = (s: StakeholderDTO) =>
     String(s.role).toUpperCase().includes("CONTRACTOR") ||
     String(s.stakeholderType).toUpperCase().includes("CONTRACTOR");
