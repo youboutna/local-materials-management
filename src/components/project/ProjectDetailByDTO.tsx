@@ -1060,7 +1060,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </CardContent>
             </Card>
           </div>
+
+          {/* Désignation du consultant projet */}
+          <ProjectConsultantDesignation projectId={projectId} />
         </TabsContent>
+
 
         {/* ===== FINANCIAL ===== */}
         <TabsContent value="financial" className="mt-6">
