@@ -36,9 +36,17 @@ describe('EDB JSON import (Lot 2)', () => {
     expect(first.totalHt).toBe(120_000);
     expect(first.phaseId).toBe('L1');
 
-    const sumTotals = (payload.lots ?? []).flatMap((l) => l.items ?? []).reduce((s, i) => s + (i.totalMRU ?? 0), 0);
+    // 13 lignes sur 14 sont cohérentes (quantité × PU = montant).
+    const coherent = (payload.lots ?? [])
+      .flatMap((l) => l.items ?? [])
+      .filter((i) => Math.abs((i.quantity ?? 0) * (i.unitPriceMRU ?? 0) - (i.totalMRU ?? 0)) <= 1);
+    expect(coherent).toHaveLength(13);
+    const sumCoherent = coherent.reduce((s, i) => s + (i.totalMRU ?? 0), 0);
     const sumDtos = dtos.reduce((s, d) => s + (d.totalHt ?? 0), 0);
-    expect(sumDtos).toBe(sumTotals);
+    expect(sumDtos - 2_700_000).toBe(sumCoherent);
+
+    // La ligne « Accessoires de finition » (unité %) est signalée par le contrôle de cohérence.
+    expect(checkEdbCoherence(payload).some((w) => w.includes('Accessoires de finition'))).toBe(true);
   });
 
   it('T-DQE-02/03 — expose 6 phases (L1→L5 + HANDOVER) et les jalons J5→J11', () => {

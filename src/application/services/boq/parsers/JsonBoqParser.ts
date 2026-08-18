@@ -90,6 +90,23 @@ export function checkEdbCoherence(edb: EdbPayload): string[] {
     }
   }
 
+  // Cohérence ligne à ligne : quantité × PU doit égaler le montant total.
+  for (const lot of edb.lots ?? []) {
+    for (const item of lot.items ?? []) {
+      const q = num(item.quantity);
+      const pu = num(item.unitPriceMRU ?? item.unitPrice);
+      const total = num(item.totalMRU);
+      if (q == null || pu == null || total == null) continue;
+      if (Math.abs(q * pu - total) > 1) {
+        warnings.push(
+          `Lot ${lot.id ?? '?'} — « ${item.description ?? item.designation ?? '?'} » : quantité × PU = ` +
+            `${(q * pu).toLocaleString('fr-FR')} MRU ≠ montant ${total.toLocaleString('fr-FR')} MRU ` +
+            `(unité « ${item.unit ?? '?'} » : PU probablement forfaitaire).`,
+        );
+      }
+    }
+  }
+
   // Sommes lots ↔ budgets de phases.
   const phaseBudget = (edb.phases ?? []).reduce((s, p) => s + (num(p.budgetMRU) ?? 0), 0);
   if (phaseBudget && Math.abs(phaseBudget - lotsRemaining) > 1) {
