@@ -79,6 +79,9 @@ const ConsultantDashboard = () => {
 
   const hasScope = projects.length > 0;
 
+  // Projet ciblé pour l'analyse des décomptes via le module DQE.
+  const [invoiceProjectId, setInvoiceProjectId] = useState<string | null>(null);
+
   const unreadPaymentNotifications = useMemo(
     () => paymentNotifications.filter((n) => !n.read),
     [paymentNotifications],
