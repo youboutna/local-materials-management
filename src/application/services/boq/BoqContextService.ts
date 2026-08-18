@@ -69,7 +69,7 @@ export const BoqContextService = {
       tenderId: input.tenderId,
       submissionId: input.submissionId,
       senderId: input.senderId,
-      contextId,
+      contextId: effectiveContextId,
       allowedActions: cfg.actions,
       title: cfg.title,
       docPrefix: cfg.docPrefix,
