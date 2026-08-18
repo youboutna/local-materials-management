@@ -271,7 +271,26 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle></DialogHeader>
 
-        {!parseResult && <ImportDropzone onFile={parseFile} disabled={isBusy} />}
+        {!parseResult && (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Format des montants du fichier</Label>
+              <Select value={numberFormat} onValueChange={(v) => applyNumberFormat(v as NumberFormatMode)} disabled={isBusy}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {NUMBER_FORMAT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {NUMBER_FORMAT_OPTIONS.find((o) => o.value === numberFormat)?.hint}
+              </p>
+            </div>
+            <ImportDropzone onFile={(f) => parseFile(f, numberFormat)} disabled={isBusy} />
+          </div>
+        )}
+
 
         {parseResult && (
           <>
