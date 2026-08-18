@@ -171,7 +171,11 @@ export class BoqImportOrchestrator {
 
       // Une unité en jours/hommes désigne une prestation intellectuelle (RH),
       // même hors bloc « Ressources Humaines » (cas des DQE de services).
-      const labourUnit = unit === 'jour';
+      // Une unité en jours désigne une prestation/main d'œuvre, sauf location
+      // d'engins ou de véhicules facturée à la journée (matériel).
+      const equipmentRental = /\b(location|louage|engin|v[eé]hicule|camion|pelle|grue|4x4|mat[eé]riel)\b/i.test(designation);
+      const labourUnit = unit === 'jour' && !equipmentRental;
+      if (unit === 'jour' && equipmentRental) resolved.resourceType = 'equipment';
       const isLabour = sectionKind === 'labour' || labourUnit;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
