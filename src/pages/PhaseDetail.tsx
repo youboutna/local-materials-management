@@ -89,6 +89,31 @@ const PhaseDetail: React.FC = () => {
     });
   };
 
+  /** Hydratation du formulaire d'édition depuis la phase persistée. */
+  useEffect(() => {
+    if (!vm) return;
+    setEditForm({
+      name: vm.title,
+      description: vm.description,
+      startDate: vm.startDate,
+      endDate: vm.endDate,
+      estimatedCost: vm.budget,
+      status: vm.status as unknown as PhaseDTO['status'],
+      progress: vm.progress,
+    } as Partial<PhaseDTO>);
+  }, [vm]);
+
+  const handleSaveEdit = async () => {
+    try {
+      await updatePhaseAsync(editForm as Record<string, unknown>);
+      setIsEditing(false);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
+
+
   if (loading) {
     return (
       <AppLayout pageTitle="Phase">
