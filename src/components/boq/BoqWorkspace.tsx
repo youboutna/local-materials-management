@@ -41,6 +41,10 @@ import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
+import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
+import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import type { StakeholderOption } from './BoqLineTable';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -527,6 +531,7 @@ export function BoqWorkspace({
                     value={wbs}
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
+          stakeholders={stakeholders}
                     referentialCode={activeReferential}
                   />
                 </div>
