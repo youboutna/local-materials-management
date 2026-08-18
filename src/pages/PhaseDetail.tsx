@@ -176,7 +176,16 @@ const PhaseDetail: React.FC = () => {
             <Badge className={getStatusColor(vm.status)} variant="outline">
               {getStatusLabel(vm.status)}
             </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              aria-label="Modifier la phase"
+            >
+              <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> Modifier
+            </Button>
           </div>
+
         </div>
 
         {/* Overview KPIs */}
