@@ -40,7 +40,7 @@ function toUser(u: any): AuthUser {
 }
 
 export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
-  constructor(private baseUrl: string, private apiKey?: string) {}
+  constructor(private baseUrl: string, private apiKey?: string) { super(); }
 
   private async call<T>(path: string, method: string, body?: unknown, token?: string) {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };

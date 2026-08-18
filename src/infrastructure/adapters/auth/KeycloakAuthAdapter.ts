@@ -66,7 +66,7 @@ function toUser(u: any): AuthUser {
 }
 
 export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
-  constructor(private opts: KeycloakOptions) {}
+  constructor(private opts: KeycloakOptions) { super(); }
 
   async getCurrentSession() {
     return { session: readSession(), error: null };
