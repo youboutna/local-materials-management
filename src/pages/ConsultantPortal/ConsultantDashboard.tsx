@@ -165,7 +165,60 @@ const ConsultantDashboard = () => {
             <ConsultantProgressValidation projects={projects} />
           </TabsContent>
 
-          <TabsContent value="invoices">
+          <TabsContent value="invoices" className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FileSpreadsheet className="h-5 w-5" aria-hidden="true" />
+                  Analyse des décomptes (module DQE)
+                </CardTitle>
+                <CardDescription>
+                  Sélectionnez un projet pour analyser les décomptes / factures ligne par ligne,
+                  avec le même moteur de calcul et de parsing que le portail fournisseur.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {hasScope ? (
+                  <>
+                    <div className="max-w-md space-y-1">
+                      <Label htmlFor="consultant-invoice-project">Projet</Label>
+                      <Select
+                        value={invoiceProjectId ?? ''}
+                        onValueChange={(v) => setInvoiceProjectId(v)}
+                      >
+                        <SelectTrigger id="consultant-invoice-project">
+                          <SelectValue placeholder="Choisir un projet…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.title ?? p.id}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {invoiceProjectId ? (
+                      <DqeWorkspace
+                        routeContext="supplier-invoice"
+                        projectId={invoiceProjectId}
+                        projectName={projects.find((p) => p.id === invoiceProjectId)?.title}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Aucun projet sélectionné.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Vous n'êtes assigné à aucun projet en tant que consultant.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             <ConsultantValidationPanel />
           </TabsContent>
 
