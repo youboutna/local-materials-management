@@ -3,6 +3,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
