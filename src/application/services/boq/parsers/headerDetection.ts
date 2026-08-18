@@ -85,7 +85,9 @@ export function extractDocumentParties(rows: string[][], stopIndex?: number): Do
 
   if (anchorRow < 0) {
     const title = rows.slice(0, limit).map((r) => String(r[0] ?? '').trim()).find((v) => v.length > 8);
-    return { documentTitle: title, consumedRows };
+    // Pas de bloc « Expéditeur / Destinataire » : devis type Excel où le client
+    // est annoncé en ligne (« Devis pour : … ») et l'émetteur figure en pied.
+    return { ...heuristicParties(rows), documentTitle: title, consumedRows };
   }
 
   consumedRows.push(anchorRow);
