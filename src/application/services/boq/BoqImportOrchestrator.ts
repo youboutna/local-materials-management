@@ -11,6 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
+import { SECTION_KIND_COLUMN } from './parsers/sectionDetection';
 import { parseLocaleNumber, type NumberFormatMode } from './parsers/numberParsing';
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
@@ -126,6 +127,8 @@ export class BoqImportOrchestrator {
       const unitPrice = pu ?? (rawTotal != null && quantity ? rawTotal / quantity : null);
       const totalHt = rawTotal ?? (unitPrice != null ? quantity * unitPrice : null);
       const lotKey = mapping.lot ? String(get(mapping.lot) ?? '').trim() || null : null;
+      // Nature de la section (bloc RH → main d'œuvre).
+      const sectionKind = String(row.raw[SECTION_KIND_COLUMN] ?? '').trim().toLowerCase();
 
       // Explicit phase from source column, else fallback to ctx.phaseId, else infer
       // via the project referential (SOMELEC / PNDS / …) or static WBS keywords.
@@ -157,7 +160,9 @@ export class BoqImportOrchestrator {
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
-        resourceType: (resolved.resourceType as BoqResourceType) ?? 'material',
+        resourceType: sectionKind === 'labour'
+          ? 'labour'
+          : ((resolved.resourceType as BoqResourceType) ?? 'material'),
       };
       out.push(dto);
     }

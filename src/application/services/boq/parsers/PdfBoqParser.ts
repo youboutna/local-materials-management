@@ -11,7 +11,9 @@ import { extractDocumentParties } from './headerDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import {
   detectSection,
+  detectSecondaryHeader,
   isRepeatedHeaderRow,
+  SECTION_KIND_COLUMN,
   SECTION_LABEL_COLUMN,
   SECTION_LOT_COLUMN,
   type DetectedSection,
@@ -124,7 +126,18 @@ export class PdfBoqParser implements IDocumentParser {
           return label || `col_${i + 1}`;
         })
       : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
-    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN];
+    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN, SECTION_KIND_COLUMN];
+
+    // Colonnes canoniques du tableau principal (pour réaligner les en-têtes
+    // secondaires — bloc RH « Rôle / Nb Jours / Taux Journalier / Total Base »).
+    const findCol = (rx: RegExp) => baseColumns.find((c) => rx.test(c));
+    const canonical = {
+      designation: findCol(/d[eé]signation|libell|description|intitul/i),
+      unit: findCol(/^unit[eé]?$/i),
+      quantity: findCol(/qu?antit[eé]|^qt[eé]?$|^qty$/i),
+      unitPrice: findCol(/prix.*unit|^p\.?\s*u\.?|^pu\b/i),
+      total: findCol(/montant|^total/i),
+    };
 
     // En-tête administratif (Expéditeur → fournisseur / Destinataire → organisation).
     const parties = extractDocumentParties(rowsAcc, headerIdx >= 0 ? headerIdx : undefined);
@@ -141,14 +154,17 @@ export class PdfBoqParser implements IDocumentParser {
     const parsedRows: ParsedBoqRow[] = [];
     let section: DetectedSection | null = null;
     let sectionsFound = 0;
+    let remap: Record<number, string> | null = null;
     for (let i = 0; i < rowsAcc.length; i++) {
       if (i === headerIdx || consumed.has(i)) continue;
       const cells = rowsAcc[i];
       const label = String(cells[0] ?? '').trim();
 
       const nextSection = detectSection(cells);
-      if (nextSection) { section = nextSection; sectionsFound += 1; continue; }
-      if (headerIdx >= 0 && isRepeatedHeaderRow(cells, baseColumns)) continue;
+      if (nextSection) { section = nextSection; sectionsFound += 1; remap = null; continue; }
+      if (headerIdx >= 0 && isRepeatedHeaderRow(cells, baseColumns)) { remap = null; continue; }
+      const secondary = detectSecondaryHeader(cells, canonical);
+      if (secondary) { remap = secondary; continue; }
 
       if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc)/i.test(label)) {
         extractFiscalFromRow(cells, detectedFiscal);
@@ -156,9 +172,10 @@ export class PdfBoqParser implements IDocumentParser {
       }
       if (isSubtotalRow(label)) continue;
       const raw: Record<string, string | number | null> = {};
-      cells.forEach((c, idx) => { raw[baseColumns[idx] ?? `col_${idx + 1}`] = c; });
+      cells.forEach((c, idx) => { raw[remap?.[idx] ?? baseColumns[idx] ?? `col_${idx + 1}`] = c; });
       raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
       raw[SECTION_LABEL_COLUMN] = section?.label ?? null;
+      raw[SECTION_KIND_COLUMN] = section?.kind ?? 'material';
       parsedRows.push({ raw });
     }
     if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
