@@ -16,6 +16,7 @@ import {
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
 import {
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
   getDevUsersSnapshot,
   DevUserProfile,
   setActiveDevRole,
@@ -151,7 +152,7 @@ async function buildSession(
   };
 }
 
-export class LocalAuthAdapter implements IAuthRepository {
+export class LocalAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
   async getCurrentSession(): Promise<{ session: AuthSession | null; error: Error | null }> {
     const persisted = readPersistedSession();
     if (!persisted) return { session: null, error: null };

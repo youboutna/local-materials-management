@@ -13,8 +13,9 @@ import {
   RegisterData 
 } from '@/domain/repositories/IAuthRepository';
 import { AuthManagerConfig } from '@/application/services/AuthManager';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
-export class SupabaseAuthAdapter implements IAuthRepository {
+export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
   private config?: AuthManagerConfig;
 
   constructor(config?: AuthManagerConfig) {

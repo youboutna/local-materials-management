@@ -4,6 +4,7 @@
  * Works with self-hosted Supabase Auth or standalone GoTrue.
  */
 import {
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
   IAuthRepository,
   AuthSession,
   AuthUser,
@@ -38,7 +39,7 @@ function toUser(u: any): AuthUser {
   };
 }
 
-export class GoTrueAuthAdapter implements IAuthRepository {
+export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
   constructor(private baseUrl: string, private apiKey?: string) {}
 
   private async call<T>(path: string, method: string, body?: unknown, token?: string) {

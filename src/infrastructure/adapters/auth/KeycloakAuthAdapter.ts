@@ -5,6 +5,7 @@
  * should combine with the existing keycloak-js redirect flow.
  */
 import {
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
   IAuthRepository,
   AuthSession,
   AuthUser,
@@ -64,7 +65,7 @@ function toUser(u: any): AuthUser {
   };
 }
 
-export class KeycloakAuthAdapter implements IAuthRepository {
+export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
   constructor(private opts: KeycloakOptions) {}
 
   async getCurrentSession() {

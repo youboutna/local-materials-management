@@ -9,8 +9,9 @@ import { UserProfile } from '@/domain/entities/UserProfile';
 import { AuthSession, AuthUser, IAuthRepository, LoginCredentials, OAuthSignInParams, RegisterData } from '@/domain/repositories/IAuthRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { SupabaseUserProfileAdapter } from './SupabaseUserProfileAdapter';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
-export class SupabaseUserAdapter implements IAuthRepository {
+export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthRepository {
   private profileAdapter: SupabaseUserProfileAdapter;
 
   constructor() {
