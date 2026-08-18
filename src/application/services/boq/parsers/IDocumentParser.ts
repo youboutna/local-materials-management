@@ -2,6 +2,7 @@
  * IDocumentParser — port for turning binary/text sources into BoqLineDTO drafts.
  */
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import type { DocumentParties } from './headerDetection';
 
 export interface ParsedBoqRow {
   raw: Record<string, string | number | null>;
@@ -21,6 +22,8 @@ export interface ParseResult {
   columns: string[];
   warnings: string[];
   detectedFiscal?: DetectedFiscal;
+  /** En-tête administratif (fournisseur / organisation) détecté dans le document. */
+  parties?: DocumentParties;
 }
 
 export interface IDocumentParser {
