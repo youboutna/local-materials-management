@@ -35,6 +35,9 @@ interface Props {
   submissionId?: string;
   senderId?: string;
   referentialCode?: ReferentialType;
+  /** Budget restant du projet, utilisé pour l'alerte d'écart lors de la demande de validation. */
+  remainingBudget?: number | null;
+
   recipientEmail?: string;
   showComparison?: boolean;
   onAttachToSubmission?: () => void;
