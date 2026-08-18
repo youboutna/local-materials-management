@@ -8,6 +8,13 @@
  */
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
+import {
+  detectSection,
+  isRepeatedHeaderRow,
+  SECTION_LABEL_COLUMN,
+  SECTION_LOT_COLUMN,
+  type DetectedSection,
+} from './sectionDetection';
 
 interface PdfItem { str: string; transform: number[]; width?: number }
 
