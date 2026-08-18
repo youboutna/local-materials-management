@@ -36,7 +36,7 @@ describe('EDB JSON import (Lot 2)', () => {
     expect(first.unitPrice).toBe(200);
     expect(first.totalHt).toBe(120_000);
     expect(first.category).toBe('L1');
-    expect(first.metadata).toEqual({ lot: 'L1' });
+    expect(first.metadata).toMatchObject({ lot: 'L1', fiscalBlock: 'material' });
 
     // 13 lignes sur 14 sont cohérentes (quantité × PU = montant).
     const items = (payload.lots ?? []).flatMap((l) => l.items ?? []);

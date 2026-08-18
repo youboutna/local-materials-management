@@ -82,7 +82,7 @@ describe('EDB PDF → BOQ pipeline', () => {
     expect(first.totalHt).toBe(120000);
     expect(first.unitPrice).toBe(120000);
     expect(first.category).toBe('L1');
-    expect(first.metadata).toEqual({ lot: 'L1' });
+    expect(first.metadata).toMatchObject({ lot: 'L1', fiscalBlock: 'material' });
 
     // Aucune ligne ne perd son montant.
     expect(dtos.every((d) => (d.totalHt ?? 0) > 0)).toBe(true);
