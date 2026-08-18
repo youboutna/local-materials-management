@@ -15,6 +15,10 @@ export interface DetectedFiscal {
   withholdingRate?: number; // e.g. 0.03 (RAS BIC)
   totalHt?: number;
   totalTtc?: number;
+  /** Bloc « Ressources Humaines » : base HT, charges sur salaire et TVA propres. */
+  laborTotalHt?: number;
+  laborPayrollTaxRate?: number;
+  laborVatRate?: number;
 }
 
 export interface ParseResult {

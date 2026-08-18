@@ -236,10 +236,26 @@ export function BoqWorkspace({
 
   const persistPending = async (silent = false): Promise<boolean> => {
     if (pendingLines.length === 0) return true;
+    // Une ligne saisie manuellement n'est enregistrable que si elle est valorisée :
+    // désignation obligatoire + quantité ou montant. Les lignes vides (clic sur
+    // « Ajouter une ligne » sans saisie) sont écartées silencieusement.
+    const isBlank = (l: BoqLineDTO) =>
+      !String(l.designation ?? '').trim() && !l.quantity && !l.unitPrice && !l.totalHt;
+    const candidates = pendingLines.filter((l) => !isBlank(l));
+    const invalid = candidates.filter((l) => !String(l.designation ?? '').trim() || (!l.quantity && !l.totalHt));
+    if (invalid.length) {
+      toast({
+        title: 'Lignes incomplètes',
+        description: `${invalid.length} ligne(s) sans désignation ou sans quantité/montant. Complétez-les avant d'enregistrer.`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+    if (candidates.length === 0) { setPendingLines([]); return true; }
     setFinalizing(true);
     try {
-      await doc.bulkCreate(pendingLines);
-      if (!silent) toast({ title: `${pendingLines.length} ligne(s) enregistrée(s)` });
+      await doc.bulkCreate(candidates);
+      if (!silent) toast({ title: `${candidates.length} ligne(s) enregistrée(s)` });
       setPendingLines([]);
       return true;
     } catch (e) {
