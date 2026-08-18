@@ -82,9 +82,14 @@ export class BoqImportOrchestrator {
       'phaseId',
     ];
 
+    // Les colonnes synthétiques (contexte de section) ne sont jamais mappables
+    // sur un champ métier : `Lot` est traité explicitement ci-dessous.
+    const synthetic = new Set<string>([SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN]);
+    const mappable = columns.filter((c) => !synthetic.has(c));
+
     for (const field of order) {
       const patterns = FUZZY[field];
-      const match = columns.find((c) => !used.has(c) && patterns.some((rx) => rx.test(String(c))));
+      const match = mappable.find((c) => !used.has(c) && patterns.some((rx) => rx.test(String(c))));
       if (match) map[field] = match;
       if (match) used.add(match);
     }
