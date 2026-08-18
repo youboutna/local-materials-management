@@ -122,8 +122,25 @@ export const BoqActionsBar: React.FC<Props> = ({
     toast({ title: TRANSFER_LABEL[ctx.routeContext], description: `${lines.length} ligne(s) transférée(s).` });
   });
 
+  // Étape explicite « DQE -> WBS » : phases, jalons, tâches et ressources.
+  const handleDispatch = () => withGuard('dispatch', async () => {
+    window.dispatchEvent(new CustomEvent('boq-dispatch-wbs', {
+      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+    }));
+  });
+
+  // Workflow de validation : alerte budgétaire + options A/B/C.
+  const handleRequestValidation = () => withGuard('validation', async () => {
+    window.dispatchEvent(new CustomEvent('boq-request-validation', {
+      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+    }));
+  });
+
+  const isProjectDqe = ctx.routeContext === 'project-dqe';
+
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
   const L = DOC_LABELS[ctx.routeContext];
+
 
   return (
     <>
