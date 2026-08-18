@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { BoqContextService, type BoqContext } from '@/application/services/boq/BoqContextService';
 import { DocumentService } from '@/application/services/boq/DocumentService';
+import { BoqInvoiceService } from '@/application/services/boq/BoqInvoiceService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 
 interface Props {
@@ -54,6 +55,8 @@ export const BoqActionsBar: React.FC<Props> = ({
   const [signOpen, setSignOpen] = useState(false);
   const [signer, setSigner] = useState('');
   const [signedInfo, setSignedInfo] = useState<{ by: string; at: string } | null>(null);
+  const [decompteOpen, setDecompteOpen] = useState(false);
+  const [decomptePct, setDecomptePct] = useState(100);
   const can = (a: Parameters<typeof BoqContextService.can>[1]) => BoqContextService.can(ctx, a);
 
   const withGuard = async (label: string, fn: () => Promise<void>) => {
@@ -99,12 +102,32 @@ export const BoqActionsBar: React.FC<Props> = ({
     if (!signer.trim()) { toast({ title: 'Signataire requis', variant: 'destructive' }); return; }
     setBusy('sign');
     try {
-      const res = await DocumentService.sign(lines, baseDocCtx);
+      const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {
         setSignedInfo({ by: signer.trim(), at: new Date().toLocaleString('fr-FR') });
         toast({ title: 'Document signé', description: `Par ${signer.trim()}` });
         setSignOpen(false);
       } else toast({ title: 'Signature échouée', description: res.message, variant: 'destructive' });
+    } finally { setBusy(null); }
+  };
+
+  /** Devis validé -> décompte / facture au pourcentage d'avancement. */
+  const confirmDecompte = async () => {
+    setBusy('decompte');
+    try {
+      const res = await BoqInvoiceService.createFromQuote({
+        quoteLines: lines,
+        quoteContextId: ctx.contextId,
+        percentage: decomptePct,
+        projectId: ctx.projectId,
+        tenderId: ctx.tenderId,
+        title: `Décompte ${decomptePct}% — ${ctx.title}`,
+      });
+      toast({ title: 'Décompte créé', description: `${res.lines.length} ligne(s) — ${res.totalHt.toLocaleString('fr-FR')} HT` });
+      setDecompteOpen(false);
+      window.dispatchEvent(new CustomEvent('boq-decompte-created', { detail: { contextId: ctx.contextId, percentage: decomptePct } }));
+    } catch (e) {
+      toast({ title: 'Création impossible', description: e instanceof Error ? e.message : undefined, variant: 'destructive' });
     } finally { setBusy(null); }
   };
 
@@ -196,6 +219,13 @@ export const BoqActionsBar: React.FC<Props> = ({
           </Button>
         )}
 
+        {ctx.routeContext === 'supplier-bid' && (
+          <Button size="sm" variant="outline" onClick={() => setDecompteOpen(true)} disabled={disabled || busy !== null || !lines.length}
+            title="Créer un décompte / facture depuis ce devis">
+            {iconOf('decompte') ?? <FileCheck2 className="h-4 w-4 mr-2" />}
+            Créer un décompte
+          </Button>
+        )}
         {can('attachToSubmission') && onAttachToSubmission && (
           <Button size="sm" variant="outline" onClick={onAttachToSubmission} disabled={disabled || busy !== null}>
             <Paperclip className="h-4 w-4 mr-2" />
@@ -215,6 +245,28 @@ export const BoqActionsBar: React.FC<Props> = ({
           </Button>
         )}
       </div>
+
+      <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un décompte depuis le devis</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Avancement facturé (%)</Label>
+              <Input type="number" min={1} max={100} value={decomptePct}
+                onChange={(e) => setDecomptePct(Number(e.target.value) || 0)} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Les quantités du devis sont proratisées puis enregistrées comme lignes de facture (onglet « Factures »).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDecompteOpen(false)}>Annuler</Button>
+            <Button onClick={confirmDecompte} disabled={busy !== null}>Créer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={signOpen} onOpenChange={setSignOpen}>
         <DialogContent>
