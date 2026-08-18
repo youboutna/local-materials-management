@@ -32,6 +32,13 @@ import {
   SelectValue,
 } from "../../ui/select";
 import StakeholderDocumentUpload from "../stakeholders/StakeholderDocumentUpload";
+import { useCurrentUserRoles } from "@/hooks/useUserRoles";
+import {
+  CONSULTANT_DESIGNATION_REFERENTIAL,
+  canDesignateConsultant,
+  isConsultantBusinessCode,
+} from "@/config/referentials/consultant-designation.referential";
+
 
 // Import entity DTOs (PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
