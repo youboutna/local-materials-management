@@ -29,12 +29,24 @@ export interface UnifiedAuthUser {
   createdAt: string;
   updatedAt?: string;
   profile?: UserProfile;
+  // Alias / champs de compatibilité présentation (Keycloak, Supabase metadata)
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  keycloakId?: string;
+  roles?: string[];
+  full_name?: string;
+  avatar_url?: string;
+  national_id?: string;
+  metadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
 }
 
 export interface UnifiedAuthSession {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: string;
+  expires_at?: string;
   user: UnifiedAuthUser;
   provider: AuthProvider;
 }

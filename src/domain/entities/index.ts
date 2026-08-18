@@ -27,7 +27,7 @@ export {
 export { Position, type PositionPermissions } from './Position';
 export { ProjectStakeholderEntity as DomainProjectStakeholder, type StakeholderType as DomainStakeholderType } from './ProjectStakeholder';
 export { Stakeholder, type StakeholderContact, type StakeholderOrganization, type StakeholderType } from './Stakeholder';
-export { User, type AuthSession, type UserProfile, type UserRoleType } from './User';
+export { User, UserRoleEntity, UserRoleStatus, type SomelecRole } from './User';
 export { UserRole } from './UserRole';
 
 // ============================================================================
