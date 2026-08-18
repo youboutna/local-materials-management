@@ -82,17 +82,17 @@ export function useConsultantPortalHex(consultantId?: string) {
       }));
 
     const fromInsurance: ExpiryItem[] = (certificates ?? [])
-      .map((c) => c as Record<string, string | number | undefined>)
-      .filter((c) => !c.projectId || projectIds.includes(String(c.projectId)))
+      .filter((c) => !c.projectId || projectIds.includes(c.projectId))
       .map((c) => ({
-        id: String(c.id),
+        id: c.id,
         kind: 'insurance' as const,
-        label: String(c.insuranceCompany ?? "Police d'assurance"),
-        reference: String(c.policyNumber ?? c.insuranceType ?? 'police'),
-        projectId: c.projectId ? String(c.projectId) : undefined,
-        expiryDate: (c.validUntil ?? c.endDate) ? String(c.validUntil ?? c.endDate) : null,
-        amount: typeof c.coverageAmount === 'number' ? c.coverageAmount : undefined,
+        label: c.insuranceCompany || "Police d'assurance",
+        reference: c.policyNumber || String(c.insuranceType ?? 'police'),
+        projectId: c.projectId || undefined,
+        expiryDate: c.validUntil ?? c.endDate ?? null,
+        amount: c.coverageAmount,
       }));
+
 
     return [...fromGuarantees, ...fromInsurance].sort((a, b) => {
       const da = daysUntil(a.expiryDate) ?? 9999;
