@@ -75,6 +75,9 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   useStakeholdersHex(projectId);
   const { data: employees = [] } = useActiveEmployeesHex();
   const { suppliers = [] } = useSuppliersHex();
+  const { userRoles } = useCurrentUserRoles();
+  const canDesignate = canDesignateConsultant(userRoles);
+
 
   const initial: StakeholderDTO[] =
     ((workflowData?.relatedData?.stakeholders as unknown) as StakeholderDTO[]) || [];
