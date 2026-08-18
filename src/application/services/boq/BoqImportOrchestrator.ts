@@ -8,6 +8,7 @@ import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { mergeDimensions } from './parsers/dimensionExtraction';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
@@ -141,9 +142,19 @@ export class BoqImportOrchestrator {
       const unit = normalized.unit;
       // Convert non-metric lengths (ft/in/cm/mm) with the mapping factor.
       const factor = normalized.factor;
-      const lengthN = length != null ? length * factor : null;
-      const widthN = width != null ? width * factor : null;
-      const heightN = height != null ? height * factor : null;
+      // Dimensions explicites, complétées par celles inscrites dans le libellé
+      // (« Revêtement (Larg. 1.0m) », « Dalle 5 x 2,5 x 0,15 m »).
+      const dims = mergeDimensions(
+        {
+          length: length != null ? length * factor : null,
+          width: width != null ? width * factor : null,
+          height: height != null ? height * factor : null,
+        },
+        designation,
+      );
+      const lengthN = dims.length;
+      const widthN = dims.width;
+      const heightN = dims.height;
 
       const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
