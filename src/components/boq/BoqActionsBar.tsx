@@ -18,6 +18,11 @@ import { BoqContextService, type BoqContext } from '@/application/services/boq/B
 import { DocumentService } from '@/application/services/boq/DocumentService';
 import { BoqInvoiceService } from '@/application/services/boq/BoqInvoiceService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { BoqInjectionGateService } from '@/application/services/boq/BoqInjectionGateService';
+import { BOQ_INJECTION_GATE_REFERENTIAL } from '@/config/referentials/boq/boq-injection-gate.referential';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   ctx: BoqContext;
@@ -58,6 +63,47 @@ export const BoqActionsBar: React.FC<Props> = ({
   const [decompteOpen, setDecompteOpen] = useState(false);
   const [decomptePct, setDecomptePct] = useState(100);
   const can = (a: Parameters<typeof BoqContextService.can>[1]) => BoqContextService.can(ctx, a);
+
+  // === Gouvernance d'injection (devis -> planification, décompte -> exécution) ===
+  const { userRoles, currentUser } = useCurrentUserRoles();
+  const { consultants } = useProjectConsultantHex(ctx.projectId);
+  const isDesignatedConsultant = React.useMemo(() => {
+    const uid = (currentUser as { userId?: string; id?: string } | null)?.userId
+      ?? (currentUser as { id?: string } | null)?.id;
+    if (!uid) return false;
+    return consultants.some((c) => c.employeeId === uid || c.supplierId === uid);
+  }, [consultants, currentUser]);
+
+  const gate = React.useMemo(() => BoqInjectionGateService.evaluate(lines), [lines]);
+  const gateActor = {
+    userId: (currentUser as { userId?: string; id?: string } | null)?.userId
+      ?? (currentUser as { id?: string } | null)?.id,
+    roles: userRoles,
+    isDesignatedConsultant,
+  };
+  const gateKind = gate.kinds[0] ?? null;
+  const canValidateGate = gateKind ? BoqInjectionGateService.canValidate(gateKind, gateActor) : false;
+
+  const handleApproveInjection = () => withGuard('gate', async () => {
+    try {
+      const res = await BoqInjectionGateService.approve(lines, gateActor);
+      toast({
+        title: 'Validation enregistrée',
+        description: `${res.validated} ligne(s) ${res.kinds
+          .map((k) => BOQ_INJECTION_GATE_REFERENTIAL.gates[k].label)
+          .join(', ')} — injection autorisée.`,
+      });
+      window.dispatchEvent(new CustomEvent('boq-injection-validated', {
+        detail: { contextId: ctx.contextId, kinds: res.kinds },
+      }));
+    } catch (e) {
+      toast({
+        title: 'Validation refusée',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      });
+    }
+  });
 
   const withGuard = async (label: string, fn: () => Promise<void>) => {
     if (!lines.length) {
@@ -200,8 +246,11 @@ export const BoqActionsBar: React.FC<Props> = ({
         )}
         {isProjectDqe && (
           <>
-            <Button size="sm" variant="outline" onClick={handleDispatch} disabled={disabled || busy !== null}
-              title="Créer les phases, jalons, tâches et ressources depuis les lignes DQE">
+            <Button size="sm" variant="outline" onClick={handleDispatch}
+              disabled={disabled || busy !== null || !gate.allowed}
+              title={gate.allowed
+                ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
+                : gate.reasons.join(' ')}>
               {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
               Transférer vers les phases
             </Button>
@@ -211,6 +260,25 @@ export const BoqActionsBar: React.FC<Props> = ({
               Demander validation
             </Button>
           </>
+        )}
+        {gateKind && !gate.allowed && (
+          <>
+            <Badge variant="destructive" className="self-center">
+              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — validation requise
+            </Badge>
+            {canValidateGate && (
+              <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
+                title={BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].blockedMessage}>
+                {iconOf('gate') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
+                Valider pour injection
+              </Button>
+            )}
+          </>
+        )}
+        {gateKind && gate.allowed && (
+          <Badge variant="outline" className="self-center">
+            {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} validé
+          </Badge>
         )}
         {can('transfer') && (
           <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null}>

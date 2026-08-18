@@ -23,6 +23,7 @@ import type { Alert } from '@/domain/entities/Alert';
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getBoqResourcePropagationService } from './BoqResourcePropagationService';
+import { BoqInjectionGateService } from './BoqInjectionGateService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface DispatchResult {
@@ -94,6 +95,10 @@ export class BoqDispatchService {
         'Aucune ligne transférable : enregistrez puis soumettez les lignes DQE avant le transfert.',
       );
     }
+
+    // Porte de gouvernance : devis validés par le gestionnaire de projet,
+    // décomptes validés par le consultant, avant toute injection WBS.
+    BoqInjectionGateService.assertInjectable(eligible);
 
     const rule = DQE_DISPATCH_REFERENTIAL.rule;
     const groups = BoqDispatchService.groupByLot(eligible);
