@@ -7,6 +7,7 @@
  *  - Default WBS (Phase › Jalon › Tâche) applied to every imported line.
  *  - Column mapping wizard, dropzone, live preview.
  */
+import { NUMBER_FORMAT_OPTIONS, type NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import { EdbValidationService } from '@/application/services/boq/EdbValidationService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
@@ -79,7 +80,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
-  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
+  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
@@ -271,7 +272,26 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle></DialogHeader>
 
-        {!parseResult && <ImportDropzone onFile={parseFile} disabled={isBusy} />}
+        {!parseResult && (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Format des montants du fichier</Label>
+              <Select value={numberFormat} onValueChange={(v) => applyNumberFormat(v as NumberFormatMode)} disabled={isBusy}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {NUMBER_FORMAT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {NUMBER_FORMAT_OPTIONS.find((o) => o.value === numberFormat)?.hint}
+              </p>
+            </div>
+            <ImportDropzone onFile={(f) => parseFile(f, numberFormat)} disabled={isBusy} />
+          </div>
+        )}
+
 
         {parseResult && (
           <>
