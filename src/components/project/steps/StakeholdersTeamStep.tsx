@@ -398,11 +398,33 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {isConsultantStakeholder(stakeholder) && (
+                    <Badge className="gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      {CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.badge}
+                    </Badge>
+                  )}
                   <Badge
                     variant={stakeholder.isActive ? "default" : "secondary"}
                   >
                     {stakeholder.isActive ? "Actif" : "Inactif"}
                   </Badge>
+                  <Button
+                    variant={isConsultantStakeholder(stakeholder) ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => toggleConsultant(stakeholder)}
+                    disabled={!canDesignate}
+                    title={
+                      canDesignate
+                        ? isConsultantStakeholder(stakeholder)
+                          ? CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.revoke
+                          : CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.designate
+                        : CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.unauthorized
+                    }
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-1" />
+                    {isConsultantStakeholder(stakeholder) ? "Retirer consultant" : "Consultant"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -421,6 +443,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+
               </div>
             </div>
           ))}
