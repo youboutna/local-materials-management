@@ -164,10 +164,14 @@ export class BoqImportOrchestrator {
         ? String(get(mapping.elementType) ?? '').trim()
         : detectElementType(designation);
 
-      const isLabour = sectionKind === 'labour';
+      // Une unité en jours/hommes désigne une prestation intellectuelle (RH),
+      // même hors bloc « Ressources Humaines » (cas des DQE de services).
+      const labourUnit = /^(?:jour|j)\b|jour\s*\/\s*homme|homme\s*\/?\s*jour|\bh\/?j\b|\bj\/?h\b/i.test(unit ?? '');
+      const isLabour = sectionKind === 'labour' || labourUnit;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
         : ((resolved.resourceType as BoqResourceType) ?? 'material');
+      const sectionLabel = String(row.raw[SECTION_LABEL_COLUMN] ?? '').trim() || null;
 
       const dto: BoqLineDTO = {
         source: ctx.source,
