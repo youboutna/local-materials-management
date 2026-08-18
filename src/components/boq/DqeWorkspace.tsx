@@ -23,7 +23,7 @@ import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { BoqContextService, type BoqRouteContext } from '@/application/services/boq/BoqContextService';
-import { getBoqResourcePropagationService } from '@/application/services/boq/BoqResourcePropagationService';
+import { getBoqDispatchService } from '@/application/services/boq/BoqDispatchService';
 import { toast } from '@/hooks/use-toast';
 import type { ReferentialType } from '@/config/referentials';
 
