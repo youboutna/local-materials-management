@@ -5,9 +5,11 @@ import { useSuppliersHex } from "@/hooks/hexagonal/useSuppliersHex";
 import {
   FileText,
   Plus,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
+
 import React, { useMemo, useState } from "react";
 import EmployeeSelector from "../../selectors/EmployeeSelector";
 import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
@@ -30,6 +32,13 @@ import {
   SelectValue,
 } from "../../ui/select";
 import StakeholderDocumentUpload from "../stakeholders/StakeholderDocumentUpload";
+import { useCurrentUserRoles } from "@/hooks/useUserRoles";
+import {
+  CONSULTANT_DESIGNATION_REFERENTIAL,
+  canDesignateConsultant,
+  isConsultantBusinessCode,
+} from "@/config/referentials/consultant-designation.referential";
+
 
 // Import entity DTOs (PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
@@ -66,6 +75,9 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   useStakeholdersHex(projectId);
   const { data: employees = [] } = useActiveEmployeesHex();
   const { suppliers = [] } = useSuppliersHex();
+  const { userRoles } = useCurrentUserRoles();
+  const canDesignate = canDesignateConsultant(userRoles);
+
 
   const initial: StakeholderDTO[] =
     ((workflowData?.relatedData?.stakeholders as unknown) as StakeholderDTO[]) || [];
@@ -175,6 +187,44 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     setLocalStakeholders(next);
     notifyUpdate(next);
   };
+
+  /**
+   * Désignation du consultant (référentiel, sans hardcode) :
+   * accessible au chef de projet, directeur ou administrateur.
+   */
+  const isConsultantStakeholder = (s: StakeholderDTO) =>
+    isConsultantBusinessCode(String(s.role ?? "")) ||
+    isConsultantBusinessCode(String(s.stakeholderType ?? ""));
+
+  const toggleConsultant = (target: StakeholderDTO) => {
+    if (!canDesignate) return;
+    const makeConsultant = !isConsultantStakeholder(target);
+    const next = localStakeholders.map((s) => {
+      if (s.id === target.id) {
+        return {
+          ...s,
+          role: (makeConsultant
+            ? CONSULTANT_DESIGNATION_REFERENTIAL.canonicalCode
+            : CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode) as StakeholderRole,
+        };
+      }
+      // Un seul consultant principal par projet
+      if (
+        makeConsultant &&
+        CONSULTANT_DESIGNATION_REFERENTIAL.singleConsultantPerProject &&
+        isConsultantStakeholder(s)
+      ) {
+        return {
+          ...s,
+          role: CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode as StakeholderRole,
+        };
+      }
+      return s;
+    });
+    setLocalStakeholders(next);
+    notifyUpdate(next);
+  };
+
 
   const isContractor = (s: StakeholderDTO) =>
     String(s.role).toUpperCase().includes("CONTRACTOR") ||
@@ -398,11 +448,33 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {isConsultantStakeholder(stakeholder) && (
+                    <Badge className="gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      {CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.badge}
+                    </Badge>
+                  )}
                   <Badge
                     variant={stakeholder.isActive ? "default" : "secondary"}
                   >
                     {stakeholder.isActive ? "Actif" : "Inactif"}
                   </Badge>
+                  <Button
+                    variant={isConsultantStakeholder(stakeholder) ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => toggleConsultant(stakeholder)}
+                    disabled={!canDesignate}
+                    title={
+                      canDesignate
+                        ? isConsultantStakeholder(stakeholder)
+                          ? CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.revoke
+                          : CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.designate
+                        : CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr.unauthorized
+                    }
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-1" />
+                    {isConsultantStakeholder(stakeholder) ? "Retirer consultant" : "Consultant"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -421,6 +493,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
+
               </div>
             </div>
           ))}

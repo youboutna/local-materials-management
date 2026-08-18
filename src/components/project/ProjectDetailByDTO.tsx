@@ -28,6 +28,8 @@ import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
+import ProjectConsultantDesignation from "@/components/project/stakeholders/ProjectConsultantDesignation";
+
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
@@ -1060,7 +1062,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </CardContent>
             </Card>
           </div>
+
+          {/* Désignation du consultant projet */}
+          <ProjectConsultantDesignation projectId={projectId} />
         </TabsContent>
+
 
         {/* ===== FINANCIAL ===== */}
         <TabsContent value="financial" className="mt-6">
