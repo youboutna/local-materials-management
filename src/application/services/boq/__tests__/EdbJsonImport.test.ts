@@ -39,13 +39,15 @@ describe('EDB JSON import (Lot 2)', () => {
     expect(first.metadata).toEqual({ lot: 'L1' });
 
     // 13 lignes sur 14 sont cohérentes (quantité × PU = montant).
-    const coherent = (payload.lots ?? [])
-      .flatMap((l) => l.items ?? [])
-      .filter((i) => Math.abs((i.quantity ?? 0) * (i.unitPriceMRU ?? 0) - (i.totalMRU ?? 0)) <= 1);
+    const items = (payload.lots ?? []).flatMap((l) => l.items ?? []);
+    const coherent = items.filter((i) => Math.abs((i.quantity ?? 0) * (i.unitPriceMRU ?? 0) - (i.totalMRU ?? 0)) <= 1);
     expect(coherent).toHaveLength(13);
-    const sumCoherent = coherent.reduce((s, i) => s + (i.totalMRU ?? 0), 0);
+    // Le montant du document fait foi (fidélité à la source) : le total importé
+    // égale le total EDB, l'incohérence étant remontée en avertissement.
+    const sumSource = items.reduce((s, i) => s + (i.totalMRU ?? 0), 0);
     const sumDtos = dtos.reduce((s, d) => s + (d.totalHt ?? 0), 0);
-    expect(sumDtos - 2_700_000).toBe(sumCoherent);
+    expect(sumDtos).toBe(sumSource);
+    expect(sumDtos).toBe(2_079_505);
 
     // La ligne « Accessoires de finition » (unité %) est signalée par le contrôle de cohérence.
     expect(checkEdbCoherence(payload).some((w) => w.includes('Accessoires de finition'))).toBe(true);
