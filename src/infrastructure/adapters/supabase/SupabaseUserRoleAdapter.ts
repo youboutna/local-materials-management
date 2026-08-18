@@ -398,12 +398,12 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
       }
 
       // Mapper les données
-      const rolesByTypeMap: Record<SomelecRole, number> = {
-        [SomelecRole.ADMIN]: 0,
-        [SomelecRole.MANAGER]: 0,
-        [SomelecRole.DIRECTOR]: 0,
-        [SomelecRole.AGENT]: 0,
-        [SomelecRole.SUPPLIER]: 0
+      const rolesByTypeMap: Record<string, number> = {
+        admin: 0,
+        manager: 0,
+        director: 0,
+        agent: 0,
+        supplier: 0
       };
       if (rolesByType && Array.isArray(rolesByType)) {
         rolesByType.forEach((item: { role_name: string }) => {
@@ -569,7 +569,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
       errors.push('User ID is required');
     }
 
-    if (!Object.values(SomelecRole).includes(roleName)) {
+    if (!['admin', 'manager', 'director', 'agent', 'supplier'].includes(String(roleName).toLowerCase())) {
       errors.push(`Invalid role: ${roleName}`);
     }
 
