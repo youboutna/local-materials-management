@@ -11,14 +11,21 @@
 /** Colonnes synthétiques injectées par les parseurs. */
 export const SECTION_LOT_COLUMN = 'Lot';
 export const SECTION_LABEL_COLUMN = 'Lot libellé';
+/** Nature de la section (`material` par défaut, `labour` pour les blocs RH). */
+export const SECTION_KIND_COLUMN = 'Nature section';
 
 const SECTION_RE = /^\s*(?:lot|chapitre|section|partie|phase|tranche)\s*[:\-]?\s*([A-Z]?\d+[A-Za-z]?)\s*[:.\-–]?\s*(.*)$/i;
+/** Bloc « Ressources Humaines & Expertises » (main d'œuvre / expertises). */
+const LABOUR_SECTION_RE = /^\s*(ressources?\s+humaines?|main\s*d[’']?\s*œuvre|main\s*d[’']?oeuvre|personnel|expertises?)\b/i;
+
+export type SectionKind = 'material' | 'labour';
 
 export interface DetectedSection {
-  /** Clé normalisée du lot (ex. `L2`). */
-  lot: string;
+  /** Clé normalisée du lot (ex. `L2`), `null` pour les blocs sans lot (RH). */
+  lot: string | null;
   /** Libellé complet de la section (ex. `LOT L2: POSE CONDUCTEURS HT`). */
   label: string;
+  kind: SectionKind;
 }
 
 /**
