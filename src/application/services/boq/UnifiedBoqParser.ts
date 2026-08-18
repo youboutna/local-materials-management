@@ -11,11 +11,14 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { MeterInputDTO, MeterInputSourceFormat } from '@/dtos/boq/MeterInputDTO';
 import { BoqImportOrchestrator, type ImportMapping } from './BoqImportOrchestrator';
 import type { ParseResult } from './parsers/IDocumentParser';
+import type { EdbPayload } from './parsers/JsonBoqParser';
 
 export interface UnifiedParseResult extends ParseResult {
   format: MeterInputSourceFormat;
   fileName: string;
   autoMapping: ImportMapping;
+  /** Charge utile EDB (JSON structuré) lorsque le fichier en contient une. */
+  edb?: EdbPayload;
 }
 
 export interface ToMeterInputsContext {
@@ -40,7 +43,7 @@ export class UnifiedBoqParser {
   private readonly orchestrator = new BoqImportOrchestrator();
 
   async parse(file: File): Promise<UnifiedParseResult> {
-    const parsed = await this.orchestrator.parseFile(file);
+    const parsed = (await this.orchestrator.parseFile(file)) as ParseResult & { edb?: EdbPayload };
     return {
       ...parsed,
       format: detectFormat(file),

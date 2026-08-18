@@ -8,6 +8,7 @@
  *  - Column mapping wizard, dropzone, live preview.
  */
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
+import { EdbValidationService } from '@/application/services/boq/EdbValidationService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { getProjectService } from '@/application/services/ProjectService';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,8 @@ import { getPhasesForReferential, getReferentialOptions, type ReferentialType } 
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import type { EdbBudgetDecision } from '@/dtos/boq/EdbValidationDTO';
+import { EdbValidationPanel } from './EdbValidationPanel';
 import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -73,6 +76,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   const [phaseMapping, setPhaseMapping] = useState<Record<string, string>>({});
   const [projectWbs, setProjectWbs] = useState<WbsPhase[]>([]);
   const [projectName, setProjectName] = useState<string>('');
+  const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
@@ -104,6 +108,18 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   }, [dtos, wbs, isAltReferential, phaseMapping]);
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
+
+  /** Rapport de validation EDB (JSON structuré) — bloque l'écriture tant que les
+   *  erreurs de calcul ne sont pas corrigées et que l'écart n'est pas arbitré. */
+  const edbReport = useMemo(
+    () => (parseResult?.edb ? EdbValidationService.buildReport(parseResult.edb, wbsEnrichedDtos) : null),
+    [parseResult, wbsEnrichedDtos],
+  );
+
+  const fixEdbErrors = () => {
+    if (!edbReport?.errors.length) return;
+    setDtos((prev) => EdbValidationService.applyLineFixes(prev, edbReport.errors));
+  };
 
   const updateLine = (index: number, patch: Partial<BoqLineDTO>) => {
     setDtos((prev) => {
@@ -186,6 +202,14 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   };
 
   const onSubmit = async () => {
+    if (edbReport && edbReport.errors.length > 0) {
+      toast({
+        title: `${edbReport.errors.length} erreur(s) de calcul dans l'EDB`,
+        description: 'Corrigez les lignes signalées (unité forfaitaire) avant import.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (issues.length > 0) {
       toast({
         title: `${issues.length} ligne(s) invalide(s)`,
@@ -203,12 +227,27 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
       return;
     }
     try {
-      const lines = wbsEnrichedDtos.map((line) => ({ ...line }));
+      let lines = wbsEnrichedDtos.map((line) => ({ ...line }));
+      let decisionNote: string | null = null;
+      let newProjectBudget: number | null = null;
+      let keepDiscrepancyAlert = false;
+      if (edbReport?.budgetDiscrepancy) {
+        const applied = EdbValidationService.applyDecision(lines, edbReport, budgetDecision);
+        lines = applied.lines;
+        decisionNote = applied.note;
+        newProjectBudget = applied.newProjectBudget;
+        keepDiscrepancyAlert = applied.keepDiscrepancyAlert;
+      }
       setDtos(lines);
       if (commitOnSubmit) {
         const r = await commit(lines);
         toast({ title: 'Import terminé', description: `${r.length} ligne(s) importée(s).` });
-        window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source, contextId, count: r.length } }));
+        window.dispatchEvent(
+          new CustomEvent('boq-imported', {
+            detail: { source, contextId, count: r.length, budgetDecision, newProjectBudget, keepDiscrepancyAlert },
+          }),
+        );
+        if (decisionNote) toast({ title: 'Décision budgétaire appliquée', description: decisionNote });
         onImported?.(r.length);
       } else {
         onParsed?.(lines);
@@ -335,6 +374,16 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
 
+            {edbReport && (
+              <EdbValidationPanel
+                report={edbReport}
+                decision={budgetDecision}
+                onDecisionChange={setBudgetDecision}
+                onFixErrors={fixEdbErrors}
+                disabled={isBusy}
+              />
+            )}
+
             {issues.length > 0 && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 space-y-1">
                 <div className="flex items-center gap-2 text-destructive text-sm font-medium">
@@ -369,7 +418,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-          <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0}>
+          <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
             {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Importer {wbsEnrichedDtos.length} ligne(s)
           </Button>
