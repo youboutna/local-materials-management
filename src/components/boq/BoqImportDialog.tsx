@@ -7,6 +7,7 @@
  *  - Default WBS (Phase › Jalon › Tâche) applied to every imported line.
  *  - Column mapping wizard, dropzone, live preview.
  */
+import { NUMBER_FORMAT_OPTIONS, type NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
 import { EdbValidationService } from '@/application/services/boq/EdbValidationService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
@@ -79,7 +80,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
   const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
-  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos } =
+  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 
