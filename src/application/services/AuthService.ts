@@ -118,6 +118,22 @@ export class AuthService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED, error);
     }
   }
+
+  /** Alias métier de register (compat couche présentation) */
+  async signUp(data: RegisterData): Promise<AuthUser | null> {
+    return this.register(data);
+  }
+
+  async setSession(params: { access_token: string; refresh_token: string; user?: AuthUser | null; expires_at?: string | number }): Promise<{ session: AuthSession | null; error: Error | null }> {
+    return this.authRepository.setSession(params);
+  }
+
+  async assignUserRole(userId: string, role: string): Promise<void> {
+    const result = await this.authRepository.updateUserRole(userId, role);
+    if (result.error) {
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to assign user role', result.error);
+    }
+  }
 }
 
 let authServiceInstance: AuthService | null = null;

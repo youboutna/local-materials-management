@@ -60,9 +60,9 @@ export const useUserRoles = (userId?: string) => {
         const user = await userService.getUserById(userId);
         if (!user) return [];
         
-        const roles: UserRole[] = user.role ? [{
-          id: `${userId}-${user.role}`,
-          roleName: String(user.role),
+        const roles: UserRole[] = user.primaryRole ? [{
+          id: `${userId}-${user.primaryRole}`,
+          roleName: String(user.primaryRole),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }] : [];
@@ -135,7 +135,7 @@ export const useCurrentUserRoles = () => {
         return Array.from(new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean)));
       }
 
-      const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
+      const fallbackRoles = user?.role ? [String(user.primaryRole).toLowerCase()] : [];
 
       const userId = currentUser?.id || user?.id;
       if (!userId) return fallbackRoles;
@@ -151,7 +151,7 @@ export const useCurrentUserRoles = () => {
         const roleNames = userRolesEntities.map(ur => String(ur.roleName || ur).toLowerCase());
         
         // Also include primary role
-        const primaryRole = userServiceUser.role ? [String(userServiceUser.role).toLowerCase()] : [];
+        const primaryRole = userServiceUser.primaryRole ? [String(userServiceUser.primaryRole).toLowerCase()] : [];
         
         const allRoles = Array.from(new Set([...roleNames, ...primaryRole, ...fallbackRoles]));
         
@@ -167,7 +167,7 @@ export const useCurrentUserRoles = () => {
     staleTime: 5 * 60 * 1000,
     placeholderData: () => {
       if (DEV_MODE) return [getActiveDevRole().role];
-      return user?.role ? [String(user.role).toLowerCase()] : [];
+      return user?.role ? [String(user.primaryRole).toLowerCase()] : [];
     }
   });
 
@@ -243,9 +243,7 @@ export const useRoleManagement = () => {
         }
         
         // Update user role via service
-        await userService.updateUser(userId, {
-          role: roleName as any
-        });
+        await authService.assignUserRole(userId, roleName);
       } catch (error) {
         console.error('Error assigning role:', error);
         throw error;
@@ -275,9 +273,7 @@ export const useRoleManagement = () => {
         if (!user) throw new Error('User not found');
         
         // Reset to default role
-        await userService.updateUser(userId, {
-          role: 'agent' as any
-        });
+        await authService.assignUserRole(userId, 'agent');
       } catch (error) {
         console.error('Error removing role:', error);
         throw error;
