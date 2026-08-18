@@ -21,6 +21,8 @@ export const UNIT_MAPPINGS: UnitMapping[] = [
   { aliases: /^\s*(in|inch|inches|pouces?)\s*$/i, target: 'm', factor: 0.0254 },
   { aliases: /^\s*(cm)\s*$/i, target: 'm', factor: 0.01 },
   { aliases: /^\s*(mm)\s*$/i, target: 'm', factor: 0.001 },
+  { aliases: /^\s*(jour\s*\/?\s*homme|homme\s*\/?\s*jours?|jours?|j\s*\/\s*h|h\s*\/\s*j|hj|jh|j)\s*$/i, target: 'jour', factor: 1 },
+  { aliases: /^\s*(forfaits?|ff|lump\s*sum|global)\s*$/i, target: 'forfait', factor: 1 },
   { aliases: /^\s*(u|un|unit[eé]s?|nb|nbre|pce|pcs|pi[eè]ces?|ea)\s*$/i, target: 'unité', factor: 1 },
 ];
 

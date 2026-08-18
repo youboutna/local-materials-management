@@ -4,7 +4,7 @@
  * Reused by QuantityTakeoff, Tender DQE Estimator, and DQE Import.
  */
 
-export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité';
+export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité' | 'jour' | 'forfait';
 
 export interface BoqUnitDefinition {
   code: BoqUnit;
@@ -41,6 +41,20 @@ export const BOQ_UNITS: BoqUnitDefinition[] = [
   {
     code: 'unité',
     label: 'unité',
+    requires: { length: true, width: false, height: false },
+    compute: (l) => l,
+  },
+  {
+    // Prestations intellectuelles / main d'œuvre : quantité = nombre de jours.
+    code: 'jour',
+    label: 'jour (homme·jour)',
+    requires: { length: true, width: false, height: false },
+    compute: (l) => l,
+  },
+  {
+    // Poste au forfait : quantité = nombre de forfaits.
+    code: 'forfait',
+    label: 'forfait',
     requires: { length: true, width: false, height: false },
     compute: (l) => l,
   },

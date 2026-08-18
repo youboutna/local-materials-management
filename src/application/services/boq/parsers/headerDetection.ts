@@ -61,6 +61,50 @@ function applyCell(party: DocumentParty, cell: string): void {
   party.name = party.name ? `${party.name} ${value}`.trim() : value;
 }
 
+/** Client annoncé en ligne : « Devis pour : … », « Client : … », « À l'attention de : … ». */
+const ORG_INLINE_RE =
+  /^(?:devis\s+pour|devis\s+[àa]\s+l['’]attention\s+de|[àa]\s+l['’]attention\s+de|client|destinataire|ma[iî]tre\s+d['’]ouvrage|organisation)\s*[:\-]\s*([\s\S]+)$/i;
+/** Raison sociale émettrice (généralement en pied de devis). */
+const COMPANY_RE = /\b(soci[eé]t[eé]|sarl|suarl|s\.a\.r\.l|s\.a\.s|sas|spa|ets|etablissements?|group(?:e)?)\b/i;
+const EMAIL_RE = /[\w.+-]+@[\w-]+(?:[.,][\w-]+)+/;
+const PHONE_RE = /\+?\d[\d\s().\-]{6,}\d/;
+
+/** Alimente une partie depuis une cellule multi-lignes (raison sociale + coordonnées). */
+function applyMultilineCell(party: DocumentParty, cell: string): void {
+  for (const line of cell.split(/\r?\n/)) {
+    const v = line.trim();
+    if (!v || isPlaceholder(v)) continue;
+    const email = v.match(EMAIL_RE);
+    if (email && !party.email) party.email = email[0].replace(/,$/, '');
+    const phone = v.match(PHONE_RE);
+    if (phone && !party.phone && !email) party.phone = phone[0].trim();
+    if (email || (phone && party.phone === phone?.[0]?.trim())) continue;
+    if (!party.name) party.name = v;
+    else party.address = party.address ? `${party.address}, ${v}` : v;
+  }
+}
+
+/**
+ * Heuristique pour les devis sans bloc « Expéditeur / Destinataire » explicite :
+ * le client est détecté sur une étiquette en ligne, l'émetteur sur une raison
+ * sociale (SARL/SUARL/SOCIETE…) où qu'elle apparaisse dans le document.
+ */
+function heuristicParties(rows: string[][]): Pick<DocumentParties, 'supplier' | 'organization'> {
+  const supplier: DocumentParty = {};
+  const organization: DocumentParty = {};
+  for (const cells of rows) {
+    for (const raw of cells ?? []) {
+      const v = String(raw ?? '').trim();
+      if (!v) continue;
+      const inline = v.match(ORG_INLINE_RE);
+      if (inline && !organization.name) { applyMultilineCell(organization, inline[1]); continue; }
+      if (!supplier.name && COMPANY_RE.test(v)) applyMultilineCell(supplier, v);
+    }
+  }
+  const clean = (p: DocumentParty) => (Object.keys(p).length ? p : undefined);
+  return { supplier: clean(supplier), organization: clean(organization) };
+}
+
 /**
  * Analyse les premières lignes d'un document pour en extraire les parties.
  * `rows` = lignes/cellules issues du clustering du parseur (PDF, Excel, CSV).
@@ -85,7 +129,9 @@ export function extractDocumentParties(rows: string[][], stopIndex?: number): Do
 
   if (anchorRow < 0) {
     const title = rows.slice(0, limit).map((r) => String(r[0] ?? '').trim()).find((v) => v.length > 8);
-    return { documentTitle: title, consumedRows };
+    // Pas de bloc « Expéditeur / Destinataire » : devis type Excel où le client
+    // est annoncé en ligne (« Devis pour : … ») et l'émetteur figure en pied.
+    return { ...heuristicParties(rows), documentTitle: title, consumedRows };
   }
 
   consumedRows.push(anchorRow);

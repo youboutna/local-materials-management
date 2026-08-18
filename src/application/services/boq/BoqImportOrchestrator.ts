@@ -11,7 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
-import { SECTION_KIND_COLUMN } from './parsers/sectionDetection';
+import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN } from './parsers/sectionDetection';
 import { parseLocaleNumber, type NumberFormatMode } from './parsers/numberParsing';
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
@@ -82,9 +82,14 @@ export class BoqImportOrchestrator {
       'phaseId',
     ];
 
+    // Les colonnes synthétiques (contexte de section) ne sont jamais mappables
+    // sur un champ métier : `Lot` est traité explicitement ci-dessous.
+    const synthetic = new Set<string>([SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN]);
+    const mappable = columns.filter((c) => !synthetic.has(c));
+
     for (const field of order) {
       const patterns = FUZZY[field];
-      const match = columns.find((c) => !used.has(c) && patterns.some((rx) => rx.test(String(c))));
+      const match = mappable.find((c) => !used.has(c) && patterns.some((rx) => rx.test(String(c))));
       if (match) map[field] = match;
       if (match) used.add(match);
     }
@@ -158,16 +163,26 @@ export class BoqImportOrchestrator {
       const resolved: import('./BoqCategoryResolver').ResolvedCategory = explicitPhase
         ? {}
         : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
-      const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId) ?? null;
+      // Phase issue du titre de section (ex. « LOT 1 - PHASE 2 ») en dernier recours.
+      const sectionPhase = String(row.raw[SECTION_PHASE_COLUMN] ?? '').trim() || null;
+      const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId || sectionPhase) ?? null;
       // Normalize element type from designation via the boq referential.
       const elementCode = mapping.elementType
         ? String(get(mapping.elementType) ?? '').trim()
         : detectElementType(designation);
 
-      const isLabour = sectionKind === 'labour';
+      // Une unité en jours/hommes désigne une prestation intellectuelle (RH),
+      // même hors bloc « Ressources Humaines » (cas des DQE de services).
+      // Une unité en jours désigne une prestation/main d'œuvre, sauf location
+      // d'engins ou de véhicules facturée à la journée (matériel).
+      const equipmentRental = /\b(location|louage|engin|v[eé]hicule|camion|pelle|grue|4x4|mat[eé]riel)\b/i.test(designation);
+      const labourUnit = unit === 'jour' && !equipmentRental;
+      if (unit === 'jour' && equipmentRental) resolved.resourceType = 'equipment';
+      const isLabour = sectionKind === 'labour' || labourUnit;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
         : ((resolved.resourceType as BoqResourceType) ?? 'material');
+      const sectionLabel = String(row.raw[SECTION_LABEL_COLUMN] ?? '').trim() || null;
 
       const dto: BoqLineDTO = {
         source: ctx.source,
@@ -185,6 +200,7 @@ export class BoqImportOrchestrator {
         category: lotKey ?? null,
         metadata: {
           ...(lotKey ? { lot: lotKey } : {}),
+          ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
           ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
           ...(partyMeta.supplierName || partyMeta.organizationName

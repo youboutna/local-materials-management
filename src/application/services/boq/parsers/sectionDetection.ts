@@ -13,6 +13,10 @@ export const SECTION_LOT_COLUMN = 'Lot';
 export const SECTION_LABEL_COLUMN = 'Lot libellé';
 /** Nature de la section (`material` par défaut, `labour` pour les blocs RH). */
 export const SECTION_KIND_COLUMN = 'Nature section';
+/** Phase portée par le titre de section (ex. « LOT 1 - PHASE 2 : … » → `P2`). */
+export const SECTION_PHASE_COLUMN = 'Phase section';
+
+const PHASE_IN_LABEL_RE = /\bphase\s*[:\-–]?\s*(\d+)/i;
 
 const SECTION_RE = /^\s*(?:lot|chapitre|section|partie|phase|tranche)\s*[:\-]?\s*([A-Z]?\d+[A-Za-z]?)\s*[:.\-–]?\s*(.*)$/i;
 /** Bloc « Ressources Humaines & Expertises » (main d'œuvre / expertises). */
@@ -26,6 +30,8 @@ export interface DetectedSection {
   /** Libellé complet de la section (ex. `LOT L2: POSE CONDUCTEURS HT`). */
   label: string;
   kind: SectionKind;
+  /** Clé de phase (`P1`, `P2`, …) lorsque le titre la mentionne. */
+  phase: string | null;
 }
 
 /**
@@ -33,13 +39,16 @@ export interface DetectedSection {
  * exploitable dans ses autres cellules (sinon c'est un total de lot).
  */
 export function detectSection(cells: (string | number | null | undefined)[]): DetectedSection | null {
-  const first = String(cells[0] ?? '').trim();
-  if (!first) return null;
-  const others = cells.slice(1).map((c) => String(c ?? '').trim()).filter(Boolean);
+  // Les classeurs réels laissent souvent la colonne A vide (mise en page) :
+  // le titre de section est porté par la première cellule non vide.
+  const firstIdx = cells.findIndex((c) => String(c ?? '').trim());
+  if (firstIdx < 0) return null;
+  const first = String(cells[firstIdx]).trim();
+  const others = cells.slice(firstIdx + 1).map((c) => String(c ?? '').trim()).filter(Boolean);
 
   // Bloc RH : titre seul, sans montant sur la même ligne.
   if (LABOUR_SECTION_RE.test(first) && others.length === 0) {
-    return { lot: null, label: first, kind: 'labour' };
+    return { lot: null, label: first, kind: 'labour', phase: null };
   }
 
   const match = first.match(SECTION_RE);
@@ -47,7 +56,13 @@ export function detectSection(cells: (string | number | null | undefined)[]): De
   const raw = match[1].toUpperCase();
   const lot = /^\d/.test(raw) ? `L${raw}` : raw;
   const title = (match[2] ?? '').trim();
-  return { lot, label: title ? `Lot ${lot} – ${title}` : `Lot ${lot}`, kind: 'material' };
+  const phaseMatch = first.match(PHASE_IN_LABEL_RE);
+  return {
+    lot,
+    label: title ? `Lot ${lot} – ${title}` : `Lot ${lot}`,
+    kind: 'material',
+    phase: phaseMatch ? `P${phaseMatch[1]}` : null,
+  };
 }
 
 /** Vrai si la ligne est une répétition de l'en-tête du tableau. */
