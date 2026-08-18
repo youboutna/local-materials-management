@@ -11,7 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
-import { SECTION_KIND_COLUMN } from './parsers/sectionDetection';
+import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN } from './parsers/sectionDetection';
 import { parseLocaleNumber, type NumberFormatMode } from './parsers/numberParsing';
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
