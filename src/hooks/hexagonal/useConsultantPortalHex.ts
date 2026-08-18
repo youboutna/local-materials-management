@@ -56,10 +56,8 @@ export function useConsultantPortalHex(consultantId?: string) {
   const { alerts, isLoading: alertsLoading, acknowledgeAlert, resolveAlert } = useAlertsHex();
   const { notifications, markAsRead, isLoading: notificationsLoading } = useNotificationsHex();
   const { data: guarantees = [], isLoading: guaranteesLoading } = useBankGuaranteesList();
-  const { certificates = [], isLoading: insuranceLoading } = useInsuranceCertificatesHex() as {
-    certificates?: Array<Record<string, unknown>>;
-    isLoading?: boolean;
-  };
+  const { certificates = [], isLoading: insuranceLoading } = useInsuranceCertificatesHex();
+
 
   const scopedAlerts = useMemo(
     () =>
