@@ -18,6 +18,7 @@ import {
   isRepeatedHeaderRow,
   SECTION_LABEL_COLUMN,
   SECTION_KIND_COLUMN,
+  SECTION_PHASE_COLUMN,
   SECTION_LOT_COLUMN,
   type DetectedSection,
 } from './sectionDetection';
@@ -78,7 +79,7 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       const s = c == null ? '' : String(c).trim();
       return s || `col_${i + 1}`;
     });
-    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN, SECTION_KIND_COLUMN];
+    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN, SECTION_KIND_COLUMN, SECTION_PHASE_COLUMN];
 
     // En-tête administratif (client / prestataire) : balayage du document entier
     // car dans les devis Excel l'émetteur figure souvent en pied de page.
@@ -113,6 +114,7 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
       raw[SECTION_LABEL_COLUMN] = section?.label ?? null;
       raw[SECTION_KIND_COLUMN] = section?.kind ?? null;
+      raw[SECTION_PHASE_COLUMN] = section?.phase ?? null;
       rows.push({ raw });
     }
 

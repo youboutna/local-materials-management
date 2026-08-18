@@ -11,7 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
-import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN } from './parsers/sectionDetection';
+import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN } from './parsers/sectionDetection';
 import { parseLocaleNumber, type NumberFormatMode } from './parsers/numberParsing';
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
@@ -84,7 +84,7 @@ export class BoqImportOrchestrator {
 
     // Les colonnes synthétiques (contexte de section) ne sont jamais mappables
     // sur un champ métier : `Lot` est traité explicitement ci-dessous.
-    const synthetic = new Set<string>([SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN]);
+    const synthetic = new Set<string>([SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN]);
     const mappable = columns.filter((c) => !synthetic.has(c));
 
     for (const field of order) {
@@ -163,7 +163,9 @@ export class BoqImportOrchestrator {
       const resolved: import('./BoqCategoryResolver').ResolvedCategory = explicitPhase
         ? {}
         : BoqCategoryResolver.resolve(designation, { referentialCode: ctx.referentialCode, unit });
-      const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId) ?? null;
+      // Phase issue du titre de section (ex. « LOT 1 - PHASE 2 ») en dernier recours.
+      const sectionPhase = String(row.raw[SECTION_PHASE_COLUMN] ?? '').trim() || null;
+      const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId || sectionPhase) ?? null;
       // Normalize element type from designation via the boq referential.
       const elementCode = mapping.elementType
         ? String(get(mapping.elementType) ?? '').trim()
