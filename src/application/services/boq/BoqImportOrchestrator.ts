@@ -164,6 +164,11 @@ export class BoqImportOrchestrator {
         ? String(get(mapping.elementType) ?? '').trim()
         : detectElementType(designation);
 
+      const isLabour = sectionKind === 'labour';
+      const resourceType: BoqResourceType = isLabour
+        ? 'labor'
+        : ((resolved.resourceType as BoqResourceType) ?? 'material');
+
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
@@ -175,17 +180,23 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: unitPrice ?? null,
-        vatRate: effectiveVat,
+        vatRate: isLabour ? labourVat : effectiveVat,
         totalHt,
         category: lotKey ?? null,
-        metadata: lotKey ? { lot: lotKey } : null,
+        metadata: {
+          ...(lotKey ? { lot: lotKey } : {}),
+          fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
+          ...(partyMeta.supplierName || partyMeta.organizationName
+            ? { parties: partyMeta }
+            : {}),
+        },
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
-        resourceType: sectionKind === 'labour'
-          ? 'labor'
-          : ((resolved.resourceType as BoqResourceType) ?? 'material'),
+        resourceType,
       };
+
       out.push(dto);
     }
     return out;
