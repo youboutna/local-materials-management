@@ -24,7 +24,8 @@ describe('EDB JSON import (Lot 2)', () => {
     expect(mapping.unit).toBe('Unité');
     expect(mapping.quantity).toBe('Quantité');
     expect(mapping.unitPrice).toBe('PU');
-    expect(mapping.phaseId).toBe('Lot');
+    // « Lot » alimente désormais la catégorie/metadata (phaseId reste un UUID DB).
+    expect(mapping.lot).toBe('Lot');
 
     const dtos = BoqImportOrchestrator.toDtos(res.rows, mapping, {
       source: 'dqe',
@@ -34,7 +35,8 @@ describe('EDB JSON import (Lot 2)', () => {
     const first = dtos[0];
     expect(first.unitPrice).toBe(200);
     expect(first.totalHt).toBe(120_000);
-    expect(first.phaseId).toBe('L1');
+    expect(first.category).toBe('L1');
+    expect(first.metadata).toEqual({ lot: 'L1' });
 
     // 13 lignes sur 14 sont cohérentes (quantité × PU = montant).
     const coherent = (payload.lots ?? [])
