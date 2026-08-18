@@ -10,6 +10,12 @@ import { BoqImportOrchestrator } from '../BoqImportOrchestrator';
 import { PdfBoqParser } from '../parsers/PdfBoqParser';
 import { resolveDqeLot } from '@/config/referentials/dqe/dqe-dispatch.referential';
 
+// pdfjs (build web) évalue son module canvas au chargement : stubs minimaux Node.
+class Stub {}
+for (const key of ['DOMMatrix', 'Path2D', 'ImageData'] as const) {
+  if (!(key in globalThis)) (globalThis as Record<string, unknown>)[key] = Stub;
+}
+
 const PDF_PATH = join(__dirname, 'fixtures/edb_boucle33kv_v4.pdf');
 
 function loadFile(): File {
