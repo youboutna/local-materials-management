@@ -71,6 +71,7 @@ import {
   SupabaseUserAdapter,
   SupabaseWorkspaceAdapter,
 } from '@/infrastructure/adapters/supabase';
+import { SupabaseUserRepositoryAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserRepositoryAdapter';
 
 import {
   BankGuaranteeAdapter,
@@ -516,7 +517,7 @@ export class RepositoryFactory {
   // ---------- USER ----------
   static getUserRepository(): IUserRepository {
     if (registry.user) return registry.user;
-    registry.user = new SupabaseUserAdapter() as unknown as IUserRepository;
+    registry.user = new SupabaseUserRepositoryAdapter();
     return registry.user as IUserRepository;
   }
 
