@@ -6,6 +6,7 @@
  * le destinataire est l'organisation maître d'ouvrage. Ces informations sont
  * nécessaires pour pré-remplir le fournisseur et l'organisation à l'import.
  */
+import { detectSection } from './sectionDetection';
 
 export interface DocumentParty {
   name?: string;
@@ -99,6 +100,8 @@ export function extractDocumentParties(rows: string[][], stopIndex?: number): Do
     const cells = (rows[i] ?? []).map((c) => String(c ?? ''));
     const nonEmpty = cells.filter((c) => c.trim());
     if (!nonEmpty.length) continue;
+    // Le bloc en-tête s'arrête dès la première section (LOT / PHASE / CHAPITRE).
+    if (detectSection(cells)) break;
     const labelled = nonEmpty.some((c) => FIELD_PATTERNS.some(({ rx }) => rx.test(c.trim())));
     // Une ligne unique non étiquetée après le bloc = titre du document.
     if (!labelled && nonEmpty.length === 1 && (supplier.name || organization.name)) {
