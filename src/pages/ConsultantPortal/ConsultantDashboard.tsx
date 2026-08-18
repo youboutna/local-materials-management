@@ -5,7 +5,7 @@
  *  - déclenche une demande de paiement (décompte) à 100 % ou en réception définitive,
  *  - reçoit alertes (retard, garantie bancaire, assurance) et notifications de paiement.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout';
 import {
   Breadcrumb,
