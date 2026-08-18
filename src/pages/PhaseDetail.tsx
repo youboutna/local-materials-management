@@ -2,7 +2,7 @@
  * PhaseDetail — Lifecycle-grouped tabs (Planification / Exécution / Contrôle / Clôture).
  * Cross-module navigation buttons link to inspections, payments, documents and reports.
  */
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,18 @@ import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
 import { PhaseStatus } from '@/dtos/entities/PhaseDTO';
+import type { PhaseDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dto';
 import PhaseTasks from '@/components/project/PhaseTasks';
-import PhaseMaterials from '@/components/project/PhaseMaterials';
-import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
+import PhaseStepsManager from '@/components/project/phase/PhaseStepsManager';
+import PhaseResourcesTab from '@/components/project/phase/PhaseResourcesTab';
+import PhaseQuantityTakeoffTab from '@/components/project/phase/PhaseQuantityTakeoffTab';
+import PhaseStakeholdersTab from '@/components/project/phase/PhaseStakeholdersTab';
+import PhaseFinancesTab from '@/components/project/phase/PhaseFinancesTab';
+import PhaseEditDialog from '@/components/project/phase/PhaseEditDialog';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
@@ -33,8 +38,9 @@ import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumb
 import {
   ArrowLeft, Calendar, DollarSign, MapPin, Users, Package, FileText, BarChart3,
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
-  ExternalLink, AlertTriangle,
+  ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
+
 
 const PhaseDetail: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
