@@ -14,12 +14,20 @@ import { getPhasesForReferential, type ReferentialType } from '@/config/referent
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
+export interface StakeholderOption {
+  id: string;
+  name: string;
+  type: 'organization' | 'employee' | 'supplier';
+}
+
 interface Props {
   lines: BoqLineDTO[];
   emptyLabel?: string;
   editable?: boolean;
   referentialCode?: ReferentialType;
   phases?: WbsPhase[];
+  /** Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur). */
+  stakeholders?: StakeholderOption[];
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
   pageSize?: number;
@@ -29,9 +37,23 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 15;
+const DATA_COLS = 17;
+const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
+  { value: 'material', label: 'Métré / matériau' },
+  { value: 'labor', label: "RH / prestation" },
+  { value: 'equipment', label: 'Équipement' },
+];
+const STAKEHOLDER_GROUPS: { type: StakeholderOption['type']; label: string }[] = [
+  { type: 'organization', label: 'Organisations' },
+  { type: 'employee', label: 'Employés' },
+  { type: 'supplier', label: 'Fournisseurs' },
+];
 
-export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, onChange, onRemove, pageSize = 10 }: Props) {
+const stakeholderOf = (l: BoqLineDTO) =>
+  (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
+
+export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10 }: Props) {
+
   const [page, setPage] = useState(0);
   useEffect(() => { setPage(0); }, [lines.length]);
 
