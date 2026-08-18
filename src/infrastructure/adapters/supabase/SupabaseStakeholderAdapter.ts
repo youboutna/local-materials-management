@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 import { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import { Stakeholder } from '@/domain/entities/Stakeholder';
-import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
+import { IStakeholderRepository, StakeholderAssignment } from '@/domain/repositories/IStakeholderRepository';
 
 const TABLE = 'project_stakeholders';
 
