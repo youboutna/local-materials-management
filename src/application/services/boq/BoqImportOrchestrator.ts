@@ -11,6 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
+import { parseLocaleNumber } from './parsers/numberParsing';
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
@@ -99,11 +100,7 @@ export class BoqImportOrchestrator {
     const effectiveVat = ctx.detectedVatRate ?? fiscal.vatRate;
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
-      const num = (v: unknown): number | null => {
-        if (v == null || v === '') return null;
-        const n = Number(String(v).replace(/\s+/g, '').replace(',', '.'));
-        return Number.isFinite(n) ? n : null;
-      };
+      const num = (v: unknown): number | null => parseLocaleNumber(v);
       const rawQty = num(get(mapping.quantity));
       const rawTotal = num(get(mapping.total));
       const pu = num(get(mapping.unitPrice));
