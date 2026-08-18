@@ -11,6 +11,7 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { MeterInputDTO, MeterInputSourceFormat } from '@/dtos/boq/MeterInputDTO';
 import { BoqImportOrchestrator, type ImportMapping } from './BoqImportOrchestrator';
 import type { ParseResult } from './parsers/IDocumentParser';
+import type { NumberFormatMode } from './parsers/numberParsing';
 import type { EdbPayload } from './parsers/JsonBoqParser';
 
 export interface UnifiedParseResult extends ParseResult {
@@ -27,6 +28,8 @@ export interface ToMeterInputsContext {
   phaseId?: string;
   referentialCode?: ReferentialType;
   fiscalProfileCode?: string;
+  /** Convention numérique du document (choisie par l'utilisateur à l'upload). */
+  numberFormat?: NumberFormatMode;
 }
 
 function detectFormat(file: File): MeterInputSourceFormat {
