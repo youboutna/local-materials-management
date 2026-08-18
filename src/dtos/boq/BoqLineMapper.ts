@@ -111,9 +111,10 @@ export class BoqLineMapper {
       fees: row.fees ?? 0,
       totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
       materialId: row.resource_id ?? row.material_id ?? null,
-      phaseId: row.phase_id ?? null,
-      milestoneId: row.milestone_id ?? null,
-      taskId: row.task_id ?? null,
+      phaseId: row.phase_id ?? row.phase_code ?? null,
+      milestoneId: row.milestone_id ?? row.milestone_code ?? null,
+      taskId: row.task_id ?? row.task_code ?? null,
+
       resourceType: ((row.resource_kind ?? row.resource_type) as BoqLineDTO['resourceType']) ?? 'material',
       note: row.note ?? null,
       bidRef: row.bid_ref ?? null,
