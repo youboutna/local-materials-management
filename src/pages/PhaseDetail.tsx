@@ -2,7 +2,7 @@
  * PhaseDetail — Lifecycle-grouped tabs (Planification / Exécution / Contrôle / Clôture).
  * Cross-module navigation buttons link to inspections, payments, documents and reports.
  */
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,18 @@ import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
 import { PhaseStatus } from '@/dtos/entities/PhaseDTO';
+import type { PhaseDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dto';
 import PhaseTasks from '@/components/project/PhaseTasks';
-import PhaseMaterials from '@/components/project/PhaseMaterials';
-import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
+import PhaseStepsManager from '@/components/project/phase/PhaseStepsManager';
+import PhaseResourcesTab from '@/components/project/phase/PhaseResourcesTab';
+import PhaseQuantityTakeoffTab from '@/components/project/phase/PhaseQuantityTakeoffTab';
+import PhaseStakeholdersTab from '@/components/project/phase/PhaseStakeholdersTab';
+import PhaseFinancesTab from '@/components/project/phase/PhaseFinancesTab';
+import PhaseEditDialog from '@/components/project/phase/PhaseEditDialog';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
@@ -33,8 +38,9 @@ import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumb
 import {
   ArrowLeft, Calendar, DollarSign, MapPin, Users, Package, FileText, BarChart3,
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
-  ExternalLink, AlertTriangle,
+  ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
+
 
 const PhaseDetail: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
@@ -42,7 +48,29 @@ const PhaseDetail: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   useLanguage();
 
-  const { phase, isLoading: loading, error, updatePhaseAsync, isUpdatingPhase } = usePhaseDetails(phaseId);
+  const {
+    phase,
+    isLoading: loading,
+    error,
+    updatePhaseAsync,
+    isUpdatingPhase,
+    addStep,
+    updateStep,
+    deleteStep,
+    addTask,
+    updateTask,
+    deleteTask,
+    isUpdating,
+  } = usePhaseDetails(phaseId);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
+
+  const steps = useMemo(
+    () => ((phase as unknown as { steps?: PhaseStepDTO[] })?.steps ?? []) as PhaseStepDTO[],
+    [phase]
+  );
+
 
   const vm = useMemo(() => (phase ? toPhaseViewModel(phase as unknown as Record<string, unknown>) : null), [phase]);
 
@@ -60,6 +88,31 @@ const PhaseDetail: React.FC = () => {
       return sp;
     });
   };
+
+  /** Hydratation du formulaire d'édition depuis la phase persistée. */
+  useEffect(() => {
+    if (!vm) return;
+    setEditForm({
+      name: vm.title,
+      description: vm.description,
+      startDate: vm.startDate,
+      endDate: vm.endDate,
+      estimatedCost: vm.budget,
+      status: vm.status as unknown as PhaseDTO['status'],
+      progress: vm.progress,
+    } as Partial<PhaseDTO>);
+  }, [vm]);
+
+  const handleSaveEdit = async () => {
+    try {
+      await updatePhaseAsync(editForm as Record<string, unknown>);
+      setIsEditing(false);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
+
 
   if (loading) {
     return (
@@ -123,7 +176,16 @@ const PhaseDetail: React.FC = () => {
             <Badge className={getStatusColor(vm.status)} variant="outline">
               {getStatusLabel(vm.status)}
             </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              aria-label="Modifier la phase"
+            >
+              <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> Modifier
+            </Button>
           </div>
+
         </div>
 
         {/* Overview KPIs */}
@@ -222,18 +284,45 @@ const PhaseDetail: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Planification: tasks, planning (gantt/pert), milestones, team */}
+          {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
           <TabsContent value="planification" className="space-y-6">
-            <Tabs defaultValue="tasks" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="tasks"><Layers className="h-3 w-3 mr-1" />Tâches</TabsTrigger>
+            <Tabs defaultValue="steps" className="space-y-4">
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" />Étapes</TabsTrigger>
+                <TabsTrigger value="tasks">Tâches</TabsTrigger>
+                <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
+                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" />Intervenants</TabsTrigger>
                 <TabsTrigger value="gantt">Gantt</TabsTrigger>
                 <TabsTrigger value="pert">PERT</TabsTrigger>
                 <TabsTrigger value="critical">Chemin critique</TabsTrigger>
                 <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" />Jalons</TabsTrigger>
                 <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" />Équipe</TabsTrigger>
               </TabsList>
+              <TabsContent value="steps">
+                <PhaseStepsManager
+                  steps={steps}
+                  onAddStep={(step) => addStep(step as Omit<PhaseStepDTO, 'id'>)}
+                  onUpdateStep={(stepId, updates) => updateStep(stepId, updates)}
+                  onDeleteStep={(stepId) => deleteStep(stepId)}
+                  onAddTask={(stepId, task) => addTask(stepId, task as Omit<PhaseTaskDTO, 'id'>)}
+                  onUpdateTask={(stepId, taskId, updates) => updateTask(stepId, taskId, updates)}
+                  onDeleteTask={(stepId, taskId) => deleteTask(stepId, taskId)}
+                  isUpdating={isUpdating}
+                  projectId={projectId!}
+                  phaseId={phaseId!}
+                />
+              </TabsContent>
               <TabsContent value="tasks"><PhaseTasks phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="metre">
+                <PhaseQuantityTakeoffTab phaseId={phaseId!} projectId={projectId!} phaseName={title} />
+              </TabsContent>
+              <TabsContent value="resources">
+                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+              </TabsContent>
+              <TabsContent value="stakeholders">
+                <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
+              </TabsContent>
               <TabsContent value="gantt">
                 <GanttChart
                   projectId={projectId!}
@@ -258,23 +347,34 @@ const PhaseDetail: React.FC = () => {
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team"><PhaseEmployees phaseId={phaseId!} /></TabsContent>
+              <TabsContent value="team"><PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
             </Tabs>
           </TabsContent>
 
-          {/* Exécution: materials, documents (livrables), payments échéances */}
+          {/* Exécution: ressources consommées, finances, livrables, échéances */}
           <TabsContent value="execution" className="space-y-6">
-            <Tabs defaultValue="materials" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="materials"><Package className="h-3 w-3 mr-1" />Matériaux</TabsTrigger>
+            <Tabs defaultValue="resources" className="space-y-4">
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
+                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" />Finances</TabsTrigger>
                 <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" />Livrables</TabsTrigger>
                 <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" />Échéances</TabsTrigger>
               </TabsList>
-              <TabsContent value="materials"><PhaseMaterials phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="resources">
+                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+              </TabsContent>
+              <TabsContent value="finances">
+                <PhaseFinancesTab
+                  phase={phase as unknown as PhaseDTO}
+                  projectId={projectId!}
+                  phaseId={phaseId!}
+                />
+              </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
               <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
             </Tabs>
           </TabsContent>
+
 
           {/* Contrôle: inspections + conformité */}
           <TabsContent value="controle" className="space-y-6">
@@ -311,7 +411,30 @@ const PhaseDetail: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <PhaseEditDialog
+          isOpen={isEditing}
+          onOpenChange={setIsEditing}
+          editForm={editForm}
+          setEditForm={setEditForm}
+          onSave={handleSaveEdit}
+          isUpdating={isUpdatingPhase}
+          phaseName={title}
+          completionValidation={{
+            canComplete: progress >= 100,
+            pendingCheckpoints: [],
+            completedCheckpoints: [],
+            totalCheckpoints: 0,
+            completedCount: 0,
+            message: '',
+            progressMet: progress >= 100,
+            currentProgress: progress,
+            requiredProgress: 100,
+            progressMessage: '',
+          }}
+        />
       </div>
+
     </AppLayout>
   );
 };
