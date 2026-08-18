@@ -104,6 +104,16 @@ export function BoqWorkspace({
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
+
+  // Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur).
+  const { data: organizations = [] } = useOrganizations();
+  const { data: activeEmployees = [] } = useActiveEmployeesHex();
+  const { data: activeSuppliers = [] } = useActiveSuppliersHex();
+  const stakeholders = useMemo<StakeholderOption[]>(() => [
+    ...organizations.map((o) => ({ id: o.id, name: o.name, type: 'organization' as const })),
+    ...activeEmployees.map((e) => ({ id: e.id, name: e.full_name, type: 'employee' as const })),
+    ...activeSuppliers.map((s) => ({ id: s.id, name: s.name, type: 'supplier' as const })),
+  ], [organizations, activeEmployees, activeSuppliers]);
   const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
