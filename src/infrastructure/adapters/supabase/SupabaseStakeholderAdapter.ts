@@ -136,6 +136,37 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
     return count || 0;
   }
 
+  /** Met à jour uniquement le rôle métier (`stakeholder_type`). */
+  async setBusinessRole(id: string, businessRole: string): Promise<Stakeholder> {
+    if (!id) throw new Error('Invalid stakeholder ID provided');
+    const { data, error } = await btpClient.from(TABLE)
+      .update({ stakeholder_type: businessRole, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return this.mapToEntity(data);
+  }
+
+  /** Projection légère des affectations pour des rôles métier donnés. */
+  async findAssignmentsByBusinessRoles(businessRoles: string[]): Promise<StakeholderAssignment[]> {
+    if (!businessRoles?.length) return [];
+    const { data, error } = await btpClient.from(TABLE)
+      .select('id, project_id, stakeholder_type, stakeholder_entity_type, employee_id, supplier_id, external_name, role_description')
+      .in('stakeholder_type', businessRoles);
+    if (error) throw error;
+    return (data || []).map((row: Record<string, any>) => ({
+      id: row.id,
+      projectId: row.project_id,
+      businessRole: String(row.stakeholder_type ?? ''),
+      entityType: String(row.stakeholder_entity_type ?? ''),
+      employeeId: row.employee_id ?? null,
+      supplierId: row.supplier_id ?? null,
+      name: row.external_name ?? row.role_description ?? null,
+    }));
+  }
+
+
   // ============= Mappers =============
 
   private mapToEntity(data: Record<string, any>): Stakeholder {
