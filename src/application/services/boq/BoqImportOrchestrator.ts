@@ -94,11 +94,33 @@ export class BoqImportOrchestrator {
   static toDtos(
     rows: ParseResult['rows'],
     mapping: ImportMapping,
-    ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string; detectedVatRate?: number | null; numberFormat?: NumberFormatMode },
+    ctx: {
+      source: BoqSource;
+      contextId: string;
+      phaseId?: string;
+      referentialCode?: ReferentialType;
+      fiscalProfileCode?: string;
+      detectedVatRate?: number | null;
+      numberFormat?: NumberFormatMode;
+      /** Fiscalité détectée (double bloc travaux / prestations intellectuelles). */
+      detectedFiscal?: import('./parsers/IDocumentParser').DetectedFiscal | null;
+      /** En-tête administratif : fournisseur (expéditeur) & organisation (destinataire). */
+      parties?: import('./parsers/headerDetection').DocumentParties | null;
+    },
   ): BoqLineDTO[] {
     const out: BoqLineDTO[] = [];
     const fiscal = getFiscalProfile(ctx.fiscalProfileCode);
-    const effectiveVat = ctx.detectedVatRate ?? fiscal.vatRate;
+    const detected = ctx.detectedFiscal ?? null;
+    const effectiveVat = ctx.detectedVatRate ?? detected?.vatRate ?? fiscal.vatRate;
+    // Les prestations intellectuelles / RH ont légitimement une fiscalité propre
+    // (TVA 16 % + traitement sur salaire) distincte des travaux (TVA 5 %).
+    const labourVat = detected?.laborVatRate ?? effectiveVat;
+    const labourPayroll = detected?.laborPayrollTaxRate ?? null;
+    const partyMeta = {
+      supplierName: ctx.parties?.supplier?.name ?? null,
+      organizationName: ctx.parties?.organization?.name ?? null,
+    };
+
     for (const row of rows) {
       const get = (key?: string) => (key ? row.raw[key] : null);
       const num = (v: unknown): number | null => parseLocaleNumber(v, ctx.numberFormat ?? 'auto');
