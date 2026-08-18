@@ -683,6 +683,7 @@ export function BoqWorkspace({
           editable
           referentialCode={activeReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
+          stakeholders={stakeholders}
           onChange={handlePatch}
           onRemove={handleRemove}
         />
