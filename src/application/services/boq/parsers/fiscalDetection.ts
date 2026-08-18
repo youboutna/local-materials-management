@@ -5,13 +5,12 @@
  * to the UI (auto-selection of the fiscal profile).
  */
 import type { DetectedFiscal } from './IDocumentParser';
+import { parseLocaleNumber } from './numberParsing';
 
 const NUM = /(-?\d[\d\s.,]*)/;
 
 function toNumber(s: string): number | null {
-  const m = s.replace(/\s+/g, '').replace(',', '.');
-  const n = Number(m);
-  return Number.isFinite(n) ? n : null;
+  return parseLocaleNumber(s);
 }
 
 function pctFromLabel(label: string): number | null {

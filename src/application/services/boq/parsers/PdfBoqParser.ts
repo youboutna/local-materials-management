@@ -8,6 +8,13 @@
  */
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
+import {
+  detectSection,
+  isRepeatedHeaderRow,
+  SECTION_LABEL_COLUMN,
+  SECTION_LOT_COLUMN,
+  type DetectedSection,
+} from './sectionDetection';
 
 interface PdfItem { str: string; transform: number[]; width?: number }
 
@@ -110,28 +117,42 @@ export class PdfBoqParser implements IDocumentParser {
       if (looksHeader(rowsAcc[i]) >= 2) { headerIdx = i; break; }
     }
     const maxCols = rowsAcc.reduce((m, r) => Math.max(m, r.length), 0);
-    const columns: string[] = headerIdx >= 0
+    const baseColumns: string[] = headerIdx >= 0
       ? Array.from({ length: maxCols }, (_, i) => {
           const label = (rowsAcc[headerIdx][i] ?? '').trim();
           return label || `col_${i + 1}`;
         })
       : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
+    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN];
 
-    const dataRows = headerIdx >= 0 ? rowsAcc.slice(headerIdx + 1) : rowsAcc;
+    // Les lignes « LOT … » précédant l'en-tête doivent rester visibles pour le
+    // contexte : on parcourt donc toutes les lignes et on saute l'en-tête détecté.
     const detectedFiscal: DetectedFiscal = {};
     const parsedRows: ParsedBoqRow[] = [];
-    for (const cells of dataRows) {
+    let section: DetectedSection | null = null;
+    let sectionsFound = 0;
+    for (let i = 0; i < rowsAcc.length; i++) {
+      if (i === headerIdx) continue;
+      const cells = rowsAcc[i];
       const label = String(cells[0] ?? '').trim();
+
+      const nextSection = detectSection(cells);
+      if (nextSection) { section = nextSection; sectionsFound += 1; continue; }
+      if (headerIdx >= 0 && isRepeatedHeaderRow(cells, baseColumns)) continue;
+
       if (isFiscalMetaRow(label) || /^(sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc)/i.test(label)) {
         extractFiscalFromRow(cells, detectedFiscal);
         continue;
       }
       if (isSubtotalRow(label)) continue;
       const raw: Record<string, string | number | null> = {};
-      cells.forEach((c, i) => { raw[columns[i]] = c; });
+      cells.forEach((c, idx) => { raw[baseColumns[idx] ?? `col_${idx + 1}`] = c; });
+      raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
+      raw[SECTION_LABEL_COLUMN] = section?.label ?? null;
       parsedRows.push({ raw });
     }
     if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
+    if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
     warnings.push(...summarizeFiscal(detectedFiscal));
     return { rows: parsedRows, columns, warnings, detectedFiscal };
   }

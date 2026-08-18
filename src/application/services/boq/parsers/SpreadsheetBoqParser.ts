@@ -12,6 +12,13 @@
 import * as XLSX from 'xlsx';
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
+import {
+  detectSection,
+  isRepeatedHeaderRow,
+  SECTION_LABEL_COLUMN,
+  SECTION_LOT_COLUMN,
+  type DetectedSection,
+} from './sectionDetection';
 
 const HEADER_HINTS: RegExp[] = [
   /d[eé]signation|libell[eé]|description|intitul/i,
@@ -65,13 +72,16 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     }
 
     const rawHeader = matrix[headerIdx] ?? [];
-    const columns: string[] = rawHeader.map((c, i) => {
+    const baseColumns: string[] = rawHeader.map((c, i) => {
       const s = c == null ? '' : String(c).trim();
       return s || `col_${i + 1}`;
     });
+    const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN];
 
     const rows: ParsedBoqRow[] = [];
     const detectedFiscal: DetectedFiscal = {};
+    let section: DetectedSection | null = null;
+    let sectionsFound = 0;
     for (let i = headerIdx + 1; i < matrix.length; i++) {
       const line = matrix[i] ?? [];
       if (line.every((v) => v == null || String(v).trim() === '')) continue;
@@ -83,16 +93,22 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       }
       if (isSubtotalRow(label)) continue;
       const hasNumeric = line.some((v) => typeof v === 'number' && v !== 0);
-      if (!hasNumeric && /^(lot\s*\d|phase\s*\d|chapitre|section)/i.test(label)) continue;
+      const nextSection = detectSection(line as (string | number | null)[]);
+      if (nextSection && !hasNumeric) { section = nextSection; sectionsFound += 1; continue; }
+      if (nextSection) section = nextSection;
+      if (isRepeatedHeaderRow(line as (string | number | null)[], baseColumns)) continue;
 
       const raw: Record<string, string | number | null> = {};
-      columns.forEach((col, idx) => {
+      baseColumns.forEach((col, idx) => {
         const v = line[idx];
         raw[col] = v == null ? null : typeof v === 'number' ? v : String(v);
       });
+      raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
+      raw[SECTION_LABEL_COLUMN] = section?.label ?? null;
       rows.push({ raw });
     }
 
+    if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
     warnings.push(...summarizeFiscal(detectedFiscal));
     return { rows, columns, warnings, detectedFiscal };
   }
