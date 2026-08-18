@@ -25,6 +25,8 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
+  const [currentProvider, setCurrentProvider] = useState<AuthProvider>('supabase');
+  const [switching, setSwitching] = useState(false);
   const [showEmailEditor, setShowEmailEditor] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   
@@ -204,62 +206,28 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
   // Switch Provider (avec fallback)
   const switchProvider = useCallback(async (config: AuthManagerConfig) => {
     try {
-      setLoading(true);
-      console.log('🔄 Switching to provider:', config.provider);
-      
+      setSwitching(true);
       const { getAuthManager } = await import('@/application/services/AuthManager');
       const authManager = getAuthManager();
-      
+
       if (typeof authManager.switchProvider === 'function') {
         await authManager.switchProvider(config);
       } else {
-        console.warn('⚠️ authManager.switchProvider is not a function. Using fallback.');
         setCurrentProvider(config.provider);
-        toast({
-          title: t('common.success'),
-          description: `Provider changed to ${config.provider} (local).`,
-        });
-        setLoading(false);
+        toast.success(`Provider changed to ${config.provider} (local).`);
         return;
       }
-      
+
       setCurrentProvider(config.provider);
-      const sessionResult = await unifiedAuthService.getCurrentSession();
-      const userResult = await unifiedAuthService.getCurrentUser();
-      if (sessionResult.session && userResult.user) {
-        const unifiedSession = {
-          user: {
-            id: userResult.user.id,
-            email: userResult.user.email || '',
-            full_name: userResult.user.full_name,
-            phone: userResult.user.phone,
-            national_id: userResult.user.national_id,
-            role: userResult.user.role,
-            avatar_url: undefined,
-            metadata: {}
-          },
-          expires_at: sessionResult.session.expiresAt ? String(sessionResult.session.expiresAt) : undefined,
-          provider: config.provider
-        };
-        setSession(unifiedSession);
-        setUser(unifiedSession.user);
-      }
-      
-      toast({
-        title: t('common.success'),
-        description: `Fournisseur changé pour ${config.provider}.`,
-      });
+      await refetch();
+      toast.success(`Fournisseur changé pour ${config.provider}.`);
     } catch (error) {
       console.error('❌ Error switching provider:', error);
-      toast({
-        title: t('common.error'),
-        description: "Échec du changement de fournisseur d'authentification.",
-        variant: "destructive"
-      });
+      toast.error("Échec du changement de fournisseur d'authentification.");
     } finally {
-      setLoading(false);
+      setSwitching(false);
     }
-  }, [unifiedAuthService, toast, t]);
+  }, [refetch]);
 
   // Listener Supabase avec reset de l'éditeur
   useEffect(() => {
@@ -289,12 +257,23 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     isAuthenticated,
-    isLoading: isLoading || loginMutation.isPending || registerMutation.isPending,
+    isLoading: isLoading || switching || loginMutation.isPending || registerMutation.isPending,
+    loading: isLoading || switching || loginMutation.isPending || registerMutation.isPending,
     error: error?.message || null,
+    isDevelopmentMode: DEV_MODE,
+    currentProvider: session?.provider || currentProvider,
+    supportedProviders: [
+      { value: 'supabase' as AuthProvider, label: 'Supabase', description: 'Auth managée Supabase' },
+      { value: 'gotrue' as AuthProvider, label: 'GoTrue', description: 'Auth self-hosted GoTrue' },
+      { value: 'keycloak' as AuthProvider, label: 'Keycloak', description: 'SSO Keycloak' },
+      { value: 'local' as AuthProvider, label: 'Local', description: 'Mode développement local' },
+    ],
+    switchProvider,
     login,
     loginWithOAuth,
     register,
     logout,
+    signOut: logout,
     getOAuthProviders,
     generateOAuthUrl,
     refetch,

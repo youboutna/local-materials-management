@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
-import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

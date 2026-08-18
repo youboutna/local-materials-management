@@ -51,7 +51,7 @@ export function ProviderSwitcher({
     setProviderStatus(prev => ({ ...prev, [provider]: 'testing' }));
     
     try {
-      await switchProvider({ provider });
+      await switchProvider({ provider: provider as AuthProvider });
       
       setProviderStatus(prev => ({ ...prev, [provider]: 'available' }));
       setSelectedProvider(provider);

@@ -10,6 +10,7 @@ import {
   LoginCredentials,
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
 const SESSION_KEY = 'gotrue_session';
 
@@ -38,8 +39,8 @@ function toUser(u: any): AuthUser {
   };
 }
 
-export class GoTrueAuthAdapter implements IAuthRepository {
-  constructor(private baseUrl: string, private apiKey?: string) {}
+export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
+  constructor(private baseUrl: string, private apiKey?: string) { super(); }
 
   private async call<T>(path: string, method: string, body?: unknown, token?: string) {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };

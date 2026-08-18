@@ -2,7 +2,7 @@
  * Types pour le contexte d'authentification hexagonal
  */
 
-import { AuthProvider } from '@/config/app';
+import { AuthManagerConfig, AuthProvider } from '@/config/app';
 import { UnifiedAuthUser, UnifiedAuthSession, OAuthLoginData } from '@/application/services/UnifiedAuthService';
 import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 
@@ -12,13 +12,21 @@ export interface HexagonalAuthContextType {
   session: UnifiedAuthSession | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** Alias de isLoading pour compatibilité présentation */
+  loading: boolean;
   error: string | null;
+  isDevelopmentMode: boolean;
+  currentProvider: AuthProvider;
+  supportedProviders: Array<{ value: AuthProvider; label: string; description: string }>;
+  switchProvider: (config: AuthManagerConfig) => Promise<void>;
 
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   loginWithOAuth: (oAuthData: OAuthLoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  /** Alias de logout */
+  signOut: () => Promise<void>;
   
   // OAuth specific
   getOAuthProviders: () => Promise<any[]>;

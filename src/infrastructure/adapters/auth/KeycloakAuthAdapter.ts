@@ -11,6 +11,7 @@ import {
   LoginCredentials,
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
 const SESSION_KEY = 'keycloak_session';
 
@@ -64,8 +65,8 @@ function toUser(u: any): AuthUser {
   };
 }
 
-export class KeycloakAuthAdapter implements IAuthRepository {
-  constructor(private opts: KeycloakOptions) {}
+export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthRepository {
+  constructor(private opts: KeycloakOptions) { super(); }
 
   async getCurrentSession() {
     return { session: readSession(), error: null };

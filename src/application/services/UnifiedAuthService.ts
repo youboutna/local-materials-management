@@ -29,12 +29,24 @@ export interface UnifiedAuthUser {
   createdAt: string;
   updatedAt?: string;
   profile?: UserProfile;
+  // Alias / champs de compatibilité présentation (Keycloak, Supabase metadata)
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  keycloakId?: string;
+  roles?: string[];
+  full_name?: string;
+  avatar_url?: string;
+  national_id?: string;
+  metadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
 }
 
 export interface UnifiedAuthSession {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: string;
+  expires_at?: string;
   user: UnifiedAuthUser;
   provider: AuthProvider;
 }
@@ -94,12 +106,25 @@ export class UnifiedAuthService {
       authProvider: 'supabase', // Le provider est fixe ici (peut être dérivé de session)
       createdAt: session.user.created_at || new Date().toISOString(),
       updatedAt: profile?.updatedAt?.toISOString() || session.user.updated_at,
-      profile: profile || undefined
+      profile: profile || undefined,
+      full_name: profile?.fullName || session.user.full_name,
+      avatar_url: profile?.avatarUrl,
+      national_id: profile?.nationalId || session.user.national_id,
+      roles: finalRole ? [String(finalRole)] : [],
+      user_metadata: {
+        full_name: profile?.fullName || session.user.full_name,
+        phone: profile?.phone || session.user.phone,
+        national_id: profile?.nationalId || session.user.national_id,
+        avatar_url: profile?.avatarUrl,
+        role: finalRole,
+      },
+      metadata: {},
     };
     return {
       accessToken: session.access_token,
       refreshToken: session.refresh_token,
       expiresAt: session.expires_at,
+      expires_at: session.expires_at,
       user,
       provider: 'supabase'
     };
@@ -239,6 +264,16 @@ export class UnifiedAuthService {
   async confirmUserEmail(userId: string): Promise<void> {
     const result = await this.authRepository.confirmUserEmail(userId);
     if (result.error) throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to confirm email', result.error);
+  }
+
+  async getCurrentUser(): Promise<{ user: UnifiedAuthUser | null }> {
+    const { user } = await this.getCurrentSession();
+    return { user };
+  }
+
+  async updateEmail(oldEmail: string, newEmail: string): Promise<void> {
+    const result = await this.authRepository.updateEmail(oldEmail, newEmail);
+    if (result.error) throw new AppError(ErrorCode.INTERNAL_ERROR, AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED, result.error);
   }
 
   private generateState(): string {

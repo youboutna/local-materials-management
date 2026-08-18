@@ -6,7 +6,7 @@
 
 import { User, UserRoleEntity, UserRoleStatus } from '@/domain/entities/User';
 import { AuthUser } from '@/domain/repositories/IAuthRepository';
-import { UserDTO, UserRoleDTO } from '@/dtos/entities/UserDTO';
+import { CreateUserRoleDTO, UpdateUserRoleDTO, UserDTO, UserRoleDTO } from '@/dtos/entities/UserDTO';
 
 export class UserTransformer {
   // ============================
@@ -69,11 +69,11 @@ export class UserTransformer {
     const id = 'id' in dto ? (dto.id as string) : '';
     const revokedAt = 'revokedAt' in dto && dto.revokedAt ? new Date(dto.revokedAt) : undefined;
     const expiresAt = 'expiresAt' in dto && dto.expiresAt ? new Date(dto.expiresAt) : undefined;
-    const status = dto.status || UserRoleStatus.ACTIVE;
+    const status = (dto.status as UserRoleStatus) || UserRoleStatus.ACTIVE;
     return UserRoleEntity.create({
       id: id || '',
       userId: dto.userId || '',
-      roleName: dto.roleName,
+      roleName: dto.roleName || 'user',
       status: status,
       assignedAt: new Date(),
       assignedBy: dto.assignedBy,
@@ -137,7 +137,8 @@ export class UserTransformer {
 
   static toSupabaseRow(user: Partial<User> | Omit<User, 'id'>): any {
     const row: any = {};
-    if (user.id !== undefined) row.id = user.id;
+    const u = user as Partial<User>;
+    if (u.id !== undefined) row.id = u.id;
     if (user.email !== undefined) row.email = user.email;
     if (user.fullName !== undefined) row.full_name = user.fullName;
     if (user.phone !== undefined) row.phone = user.phone;

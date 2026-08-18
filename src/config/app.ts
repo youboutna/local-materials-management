@@ -26,6 +26,7 @@ export type AppMode = 'development' | 'production' | 'local-bypass';
 export type AuthProvider = 'supabase' | 'gotrue' | 'keycloak' | 'local' | 'auth0' | 'custom';
 export type DatabaseProvider = 'supabase' | 'postgrest' | 'local' | 'postgresql' | 'mysql';
 export type StorageProvider = 'supabase' | 's3' | 'minio' | 'local' | 'azure' | 'gcs' | 'ftp';
+export type { AuthManagerConfig } from '@/application/services/AuthManager';
 
 export interface AppConfig {
   environment: Environment;

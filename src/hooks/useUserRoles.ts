@@ -60,9 +60,9 @@ export const useUserRoles = (userId?: string) => {
         const user = await userService.getUserById(userId);
         if (!user) return [];
         
-        const roles: UserRole[] = user.role ? [{
-          id: `${userId}-${user.role}`,
-          roleName: String(user.role),
+        const roles: UserRole[] = user.primaryRole ? [{
+          id: `${userId}-${user.primaryRole}`,
+          roleName: String(user.primaryRole),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }] : [];
@@ -113,7 +113,7 @@ export const useCurrentUserRoles = () => {
     }
     const userData = await userService.getUserById(user.id);
     setCurrentUser(userData ? {
-      roleName: String(userData.role || ''),
+      roleName: String(userData.primaryRole || ''),
       id: userData.id || user.id,
       created_at: userData.createdAt?.toISOString?.() || new Date().toISOString(),
       updated_at: userData.updatedAt?.toISOString?.() || new Date().toISOString(),
@@ -151,7 +151,7 @@ export const useCurrentUserRoles = () => {
         const roleNames = userRolesEntities.map(ur => String(ur.roleName || ur).toLowerCase());
         
         // Also include primary role
-        const primaryRole = userServiceUser.role ? [String(userServiceUser.role).toLowerCase()] : [];
+        const primaryRole = userServiceUser.primaryRole ? [String(userServiceUser.primaryRole).toLowerCase()] : [];
         
         const allRoles = Array.from(new Set([...roleNames, ...primaryRole, ...fallbackRoles]));
         
@@ -243,9 +243,7 @@ export const useRoleManagement = () => {
         }
         
         // Update user role via service
-        await userService.updateUser(userId, {
-          role: roleName as any
-        });
+        await getAuthService().assignUserRole(userId, roleName);
       } catch (error) {
         console.error('Error assigning role:', error);
         throw error;
@@ -275,9 +273,7 @@ export const useRoleManagement = () => {
         if (!user) throw new Error('User not found');
         
         // Reset to default role
-        await userService.updateUser(userId, {
-          role: 'agent' as any
-        });
+        await getAuthService().assignUserRole(userId, 'agent');
       } catch (error) {
         console.error('Error removing role:', error);
         throw error;

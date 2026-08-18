@@ -16,7 +16,7 @@
 
 export * from './ProjectDTO';
 
-export * from './UserDTO';
+export type { UserDTO, UserRoleDTO, CreateUserDTO, UpdateUserDTO, CreateUserRoleDTO, UpdateUserRoleDTO } from './UserDTO';
 
 export * from './EmployeeDTO';
 
@@ -58,7 +58,6 @@ export * from './InsuranceDTO';
 export * from './InvoiceDTO';
 
 export * from './HierarchyDTO';
-export * from './UserDTO';
 
 export * from './HierarchyMappingDTO';
 

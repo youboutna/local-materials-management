@@ -65,7 +65,7 @@ const ConsultantDashboard = () => {
                 {hasConsultantScope ? (
                   <AssociatedPaymentsPanel
                     entityType="validation"
-                    entityId={userId}
+                    entityId={userId ?? ''}
                     showActions={true}
                     onPaymentCreated={() => {}}
                   />

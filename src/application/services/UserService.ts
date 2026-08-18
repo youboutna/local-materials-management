@@ -133,8 +133,8 @@ export class UserService {
       await this.updateUser(userId, {
         fullName: data.fullName,
         phone: data.phone,
-        avatar: data.avatar
-      });
+        avatarUrl: data.avatar
+      } as Partial<User>);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
