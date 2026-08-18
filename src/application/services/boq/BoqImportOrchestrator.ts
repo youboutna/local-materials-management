@@ -166,7 +166,7 @@ export class BoqImportOrchestrator {
 
       // Une unité en jours/hommes désigne une prestation intellectuelle (RH),
       // même hors bloc « Ressources Humaines » (cas des DQE de services).
-      const labourUnit = /^(?:jour|j)\b|jour\s*\/\s*homme|homme\s*\/?\s*jour|\bh\/?j\b|\bj\/?h\b/i.test(unit ?? '');
+      const labourUnit = unit === 'jour';
       const isLabour = sectionKind === 'labour' || labourUnit;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
