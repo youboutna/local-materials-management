@@ -411,7 +411,30 @@ const PhaseDetail: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <PhaseEditDialog
+          isOpen={isEditing}
+          onOpenChange={setIsEditing}
+          editForm={editForm}
+          setEditForm={setEditForm}
+          onSave={handleSaveEdit}
+          isUpdating={isUpdatingPhase}
+          phaseName={title}
+          completionValidation={{
+            canComplete: progress >= 100,
+            pendingCheckpoints: [],
+            completedCheckpoints: [],
+            totalCheckpoints: 0,
+            completedCount: 0,
+            message: '',
+            progressMet: progress >= 100,
+            currentProgress: progress,
+            requiredProgress: 100,
+            progressMessage: '',
+          }}
+        />
       </div>
+
     </AppLayout>
   );
 };
