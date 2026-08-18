@@ -123,7 +123,9 @@ export class BoqImportOrchestrator {
       const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
       const quantity = computed || (rawTotal != null ? 1 : computed);
-      if (!designation && !quantity && rawTotal == null) continue;
+      // Rejet des lignes non valorisées (titres de document, notes) : une ligne
+      // DQE exploitable porte au minimum une quantité, un PU ou un montant.
+      if (!designation || (!quantity && rawTotal == null && pu == null)) continue;
       const unitPrice = pu ?? (rawTotal != null && quantity ? rawTotal / quantity : null);
       const totalHt = rawTotal ?? (unitPrice != null ? quantity * unitPrice : null);
       const lotKey = mapping.lot ? String(get(mapping.lot) ?? '').trim() || null : null;
