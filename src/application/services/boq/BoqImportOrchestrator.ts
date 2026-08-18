@@ -161,7 +161,7 @@ export class BoqImportOrchestrator {
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
         resourceType: sectionKind === 'labour'
-          ? 'labour'
+          ? 'labor'
           : ((resolved.resourceType as BoqResourceType) ?? 'material'),
       };
       out.push(dto);
