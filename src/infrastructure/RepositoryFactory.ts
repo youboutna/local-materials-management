@@ -71,6 +71,7 @@ import {
   SupabaseUserAdapter,
   SupabaseWorkspaceAdapter,
 } from '@/infrastructure/adapters/supabase';
+import { SupabaseUserRepositoryAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserRepositoryAdapter';
 
 import {
   BankGuaranteeAdapter,
