@@ -75,4 +75,27 @@ export interface IStakeholderRepository {
    * Compte les parties prenantes par type
    */
   countByType(type: string): Promise<number>;
+
+  /**
+   * Met à jour uniquement le rôle métier (`stakeholder_type`) d'une partie prenante.
+   * Utilisé pour la désignation / révocation du consultant projet.
+   */
+  setBusinessRole?(id: string, businessRole: string): Promise<Stakeholder>;
+
+  /**
+   * Retourne les affectations correspondant à des rôles métier donnés.
+   */
+  findAssignmentsByBusinessRoles?(businessRoles: string[]): Promise<StakeholderAssignment[]>;
 }
+
+/** Affectation brute d'une partie prenante (projection légère). */
+export interface StakeholderAssignment {
+  id: string;
+  projectId: string;
+  businessRole: string;
+  entityType: string;
+  employeeId: string | null;
+  supplierId: string | null;
+  name: string | null;
+}
+
