@@ -26,7 +26,8 @@ export type PaymentStatus =
   | 'failed'
   | 'refunded'
   | 'manual'
-  | 'blocked';
+  | 'blocked'
+  | 'processed';
 
 export interface PaymentDocument {
   id: string;
@@ -190,6 +191,21 @@ export class Payment {
 
   set progressAtPayment(value: number) {
     this._progressAtPayment = this.validateProgress(value);
+    this._updatedAt = new Date().toISOString();
+  }
+
+  set projectRef(value: { id: string } | null) {
+    this._projectRef = value;
+    this._updatedAt = new Date().toISOString();
+  }
+
+  set phaseRef(value: { id: string } | null) {
+    this._phaseRef = value;
+    this._updatedAt = new Date().toISOString();
+  }
+
+  set inspectionRef(value: { id: string } | null) {
+    this._inspectionRef = value;
     this._updatedAt = new Date().toISOString();
   }
 
@@ -365,7 +381,7 @@ export class Payment {
   private validateStatus(status: PaymentStatus): PaymentStatus {
     const validStatuses: PaymentStatus[] = [
       'requested', 'pending_validation', 'validated', 'approved', 'rejected', 'paid', 'cancelled',
-      'pending', 'processing', 'completed', 'failed', 'refunded', 'manual', 'blocked'
+      'pending', 'processing', 'completed', 'failed', 'refunded', 'manual', 'blocked', 'processed'
     ];
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid payment status: ${status}`);

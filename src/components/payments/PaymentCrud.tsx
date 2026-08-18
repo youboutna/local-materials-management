@@ -15,11 +15,11 @@ import { exportToCSV } from '@/lib/export';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentCrud, useProjects } from '@/hooks/hexagonal';
 import { useDocumentViewer } from '@/components/documents/viewer';
-import { useDocumentsHex } from '@/hooks/hexagonal';
 import { UnifiedPaymentFormDialog } from '@/components/payments/UnifiedPaymentFormDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toDateInput } from '@/lib/utils';
+import { getDocumentService } from '@/application/services/DocumentService';
 
 interface PaymentCrudProps {
   onCreatePayment?: () => void;
@@ -29,7 +29,13 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { openDocument } = useDocumentViewer();
-  const { getDocumentsByIds } = useDocumentsHex();
+  const getDocumentsByIds = useMemo(() => {
+    const documentService = getDocumentService();
+    return async (ids: string[]) => {
+      const docs = await Promise.all(ids.map(id => documentService.getDocumentById(id)));
+      return docs.filter((d): d is NonNullable<typeof d> => Boolean(d));
+    };
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editingPayment, setEditingPayment] = useState<PaymentDTO | null>(null);

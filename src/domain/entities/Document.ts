@@ -171,6 +171,8 @@ export class Document {
   get title(): string { return this._title; }
   get description(): string | null { return this._description; }
   get documentType(): DocumentType { return this._documentType; }
+  get accessLevel(): string | undefined { return (this._metadata?.accessLevel as string) ?? undefined; }
+  get approvalStatus(): string | undefined { return (this._metadata?.approvalStatus as string) ?? undefined; }
   get status(): DocumentStatus { return this._status; }
   get priority(): DocumentPriority { return this._priority; }
   get fileName(): string | null { return this._fileName; }
@@ -338,6 +340,21 @@ export class Document {
 
   set description(value: string | null) {
     this._description = value;
+    this._updatedAt = new Date();
+  }
+
+  set documentType(value: DocumentType) {
+    this._documentType = value;
+    this._updatedAt = new Date();
+  }
+
+  set accessLevel(value: string | undefined) {
+    this._metadata = { ...(this._metadata || {}), accessLevel: value };
+    this._updatedAt = new Date();
+  }
+
+  set approvalStatus(value: string | undefined) {
+    this._metadata = { ...(this._metadata || {}), approvalStatus: value };
     this._updatedAt = new Date();
   }
 
@@ -569,41 +586,58 @@ export class Document {
   static create(params: {
     id: string;
     title: string;
-    projectId?: string;
-    phaseId?: string;
+    projectId?: string | null;
+    phaseId?: string | null;
+    inspectionId?: string | null;
+    paymentId?: string | null;
+    supplierId?: string | null;
     documentType?: DocumentType;
-    description?: string;
+    status?: DocumentStatus;
+    description?: string | null;
+    fileUrl?: string | null;
+    fileName?: string | null;
+    fileSize?: number | null;
+    mimeType?: string | null;
     tags?: string[];
-    uploadedBy?: string;
+    uploadedBy?: string | null;
     priority?: DocumentPriority;
+    isInternalOnly?: boolean;
+    isSharedWithSuppliers?: boolean;
+    accessLevel?: string;
+    approvalStatus?: string;
+    metadata?: Record<string, unknown> | null;
   }): Document {
     const now = new Date();
-    
+    const metadata: Record<string, unknown> | null =
+      params.accessLevel !== undefined || params.approvalStatus !== undefined
+        ? { ...(params.metadata || {}), accessLevel: params.accessLevel, approvalStatus: params.approvalStatus }
+        : params.metadata ?? null;
+
     return new Document(
       params.id,
       params.projectId || null,
       params.phaseId || null,
-      null, // inspectionId
-      null, // paymentId
-      null, // supplierId
+      params.inspectionId || null, // inspectionId
+      params.paymentId || null, // paymentId
+      params.supplierId || null, // supplierId
       params.title,
       params.description || null,
       params.documentType || DocumentType.OTHER,
-      DocumentStatus.DRAFT,
+      params.status || DocumentStatus.DRAFT,
       params.priority || DocumentPriority.MEDIUM,
-      null, // fileName
-      null, // fileUrl
-      null, // fileSize
-      null, // mimeType
+      params.fileName || null, // fileName
+      params.fileUrl || null, // fileUrl
+      params.fileSize || null, // fileSize
+      params.mimeType || null, // mimeType
       params.tags || [],
-      false, // isInternalOnly
-      false, // isSharedWithSuppliers
+      params.isInternalOnly || false, // isInternalOnly
+      params.isSharedWithSuppliers || false, // isSharedWithSuppliers
       null, // deadlineDate
       null, // assignedTo
       params.uploadedBy || null,
       now, // createdAt
       now, // updatedAt
-      null // metadata
+      metadata // metadata
     );
   }
 

@@ -81,7 +81,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
             {payments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell>{formatDate(payment.createdAt || payment.date)}</TableCell>
-                <TableCell>{payment.projectName || payment.project}</TableCell>
+                <TableCell>{payment.projectName || payment.projectId}</TableCell>
                 <TableCell>{payment.contractor}</TableCell>
                 <TableCell>{payment.amount} MRU</TableCell>
                 <TableCell>

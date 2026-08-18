@@ -25,7 +25,7 @@ import { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 
 // Types
-import { PaymentOrigin, getInitialStatusForOrigin } from '@/config/referentials/payment-origin.referential';
+import { PaymentOriginKey, getInitialStatusForOrigin } from '@/config/referentials/payment-origin.referential';
 
 // ============================================================
 // Hook : Contexte du formulaire (phases, inspections, supplier, project)
@@ -111,19 +111,20 @@ export function usePaymentFormContextHex(
         date: i.date || i.inspectionDate,
       })) : [];
 
+      const primaryContact = supplier?.contacts?.[0];
       const formattedSupplier = supplier ? {
         id: supplier.id,
-        name: supplier.name || supplier.companyName || 'Fournisseur',
-        contact: supplier.contact || supplier.contactPerson || supplier.email || '',
-        bankName: supplier.bankName || supplier.bank_name || '',
-        accountNumber: supplier.accountNumber || supplier.account_number || '',
-        rib: supplier.rib || '',
+        name: supplier.name || 'Fournisseur',
+        contact: primaryContact?.name || primaryContact?.email || supplier.email || '',
+        bankName: '',
+        accountNumber: '',
+        rib: '',
       } : null;
 
       const formattedProject = project ? {
         id: project.id,
-        title: project.title || project.name || 'Projet',
-        reference: project.reference || project.projectReference,
+        title: project.title || 'Projet',
+        reference: project.projectReference,
         status: project.status,
         budget: project.budget,
       } : null;
@@ -264,7 +265,7 @@ export function useSubmitUnifiedPaymentHex() {
    * Soumettre avec origine (pour compatibilité avec le formulaire)
    */
   const submitWithOrigin = useCallback(
-    async (payment: CreatePaymentDTO, origin: PaymentOrigin = 'manual') => {
+    async (payment: CreatePaymentDTO, origin: PaymentOriginKey = 'manual') => {
       const initialStatus = getInitialStatusForOrigin(origin);
       return submitPayment({ payment, initialStatus });
     },

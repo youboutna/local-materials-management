@@ -18,7 +18,7 @@ import {
   PAYMENT_STATUSES,
   getInitialStatusForOrigin,
   getDefaultPaymentMethod,
-  PaymentOrigin,
+  PaymentOriginKey,
 } from '@/config/referentials/payment-origin.referential';
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -62,7 +62,7 @@ export function usePaymentCrud() {
   );
 
   const createPayment = useCallback(
-    async (formData: CreatePaymentDTO, origin: PaymentOrigin = 'manual'): Promise<PaymentDTO> => {
+    async (formData: CreatePaymentDTO, origin: PaymentOriginKey = 'manual'): Promise<PaymentDTO> => {
       const initialStatus = getInitialStatusForOrigin(origin);
       const paymentData = {
         ...formData,
@@ -158,7 +158,7 @@ export function usePaymentCrud() {
   );
 
   const getPaymentsByOrigin = useCallback(
-    (origin: PaymentOrigin): PaymentDTO[] => payments.filter((p) => p.origin === origin),
+    (origin: PaymentOriginKey): PaymentDTO[] => payments.filter((p) => p.origin === origin),
     [payments],
   );
 

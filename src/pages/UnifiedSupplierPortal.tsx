@@ -82,7 +82,7 @@ import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsP
 
 // ✅ Import du GED centralisé (DocumentHub)
 import { DocumentHub } from "@/components/documents/hub/DocumentHub";
-import type { DocumentHubContract, DocumentItem } from "@/components/documents/hub/types";
+import type { DocumentHubContract, DocumentItem, UploadInput } from "@/components/documents/hub/types";
 
 // ✅ Définition du contrat GED pour le fournisseur
 function createSupplierDocumentHubContract(
@@ -125,31 +125,21 @@ function createSupplierDocumentHubContract(
       },
     ],
     categoryLabels: {
-      documentType: (value: string) => {
-        const map: Record<string, string> = {
-          inspection: "Inspection",
-          plan: "Plan",
-          photo: "Photo",
-          invoice: "Facture",
-          purchase_order: "Bon de commande",
-          inquiry: "Demande",
-          contract: "Contrat",
-          report: "Rapport",
-          certificate: "Certificat",
-          specification: "Spécification",
-          supplier_info: "Information fournisseur",
-        };
-        return map[value] || value;
-      },
-      status: (value: string) => {
-        const map: Record<string, string> = {
-          draft: "Brouillon",
-          pending_review: "En révision",
-          approved: "Approuvé",
-          rejected: "Rejeté",
-        };
-        return map[value] || value;
-      },
+      inspection: "Inspection",
+      plan: "Plan",
+      photo: "Photo",
+      invoice: "Facture",
+      purchase_order: "Bon de commande",
+      inquiry: "Demande",
+      contract: "Contrat",
+      report: "Rapport",
+      certificate: "Certificat",
+      specification: "Spécification",
+      supplier_info: "Information fournisseur",
+      draft: "Brouillon",
+      pending_review: "En révision",
+      approved: "Approuvé",
+      rejected: "Rejeté",
     },
     useDocuments: () => {
       const items = documents.map((doc): DocumentItem => ({
@@ -161,21 +151,22 @@ function createSupplierDocumentHubContract(
         mimeType: doc.mimeType || doc.mime_type || "application/octet-stream",
         createdAt: doc.createdAt || doc.created_at || new Date().toISOString(),
         updatedAt: doc.updatedAt || doc.updated_at || new Date().toISOString(),
+        category: doc.documentType || doc.document_type || "other",
+        status: doc.status || "draft",
         facets: {
           documentType: doc.documentType || doc.document_type || "other",
           status: doc.status || "draft",
         },
-        metadata: doc.metadata || {},
-        permissions: doc.permissions || { canView: true, canDownload: true },
+        raw: doc,
       }));
-      return { data: items, isLoading: false };
+      return { data: items, isLoading: false, refetch };
     },
-    onUpload: async (file: File, metadata: Record<string, any>) => {
+    onUpload: async (input: UploadInput) => {
       await uploadDocument({
-        file,
-        title: metadata.title || file.name,
-        description: metadata.description || "",
-        documentType: metadata.documentType || "other",
+        file: input.file,
+        title: input.title || input.file.name,
+        description: input.description || "",
+        documentType: input.category || "other",
         supplierId,
       });
       refetch();

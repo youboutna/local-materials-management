@@ -44,7 +44,6 @@ import {
   getPaymentRequestType,
 } from '@/config/referentials/payment-origin.referential';
 import { useDocumentViewer } from '@/components/documents/viewer';
-import { useDocumentsHex } from '@/hooks/hexagonal';
 import { useSubmitUnifiedPaymentHex, usePaymentFormContextHex } from '@/hooks/hexagonal/useUnifiedPaymentFormHex';
 import type { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import type { CreatePaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
@@ -106,7 +105,13 @@ export function UnifiedPaymentFormDialog({
   const originDef = getPaymentOrigin(origin);
   const { submitPayment, updatePayment, isPending } = useSubmitUnifiedPaymentHex();
   const { openDocument } = useDocumentViewer();
-  const { getDocumentsByIds } = useDocumentsHex();
+  const getDocumentsByIds = useMemo(() => {
+    const documentService = getDocumentService();
+    return async (ids: string[]) => {
+      const docs = await Promise.all(ids.map(id => documentService.getDocumentById(id)));
+      return docs.filter((d): d is NonNullable<typeof d> => Boolean(d));
+    };
+  }, []);
 
   // State
   const [requestType, setRequestType] = useState<PaymentRequestTypeKey>(
@@ -482,10 +487,13 @@ export function UnifiedPaymentFormDialog({
             </DialogHeader>
             <ProjectDocumentUpload
               projectId={projectId}
-              context="payment"
+              context="project"
               contextLabel={isEdit ? `Paiement ${defaults?.id?.slice(0, 8) || ''}` : 'Nouveau paiement'}
-              documentType="contract" // ✅ Explicitement 'contract'
-              onDocumentUploaded={handleDocumentUploaded}
+              defaultDocumentType="contract" // ✅ Explicitement 'contract'
+              onDocumentUploaded={() => {
+                setIsDocumentUploadOpen(false);
+                toast({ title: 'Document ajouté', description: 'Le document a été joint au projet.' });
+              }}
             />
           </DialogContent>
         </Dialog>

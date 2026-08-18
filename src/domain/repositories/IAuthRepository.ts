@@ -66,4 +66,10 @@ export interface IAuthRepository {
 
   // Session cleanup
   clearSessions(userId: string): Promise<{ error: Error | null }>;
+
+  // Session restore (e.g. password recovery links)
+  setSession(params: { access_token: string; refresh_token: string; user?: AuthUser | null; expires_at?: string | number }): Promise<{ session: AuthSession | null; error: Error | null }>;
+
+  // Email change without active session
+  updateEmail(oldEmail: string, newEmail: string): Promise<{ error: Error | null }>;
 }
