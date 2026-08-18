@@ -61,7 +61,9 @@ export function extractFiscalFromRow(cells: unknown[], acc: DetectedFiscal): voi
       else if (amount != null && acc.laborTotalHt) acc.laborVatRate = amount / acc.laborTotalHt;
     } else if (/traitement|charge|payroll|imp[oô]t/i.test(label)) {
       if (pct != null) acc.laborPayrollTaxRate = pct;
-      else if (amount != null && acc.laborTotalHt) acc.laborPayrollTaxRate = amount / acc.laborTotalHt;
+      else if (acc.laborPayrollTaxRate == null && amount != null && acc.laborTotalHt) {
+        acc.laborPayrollTaxRate = Math.max(0, amount / acc.laborTotalHt - 1);
+      }
     } else if (/base|total/i.test(label) && amount != null && acc.laborTotalHt == null) {
       acc.laborTotalHt = amount;
     }
