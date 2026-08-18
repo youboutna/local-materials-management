@@ -5,13 +5,13 @@
  * should combine with the existing keycloak-js redirect flow.
  */
 import {
-import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
   IAuthRepository,
   AuthSession,
   AuthUser,
   LoginCredentials,
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
 const SESSION_KEY = 'keycloak_session';
 

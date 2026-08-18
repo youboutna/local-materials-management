@@ -4,13 +4,13 @@
  * Works with self-hosted Supabase Auth or standalone GoTrue.
  */
 import {
-import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
   IAuthRepository,
   AuthSession,
   AuthUser,
   LoginCredentials,
   RegisterData,
 } from '@/domain/repositories/IAuthRepository';
+import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
 
 const SESSION_KEY = 'gotrue_session';
 
