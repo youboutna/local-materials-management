@@ -39,6 +39,10 @@ export interface BoqDbRow {
   phase_id?: string | null;
   milestone_id?: string | null;
   task_id?: string | null;
+  phase_code?: string | null;
+  milestone_code?: string | null;
+  task_code?: string | null;
+
   resource_type?: string | null;
   note?: string | null;
   category?: string | null;
