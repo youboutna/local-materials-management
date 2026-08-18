@@ -1,0 +1,444 @@
+{
+  "metadata": {
+    "projectId": "45bcdfdc-118e-4abc-9d2a-463c41977bf9",
+    "edbVersion": "1.0",
+    "generatedAt": "2026-08-19T00:00:00.000Z",
+    "status": "POUR_VALIDATION_CHEF_PROJET",
+    "totalBudgetMRU": 5266117,
+    "currentProgress": 66,
+    "plannedCompletion": "2027-04-29",
+    "remainingBudgetMRU": 1790480,
+    "remainingDurationMonths": 8.3,
+    "contractor": "CEGELEC",
+    "projectTitle": "Boucle 33 kV Kaédi – Sélibabi-Kaédi (Lot 2)"
+  },
+  "lots": [
+    {
+      "id": "L1",
+      "designation": "Génie civil – finitions",
+      "percentageComplete": 80,
+      "remainingAmountMRU": 240000,
+      "items": [
+        {
+          "description": "Clôtures et accès postes",
+          "unit": "ml",
+          "quantity": 600,
+          "unitPriceMRU": 200,
+          "totalMRU": 120000,
+          "remainingMRU": 120000
+        },
+        {
+          "description": "Revêtement et finitions",
+          "unit": "m²",
+          "quantity": 800,
+          "unitPriceMRU": 150,
+          "totalMRU": 120000,
+          "remainingMRU": 120000
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "designation": "Pose conducteurs HT",
+      "percentageComplete": 70,
+      "remainingAmountMRU": 540000,
+      "items": [
+        {
+          "description": "Conducteur AAC 150 mm²",
+          "unit": "km",
+          "quantity": 15,
+          "unitPriceMRU": 18000,
+          "totalMRU": 270000,
+          "remainingMRU": 270000
+        },
+        {
+          "description": "Pose et tension",
+          "unit": "km",
+          "quantity": 15,
+          "unitPriceMRU": 12000,
+          "totalMRU": 180000,
+          "remainingMRU": 180000
+        },
+        {
+          "description": "Accessoires de finition",
+          "unit": "%",
+          "quantity": 30,
+          "unitPriceMRU": 90000,
+          "totalMRU": 90000,
+          "remainingMRU": 90000
+        }
+      ]
+    },
+    {
+      "id": "L3",
+      "designation": "Postes de transformation & mise en service",
+      "percentageComplete": 60,
+      "remainingAmountMRU": 440000,
+      "items": [
+        {
+          "description": "Mise en service & tests",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPriceMRU": 200000,
+          "totalMRU": 200000,
+          "remainingMRU": 200000
+        },
+        {
+          "description": "SCADA / télécommande",
+          "unit": "jeu",
+          "quantity": 2,
+          "unitPriceMRU": 50000,
+          "totalMRU": 100000,
+          "remainingMRU": 100000
+        },
+        {
+          "description": "Formations et documents",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPriceMRU": 140000,
+          "totalMRU": 140000,
+          "remainingMRU": 140000
+        }
+      ]
+    },
+    {
+      "id": "L4",
+      "designation": "Réseau MT (15 kV)",
+      "percentageComplete": 30,
+      "remainingAmountMRU": 665000,
+      "items": [
+        {
+          "description": "Câble 15 kV souterrain",
+          "unit": "km",
+          "quantity": 7,
+          "unitPriceMRU": 35000,
+          "totalMRU": 245000,
+          "remainingMRU": 245000
+        },
+        {
+          "description": "Postes de distribution HTA/BT",
+          "unit": "unité",
+          "quantity": 20,
+          "unitPriceMRU": 18000,
+          "totalMRU": 360000,
+          "remainingMRU": 360000
+        },
+        {
+          "description": "Armoires de protection et raccords",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPriceMRU": 60000,
+          "totalMRU": 60000,
+          "remainingMRU": 60000
+        }
+      ]
+    },
+    {
+      "id": "L5",
+      "designation": "Raccordements BT et branchements",
+      "percentageComplete": 10,
+      "remainingAmountMRU": 194505,
+      "items": [
+        {
+          "description": "Câble BT",
+          "unit": "km",
+          "quantity": 5,
+          "unitPriceMRU": 25000,
+          "totalMRU": 125000,
+          "remainingMRU": 125000
+        },
+        {
+          "description": "Branchements individuels",
+          "unit": "unité",
+          "quantity": 400,
+          "unitPriceMRU": 150,
+          "totalMRU": 60000,
+          "remainingMRU": 60000
+        },
+        {
+          "description": "Fournitures diverses",
+          "unit": "forfait",
+          "quantity": 1,
+          "unitPriceMRU": 9505,
+          "totalMRU": 9505,
+          "remainingMRU": 9505
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "EXECUTION_L1",
+      "code": "EXECUTION_L1",
+      "designation": "Génie civil (finitions)",
+      "type": "execution",
+      "priority": "medium",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 240000,
+      "weight": 0.1,
+      "startDate": "2026-09-01",
+      "endDate": "2026-10-31",
+      "durationDays": 60,
+      "references": { "lot": "L1", "repository": "SOMELEC_INFRA" }
+    },
+    {
+      "id": "EXECUTION_L2",
+      "code": "EXECUTION_L2",
+      "designation": "Pose conducteurs HT",
+      "type": "execution",
+      "priority": "medium",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 540000,
+      "weight": 0.1,
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "durationDays": 90,
+      "references": { "lot": "L2", "repository": "SOMELEC_INFRA" }
+    },
+    {
+      "id": "EXECUTION_L3",
+      "code": "EXECUTION_L3",
+      "designation": "Postes & mise en service",
+      "type": "execution",
+      "priority": "medium",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 440000,
+      "weight": 0.1,
+      "startDate": "2026-11-01",
+      "endDate": "2027-01-31",
+      "durationDays": 90,
+      "references": { "lot": "L3", "repository": "SOMELEC_INFRA" }
+    },
+    {
+      "id": "EXECUTION_L4",
+      "code": "EXECUTION_L4",
+      "designation": "Réseau MT",
+      "type": "execution",
+      "priority": "medium",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 665000,
+      "weight": 0.1,
+      "startDate": "2026-12-01",
+      "endDate": "2027-02-28",
+      "durationDays": 75,
+      "references": { "lot": "L4", "repository": "SOMELEC_INFRA" }
+    },
+    {
+      "id": "EXECUTION_L5",
+      "code": "EXECUTION_L5",
+      "designation": "Raccordements BT",
+      "type": "execution",
+      "priority": "medium",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 194505,
+      "weight": 0.1,
+      "startDate": "2027-01-01",
+      "endDate": "2027-03-31",
+      "durationDays": 75,
+      "references": { "lot": "L5", "repository": "SOMELEC_INFRA" }
+    },
+    {
+      "id": "HANDOVER",
+      "code": "HANDOVER",
+      "designation": "Réception provisoire & définitive",
+      "type": "execution",
+      "priority": "high",
+      "status": "not_started",
+      "progress": 0,
+      "budgetMRU": 0,
+      "weight": 0.1,
+      "startDate": "2027-03-01",
+      "endDate": "2027-04-29",
+      "durationDays": 45,
+      "references": { "repository": "SOMELEC_INFRA" }
+    }
+  ],
+  "milestones": [
+    {
+      "id": "J5",
+      "phaseId": "EXECUTION_L1",
+      "designation": "Fin génie civil",
+      "date": "2026-10-31",
+      "type": "inspection",
+      "condition": "PV de réception L1 signé"
+    },
+    {
+      "id": "J6",
+      "phaseId": "EXECUTION_L2",
+      "designation": "Fin pose conducteurs",
+      "date": "2026-12-31",
+      "type": "inspection",
+      "condition": "PV de réception L2 signé"
+    },
+    {
+      "id": "J7",
+      "phaseId": "EXECUTION_L3",
+      "designation": "Mise en service postes",
+      "date": "2027-01-31",
+      "type": "test",
+      "condition": "Rapport de tests SCADA validé"
+    },
+    {
+      "id": "J8",
+      "phaseId": "EXECUTION_L4",
+      "designation": "Fin réseau MT",
+      "date": "2027-02-28",
+      "type": "inspection",
+      "condition": "PV de réception L4 signé"
+    },
+    {
+      "id": "J9",
+      "phaseId": "EXECUTION_L5",
+      "designation": "Fin raccordements BT",
+      "date": "2027-03-31",
+      "type": "inspection",
+      "condition": "PV de réception L5 signé"
+    },
+    {
+      "id": "J10",
+      "phaseId": "HANDOVER",
+      "designation": "Réception provisoire",
+      "date": "2027-04-15",
+      "type": "inspection",
+      "condition": "Procès-verbal de réception provisoire signé"
+    },
+    {
+      "id": "J11",
+      "phaseId": "HANDOVER",
+      "designation": "Réception définitive",
+      "date": "2027-04-29",
+      "type": "handover",
+      "condition": "Fin de garantie, PV définitif signé"
+    }
+  ],
+  "tenders": [
+    {
+      "id": "AO-L4-2026",
+      "projectId": "45bcdfdc-118e-4abc-9d2a-463c41977bf9",
+      "title": "Appel d'offres – Réseau MT (L4) – Boucle 33 kV Kaédi-Sélibabi",
+      "description": "Fourniture et pose de câbles 15 kV, postes de distribution et armoires de protection (reliquat du projet).",
+      "budgetMRU": 665000,
+      "status": "draft",
+      "deadline": "2026-11-15",
+      "documents": [
+        {
+          "title": "Plan de situation réseau MT",
+          "url": "https://ged.hadratech.gpi/documents/plan_mt_l4.pdf"
+        },
+        {
+          "title": "Devis quantitatif L4 (détail)",
+          "url": "https://ged.hadratech.gpi/documents/dqe_l4.xlsx"
+        },
+        {
+          "title": "Cahier des clauses techniques particulières (CCTP)",
+          "url": "https://ged.hadratech.gpi/documents/cctp_l4.pdf"
+        }
+      ]
+    },
+    {
+      "id": "AO-L5-2026",
+      "projectId": "45bcdfdc-118e-4abc-9d2a-463c41977bf9",
+      "title": "Appel d'offres – Raccordements BT (L5) – Boucle 33 kV Kaédi-Sélibabi",
+      "description": "Fourniture et pose de câbles BT, branchements individuels et accessoires (reliquat du projet).",
+      "budgetMRU": 194505,
+      "status": "draft",
+      "deadline": "2026-12-01",
+      "documents": [
+        {
+          "title": "Plan de raccordement BT",
+          "url": "https://ged.hadratech.gpi/documents/plan_bt_l5.pdf"
+        },
+        {
+          "title": "Devis quantitatif L5",
+          "url": "https://ged.hadratech.gpi/documents/dqe_l5.xlsx"
+        }
+      ]
+    }
+  ],
+  "indicators": {
+    "spi": 1.06,
+    "cpi": 1.0,
+    "etac": 5266117,
+    "etc": 1790480,
+    "plannedValue": 5266117,
+    "earnedValue": 3475637,
+    "actualCost": 3475637,
+    "budgetAtCompletion": 5266117,
+    "scheduleVariance": 0.04,
+    "costVariance": 0
+  },
+  "documents": [
+    {
+      "id": "doc-001",
+      "title": "Plan de situation",
+      "url": "https://ged.hadratech.gpi/documents/plan_situation_boucle33.pdf",
+      "phaseId": null,
+      "type": "plan"
+    },
+    {
+      "id": "doc-002",
+      "title": "Devis quantitatif détaillé (global)",
+      "url": "https://ged.hadratech.gpi/documents/dqe_global_boucle33.xlsx",
+      "phaseId": null,
+      "type": "dqe"
+    },
+    {
+      "id": "doc-003",
+      "title": "Schéma électrique unifilaire 33 kV",
+      "url": "https://ged.hadratech.gpi/documents/schema_unifilaire_33kv.pdf",
+      "phaseId": null,
+      "type": "schema"
+    },
+    {
+      "id": "doc-004",
+      "title": "Cahier des charges générales (CCG)",
+      "url": "https://ged.hadratech.gpi/documents/ccg_projet.pdf",
+      "phaseId": null,
+      "type": "reference"
+    },
+    {
+      "id": "doc-005",
+      "title": "PV de réception provisoire (existant)",
+      "url": "https://ged.hadratech.gpi/documents/pv_reception_existant.pdf",
+      "phaseId": null,
+      "type": "procès-verbal"
+    }
+  ],
+  "actionsAfterValidation": [
+    {
+      "action": "CREATE_PHASES",
+      "target": ["EXECUTION_L1", "EXECUTION_L2", "EXECUTION_L3", "EXECUTION_L4", "EXECUTION_L5", "HANDOVER"],
+      "status": "pending"
+    },
+    {
+      "action": "CREATE_TENDERS",
+      "target": ["AO-L4-2026", "AO-L5-2026"],
+      "status": "pending"
+    },
+    {
+      "action": "SCHEDULE_INSPECTIONS",
+      "target": ["J5", "J6", "J8", "J9", "J10"],
+      "status": "pending"
+    },
+    {
+      "action": "UPDATE_INDICATORS",
+      "target": "all",
+      "status": "pending"
+    },
+    {
+      "action": "GENERATE_PDF_REPORT",
+      "target": "progress_report",
+      "status": "pending"
+    },
+    {
+      "action": "INVALIDATE_CACHES",
+      "target": ["phases", "tasks", "resources", "tenders"],
+      "status": "pending"
+    }
+  ]
+}

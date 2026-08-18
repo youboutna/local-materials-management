@@ -11,6 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
+import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 
@@ -45,7 +46,7 @@ const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
 export class BoqImportOrchestrator {
   private readonly parsers: IDocumentParser[];
   constructor() {
-    this.parsers = [new SpreadsheetBoqParser(), new PdfBoqParser()];
+    this.parsers = [new SpreadsheetBoqParser(), new PdfBoqParser(), new JsonBoqParser()];
   }
 
   async parseFile(file: File): Promise<ParseResult> {
