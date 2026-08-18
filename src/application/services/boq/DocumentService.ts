@@ -101,8 +101,25 @@ export const DocumentService = {
     }
   },
 
-  async sign(_lines: BoqLineDTO[], _ctx: DocumentContext): Promise<{ ok: boolean; message?: string; signedAt?: string }> {
+  /** Signature métier : horodatage + signataire persistés sur chaque ligne
+   *  du document, et passage du statut à `validated` (document figé). */
+  async sign(lines: BoqLineDTO[], ctx: DocumentContext): Promise<{ ok: boolean; message?: string; signedAt?: string }> {
     const signedAt = new Date().toISOString();
+    const signedBy = ctx.signedBy ?? ctx.senderName ?? null;
+    const persistable = lines.filter((l) => !!l.id);
+    try {
+      await Promise.all(
+        persistable.map((l) =>
+          boqRepository.update(l.id as string, {
+            source: l.source,
+            status: 'validated',
+            metadata: { ...(l.metadata ?? {}), signature: { signedBy, signedAt } },
+          } as Partial<BoqLineDTO>),
+        ),
+      );
+    } catch (e) {
+      return { ok: false, message: e instanceof Error ? e.message : 'Signature non enregistrée' };
+    }
     return { ok: true, message: 'Signature enregistrée', signedAt };
   },
 };
