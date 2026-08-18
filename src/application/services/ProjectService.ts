@@ -245,12 +245,18 @@ export class ProjectService {
    */
   async getProjectsByConsultantId(consultantId: string): Promise<ProjectDTO[]> {
     try {
+      const { getProjectConsultantService } = await import('@/application/services/ProjectConsultantService');
+      const designatedProjectIds = await getProjectConsultantService()
+        .getConsultantProjectIds(consultantId)
+        .catch(() => [] as string[]);
+
       const allProjects = await this.projectRepository.findAll();
       const filtered = allProjects.filter(p => {
         const consultant = p.engineeringConsultant as { id?: string } | undefined;
-        return consultant?.id === consultantId;
+        return consultant?.id === consultantId || designatedProjectIds.includes(p.id);
       });
       return ProjectTransformer.manyToDTO(filtered);
+
     } catch (error) {
       throw new ProjectServiceError(
         `Failed to get projects by consultant: ${error instanceof Error ? error.message : 'Unknown error'}`,
