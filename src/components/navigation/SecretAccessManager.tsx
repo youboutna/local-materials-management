@@ -80,7 +80,10 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
   );
 };
 
-export const SecretAccessManager: React.FC<{ className?: string }> = ({ className }) => {
+export const SecretAccessManager: React.FC<{ className?: string; hideLabel?: boolean }> = ({
+  className,
+  hideLabel = false,
+}) => {
   const [open, setOpen] = useState(false);
   const params = useParams();
   const location = useLocation();
@@ -104,9 +107,10 @@ export const SecretAccessManager: React.FC<{ className?: string }> = ({ classNam
           title="Créer et gérer les codes secrets de partage"
         >
           <KeyRound className="h-4 w-4" />
-          <span className="ml-2 hidden lg:inline">Partage &amp; codes</span>
+          {!hideLabel && <span className="truncate text-sm font-medium">Partage &amp; codes</span>}
         </Button>
       </DialogTrigger>
+
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Partage sécurisé &amp; codes secrets</DialogTitle>
