@@ -704,6 +704,28 @@ export function BoqWorkspace({
                 </div>
               </div>
 
+              {/* Recommandations métier (référentiel) pour le type d'ouvrage */}
+              {recommendations.length > 0 && (
+                <div className="mt-3 rounded-md border border-dashed p-3">
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4"
+                      checked={autoRecs}
+                      onChange={(e) => setAutoRecs(e.target.checked)}
+                    />
+                    <span>
+                      Générer une ligne article par recommandation ({recommendations.length}) — PU / unité de la ligne principale
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {recommendations.map((r) => r.label).join(' • ')}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              )}
+
+
+
               <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
                 <div>Qté : <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
                 <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
