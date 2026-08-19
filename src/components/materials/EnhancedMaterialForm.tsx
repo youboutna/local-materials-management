@@ -1047,7 +1047,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             <CardContent className="pt-6">
               <SupplierSelector
                 value={{
-                  id: formData.supplier?.supplierId,
+                  id: formData.supplier?.supplierId || formData.supplierId,
                   name: formData.supplier?.name,
                   contact: formData.supplier?.contact,
                   leadTime: formData.supplier?.leadTime,
