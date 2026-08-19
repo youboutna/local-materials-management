@@ -63,7 +63,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       case 'draft': return 'bg-muted text-muted-foreground';
       case 'pending_review':
       case 'pending_approval': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
+      case 'approved': return 'bg-success-soft text-success';
       case 'rejected': return 'bg-destructive/10 text-destructive';
       case 'archived': return 'bg-blue-100 text-blue-800';
       default: return 'bg-muted text-muted-foreground';

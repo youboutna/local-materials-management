@@ -102,7 +102,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
 
   const getRiskScoreColor = (score: number | undefined) => {
     const safeScore = score || 0;
-    if (safeScore <= 5) return 'bg-green-500';
+    if (safeScore <= 5) return 'bg-success';
     if (safeScore <= 10) return 'bg-yellow-500';
     if (safeScore <= 15) return 'bg-orange-500';
     return 'bg-red-500';
@@ -157,12 +157,12 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
             <p className="text-2xl font-bold text-red-600">{metrics.highRisks}</p>
           </div>
           
-          <div className="p-3 bg-green-50 rounded-lg">
+          <div className="p-3 bg-success-soft rounded-lg">
             <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-green-600" />
+              <TrendingDown className="h-4 w-4 text-success" />
               <span className="text-sm font-medium">Mitigés</span>
             </div>
-            <p className="text-2xl font-bold text-green-600">{metrics.mitigatedRisks}</p>
+            <p className="text-2xl font-bold text-success">{metrics.mitigatedRisks}</p>
           </div>
           
           <div className="p-3 bg-orange-50 rounded-lg">

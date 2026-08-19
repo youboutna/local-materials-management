@@ -388,7 +388,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             isDragging 
               ? 'border-primary bg-primary/5' 
               : file 
-                ? 'border-green-500 bg-green-50' 
+                ? 'border-success bg-success-soft' 
                 : 'border-muted-foreground/25 hover:border-primary/50'
           }`}
           onDragEnter={handleDragEnter}

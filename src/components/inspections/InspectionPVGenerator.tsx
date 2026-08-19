@@ -190,7 +190,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
             <Separator />
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
                 <span className="font-medium">PV généré: {generatedPV.pv_number}</span>
               </div>
               <p className="text-sm text-muted-foreground">

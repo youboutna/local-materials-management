@@ -18,7 +18,7 @@ const getStatusConfig = (status: string) => {
   const configs = {
     approved: {
       label: 'Approuvée',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+      className: 'bg-success-soft text-success dark:bg-success dark:text-success-foreground'
     },
     rejected: {
       label: 'Rejetée',

@@ -24,10 +24,10 @@ const getStatusConfig = (status: StatusType) => {
      case 'terminé':
      case 'termine':
        return {
-         bgColor: 'bg-green-50',
-         textColor: 'text-green-700',
-         borderColor: 'border-green-200',
-         dotColor: 'bg-green-500',
+         bgColor: 'bg-success-soft',
+         textColor: 'text-success',
+         borderColor: 'border-success/30',
+         dotColor: 'bg-success',
        };
      case 'en attente':
      case 'en_attente':
@@ -63,10 +63,10 @@ const getStatusConfig = (status: StatusType) => {
     // Inspection statuses
     case 'approuvée':
       return {
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-200',
-        dotColor: 'bg-green-500',
+        bgColor: 'bg-success-soft',
+        textColor: 'text-success',
+        borderColor: 'border-success/30',
+        dotColor: 'bg-success',
       };
     case 'rejetée':
       return {

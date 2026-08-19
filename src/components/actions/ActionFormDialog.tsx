@@ -229,7 +229,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">
-                  <span className="text-green-600">● Faible</span>
+                  <span className="text-success">● Faible</span>
                 </SelectItem>
                 <SelectItem value="medium">
                   <span className="text-yellow-600">● Moyenne</span>
@@ -390,7 +390,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               <div className="text-xs text-muted-foreground mb-2">
                 La tâche sera assignée à la personne sélectionnée ci-dessus
               </div>
-              <div className="p-3 bg-green-50 rounded-lg">
+              <div className="p-3 bg-success-soft rounded-lg">
                 <div className="text-sm">
                   <strong>Assigné à :</strong> {
                     availableEmployees.find(emp => emp.id === formData.assigneeId)?.full_name || 'Employé sélectionné'

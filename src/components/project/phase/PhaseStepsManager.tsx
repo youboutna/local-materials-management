@@ -81,13 +81,13 @@ interface PhaseStepsManagerProps {
 const statusOptions: { value: PhaseStatus; label: string; color: string; icon: React.ReactNode }[] = [
   { value: 'pending', label: 'En attente', color: 'bg-yellow-500', icon: <Clock className="h-3 w-3" /> },
   { value: 'in_progress', label: 'En cours', color: 'bg-blue-500', icon: <RefreshCw className="h-3 w-3" /> },
-  { value: 'completed', label: 'Terminé', color: 'bg-green-500', icon: <CheckCircle className="h-3 w-3" /> },
+  { value: 'completed', label: 'Terminé', color: 'bg-success', icon: <CheckCircle className="h-3 w-3" /> },
   { value: 'delayed', label: 'En retard', color: 'bg-red-500', icon: <AlertTriangle className="h-3 w-3" /> },
 ];
 
 const getStatusColor = (status: PhaseStatus | string) => {
   switch (status) {
-    case "completed": return "bg-green-100 text-green-800 border-green-200";
+    case "completed": return "bg-success-soft text-success border-success/30";
     case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
     case "delayed": return "bg-red-100 text-red-800 border-red-200";
     default: return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -443,7 +443,7 @@ const StepCard: React.FC<{
       {/* Step indicator */}
       <div className={cn(
         "absolute left-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all z-10",
-        isCompleted && "bg-green-500 text-white shadow-lg shadow-green-500/30",
+        isCompleted && "bg-success text-white shadow-lg shadow-green-500/30",
         isInProgress && "bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-primary/20",
         isDelayed && "bg-destructive text-white shadow-lg shadow-destructive/30",
         !isCompleted && !isInProgress && !isDelayed && "bg-muted text-muted-foreground border-2 border-muted-foreground/30"
@@ -453,7 +453,7 @@ const StepCard: React.FC<{
       
       <Card className={cn(
         "transition-all border-2",
-        isCompleted && "border-green-200 bg-green-50/30",
+        isCompleted && "border-success/30 bg-success-soft/30",
         isInProgress && "border-primary/40 bg-primary/5",
         isDelayed && "border-destructive/40 bg-destructive/5",
         !isCompleted && !isInProgress && !isDelayed && "border-muted hover:border-muted-foreground/20"
@@ -514,7 +514,7 @@ const StepCard: React.FC<{
                 </div>
                 <span className={cn(
                   "text-sm font-bold min-w-[3rem] text-right",
-                  step.progress === 100 && "text-green-600",
+                  step.progress === 100 && "text-success",
                   step.progress > 0 && step.progress < 100 && "text-primary",
                   step.progress === 0 && "text-muted-foreground"
                 )}>
@@ -566,7 +566,7 @@ const StepCard: React.FC<{
                     key={task.id}
                     className={cn(
                       "flex items-center justify-between p-3 rounded-lg transition-colors group",
-                      task.status === 'completed' ? "bg-green-100/50" : 
+                      task.status === 'completed' ? "bg-success-soft/50" : 
                       task.status === 'in_progress' ? "bg-blue-100/50" :
                       task.status === 'delayed' ? "bg-red-100/50" : "bg-muted/50"
                     )}
@@ -581,7 +581,7 @@ const StepCard: React.FC<{
                         className="shrink-0"
                       >
                         {task.status === "completed" ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CheckCircle className="h-5 w-5 text-success" />
                         ) : task.status === "in_progress" ? (
                           <RefreshCw className="h-5 w-5 text-primary" />
                         ) : task.status === "delayed" ? (
@@ -836,7 +836,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-success-soft text-success border-success/30">
             <CheckCircle className="h-3 w-3 mr-1" />
             {completedCount}
           </Badge>

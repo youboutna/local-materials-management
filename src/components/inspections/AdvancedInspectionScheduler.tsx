@@ -451,7 +451,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                     </span>
                                   )}
                                   {isInspector && (
-                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    <span className="text-xs bg-success-soft text-success px-2 py-1 rounded">
                                       Inspecteur
                                     </span>
                                   )}

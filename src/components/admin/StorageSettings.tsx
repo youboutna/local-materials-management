@@ -220,7 +220,7 @@ const StorageSettings = () => {
           {connectionStatus !== null && (
             <div className="flex items-center">
               {connectionStatus ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
                 <XCircle className="h-5 w-5 text-red-500" />
               )}

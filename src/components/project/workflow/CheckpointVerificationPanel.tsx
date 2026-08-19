@@ -54,7 +54,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'verified': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'verified': return <CheckCircle className="h-4 w-4 text-success" />;
       case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
       case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
       default: return <Clock className="h-4 w-4 text-muted-foreground" />;
@@ -63,7 +63,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'verified': return 'bg-green-100 text-green-700 border-green-200';
+      case 'verified': return 'bg-success-soft text-success border-success/30';
       case 'failed': return 'bg-red-100 text-red-700 border-red-200';
       case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-muted text-muted-foreground';
@@ -79,7 +79,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3 text-green-600" />
+            <CheckCircle className="h-3 w-3 text-success" />
             {verificationStatus.verified}
           </span>
           <span className="flex items-center gap-1">
@@ -122,8 +122,8 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
             <p className="text-lg font-bold">{verificationStatus.total}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
-          <div className="p-2 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-lg font-bold text-green-600">{verificationStatus.verified}</p>
+          <div className="p-2 rounded-lg bg-success-soft border border-success/30">
+            <p className="text-lg font-bold text-success">{verificationStatus.verified}</p>
             <p className="text-xs text-muted-foreground">Vérifiés</p>
           </div>
           <div className="p-2 rounded-lg bg-muted/30 border">

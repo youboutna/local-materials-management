@@ -221,9 +221,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             
             <div className="space-y-3">
               {isInitialPaymentPhase ? (
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-sm text-green-700">Paiement initial autorisé</span>
-                  <span className="font-bold text-lg text-green-800">{formatAmount2(maxInitialPayment)}</span>
+                <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
+                  <span className="text-sm text-success">Paiement initial autorisé</span>
+                  <span className="font-bold text-lg text-success">{formatAmount2(maxInitialPayment)}</span>
                 </div>
               ) : (
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -231,9 +231,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                   <span className="font-bold text-lg text-blue-800">{formatAmount2(progressBasedAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                <span className="text-sm text-green-700">Maximum autorisé (1.5x)</span>
-                <span className="font-bold text-xl text-green-800">
+              <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
+                <span className="text-sm text-success">Maximum autorisé (1.5x)</span>
+                <span className="font-bold text-xl text-success">
                   {formatAmount2(maxToleranceAmount)}
                 </span>
               </div>
@@ -268,10 +268,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       
       {/* Status Alerts */}
       {isInitialPaymentPhase && (
-        <Alert className="bg-green-50 border-green-200">
-          <CreditCard className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Paiement initial autorisé</AlertTitle>
-          <AlertDescription className="text-green-700">
+        <Alert className="bg-success-soft border-success/30">
+          <CreditCard className="h-4 w-4 text-success" />
+          <AlertTitle className="text-success">Paiement initial autorisé</AlertTitle>
+          <AlertDescription className="text-success">
             Ce projet autorise un paiement initial de {initialPaymentPercentage}% du budget total 
             ({formatAmount2(maxInitialPayment)}) selon les termes du contrat.
           </AlertDescription>
@@ -482,9 +482,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           )}
 
           {selectedPaymentMethod === "cheque" && (
-            <Card className="border-green-200 bg-green-50">
+            <Card className="border-success/30 bg-success-soft">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-green-800">
+                <CardTitle className="text-base flex items-center gap-2 text-success">
                   <CreditCard className="h-5 w-5" />
                   Informations du chèque
                 </CardTitle>
@@ -602,7 +602,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           
           <Button 
             type="submit" 
-            className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 text-lg font-medium shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-gradient-to-r from-success to-success hover:from-success hover:to-success text-white py-3 text-lg font-medium shadow-lg hover:shadow-xl transition-all"
             disabled={isSubmitting || paymentStatus === "rejected"}
             size="lg"
           >

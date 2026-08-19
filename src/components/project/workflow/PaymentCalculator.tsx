@@ -161,7 +161,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
           
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Déjà payé</span>
-            <span className="font-medium text-green-600">
+            <span className="font-medium text-success">
               {formatCurrency(decompte.previousPayments)}
             </span>
           </div>

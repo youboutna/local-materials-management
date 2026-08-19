@@ -167,7 +167,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
 
   const getStatusColor = (status: CascadeStep['status']) => {
     switch (status) {
-      case 'completed': return 'bg-green-500 text-white';
+      case 'completed': return 'bg-success text-white';
       case 'active': return 'bg-blue-500 text-white animate-pulse';
       case 'blocked': return 'bg-red-500 text-white';
       default: return 'bg-muted text-muted-foreground';
@@ -192,7 +192,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
             Workflow en Cascade
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700">
+            <Badge variant="outline" className="bg-success-soft text-success">
               {formatCurrency(totalPaid)} payé
             </Badge>
             <Badge variant="outline">
@@ -211,7 +211,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
               <div className={cn(
                 "flex-1 p-3 rounded-lg border-2 transition-all",
                 step.status === 'active' && "border-blue-300 bg-blue-50/50",
-                step.status === 'completed' && "border-green-200 bg-green-50/30",
+                step.status === 'completed' && "border-success/30 bg-success-soft/30",
                 step.status === 'blocked' && "border-red-200 bg-red-50/30",
                 step.status === 'pending' && "border-muted bg-muted/20",
               )}>

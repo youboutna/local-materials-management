@@ -86,7 +86,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
               {showAnalytics && (
                 <div className="flex items-center gap-1">
                   <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    projectHealth === 'healthy' ? 'bg-green-100 text-green-800' :
+                    projectHealth === 'healthy' ? 'bg-success-soft text-success' :
                     projectHealth === 'warning' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-red-100 text-red-800'
                   }`}>

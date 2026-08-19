@@ -81,7 +81,7 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
               style={{ left: `${pct(phase.start)}%`, width: `${Math.max(1, pct(phase.end) - pct(phase.start))}%` }}
             >
               <div
-                className={`h-full ${phase.progress >= 100 ? 'bg-emerald-500' : 'bg-primary'}`}
+                className={`h-full ${phase.progress >= 100 ? 'bg-success' : 'bg-primary'}`}
                 style={{ width: `${phase.progress}%` }}
               />
             </div>
@@ -103,10 +103,10 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
           {gantt.milestones.map((m) => (
             <div key={m.label} className="flex-1">
               <div
-                className={`h-2 w-2 rotate-45 ${m.reached ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
+                className={`h-2 w-2 rotate-45 ${m.reached ? 'bg-success' : 'bg-muted-foreground/40'}`}
               />
               <p className="text-[10px] text-muted-foreground">{m.label}</p>
-              <p className={`text-[10px] ${m.reached ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+              <p className={`text-[10px] ${m.reached ? 'text-success' : 'text-muted-foreground'}`}>
                 {m.reached ? 'atteint' : 'en attente'}
               </p>
             </div>

@@ -61,7 +61,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case TaskStatus.COMPLETED: return 'bg-green-100 text-green-800 border-green-200';
+      case TaskStatus.COMPLETED: return 'bg-success-soft text-success border-success/30';
       case TaskStatus.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
       case TaskStatus.BLOCKED: return 'bg-red-100 text-red-800 border-red-200';
       case TaskStatus.PENDING: return 'bg-yellow-100 text-yellow-800 border-yellow-200';

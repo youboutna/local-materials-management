@@ -75,7 +75,7 @@ export function classifyPerformance(code: string, value: number): PerformanceSta
 
 /** Mappe un statut de performance vers une classe tailwind sémantique. */
 export const PERFORMANCE_STATUS_TEXT_CLASS: Record<PerformanceStatus, string> = {
-  good: 'text-green-600',
+  good: 'text-success',
   warning: 'text-yellow-600',
   critical: 'text-red-600',
 };

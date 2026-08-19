@@ -479,7 +479,7 @@ const UnifiedSupplierPortal = () => {
         <div className="max-w-6xl mx-auto px-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+              <CheckCircle className="h-6 w-6 text-success" />
               <div>
                 <h1 className="text-xl font-semibold">Accès sécurisé fournisseur</h1>
                 <p className="text-sm text-muted-foreground">
@@ -608,10 +608,10 @@ const UnifiedSupplierPortal = () => {
                 <CardTitle className="text-sm font-medium">
                   Paiements Total
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-green-600" />
+                <DollarSign className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-success">
                   {formatAmount2(totalPayments)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -889,18 +889,18 @@ const UnifiedSupplierPortal = () => {
                             className={`p-4 rounded-lg border-2 ${
                               notification.used_at
                                 ? "bg-muted/50 border-muted"
-                                : "bg-green-50 border-green-300"
+                                : "bg-success-soft border-success/30"
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                  <DollarSign className="h-5 w-5 text-green-600" />
-                                  <h3 className="font-semibold text-green-800">
+                                  <DollarSign className="h-5 w-5 text-success" />
+                                  <h3 className="font-semibold text-success">
                                     Demande de Paiement Initiée
                                   </h3>
                                   {!notification.used_at && (
-                                    <Badge className="bg-green-600">Action requise</Badge>
+                                    <Badge className="bg-success">Action requise</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-2">
@@ -926,7 +926,7 @@ const UnifiedSupplierPortal = () => {
                               {!notification.used_at && (
                                 <Button 
                                   onClick={() => handlePaymentInitiationClick(notification)}
-                                  className="bg-green-600 hover:bg-green-700"
+                                  className="bg-success hover:bg-success"
                                 >
                                   <Send className="h-4 w-4 mr-2" />
                                   Compléter la demande

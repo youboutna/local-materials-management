@@ -268,7 +268,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                   <div className="space-y-4">
                     {workflowSteps.map((step, index) => (
                       <Card key={step.id} className={`transition-all duration-200 ${
-                        step.status === 'completed' ? 'border-green-500 bg-green-50' :
+                        step.status === 'completed' ? 'border-success bg-success-soft' :
                         step.status === 'in_progress' ? 'border-primary bg-blue-50' :
                         'border-gray-200'
                       }`}>
@@ -276,7 +276,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                step.status === 'completed' ? 'bg-green-500 text-white' :
+                                step.status === 'completed' ? 'bg-success text-white' :
                                 step.status === 'in_progress' ? 'bg-primary text-white' :
                                 'bg-gray-200 text-gray-600'
                               }`}>
@@ -374,7 +374,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-8 w-8 text-green-600" />
+                      <DollarSign className="h-8 w-8 text-success" />
                       <div>
                         <p className="text-sm text-gray-600">Estimation Totale</p>
                         <p className="text-2xl font-bold">2,450,000 MRU</p>

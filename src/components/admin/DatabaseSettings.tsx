@@ -279,7 +279,7 @@ const DatabaseSettings = () => {
             </>
           ) : isConnected ? (
             <>
-              <Check className="mr-2 h-4 w-4 text-green-500" />
+              <Check className="mr-2 h-4 w-4 text-success" />
               {t("database_settings.connected")}
             </>
           ) : (

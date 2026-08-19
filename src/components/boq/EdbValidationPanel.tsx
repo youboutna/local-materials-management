@@ -56,7 +56,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
         </div>
       ) : (
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+          <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden />
           Aucune erreur de calcul détectée (quantité × PU = montant).
         </p>
       )}

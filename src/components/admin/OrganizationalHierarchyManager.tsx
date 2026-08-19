@@ -190,7 +190,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
     const colors = {
       'décisionnel': 'bg-red-100 text-red-800',
       'technique': 'bg-blue-100 text-blue-800',
-      'opérationnel': 'bg-green-100 text-green-800',
+      'opérationnel': 'bg-success-soft text-success',
       'budgétaire': 'bg-purple-100 text-purple-800',
       'communication': 'bg-orange-100 text-orange-800',
       'contractuel': 'bg-indigo-100 text-indigo-800',

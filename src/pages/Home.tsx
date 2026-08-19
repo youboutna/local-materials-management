@@ -32,9 +32,9 @@ const Home = () => {
       title: "Régions couvertes",
       value: "15",
       icon: MapPin,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
+      color: "text-success",
+      bgColor: "bg-success-soft",
+      borderColor: "border-success/30",
     },
     {
       title: "Équipes actives",
@@ -69,7 +69,7 @@ const Home = () => {
       description:
         "Visualisez tous vos projets et matériaux sur une carte interactive de la Mauritanie.",
       link: "/projects",
-      gradient: "from-emerald-500 to-green-500",
+      gradient: "from-success to-success",
     },
     {
       icon: Users,

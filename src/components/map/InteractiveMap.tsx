@@ -304,7 +304,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <Marker position={[mapData.center.lat, mapData.center.lng]}>
                   <Popup>
                     <div className="text-center">
-                      <strong className="text-green-600">
+                      <strong className="text-success">
                         Position sélectionnée
                       </strong>
                       <div className="text-xs text-gray-600">

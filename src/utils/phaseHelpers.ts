@@ -6,7 +6,7 @@ export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 
 export const getStatusColor = (status: PhaseStatus | string): string => {
   switch (status) {
     case "completed":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success-soft text-success border-success/30";
     case "in_progress":
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "delayed":
@@ -81,8 +81,8 @@ export type FinancialHealth = 'excellent' | 'good' | 'warning' | 'critical' | 'u
 
 export const getFinancialHealthColor = (health: string): string => {
   switch (health) {
-    case 'excellent': return 'text-green-600 bg-green-100 border-green-200';
-    case 'good': return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+    case 'excellent': return 'text-success bg-success-soft border-success/30';
+    case 'good': return 'text-success bg-success-soft border-success/30';
     case 'warning': return 'text-amber-600 bg-amber-100 border-amber-200';
     case 'critical': return 'text-red-600 bg-red-100 border-red-200';
     default: return 'text-gray-600 bg-gray-100 border-gray-200';
@@ -126,7 +126,7 @@ export const getMilestoneTypeColor = (type: MilestoneType | string): string => {
   switch (type) {
     case 'point_controle': return 'bg-blue-100 text-blue-800';
     case 'reception_provisoire': return 'bg-amber-100 text-amber-800';
-    case 'reception_definitive': return 'bg-green-100 text-green-800';
+    case 'reception_definitive': return 'bg-success-soft text-success';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
@@ -139,7 +139,7 @@ export const getWorkflowStatusColor = (status: WorkflowStatus | string): string 
     case 'not_started': return 'bg-gray-100 text-gray-700';
     case 'in_progress': return 'bg-blue-100 text-blue-700';
     case 'validation_pending': return 'bg-amber-100 text-amber-700';
-    case 'approved': return 'bg-green-100 text-green-700';
+    case 'approved': return 'bg-success-soft text-success';
     case 'blocked': return 'bg-red-100 text-red-700';
     default: return 'bg-gray-100 text-gray-700';
   }
@@ -172,8 +172,8 @@ export const calculateWeightedProgress = (
 };
 
 export const getProgressColor = (progress: number): string => {
-  if (progress >= 90) return 'bg-green-500';
-  if (progress >= 70) return 'bg-emerald-500';
+  if (progress >= 90) return 'bg-success';
+  if (progress >= 70) return 'bg-success';
   if (progress >= 50) return 'bg-amber-500';
   if (progress >= 25) return 'bg-orange-500';
   return 'bg-red-500';

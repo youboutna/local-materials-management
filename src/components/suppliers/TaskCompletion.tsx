@@ -93,7 +93,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
@@ -176,13 +176,13 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
         )}
 
         {task.status === 'completed' && task.completion_date && (
-          <div className="bg-green-50 p-3 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className="bg-success-soft p-3 rounded-lg">
+            <p className="text-sm text-success">
               <CheckCircle className="h-4 w-4 inline mr-1" />
               Tâche terminée le {new Date(task.completion_date).toLocaleDateString('fr-FR')}
             </p>
             {task.notes && (
-              <p className="text-sm text-green-700 mt-1">
+              <p className="text-sm text-success mt-1">
                 <strong>Notes:</strong> {task.notes}
               </p>
             )}

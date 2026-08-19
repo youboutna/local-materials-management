@@ -217,7 +217,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               onClick={() => copyToClipboard(secret.secretCode)}
                             >
                               {copiedCode === secret.secretCode ? (
-                                <Check className="h-4 w-4 text-green-600" />
+                                <Check className="h-4 w-4 text-success" />
                               ) : (
                                 <Copy className="h-4 w-4" />
                               )}

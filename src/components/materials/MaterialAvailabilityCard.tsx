@@ -23,7 +23,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
   const getStatusIcon = () => {
     if (!isAvailable) return <AlertTriangle className="h-5 w-5 text-red-500" />;
     if (isLowStock) return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-    return <CheckCircle className="h-5 w-5 text-green-500" />;
+    return <CheckCircle className="h-5 w-5 text-success" />;
   };
 
   const getStatusBadge = () => {
@@ -33,7 +33,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
     if (isLowStock) {
       return <Badge className="bg-yellow-500 text-white">Stock faible</Badge>;
     }
-    return <Badge className="bg-green-500 text-white">Disponible</Badge>;
+    return <Badge className="bg-success text-white">Disponible</Badge>;
   };
 
   const getTotalValue = () => {

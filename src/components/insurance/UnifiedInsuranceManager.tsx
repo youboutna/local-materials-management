@@ -89,7 +89,7 @@ const COVERAGE_TYPES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
+  { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
   { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
   { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
   { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' },
@@ -576,7 +576,7 @@ const UnifiedInsuranceManager = () => {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-2xl font-bold text-success">{stats.active}</div>
             <p className="text-sm text-muted-foreground">Actifs</p>
           </CardContent>
         </Card>
@@ -623,7 +623,7 @@ const UnifiedInsuranceManager = () => {
             <Card>
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Aucune alerte d'expiration</p>
                 </div>
               </CardContent>

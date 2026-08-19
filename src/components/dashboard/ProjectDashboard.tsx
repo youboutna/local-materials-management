@@ -206,7 +206,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
     switch (status) {
       case ProjectStatus.COMPLETED:
       case ProjectStatus.TERMINE:
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case ProjectStatus.EN_COURS:
       case ProjectStatus.EN_CONSTRUCTION:
         return <Activity className="h-4 w-4 text-blue-500" />;
@@ -309,9 +309,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{projectStats.completedProjects}</p>
+                  <p className="text-2xl font-bold text-success">{projectStats.completedProjects}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>

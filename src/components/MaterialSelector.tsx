@@ -244,7 +244,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                     <div className="text-right">
                       <div className="text-2xl font-bold text-primary">{totalCost.toLocaleString()} MRU</div>
                       {projectBudget && (
-                        <span className={totalCost > projectBudget ? "text-destructive" : "text-green-600"}>
+                        <span className={totalCost > projectBudget ? "text-destructive" : "text-success"}>
                           {((totalCost / projectBudget) * 100).toFixed(1)}% du budget
                         </span>
                       )}

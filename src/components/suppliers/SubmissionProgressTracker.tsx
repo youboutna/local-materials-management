@@ -49,7 +49,7 @@ export function SubmissionProgressTracker({
     const status = getStepStatus(stepIndex);
     
     if (status === 'completed') {
-      return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+      return <CheckCircle2 className="h-5 w-5 text-success" />;
     }
     if (status === 'active') {
       return <Loader2 className="h-5 w-5 text-primary animate-spin" />;
@@ -62,7 +62,7 @@ export function SubmissionProgressTracker({
 
   const getStepTextColor = (stepIndex: number) => {
     const status = getStepStatus(stepIndex);
-    if (status === 'completed') return 'text-green-600';
+    if (status === 'completed') return 'text-success';
     if (status === 'active') return 'text-primary font-medium';
     if (status === 'error') return 'text-destructive';
     return 'text-muted-foreground';

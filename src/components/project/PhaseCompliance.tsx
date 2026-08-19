@@ -132,7 +132,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "compliant":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case "non_compliant":
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case "in_review":
@@ -145,7 +145,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "compliant":
-        return "bg-green-100 text-green-800";
+        return "bg-success-soft text-success";
       case "non_compliant":
         return "bg-red-100 text-red-800";
       case "in_review":

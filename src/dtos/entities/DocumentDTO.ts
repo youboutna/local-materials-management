@@ -635,7 +635,7 @@ export function getDocumentStatusColor(status: DocumentStatusUnion): string {
     [DocumentStatus.PENDING_APPROVAL]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     [DocumentStatus.PENDING_REVIEW]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 
-    [DocumentStatus.APPROVED]: 'bg-green-100 text-green-800 border-green-200',
+    [DocumentStatus.APPROVED]: 'bg-success-soft text-success border-success/30',
     [DocumentStatus.REJECTED]: 'bg-red-100 text-red-800 border-red-200',
     [DocumentStatus.ARCHIVED]: 'bg-gray-200 text-gray-600 border-gray-300',
     [DocumentStatus.EXPIRED]: 'bg-orange-100 text-orange-800 border-orange-200',

@@ -53,8 +53,8 @@ const InspectionCrud: React.FC = () => {
   const statusOptions = [
     { value: 'scheduled', label: 'Programmée', color: 'bg-blue-100 text-blue-800', icon: Clock },
     { value: 'in_progress', label: 'En cours', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-    { value: 'completed', label: 'Terminée', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    { value: 'approved', label: 'Approuvée', color: 'bg-emerald-100 text-emerald-800', icon: CheckCircle },
+    { value: 'completed', label: 'Terminée', color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'approved', label: 'Approuvée', color: 'bg-success-soft text-success', icon: CheckCircle },
     { value: 'rejected', label: 'Rejetée', color: 'bg-red-100 text-red-800', icon: AlertTriangle },
     { value: 'cancelled', label: 'Annulée', color: 'bg-gray-100 text-gray-800', icon: AlertTriangle }
   ];

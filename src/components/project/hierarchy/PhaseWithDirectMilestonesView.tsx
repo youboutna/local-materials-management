@@ -192,7 +192,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
                   </Badge>
                 )}
                 {stats.byType.payment > 0 && (
-                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                  <Badge variant="outline" className="text-xs bg-success-soft text-success border-success/30">
                     <DollarSign className="h-3 w-3 mr-1" />
                     {stats.byType.payment}
                   </Badge>
@@ -313,7 +313,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
             {groupedMilestones.payment.length > 0 && (
               <div>
                 <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider flex items-center gap-2">
-                  <DollarSign className="h-3 w-3 text-green-600" />
+                  <DollarSign className="h-3 w-3 text-success" />
                   Paiements ({groupedMilestones.payment.length})
                 </div>
                 <div className="space-y-2">

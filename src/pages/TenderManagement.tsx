@@ -303,7 +303,7 @@ const TenderManagement = () => {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {winnerSub ? (
-                            <div className="p-3 border rounded-md bg-emerald-50 border-emerald-200">
+                            <div className="p-3 border rounded-md bg-success-soft border-success/30">
                               <div className="text-sm font-medium">Lauréat proposé</div>
                               <div className="text-lg">{winnerSub.supplier_name}</div>
                               <div className="text-xs text-muted-foreground">

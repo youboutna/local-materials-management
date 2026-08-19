@@ -161,7 +161,7 @@ const TaskDetail = () => {
             )}
             {task.completedAt && (
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+                <CheckCircle className="h-4 w-4 text-success" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-medium">Date de completion</p>
                   <p className="text-sm text-muted-foreground">

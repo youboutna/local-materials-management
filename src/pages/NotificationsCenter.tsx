@@ -227,9 +227,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Inspections</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.inspections}</p>
+                    <p className="text-2xl font-bold text-success">{stats.inspections}</p>
                   </div>
-                  <Eye className="h-8 w-8 text-green-500" />
+                  <Eye className="h-8 w-8 text-success" />
                 </div>
               </CardContent>
             </Card>
@@ -251,9 +251,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Paiements</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.payments}</p>
+                    <p className="text-2xl font-bold text-success">{stats.payments}</p>
                   </div>
-                  <CreditCard className="h-8 w-8 text-green-500" />
+                  <CreditCard className="h-8 w-8 text-success" />
                 </div>
               </CardContent>
             </Card>
@@ -608,7 +608,7 @@ const NotificationsCenterPage = () => {
                                     <Badge variant="destructive">Urgent</Badge>
                                   )}
                                   {notification.type.includes('completed') && (
-                                    <Badge variant="default" className="bg-green-100 text-green-800">Terminé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success">Terminé</Badge>
                                   )}
                                   {notification.type.includes('failed') && (
                                     <Badge variant="destructive">Échec</Badge>
@@ -637,7 +637,7 @@ const NotificationsCenterPage = () => {
                                   )}
                                 {notification.metadata?.payment_amount && (
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline" className="text-green-600">
+                                    <Badge variant="outline" className="text-success">
                                       {formatAmount2(notification.metadata.payment_amount, '€')}
                                     </Badge>
                                     {notification.metadata?.payment_method && (
@@ -718,7 +718,7 @@ const NotificationsCenterPage = () => {
                                     <Badge variant="destructive">Urgent</Badge>
                                   )}
                                   {notification.type.includes('completed') && (
-                                    <Badge variant="default" className="bg-green-100 text-green-800">Terminé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success">Terminé</Badge>
                                   )}
                                   {notification.type.includes('overdue') && (
                                     <Badge variant="destructive">En retard</Badge>
@@ -833,7 +833,7 @@ const NotificationsCenterPage = () => {
                                     <Badge variant="destructive">Urgent</Badge>
                                   )}
                                   {notification.type.includes('approved') && (
-                                    <Badge variant="default" className="bg-green-100 text-green-800">Approuvé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success">Approuvé</Badge>
                                   )}
                                   {notification.type.includes('rejected') && (
                                     <Badge variant="destructive">Rejeté</Badge>

@@ -103,7 +103,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-success-soft text-success border-success/30";
       case "in_progress":
         return "bg-blue-100 text-blue-800 border-blue-200";
       case "delayed":

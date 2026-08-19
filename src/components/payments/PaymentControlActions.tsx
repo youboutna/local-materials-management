@@ -80,7 +80,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   ];
 
   const priorityLevels = [
-    { value: 'low', label: 'Faible', color: 'bg-green-100 text-green-800' },
+    { value: 'low', label: 'Faible', color: 'bg-success-soft text-success' },
     { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800' },
     { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800' },
     { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' }

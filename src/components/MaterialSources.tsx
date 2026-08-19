@@ -39,7 +39,7 @@ const MaterialSources = ({
                     <h3 className="font-medium text-adrar-700">{source.name}</h3>
                     <p className="text-sm text-adrar-600">{source.type}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-success-soft text-success' : 'bg-amber-100 text-amber-800'}`}>
                     {source.availability}% {t('materials.available') || 'disponible'}
                   </span>
                 </div>

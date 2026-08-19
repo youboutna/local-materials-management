@@ -620,7 +620,7 @@ const EnhancedSupplierTenderPortal = () => {
                     <div className="flex items-center gap-2 p-3 bg-muted/50 rounded">
                       {canSubmitBid() ? (
                         <>
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CheckCircle className="h-5 w-5 text-success" />
                           <span className="text-sm">Phase de soumission active</span>
                         </>
                       ) : (
@@ -638,14 +638,14 @@ const EnhancedSupplierTenderPortal = () => {
 
                     {userSubmission ? (
                       <>
-                        <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
+                        <div className="bg-success-soft border border-success/30 p-4 rounded-lg space-y-3">
                           <div>
-                            <h4 className="font-medium text-green-800 mb-1">Soumission envoyée avec succès</h4>
-                            <p className="text-sm text-green-600">
+                            <h4 className="font-medium text-success mb-1">Soumission envoyée avec succès</h4>
+                            <p className="text-sm text-success">
                               Votre dossier de candidature a été soumis le{' '}
                               {new Date(userSubmission.submission_date).toLocaleDateString()}
                             </p>
-                            <p className="text-xs text-green-600 mt-1">
+                            <p className="text-xs text-success mt-1">
                               Statut: {userSubmission.status === 'submitted' ? 'En cours d\'évaluation' : userSubmission.status}
                             </p>
                           </div>
@@ -678,7 +678,7 @@ const EnhancedSupplierTenderPortal = () => {
                                       <div className="flex gap-2">
                                         {file ? (
                                           <>
-                                            <CheckCircle className="h-5 w-5 text-green-600" />
+                                            <CheckCircle className="h-5 w-5 text-success" />
                                             <Button 
                                               variant="outline" 
                                               size="sm"
@@ -734,7 +734,7 @@ const EnhancedSupplierTenderPortal = () => {
                           <div className="text-sm text-muted-foreground">
                             Fichiers sélectionnés: {Object.keys(selectedFiles).length}
                             {isSubmissionComplete() && (
-                              <span className="text-green-600 ml-2">✓ Dossier complet</span>
+                              <span className="text-success ml-2">✓ Dossier complet</span>
                             )}
                           </div>
                           <Button

@@ -77,7 +77,7 @@ export const PROJECT_WORKFLOW_STEPS: WorkflowStepConfig[] = [
     title: 'Parties prenantes',
     description: 'Bailleurs, Ministères, Entreprises, Banques, Bureau conseil',
     icon: 'users',
-    color: 'bg-green-500',
+    color: 'bg-success',
     hint: 'Au moins un Chef de projet ou une partie prenante requise',
     validate: hasStakeholders,
   },

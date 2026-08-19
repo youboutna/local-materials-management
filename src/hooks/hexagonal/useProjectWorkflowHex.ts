@@ -215,7 +215,7 @@ export function useProjectWorkflowHex(projectId?: string) {
       toast({
         title: 'Projet finalisé',
         description: 'Le projet a été finalisé avec succès.',
-        className: 'bg-green-100 border-green-300 text-green-800',
+        className: 'bg-success-soft border-success/30 text-success',
       });
 
       queryClient.invalidateQueries({ queryKey: ['project-workflow', projectId] });

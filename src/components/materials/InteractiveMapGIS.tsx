@@ -367,7 +367,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                             </div>
                           )}
                           {city.hasAirport && (
-                            <div className="text-xs text-green-600">🛫 Aéroport</div>
+                            <div className="text-xs text-success">🛫 Aéroport</div>
                           )}
                           {city.hasPort && (
                             <div className="text-xs text-blue-600">⚓ Port</div>
@@ -383,7 +383,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   {mapData?.coordinates && (
                     <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
                       <Popup>
-                        <strong className="text-green-600">Position sélectionnée</strong>
+                        <strong className="text-success">Position sélectionnée</strong>
                       </Popup>
                     </Marker>
                   )}

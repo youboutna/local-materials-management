@@ -506,8 +506,8 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 onClick={handleTriggerPayment}
                 disabled={hasApprovedInspectionWithProgress()}
               >
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-4 w-4 text-green-600" />
+                <div className="p-2 bg-success-soft rounded-lg">
+                  <DollarSign className="h-4 w-4 text-success" />
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-medium">Effectuer un paiement</p>
@@ -518,7 +518,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                     }
                   </p>
                   {!hasApprovedInspectionWithProgress() && paymentContext?.suggestedAmount !== undefined && paymentContext.suggestedAmount > 0 && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-success">
                       Montant suggéré: {paymentContext.suggestedAmount.toLocaleString()} MRU
                     </p>
                   )}

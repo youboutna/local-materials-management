@@ -180,7 +180,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Statut:</span>
                     {secretValid.valid ? (
-                      <Badge className="bg-green-100 text-green-800">
+                      <Badge className="bg-success-soft text-success">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         Actif
                       </Badge>

@@ -114,7 +114,7 @@ const RegionalDashboard = () => {
                     <div className="text-xs text-adrar-600">En cours</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-green-600">{stat.completedProjects}</div>
+                    <div className="font-semibold text-success">{stat.completedProjects}</div>
                     <div className="text-xs text-adrar-600">Terminés</div>
                   </div>
                 </div>

@@ -84,7 +84,7 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
               </div>
               <div className="border rounded p-3">
                 <div className="text-xs text-muted-foreground">Écart</div>
-                <div className={`text-xl font-semibold flex items-center gap-1 ${report.totals.costDelta > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                <div className={`text-xl font-semibold flex items-center gap-1 ${report.totals.costDelta > 0 ? 'text-destructive' : 'text-success'}`}>
                   {report.totals.costDelta > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                   {fmt(report.totals.costDelta)}
                 </div>
@@ -121,7 +121,7 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
                     <TableCell className="text-right">{fmt(r.actualQuantity)}</TableCell>
                     <TableCell className="text-right">{fmt(r.plannedCost)}</TableCell>
                     <TableCell className="text-right">{fmt(r.actualCost)}</TableCell>
-                    <TableCell className={`text-right font-medium ${r.costDelta > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                    <TableCell className={`text-right font-medium ${r.costDelta > 0 ? 'text-destructive' : 'text-success'}`}>
                       {fmt(r.costDelta)}
                     </TableCell>
                     <TableCell className="text-right">{fmtPct(r.costDeltaPct)}</TableCell>

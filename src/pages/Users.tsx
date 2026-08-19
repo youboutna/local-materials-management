@@ -326,7 +326,7 @@ const Users = () => {
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             profile.is_active !== false
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-success-soft text-success"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
@@ -364,7 +364,7 @@ const Users = () => {
                                 className={`h-8 ${
                                   profile.is_active !== false
                                     ? "border-red-200 hover:border-red-300 text-red-600"
-                                    : "border-green-200 hover:border-green-300 text-green-600"
+                                    : "border-success/30 hover:border-success/30 text-success"
                                 }`}
                                 onClick={() => handleToggleUserStatus(profile)}
                               >

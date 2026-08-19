@@ -135,7 +135,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case "in_progress":
         return <Clock className="h-4 w-4 text-blue-500" />;
       case "delayed":
@@ -148,7 +148,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-success-soft text-success";
       case "in_progress":
         return "bg-blue-100 text-blue-800";
       case "delayed":

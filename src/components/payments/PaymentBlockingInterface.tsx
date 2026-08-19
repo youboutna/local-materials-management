@@ -374,10 +374,10 @@ const PaymentBlockingInterface = () => {
             {/* Validation Results */}
             {validationResult && (
               <div className="mt-6 space-y-4">
-                <div className={`p-4 rounded-lg border ${validationResult.canProceed ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                <div className={`p-4 rounded-lg border ${validationResult.canProceed ? 'border-success/30 bg-success-soft' : 'border-red-200 bg-red-50'}`}>
                   <div className="flex items-center gap-2 mb-2">
                     {validationResult.canProceed ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className="h-5 w-5 text-success" />
                     ) : (
                       <Ban className="h-5 w-5 text-red-600" />
                     )}

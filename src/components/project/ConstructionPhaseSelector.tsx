@@ -74,7 +74,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                   <div key={phase.value} className="flex items-center gap-3">
                     <div className="flex-shrink-0">
                       {isCompleted && (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <CheckCircle className="h-5 w-5 text-success" />
                       )}
                       {isCurrent && (
                         <Clock className="h-5 w-5 text-blue-500" />
@@ -86,7 +86,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`text-sm font-medium ${
-                          isCompleted ? 'text-green-700' : 
+                          isCompleted ? 'text-success' : 
                           isCurrent ? 'text-blue-700' : 
                           'text-gray-500'
                         }`}>
@@ -98,7 +98,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                           </Badge>
                         )}
                         {isCompleted && (
-                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          <Badge variant="outline" className="text-xs bg-success-soft text-success border-success/30">
                             Terminé
                           </Badge>
                         )}

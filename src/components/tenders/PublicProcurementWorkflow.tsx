@@ -515,7 +515,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
   const getStageColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'text-green-600 bg-green-100';
+        return 'text-success bg-success-soft';
       case 'in_progress':
         return 'text-blue-600 bg-blue-100';
       default:

@@ -21,7 +21,7 @@ const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {
       case 'project_manager':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
       case 'supervisor':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
+        return 'bg-success-soft text-success hover:bg-success-soft';
       case 'inspector':
         return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
       case 'supplier':

@@ -90,7 +90,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               variant="outline" 
               className={cn(
                 projectVerification.allVerified 
-                  ? 'bg-green-50 text-green-700 border-green-200' 
+                  ? 'bg-success-soft text-success border-success/30' 
                   : 'bg-amber-50 text-amber-700 border-amber-200'
               )}
             >
@@ -108,9 +108,9 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               <p className="text-xs text-muted-foreground">Progression globale</p>
               <p className="text-xl font-bold text-primary">{canonicalProgress}%</p>
             </div>
-            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 text-center">
+            <div className="p-3 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30 text-center">
               <p className="text-xs text-muted-foreground">Total payé</p>
-              <p className="text-lg font-bold text-green-600">{formatCurrency(metrics.totalPaid)}</p>
+              <p className="text-lg font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
             <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-center">
               <p className="text-xs text-muted-foreground">Retenue garantie</p>
@@ -119,20 +119,20 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
             <div className="p-3 rounded-lg bg-muted/30 border text-center">
               <p className="text-xs text-muted-foreground">Checkpoints</p>
               <p className="text-lg font-bold">
-                <span className="text-green-600">{metrics.completedCheckpoints}</span>
+                <span className="text-success">{metrics.completedCheckpoints}</span>
                 <span className="text-muted-foreground">/{metrics.completedCheckpoints + metrics.pendingCheckpoints}</span>
               </p>
             </div>
           </div>
 
           {projectDecompte.canRequestPayment && (
-            <div className="mt-3 p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200">
+            <div className="mt-3 p-2 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-700 flex items-center gap-1">
+                <span className="text-sm text-success flex items-center gap-1">
                   <DollarSign className="h-4 w-4" />
                   Paiement disponible: {formatCurrency(projectDecompte.netPayable)}
                 </span>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button size="sm" className="bg-success hover:bg-success">
                   Demander
                 </Button>
               </div>
@@ -159,7 +159,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               className={cn(
                 'text-sm',
                 projectVerification.allVerified 
-                  ? 'bg-green-50 text-green-700 border-green-200' 
+                  ? 'bg-success-soft text-success border-success/30' 
                   : 'bg-amber-50 text-amber-700 border-amber-200'
               )}
             >
@@ -184,12 +184,12 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               </div>
               <p className="text-xl font-bold">{formatCurrency(metrics.totalBudget)}</p>
             </div>
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200">
+            <div className="p-4 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
                 <span className="text-xs text-muted-foreground">Payé</span>
               </div>
-              <p className="text-xl font-bold text-green-600">{formatCurrency(metrics.totalPaid)}</p>
+              <p className="text-xl font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
             <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200">
               <div className="flex items-center gap-2 mb-2">
@@ -204,7 +204,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                 <span className="text-xs text-muted-foreground">Checkpoints</span>
               </div>
               <p className="text-xl font-bold">
-                <span className="text-green-600">{metrics.completedCheckpoints}</span>
+                <span className="text-success">{metrics.completedCheckpoints}</span>
                 <span className="text-muted-foreground text-base">/{metrics.completedCheckpoints + metrics.pendingCheckpoints}</span>
               </p>
             </div>
@@ -214,50 +214,50 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
           <div className="grid grid-cols-4 gap-3 mb-4">
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              (projectVerification as any).inspectionVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).inspectionVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
-              <ClipboardCheck className={cn('h-4 w-4', (projectVerification as any).inspectionVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <ClipboardCheck className={cn('h-4 w-4', (projectVerification as any).inspectionVerified ? 'text-success' : 'text-muted-foreground')} />
               <span className="text-sm">Inspections</span>
-              {(projectVerification as any).inspectionVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).inspectionVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              (projectVerification as any).documentVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).documentVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
-              <FileCheck className={cn('h-4 w-4', (projectVerification as any).documentVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <FileCheck className={cn('h-4 w-4', (projectVerification as any).documentVerified ? 'text-success' : 'text-muted-foreground')} />
               <span className="text-sm">Documents</span>
-              {(projectVerification as any).documentVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).documentVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              (projectVerification as any).approvalVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).approvalVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
-              <Shield className={cn('h-4 w-4', (projectVerification as any).approvalVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <Shield className={cn('h-4 w-4', (projectVerification as any).approvalVerified ? 'text-success' : 'text-muted-foreground')} />
               <span className="text-sm">Approbations</span>
-              {(projectVerification as any).approvalVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).approvalVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
               'p-3 rounded-lg border flex items-center gap-2',
-              (projectVerification as any).pvVerified ? 'bg-green-50 border-green-200' : 'bg-muted/30'
+              (projectVerification as any).pvVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
-              <FileCheck className={cn('h-4 w-4', (projectVerification as any).pvVerified ? 'text-green-600' : 'text-muted-foreground')} />
+              <FileCheck className={cn('h-4 w-4', (projectVerification as any).pvVerified ? 'text-success' : 'text-muted-foreground')} />
               <span className="text-sm">PV Service Fait</span>
-              {(projectVerification as any).pvVerified && <CheckCircle className="h-3 w-3 text-green-600 ml-auto" />}
+              {(projectVerification as any).pvVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
           </div>
 
           {/* Payment action */}
           {projectDecompte.canRequestPayment && (
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200">
+            <div className="p-4 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-green-700">Paiement disponible</p>
-                  <p className="text-sm text-green-600">
+                  <p className="font-medium text-success">Paiement disponible</p>
+                  <p className="text-sm text-success">
                     Net à payer: {formatCurrency(projectDecompte.netPayable)} 
                     (après retenue de {formatCurrency(projectDecompte.retentionAmount)})
                   </p>
                 </div>
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="bg-success hover:bg-success">
                   <DollarSign className="h-4 w-4 mr-2" />
                   Demander le paiement
                 </Button>
@@ -308,7 +308,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                     </div>
                     <div className="flex items-center gap-2">
                       {phaseVerif?.allVerified ? (
-                        <Badge className="bg-green-100 text-green-700 border-green-200">
+                        <Badge className="bg-success-soft text-success border-success/30">
                           <CheckCircle className="h-3 w-3 mr-1" /> Vérifié
                         </Badge>
                       ) : (
@@ -317,7 +317,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                         </Badge>
                       )}
                       {phaseDecompte?.canRequestPayment && (
-                        <Badge className="bg-green-600 text-white">
+                        <Badge className="bg-success text-white">
                           <DollarSign className="h-3 w-3 mr-1" />
                           {formatCurrency(phaseDecompte.netPayable)}
                         </Badge>

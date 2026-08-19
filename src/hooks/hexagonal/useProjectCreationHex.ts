@@ -81,7 +81,7 @@ export function useProjectCreationHex() {
         toast({
           title: "Projet créé avec succès",
           description: `Le projet a été créé et est maintenant disponible.`,
-          className: 'bg-green-100 border-green-300 text-green-800',
+          className: 'bg-success-soft border-success/30 text-success',
         });
         
         queryClient.invalidateQueries({ queryKey: ['projects'] });

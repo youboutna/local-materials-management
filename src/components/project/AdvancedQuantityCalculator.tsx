@@ -104,7 +104,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "cement_block_masonry":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Blocs creux 20x20x40 cm courants</li>
           <li>13 blocs/m² environ</li>
           <li>Dosage mortier : 400 kg/m³</li>
@@ -192,7 +192,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "site_preparation":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Débroussaillage complet du terrain</li>
           <li>Évacuation des déchets et gravats</li>
           <li>Nivellement avant travaux</li>
@@ -208,7 +208,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "masonry_wall":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Épaisseur mur standard : 20 cm</li>
           <li>Type de brique : Brique creuse ou bloc ciment</li>
           <li>Dosage mortier : 400 kg/m³</li>
@@ -227,7 +227,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "fence":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Hauteur réglementaire selon PLU</li>
           <li>Fondations adaptées au sol</li>
           <li>Traitement anticorrosion pour les parties métalliques</li>
@@ -235,7 +235,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "gate":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Prévoir une ouverture sécurisée</li>
           <li>Matériau adapté à l'usage (acier, alu, bois)</li>
           <li>Vérifier l’alignement et la fixation</li>
@@ -243,7 +243,7 @@ const getRecommendations = (elementType: string) => {
       );
     case "landscaping":
       return (
-        <ul className="list-disc ml-4 text-xs text-green-900">
+        <ul className="list-disc ml-4 text-xs text-success">
           <li>Prévoir un drainage efficace</li>
           <li>Choisir des plantes adaptées au climat</li>
           <li>Stabiliser les allées et accès</li>

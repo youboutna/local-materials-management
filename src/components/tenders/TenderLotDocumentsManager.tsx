@@ -342,7 +342,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                   {form.fileUrl ? 'Remplacer' : 'Choisir un fichier'}
                 </Button>
                 {form.fileUrl && (
-                  <span className="flex items-center gap-1 text-sm text-emerald-600">
+                  <span className="flex items-center gap-1 text-sm text-success">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="truncate max-w-[220px]">{form.fileName}</span>
                   </span>

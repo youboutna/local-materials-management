@@ -97,7 +97,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   const getStatusIcon = useCallback((status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
         return <Play className="h-4 w-4 text-blue-600" />;
       case 'delayed':
@@ -109,7 +109,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
 
   const getStatusBadge = useCallback((status: string) => {
     const configs: Record<string, { label: string; className: string }> = {
-      completed: { label: '✅ Terminée', className: 'bg-green-100 text-green-800 border-green-200' },
+      completed: { label: '✅ Terminée', className: 'bg-success-soft text-success border-success/30' },
       in_progress: { label: '🟡 En cours', className: 'bg-blue-100 text-blue-800 border-blue-200' },
       delayed: { label: '🔴 Retard', className: 'bg-red-100 text-red-800 border-red-200' },
       pending: { label: '🔵 À venir', className: 'bg-gray-100 text-gray-800 border-gray-200' },
@@ -123,7 +123,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
       const date = format(parseISO(workflowStatus.latestInspection.date), 'd MMM yy', { locale: fr });
       if (workflowStatus.inspectionStatus === 'approved') {
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+          <Badge variant="outline" className="bg-success-soft text-success border-success/30 text-xs">
             ✅ {date}
           </Badge>
         );
@@ -144,14 +144,14 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   const getPaymentBadge = useCallback((workflowStatus: StepWorkflowStatus) => {
     if (workflowStatus.paymentStatus === 'paid') {
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+        <Badge variant="outline" className="bg-success-soft text-success border-success/30 text-xs">
           💰 Payé
         </Badge>
       );
     }
     if (workflowStatus.paymentStatus === 'available') {
       return (
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs animate-pulse">
+        <Badge variant="outline" className="bg-success-soft text-success border-success/30 text-xs animate-pulse">
           💵 Disponible
         </Badge>
       );
@@ -268,7 +268,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                   <div 
                     className={cn(
                       "grid grid-cols-12 gap-2 px-4 py-3 items-center transition-colors cursor-pointer",
-                      step.status === 'completed' && "bg-green-50/50",
+                      step.status === 'completed' && "bg-success-soft/50",
                       step.status === 'in_progress' && "bg-blue-50/50",
                       isExpanded && "bg-muted/30",
                       "hover:bg-muted/50"
@@ -279,7 +279,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                     <div className="col-span-4 flex items-center gap-3">
                       <div className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
-                        step.status === 'completed' && "bg-green-500 text-white",
+                        step.status === 'completed' && "bg-success text-white",
                         step.status === 'in_progress' && "bg-blue-500 text-white",
                         step.status !== 'completed' && step.status !== 'in_progress' && "bg-muted text-muted-foreground"
                       )}>
@@ -403,7 +403,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                             {workflowStatus.totalPaid > 0 && (
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Montant payé:</span>
-                                <span className="text-green-600 font-medium">
+                                <span className="text-success font-medium">
                                   {formatCurrency(workflowStatus.totalPaid)}
                                 </span>
                               </div>

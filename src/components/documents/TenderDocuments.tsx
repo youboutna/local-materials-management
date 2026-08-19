@@ -33,7 +33,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'rejected':
         return <XCircle className="h-4 w-4 text-red-600" />;
       case 'requires_revision':
@@ -48,7 +48,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-soft text-success';
       case 'rejected':
         return 'bg-red-100 text-red-800';
       case 'requires_revision':

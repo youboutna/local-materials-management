@@ -48,7 +48,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
       case 'management':
         return 'bg-purple-100 text-purple-800';
       case 'quality':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-soft text-success';
       case 'hse':
         return 'bg-orange-100 text-orange-800';
       case 'finance':

@@ -82,7 +82,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     const statusValue = status as OperationalStatus;
     switch (statusValue) {
       case OperationalStatus.active:
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case OperationalStatus.inactive:
         return <AlertCircle className="h-4 w-4 text-yellow-600" />;
       case OperationalStatus.closed:
@@ -110,7 +110,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     const statusValue = status as OperationalStatus;
     switch (statusValue) {
       case OperationalStatus.active:
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case OperationalStatus.inactive:
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case OperationalStatus.closed:

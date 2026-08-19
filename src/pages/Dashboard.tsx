@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
             </Badge>
           )}
           {userRoles.includes("project_manager") && (
-            <Badge className="bg-green-500 text-white text-xs">
+            <Badge className="bg-success text-white text-xs">
               {t("dashboard.badges.project_manager")}
             </Badge>
           )}

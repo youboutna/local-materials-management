@@ -260,7 +260,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       className={cn(
                         'flex items-center justify-between p-3 border rounded-lg transition-colors',
                         status?.available 
-                          ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
+                          ? 'bg-success-soft border-success/30 dark:bg-success dark:border-success'
                           : docType.required
                             ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
                             : 'bg-muted/30'
@@ -292,7 +292,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       <div className="flex items-center gap-2">
                         {status?.available ? (
                           <>
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            <CheckCircle2 className="h-4 w-4 text-success" />
                             {status.document?.file_url && (
                               <Button
                                 variant="ghost"

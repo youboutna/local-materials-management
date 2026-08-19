@@ -389,7 +389,7 @@ const InsuranceCertificateManager = () => {
             <Card>
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Aucune alerte d'expiration d'assurance</p>
                 </div>
               </CardContent>

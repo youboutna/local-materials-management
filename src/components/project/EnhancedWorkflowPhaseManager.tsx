@@ -178,7 +178,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'completed': return 'bg-success-soft text-success border-success/30';
       case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'planned': return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'delayed': return 'bg-red-100 text-red-800 border-red-200';
@@ -188,7 +188,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'completed': return <CheckCircle2 className="h-4 w-4 text-success" />;
       case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
       case 'planned': return <Calendar className="h-4 w-4 text-gray-600" />;
       case 'delayed': return <AlertTriangle className="h-4 w-4 text-red-600" />;
@@ -458,7 +458,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
-                          <ClipboardCheck className="h-5 w-5 text-green-500" />
+                          <ClipboardCheck className="h-5 w-5 text-success" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.tasks_count}</p>
                             <p className="text-sm text-muted-foreground">Tâches</p>

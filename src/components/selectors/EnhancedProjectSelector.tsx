@@ -81,7 +81,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
     switch (status?.toLowerCase()) {
       case 'completed':
       case 'terminé':
-        return { color: 'bg-green-100 text-green-800 border-green-200', label: 'Terminé' };
+        return { color: 'bg-success-soft text-success border-success/30', label: 'Terminé' };
       case 'inprogress':
       case 'en cours':
         return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'En cours' };

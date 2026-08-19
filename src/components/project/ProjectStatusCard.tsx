@@ -9,7 +9,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO
   const getStatusColor = () => {
     switch (project.status) {
       case 'en cours': return 'bg-blue-500';
-      case 'terminé': return 'bg-green-500';
+      case 'terminé': return 'bg-success';
       case 'en attente': return 'bg-amber-500';
       case 'en inspection': return 'bg-yellow-500';
       case 'suspendu': return 'bg-purple-500';
@@ -53,7 +53,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO
               <p className="text-sm">
                 {format(new Date(project.inspections[0].date), 'dd/MM/yyyy')} -{' '}
                 <span className={`${
-                  project.inspections[0].status === 'approved' ? 'text-green-600' : 
+                  project.inspections[0].status === 'approved' ? 'text-success' : 
                   project.inspections[0].status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
                 }`}>
                   {project.inspections[0].status === 'approved' ? 'APPROUVÉE' : 

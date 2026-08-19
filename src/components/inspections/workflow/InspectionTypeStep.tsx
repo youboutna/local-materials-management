@@ -106,7 +106,7 @@ const InspectionTypeStep: React.FC<InspectionTypeStepProps> = ({
     switch (category) {
       case 'routine': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
       case 'technical': return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
-      case 'final': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+      case 'final': return 'bg-success-soft text-success dark:bg-success dark:text-success';
       default: return 'bg-muted text-muted-foreground';
     }
   };

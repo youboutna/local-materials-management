@@ -169,7 +169,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${
                         status === 'en cours' ? 'bg-blue-500' :
-                        status === 'terminé' ? 'bg-green-500' :
+                        status === 'terminé' ? 'bg-success' :
                         status === 'en attente' ? 'bg-yellow-500' :
                         status === 'en inspection' ? 'bg-purple-500' :
                         status === 'suspendu' ? 'bg-orange-500' :
@@ -190,7 +190,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="region-filter" className="text-sm font-medium flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-green-600" />
+              <MapPin className="h-4 w-4 text-success" />
               Région/Wilaya
             </Label>
             <Select 
@@ -216,7 +216,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     <SelectItem key={region.code} value={region.code}>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-3 w-3 text-green-600" />
+                          <MapPin className="h-3 w-3 text-success" />
                           <span className="font-medium">{region.name}</span>
                           {region.economicImportance === 'capital' && (
                             <Badge variant="secondary" className="text-xs px-1">Capitale</Badge>

@@ -65,7 +65,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
+      case 'approved': return 'bg-success-soft text-success';
       case 'draft': return 'bg-yellow-100 text-yellow-800';
       case 'under_review': return 'bg-blue-100 text-blue-800';
       case 'rejected': return 'bg-red-100 text-red-800';

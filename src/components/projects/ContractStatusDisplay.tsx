@@ -50,7 +50,7 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
     }
     
     if (isAfter(now, startDate) && (!endDate || isBefore(now, endDate))) {
-      return { phase: 'contract_execution', label: 'Exécution du contrat', color: 'bg-green-500' };
+      return { phase: 'contract_execution', label: 'Exécution du contrat', color: 'bg-success' };
     }
     
     if (endDate && isAfter(now, endDate)) {

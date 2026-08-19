@@ -90,7 +90,7 @@ export const calculateUptime = (
 export const getHealthColor = (health: MonitoringMetrics['projectHealth']): string => {
   switch (health) {
     case 'excellent':
-      return 'text-green-600';
+      return 'text-success';
     case 'good':
       return 'text-blue-600';
     case 'warning':

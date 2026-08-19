@@ -403,7 +403,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
-      case 'approved': return 'text-green-600 bg-green-100';
+      case 'approved': return 'text-success bg-success-soft';
       case 'pending': return 'text-yellow-600 bg-yellow-100';
       case 'rejected': return 'text-red-600 bg-red-100';
       case 'in_review': return 'text-blue-600 bg-blue-100';
@@ -416,7 +416,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
     switch (priority?.toLowerCase()) {
       case 'high': return 'text-red-600 bg-red-100';
       case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-green-600 bg-green-100';
+      case 'low': return 'text-success bg-success-soft';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -588,7 +588,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
             
             <div className="grid grid-cols-4 gap-2 mt-4 text-sm">
               <div className="text-center">
-                <div className="font-bold text-green-600">{stats.approved}</div>
+                <div className="font-bold text-success">{stats.approved}</div>
                 <div className="text-xs text-muted-foreground">Approuvés</div>
               </div>
               <div className="text-center">

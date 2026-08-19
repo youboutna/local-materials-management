@@ -97,7 +97,7 @@ export function ProviderSwitcher({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'available':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'unavailable':
         return <XCircle className="h-4 w-4 text-red-500" />;
       case 'error':
@@ -112,7 +112,7 @@ export function ProviderSwitcher({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Available</Badge>;
+        return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Available</Badge>;
       case 'unavailable':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Unavailable</Badge>;
       case 'error':

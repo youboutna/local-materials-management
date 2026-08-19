@@ -81,7 +81,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   ];
 
   const priorityLevels = [
-    { value: 'low', label: 'Faible', color: 'bg-green-100 text-green-800', icon: Target },
+    { value: 'low', label: 'Faible', color: 'bg-success-soft text-success', icon: Target },
     { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800', icon: Target },
     { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800', icon: AlertTriangle },
     { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800', icon: AlertTriangle }

@@ -75,7 +75,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     switch (status) {
       case 'completed':
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
         return <Clock className="h-4 w-4 text-blue-600" />;
       case 'rejected':
@@ -89,7 +89,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     switch (status) {
       case 'completed':
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'rejected':
@@ -474,7 +474,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             Array.from({ length: step.tasks_total }, (_, i) => (
                               <div key={i} className="flex items-center gap-2 p-2 border rounded">
                                 {i < step.tasks_completed ? (
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <CheckCircle className="h-4 w-4 text-success" />
                                 ) : (
                                   <Clock className="h-4 w-4 text-gray-400" />
                                 )}
