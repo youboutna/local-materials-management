@@ -4839,30 +4839,45 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     };
 
     const t = (key: string, params?: Record<string, string | number>): string => {
-        const keys = key.split('.');
         type Nested = Record<string, unknown>;
-        let value: unknown = (translations as Record<string, Nested>)[language];
 
-        for (const k of keys) {
-            if (value && typeof value === 'object' && k in (value as Nested)) {
-                value = (value as Nested)[k];
-            } else {
-                console.warn(`Translation key "${key}" not found for language "${language}"`);
-                return key;
+        const lookup = (lang: Language): string | null => {
+            let value: unknown = (translations as unknown as Record<string, Nested>)[lang];
+            for (const k of key.split('.')) {
+                if (value && typeof value === 'object' && k in (value as Nested)) {
+                    value = (value as Nested)[k];
+                } else {
+                    return null;
+                }
             }
+            return typeof value === 'string' ? value : null;
+        };
+
+        /** Repli lisible : jamais de clé technique affichée dans l'UI. */
+        const humanize = (): string => {
+            const last = key.split('.').pop() ?? key;
+            const words = last.replace(/[_-]+/g, ' ').trim();
+            return words.charAt(0).toUpperCase() + words.slice(1);
+        };
+
+        let result = lookup(language) ?? (language !== 'fr' ? lookup('fr') : null);
+        if (result === null) {
+            if (import.meta.env.DEV) {
+                console.warn(`Translation key "${key}" not found for language "${language}"`);
+            }
+            result = humanize();
         }
 
-        let result = typeof value === 'string' ? value : key;
-        
         // Handle interpolation with params like {title}
-        if (params && typeof result === 'string') {
+        if (params) {
             Object.entries(params).forEach(([paramKey, paramValue]) => {
-                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+                result = (result as string).replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
             });
         }
 
         return result;
     };
+
 
     return (
         <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
