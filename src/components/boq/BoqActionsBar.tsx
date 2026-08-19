@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle, Layers, ShieldCheck } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,8 @@ import { BOQ_INJECTION_GATE_REFERENTIAL } from '@/config/referentials/boq/boq-in
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
 import { Badge } from '@/components/ui/badge';
+import { BoqTransferService } from '@/application/services/boq/BoqTransferService';
+import { BoqPartyResolverService, partyHintsFromLines } from '@/application/services/boq/BoqPartyResolverService';
 
 interface Props {
   ctx: BoqContext;
@@ -114,6 +116,12 @@ export const BoqActionsBar: React.FC<Props> = ({
     try { await fn(); } finally { setBusy(null); }
   };
 
+  // Parties prenantes contextualisées (expression de besoin / devis / décompte)
+  const parties = React.useMemo(
+    () => BoqPartyResolverService.resolve(ctx.routeContext, partyHintsFromLines(lines)),
+    [ctx.routeContext, lines],
+  );
+
   const baseDocCtx = {
     docPrefix: ctx.docPrefix,
     title: ctx.title,
@@ -125,6 +133,8 @@ export const BoqActionsBar: React.FC<Props> = ({
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
+    senderName: parties.senderName,
+    recipientName: parties.recipientName,
   };
 
   const handleGenerate = () => withGuard('pdf', async () => {
@@ -178,17 +188,36 @@ export const BoqActionsBar: React.FC<Props> = ({
   };
 
   const handleTransfer = () => withGuard('transfer', async () => {
-    // Route contextuel : dispatch d'un event que la page hôte peut intercepter
-    window.dispatchEvent(new CustomEvent('boq-transfer-next', { detail: {
-      routeContext: ctx.routeContext,
-      projectId: ctx.projectId,
-      tenderId: ctx.tenderId,
-      submissionId: ctx.submissionId,
-      contextId: ctx.contextId,
-      signed: !!signedInfo,
-      lineCount: lines.length,
-    } }));
-    toast({ title: TRANSFER_LABEL[ctx.routeContext], description: `${lines.length} ligne(s) transférée(s).` });
+    try {
+      const res = await BoqTransferService.transfer({
+        routeContext: ctx.routeContext,
+        lines,
+        actorName: signedInfo?.by ?? parties.senderName ?? null,
+        submissionId: ctx.submissionId,
+      });
+      toast({ title: TRANSFER_LABEL[ctx.routeContext], description: `${res.transferred} ligne(s) — ${res.message}` });
+      window.dispatchEvent(new CustomEvent('boq-transfer-next', { detail: {
+        routeContext: ctx.routeContext,
+        projectId: ctx.projectId,
+        tenderId: ctx.tenderId,
+        submissionId: ctx.submissionId,
+        contextId: ctx.contextId,
+        stage: res.stage,
+        status: res.status,
+        signed: !!signedInfo,
+        lineCount: res.transferred,
+      } }));
+      // Callbacks métier optionnels de la page hôte (soumission, paiement, publication).
+      if (ctx.routeContext === 'supplier-bid') onAttachToSubmission?.();
+      if (ctx.routeContext === 'supplier-invoice') onSubmitInvoice?.();
+      if (ctx.routeContext === 'tender-estimate') onPublish?.();
+    } catch (e) {
+      toast({
+        title: 'Transfert impossible',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      });
+    }
   });
 
   // Étape explicite « DQE -> WBS » : phases, jalons, tâches et ressources.
@@ -318,6 +347,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Créer un décompte depuis le devis</DialogTitle>
+            <DialogDescription>Les quantités du devis seront proratisées selon l'avancement facturé.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
@@ -340,6 +370,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Signer le document</DialogTitle>
+            <DialogDescription>La signature est horodatée et figée sur toutes les lignes du document.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
