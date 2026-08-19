@@ -268,6 +268,8 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({
       ...prev,
+      // La racine `supplierId` est la clé étrangère persistée ; `supplier` reste le snapshot JSON.
+      supplierId: supplier.id,
       supplier: {
         name: supplier.name,
         contact: supplier.contact,
@@ -276,6 +278,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
       }
     }));
   };
+
 
   const handleMapChange = (mapData: MapData) => {
     console.log('Map data changed:', mapData);
