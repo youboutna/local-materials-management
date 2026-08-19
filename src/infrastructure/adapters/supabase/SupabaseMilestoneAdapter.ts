@@ -37,12 +37,16 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
    * Find all milestones for a project
    */
   async findByProjectId(projectId: string): Promise<MilestoneDTO[]> {
+    if (!projectId || !projectId.trim()) {
+      return [];
+    }
     try {
       const { data, error } = await supabase
         .from('project_milestones')
         .select('*')
         .eq('project_id', projectId)
         .order('target_date', { ascending: true });
+
 
       if (error) {
         console.error('Error finding milestones by project ID:', error);
