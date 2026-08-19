@@ -383,3 +383,127 @@
   }
 }
 
+
+/* ============================================================================
+   Thème « RIM Énergie » (référentiel src/config/referentials/ui/themes.referential.ts)
+   Surcharge des tokens sémantiques : palette République Islamique de Mauritanie
+   (vert pétrole, or énergie, tons sable). Aucun composant ne code de couleur.
+   ========================================================================== */
+.theme-rim {
+  --background: 45 15% 98%;
+  --foreground: 210 25% 8%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 210 25% 8%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 25% 8%;
+
+  --primary: 142 76% 18%;
+  --primary-foreground: 0 0% 98%;
+  --primary-glow: 142 76% 35%;
+
+  --secondary: 45 35% 88%;
+  --secondary-foreground: 210 25% 8%;
+
+  --accent: 48 96% 53%;
+  --accent-foreground: 210 25% 8%;
+  --accent-muted: 48 60% 85%;
+
+  --muted: 45 15% 94%;
+  --muted-foreground: 210 15% 46%;
+
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 98%;
+  --warning: 48 96% 53%;
+  --warning-foreground: 210 25% 8%;
+  --info: 200 95% 45%;
+  --info-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 45 25% 85%;
+  --input: 45 25% 92%;
+  --ring: 142 76% 18%;
+
+  --radius: 0.75rem;
+
+  --stage-plan: 200 95% 45%;
+  --stage-exec: 142 76% 30%;
+  --stage-control: 48 96% 45%;
+  --stage-close: 210 25% 25%;
+
+  --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+  --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+
+  --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+  --shadow-glow: 0 0 40px hsl(var(--accent) / 0.2);
+
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 210 25% 20%;
+  --sidebar-primary: 142 76% 18%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 45 30% 94%;
+  --sidebar-accent-foreground: 142 76% 18%;
+  --sidebar-border: 45 25% 88%;
+  --sidebar-ring: 142 76% 25%;
+}
+
+.theme-rim.dark {
+  --background: 210 25% 8%;
+  --foreground: 45 15% 95%;
+
+  --card: 210 20% 12%;
+  --card-foreground: 45 15% 95%;
+
+  --popover: 210 20% 12%;
+  --popover-foreground: 45 15% 95%;
+
+  --primary: 142 76% 25%;
+  --primary-foreground: 0 0% 98%;
+  --primary-glow: 142 76% 40%;
+
+  --secondary: 210 15% 18%;
+  --secondary-foreground: 45 15% 85%;
+
+  --accent: 48 96% 58%;
+  --accent-foreground: 210 25% 8%;
+
+  --muted: 210 15% 15%;
+  --muted-foreground: 45 10% 60%;
+
+  --success: 142 76% 30%;
+  --warning: 48 96% 58%;
+  --destructive: 0 84% 65%;
+  --info: 200 95% 50%;
+
+  --border: 210 15% 20%;
+  --input: 210 15% 18%;
+  --ring: 142 76% 25%;
+
+  --sidebar-background: 210 20% 10%;
+  --sidebar-foreground: 45 15% 85%;
+  --sidebar-primary: 142 76% 25%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 210 15% 18%;
+  --sidebar-accent-foreground: 45 15% 85%;
+  --sidebar-border: 210 15% 20%;
+  --sidebar-ring: 142 76% 25%;
+}
+
+/* ============================================================================
+   Limites administratives (SIG) — libellés et infobulles wilayas
+   ========================================================================== */
+.wilaya-label {
+  background: transparent;
+  border: none;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow:
+    1px 1px 2px hsl(var(--background)),
+    -1px -1px 2px hsl(var(--background));
+}

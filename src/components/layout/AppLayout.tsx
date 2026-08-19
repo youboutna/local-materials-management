@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
+import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -132,12 +133,11 @@ export function AppLayout({
                   </div>
                 </div>
 
-                {/* Page Actions */}
-                {actions && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {actions}
-                  </div>
-                )}
+                {/* Page Actions + sélecteur de thème */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {actions}
+                  <ThemeSwitcher />
+                </div>
               </div>
             </div>
           </div>
