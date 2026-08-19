@@ -124,6 +124,9 @@ export class TenderSharingService {
     } catch {
       // journalisation non bloquante
     }
+  }
+
+
 
 
   /**
