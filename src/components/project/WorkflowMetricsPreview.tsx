@@ -19,9 +19,12 @@ interface Props {
   formData?: ProjectWorkflowData | null;
   mode: 'create' | 'edit';
   className?: string;
+  /** Replie le bandeau par défaut afin de ne pas masquer le workflow. */
+  defaultOpen?: boolean;
 }
 
-export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, className }) => {
+export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, className, defaultOpen = false }) => {
+  const [open, setOpen] = useState(defaultOpen);
   const project = (formData?.projectData ?? null) as any;
   const related = (formData?.relatedData ?? {}) as any;
 
@@ -30,31 +33,44 @@ export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, classN
 
   const hasMinimalData = Boolean(project?.title || project?.budget || phases.length > 0);
 
-  if (!hasMinimalData) {
-    return (
-      <Card className={className}>
-        <CardContent className="p-4 text-sm text-muted-foreground">
-          Les indicateurs (avancement pondéré, EVM, alertes) apparaîtront dès que le titre, le
-          budget ou les phases seront renseignés.
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className={className}>
+      <Card>
+        <CardContent className="p-2">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full justify-between">
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <Activity className="h-4 w-4" />
+                Indicateurs temps réel (avancement, EVM, alertes)
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            {hasMinimalData ? (
+              <ProjectMetricsPanel
+                variant="compact"
+                project={project}
+                phases={phases}
+                actualCost={project?.actualCost ?? 0}
+                documentsCount={(related.documents ?? []).length}
+                inspectionsCount={(related.inspections ?? []).length}
+                risks={risks}
+                // En création, les alertes de retard ne sont pertinentes qu'après saisie des dates.
+                showAlerts={mode === 'edit' || Boolean(project?.startDate && project?.endDate)}
+              />
+            ) : (
+              <p className="p-2 text-sm text-muted-foreground">
+                Les indicateurs (avancement pondéré, EVM, alertes) apparaîtront dès que le titre, le
+                budget ou les phases seront renseignés.
+              </p>
+            )}
+          </CollapsibleContent>
         </CardContent>
       </Card>
-    );
-  }
-
-  return (
-    <ProjectMetricsPanel
-      className={className}
-      variant="compact"
-      project={project}
-      phases={phases}
-      actualCost={project?.actualCost ?? 0}
-      documentsCount={(related.documents ?? []).length}
-      inspectionsCount={(related.inspections ?? []).length}
-      risks={risks}
-      // En création, les alertes de retard ne sont pertinentes qu'après saisie des dates.
-      showAlerts={mode === 'edit' || Boolean(project?.startDate && project?.endDate)}
-    />
+    </Collapsible>
   );
+
 };
 
 export default WorkflowMetricsPreview;
