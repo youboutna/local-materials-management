@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Target
 } from "lucide-react";
-import { KPICard } from "./KPICard";
+
 import { cn } from "@/lib/utils";
 
 interface ProjectHeaderProps {
@@ -124,125 +124,120 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const statusConfig = getStatusConfig(project.status);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Breadcrumb hiérarchique */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate("/projects")}
-          className="h-auto p-0 hover:bg-transparent hover:text-foreground"
+          className="h-auto p-0 text-xs hover:bg-transparent hover:text-foreground"
         >
-          <Building className="h-4 w-4 mr-1" />
+          <Building className="h-3.5 w-3.5 mr-1" />
           <span>Projets</span>
         </Button>
-        <ChevronRight className="h-4 w-4" />
-        <span className="font-medium text-foreground truncate max-w-[300px]">
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="font-medium text-foreground truncate max-w-[280px]">
           {project.title}
         </span>
       </div>
 
-      {/* Header Principal */}
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-3">
-            <div className="p-3 rounded-xl bg-primary/10 shrink-0">
-              <Building className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight truncate">
+      {/* Header principal — une seule bande compacte */}
+      <div className="rounded-lg border bg-card">
+        <div className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-lg font-semibold tracking-tight lg:text-xl">
                 {project.title}
               </h1>
-              {project.description && (
-                <p className="text-muted-foreground mt-1 line-clamp-2">
-                  {project.description}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-3 mt-3">
-                <Badge 
-                  variant={statusConfig.variant}
-                  className={cn("flex items-center gap-1.5", statusConfig.className)}
-                >
-                  {statusConfig.icon}
-                  {project.status || "En cours"}
-                </Badge>
-                {project.location && (
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{project.location}</span>
-                  </div>
-                )}
-                {project.teamSize !== undefined && (
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{project.teamSize} membres</span>
-                  </div>
-                )}
-              </div>
+              <Badge
+                variant={statusConfig.variant}
+                className={cn("flex shrink-0 items-center gap-1 text-[11px]", statusConfig.className)}
+              >
+                {statusConfig.icon}
+                {project.status || "En cours"}
+              </Badge>
             </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              {project.location && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {project.location}
+                </span>
+              )}
+              {project.teamSize !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5" />
+                  {project.teamSize} membres
+                </span>
+              )}
+              {project.description && (
+                <span className="truncate max-w-[420px]" title={project.description}>
+                  {project.description}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => navigate("/projects")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Retour
+            </Button>
+            {onEdit && (
+              <Button variant="outline" size="sm" className="h-8" onClick={onEdit}>
+                Modifier
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive" onClick={onDelete}>
+                Supprimer
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/projects")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
-          {onEdit && (
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              Modifier
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="destructive" size="sm" onClick={onDelete}>
-              Supprimer
-            </Button>
-          )}
+        {/* Indicateurs clés — bande d'une ligne (plus de grille de cartes) */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t px-3 py-2 text-xs">
+          <span className="flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Progression</span>
+            <span className="font-semibold">{project.progress}%</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Wallet className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Budget</span>
+            <span className="font-semibold">{formatCurrency(project.budget, project.currency)}</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Délai</span>
+            <span className="font-semibold">{getDaysRemaining()}</span>
+            {project.endDate && (
+              <span className="text-muted-foreground">
+                ({new Date(project.endDate).toLocaleDateString("fr-FR")})
+              </span>
+            )}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Layers className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Phases</span>
+            <span className="font-semibold">
+              {phasesStats.completed}/{phasesStats.total}
+            </span>
+            <span className="text-muted-foreground">({phasesStats.inProgress} en cours)</span>
+          </span>
         </div>
-      </div>
-
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Progression"
-          value={`${project.progress}%`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          color={project.progress >= 75 ? "success" : project.progress >= 50 ? "info" : "warning"}
-          trend={project.progress >= 50 ? "positive" : "neutral"}
-          subtitle="du projet complété"
-        />
-        
-        <KPICard
-          title="Budget"
-          value={formatCurrency(project.budget, project.currency)}
-          icon={<Wallet className="h-5 w-5" />}
-          color="success"
-          subtitle="budget alloué"
-        />
-        
-        <KPICard
-          title="Délai"
-          value={getDaysRemaining()}
-          icon={<Calendar className="h-5 w-5" />}
-          color={getDelayColor()}
-          subtitle={project.endDate ? new Date(project.endDate).toLocaleDateString("fr-FR") : "Non défini"}
-        />
-        
-        <KPICard
-          title="Phases"
-          value={`${phasesStats.completed}/${phasesStats.total}`}
-          icon={<Layers className="h-5 w-5" />}
-          color="primary"
-          subtitle={`${phasesStats.inProgress} en cours`}
-        />
       </div>
     </div>
   );
 };
+
 
 export default ProjectHeader;
