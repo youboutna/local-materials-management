@@ -660,6 +660,14 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                 >
                   <Download className="h-3.5 w-3.5 mr-1" /> Exporter
                 </Button>
+                <Button
+                  size="sm"
+                  variant={showBoundaries ? 'secondary' : 'outline'}
+                  onClick={() => setShowBoundaries((v) => !v)}
+                  title="Afficher / masquer les limites administratives (wilayas)"
+                >
+                  <Map className="h-3.5 w-3.5 mr-1" /> Wilayas
+                </Button>
               </>
             ) : (
               <>
