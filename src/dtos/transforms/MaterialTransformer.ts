@@ -380,7 +380,8 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
    * Résout l'identifiant fournisseur quel que soit l'endroit où l'UI le stocke
    * (racine du formulaire, ou objet `supplier` du SupplierSelector).
    */
-  static resolveSupplierId(formData: Partial<MaterialFormDataDTO>): string | undefined {
+  static resolveSupplierId(formData: { supplierId?: string; supplier?: unknown } | undefined | null): string | undefined {
+    if (!formData) return undefined;
     const nested = formData.supplier as
       | { supplierId?: string; id?: string }
       | undefined;

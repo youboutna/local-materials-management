@@ -19,7 +19,7 @@ interface SupplierSelectorProps {
   allowCustom?: boolean;
   disabled?: boolean;
   /** Liste préchargée (page Matériaux). Sinon le hook interne prend le relais. */
-  suppliers?: Array<Record<string, unknown>>;
+  suppliers?: readonly unknown[];
 }
 
 const CUSTOM_OPTION = 'custom';
