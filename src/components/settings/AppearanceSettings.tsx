@@ -32,6 +32,8 @@ export const AppearanceSettings: React.FC = () => {
     setBrandingOverrides,
     resetBrandingOverrides,
   } = useUiTheme();
+  const { organization: ownerOrganization } = useOwnerOrganization();
+
 
   return (
     <div className="space-y-6">
