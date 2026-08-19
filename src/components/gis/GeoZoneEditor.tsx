@@ -46,6 +46,7 @@ import {
   Upload,
   Download,
   Search,
+  Map,
 } from 'lucide-react';
 import type {
   InterventionZoneDTO,
@@ -55,6 +56,7 @@ import type {
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import AddressSearchBox from '@/components/gis/AddressSearchBox';
 import ZoneLocationEditor from '@/components/gis/ZoneLocationEditor';
+import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer';
 import { toast } from 'sonner';
 
 // -----------------------------------------------------------------------------
@@ -355,6 +357,8 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
     lng: number;
   } | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // Limites administratives (wilayas) : couche SIG optionnelle, activée par défaut.
+  const [showBoundaries, setShowBoundaries] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialCenter: [number, number] = zones[0]?.coordinates[0]
@@ -764,6 +768,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
               attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <WilayaBoundariesLayer visible={showBoundaries} showLabels={defaultZoom <= 8} />
             {!readOnly && (
               <ClickCapture
                 onClick={handleMapClick}

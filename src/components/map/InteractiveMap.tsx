@@ -8,6 +8,7 @@ import { Target, MapPin, Globe, Compass, Info, Navigation } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer';
 
 // Import hexagonal architecture services
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
@@ -261,6 +262,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+
+              {/* Limites administratives (wilayas) issues du référentiel SIG */}
+              <WilayaBoundariesLayer visible showLabels={mapZoom <= 7} />
 
               <MapClickHandler onMapClick={onMapClick} />
 
