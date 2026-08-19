@@ -274,21 +274,14 @@ export const BoqActionsBar: React.FC<Props> = ({
           </Button>
         )}
         {isProjectDqe && (
-          <>
-            <Button size="sm" variant="outline" onClick={handleDispatch}
-              disabled={disabled || busy !== null || !gate.allowed}
-              title={gate.allowed
-                ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
-                : gate.reasons.join(' ')}>
-              {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
-              Transférer vers les phases
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleRequestValidation} disabled={disabled || busy !== null}
-              title="Créer le workflow de validation (alerte budgétaire, options A/B/C)">
-              {iconOf('validation') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
-              Demander validation
-            </Button>
-          </>
+          <Button size="sm" variant="outline" onClick={handleDispatch}
+            disabled={disabled || busy !== null || !gate.allowed}
+            title={gate.allowed
+              ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
+              : gate.reasons.join(' ')}>
+            {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
+            Transférer vers les phases
+          </Button>
         )}
         {gateKind && !gate.allowed && (
           <>
