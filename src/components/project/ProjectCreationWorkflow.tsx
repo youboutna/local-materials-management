@@ -120,8 +120,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   // ⚠️ `controlledStep` (prop parent) est 1-indexé (Étape 1..8) alors que l'index
   // interne de rendu est 0-indexé. On convertit à la frontière pour que l'onglet
   // cliqué affiche bien le contenu correspondant.
+  // UX : en mode non contrôlé, l'onglet actif est persisté dans l'URL (`?step=`)
+  // afin de permettre le partage de lien vers une étape précise.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stepFromUrl = (() => {
+    const raw = Number(searchParams.get('step'));
+    if (!Number.isFinite(raw) || raw < 1) return null;
+    return Math.min(Math.max(0, raw - 1), PROJECT_WORKFLOW_STEPS.length - 1);
+  })();
   const [internalStep, setCurrentStepUi] = useState(
-    controlledStep != null ? Math.max(0, controlledStep - 1) : 0
+    controlledStep != null ? Math.max(0, controlledStep - 1) : (stepFromUrl ?? 0)
   );
   const currentStep = controlledStep != null ? Math.max(0, controlledStep - 1) : internalStep;
 
@@ -131,14 +139,20 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       const next = Math.min(Math.max(0, idx), PROJECT_WORKFLOW_STEPS.length - 1);
       setCurrentStepUi(next);
       onStepChange?.(next + 1);
+      if (controlledStep == null) {
+        const params = new URLSearchParams(searchParams);
+        params.set('step', String(next + 1));
+        setSearchParams(params, { replace: true });
+      }
     },
-    [onStepChange]
+    [onStepChange, controlledStep, searchParams, setSearchParams]
   );
 
   // Keep the application layer in sync with UI tab selection (1-indexed in hook).
   useEffect(() => {
     setCurrentStep(currentStep + 1);
   }, [currentStep, setCurrentStep]);
+
 
   // Remonte les données live à la page (KPI/EVM/alertes temps réel).
   useEffect(() => {
