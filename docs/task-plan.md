@@ -1,13 +1,16 @@
-# 📋 task-plan.md  
-## Plan de Migration et d'Implémentation  
-### Système de Gestion Intégrée des Projets d'Infrastructure  
+# 📋 task-plan.md
+
+## Plan de Migration et d'Implémentation
+
+### Système de Gestion Intégrée des Projets d'Infrastructure
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
 **Architecture** : Hexagonale (Ports & Adapters) + Référentiel Métier  
 **OBJECTIF FINAL** : achever la migration hexagonale, sécuriser le typage et valider les parcours CRUD de production.
-**Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)  
+**Rôle AGENT AI** : Architecte AI (explorer → analyser → concevoir)
 
 ---
+
 ne pas changer le fichier .env
 en phase de migration :
 
@@ -18,41 +21,43 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
      ↑                                                                  ↓
      └──────────────────────── Transformer ←────────────────────────────┘
 ```
-## Bonnes Pratiques d'Architecture Hexagonale ##
 
-###📋 Rôles de Chaque Couche## 
-1. domain entities (domain/*)
-Rôle : Entités métier
-Responsabilité : Définir la structure des données métier
-Usage : Utilisés par les services et les adapters, mapping avec DB voir /integrations/supabase/types.ts
+## Bonnes Pratiques d'Architecture Hexagonale
+
+###📋 Rôles de Chaque Couche##
+
+1. domain entities (domain/\*)
+   Rôle : Entités métier
+   Responsabilité : Définir la structure des données métier
+   Usage : Utilisés par les services et les adapters, mapping avec DB voir /integrations/supabase/types.ts
 2. DTOs (/dtos/entities/, /dtos/workflows/)
-Rôle : Types de transfert de données entre couches
-Responsabilité : Définir la structure des données échangées
-Usage : Utilisés par les transformers et services
+   Rôle : Types de transfert de données entre couches
+   Responsabilité : Définir la structure des données échangées
+   Usage : Utilisés par les transformers et services
 3. Transformers (/dtos/transforms/)
-Rôle : Conversion entre entités domaine et DTOs
-Responsabilité : Mapper les données entre couches
-Usage : Utilisés par les services pour les conversions
+   Rôle : Conversion entre entités domaine et DTOs
+   Responsabilité : Mapper les données entre couches
+   Usage : Utilisés par les services pour les conversions
 4. Services et Référentiels (/application/services/,config/referentials/)
-Rôle : Logique métier et accès aux données référentielles
-Responsabilité : Fournir les données métier centralisées
-Usage : Utilisés par les composants UI
+   Rôle : Logique métier et accès aux données référentielles
+   Responsabilité : Fournir les données métier centralisées
+   Usage : Utilisés par les composants UI
 5. UI Components (/components/)
-Rôle : Présentation et interaction utilisateur
-Responsabilité : Utiliser les types existants, pas en redéfinir
-Usage : Importer depuis DTOs et services
-6. Adapters (/infrastructure/supabase/adapters/)
-Rôle : Implémentations techniques
-Responsabilité : Implémenter les ports
-Usage : Utilisés par les services
+   Rôle : Présentation et interaction utilisateur
+   Responsabilité : Utiliser les types existants, pas en redéfinir
+   Usage : Importer depuis DTOs et services
+6. Adapters (/infrastructure/adapters/)
+   Rôle : Implémentations techniques
+   Responsabilité : Implémenter les ports
+   Usage : Utilisés par les services
 7. Hooks (/hooks/hexagonal/)
-Rôle : Logique métier et accès aux données référentielles
-Responsabilité : Fournir les données métier centralisées
-Usage : Utilisés par les composants UI
+   Rôle : Logique métier et accès aux données référentielles
+   Responsabilité : Fournir les données métier centralisées
+   Usage : Utilisés par les composants UI
 8. Repository (/domain/repositories/)
-Rôle : Interface pour accéder aux données
-Responsabilité : Définir les contrats pour les données
-Usage : Utilisés par les services
+   Rôle : Interface pour accéder aux données
+   Responsabilité : Définir les contrats pour les données
+   Usage : Utilisés par les services
 
 ## 📊 ÉTAT ACTUEL DE LA MIGRATION — 31/07/2026
 
@@ -71,22 +76,23 @@ La migration reste **en cours**. Les changements locaux ne sont considérés com
 
 ### Indicateurs de sortie
 
-| Indicateur | Cible | Preuve attendue |
-|---|---:|---|
-| Build TypeScript/Vite | 0 erreur | `npm run build` |
-| Lint | 0 erreur bloquante | `npm run lint` |
-| Tests | 100 % des tests passants | `npm run test` ou commande Vitest équivalente |
-| Supabase direct dans composants/hooks | 0 accès métier | recherche `grep -RIn 'supabase\\.' src/components src/hooks` |
-| DTOs exposés à l’UI | camelCase uniquement | revue des DTOs et transformers |
-| Domaine | 0 import technique | revue `src/domain/` |
-| CRUD prioritaire | lecture, création, modification, suppression | tests + vérification manuelle |
+| Indicateur                            |                                        Cible | Preuve attendue                                              |
+| ------------------------------------- | -------------------------------------------: | ------------------------------------------------------------ |
+| Build TypeScript/Vite                 |                                     0 erreur | `npm run build`                                              |
+| Lint                                  |                           0 erreur bloquante | `npm run lint`                                               |
+| Tests                                 |                     100 % des tests passants | `npm run test` ou commande Vitest équivalente                |
+| Supabase direct dans composants/hooks |                               0 accès métier | recherche `grep -RIn 'supabase\\.' src/components src/hooks` |
+| DTOs exposés à l’UI                   |                         camelCase uniquement | revue des DTOs et transformers                               |
+| Domaine                               |                           0 import technique | revue `src/domain/`                                          |
+| CRUD prioritaire                      | lecture, création, modification, suppression | tests + vérification manuelle                                |
 
 ## 🎯 Objectif
 
 Mettre en œuvre, migrer ou refactoriser le système en respectant **strictement** :
+
 - l’architecture hexagonale
 - la séparation UI / Application / Domain / Infrastructure
-- le référentiel métier 
+- le référentiel métier
 - le typage fort et centralisé
 - l’absence totale de dépendances techniques dans le domaine.
 
@@ -96,52 +102,51 @@ Mettre en œuvre, migrer ou refactoriser le système en respectant **strictement
    - colonnes : project_name, created_at, kpi_score
    - tables : project_details, material_sources
 
-2. DTOs (src/dtos/entities/* et src/dtos/workflows/*) : camelCase OBLIGATOIRE
+2. DTOs (src/dtos/entities/_ et src/dtos/workflows/_) : camelCase OBLIGATOIRE
    - projectName, createdAt, kpiScore
    - Les DTOs représentent les données pour l'application
 
-3. TRANSFORMERS (src/dtos/transforms/*) : 
+3. TRANSFORMERS (src/dtos/transforms/\*) :
    - DOIVENT convertir snake_case ↔ camelCase
    - Une méthode toModel() et fromModel()
 
-4. MODÈLES DOMAINE (src/domain/*) : camelCase
+4. MODÈLES DOMAINE (src/domain/\*) : camelCase
    - Entities et Value Objects en camelCase
 
-5. SERVICES (src/application/*) : camelCase uniquement
+5. SERVICES (src/application/\*) : camelCase uniquement
    - Ne jamais voir de snake_case dans les services
 
 6. UI Components (React)
-        ↓ (utilise)
-      HOOKS ←─────── Adaptateurs UI
-        ↓ (appelle)
-      PORTS (Interfaces)
-        ↓ (implémente)
-    SERVICES (Logique Métier)
-        ↓ (utilise)
-    DOMAINE (Entités)
+   ↓ (utilise)
+   HOOKS ←─────── Adaptateurs UI
+   ↓ (appelle)
+   PORTS (Interfaces)
+   ↓ (implémente)
+   SERVICES (Logique Métier)
+   ↓ (utilise)
+   DOMAINE (Entités)
 
-7. POUR LES SERVICES (src/application/*) :
+7. POUR LES SERVICES (src/application/\*) :
+   1. VÉRIFIER qu'aucun attribut snake_case n'est utilisé
+   2. CORRIGER les imports/types qui référencent directement la DB
+   3. UTILISER uniquement les DTOs camelCase
 
-    1. VÉRIFIER qu'aucun attribut snake_case n'est utilisé
-    2. CORRIGER les imports/types qui référencent directement la DB
-    3. UTILISER uniquement les DTOs camelCase
+   POUR LES HOOKS :
+   1. Les hooks exposent uniquement du camelCase aux composants
+   2. La conversion se fait dans le hook via les transformers
 
-    POUR LES HOOKS :
-    1. Les hooks exposent uniquement du camelCase aux composants
-    2. La conversion se fait dans le hook via les transformers
+   EXEMPLE DE CORRECTION :
+   // AVANT (mauvais - mélange des conventions) :
+   const project = {
+   project_name: "Nom", // snake_case dans le service
+   kpiScore: 85 // camelCase mélangé
+   };
 
-    EXEMPLE DE CORRECTION :
-    // AVANT (mauvais - mélange des conventions) :
-    const project = {
-    project_name: "Nom",  // snake_case dans le service
-    kpiScore: 85          // camelCase mélangé
-    };
-
-    // APRÈS (correct - camelCase uniquement) :
-    const project = {
-    projectName: "Nom",   // camelCase uniquement
-    kpiScore: 85
-    };
+   // APRÈS (correct - camelCase uniquement) :
+   const project = {
+   projectName: "Nom", // camelCase uniquement
+   kpiScore: 85
+   };
 
 ❌ À éviter dans les hooks :
 
@@ -150,6 +155,7 @@ Mettre en œuvre, migrer ou refactoriser le système en respectant **strictement
     Contenir la logique métier pure (c'est le rôle des services)
 
     Stocker l'état métier persistant (c'est le rôle du domaine)
+
 ---
 
 Ce plan est **opérationnel** et **séquentiel**.  
@@ -177,6 +183,7 @@ Pour toute erreur TypeScript à la frontière UI/DTO, localiser d’abord la sou
 - [ ] Activer le `DEV_MODE` si nécessaire
 
 Livrable :
+
 - ✔️ Schéma DB validé
 - ✔️ Périmètre clair de migration
 
@@ -191,7 +198,6 @@ Livrable :
 - [ ] Types primitifs uniquement
 - [ ] Méthodes métier pures
 - [ ] Aucune dépendance externe
-
 
 exemple : public class Project {
 
@@ -301,14 +307,15 @@ exemple : public class Project {
 
 }
 
-
 ❌ Interdit :
+
 - Interfaces
 - DTOs
 - Types Supabase
 - Logique UI
 
 Livrable :
+
 - ✔️ Entités métier stables et testables
 
 ---
@@ -320,6 +327,7 @@ Livrable :
 - [ ] Aucun détail technique
 
 Livrable :
+
 - ✔️ Contrats clairs entre domaine et infrastructure
 
 ---
@@ -334,6 +342,7 @@ Livrable :
 - [ ] Zéro logique métier
 
 Livrable :
+
 - ✔️ Accès DB encapsulé
 - ✔️ Supabase invisible hors infrastructure
 
@@ -346,6 +355,7 @@ Livrable :
 - [ ] Pas de calcul métier
 
 Livrable :
+
 - ✔️ Frontière DB / Domaine étanche
 
 ---
@@ -360,6 +370,7 @@ Livrable :
 - [ ] Gestion des règles SOMELEC
 
 Livrable :
+
 - ✔️ Logique métier centralisée
 - ✔️ Services réutilisables (UI, batch, API)
 
@@ -380,6 +391,7 @@ Livrable :
 - [ ] Mapping explicite champ par champ
 
 Livrable :
+
 - ✔️ Séparation claire Domain / UI
 
 ---
@@ -392,13 +404,15 @@ Livrable :
 - [ ] Support DEV_MODE / PROD_MODE
 
 ❌ Interdit :
+
 - Appels Supabase
--  - .from('name_table')... ***
--  - .select('column_table')... ***
+- - .from('name_table')... \*\*\*
+- - .select('column_table')... \*\*\*
 - Accès DB
 - Logique métier
 
 Livrable :
+
 - ✔️ API front propre et stable
 
 ---
@@ -411,6 +425,7 @@ Livrable :
 - [ ] Design system respecté (Shadcn/UI)
 
 Livrable :
+
 - ✔️ UI découplée
 - ✔️ Aucune dette technique UI
 
@@ -424,6 +439,7 @@ Livrable :
 - [ ] Nettoyer types legacy
 
 Livrable :
+
 - ✔️ Code legacy éliminé
 - ✔️ Architecture homogène
 
@@ -433,7 +449,7 @@ Livrable :
 
 ### 8.1 Vérifications techniques
 
-```bash
+````bash
 grep -r "supabase\." src/components/
 grep -r "supabase\." src/hooks/
 Résultat attendu : 0 occurrence
@@ -493,11 +509,12 @@ find src/components -type f -name '*.tsx' | wc -l
 find src/hooks -type f -name '*.ts' -print0 | xargs -0 grep -l 'supabase\.' 2>/dev/null | wc -l
 grep -RIn 'supabase\.' src/components src/hooks 2>/dev/null || true
 grep -RInE '(^|[^A-Za-z])any([^A-Za-z]|$)' src/components src/hooks src/application 2>/dev/null || true
-```
+````
 
 Les résultats doivent être consignés dans la revue de migration, jamais présentés comme des valeurs fixes dans ce plan.
 
 ### Référence historique — script PowerShell
+
 ```powershell
 # Script d'analyse complète
 Write-Host "🔍 ANALYSE COMPLÈTE DE LA MIGRATION HEXAGONALE" -ForegroundColor Green
@@ -574,18 +591,22 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 ```
 
 ### **Utilisation**
+
 ```powershell
 # Exécuter le script pour obtenir les résultats actuels
 ./analyze-migration.ps1
 
 # Les résultats changent à chaque exécution selon l'état du code
 ```
+
 ---
+
 ---
 
 ## ✅ Finalisation CRUD & Vues — Projets / Phases / Jalons (HadraTech-GPI)
 
 ### Pages cibles
+
 - [x] `src/pages/Projects.tsx` — toolbar filtres + suppression bulk OK
 - [x] `src/pages/ProjectDetail.tsx` (+ `ProjectDetailByDTO`) — onglets Vue/Phases/Suivi & Évaluation
 - [x] `src/pages/PhaseDetail.tsx` — onglets lifecycle (Planif/Exec/Contrôle/Clôture) + navigation cross-module
@@ -593,11 +614,13 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 - [x] `src/pages/MilestoneDetail.tsx` — toggle terminé/rouvrir avec `aria-busy`
 
 ### Sous-objets (composants `Phase*`)
+
 - `PhaseTasks` — CRUD via `useTasksHex`
 - `PhaseMilestones` — CRUD via `useMilestonesHex`
 - `PhaseMaterials` / `PhaseDocuments` / `PhasePayments` / `PhaseInspections` / `PhaseEmployees`
 
 ### Garde-fous design / accessibilité
+
 - Tokens sémantiques uniquement (pas de `text-gray-*` ad-hoc).
 - Un seul `<main>` par route (via `AppLayout`).
 - Boutons-icônes : `aria-label` obligatoire.
@@ -605,6 +628,7 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 - Tap target ≥ 44×44 sur mobile (`min-h-11 min-w-11`).
 
 ### Hors scope explicite
+
 - Aucune nouvelle fonctionnalité hors migration et validation.
 - Les migrations DB et les adapters existants sont modifiés uniquement lorsqu’ils sont nécessaires à un parcours CRUD prioritaire et couverts par une preuve.
 
@@ -667,23 +691,25 @@ $allFilesWithCalls | Sort-Object Appels -Descending | Select-Object -First 10 | 
 
 ## 📌 Registre des écarts
 
-| Écart | Impact | Propriétaire | Prochaine action | Échéance |
-|---|---|---|---|---|
-| Suite `EnhancedValidationIntegration.test.ts` dépend de `@jest/globals` | Bloque Vitest | À assigner | Migrer la suite vers Vitest ou l’exclure de la configuration Vitest documentée | Avant GO |
-| `RepositoryFactory.providers.test.ts` attend `SupabaseStorageProvider`, mais reçoit `SupabaseStorageAdapter` | 1 test en échec | À assigner | Aligner le test et le contrat sur l’implémentation retenue | Avant GO |
-| `npm run lint` est bloqué par les permissions de `supabase/docker/volumes/db/data` | Lint non qualifié | Environnement | Exclure le volume de la portée ESLint ou corriger ses permissions, puis relancer | Avant GO |
+| Écart                                                                                                        | Impact            | Propriétaire  | Prochaine action                                                                 | Échéance |
+| ------------------------------------------------------------------------------------------------------------ | ----------------- | ------------- | -------------------------------------------------------------------------------- | -------- |
+| Suite `EnhancedValidationIntegration.test.ts` dépend de `@jest/globals`                                      | Bloque Vitest     | À assigner    | Migrer la suite vers Vitest ou l’exclure de la configuration Vitest documentée   | Avant GO |
+| `RepositoryFactory.providers.test.ts` attend `SupabaseStorageProvider`, mais reçoit `SupabaseStorageAdapter` | 1 test en échec   | À assigner    | Aligner le test et le contrat sur l’implémentation retenue                       | Avant GO |
+| `npm run lint` est bloqué par les permissions de `supabase/docker/volumes/db/data`                           | Lint non qualifié | Environnement | Exclure le volume de la portée ESLint ou corriger ses permissions, puis relancer | Avant GO |
 
 ## 🔁 Itération — Nettoyage priorisé UI (COMPONENT/UI par p0Violations)
 
 Généré par `scripts/generate-refactor-plan.cjs` (tri : COMPONENT/UI d'abord, puis `p0Violations` décroissant, puis `score`).
 
 ### Fait
+
 - [x] `scripts/generate-refactor-plan.cjs` : exploite `p0Violations`, `violations`, `score`, `layer`, `type` du rapport ; nouveau tri UI-first ; table « Top UI/COMPONENT par p0Violations ».
 - [x] `scripts/fix-hexagonal-violations.js` : faux positifs supprimés (P0-DB001 limité aux vraies méthodes Supabase, P0-M001 ignore les callbacks inline `() => {}`).
 - [x] Hiérarchie projet persistée réellement : table `btp.project_hierarchy_nodes` (niveau/chemin calculés par trigger) + `SupabaseHierarchyAdapter` réécrit — CRUD, arbre (move/reorder/duplicate récursif), recherche à facettes, statistiques, chemin critique, validation d'intégrité (cycles, parent invalide, ordre dupliqué). Plus aucun mock.
 - [x] Imports morts `RepositoryFactory` supprimés dans `ProjectExporter`, `ProjectDetailByDTO`, `ProjectFileImporter`, `AdvancedProjectImporter` (ces écrans passent déjà par les services).
 
 ### Reste à traiter (ordre d'attaque)
+
 1. `ProjectExporter.tsx` (21 p0) — typer les collections `any[]` en DTOs (`PhaseDTO`, `TaskAssignmentDTO`, `PaymentDTO`, `RiskDTO`, `MilestoneDTO`, `DocumentDTO`) et retirer les accès `phase_name`, `start_date`, `payment_date`, `contractor_name` (fallbacks legacy).
 2. `ProjectDetailByDTO.tsx` (19 p0) — supprimer les casts `as any` sur `interventionZones`, `coordinates`, `inspections`, `documents` (déjà typés), clarifier `entityCode` vs `referentialCode`, typer les `queryFn` (Gantt/PERT/compliance).
 3. `ProjectFileImporter.tsx` / `AdvancedProjectImporter.tsx` (8 et 4 p0) — lignes brutes en `Record<string, unknown>`, sorties en `Partial<CreateProjectDTO>`/`UpdateProjectDTO`, mapping camelCase (`startDate`, `endDate`, `financingSource`, `marketType`, `selectionMode`, `projectReference`).
@@ -691,5 +717,6 @@ Généré par `scripts/generate-refactor-plan.cjs` (tri : COMPONENT/UI d'abord, 
 5. Workflows de phases (`PhaseWorkflowOrchestrator`, `PhaseWorkflowContainer`, les deux `UnifiedPhaseWorkflow`, `PhasePlanificationStep`) — combler les trous de persistance (états locaux non écrits en base) et dédupliquer les variantes mortes.
 
 ### Points à clarifier (métier)
+
 - `projectManagerId` vs `projectResponsableId` dans l'import avancé (sémantique différente, pas un simple problème de casse).
 - Existence de DTOs dédiés pour garanties bancaires / attestations d'assurance côté détail projet.
