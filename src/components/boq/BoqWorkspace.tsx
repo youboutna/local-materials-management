@@ -386,6 +386,16 @@ export function BoqWorkspace({
 
   // ---- Render ---------------------------------------------------------------
   const docRef = (documentId ?? contextId).slice(0, 8).toUpperCase();
+  // Tant que le document n'est pas signé, l'édition (ajout / modification /
+  // suppression de lignes) reste ouverte. La signature figeage le document.
+  const signatureInfo = useMemo(() => {
+    for (const l of doc.lines) {
+      const sig = (l.metadata as { signature?: { signedBy?: string; signedAt?: string } } | null)?.signature;
+      if (sig?.signedAt) return { by: sig.signedBy ?? '—', at: new Date(sig.signedAt).toLocaleString('fr-FR') };
+    }
+    return null;
+  }, [doc.lines]);
+  const locked = !!signatureInfo;
   const pendingCount = pendingLines.length + draftLineIds.length;
   const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
   const isDocumentEmpty = displayedLines.length === 0;
@@ -408,6 +418,11 @@ export function BoqWorkspace({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
               <Badge variant={pendingCount > 0 ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
+              {locked && (
+                <Badge variant="outline" className="border-primary text-primary">
+                  Signé le {signatureInfo?.at} par {signatureInfo?.by} — lecture seule
+                </Badge>
+              )}
             </div>
           </div>
           <div className="space-y-2">
@@ -449,7 +464,7 @@ export function BoqWorkspace({
             </Select>
           </div>
           <div className="flex lg:justify-end">
-            <Button onClick={() => finalizeDraftLines(false)} disabled={pendingCount === 0 || finalizing || doc.isPending}>
+            <Button onClick={() => finalizeDraftLines(false)} disabled={locked || pendingCount === 0 || finalizing || doc.isPending}>
               {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
               Enregistrer le {labels.docPrefix.toUpperCase()}{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </Button>
@@ -458,12 +473,12 @@ export function BoqWorkspace({
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={addEmptyRow}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
+            <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
 
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline"><Calculator className="h-4 w-4 mr-1" />Calcul métré</Button>
+              <Button size="sm" variant="outline" disabled={locked}><Calculator className="h-4 w-4 mr-1" />Calcul métré</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
@@ -652,7 +667,7 @@ export function BoqWorkspace({
             defaultReferentialCode={activeReferential}
             title={importLabel ?? labels.import}
             trigger={
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" disabled={locked}>
                 <FileSpreadsheet className="h-4 w-4 mr-1" />{importLabel ?? labels.import}
               </Button>
             }
@@ -691,7 +706,7 @@ export function BoqWorkspace({
         <BoqLineTable
           lines={displayedLines}
           emptyLabel={emptyLabel ?? labels.empty}
-          editable
+          editable={!locked}
           referentialCode={activeReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
           stakeholders={stakeholders}
