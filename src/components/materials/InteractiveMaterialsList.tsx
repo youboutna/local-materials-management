@@ -166,7 +166,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                         </span>
                         <Badge 
                           variant="secondary" 
-                          className={`text-xs text-white ${stockColor}`}
+                          className={`text-xs ${stockColor}`}
                         >
                           {stockLabel}
                         </Badge>

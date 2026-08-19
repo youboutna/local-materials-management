@@ -183,7 +183,7 @@ const AlertsDashboard: React.FC = () => {
                         <div className="flex items-center gap-2">
                           {alert.title}
                           <Badge
-                            className={`${getSeverityColor(alert.severity)} text-white`}
+                            className={`${getSeverityColor(alert.severity)}`}
                           >
                             {alert.severity}
                           </Badge>

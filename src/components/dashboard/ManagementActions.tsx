@@ -154,7 +154,7 @@ const ManagementActions: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-medium">{item.title}</h3>
-                          <Badge className={`${getUrgencyColor(item.urgency)} text-white text-xs`}>
+                          <Badge className={`${getUrgencyColor(item.urgency)} text-xs`}>
                             {item.urgency}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
