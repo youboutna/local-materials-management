@@ -338,11 +338,12 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       completionDate: data.completion_date,
       completedate: data.completion_date,
       status: data.status,
-      type: data.type || 'checkpoint', // Default to checkpoint if not specified
+      type: data.milestone_type || data.type || 'checkpoint', // Default to checkpoint if not specified
       priority: data.priority || 'normal', // Default to normal priority
       weight: data.weight,
       isFromTemplate: data.is_from_template || false, // Default to false for custom milestones
-      dependencies: data.dependencies || [],
+      dependencies: data.predecessor_ids || data.dependencies || [],
+
       notes: data.notes,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
