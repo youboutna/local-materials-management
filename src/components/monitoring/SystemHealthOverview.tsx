@@ -126,12 +126,21 @@ const SystemHealthOverview: React.FC = () => {
               <div className="text-sm text-muted-foreground">
                 {criticalAlerts.length > 0 && `${criticalAlerts.length} alerte(s) critique(s)`}
                 {criticalAlerts.length === 0 && highAlerts.length > 0 && `${highAlerts.length} alerte(s) importante(s)`}
-                {alerts.length === 0 && 'Tous les systèmes fonctionnent normalement'}
+                {alerts.length === 0 && operationalIssues > 0 && `${operationalIssues} point(s) de vigilance opérationnels`}
+                {alerts.length === 0 && operationalIssues === 0 && 'Tous les systèmes fonctionnent normalement'}
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={loadData}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                loadData();
+                refetchMonitoringStats();
+              }}
+            >
               Actualiser
             </Button>
+
           </div>
         </CardContent>
       </Card>
