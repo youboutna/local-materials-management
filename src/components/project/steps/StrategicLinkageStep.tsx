@@ -71,7 +71,13 @@ interface StrategicLinkageStepProps {
   onStrategyLinksChange?: (links: CreateProjectStrategyLinkDTO[]) => void;
   onBudgetLinksChange?: (links: CreateProjectBudgetLinkDTO[]) => void;
   readOnly?: boolean;
+  /** Budget du projet (étape 1) — sert au contrôle CP ≤ budget ≤ CE. */
+  projectBudget?: number | null;
+  /** Budgets des phases déjà planifiées — cumul ≤ budget projet. */
+  phaseBudgets?: number[];
+  currency?: string;
 }
+
 
 // Type for search functions that can accept optional parent code or limit
 type SearchFunction = 
