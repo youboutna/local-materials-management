@@ -1,17 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw, LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEscalationThresholdsHex } from '@/hooks/hexagonal/useEscalationThresholdsHex';
 import type { EscalationThresholdRow } from '@/domain/repositories/IEscalationThresholdRepository';
+import {
+  ESCALATION_SEVERITIES,
+  ESCALATION_THRESHOLD_CATEGORIES,
+  ESCALATION_UNIT_LABELS,
+  type EscalationUnit,
+} from '@/config/referentials/kpi/escalation-thresholds.referential';
 
 type EscalationThreshold = EscalationThresholdRow;
+
+/** Résolution des icônes référentielles (le référentiel reste sans dépendance UI). */
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  clock: Clock,
+  shield: Shield,
+  money: DollarSign,
+  alert: AlertTriangle,
+  settings: Settings,
+};
 
 const EscalationThresholdsSettings: React.FC = () => {
   const [thresholds, setThresholds] = useState<EscalationThreshold[]>([]);
@@ -23,14 +37,18 @@ const EscalationThresholdsSettings: React.FC = () => {
     isSaving: saving,
   } = useEscalationThresholdsHex();
 
-  const thresholdTypes = [
-    { key: 'project_delay', label: 'Retards de Projet', icon: Clock },
-    { key: 'insurance_expiry', label: 'Expiration d\'Assurance', icon: Shield },
-    { key: 'payment_validation', label: 'Validation Paiement', icon: DollarSign },
-    { key: 'inspection_overdue', label: 'Inspections en Retard', icon: AlertTriangle },
-    { key: 'material_wastage', label: 'Gaspillage Matériau', icon: Settings },
-    { key: 'budget_allocation', label: 'Allocation Budget', icon: Settings }
-  ];
+  const thresholdTypes = useMemo(
+    () =>
+      ESCALATION_THRESHOLD_CATEGORIES.map((category) => ({
+        key: category.key,
+        label: category.label,
+        description: category.description,
+        highlighted: category.highlighted,
+        icon: CATEGORY_ICONS[category.icon] ?? Settings,
+      })),
+    []
+  );
+
 
   useEffect(() => {
     setThresholds(loadedThresholds);
@@ -71,19 +89,25 @@ const EscalationThresholdsSettings: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const severityBadgeVariant = (
+    severity: string
+  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (severity) {
-      case 'critical': return 'bg-red-500 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'critical':
+        return 'destructive';
+      case 'high':
+        return 'default';
+      case 'medium':
+        return 'secondary';
+      default:
+        return 'outline';
     }
   };
 
   const getThresholdsByType = (type: string) => {
     return thresholds.filter(t => t.threshold_type === type);
   };
+
 
   if (loading) {
     return (
@@ -144,12 +168,14 @@ const EscalationThresholdsSettings: React.FC = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <type.icon className="h-4 w-4" />
+                      <type.icon className="h-4 w-4 text-primary" />
                       {type.label}
                     </CardTitle>
+                    <p className="text-sm text-muted-foreground">{type.description}</p>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="overflow-x-auto">
                     <Table>
+
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nom du Seuil</TableHead>
@@ -179,22 +205,28 @@ const EscalationThresholdsSettings: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">
-                                {threshold.threshold_unit === 'percentage' ? '%' : 
-                                 threshold.threshold_unit === 'days' ? 'jours' : threshold.threshold_unit}
+                                {ESCALATION_UNIT_LABELS[threshold.threshold_unit as EscalationUnit] ??
+                                  threshold.threshold_unit}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <select
-                                value={threshold.severity_level}
-                                onChange={(e) => updateThreshold(threshold.id, 'severity_level', e.target.value)}
-                                className="border rounded px-2 py-1 text-xs"
-                              >
-                                <option value="low">Faible</option>
-                                <option value="medium">Moyen</option>
-                                <option value="high">Élevé</option>
-                                <option value="critical">Critique</option>
-                              </select>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={threshold.severity_level}
+                                  onChange={(e) => updateThreshold(threshold.id, 'severity_level', e.target.value)}
+                                  className="border border-input bg-background text-foreground rounded px-2 py-1 text-xs"
+                                  aria-label="Sévérité du seuil"
+                                >
+                                  {ESCALATION_SEVERITIES.map((s) => (
+                                    <option key={s.value} value={s.value}>{s.label}</option>
+                                  ))}
+                                </select>
+                                <Badge variant={severityBadgeVariant(threshold.severity_level)} className="text-[10px]">
+                                  {ESCALATION_SEVERITIES.find(s => s.value === threshold.severity_level)?.label ?? threshold.severity_level}
+                                </Badge>
+                              </div>
                             </TableCell>
+
                             <TableCell>
                               <Input
                                 type="number"
@@ -240,27 +272,32 @@ const EscalationThresholdsSettings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Section */}
+      {/* Summary Section — catégories mises en avant par le référentiel */}
       <Card>
         <CardHeader>
           <CardTitle>Résumé des Seuils d'Escalade</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {thresholds.length} seuils référencés · {thresholds.filter(t => t.is_active).length} actifs ·{' '}
+            {thresholds.filter(t => t.severity_level === 'critical').length} critiques
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {['project_delay', 'insurance_expiry', 'payment_validation', 'inspection_overdue'].map(type => {
-              const typeThresholds = getThresholdsByType(type);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {thresholdTypes.filter(t => t.highlighted).map(type => {
+              const typeThresholds = getThresholdsByType(type.key);
               const activeThresholds = typeThresholds.filter(t => t.is_active);
               const criticalThresholds = typeThresholds.filter(t => t.severity_level === 'critical');
-              
+
               return (
-                <div key={type} className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">
-                    {thresholdTypes.find(t => t.key === type)?.label}
+                <div key={type.key} className="p-4 border rounded-lg bg-card">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <type.icon className="h-4 w-4 text-primary" />
+                    {type.label}
                   </h4>
                   <div className="space-y-1 text-sm">
                     <div>Total: <Badge variant="outline">{typeThresholds.length}</Badge></div>
                     <div>Actifs: <Badge variant="secondary">{activeThresholds.length}</Badge></div>
-                    <div>Critiques: <Badge className="bg-red-500 text-white">{criticalThresholds.length}</Badge></div>
+                    <div>Critiques: <Badge variant="destructive">{criticalThresholds.length}</Badge></div>
                   </div>
                 </div>
               );
@@ -268,6 +305,7 @@ const EscalationThresholdsSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 };
