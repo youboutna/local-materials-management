@@ -64,6 +64,8 @@ export interface SupplierDetailsDTO extends SupplierDTO {
 export interface SupplierSummaryDTO {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
   category?: string;
   rating?: number;
   isActive: boolean;
@@ -71,6 +73,7 @@ export interface SupplierSummaryDTO {
   totalContractValue?: number;
   averagePerformance?: number;
 }
+
 
 export interface CreateSupplierDTO {
   externalRef?: string;
