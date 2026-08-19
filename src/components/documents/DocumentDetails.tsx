@@ -289,7 +289,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="details">Détails</TabsTrigger>
             <TabsTrigger value="preview" disabled={!canPreview()}>
               <Eye className="h-4 w-4 mr-2" />

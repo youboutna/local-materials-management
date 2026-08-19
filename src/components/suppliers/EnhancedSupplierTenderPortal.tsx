@@ -451,7 +451,7 @@ const EnhancedSupplierTenderPortal = () => {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
           <TabsTrigger value="browse">{t('supplier_tender.tabs.browse')}</TabsTrigger>
           <TabsTrigger value="documents">{t('supplier_tender.tabs.documents')}</TabsTrigger>
           <TabsTrigger value="submit">{t('supplier_tender.tabs.submit')}</TabsTrigger>

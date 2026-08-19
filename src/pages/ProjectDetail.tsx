@@ -36,7 +36,7 @@ const ProjectDetail = () => {
   return (
     <AppLayout pageTitle={t("nav.projects")}>
       <Tabs defaultValue="info" className="mt-4">
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:w-auto lg:inline-grid">
           <TabsTrigger value="info" className="flex items-center gap-2">
             Informations
           </TabsTrigger>

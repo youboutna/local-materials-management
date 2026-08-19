@@ -1109,7 +1109,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* ===== PHASES ===== */}
         <TabsContent value="phases" className="mt-6">
           <Tabs defaultValue="wbs" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
               <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
@@ -1192,7 +1192,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <PlanningVarianceView projectId={projectId!} />
               </div>
               <Tabs defaultValue="gantt" className="space-y-4 mt-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
                   <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
                   <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
                   <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
@@ -1228,7 +1228,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
             <TabsContent value="milestones" className="mt-6">
               <Tabs defaultValue="timeline" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
                   <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
                   <TabsTrigger value="pert">Analyse PERT</TabsTrigger>

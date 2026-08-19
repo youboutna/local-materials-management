@@ -610,7 +610,7 @@ const UnifiedInsuranceManager = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="alerts">Alertes ({alerts.length})</TabsTrigger>
           <TabsTrigger value="active">Actifs ({stats.active})</TabsTrigger>
           <TabsTrigger value="expired">Expirés ({stats.expired})</TabsTrigger>

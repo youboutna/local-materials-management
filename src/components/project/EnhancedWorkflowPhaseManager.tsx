@@ -413,7 +413,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
             ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <ScrollArea>
-                  <TabsList className="grid w-full grid-cols-6 h-auto mb-6">
+                  <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6 h-auto mb-6">
                     <TabsTrigger value="overview" className="flex flex-col items-center gap-1 p-3">
                       <Settings className="h-4 w-4" />
                       <span className="text-xs">Vue d'ensemble</span>

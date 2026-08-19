@@ -92,7 +92,7 @@ const BankGuaranteeContent = () => {
       />
 
       <Tabs defaultValue="surveillance" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 lg:w-auto lg:inline-grid">
           <TabsTrigger value="surveillance" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             <span className="hidden sm:inline">Surveillance &amp; Alertes</span>

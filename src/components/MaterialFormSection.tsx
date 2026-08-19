@@ -39,7 +39,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
   return (
     <div className="space-y-6">
       <Tabs defaultValue="materials" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
           <TabsTrigger value="materials" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             {t('materials.title') || 'Matériaux'}

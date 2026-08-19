@@ -237,7 +237,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
               <TabsTrigger value="workflow">Workflow</TabsTrigger>
               <TabsTrigger value="calculator">Calculateur</TabsTrigger>
               <TabsTrigger value="devis">Devis</TabsTrigger>

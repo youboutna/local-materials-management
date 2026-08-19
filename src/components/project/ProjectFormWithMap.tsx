@@ -253,7 +253,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-1 h-auto p-1 bg-muted/50 rounded-lg overflow-x-auto">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-1 h-auto p-1 bg-muted/50 rounded-lg overflow-x-auto">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Informations</span>

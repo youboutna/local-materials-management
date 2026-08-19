@@ -318,7 +318,7 @@ const NotificationsCenterPage = () => {
 
           {/* Tabbed Interface */}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4 lg:grid-cols-9">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
                 Toutes

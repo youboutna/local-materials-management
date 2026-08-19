@@ -546,7 +546,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="info">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="info">Information</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>

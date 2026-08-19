@@ -253,7 +253,7 @@ const SupplierSubmissionDashboard = () => {
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
                   <TabsTrigger value="all">Toutes</TabsTrigger>
                   <TabsTrigger value="submitted">Soumises</TabsTrigger>
                   <TabsTrigger value="under_review">En cours</TabsTrigger>

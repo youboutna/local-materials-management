@@ -320,7 +320,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
 
       {/* Validation Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="overview">Aperçu</TabsTrigger>
           <TabsTrigger value="reception">Réceptions</TabsTrigger>
           <TabsTrigger value="compliance">Conformité</TabsTrigger>

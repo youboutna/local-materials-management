@@ -328,7 +328,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="share">Partager des documents</TabsTrigger>
             <TabsTrigger value="upload">Télécharger nouveau document</TabsTrigger>
           </TabsList>

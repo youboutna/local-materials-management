@@ -234,7 +234,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
 
       {/* Tabs de navigation */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as StepDetailTab)}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="overview" className="gap-1">
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">Aperçu</span>

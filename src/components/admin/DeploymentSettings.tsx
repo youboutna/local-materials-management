@@ -170,7 +170,7 @@ const DeploymentSettings = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="environment" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                 <TabsTrigger value="environment">Environment</TabsTrigger>
                 <TabsTrigger value="docker">Docker</TabsTrigger>
                 <TabsTrigger value="steps">Setup Steps</TabsTrigger>

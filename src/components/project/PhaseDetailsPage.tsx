@@ -286,7 +286,7 @@ const PhaseDetailsPage: React.FC = () => {
 
       {/* Tabs de navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6 mb-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6 mb-4">
           <TabsTrigger value="hierarchy" className="flex items-center gap-2">
             <Target className="h-4 w-4" /> Hiérarchie
           </TabsTrigger>

@@ -170,7 +170,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
       {/* Documents and Evaluation */}
       <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="evaluation">Évaluation</TabsTrigger>
           <TabsTrigger value="summary">Résumé</TabsTrigger>

@@ -206,7 +206,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                   <DialogTitle>{t('projects.tab.takeoffs') + ' ' + t('projects.add')}</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="manual" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
                     <TabsTrigger value="manual">{t('projects.takeoffs.form.basic_info')}</TabsTrigger>
                     <TabsTrigger value="advanced">{t('projects.takeoffs.form.advanced')}</TabsTrigger>
                   </TabsList>
