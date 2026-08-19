@@ -322,9 +322,10 @@ const TaskAssignmentsComponent = () => {
     if (name) {
       return `${name}${type ? ` (${type})` : ''}`;
     }
-    const assignedTo = task.assigned_to || task.assignedTo;
+    const assignedTo = firstAssignee(task);
     if (!assignedTo) return t("task.unassigned") || "Non assigné";
     return assignedTo;
+
   };
 
   // Pagination
