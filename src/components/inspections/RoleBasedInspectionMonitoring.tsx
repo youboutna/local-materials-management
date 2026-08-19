@@ -86,18 +86,23 @@ const RoleBasedInspectionMonitoring = () => {
     filterByInspector: isInspector,
     inspectorName: isInspector ? user?.email : undefined
   });
-  const { inspections = [], isLoading } = inspectionData;
+  const { inspections = [], isLoading, getProjectTitle, sendNotification } = inspectionData;
 
-
-  // Helper function to send alert to hierarchy - matching original
+  // Alerte hiérarchie — persistée via NotificationService (hook hexagonal)
   const sendAlertToHierarchy = async (inspectionId: string, message: string) => {
-    // This would send notification to project managers/admins
-    console.log('Alert sent:', { inspectionId, message });
+    sendNotification({
+      recipientId: user?.id ?? '',
+      title: 'Inspection en retard',
+      message,
+      type: 'warning',
+      relatedId: inspectionId,
+    });
     toast({
       title: "Alerte envoyée",
       description: "La hiérarchie a été notifiée",
     });
   };
+
 
   // Filter and paginate inspections
   const filteredInspections = useMemo(() => {
