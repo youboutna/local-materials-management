@@ -21,6 +21,8 @@ import {
     Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
 // (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
 
 // Import step components
