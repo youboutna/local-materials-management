@@ -145,8 +145,12 @@ const TaskAssignmentsComponent = () => {
           title: taskData.title,
           description: taskData.description || undefined,
           priority: taskData.priority as any,
+          status: taskData.status as any,
+          assigneeName: taskData.assignee_name || undefined,
+          assigneeEmail: taskData.assignee_email || undefined,
           dueDate: taskData.due_date || undefined,
           assignmentNotes: taskData.notes || undefined,
+
         }, 
         assignedBy: user?.id 
       });
