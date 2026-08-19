@@ -32,7 +32,13 @@ export interface UserProfile {
   created_at?: string | null;
   updated_at?: string | null;
   is_active?: boolean;
+  /** Enrichissement RH : poste / département de l'employé lié (si trouvé). */
+  position?: string | null;
+  department?: string | null;
+  /** Identifiant employé lié (rapprochement par email ou nom complet). */
+  employee_id?: string | null;
 }
+
 
 export interface ProjectOption {
   id: string;
