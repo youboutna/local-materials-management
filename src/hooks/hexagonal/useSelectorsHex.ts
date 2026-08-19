@@ -107,23 +107,92 @@ export function useUsersSelector(options?: {
   roleFilter?: string[];
   enabled?: boolean;
 }) {
+const normalizeName = (value?: string | null) =>
+  (value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+export function useUsersSelector(options?: {
+  searchTerm?: string;
+  roleFilter?: string[];
+  /** Rapproche chaque utilisateur d'un employé (poste / département). */
+  withEmployeeDetails?: boolean;
+  enabled?: boolean;
+}) {
+  const withEmployeeDetails = options?.withEmployeeDetails !== false;
+
   return useQuery({
-    queryKey: ['users-selector', options?.searchTerm, options?.roleFilter],
+    queryKey: ['users-selector', options?.searchTerm, options?.roleFilter, withEmployeeDetails],
     queryFn: async (): Promise<UserProfile[]> => {
       const userService = getUserService();
-      
+
       const result = await userService.searchUsers({
         searchTerm: options?.searchTerm,
         roleFilter: options?.roleFilter,
-        limit: 50
+        limit: 50,
       });
-      
-      return result.users;
+
+      // Les services renvoient des entités (camelCase + getters) : on projette
+      // explicitement vers le DTO plat attendu par les sélecteurs UI.
+      let users: UserProfile[] = (result.users || []).map((u: any) => ({
+        id: u.id,
+        full_name: u.fullName ?? u.full_name ?? null,
+        phone: u.phone ?? null,
+        national_id: u.nationalId ?? u.national_id ?? null,
+        email: typeof u.email === 'string' && !u.email.endsWith('@users.local') ? u.email : null,
+        role: (typeof u.primaryRole === 'string' ? u.primaryRole : u.role) ?? null,
+        is_active: u.isActive ?? u.is_active ?? true,
+        created_at: u.createdAt instanceof Date ? u.createdAt.toISOString() : u.created_at ?? null,
+        updated_at: u.updatedAt instanceof Date ? u.updatedAt.toISOString() : u.updated_at ?? null,
+      }));
+
+      // Filtre local de repli (autocomplétion sur le nom complet) au cas où la
+      // recherche serveur ne filtre pas (données legacy sans full_name indexé).
+      const term = normalizeName(options?.searchTerm);
+      if (term.length > 0) {
+        const filtered = users.filter(
+          (u) =>
+            normalizeName(u.full_name).includes(term) ||
+            normalizeName(u.email).includes(term) ||
+            normalizeName(u.national_id).includes(term) ||
+            normalizeName(u.phone).includes(term)
+        );
+        if (filtered.length > 0) users = filtered;
+      }
+
+      if (withEmployeeDetails && users.length > 0) {
+        try {
+          const employeeService = new EmployeeService(RepositoryFactory.getEmployeeRepository());
+          const employees = await employeeService.searchEmployees({ isActive: true, limit: 200 });
+          const byEmail = new Map<string, any>();
+          const byName = new Map<string, any>();
+          employees.employees.forEach((e: any) => {
+            if (e.email) byEmail.set(normalizeName(e.email), e);
+            if (e.fullName) byName.set(normalizeName(e.fullName), e);
+          });
+          users = users.map((u) => {
+            const match =
+              (u.email ? byEmail.get(normalizeName(u.email)) : undefined) ??
+              byName.get(normalizeName(u.full_name));
+            if (!match) return u;
+            return {
+              ...u,
+              position: match.position ?? null,
+              department: match.department ?? null,
+              employee_id: match.employeeId ?? match.id ?? null,
+              email: u.email ?? match.email ?? null,
+            };
+          });
+        } catch {
+          // L'enrichissement RH est optionnel : on garde la liste utilisateurs.
+        }
+      }
+
+      return users;
     },
     enabled: options?.enabled !== false,
     ...COMMON_QUERY_OPTIONS,
   });
 }
+
 
 export function useProjectsSelector(options?: {
   searchTerm?: string;
