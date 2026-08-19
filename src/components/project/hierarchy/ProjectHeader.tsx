@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Target
 } from "lucide-react";
-import { KPICard } from "./KPICard";
+
 import { cn } from "@/lib/utils";
 
 interface ProjectHeaderProps {
