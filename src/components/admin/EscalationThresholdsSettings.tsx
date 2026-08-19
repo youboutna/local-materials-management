@@ -168,12 +168,14 @@ const EscalationThresholdsSettings: React.FC = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <type.icon className="h-4 w-4" />
+                      <type.icon className="h-4 w-4 text-primary" />
                       {type.label}
                     </CardTitle>
+                    <p className="text-sm text-muted-foreground">{type.description}</p>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="overflow-x-auto">
                     <Table>
+
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nom du Seuil</TableHead>
