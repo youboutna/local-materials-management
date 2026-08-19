@@ -618,7 +618,6 @@ export class Material {
       unit: this._unit,
       min_quantity: this._minQuantity,
       workspace_id: this._workspaceId,
-      location: this._location,
       timeline: this._timeline,
       last_restock: this._lastRestock.toISOString(),
       supplier: this._supplier,
@@ -641,12 +640,7 @@ export class Material {
       coordinates_longitude: this._coordinatesLongitude,
       multilang_labels: this._multilangLabels,
       supplier_id: this._supplierId,
-      material_code: this._materialCode,
-      minimum_stock: this._minimumStock,
-      maximum_stock: this._maximumStock,
       lead_time_days: this._leadTimeDays,
-      quality_grade: this._qualityGrade,
-      technical_specifications: this._technicalSpecifications,
       material_status: this._materialStatus,
       tags: this._tags
     };
