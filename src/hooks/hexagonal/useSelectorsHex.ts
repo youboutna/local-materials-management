@@ -232,12 +232,13 @@ export function useSuppliersSelector(searchTerm?: string, enabled?: boolean) {
         id: supplier.id,
         name: supplier.name,
         contact_person: null,
-        phone: null,
-        email: null,
+        phone: supplier.phone ?? null,
+        email: supplier.email ?? null,
         category: supplier.category || null,
         rating: supplier.rating || null,
         is_active: supplier.isActive
       }));
+
     },
     enabled: enabled !== false,
     ...COMMON_QUERY_OPTIONS,
