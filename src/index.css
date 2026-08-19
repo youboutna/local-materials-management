@@ -64,12 +64,23 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    /* Vert adouci (sauge/menthe) — accessible, usage parcimonieux */
+    --success: 152 42% 38%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 40% 94%;
+    --success-soft-foreground: 152 45% 24%;
+    --success-border: 152 32% 80%;
     --warning: 38 92% 50%;
     --warning-foreground: 222.2 47.4% 11.2%;
     --info: 199 89% 48%;
     --info-foreground: 210 40% 98%;
+
+    /* Fonds standardisés (approche variables CSS) */
+    --surface: 0 0% 100%;
+    --surface-muted: 210 30% 97%;
+    --surface-subtle: 210 24% 94%;
+    --surface-accent: 152 40% 96%;
+    --surface-foreground: 222.2 84% 4.9%;
 
     /* Bandeaux d'identité (branding) — surchargés par thème */
     --brand-band-1: 218 90% 35%;
@@ -185,6 +196,18 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    --success: 152 38% 40%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 28% 16%;
+    --success-soft-foreground: 152 45% 82%;
+    --success-border: 152 24% 28%;
+
+    --surface: 222 40% 9%;
+    --surface-muted: 217.2 32.6% 14%;
+    --surface-subtle: 217.2 32.6% 18%;
+    --surface-accent: 152 28% 14%;
+    --surface-foreground: 210 40% 98%;
   }
 }
  
@@ -475,9 +498,9 @@
   --popover-foreground: 210 25% 8%;
 
   /* Couleurs officielles de la charte : vert #00A95C, or #FFD700, rouge #D01C1F */
-  --primary: 153 100% 26%;
-  --primary-foreground: 0 0% 98%;
-  --primary-glow: 153 100% 33%;
+  --primary: 153 55% 27%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 153 45% 38%;
 
   --brand-band-1: 153 100% 33%;
   --brand-band-2: 51 100% 50%;
@@ -488,16 +511,16 @@
   --font-serif: 'LouguiyaFR', 'Louguiya', 'Amiri', Georgia, serif;
 
   /* Palettes de marque re-mappées sur la charte nationale */
-  --adrar-50: 153 100% 96%;
-  --adrar-100: 153 100% 90%;
-  --adrar-200: 153 100% 78%;
-  --adrar-300: 153 60% 64%;
-  --adrar-400: 153 70% 45%;
-  --adrar-500: 153 100% 33%;
-  --adrar-600: 153 100% 28%;
-  --adrar-700: 153 100% 22%;
-  --adrar-800: 153 100% 16%;
-  --adrar-900: 153 100% 11%;
+  --adrar-50: 152 34% 95%;
+  --adrar-100: 152 32% 88%;
+  --adrar-200: 152 30% 78%;
+  --adrar-300: 152 28% 66%;
+  --adrar-400: 152 32% 52%;
+  --adrar-500: 152 42% 38%;
+  --adrar-600: 152 45% 31%;
+  --adrar-700: 152 46% 25%;
+  --adrar-800: 152 46% 19%;
+  --adrar-900: 152 45% 13%;
 
   --terracotta-50: 359 76% 96%;
   --terracotta-100: 359 76% 91%;
@@ -532,8 +555,11 @@
   --muted: 45 15% 94%;
   --muted-foreground: 210 15% 46%;
 
-  --success: 142 76% 36%;
-  --success-foreground: 0 0% 98%;
+  --success: 152 42% 36%;
+  --success-foreground: 0 0% 100%;
+  --success-soft: 152 38% 94%;
+  --success-soft-foreground: 152 45% 22%;
+  --success-border: 152 30% 80%;
   --warning: 48 96% 53%;
   --warning-foreground: 210 25% 8%;
   --info: 200 95% 45%;
@@ -543,7 +569,13 @@
 
   --border: 45 25% 85%;
   --input: 45 25% 92%;
-  --ring: 142 76% 18%;
+  --ring: 153 45% 30%;
+
+  --surface: 0 0% 100%;
+  --surface-muted: 45 25% 96%;
+  --surface-subtle: 45 22% 92%;
+  --surface-accent: 152 34% 95%;
+  --surface-foreground: 210 25% 8%;
 
   --radius: 0.75rem;
 
@@ -579,9 +611,9 @@
   --popover: 210 20% 12%;
   --popover-foreground: 45 15% 95%;
 
-  --primary: 142 76% 25%;
-  --primary-foreground: 0 0% 98%;
-  --primary-glow: 142 76% 40%;
+  --primary: 152 40% 32%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 152 38% 44%;
 
   --secondary: 210 15% 18%;
   --secondary-foreground: 45 15% 85%;
@@ -592,23 +624,33 @@
   --muted: 210 15% 15%;
   --muted-foreground: 45 10% 60%;
 
-  --success: 142 76% 30%;
+  --success: 152 36% 38%;
+  --success-foreground: 0 0% 100%;
+  --success-soft: 152 26% 16%;
+  --success-soft-foreground: 152 42% 82%;
+  --success-border: 152 22% 28%;
   --warning: 48 96% 58%;
   --destructive: 0 84% 65%;
   --info: 200 95% 50%;
 
   --border: 210 15% 20%;
   --input: 210 15% 18%;
-  --ring: 142 76% 25%;
+  --ring: 152 40% 32%;
+
+  --surface: 210 20% 12%;
+  --surface-muted: 210 16% 15%;
+  --surface-subtle: 210 15% 19%;
+  --surface-accent: 152 24% 14%;
+  --surface-foreground: 45 15% 95%;
 
   --sidebar-background: 210 20% 10%;
   --sidebar-foreground: 45 15% 85%;
-  --sidebar-primary: 142 76% 25%;
-  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-primary: 152 40% 32%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 15% 18%;
   --sidebar-accent-foreground: 45 15% 85%;
   --sidebar-border: 210 15% 20%;
-  --sidebar-ring: 142 76% 25%;
+  --sidebar-ring: 152 40% 32%;
 }
 
 /* ============================================================================
