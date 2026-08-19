@@ -254,7 +254,19 @@ export function ContextualSidebar({ className, collapsed = false, onToggle }: Co
           ))}
         </nav>
       </ScrollArea>
+
+      {/* Partage sécurisé & codes secrets — accessible depuis toutes les pages */}
+      <div className={cn("border-t p-2", collapsed && "px-1")}>
+        <SecretAccessManager
+          className={cn(
+            "w-full justify-start gap-3 text-muted-foreground hover:text-foreground",
+            collapsed && "justify-center px-2",
+          )}
+          hideLabel={collapsed}
+        />
+      </div>
     </aside>
+
   );
 }
 
