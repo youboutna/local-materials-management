@@ -98,9 +98,13 @@ const SystemHealthOverview: React.FC = () => {
     );
   }
 
-  const overallHealth = stats ? 'good' : 'warning'; // Simplified health calculation
+  const availability = Math.max(0, Math.min(100, 100 - (stats.errorRate || 0)));
+  const operationalIssues =
+    monitoringStats.guarantees.count + monitoringStats.payments.count + monitoringStats.inspections.count;
+  const overallHealth = operationalIssues > 0 || (stats.errorRate || 0) > 5 ? 'warning' : 'good';
   const criticalAlerts = alerts.filter(a => a.severity === 'critical' && !a.acknowledged);
   const highAlerts = alerts.filter(a => a.severity === 'high' && !a.acknowledged);
+
 
   return (
     <div className="space-y-6">
