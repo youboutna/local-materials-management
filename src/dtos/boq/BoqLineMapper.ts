@@ -92,8 +92,18 @@ export class BoqLineMapper {
         : source === 'tender_estimate'
           ? String(row.tender_id ?? row.estimate_id ?? '')
           : String(row.submission_id ?? row.estimate_id ?? row.sender_id ?? '');
-    const unitPrice = row.unit_price_ht ?? row.unit_price ?? null;
     const quantity = Number(row.quantity ?? 0);
+    // Montant ligne stocké : 0 (défaut colonne) est traité comme « non valorisé »
+    // afin de retomber sur qté × PU au lieu d'afficher un total vide (PDF/récap).
+    const storedTotal = [row.total_ht, row.total_price, row.total_value]
+      .map((v) => (v == null ? null : Number(v)))
+      .find((v) => v != null && v !== 0) ?? null;
+    const storedPu = [row.unit_price_ht, row.unit_price]
+      .map((v) => (v == null ? null : Number(v)))
+      .find((v) => v != null && v !== 0) ?? null;
+    // PU absent mais montant présent (DQE forfaitaires) : PU reconstitué.
+    const unitPrice = storedPu ?? (storedTotal != null && quantity ? storedTotal / quantity : null);
+
     return {
       id: row.id,
       source,
