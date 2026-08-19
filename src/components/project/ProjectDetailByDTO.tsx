@@ -1536,8 +1536,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== RAPPORTS ===== */}
         <TabsContent value="rapports" className="mt-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">Rapports du projet</h2>
+            <ReportManager
+              data={{ project: (projectDataForReport ?? project) as any }}
+              reportType="project"
+            />
+          </div>
           <CompactProjectReportGenerator project={projectDetail as any} />
         </TabsContent>
+
 
       </Tabs>
     </div>
