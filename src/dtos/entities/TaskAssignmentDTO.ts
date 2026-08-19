@@ -62,6 +62,12 @@ export interface TaskAssignmentDTO {
   completedAt?: string;
   estimatedDuration?: number;
   actualDuration?: number;
+  /** Quantité DQE reportée sur la tâche. */
+  quantity?: number;
+  /** Unité DQE reportée sur la tâche. */
+  unit?: string;
+  /** Taux journalier (main d'œuvre : unité homme·jour). */
+  dailyRate?: number;
   estimatedCost?: number;
   actualCost?: number;
   dependencies?: string[];
@@ -96,6 +102,9 @@ export interface CreateTaskAssignmentDTO {
   endDate?: string;
   dueDate?: string;
   estimatedDuration?: number;
+  quantity?: number;
+  unit?: string;
+  dailyRate?: number;
   estimatedCost?: number;
   dependencies?: string[];
   notes?: string;

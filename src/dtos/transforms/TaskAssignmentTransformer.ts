@@ -57,6 +57,11 @@ export class TaskAssignmentTransformer {
       completedAt: entity.completedAt?.toISOString(),
       estimatedDuration: entity.estimatedDuration,
       actualDuration: entity.actualDuration,
+      quantity: entity.quantity,
+      unit: entity.unit,
+      dailyRate: entity.dailyRate,
+      estimatedCost: entity.estimatedCost,
+      metadata: entity.metadata,
       dependencies: entity.dependencies,
       notes: entity.notes,
       createdAt: entity.createdAt.toISOString(),
@@ -108,6 +113,11 @@ export class TaskAssignmentTransformer {
         : undefined,
       estimatedDuration: source.estimatedDuration,
       actualDuration: (source as TaskAssignmentDTO).actualDuration,
+      quantity: source.quantity,
+      unit: source.unit,
+      dailyRate: source.dailyRate,
+      estimatedCost: source.estimatedCost,
+      metadata: source.metadata,
       dependencies: source.dependencies,
       notes: source.notes,
     };
@@ -166,6 +176,13 @@ export class TaskAssignmentTransformer {
       // Durées
       estimated_duration: entity.estimatedDuration ?? null,
       actual_duration: entity.actualDuration ?? null,
+
+      // Données DQE reportées sur la tâche
+      quantity: entity.quantity ?? null,
+      unit: entity.unit ?? null,
+      daily_rate: entity.dailyRate ?? null,
+      cost_estimate: entity.estimatedCost ?? null,
+      metadata: entity.metadata ?? {},
       
       // Métadonnées
       notes: entity.notes ?? null,
@@ -234,6 +251,12 @@ export class TaskAssignmentTransformer {
       // Durées
       estimatedDuration: (row.estimated_duration as number) ?? undefined,
       actualDuration: (row.actual_duration as number) ?? undefined,
+      quantity: row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : undefined,
+      unit: (row.unit as string) ?? undefined,
+      dailyRate: row.daily_rate !== null && row.daily_rate !== undefined ? Number(row.daily_rate) : undefined,
+      estimatedCost:
+        row.cost_estimate !== null && row.cost_estimate !== undefined ? Number(row.cost_estimate) : undefined,
+      metadata: (row.metadata as Record<string, unknown>) ?? {},
       
       // Métadonnées
       notes: (row.notes as string) ?? undefined,
@@ -279,6 +302,10 @@ export class TaskAssignmentTransformer {
     endDate?: string;
     dueDate?: string;
     estimatedDuration?: number;
+    quantity?: number;
+    unit?: string;
+    dailyRate?: number;
+    estimatedCost?: number;
     dependencies?: string[];
     notes?: string;
   }): CreateTaskAssignmentDTO {
