@@ -576,6 +576,7 @@ function App() {
                 </HexagonalAuthProvider>
                 </BrowserRouter>
         </LanguageProvider>
+        </UiThemeProvider>
       </ErrorBoundary>
     </QueryClientProvider>
   );
