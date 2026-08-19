@@ -4421,6 +4421,9 @@ export type BtpDatabase = {
           phase_id: string | null
           priority: string
           progress: number | null
+          quantity: number | null
+          unit: string | null
+          daily_rate: number | null
           project_id: string | null
           related_id: string | null
           start_date: string | null
@@ -4457,6 +4460,9 @@ export type BtpDatabase = {
           phase_id?: string | null
           priority: string
           progress?: number | null
+          quantity?: number | null
+          unit?: string | null
+          daily_rate?: number | null
           project_id?: string | null
           related_id?: string | null
           start_date?: string | null
@@ -4493,6 +4499,9 @@ export type BtpDatabase = {
           phase_id?: string | null
           priority?: string
           progress?: number | null
+          quantity?: number | null
+          unit?: string | null
+          daily_rate?: number | null
           project_id?: string | null
           related_id?: string | null
           start_date?: string | null
