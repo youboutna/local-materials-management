@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { getMilestone, getPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { BudgetConsistencyService } from '@/application/services/BudgetConsistencyService';
+import BudgetConsistencyAlerts from '@/components/project/BudgetConsistencyAlerts';
 
 interface Props {
   planned: BoqLineDTO[];      // quantity_takeoff
@@ -24,6 +26,8 @@ interface Props {
   phaseLabels?: Record<string, string>;
   /** Libellés réels des jalons du projet (id → titre). */
   milestoneLabels?: Record<string, string>;
+  /** Budget inscrit au projet — sert au contrôle réel ≤ budget. */
+  projectBudget?: number | null;
 }
 
 const UNASSIGNED = 'Hors WBS (à affecter)';
@@ -70,6 +74,7 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
   currency = 'MRU',
   phaseLabels,
   milestoneLabels,
+  projectBudget = null,
 }) => {
   const label = useMemo<Labeller>(() => (phaseId, milestoneId) => {
     const phaseLabel =
@@ -114,6 +119,19 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
   const totalPlannedTtc = rows.reduce((s, r) => s + r.plannedTtc, 0);
   const totalActualTtc = rows.reduce((s, r) => s + r.actualTtc, 0);
   const totalVariance = totalActual - totalPlanned;
+
+  // Réconciliation : détection des résidus hors WBS et des dépassements
+  const reconciliation = useMemo(() => {
+    const unassigned = rows.filter((r) => r.phaseLabel === UNASSIGNED);
+    return BudgetConsistencyService.reconcileBoq({
+      plannedTotal: totalPlanned,
+      actualTotal: totalActual,
+      unassignedPlanned: unassigned.reduce((s, r) => s + r.plannedHt, 0),
+      unassignedActual: unassigned.reduce((s, r) => s + r.actualHt, 0),
+      projectBudget,
+      currency,
+    });
+  }, [rows, totalPlanned, totalActual, projectBudget, currency]);
 
   return (
     <Card>
@@ -172,6 +190,15 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
               </TableRow>
             </TableBody>
           </Table>
+        )}
+
+        {rows.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <BudgetConsistencyAlerts
+              findings={reconciliation.findings}
+              okLabel="Réconciliation complète : toutes les lignes sont affectées à la WBS et les montants réels restent dans l'enveloppe."
+            />
+          </div>
         )}
       </CardContent>
     </Card>
