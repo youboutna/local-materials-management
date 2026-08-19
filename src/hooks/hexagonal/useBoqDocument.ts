@@ -61,11 +61,12 @@ export function useBoqDocument(filter: BoqLineFilter) {
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
-    createLine: async (dto: BoqLineDTO) => { const r = await createMut.mutateAsync(dto); invalidate(); return r; },
-    bulkCreate: async (dtos: BoqLineDTO[]) => { const r = await bulkCreateMut.mutateAsync(dtos); invalidate(); return r; },
-    updateLine: async (id: string, dto: Partial<BoqLineDTO>) => { const r = await updateMut.mutateAsync({ id, dto }); invalidate(); return r; },
-    updateStatus: async (ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']) => { await updateStatusMut.mutateAsync({ ids, status, source }); invalidate(); },
-    deleteLine: async (id: string, source: BoqLineDTO['source']) => { await deleteMut.mutateAsync({ id, source }); invalidate(); },
+    invalidate,
+    createLine: async (dto: BoqLineDTO) => { const r = await createMut.mutateAsync(dto); await invalidate(); return r; },
+    bulkCreate: async (dtos: BoqLineDTO[]) => { const r = await bulkCreateMut.mutateAsync(dtos); await invalidate(); return r; },
+    updateLine: async (id: string, dto: Partial<BoqLineDTO>) => { const r = await updateMut.mutateAsync({ id, dto }); await invalidate(); return r; },
+    updateStatus: async (ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']) => { await updateStatusMut.mutateAsync({ ids, status, source }); await invalidate(); },
+    deleteLine: async (id: string, source: BoqLineDTO['source']) => { await deleteMut.mutateAsync({ id, source }); await invalidate(); window.dispatchEvent(new Event('boq-kpi-refresh')); },
     isPending: createMut.isPending || bulkCreateMut.isPending || updateMut.isPending || deleteMut.isPending || updateStatusMut.isPending,
   };
 }
