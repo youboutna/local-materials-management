@@ -94,7 +94,9 @@ export function AppLayout({
         {/* Page Header with Breadcrumb */}
         {(showBreadcrumb || pageTitle || actions) && (
           <div className="sticky top-16 z-20 bg-background/95 backdrop-blur-sm border-b">
+            <BrandBands />
             <div className="container-responsive py-3">
+
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
                   {/* Sidebar Toggle (Desktop) */}
