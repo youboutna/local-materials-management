@@ -132,12 +132,11 @@ export function AppLayout({
                   </div>
                 </div>
 
-                {/* Page Actions */}
-                {actions && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {actions}
-                  </div>
-                )}
+                {/* Page Actions + sélecteur de thème */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {actions}
+                  <ThemeSwitcher />
+                </div>
               </div>
             </div>
           </div>
