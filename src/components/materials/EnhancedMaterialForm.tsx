@@ -125,7 +125,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     ...initialData
   });
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [mapData, setMapData] = useState<MapData>({});
   const [address, setAddress] = useState(initialData?.adresse || '');
   const [selectedRegion, setSelectedRegion] = useState<LocationDTO | null>(null);
