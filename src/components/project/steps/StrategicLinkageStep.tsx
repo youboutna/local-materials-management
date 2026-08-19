@@ -467,6 +467,19 @@ export default function StrategicLinkageStep({
     };
   }, [budgetLinks]);
 
+  // Contrôles de cohérence budgétaire (référentiel: budget-consistency)
+  const budgetConsistency = useMemo(
+    () =>
+      BudgetConsistencyService.evaluate({
+        projectBudget,
+        budgetLinks,
+        phaseBudgets,
+        currency,
+      }),
+    [projectBudget, budgetLinks, phaseBudgets, currency],
+  );
+
+
   // Resolve human-readable labels for a budget link from the LF referential
   const resolveBudgetLabel = useCallback((link: CreateProjectBudgetLinkDTO): string => {
     const line = link.lineCode ? linkageHelpers.findBudgetLine(link.lineCode)?.line : undefined;
