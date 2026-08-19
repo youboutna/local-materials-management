@@ -202,9 +202,6 @@ const ProjectCreate = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
-        {/* Indicateurs temps réel — source unique : ProjectMetricsOrchestrator */}
-        <WorkflowMetricsPreview formData={liveWorkflowData} mode="create" className="mb-6" />
-
         {/* Workflow Progress Bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -295,6 +292,8 @@ const ProjectCreate = () => {
             )}
           </p>
         </div>
+        {/* Indicateurs temps réel (repliés par défaut) — source unique : ProjectMetricsOrchestrator */}
+        <WorkflowMetricsPreview formData={liveWorkflowData} mode="create" className="mt-6" />
       </motion.div>
     </AppLayout>
   );
