@@ -6,7 +6,7 @@ import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
-import { BrandBands, BrandIdentity } from "@/components/branding/BrandIdentity";
+import { BrandBandsBackground, BrandIdentity } from "@/components/branding/BrandIdentity";
 
 
 interface AppLayoutProps {
@@ -95,8 +95,9 @@ export function AppLayout({
       >
         {/* Page Header with Breadcrumb */}
         {(showBreadcrumb || pageTitle || actions) && (
-          <div className="sticky top-16 z-20 bg-background/95 backdrop-blur-sm border-b">
-            <BrandBands />
+          <div className="relative isolate sticky top-16 z-20 bg-background/95 backdrop-blur-sm border-b">
+            <BrandBandsBackground />
+
             <div className="container-responsive py-3">
 
               <div className="flex items-center justify-between gap-4">
@@ -139,7 +140,7 @@ export function AppLayout({
 
                 {/* Identité client + actions + sélecteur de thème */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <BrandIdentity className="mr-2 hidden lg:flex max-w-[220px]" />
+                  <BrandIdentity withBands className="mr-2 hidden lg:flex max-w-[240px]" />
                   {actions}
                   <ThemeSwitcher />
                 </div>
