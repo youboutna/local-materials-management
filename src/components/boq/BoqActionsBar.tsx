@@ -235,12 +235,6 @@ export const BoqActionsBar: React.FC<Props> = ({
     }));
   });
 
-  // Workflow de validation : alerte budgétaire + options A/B/C.
-  const handleRequestValidation = () => withGuard('validation', async () => {
-    window.dispatchEvent(new CustomEvent('boq-request-validation', {
-      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
-    }));
-  });
 
   const isProjectDqe = ctx.routeContext === 'project-dqe';
 
