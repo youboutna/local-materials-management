@@ -181,7 +181,7 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{monitoringStats.guarantees.count}</div>
+              <div className="text-2xl font-bold">{monitoringStats.guarantees.total}</div>
               <div className="text-sm text-muted-foreground">
                 {monitoringStats.guarantees.count > 0 ? (
                   <span className="text-warning">
@@ -203,7 +203,7 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{monitoringStats.payments.count}</div>
+              <div className="text-2xl font-bold">{monitoringStats.payments.total}</div>
               <div className="text-sm text-muted-foreground">
                 {monitoringStats.payments.count > 0 ? (
                   <span className="text-destructive">
@@ -225,7 +225,7 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{monitoringStats.inspections.count}</div>
+              <div className="text-2xl font-bold">{monitoringStats.inspections.total}</div>
               <div className="text-sm text-muted-foreground">
                 {monitoringStats.inspections.count > 0 ? (
                   <span className="text-destructive">
