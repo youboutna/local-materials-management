@@ -35,9 +35,9 @@ export const UI_THEMES: UiThemeDefinition[] = [
   {
     id: "rim",
     label: "RIM Énergie",
-    description: "Palette République Islamique de Mauritanie : vert pétrole, or énergie, tons sable.",
+    description: "Charte graphique officielle RIM : vert #00A95C, or #FFD700, rouge #D01C1F, police Louguiya.",
     className: "theme-rim",
-    preview: { primary: "142 76% 18%", accent: "48 96% 53%", background: "45 15% 98%" },
+    preview: { primary: "153 100% 26%", accent: "51 100% 50%", background: "45 15% 98%" },
   },
 ];
 

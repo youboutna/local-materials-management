@@ -2,6 +2,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================================
+   Polices officielles « Louguiya » (charte graphique RIM)
+   ========================================================================== */
+@font-face {
+  font-family: 'LouguiyaFR';
+  src: url('/__l5e/assets-v1/9130b571-3899-4e1f-b9d1-3f855b8fbe90/LouguiyaFR.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LouguiyaFR';
+  src: url('/__l5e/assets-v1/5b577e0e-6cf2-488b-9b6a-9e0b7c068855/LouguiyaFR-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Louguiya';
+  src: url('/__l5e/assets-v1/f31405fe-b892-488d-8385-5decb1b80877/Louguiya.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Louguiya';
+  src: url('/__l5e/assets-v1/69d2085c-fe65-438b-a97f-f650fc19b07b/Louguiya-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
  
 @layer base {
   :root {
@@ -87,7 +116,46 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  
     --radius: 0.5rem;
+
+    /* Typographie du thème */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Lora', 'Amiri', Georgia, serif;
+
+    /* Palettes de marque (consommées par Tailwind : adrar-*, terracotta-*, sandstone-*) */
+    --adrar-50: 45 32% 93%;
+    --adrar-100: 45 32% 85%;
+    --adrar-200: 44 32% 70%;
+    --adrar-300: 44 32% 55%;
+    --adrar-400: 45 37% 44%;
+    --adrar-500: 45 46% 34%;
+    --adrar-600: 46 46% 28%;
+    --adrar-700: 47 46% 22%;
+    --adrar-800: 49 45% 16%;
+    --adrar-900: 52 44% 11%;
+
+    --terracotta-50: 17 68% 93%;
+    --terracotta-100: 17 70% 85%;
+    --terracotta-200: 17 71% 71%;
+    --terracotta-300: 17 63% 60%;
+    --terracotta-400: 15 56% 51%;
+    --terracotta-500: 14 59% 45%;
+    --terracotta-600: 14 58% 38%;
+    --terracotta-700: 14 58% 30%;
+    --terracotta-800: 15 58% 22%;
+    --terracotta-900: 14 57% 15%;
+
+    --sandstone-50: 40 43% 96%;
+    --sandstone-100: 40 43% 92%;
+    --sandstone-200: 38 44% 84%;
+    --sandstone-300: 38 38% 76%;
+    --sandstone-400: 40 34% 68%;
+    --sandstone-500: 40 32% 60%;
+    --sandstone-600: 38 29% 53%;
+    --sandstone-700: 38 26% 43%;
+    --sandstone-800: 38 26% 33%;
+    --sandstone-900: 39 26% 24%;
   }
+
  
   .dark {
     --background: 222.2 84% 4.9%;
@@ -406,23 +474,60 @@
   --popover: 0 0% 100%;
   --popover-foreground: 210 25% 8%;
 
-  --primary: 142 76% 18%;
+  /* Couleurs officielles de la charte : vert #00A95C, or #FFD700, rouge #D01C1F */
+  --primary: 153 100% 26%;
   --primary-foreground: 0 0% 98%;
-  --primary-glow: 142 76% 35%;
+  --primary-glow: 153 100% 33%;
 
-  /* Charte nationale : vert dominant + or + rouge */
-  --brand-band-1: 142 76% 22%;
-  --brand-band-2: 48 96% 53%;
-  --brand-band-3: 355 78% 44%;
+  --brand-band-1: 153 100% 33%;
+  --brand-band-2: 51 100% 50%;
+  --brand-band-3: 359 76% 46%;
 
+  /* Typographie officielle « Louguiya » */
+  --font-sans: 'LouguiyaFR', 'Louguiya', 'Inter', system-ui, sans-serif;
+  --font-serif: 'LouguiyaFR', 'Louguiya', 'Amiri', Georgia, serif;
 
+  /* Palettes de marque re-mappées sur la charte nationale */
+  --adrar-50: 153 100% 96%;
+  --adrar-100: 153 100% 90%;
+  --adrar-200: 153 100% 78%;
+  --adrar-300: 153 60% 64%;
+  --adrar-400: 153 70% 45%;
+  --adrar-500: 153 100% 33%;
+  --adrar-600: 153 100% 28%;
+  --adrar-700: 153 100% 22%;
+  --adrar-800: 153 100% 16%;
+  --adrar-900: 153 100% 11%;
 
-  --secondary: 45 35% 88%;
+  --terracotta-50: 359 76% 96%;
+  --terracotta-100: 359 76% 91%;
+  --terracotta-200: 359 76% 82%;
+  --terracotta-300: 359 76% 70%;
+  --terracotta-400: 359 76% 58%;
+  --terracotta-500: 359 76% 46%;
+  --terracotta-600: 359 76% 39%;
+  --terracotta-700: 359 76% 31%;
+  --terracotta-800: 359 76% 23%;
+  --terracotta-900: 359 76% 15%;
+
+  --sandstone-50: 51 100% 97%;
+  --sandstone-100: 51 100% 92%;
+  --sandstone-200: 51 100% 84%;
+  --sandstone-300: 51 100% 72%;
+  --sandstone-400: 51 100% 62%;
+  --sandstone-500: 51 100% 50%;
+  --sandstone-600: 51 100% 44%;
+  --sandstone-700: 51 90% 34%;
+  --sandstone-800: 51 85% 26%;
+  --sandstone-900: 51 80% 18%;
+
+  --secondary: 51 60% 92%;
   --secondary-foreground: 210 25% 8%;
 
-  --accent: 48 96% 53%;
+  --accent: 51 100% 50%;
   --accent-foreground: 210 25% 8%;
-  --accent-muted: 48 60% 85%;
+  --accent-muted: 51 80% 88%;
+
 
   --muted: 45 15% 94%;
   --muted-foreground: 210 15% 46%;
