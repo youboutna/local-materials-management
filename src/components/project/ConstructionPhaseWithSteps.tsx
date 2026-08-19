@@ -154,7 +154,7 @@ export function ConstructionPhaseWithSteps({
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="steps" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                 <TabsTrigger value="steps">Étapes ({phaseSteps.length})</TabsTrigger>
                 <TabsTrigger value="progress">Progression</TabsTrigger>
                 <TabsTrigger value="details">Détails</TabsTrigger>

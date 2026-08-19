@@ -155,7 +155,7 @@ const ProjectResourcesContainer: React.FC<ProjectResourcesContainerProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="human" className="text-xs sm:text-sm">
               <Users className="h-3.5 w-3.5 mr-1" /> Humaines

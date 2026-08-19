@@ -245,7 +245,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 mb-4">
                   <TabsTrigger value="administrative">Administrative</TabsTrigger>
                   <TabsTrigger value="technical">Technique</TabsTrigger>
                   <TabsTrigger value="financial">Financière</TabsTrigger>

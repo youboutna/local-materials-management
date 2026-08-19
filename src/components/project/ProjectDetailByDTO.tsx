@@ -881,32 +881,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </TabsList>
 
           <div className="flex shrink-0 items-center gap-1.5 pl-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
-                  <FileDown className="h-4 w-4" />
-                  <span className="hidden sm:inline">Rapport compact</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-                <DialogHeader>
-                  <DialogTitle>Générer un Rapport Compact</DialogTitle>
-                  <DialogDescription>
-                    Créez un rapport PDF compact avec les informations essentielles du projet.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto pr-1 max-h-[75vh]">
-                  {projectDataForReport && (
-                    <CompactProjectReportGenerator project={projectDataForReport as any} />
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-            <ReportManager
-              data={{ project: (projectDataForReport ?? project) as any }}
-              reportType="project"
-            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setActiveTab("rapports")}
+            >
+              <FileDown className="h-4 w-4" />
+              <span className="hidden sm:inline">Rapports</span>
+            </Button>
           </div>
+
         </div>
 
 
@@ -1124,7 +1109,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* ===== PHASES ===== */}
         <TabsContent value="phases" className="mt-6">
           <Tabs defaultValue="wbs" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
               <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
@@ -1207,7 +1192,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <PlanningVarianceView projectId={projectId!} />
               </div>
               <Tabs defaultValue="gantt" className="space-y-4 mt-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
                   <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
                   <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
                   <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
@@ -1243,7 +1228,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
             <TabsContent value="milestones" className="mt-6">
               <Tabs defaultValue="timeline" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
                   <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
                   <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
@@ -1551,8 +1536,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== RAPPORTS ===== */}
         <TabsContent value="rapports" className="mt-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">Rapports du projet</h2>
+            <ReportManager
+              data={{ project: (projectDataForReport ?? project) as any }}
+              reportType="project"
+            />
+          </div>
           <CompactProjectReportGenerator project={projectDetail as any} />
         </TabsContent>
+
 
       </Tabs>
     </div>

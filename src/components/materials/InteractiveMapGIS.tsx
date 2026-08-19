@@ -275,7 +275,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
       </CardHeader>
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-xl border border-border/50">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 bg-muted/50 p-1 rounded-xl border border-border/50">
             <TabsTrigger 
               value="location" 
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"

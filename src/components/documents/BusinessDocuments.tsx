@@ -163,7 +163,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
         <Tabs value={activeTab} onValueChange={(tab) => {
           setActiveTab(tab);
         }}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
             <TabsTrigger value="contract" className="flex items-center gap-2">
               {getTabIcon('contract')}
               Bon de Commande

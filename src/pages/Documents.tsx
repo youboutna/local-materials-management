@@ -96,7 +96,7 @@ export default function Documents() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                 {SCOPES.map((s) => {
                   const Icon = s.icon;
                   return (

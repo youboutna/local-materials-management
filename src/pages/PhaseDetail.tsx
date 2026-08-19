@@ -269,7 +269,7 @@ const PhaseDetail: React.FC = () => {
 
         {/* Lifecycle stage tabs */}
         <Tabs value={defaultStageTab} onValueChange={onStageChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
             <TabsTrigger value="planification" className="flex items-center gap-2">
               <Compass className="h-4 w-4" /> <span className="hidden sm:inline">Planification</span>
             </TabsTrigger>

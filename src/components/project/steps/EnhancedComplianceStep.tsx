@@ -610,13 +610,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Vue d'Ensemble</TabsTrigger>
-          <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
-          <TabsTrigger value="insurance">Assurances ({insurancePolicies.length})</TabsTrigger>
-          <TabsTrigger value="bank-guarantees">Garanties ({bankGuarantees.length})</TabsTrigger>
-          <TabsTrigger value="regulatory">Réglementaire ({complianceItems.length})</TabsTrigger>
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
+          <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm">Vue d'Ensemble</TabsTrigger>
+          <TabsTrigger value="documents" className="flex-1 text-xs sm:text-sm">Documents ({documents.length})</TabsTrigger>
+          <TabsTrigger value="insurance" className="flex-1 text-xs sm:text-sm">Assurances ({insurancePolicies.length})</TabsTrigger>
+          <TabsTrigger value="bank-guarantees" className="flex-1 text-xs sm:text-sm">Garanties ({bankGuarantees.length})</TabsTrigger>
+          <TabsTrigger value="regulatory" className="flex-1 text-xs sm:text-sm">Réglementaire ({complianceItems.length})</TabsTrigger>
         </TabsList>
+
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4 pt-4">
@@ -710,7 +711,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="documents" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <FileText className="h-5 w-5" />
                   Gestion des Documents ({documents.length})
@@ -751,7 +752,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="insurance" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Shield className="h-5 w-5" />
                   Assurances du Projet ({insurancePolicies.length})
@@ -773,12 +774,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucune assurance trouvée</p>
-                  <Button onClick={() => setIsInsuranceDialogOpen(true)} className="mt-4" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une assurance
-                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Utilisez « Ajouter » en haut à droite pour créer une police.
+                  </p>
                 </div>
               ) : (
+
                 <div className="space-y-3">
                   {insurancePolicies.slice(0, 5).map((policy) => (
                     <div key={policy.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -811,7 +812,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="bank-guarantees" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Building className="h-5 w-5" />
                   Garanties Bancaires ({bankGuarantees.length})
@@ -833,12 +834,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="text-center py-8">
                   <Building className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucune garantie bancaire trouvée</p>
-                  <Button onClick={() => setIsBankGuaranteeDialogOpen(true)} className="mt-4" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une garantie
-                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Utilisez « Ajouter » en haut à droite pour créer une garantie.
+                  </p>
                 </div>
               ) : (
+
                 <div className="space-y-3">
                   {bankGuarantees.slice(0, 5).map((guarantee) => (
                     <div key={guarantee.id} className="flex items-center justify-between p-3 border rounded-lg">

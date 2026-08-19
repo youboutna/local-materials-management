@@ -55,7 +55,10 @@ export function useBoqDocumentList(filter: Omit<BoqLineFilter, 'documentId'>) {
   });
 
   useEffect(() => {
-    const handler = () => qc.invalidateQueries({ queryKey: ['boq-list'] });
+    const handler = () => {
+      qc.invalidateQueries({ queryKey: ['boq-list'] });
+      qc.invalidateQueries({ queryKey: ['boq'] });
+    };
     window.addEventListener('boq-imported', handler);
     window.addEventListener('boq-kpi-refresh', handler);
     return () => {
@@ -71,6 +74,14 @@ export function useBoqDocumentList(filter: Omit<BoqLineFilter, 'documentId'>) {
     rawLines: query.data ?? [],
     isLoading: query.isLoading,
     refetch: query.refetch,
-    invalidate: () => qc.invalidateQueries({ queryKey: ['boq-list'] }),
+    /** Invalide la liste ET les lignes (workspace) pour un rafraîchissement complet. */
+    invalidate: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['boq-list'] }),
+        qc.invalidateQueries({ queryKey: ['boq'] }),
+        qc.invalidateQueries({ queryKey: ['boq-documents'] }),
+      ]);
+      await query.refetch();
+    },
   };
 }

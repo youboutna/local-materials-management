@@ -218,7 +218,7 @@ const TenderManagement = () => {
 
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-7 max-w-4xl">
+                    <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-7 max-w-4xl">
                       <TabsTrigger value="workflow" className="text-xs">
                         <Layers className="h-3 w-3 mr-1" /> Workflow
                       </TabsTrigger>

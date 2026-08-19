@@ -723,7 +723,7 @@ export default function StrategicLinkageStep({
               </div>
             )}
             <Tabs defaultValue="strategy" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
                 <TabsTrigger value="strategy" className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
                   Stratégie SCAPP

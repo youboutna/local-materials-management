@@ -546,7 +546,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         </CardHeader>
         <CardContent>
           <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
               <TabsTrigger value="administrative">Administratifs</TabsTrigger>
               <TabsTrigger value="technical">Techniques</TabsTrigger>
               <TabsTrigger value="financial">Financières</TabsTrigger>

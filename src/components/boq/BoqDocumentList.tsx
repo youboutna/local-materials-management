@@ -64,8 +64,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       // Récupérer les IDs des lignes du document et les supprimer une par une (repo hexagonal).
       const lines = await boqRepository.list({ source, contextId, projectId, documentId: doc.documentId });
       for (const l of lines) if (l.id) await boqRepository.delete(l.id, source);
-      toast({ title: 'Document supprimé' });
-      invalidate();
+      window.dispatchEvent(new Event('boq-kpi-refresh'));
+      await invalidate();
+      toast({ title: 'Document supprimé', description: `${lines.length} ligne(s) supprimée(s).` });
     } catch (e) {
       toast({ title: 'Suppression échouée', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     }

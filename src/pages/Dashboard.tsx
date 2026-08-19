@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.5 }}
         >
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('dashboard.management_tabs.overview')}</span>

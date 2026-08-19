@@ -12,7 +12,7 @@ const WorkflowTest = () => {
       <h1 className="text-2xl font-bold mb-6">Test Workflow Steps</h1>
       
       <Tabs defaultValue="workflow" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
           <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="manage">Gestion</TabsTrigger>
         </TabsList>

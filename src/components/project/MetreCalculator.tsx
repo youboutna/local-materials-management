@@ -295,7 +295,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="automatic">Calcul automatique</TabsTrigger>
             <TabsTrigger value="manual">Calcul manuel</TabsTrigger>
           </TabsList>

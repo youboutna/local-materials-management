@@ -322,7 +322,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
               {isExpanded && (
                 <CardContent>
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                       <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
                       <TabsTrigger value="tasks">Tâches</TabsTrigger>
                       <TabsTrigger value="documents">Documents</TabsTrigger>

@@ -144,7 +144,7 @@ const ConsultantDashboard = () => {
         </section>
 
         <Tabs defaultValue="validation" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="validation" className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               Avancement

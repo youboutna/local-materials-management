@@ -500,7 +500,7 @@ const UnifiedSupplierPortal = () => {
           </div>
 
           <Tabs value={guestTab} onValueChange={setGuestTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
               <TabsTrigger value="tenders">Appel d'offres</TabsTrigger>
               <TabsTrigger value="documents">Documents partagés</TabsTrigger>
             </TabsList>
@@ -666,7 +666,7 @@ const UnifiedSupplierPortal = () => {
 
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full grid-cols-9 overflow-x-auto">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-9 overflow-x-auto">
               <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
               <TabsTrigger value="devis">Devis</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>

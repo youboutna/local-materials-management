@@ -1078,7 +1078,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom' | 'procurement')}>
 
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
 
                     <TabsTrigger value="standard">Phases standards</TabsTrigger>
 

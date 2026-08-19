@@ -205,7 +205,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
             <TabsTrigger value="material">Matériau</TabsTrigger>
             <TabsTrigger value="employee">Main d'œuvre</TabsTrigger>
             <TabsTrigger value="service">Prestation</TabsTrigger>

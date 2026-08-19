@@ -603,7 +603,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-7">
           <TabsTrigger value="basic">Informations</TabsTrigger>
           <TabsTrigger value="identifiers">Identifiants</TabsTrigger>
           <TabsTrigger value="location">Localisation</TabsTrigger>

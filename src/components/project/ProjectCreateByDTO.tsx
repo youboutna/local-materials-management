@@ -241,7 +241,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
       </div>
 
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="basic">Informations de base</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
           <TabsTrigger value="milestones">Jalons</TabsTrigger>
