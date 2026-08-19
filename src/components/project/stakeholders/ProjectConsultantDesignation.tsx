@@ -3,24 +3,50 @@
  * Permet au chef de projet / directeur de désigner une partie prenante
  * (employé, organisation, fournisseur) comme consultant du projet.
  */
-import React, { useState } from 'react';
-import { UserCheck, ShieldCheck, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { UserCheck, ShieldCheck, X, ChevronsUpDown, Check, Building2, Truck, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
+import type { ProjectConsultantDTO } from '@/application/services/ProjectConsultantService';
 
 interface ProjectConsultantDesignationProps {
   projectId?: string;
   className?: string;
 }
+
+type EntityKind = 'organization' | 'supplier' | 'employee';
+
+const KIND_META: Record<EntityKind, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+  organization: { label: 'Organisations', icon: Building2 },
+  supplier: { label: 'Fournisseurs', icon: Truck },
+  employee: { label: 'Employés', icon: User },
+};
+
+/** Classe une partie prenante selon son type d'entité (référentiel métier stakeholders). */
+const classify = (s: ProjectConsultantDTO): EntityKind => {
+  const hay = `${s.entityType} ${s.businessRole}`.toLowerCase();
+  if (s.employeeId || hay.includes('employee') || hay.includes('employé') || hay.includes('agent')) {
+    return 'employee';
+  }
+  if (hay.includes('supplier') || hay.includes('vendor') || hay.includes('fournisseur') || hay.includes('contractor')) {
+    return 'supplier';
+  }
+  if (s.supplierId) return 'supplier';
+  return 'organization';
+};
 
 const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> = ({
   projectId,
