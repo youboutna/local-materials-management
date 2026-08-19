@@ -62,7 +62,6 @@ import {
     DollarSign,
     FileDown,
     FileText,
-    Package,
     Shield,
     Target,
     TrendingUp
