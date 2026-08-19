@@ -14,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Milestone, useMilestonesHex, usePhaseInspectionsHex } from "@/hooks/hexagonal";
 import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
 import { toast } from "@/hooks/use-toast";
-import { CalendarDays, CheckCircle, Clock, Plus, Target } from "lucide-react";
+import { CalendarDays, CheckCircle, Clock, Plus, Sparkles, Target } from "lucide-react";
 import React, { useState } from "react";
 import { ElectricSpinner } from "../loading-page";
+import { getDefaultPhaseMilestones } from "@/config/referentials/milestones.referential";
 
 interface PhaseMilestonesProps {
   phaseId: string;
@@ -43,6 +44,44 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+  const [generating, setGenerating] = useState(false);
+
+  /**
+   * Génère les jalons de la phase depuis le référentiel (milestones.referential.ts)
+   * lorsque la phase n'en possède aucun — proposé dans les workflows de création/édition.
+   */
+  const handleGenerateFromReferential = async () => {
+    setGenerating(true);
+    try {
+      const templates = getDefaultPhaseMilestones();
+      const base = Date.now();
+      for (const tpl of templates) {
+        const target = new Date(base + (tpl.relative_offset_days ?? 0) * 86400000);
+        await createMilestone({
+          projectId,
+          phaseId,
+          title: tpl.name,
+          description: tpl.description,
+          targetDate: target.toISOString(),
+          weight: tpl.weight ?? 0.1,
+          status: 'pending',
+        });
+      }
+      toast({
+        title: 'Jalons générés',
+        description: `${templates.length} jalon(s) créés depuis le référentiel.`,
+      });
+    } catch (error) {
+      console.error('Error generating milestones:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer les jalons.',
+        variant: 'destructive',
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: "",
@@ -291,10 +330,23 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           </div>
         )}
         {milestones.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun jalon pour cette phase
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Aucun jalon pour cette phase — vous pouvez les générer depuis le référentiel
+              projet puis les ajuster.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateFromReferential}
+              disabled={generating}
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              {generating ? 'Génération…' : 'Générer les jalons du référentiel'}
+            </Button>
           </div>
         ) : (
+
           <div className="space-y-4">
             {milestones.map((milestone) => (
               <div

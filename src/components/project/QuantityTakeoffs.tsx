@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calculator, FileSpreadsheet, RefreshCw } from 'lucide-react';
+import { Plus, FileSpreadsheet, RefreshCw, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import QuantityTakeoffsList from './QuantityTakeoffsList';
 import { BoqWorkspace } from '@/components/boq/BoqWorkspace';
+import { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 import type { ReferentialType } from '@/config/referentials';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
@@ -36,9 +37,11 @@ interface QuantityTakeoffsProps {
   projectId: string;
   /** Référentiel projet courant — piloté par la page appelante. */
   referentialCode?: ReferentialType;
+  /** Contexte phase optionnel : rattache les imports/lignes à la phase. */
+  phaseId?: string;
 }
 
-const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps) => {
+const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeoffsProps) => {
   const [takeoffs, setTakeoffs] = useState<QuantityTakeoff[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
@@ -168,7 +171,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps)
       <Card>
         <CardContent className="p-6">
           <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-adrar-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -177,61 +180,74 @@ const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps)
 
   return (
     <div className="space-y-6">
-      {/* Summary Card */}
+      {/* Summary Card — barre d'actions unique du métré (import + génération + saisie DQE) */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
               {t('projects.tab.takeoffs')}
             </CardTitle>
-            <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => syncToBoq.mutate()}
-              disabled={syncToBoq.isPending || takeoffs.length === 0}
-              title="Créer les lignes DQE et les ressources de phase à partir des métrés"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${syncToBoq.isPending ? 'animate-spin' : ''}`} />
-              Générer le DQE
-            </Button>
-            {/* Saisie manuelle : déléguée au module DQE (moteur de métré unifié :
-                types d'ouvrage, ouvertures déduites, recommandations, WBS, fiscalité). */}
-            <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('projects.tab.takeoffs') + ' ' + t('projects.add')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{t('projects.tab.takeoffs') + ' ' + t('projects.add')}</DialogTitle>
-                  <DialogDescription>
-                    Saisie et import des métrés via le module DQE unifié — le calcul par type
-                    d'ouvrage et les recommandations sont appliqués automatiquement.
-                  </DialogDescription>
-                </DialogHeader>
-                <BoqWorkspace
-                  source="quantity_takeoff"
-                  contextId={projectId}
-                  projectId={projectId}
-                  mode="planning"
-                  referentialCode={referentialCode}
-                />
-              </DialogContent>
-            </Dialog>
+            <div className="flex flex-wrap items-center gap-2">
+              <BoqImportDialog
+                source="quantity_takeoff"
+                contextId={projectId}
+                phaseId={phaseId}
+                title="Importer un BOQ / DQE (PDF, Excel, CSV)"
+                trigger={
+                  <Button size="sm" variant="outline">
+                    <Upload className="mr-2 h-4 w-4" /> Import BOQ
+                  </Button>
+                }
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => syncToBoq.mutate()}
+                disabled={syncToBoq.isPending || takeoffs.length === 0}
+                title="Créer les lignes DQE et les ressources de phase à partir des métrés"
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${syncToBoq.isPending ? 'animate-spin' : ''}`} />
+                Générer le DQE
+              </Button>
+              {/* Saisie manuelle : déléguée au module DQE (moteur de métré unifié :
+                  types d'ouvrage, ouvertures déduites, recommandations, WBS, fiscalité). */}
+              <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Saisir via DQE
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{t('projects.tab.takeoffs') + ' — ' + t('projects.add')}</DialogTitle>
+                    <DialogDescription>
+                      Saisie et import des métrés via le module DQE unifié — calcul par type
+                      d'ouvrage, déduction des ouvertures et recommandations appliqués
+                      automatiquement, puis workflow de validation et dispatching.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <BoqWorkspace
+                    source="quantity_takeoff"
+                    contextId={projectId}
+                    projectId={projectId}
+                    mode="planning"
+                    referentialCode={referentialCode}
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="text-center">
-              <p className="text-2xl font-bold text-adrar-600">{takeoffs.length}</p>
+              <p className="text-2xl font-bold text-primary">{takeoffs.length}</p>
               <p className="text-sm text-muted-foreground">{t('projects.takeoffs.elements.measured')}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-terracotta-600">
+              <p className="text-2xl font-bold text-accent-foreground">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
               <p className="text-sm text-muted-foreground">{t('projects.takeoffs.total.value')}</p>
@@ -245,6 +261,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps)
           </div>
         </CardContent>
       </Card>
+
 
       {/* Takeoffs List */}
       <QuantityTakeoffsList
