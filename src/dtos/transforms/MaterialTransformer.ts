@@ -103,6 +103,9 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       coordinates_longitude: entity.coordinatesLongitude,
       multilang_labels: entity.multilangLabels,
       supplier: entity.supplier,
+      supplier_id: entity.supplierId ?? null,
+      lead_time_days: entity.leadTimeDays ?? entity.supplier?.leadTime ?? null,
+
       timeline: entity.timeline,
       last_restock: entity.lastRestock instanceof Date ? entity.lastRestock.toISOString() : entity.lastRestock,
       material_status: entity.materialStatus,
