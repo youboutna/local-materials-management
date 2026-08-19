@@ -272,27 +272,32 @@ const EscalationThresholdsSettings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Section */}
+      {/* Summary Section — catégories mises en avant par le référentiel */}
       <Card>
         <CardHeader>
           <CardTitle>Résumé des Seuils d'Escalade</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {thresholds.length} seuils référencés · {thresholds.filter(t => t.is_active).length} actifs ·{' '}
+            {thresholds.filter(t => t.severity_level === 'critical').length} critiques
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {['project_delay', 'insurance_expiry', 'payment_validation', 'inspection_overdue'].map(type => {
-              const typeThresholds = getThresholdsByType(type);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {thresholdTypes.filter(t => t.highlighted).map(type => {
+              const typeThresholds = getThresholdsByType(type.key);
               const activeThresholds = typeThresholds.filter(t => t.is_active);
               const criticalThresholds = typeThresholds.filter(t => t.severity_level === 'critical');
-              
+
               return (
-                <div key={type} className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">
-                    {thresholdTypes.find(t => t.key === type)?.label}
+                <div key={type.key} className="p-4 border rounded-lg bg-card">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <type.icon className="h-4 w-4 text-primary" />
+                    {type.label}
                   </h4>
                   <div className="space-y-1 text-sm">
                     <div>Total: <Badge variant="outline">{typeThresholds.length}</Badge></div>
                     <div>Actifs: <Badge variant="secondary">{activeThresholds.length}</Badge></div>
-                    <div>Critiques: <Badge className="bg-red-500 text-white">{criticalThresholds.length}</Badge></div>
+                    <div>Critiques: <Badge variant="destructive">{criticalThresholds.length}</Badge></div>
                   </div>
                 </div>
               );
@@ -300,6 +305,7 @@ const EscalationThresholdsSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 };
