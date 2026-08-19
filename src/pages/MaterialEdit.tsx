@@ -43,9 +43,14 @@ const MaterialEdit = () => {
 
   const handleSubmit = (updatedFormData: Partial<MaterialFormDataDTO>) => {
     // Form (transforms DTO) → Hook (transformation) → Service (entities DTO) → Entity
-    // Pass the transforms DTO directly to the hook, let it handle transformation
+    // La clé étrangère fournisseur est résolue explicitement avant persistance.
+    const payload = {
+      ...updatedFormData,
+      supplierId: MaterialTransformer.resolveSupplierId(updatedFormData),
+    };
     updateMaterial.mutate(
-      { id: safeId, data: updatedFormData as UpdateMaterialRequestDto },
+      { id: safeId, data: payload as UpdateMaterialRequestDto },
+
       {
         onSuccess: () => {
           toast({ title: t("materials.updated"), description: t("materials.updated_success") });
