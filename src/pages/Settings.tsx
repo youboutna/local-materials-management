@@ -38,6 +38,8 @@ import {
   Folder,
   Key,
   Mail,
+  Palette,
+
   Settings2,
   Shield,
   Users,
