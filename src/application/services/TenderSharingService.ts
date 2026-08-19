@@ -74,6 +74,7 @@ export class TenderSharingService {
     tenderId: string;
     tenderTitle: string;
     secretCode: string;
+    secretId?: string;
     supplierEmail: string;
     supplierName?: string;
     expiresAt?: string | null;
@@ -110,11 +111,16 @@ export class TenderSharingService {
     if (error) throw new Error(error.message || "Échec de l'envoi de l'e-mail de partage");
 
     try {
-      await this.logAccess({
-        secretCode: params.secretCode,
-        supplierEmail: params.supplierEmail,
-        accessType: 'shared_by_email',
-      } as CreateAccessLogDTO);
+      if (params.secretId) {
+        await this.logAccess({
+          sharingSecretId: params.secretId,
+          accessedAt: new Date().toISOString(),
+          accessedBy: params.supplierEmail,
+          sharedBy: null,
+          actionType: 'view',
+          metadata: { channel: 'email', supplierName: params.supplierName ?? null },
+        });
+      }
     } catch {
       // journalisation non bloquante
     }
