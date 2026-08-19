@@ -32,6 +32,8 @@ import {
   Target,
   BarChart3,
   Palette,
+  KeyRound,
+
 } from "lucide-react";
 import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 
@@ -43,6 +45,8 @@ interface NavItem {
   badge?: string | number;
   children?: NavItem[];
   roles?: string[];
+  /** Action spéciale rendue par un composant dédié (ex. gestionnaire de codes secrets) */
+  action?: 'secretManager';
 }
 
 interface ContextualSidebarProps {
@@ -108,6 +112,7 @@ const navigationItems: NavItem[] = [
     children: [
       { label: "Liste", href: "/suppliers" },
       { label: "Appels d'offres", href: "/tender-management" },
+      { label: "Partage & codes", action: 'secretManager', icon: KeyRound },
     ],
   },
   {
@@ -169,6 +174,20 @@ function NavItemComponent({
   );
 
   const IconComponent = item.icon;
+
+  // Action item (dialogue) — ex. partage & codes secrets fournisseurs
+  if (item.action === 'secretManager') {
+    return (
+      <SecretAccessManager
+        className={cn(
+          "w-full justify-start gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+          depth > 0 && "pl-10",
+          collapsed && "justify-center px-2",
+        )}
+        hideLabel={collapsed}
+      />
+    );
+  }
 
   // Simple link item
   if (!item.children) {

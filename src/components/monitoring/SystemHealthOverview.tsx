@@ -21,11 +21,14 @@ import { getPerformanceMonitoringService } from '@/application/services/Performa
 interface DatabaseMetricsDTO { totalSize?: number; activeConnections?: number; queryPerformance?: number; }
 interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; errorRate?: number; throughput?: number; }
 import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/monitoringCalculations';
+import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
 const SystemHealthOverview: React.FC = () => {
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { stats: monitoringStats, refetch: refetchMonitoringStats } = useMonitoringStatsHex();
+
 
   useEffect(() => {
     loadData();
@@ -95,9 +98,13 @@ const SystemHealthOverview: React.FC = () => {
     );
   }
 
-  const overallHealth = stats ? 'good' : 'warning'; // Simplified health calculation
+  const availability = Math.max(0, Math.min(100, 100 - (stats.errorRate || 0)));
+  const operationalIssues =
+    monitoringStats.guarantees.count + monitoringStats.payments.count + monitoringStats.inspections.count;
+  const overallHealth = operationalIssues > 0 || (stats.errorRate || 0) > 5 ? 'warning' : 'good';
   const criticalAlerts = alerts.filter(a => a.severity === 'critical' && !a.acknowledged);
   const highAlerts = alerts.filter(a => a.severity === 'high' && !a.acknowledged);
+
 
   return (
     <div className="space-y-6">
@@ -119,12 +126,21 @@ const SystemHealthOverview: React.FC = () => {
               <div className="text-sm text-muted-foreground">
                 {criticalAlerts.length > 0 && `${criticalAlerts.length} alerte(s) critique(s)`}
                 {criticalAlerts.length === 0 && highAlerts.length > 0 && `${highAlerts.length} alerte(s) importante(s)`}
-                {alerts.length === 0 && 'Tous les systèmes fonctionnent normalement'}
+                {alerts.length === 0 && operationalIssues > 0 && `${operationalIssues} point(s) de vigilance opérationnels`}
+                {alerts.length === 0 && operationalIssues === 0 && 'Tous les systèmes fonctionnent normalement'}
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={loadData}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                loadData();
+                refetchMonitoringStats();
+              }}
+            >
               Actualiser
             </Button>
+
           </div>
         </CardContent>
       </Card>
@@ -149,9 +165,10 @@ const SystemHealthOverview: React.FC = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Disponibilité</span>
-                <span>{formatMetric(99.9, 'percentage')}</span>
+                <span>{formatMetric(availability, 'percentage')}</span>
               </div>
-              <Progress value={99.9} className="mt-2" />
+              <Progress value={availability} className="mt-2" />
+
             </div>
           </CardContent>
         </Card>
@@ -164,11 +181,11 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.guarantees?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.guarantees.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.guarantees?.expiring || 0) > 0 ? (
+                {monitoringStats.guarantees.count > 0 ? (
                   <span className="text-warning">
-                    {(stats as any)?.guarantees?.expiring} expirent bientôt
+                    {monitoringStats.guarantees.count} expirent bientôt
                   </span>
                 ) : (
                   'Toutes valides'
@@ -186,11 +203,11 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.payments?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.payments.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.payments?.blocked || 0) > 0 ? (
+                {monitoringStats.payments.count > 0 ? (
                   <span className="text-destructive">
-                    {(stats as any)?.payments?.blocked} bloqué(s)
+                    {monitoringStats.payments.count} bloqué(s)
                   </span>
                 ) : (
                   'Aucun blocage'
@@ -204,21 +221,22 @@ const SystemHealthOverview: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Inspections</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <TrendingUp className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.inspections?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.inspections.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.inspections?.delayed || 0) > 0 ? (
+                {monitoringStats.inspections.count > 0 ? (
                   <span className="text-destructive">
-                    {(stats as any)?.inspections?.delayed} en retard
+                    {monitoringStats.inspections.count} en retard
                   </span>
                 ) : (
                   'À jour'
                 )}
               </div>
             </div>
+
           </CardContent>
         </Card>
       </div>
