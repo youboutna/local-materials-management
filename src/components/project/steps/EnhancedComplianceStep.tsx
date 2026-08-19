@@ -610,13 +610,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Vue d'Ensemble</TabsTrigger>
-          <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
-          <TabsTrigger value="insurance">Assurances ({insurancePolicies.length})</TabsTrigger>
-          <TabsTrigger value="bank-guarantees">Garanties ({bankGuarantees.length})</TabsTrigger>
-          <TabsTrigger value="regulatory">Réglementaire ({complianceItems.length})</TabsTrigger>
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
+          <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm">Vue d'Ensemble</TabsTrigger>
+          <TabsTrigger value="documents" className="flex-1 text-xs sm:text-sm">Documents ({documents.length})</TabsTrigger>
+          <TabsTrigger value="insurance" className="flex-1 text-xs sm:text-sm">Assurances ({insurancePolicies.length})</TabsTrigger>
+          <TabsTrigger value="bank-guarantees" className="flex-1 text-xs sm:text-sm">Garanties ({bankGuarantees.length})</TabsTrigger>
+          <TabsTrigger value="regulatory" className="flex-1 text-xs sm:text-sm">Réglementaire ({complianceItems.length})</TabsTrigger>
         </TabsList>
+
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4 pt-4">
