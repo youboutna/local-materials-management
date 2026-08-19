@@ -1,23 +1,34 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
+/**
+ * PhaseEmployees — main d'œuvre affectée à une phase.
+ * Flux hexagonal : UI → usePhaseEmployeesHex → PhaseEmployeeService → Adapter → btp.phase_employees.
+ * Aucun accès direct à Supabase dans ce composant.
+ */
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { usePhaseEmployeesHex } from '@/hooks/hexagonal/usePhaseEmployeesHex';
+import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
+import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
-import { getSupplierService } from '@/application/services/SupplierService';
 
 interface PhaseEmployeesProps {
   phaseId: string;
 }
 
-interface EmployeeFormData {
+interface EmployeeFormState {
   employeeName: string;
   employeeRole: string;
   employeeContact: string;
@@ -27,323 +38,203 @@ interface EmployeeFormData {
   isPrimarySupplier: boolean;
 }
 
+const EMPTY_FORM: EmployeeFormState = {
+  employeeName: '',
+  employeeRole: '',
+  employeeContact: '',
+  dailyRate: '',
+  startDate: '',
+  endDate: '',
+  isPrimarySupplier: false,
+};
+
 const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
-  const [isAdding, setIsAdding] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<EmployeeFormData>({
-    employeeName: '',
-    employeeRole: '',
-    employeeContact: '',
-    dailyRate: '',
-    startDate: '',
-    endDate: '',
-    isPrimarySupplier: false,
-  });
+  const [formData, setFormData] = useState<EmployeeFormState>(EMPTY_FORM);
   const [memberType, setMemberType] = useState<'employee' | 'supplier'>('employee');
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
-  const [employeeSearch, setEmployeeSearch] = useState('');
-  
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: employees, isLoading } = useQuery({
-    queryKey: ['phase-employees', phaseId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await btpClient.from('phase_employees')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  const {
+    employees,
+    isLoading,
+    totalLaborCost,
+    addEmployee,
+    updateEmployee,
+    removeEmployee,
+    isAdding,
+    isUpdating,
+  } = usePhaseEmployeesHex(phaseId);
 
-  const { data: suppliersList } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: async () => {
-      const { SupplierService } = await import('@/application/services/SupplierService');
-      const supplierService = getSupplierService();
-      const result = await supplierService.searchSuppliers({ isActive: true });
-      // Map to UI compatible format with dual-casing
-      return result.suppliers.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        phone: s.phone,
-        contactPerson: s.contactPerson || s.contact_person,
-        contact_person: s.contact_person || s.contactPerson
-      }));
-    },
-  });
-
-  // Fetch employeesList from your API or context
-  const { data: employeesList, isLoading: isEmployeesLoading } = useQuery({
-    queryKey: ['employees', employeeSearch],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      let query = btpClient.from('employees')
-        .select('id, full_name, position, email, phone')
-        .order('full_name');
-
-      if (employeeSearch) {
-        query = query.or(`full_name.ilike.%${employeeSearch}%,employee_id.ilike.%${employeeSearch}%,position.ilike.%${employeeSearch}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const addEmployeeMutation = useMutation({
-    mutationFn: async (employeeData: EmployeeFormData) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await btpClient.from('phase_employees')
-        .insert({
-          phase_id: phaseId,
-          employee_name: employeeData.employeeName,
-          employee_role: employeeData.employeeRole,
-          employee_contact: employeeData.employeeContact,
-          daily_rate: employeeData.dailyRate ? parseFloat(employeeData.dailyRate) : null,
-          start_date: employeeData.startDate || null,
-          end_date: employeeData.endDate || null,
-          is_primary_supplier: employeeData.isPrimarySupplier,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees', phaseId] });
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Employé ajouté avec succès' });
-    },
-  });
-
-  const updateEmployeeMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const updateData = {
-        employee_name: data.employeeName,
-        employee_role: data.employeeRole,
-        employee_contact: data.employeeContact,
-        daily_rate: data.dailyRate ? parseFloat(data.dailyRate) : null,
-        start_date: data.startDate || null,
-        end_date: data.endDate || null,
-        is_primary_supplier: data.isPrimarySupplier,
-      };
-      
-      const { error } = await btpClient.from('phase_employees')
-        .update(updateData)
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees', phaseId] });
-      setEditingId(null);
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Employé mis à jour avec succès' });
-    },
-  });
-
-  const deleteEmployeeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await btpClient.from('phase_employees')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees', phaseId] });
-      toast({ title: 'Employé supprimé avec succès' });
-    },
-  });
+  const { data: employeesList = [] } = useActiveEmployeesHex();
+  const { suppliers = [] } = useSuppliersHex();
 
   const resetForm = () => {
-    setFormData({
-      employeeName: '',
-      employeeRole: '',
-      employeeContact: '',
-      dailyRate: '',
-      startDate: '',
-      endDate: '',
-      isPrimarySupplier: false,
-    });
+    setFormData(EMPTY_FORM);
     setEditingId(null);
+    setMemberType('employee');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const toInput = (data: EmployeeFormState) => ({
+    employeeName: data.employeeName,
+    employeeRole: data.employeeRole,
+    employeeContact: data.employeeContact || null,
+    dailyRate: data.dailyRate ? parseFloat(data.dailyRate) : null,
+    startDate: data.startDate || null,
+    endDate: data.endDate || null,
+    isPrimarySupplier: data.isPrimarySupplier,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      updateEmployeeMutation.mutate({ id: editingId, data: formData });
+      await updateEmployee({ id: editingId, data: toInput(formData) });
     } else {
-      addEmployeeMutation.mutate(formData);
+      await addEmployee(toInput(formData));
     }
+    setIsDialogOpen(false);
+    resetForm();
   };
 
-  const startEdit = (employee: any) => {
+  const startEdit = (employee: (typeof employees)[number]) => {
     setFormData({
-      employeeName: employee.employee_name || '',
-      employeeRole: employee.employee_role || '',
-      employeeContact: employee.employee_contact || '',
-      dailyRate: employee.daily_rate?.toString() || '',
-      startDate: employee.start_date || '',
-      endDate: employee.end_date || '',
-      isPrimarySupplier: employee.is_primary_supplier || false,
+      employeeName: employee.employeeName,
+      employeeRole: employee.employeeRole,
+      employeeContact: employee.employeeContact || '',
+      dailyRate: employee.dailyRate != null ? String(employee.dailyRate) : '',
+      startDate: employee.startDate || '',
+      endDate: employee.endDate || '',
+      isPrimarySupplier: employee.isPrimarySupplier,
     });
     setEditingId(employee.id);
-    setIsAdding(true);
+    setIsDialogOpen(true);
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des employés...</div>;
+    return <div className="animate-pulse text-sm text-muted-foreground">Chargement de l'équipe…</div>;
   }
 
-  const primarySupplier = employees?.find(emp => emp.is_primary_supplier);
-  const totalDailyCost = employees?.reduce((sum, emp) => sum + (emp.daily_rate || 0), 0) || 0;
+  const primarySupplier = employees.find((emp) => emp.isPrimarySupplier);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Équipe de la phase ({employees?.length || 0})
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4" />
+            Équipe de la phase ({employees.length})
           </CardTitle>
-          <Dialog open={isAdding} onOpenChange={setIsAdding}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button size="sm" className="w-full sm:w-auto" onClick={resetForm}>
+                <Plus className="mr-2 h-4 w-4" />
                 Ajouter un membre
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingId ? 'Modifier le membre' : 'Ajouter un membre à l\'équipe'}
+                  {editingId ? 'Modifier le membre' : "Ajouter un membre à l'équipe"}
                 </DialogTitle>
+                <DialogDescription>
+                  Renseignez l'affectation (interne ou externe), le tarif journalier et la période.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Member type selector */}
-                <div className="flex gap-4 mb-2">
-                  <label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="radio"
                       checked={memberType === 'employee'}
                       onChange={() => {
                         setMemberType('employee');
-                        setSelectedSupplierId(null);
-                        setFormData({
-                          ...formData,
-                          employeeName: '',
-                          employeeRole: '',
-                          employeeContact: '',
-                        });
+                        setFormData({ ...formData, employeeName: '', employeeRole: '', employeeContact: '' });
                       }}
                     />
-                    <span className="ml-2">Employé interne</span>
+                    Employé interne
                   </label>
-                  <label>
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="radio"
                       checked={memberType === 'supplier'}
                       onChange={() => {
                         setMemberType('supplier');
-                        setFormData({
-                          ...formData,
-                          employeeName: '',
-                          employeeRole: '',
-                          employeeContact: '',
-                        });
+                        setFormData({ ...formData, employeeName: '', employeeRole: '', employeeContact: '' });
                       }}
                     />
-                    <span className="ml-2">Consultant externe / Fournisseur</span>
+                    Consultant externe / Fournisseur
                   </label>
                 </div>
 
-                {/* If supplier, show dropdown */}
-                {memberType === 'supplier' && (
+                {memberType === 'supplier' ? (
                   <div>
-                    <Label htmlFor="supplier_select">Sélectionner un fournisseur/consultant *</Label>
+                    <Label htmlFor="supplier_select">Fournisseur / consultant *</Label>
                     <Input
                       id="supplier_select"
                       value={formData.employeeName}
-                      onChange={e => {
-                        const supplier = suppliersList?.find((s: any) => s.name === e.target.value);
-                        setSelectedSupplierId(supplier?.id || null);
-                        const contactPerson = supplier?.contactPerson || supplier?.contact_person;
+                      list="phase-supplier-list"
+                      autoComplete="off"
+                      required
+                      onChange={(e) => {
+                        const supplier = suppliers.find((s) => s.name === e.target.value);
                         setFormData({
                           ...formData,
                           employeeName: supplier?.name || e.target.value,
-                          employeeRole: 'Consultant externe',
-                          employeeContact: contactPerson || supplier?.email || supplier?.phone || '',
+                          employeeRole: formData.employeeRole || 'Consultant externe',
+                          employeeContact:
+                            supplier?.contactPerson || supplier?.email || supplier?.phone || formData.employeeContact,
                         });
                       }}
-                      required={memberType === 'supplier'}
-                      list="supplier-list"
-                      disabled={memberType !== 'supplier'}
                     />
-                    <datalist id="supplier-list">
-                      {suppliersList?.map((s: any) => (
-                        <option key={s.id} value={s.name} label={s.contactPerson || s.contact_person || ''} />
+                    <datalist id="phase-supplier-list">
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.name} />
                       ))}
                     </datalist>
                   </div>
-                )}
-
-                {memberType === 'employee' && (
+                ) : (
                   <div>
                     <Label htmlFor="employee_name">Nom complet *</Label>
                     <Input
                       id="employee_name"
                       value={formData.employeeName}
-                      onChange={e => {
-                        setEmployeeSearch(e.target.value);
-                        const emp = employeesList?.find(emp => emp.full_name === e.target.value);
+                      list="phase-employee-list"
+                      autoComplete="off"
+                      required
+                      onChange={(e) => {
+                        const emp = employeesList.find((item) => item.full_name === e.target.value);
                         setFormData({
                           ...formData,
                           employeeName: e.target.value,
-                          employeeRole: emp?.position || '',
-                          employeeContact: emp?.email || emp?.phone || '',
+                          employeeRole: emp?.position || formData.employeeRole,
+                          employeeContact: formData.employeeContact,
                         });
                       }}
-                      required
-                      disabled={memberType !== 'employee'}
-                      list="employee-list"
-                      autoComplete="off"
                     />
-                    <datalist id="employee-list">
-                      {employeesList?.map(emp => (
-                        <option key={emp.id} value={emp.full_name || ''} />
+                    <datalist id="phase-employee-list">
+                      {employeesList.map((emp) => (
+                        <option key={emp.id} value={emp.full_name} />
                       ))}
                     </datalist>
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="employee_role">Rôle/Fonction *</Label>
+                    <Label htmlFor="employee_role">Rôle / Fonction *</Label>
                     <Input
                       id="employee_role"
                       value={formData.employeeRole}
                       onChange={(e) => setFormData({ ...formData, employeeRole: e.target.value })}
                       required
-                      placeholder="Ex: Chef de chantier, Maçon, etc."
-                      disabled={memberType === 'supplier'}
+                      placeholder="Ex : Chef de chantier, Maçon…"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="employee_contact">Contact</Label>
                     <Input
@@ -351,9 +242,11 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       value={formData.employeeContact}
                       onChange={(e) => setFormData({ ...formData, employeeContact: e.target.value })}
                       placeholder="Téléphone ou email"
-                      disabled={memberType === 'supplier'}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
                     <Label htmlFor="daily_rate">Tarif journalier (MRU)</Label>
                     <Input
@@ -364,9 +257,6 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="start_date">Date de début</Label>
                     <Input
@@ -391,9 +281,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                   <Checkbox
                     id="is_primary_supplier"
                     checked={formData.isPrimarySupplier}
-                    onCheckedChange={(checked) => 
-                      setFormData({ ...formData, isPrimarySupplier: !!checked })
-                    }
+                    onCheckedChange={(checked) => setFormData({ ...formData, isPrimarySupplier: !!checked })}
                   />
                   <Label htmlFor="is_primary_supplier" className="flex items-center gap-2">
                     <Star className="h-4 w-4" />
@@ -401,11 +289,11 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                   </Label>
                 </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={isAdding || isUpdating}>
                     {editingId ? 'Mettre à jour' : 'Ajouter'}
                   </Button>
                 </div>
@@ -415,74 +303,60 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
         </div>
       </CardHeader>
       <CardContent>
-        {employees && employees.length > 0 ? (
+        {employees.length > 0 ? (
           <div className="space-y-4">
-            {totalDailyCost > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
+            {totalLaborCost > 0 && (
+              <div className="rounded-lg bg-muted p-3">
                 <p className="text-sm font-medium">
-                  Coût journalier total: {totalDailyCost.toLocaleString()} MRU/jour
+                  Coût journalier total : {totalLaborCost.toLocaleString()} MRU/jour
                 </p>
               </div>
             )}
 
             {primarySupplier && (
-              <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
+                <div className="mb-1 flex items-center gap-2">
                   <Star className="h-4 w-4 text-warning" />
                   <span className="font-medium text-warning">Fournisseur principal</span>
                 </div>
                 <p className="text-sm text-warning">
-                  {primarySupplier.employee_name} - {primarySupplier.employee_role}
+                  {primarySupplier.employeeName} — {primarySupplier.employeeRole}
                 </p>
               </div>
             )}
-            
+
             {employees.map((employee) => (
-              <div key={employee.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
+              <div key={employee.id} className="rounded-lg border p-4">
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{employee.employee_name}</h3>
-                      {employee.is_primary_supplier && (
-                        <Star className="h-4 w-4 text-warning" />
-                      )}
+                      <h3 className="font-medium">{employee.employeeName}</h3>
+                      {employee.isPrimarySupplier && <Star className="h-4 w-4 text-warning" />}
                     </div>
-                    <p className="text-sm text-muted-foreground">{employee.employee_role}</p>
-                    {employee.employee_contact && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Contact: {employee.employee_contact}
-                      </p>
+                    <p className="text-sm text-muted-foreground">{employee.employeeRole}</p>
+                    {employee.employeeContact && (
+                      <p className="mt-1 text-xs text-muted-foreground">Contact : {employee.employeeContact}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => startEdit(employee)}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => deleteEmployeeMutation.mutate(employee.id)}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => removeEmployee(employee.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
-                  {employee.daily_rate && (
-                    <Badge variant="secondary">
-                      {employee.daily_rate.toLocaleString()} MRU/jour
-                    </Badge>
+                  {employee.dailyRate != null && (
+                    <Badge variant="secondary">{employee.dailyRate.toLocaleString()} MRU/jour</Badge>
                   )}
-                  {employee.start_date && (
-                    <Badge variant="outline">
-                      Début: {new Date(employee.start_date).toLocaleDateString()}
-                    </Badge>
+                  {employee.startDate && (
+                    <Badge variant="outline">Début : {new Date(employee.startDate).toLocaleDateString()}</Badge>
                   )}
-                  {employee.end_date && (
-                    <Badge variant="outline">
-                      Fin: {new Date(employee.end_date).toLocaleDateString()}
-                    </Badge>
+                  {employee.endDate && (
+                    <Badge variant="outline">Fin : {new Date(employee.endDate).toLocaleDateString()}</Badge>
                   )}
                 </div>
               </div>

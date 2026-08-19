@@ -1,3 +1,4 @@
+import { invalidateAllTaskQueries } from '@/hooks/hexagonal/taskQueryKeys';
 import { PhaseService } from '@/application/services/PhaseService';
 /**
  * useEnhancedTasksHex - Hook hexagonal pour les tâches avancées
@@ -298,7 +299,7 @@ export function useEnhancedTasksHex(projectId: string) {
       return await taskAssignmentService.create(enrichedData);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'overdue'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'due-soon'] });
@@ -329,7 +330,7 @@ export function useEnhancedTasksHex(projectId: string) {
       return await taskAssignmentService.update(id, data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'overdue'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'due-soon'] });
@@ -381,7 +382,7 @@ export function useEnhancedTasksHex(projectId: string) {
       return await taskAssignmentService.update(id, updateData);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'overdue'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'due-soon'] });
@@ -418,7 +419,7 @@ export function useEnhancedTasksHex(projectId: string) {
       return await taskAssignmentService.markAsCompleted(id);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'overdue'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'due-soon'] });
@@ -445,7 +446,7 @@ export function useEnhancedTasksHex(projectId: string) {
       await taskAssignmentService.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'overdue'] });
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'due-soon'] });
@@ -484,7 +485,7 @@ export function useEnhancedTasksHex(projectId: string) {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['enhanced-tasks', projectId, 'stats'] });
       toast({
         title: 'Tâche bloquée',
@@ -712,7 +713,7 @@ export function useCreateProjectTask(projectId: string) {
       return await taskAssignmentService.create(enrichedData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       toast({
         title: 'Tâche créée',
         description: 'La tâche a été ajoutée au projet avec succès.',
@@ -743,7 +744,7 @@ export function useUpdateProjectTask(projectId: string) {
       return await taskAssignmentService.update(id, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       toast({
         title: 'Tâche mise à jour',
         description: 'Les modifications ont été sauvegardées.',
@@ -773,7 +774,7 @@ export function useDeleteProjectTask(projectId: string) {
       await taskAssignmentService.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
+      invalidateAllTaskQueries(queryClient);
       toast({
         title: 'Tâche supprimée',
         description: 'La tâche a été supprimée avec succès.',

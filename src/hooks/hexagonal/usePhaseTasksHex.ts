@@ -16,6 +16,7 @@
  * - ✅ Gestion des tâches par phase
  */
 
+import { invalidateAllTaskQueries } from '@/hooks/hexagonal/taskQueryKeys';
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { 
   TaskAssignmentDTO,
@@ -142,7 +143,7 @@ export function usePhaseTasksHex(phaseId: string) {
       return await taskAssignmentService.create(enrichedData);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       
       toast({
@@ -176,7 +177,7 @@ export function usePhaseTasksHex(phaseId: string) {
       return await taskAssignmentService.update(id, data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       
       toast({
@@ -215,7 +216,7 @@ export function usePhaseTasksHex(phaseId: string) {
       return await taskAssignmentService.update(id, updateData);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       
       toast({
@@ -249,7 +250,7 @@ export function usePhaseTasksHex(phaseId: string) {
       return await taskAssignmentService.markAsCompleted(id);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       
       toast({
@@ -283,7 +284,7 @@ export function usePhaseTasksHex(phaseId: string) {
       await taskAssignmentService.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       
       toast({
@@ -320,7 +321,7 @@ export function usePhaseTasksHex(phaseId: string) {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', data.phaseId || ''] });
       queryClient.invalidateQueries({ queryKey: ['phase-tasks-hex', phaseId, 'stats'] });
       

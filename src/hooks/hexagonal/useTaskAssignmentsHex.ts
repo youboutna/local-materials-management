@@ -1,3 +1,4 @@
+import { invalidateAllTaskQueries } from '@/hooks/hexagonal/taskQueryKeys';
 import { PhaseService } from '@/application/services/PhaseService';
 /**
  * useTaskAssignmentsHex - Hook hexagonal pour la gestion des assignations de tâches
@@ -148,7 +149,7 @@ export function useTaskAssignmentsHex(filters?: {
       return await taskAssignmentService.create(enrichedData);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'assignee'] });
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'project'] });
       
@@ -174,7 +175,7 @@ export function useTaskAssignmentsHex(filters?: {
       return await taskAssignmentService.update(id, data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'assignee'] });
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'project'] });
@@ -201,7 +202,7 @@ export function useTaskAssignmentsHex(filters?: {
       await taskAssignmentService.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'assignee'] });
       queryClient.invalidateQueries({ queryKey: ['task-assignments-hex', 'project'] });
       
@@ -236,7 +237,7 @@ export function useTaskAssignmentsHex(filters?: {
       return await taskAssignmentService.updateStatus(id, TaskStatus.IN_PROGRESS);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       
       toast({
@@ -274,7 +275,7 @@ export function useTaskAssignmentsHex(filters?: {
       return await taskAssignmentService.markAsCompleted(id);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       
       toast({
@@ -311,7 +312,7 @@ export function useTaskAssignmentsHex(filters?: {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       
       toast({
@@ -351,7 +352,7 @@ export function useTaskAssignmentsHex(filters?: {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       
       toast({
@@ -388,7 +389,7 @@ export function useTaskAssignmentsHex(filters?: {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', data.id] });
       
       toast({
@@ -554,7 +555,7 @@ export function useTaskAssignmentHex(taskId: string | undefined) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       
       toast({
         title: 'Tâche mise à jour',
@@ -596,7 +597,7 @@ export function useTaskAssignmentHex(taskId: string | undefined) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['task-assignment-hex', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['task-assignments-hex'] });
+      invalidateAllTaskQueries(queryClient);
       
       toast({
         title: 'Note ajoutée',
