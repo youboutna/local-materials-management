@@ -45,6 +45,36 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type Translate = (key: string) => string;
+
+/** Sections de paramétrage (source unique : onglets desktop + sélecteur mobile). */
+const SETTINGS_TABS: Array<{
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: (t: Translate) => string;
+}> = [
+  { value: "appearance", icon: Palette, label: () => "Apparence" },
+  { value: "providers", icon: Cloud, label: () => "Providers" },
+  { value: "deployment", icon: Settings2, label: () => "Déploiement" },
+  { value: "database", icon: Database, label: (t) => t("settings.tabs.database") },
+  { value: "storage", icon: Folder, label: (t) => t("settings.tabs.storage") },
+  { value: "keycloak", icon: Key, label: (t) => t("settings.tabs.keycloak") },
+  { value: "keycloak-config", icon: Cog, label: (t) => t("settings.tabs.keycloak_config") },
+  { value: "system", icon: Cog, label: (t) => t("settings.tabs.system") },
+  { value: "alerts", icon: AlertTriangle, label: () => "Alertes" },
+  { value: "notifications", icon: Mail, label: () => "Emails" },
+  { value: "local-users", icon: Users, label: () => "Utilisateurs locaux" },
+];
+
+
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -147,44 +177,36 @@ const Settings = () => {
             </Card>
           )}
 
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <div className="-mx-1 mb-6 overflow-x-auto px-1 pb-1">
-              <TabsList className="flex h-auto w-max min-w-full flex-wrap justify-start gap-1 p-1">
-                <TabsTrigger value="appearance" className="flex items-center">
-                  <Palette className="mr-2 h-4 w-4" /> Apparence
-                </TabsTrigger>
-                <TabsTrigger value="providers" className="flex items-center">
-                  <Cloud className="mr-2 h-4 w-4" /> Providers
-                </TabsTrigger>
-                <TabsTrigger value="deployment" className="flex items-center">
-                  <Settings2 className="mr-2 h-4 w-4" /> Deployment
-                </TabsTrigger>
-                <TabsTrigger value="database" className="flex items-center">
-                  <Database className="mr-2 h-4 w-4" /> {t("settings.tabs.database")}
-                </TabsTrigger>
-                <TabsTrigger value="storage" className="flex items-center">
-                  <Folder className="mr-2 h-4 w-4" /> {t("settings.tabs.storage")}
-                </TabsTrigger>
-                <TabsTrigger value="keycloak" className="flex items-center">
-                  <Key className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak")}
-                </TabsTrigger>
-                <TabsTrigger value="keycloak-config" className="flex items-center">
-                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak_config")}
-                </TabsTrigger>
-                <TabsTrigger value="system" className="flex items-center">
-                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
-                </TabsTrigger>
-                <TabsTrigger value="alerts" className="flex items-center">
-                  <AlertTriangle className="mr-2 h-4 w-4" /> Alertes
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center">
-                  <Mail className="mr-2 h-4 w-4" /> Emails
-                </TabsTrigger>
-                <TabsTrigger value="local-users" className="flex items-center">
-                  <Users className="mr-2 h-4 w-4" /> Utilisateurs locaux
-                </TabsTrigger>
-              </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {/* Mobile : sélecteur compact — Desktop : onglets qui passent à la ligne */}
+            <div className="mb-6 sm:hidden">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger aria-label="Section des paramètres">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SETTINGS_TABS.map((tab) => (
+                    <SelectItem key={tab.value} value={tab.value}>
+                      {tab.label(t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <TabsList className="mb-6 hidden h-auto w-full flex-wrap justify-start gap-1 p-1 sm:flex">
+              {SETTINGS_TABS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{tab.label(t)}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
 
             <TabsContent value="appearance">
               <AppearanceSettings />

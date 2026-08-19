@@ -4706,6 +4706,119 @@ procurement_features: {
     }
 
 };
+
+/**
+ * Complément de traductions FR — clés introduites par les écrans d'administration
+ * et de paramétrage (fusionnées en profondeur dans `translations.fr`).
+ */
+const FR_ADDITIONS: Record<string, unknown> = {
+    settings: {
+        current_role: "Rôle actif",
+        dev_mode_active: "Mode développement actif",
+        dev_mode_desc: "Permet de simuler un rôle utilisateur sans authentification réelle.",
+        dev_role_updated: "Rôle de développement mis à jour",
+        dev_role_changed: "Le rôle actif est désormais : {role}",
+        tabs: {
+            database: "Base de données",
+            storage: "Stockage",
+            keycloak: "Keycloak",
+            keycloak_config: "Config. Keycloak",
+            system: "Système",
+        },
+    },
+    database_settings: {
+        title: "Base de données",
+        desc: "Fournisseur de données et paramètres de connexion.",
+        provider: "Fournisseur",
+        use_connection_string: "Utiliser une chaîne de connexion",
+        connection_string: "Chaîne de connexion",
+        host: "Hôte",
+        port: "Port",
+        username: "Utilisateur",
+        password: "Mot de passe",
+        database: "Base",
+        ssl: "SSL",
+        test: "Tester la connexion",
+        testing: "Test en cours…",
+        connected: "Connexion établie",
+        connected_label: "Connecté",
+        save: "Enregistrer",
+        success_title: "Connexion réussie",
+        success_desc: "La connexion a été établie avec le fournisseur",
+        failure_title: "Connexion échouée",
+        failure_desc: "Vérifiez les paramètres de connexion.",
+        error_title: "Erreur de connexion",
+        error_desc: "Une erreur est survenue lors du test de connexion.",
+        save_success_title: "Paramètres enregistrés",
+        save_success_desc: "La configuration de la base de données a été enregistrée.",
+        save_error_title: "Enregistrement impossible",
+        save_error_desc: "La configuration n'a pas pu être enregistrée.",
+    },
+    materials: {
+        price: "Prix unitaire",
+        not_defined: "Non défini",
+        none_selected: "Aucune sélection",
+        last_updated: "Dernière mise à jour",
+        sources_title: "Sources de prix",
+        no_sources: "Aucune source de prix",
+        add_sources_hint: "Ajoutez une source pour tracer l'origine du prix unitaire.",
+        updated_success: "Le matériau a été mis à jour.",
+    },
+    users: {
+        created_success: "Utilisateur créé avec succès.",
+        updated_success: "Utilisateur mis à jour avec succès.",
+    },
+    projects: {
+        view_details: "Voir le détail",
+        import: {
+            projectsCreated: "projet(s) créé(s)",
+            projectsUpdated: "projet(s) mis à jour",
+        },
+    },
+    documents: {
+        size: { unknown: "Taille inconnue" },
+        employee: { updated_successfully: "Document mis à jour avec succès." },
+    },
+    inspection_monitoring: {
+        title: "Suivi des inspections",
+        subtitle: "Planification, exécution et conformité des inspections",
+    },
+    bank_guarantee: {
+        alerts_title: "Alertes garanties bancaires",
+        alert_acknowledged: "Alerte prise en compte",
+        alert_acknowledge_error: "Impossible de prendre en compte l'alerte",
+        alert_resolved: "Alerte résolue",
+        alert_resolve_error: "Impossible de résoudre l'alerte",
+        delay_percent_prefix: "Retard",
+    },
+    tenders: {
+        supplierSecure: {
+            enter_code: "Saisir le code d'accès",
+            enter_code_desc: "Renseignez le code secret transmis avec l'appel d'offres.",
+            code_placeholder: "Code d'accès",
+            validate: "Valider",
+            access_granted_desc: "Accès accordé à l'appel d'offres.",
+            security_notice: "Confidentialité",
+            security_notice_desc: "Ce code est personnel et ne doit pas être partagé.",
+        },
+    },
+};
+
+/** Fusion profonde non destructive (les clés existantes ne sont jamais écrasées). */
+const deepMergeMissing = (target: Record<string, unknown>, additions: Record<string, unknown>): void => {
+    Object.entries(additions).forEach(([key, value]) => {
+        const current = target[key];
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            if (!current || typeof current !== 'object') target[key] = {};
+            deepMergeMissing(target[key] as Record<string, unknown>, value as Record<string, unknown>);
+        } else if (current === undefined) {
+            target[key] = value;
+        }
+    });
+};
+
+deepMergeMissing((translations as unknown as Record<string, Record<string, unknown>>).fr, FR_ADDITIONS);
+
 interface LanguageProviderProps {
     children: ReactNode;
 }
@@ -4726,30 +4839,45 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     };
 
     const t = (key: string, params?: Record<string, string | number>): string => {
-        const keys = key.split('.');
         type Nested = Record<string, unknown>;
-        let value: unknown = (translations as Record<string, Nested>)[language];
 
-        for (const k of keys) {
-            if (value && typeof value === 'object' && k in (value as Nested)) {
-                value = (value as Nested)[k];
-            } else {
-                console.warn(`Translation key "${key}" not found for language "${language}"`);
-                return key;
+        const lookup = (lang: Language): string | null => {
+            let value: unknown = (translations as unknown as Record<string, Nested>)[lang];
+            for (const k of key.split('.')) {
+                if (value && typeof value === 'object' && k in (value as Nested)) {
+                    value = (value as Nested)[k];
+                } else {
+                    return null;
+                }
             }
+            return typeof value === 'string' ? value : null;
+        };
+
+        /** Repli lisible : jamais de clé technique affichée dans l'UI. */
+        const humanize = (): string => {
+            const last = key.split('.').pop() ?? key;
+            const words = last.replace(/[_-]+/g, ' ').trim();
+            return words.charAt(0).toUpperCase() + words.slice(1);
+        };
+
+        let result = lookup(language) ?? (language !== 'fr' ? lookup('fr') : null);
+        if (result === null) {
+            if (import.meta.env.DEV) {
+                console.warn(`Translation key "${key}" not found for language "${language}"`);
+            }
+            result = humanize();
         }
 
-        let result = typeof value === 'string' ? value : key;
-        
         // Handle interpolation with params like {title}
-        if (params && typeof result === 'string') {
+        if (params) {
             Object.entries(params).forEach(([paramKey, paramValue]) => {
-                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+                result = (result as string).replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
             });
         }
 
         return result;
     };
+
 
     return (
         <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
