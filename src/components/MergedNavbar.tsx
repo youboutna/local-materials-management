@@ -203,22 +203,31 @@ const MergedNavbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between min-h-16 gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-adrar-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-adrar-900 font-serif leading-tight">
-                HadraTech-GPI
-              </span>
-              {DEV_MODE && (
-                <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded self-start">
-                  DEV MODE
+          {/* Identité du propriétaire (placement barre principale) */}
+          <Link to="/" className="flex items-center gap-3 flex-shrink-0 min-w-0">
+            <BrandIdentity
+              size="lg"
+              sealBadge
+              emphasis
+              className="max-w-[220px] sm:max-w-[420px]"
+              fallback={
+                <span className="flex items-center gap-3">
+                  <span className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-adrar-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">A</span>
+                  </span>
+                  <span className="text-lg font-bold text-adrar-900 font-serif leading-tight">
+                    HadraTech-GPI
+                  </span>
                 </span>
-              )}
-            </div>
+              }
+            />
+            {DEV_MODE && (
+              <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded self-center">
+                DEV MODE
+              </span>
+            )}
           </Link>
+
 
           {/* Desktop Navigation - Core Items */}
           {isAuthenticated && !isSupplierOnly && (
