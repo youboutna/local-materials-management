@@ -101,6 +101,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
+        <UiThemeProvider>
         <LanguageProvider>
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <HexagonalAuthProvider>
