@@ -16,7 +16,7 @@
  */
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -468,6 +468,7 @@ export function BoqWorkspace({
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Calcul métré — ajouter au document</DialogTitle>
+                <DialogDescription>Calculez les quantités puis ajoutez les lignes obtenues au document courant.</DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
