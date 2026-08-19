@@ -14,18 +14,33 @@ import { cn } from '@/lib/utils';
 interface BrandIdentityProps {
   className?: string;
   /** Taille du sceau. */
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   /** Masque le texte (sceau uniquement). */
   hideText?: boolean;
   /** Affiche les bandeaux d'accent en filet vertical accolé à l'identité. */
   withBands?: boolean;
+  /** Encadre le sceau dans une pastille de la couleur d'accent (barre de navigation). */
+  sealBadge?: boolean;
+  /** Rend le nom du propriétaire en couleur d'accent (placement en barre principale). */
+  emphasis?: boolean;
+  /** Repli rendu lorsqu'aucun sceau ni nom n'est disponible. */
+  fallback?: React.ReactNode;
 }
+
+const SEAL_SIZES: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'h-7 w-7',
+  md: 'h-10 w-10',
+  lg: 'h-11 w-11',
+};
 
 export const BrandIdentity: React.FC<BrandIdentityProps> = ({
   className,
   size = 'sm',
   hideText = false,
   withBands = false,
+  sealBadge = false,
+  emphasis = false,
+  fallback,
 }) => {
   const { branding, brandingOverrides } = useUiTheme();
   const { organization } = useOwnerOrganization();
@@ -35,37 +50,77 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
     brandingOverrides.ownerName?.trim() || organization?.name || branding.ownerName;
   const ownerSubtitle =
     brandingOverrides.ownerSubtitle?.trim() ||
-    organization?.description?.trim() ||
-    organization?.orgType?.trim() ||
-    branding.ownerSubtitle;
+    branding.ownerSubtitle ||
+    undefined;
   const sealUrl =
     brandingOverrides.sealUrl?.trim() || organization?.logoUrl?.trim() || branding.sealUrl;
 
-  const showSeal = branding.showSeal && !!sealUrl;
-  if (!showSeal && hideText) return null;
+  const [sealFailed, setSealFailed] = React.useState(false);
+  React.useEffect(() => setSealFailed(false), [sealUrl]);
+  const showSeal = branding.showSeal && !!sealUrl && !sealFailed;
+  if (!showSeal && (hideText || !ownerName)) return <>{fallback ?? null}</>;
+
+  const seal = showSeal ? (
+    <img
+      src={sealUrl}
+      alt={`Sceau ${ownerName}`}
+      loading="lazy"
+      onError={() => setSealFailed(true)}
+      className={cn('shrink-0 object-contain', SEAL_SIZES[size])}
+    />
+  ) : null;
 
   return (
-    <div className={cn('flex items-center gap-2 min-w-0', className)}>
+    <div className={cn('flex items-center gap-2.5 min-w-0', className)}>
       {withBands && <BrandBands orientation="vertical" className="h-8" />}
-      {showSeal && (
-        <img
-          src={sealUrl}
-          alt={`Sceau ${ownerName}`}
-          loading="lazy"
-          className={cn('shrink-0 object-contain', size === 'md' ? 'h-10 w-10' : 'h-7 w-7')}
-        />
+      {!seal && sealBadge && ownerName && (
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white"
+          style={{ backgroundColor: 'hsl(var(--brand-band-1))' }}
+          aria-hidden="true"
+        >
+          {ownerName.trim().charAt(0).toUpperCase()}
+        </span>
       )}
+      {seal &&
+        (sealBadge ? (
+          <span
+            className="flex shrink-0 items-center justify-center rounded-lg p-1.5"
+            style={{ backgroundColor: 'hsl(var(--brand-band-1))' }}
+          >
+            {seal}
+          </span>
+        ) : (
+          seal
+        ))}
       {!hideText && (
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-xs font-semibold text-foreground">{ownerName}</p>
+        <div className="min-w-0 text-left leading-tight">
+          <p
+            className={cn(
+              'truncate font-semibold',
+              emphasis ? 'text-sm' : 'text-xs',
+              emphasis ? '' : 'text-foreground',
+            )}
+            style={emphasis ? { color: 'hsl(var(--brand-band-1))' } : undefined}
+          >
+            {ownerName}
+          </p>
           {ownerSubtitle && (
-            <p className="truncate text-[10px] text-muted-foreground">{ownerSubtitle}</p>
+            <p
+              className={cn(
+                'truncate text-muted-foreground',
+                emphasis ? 'text-[11px]' : 'text-[10px]',
+              )}
+            >
+              {ownerSubtitle}
+            </p>
           )}
         </div>
       )}
     </div>
   );
 };
+
 
 /**
  * BrandBands — bandeaux d'accent (tokens `--brand-band-*` du thème actif).
