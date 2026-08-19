@@ -50,8 +50,8 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
     brandingOverrides.ownerName?.trim() || organization?.name || branding.ownerName;
   const ownerSubtitle =
     brandingOverrides.ownerSubtitle?.trim() ||
-    organization?.orgType?.trim() ||
-    branding.ownerSubtitle;
+    branding.ownerSubtitle ||
+    undefined;
   const sealUrl =
     brandingOverrides.sealUrl?.trim() || organization?.logoUrl?.trim() || branding.sealUrl;
 
@@ -73,6 +73,15 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>
       {withBands && <BrandBands orientation="vertical" className="h-8" />}
+      {!seal && sealBadge && ownerName && (
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white"
+          style={{ backgroundColor: 'hsl(var(--brand-band-1))' }}
+          aria-hidden="true"
+        >
+          {ownerName.trim().charAt(0).toUpperCase()}
+        </span>
+      )}
       {seal &&
         (sealBadge ? (
           <span
@@ -85,7 +94,7 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
           seal
         ))}
       {!hideText && (
-        <div className="min-w-0 leading-tight">
+        <div className="min-w-0 text-left leading-tight">
           <p
             className={cn(
               'truncate font-semibold',
