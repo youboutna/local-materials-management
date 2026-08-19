@@ -61,6 +61,17 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
 
 ## 📊 ÉTAT ACTUEL DE LA MIGRATION — 31/07/2026
 
+### Revue de migration — 19/08/2026 (exécution Phase 8)
+
+| Indicateur | Mesure | Statut |
+| --- | --- | --- |
+| Build TypeScript/Vite | 0 erreur | ✅ |
+| Tests (Vitest) | 31 fichiers / 164 tests passants | ✅ |
+| `supabase.from()` dans `src/components` et `src/hooks` | 0 (occurrences restantes = commentaires de documentation) | ✅ |
+| `supabase.storage` dans l'UI | 0 — remplacé par `StorageService` (`documentsTableAdapter`, `EnhancedValidationStep`) | ✅ |
+| `supabase.auth` dans l'UI | 0 — remplacé par `AuthService.getCurrentUser()` (`WorkspaceCreateDialog`, `TenderEvaluationPanel`) | ✅ |
+| Exception assumée | `useUnifiedSupplierPortalHex` (frontière d'authentification : `onAuthStateChange` non exposé par `IAuthRepository`) | ⚠️ documenté |
+
 ### Constats vérifiés
 
 - [x] Les services, repositories, DTOs, hooks et adapters d’organisation sont présents dans le dépôt.
