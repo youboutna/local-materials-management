@@ -328,8 +328,13 @@ export class TaskAssignmentTransformer {
       endDate: formData.endDate,
       dueDate: formData.dueDate,
       estimatedDuration: formData.estimatedDuration,
+      quantity: formData.quantity,
+      unit: formData.unit,
+      dailyRate: formData.dailyRate,
+      estimatedCost: formData.estimatedCost,
       dependencies: formData.dependencies,
       notes: formData.notes,
+
     };
   }
 
