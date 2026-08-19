@@ -333,7 +333,8 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
+
     };
   }
 
