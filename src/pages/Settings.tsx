@@ -9,6 +9,8 @@ import ProviderSettings from "@/components/admin/ProviderSettings";
 import StorageSettings from "@/components/admin/StorageSettings";
 import { AppLayout } from "@/components/layout";
 import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
+import AppearanceSettings from "@/components/settings/AppearanceSettings";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +38,8 @@ import {
   Folder,
   Key,
   Mail,
+  Palette,
+
   Settings2,
   Shield,
   Users,
@@ -144,43 +148,48 @@ const Settings = () => {
           )}
 
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-10 mb-8">
-              <TabsTrigger value="providers" className="flex items-center">
-                <Cloud className="mr-2 h-4 w-4" /> Providers
-              </TabsTrigger>
-              <TabsTrigger value="deployment" className="flex items-center">
-                <Settings2 className="mr-2 h-4 w-4" /> Deployment
-              </TabsTrigger>
-              <TabsTrigger value="database" className="flex items-center">
-                <Database className="mr-2 h-4 w-4" />{" "}
-                {t("settings.tabs.database")}
-              </TabsTrigger>
-              <TabsTrigger value="storage" className="flex items-center">
-                <Folder className="mr-2 h-4 w-4" /> {t("settings.tabs.storage")}
-              </TabsTrigger>
-              <TabsTrigger value="keycloak" className="flex items-center">
-                <Key className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak")}
-              </TabsTrigger>
-              <TabsTrigger
-                value="keycloak-config"
-                className="flex items-center"
-              >
-                <Cog className="mr-2 h-4 w-4" />{" "}
-                {t("settings.tabs.keycloak_config")}
-              </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center">
-                <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
-              </TabsTrigger>
-              <TabsTrigger value="alerts" className="flex items-center">
-                <AlertTriangle className="mr-2 h-4 w-4" /> Alertes
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center">
-                <Mail className="mr-2 h-4 w-4" /> Emails
-              </TabsTrigger>
-              <TabsTrigger value="local-users" className="flex items-center">
-                <Users className="mr-2 h-4 w-4" /> Utilisateurs locaux
-              </TabsTrigger>
-            </TabsList>
+            <div className="-mx-1 mb-6 overflow-x-auto px-1 pb-1">
+              <TabsList className="flex h-auto w-max min-w-full flex-wrap justify-start gap-1 p-1">
+                <TabsTrigger value="appearance" className="flex items-center">
+                  <Palette className="mr-2 h-4 w-4" /> Apparence
+                </TabsTrigger>
+                <TabsTrigger value="providers" className="flex items-center">
+                  <Cloud className="mr-2 h-4 w-4" /> Providers
+                </TabsTrigger>
+                <TabsTrigger value="deployment" className="flex items-center">
+                  <Settings2 className="mr-2 h-4 w-4" /> Deployment
+                </TabsTrigger>
+                <TabsTrigger value="database" className="flex items-center">
+                  <Database className="mr-2 h-4 w-4" /> {t("settings.tabs.database")}
+                </TabsTrigger>
+                <TabsTrigger value="storage" className="flex items-center">
+                  <Folder className="mr-2 h-4 w-4" /> {t("settings.tabs.storage")}
+                </TabsTrigger>
+                <TabsTrigger value="keycloak" className="flex items-center">
+                  <Key className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak")}
+                </TabsTrigger>
+                <TabsTrigger value="keycloak-config" className="flex items-center">
+                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak_config")}
+                </TabsTrigger>
+                <TabsTrigger value="system" className="flex items-center">
+                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
+                </TabsTrigger>
+                <TabsTrigger value="alerts" className="flex items-center">
+                  <AlertTriangle className="mr-2 h-4 w-4" /> Alertes
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="flex items-center">
+                  <Mail className="mr-2 h-4 w-4" /> Emails
+                </TabsTrigger>
+                <TabsTrigger value="local-users" className="flex items-center">
+                  <Users className="mr-2 h-4 w-4" /> Utilisateurs locaux
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="appearance">
+              <AppearanceSettings />
+            </TabsContent>
+
 
             <TabsContent value="providers">
               <ProviderSettings />
