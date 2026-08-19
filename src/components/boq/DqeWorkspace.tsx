@@ -145,6 +145,28 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
 
 
+  // Transfert vers l'étape suivante (tous contextes) : rafraîchir les vues dépendantes.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { contextId?: string } | undefined;
+      if (detail?.contextId && detail.contextId !== ctx.contextId) return;
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['boq'] }),
+        queryClient.invalidateQueries({ queryKey: ['boq-documents'] }),
+        queryClient.invalidateQueries({ queryKey: ['project-alerts'] }),
+        queryClient.invalidateQueries({ queryKey: ['payment-requests'] }),
+      ]);
+    };
+    window.addEventListener('boq-transfer-next', handler);
+    window.addEventListener('boq-injection-validated', handler);
+    window.addEventListener('boq-decompte-created', handler);
+    return () => {
+      window.removeEventListener('boq-transfer-next', handler);
+      window.removeEventListener('boq-injection-validated', handler);
+      window.removeEventListener('boq-decompte-created', handler);
+    };
+  }, [ctx.contextId, queryClient]);
+
   // Comparaison optionnelle (projet uniquement).
   const dqeCompare = useBoqDocument({
     source: 'dqe',
