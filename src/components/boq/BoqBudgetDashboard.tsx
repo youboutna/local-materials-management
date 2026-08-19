@@ -20,7 +20,13 @@ interface Props {
   planned: BoqLineDTO[];      // quantity_takeoff
   actual: BoqLineDTO[];       // dqe / supplier_bid
   currency?: string;
+  /** Libellés réels des phases du projet (id → nom), prioritaires sur le référentiel. */
+  phaseLabels?: Record<string, string>;
+  /** Libellés réels des jalons du projet (id → titre). */
+  milestoneLabels?: Record<string, string>;
 }
+
+const UNASSIGNED = 'Hors WBS (à affecter)';
 
 interface Row {
   key: string;
