@@ -130,11 +130,15 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Paramètres",
-    href: "/settings",
     icon: Settings,
     roles: ["admin", "director"],
+    children: [
+      { label: "Général", href: "/settings" },
+      { label: "Apparence & thèmes", href: "/settings?tab=appearance", icon: Palette },
+    ],
   },
 ];
+
 
 function NavItemComponent({
   item,
