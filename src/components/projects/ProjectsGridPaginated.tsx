@@ -17,6 +17,10 @@ import {
   Building2,
   DollarSign,
   MapPin,
+  Eye,
+  Pencil,
+  Rows3,
+  LayoutGrid,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
@@ -49,6 +53,19 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
   onDeselectAllOnPage,
   isLoading = false,
 }) => {
+  // UX 3.1 — densité d'affichage des cartes, préférence conservée localement.
+  const [density, setDensityState] = React.useState<"compact" | "detailed">(() => {
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem("projects.cardDensity") : null;
+    return stored === "detailed" ? "detailed" : "compact";
+  });
+  const setDensity = (value: "compact" | "detailed") => {
+    setDensityState(value);
+    try {
+      window.localStorage.setItem("projects.cardDensity", value);
+    } catch {
+      /* préférence non persistable (mode privé) : ignoré */
+    }
+  };
   const generateVisiblePages = () => {
     const delta = 2;
     const range: number[] = [];
