@@ -150,13 +150,14 @@ const MaterialCreate = () => {
       onSuccess: (createdMaterial) => {
         toast({
           title: t('common.success'),
-          description: "Matériau créé avec succès!",
+          description: "Matériau créé. Vous pouvez maintenant joindre ses documents.",
           variant: "default",
         });
 
-        // Navigate to material details or list
-        navigate(`/materials/${createdMaterial.id}`);
+        // Étape 2 du workflow découplé : les documents nécessitent l'ID du matériau
+        navigate(`/materials/${createdMaterial.id}/edit?tab=documents`);
       },
+
       onError: (error) => {
         console.error('Material creation failed:', error);
         toast({
