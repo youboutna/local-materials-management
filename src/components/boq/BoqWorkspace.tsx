@@ -668,6 +668,26 @@ export function BoqWorkspace({
                   </>
                 )}
 
+                {/* Ouvertures à déduire — piloté par le référentiel element-types */}
+                {useAdvanced && elDef?.deductOpenings && (
+                  <>
+                    <div className="col-span-2">
+                      <Label>Ouvertures (nb)</Label>
+                      <Input type="number" min={0} value={openings.count || ''} onChange={(e) => setOpenings({ ...openings, count: Number(e.target.value) || 0 })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Ouverture larg. (m)</Label>
+                      <Input type="number" min={0} step={0.01} value={openings.width || ''} onChange={(e) => setOpenings({ ...openings, width: Number(e.target.value) || 0 })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Ouverture haut. (m)</Label>
+                      <Input type="number" min={0} step={0.01} value={openings.height || ''} onChange={(e) => setOpenings({ ...openings, height: Number(e.target.value) || 0 })} />
+                    </div>
+                  </>
+                )}
+
+
+
                 <div className="col-span-1">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
