@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
+import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
 
 interface AppLayoutProps {
   children: React.ReactNode;
