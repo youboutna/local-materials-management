@@ -119,7 +119,7 @@ export class BoqLineMapper {
       vatRate: row.vat_rate ?? 0,
       rasRate: row.ras_rate ?? 0,
       fees: row.fees ?? 0,
-      totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
+      totalHt: storedTotal ?? (unitPrice != null ? quantity * unitPrice + Number(row.fees ?? 0) : null),
       materialId: row.resource_id ?? row.material_id ?? null,
       phaseId: row.phase_id ?? row.phase_code ?? null,
       milestoneId: row.milestone_id ?? row.milestone_code ?? null,
