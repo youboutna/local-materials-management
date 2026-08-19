@@ -839,7 +839,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   // ============ Rendu principal ============
   return (
-    <div className="container mx-auto py-4 space-y-4">
+    <div className="container mx-auto py-3 space-y-3">
 
       {/* Header */}
       <ProjectHeader
@@ -861,48 +861,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onDelete={() => handleDelete(project.id)}
       />
 
-      {/* Report Actions */}
-      <div className="flex flex-wrap gap-2">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <FileDown className="h-4 w-4" />
-              Rapport compact
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle>Générer un Rapport Compact</DialogTitle>
-              <DialogDescription>
-                Créez un rapport PDF compact avec les informations essentielles du projet.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="overflow-y-auto pr-1 max-h-[75vh]">
-              {projectDataForReport && (
-                <CompactProjectReportGenerator project={projectDataForReport as any} />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-        <ReportManager
-          data={{ project: (projectDataForReport ?? project) as any }}
-          reportType="project"
-        />
-      </div>
-
       {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="sticky top-0 z-20 grid w-full grid-cols-3 md:grid-cols-5 lg:grid-cols-9 h-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
-          {projectTabsDef.map((tab) => (
-            <TabsTrigger key={tab.uiValue} value={tab.uiValue} className="text-xs sm:text-sm">
-              {tab.label.fr}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {/* Barre unifiée : navigation (défilement horizontal) + actions rapports */}
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <TabsList className="h-9 flex-1 justify-start gap-1 overflow-x-auto rounded-none bg-transparent p-0">
+            {projectTabsDef.map((tab) => (
+              <TabsTrigger
+                key={tab.uiValue}
+                value={tab.uiValue}
+                className="shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:text-sm"
+              >
+                {tab.label.fr}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <div className="flex shrink-0 items-center gap-1.5 pl-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
+                  <FileDown className="h-4 w-4" />
+                  <span className="hidden sm:inline">Rapport compact</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+                <DialogHeader>
+                  <DialogTitle>Générer un Rapport Compact</DialogTitle>
+                  <DialogDescription>
+                    Créez un rapport PDF compact avec les informations essentielles du projet.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="overflow-y-auto pr-1 max-h-[75vh]">
+                  {projectDataForReport && (
+                    <CompactProjectReportGenerator project={projectDataForReport as any} />
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            <ReportManager
+              data={{ project: (projectDataForReport ?? project) as any }}
+              reportType="project"
+            />
+          </div>
+        </div>
+
 
         {/* ===== OVERVIEW ===== */}
         <TabsContent value="overview" className="space-y-4">
