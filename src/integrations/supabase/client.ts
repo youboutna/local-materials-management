@@ -20,10 +20,28 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Verrou tolérant : le Navigator LockManager échoue dans certains contextes
+ * (onglets multiples, iframes, changements de visibilité) et provoque
+ * `LockAcquireTimeoutError`. On tente le verrou natif puis on retombe sur une
+ * exécution directe pour ne jamais bloquer le rafraîchissement du token.
+ */
+const tolerantLock = async <R>(name: string, acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
+  const lockManager = typeof navigator !== 'undefined' ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
+  if (!lockManager) return await fn();
+  try {
+    return await lockManager.request(name, { mode: 'exclusive' }, async () => await fn());
+  } catch {
+    return await fn();
+  }
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
-    autoRefreshToken: true
+    autoRefreshToken: true,
+    lock: tolerantLock
   }
 });
+

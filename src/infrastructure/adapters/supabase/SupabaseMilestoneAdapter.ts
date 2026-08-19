@@ -37,12 +37,16 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
    * Find all milestones for a project
    */
   async findByProjectId(projectId: string): Promise<MilestoneDTO[]> {
+    if (!projectId || !projectId.trim()) {
+      return [];
+    }
     try {
       const { data, error } = await supabase
         .from('project_milestones')
         .select('*')
         .eq('project_id', projectId)
         .order('target_date', { ascending: true });
+
 
       if (error) {
         console.error('Error finding milestones by project ID:', error);
@@ -143,9 +147,10 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         completion_date: data.completion_date || null,
         status: data.status || 'pending',
         priority: data.priority || 'normal',
-        type: data.type || 'checkpoint',
+        milestone_type: data.type || 'checkpoint',
         weight: data.weight || 0.5,
-        dependencies: data.dependencies || [],
+        predecessor_ids: data.dependencies || [],
+
         notes: data.notes || null,
         stage_type: data.stage_type || data.type || null,
         material_usage: (data.material_usage as unknown as Json) || [],
@@ -178,13 +183,17 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
    */
   async update(id: string, data: UpdateMilestoneData): Promise<MilestoneDTO | null> {
     try {
-      const updateData = {
-        ...data,
+      const { type, dependencies, ...rest } = data;
+      const updateData: Record<string, unknown> = {
+        ...rest,
+        ...(type !== undefined ? { milestone_type: type } : {}),
+        ...(dependencies !== undefined ? { predecessor_ids: dependencies } : {}),
         material_usage: data.material_usage !== undefined
           ? (data.material_usage as unknown as Json)
           : undefined,
         updated_at: new Date().toISOString()
       };
+
 
       const { data: result, error } = await supabase
         .from('project_milestones')
@@ -329,11 +338,12 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       completionDate: data.completion_date,
       completedate: data.completion_date,
       status: data.status,
-      type: data.type || 'checkpoint', // Default to checkpoint if not specified
+      type: data.milestone_type || data.type || 'checkpoint', // Default to checkpoint if not specified
       priority: data.priority || 'normal', // Default to normal priority
       weight: data.weight,
       isFromTemplate: data.is_from_template || false, // Default to false for custom milestones
-      dependencies: data.dependencies || [],
+      dependencies: data.predecessor_ids || data.dependencies || [],
+
       notes: data.notes,
       createdAt: data.created_at,
       updatedAt: data.updated_at,

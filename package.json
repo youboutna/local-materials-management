@@ -68,6 +68,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/leaflet": "^1.9.18",
     "@vitest/ui": "^4.0.6",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

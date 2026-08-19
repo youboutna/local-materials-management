@@ -21,9 +21,11 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .order('provider_name');
 
     if (error) {
-      console.error('❌ SupabaseOAuthProviderAdapter.findAll error:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth providers', error);
+      // Lecture non critique : ne jamais bloquer la page de connexion (401/permission denied).
+      console.warn('⚠️ SupabaseOAuthProviderAdapter.findAll unavailable:', error.message);
+      return [];
     }
+
 
     return OAuthProviderTransformer.manyFromDB(data || []);
   }
@@ -36,9 +38,10 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .maybeSingle();
 
     if (error) {
-      console.error('❌ SupabaseOAuthProviderAdapter.findByName error:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth provider', error);
+      console.warn('⚠️ SupabaseOAuthProviderAdapter.findByName unavailable:', error.message);
+      return null;
     }
+
 
     return data ? OAuthProviderTransformer.fromDB(data) : null;
   }

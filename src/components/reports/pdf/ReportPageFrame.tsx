@@ -165,9 +165,10 @@ export function ReportHeader({ title, subtitle, company, extra, showFullHeader =
           <View style={styles.reportHeader}>
             <View style={{ flex: 1 }}>
               <Text style={styles.reportTitle}>{title} - Généré le {currentDate}</Text>
-              {subtitle && <Text style={styles.reportSubtitle}>{subtitle}</Text>}
+              {subtitle ? <Text style={styles.reportSubtitle}>{subtitle}</Text> : null}
             </View>
-            {extra}
+            {extra ?? null}
+
           </View>
         </View>
       )}
