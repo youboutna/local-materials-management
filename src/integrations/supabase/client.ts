@@ -21,18 +21,28 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Verrou tolérant : le Navigator LockManager échoue dans certains contextes
- * (onglets multiples, iframes, changements de visibilité) et provoque
- * `LockAcquireTimeoutError`. On tente le verrou natif puis on retombe sur une
- * exécution directe pour ne jamais bloquer le rafraîchissement du token.
+ * Sérialise les opérations d'authentification dans cette instance de l'app.
+ * Le LockManager natif échoue immédiatement dans certains navigateurs et
+ * contextes embarqués. Une file de promesses conserve l'exclusion mutuelle
+ * attendue par GoTrue sans dépendre de `navigator.locks`.
  */
-const tolerantLock = async <R>(name: string, acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
-  const lockManager = typeof navigator !== 'undefined' ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
-  if (!lockManager) return await fn();
+const authLockQueues = new Map<string, Promise<void>>();
+
+const tolerantLock = async <R>(name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
+  const previous = authLockQueues.get(name) ?? Promise.resolve();
+  let release: (() => void) | undefined;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const queued = previous.catch(() => undefined).then(() => current);
+  authLockQueues.set(name, queued);
+
+  await previous.catch(() => undefined);
   try {
-    return await lockManager.request(name, { mode: 'exclusive' }, async () => await fn());
-  } catch {
     return await fn();
+  } finally {
+    release?.();
+    if (authLockQueues.get(name) === queued) authLockQueues.delete(name);
   }
 };
 
