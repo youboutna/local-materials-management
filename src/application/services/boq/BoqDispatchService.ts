@@ -176,7 +176,10 @@ export class BoqDispatchService {
 
       // Tâches = postes DQE (quantité / unité / délai / taux journalier reportés)
       const existingTasks = await this.tasks.findByPhaseId(phaseId).catch(() => []);
-      const existingByTitle = new Map(existingTasks.map((t) => [t.title, t]));
+      const existingByTitle = new Map<string, TaskAssignment>(
+        existingTasks.map((t) => [t.title, t] as [string, TaskAssignment]),
+      );
+
       for (const line of group.lines) {
         propagationLines.push({ ...line, phaseId });
         const meta = (line.metadata ?? {}) as { durationDays?: number; crewSize?: number };
