@@ -205,20 +205,19 @@ const MergedNavbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between min-h-16 gap-4">
-          {/* Identité du propriétaire (placement barre principale) */}
+          {/* Identité du propriétaire — sceau + bandeau au même niveau (aucun nom applicatif ici) */}
           <Link to="/" className="flex items-center gap-3 flex-shrink-0 min-w-0">
             <BrandIdentity
               size="lg"
               sealBadge
+              withBands
               emphasis
               className="max-w-[220px] sm:max-w-[420px]"
               fallback={
-                <span className="flex items-center gap-3">
-                  <span className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-adrar-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">A</span>
-                  </span>
-                  <span className="text-lg font-bold text-adrar-900 font-serif leading-tight">
-                    HadraTech-GPI
+                <span className="flex items-center gap-2.5">
+                  <BrandBands orientation="vertical" className="h-8" />
+                  <span className="w-11 h-11 rounded-lg flex items-center justify-center bg-primary">
+                    <span className="text-primary-foreground font-bold text-lg">A</span>
                   </span>
                 </span>
               }
@@ -229,6 +228,7 @@ const MergedNavbar = () => {
               </span>
             )}
           </Link>
+
 
 
           {/* Desktop Navigation - Core Items */}
@@ -609,8 +609,6 @@ const MergedNavbar = () => {
           </div>
         </div>
       </div>
-      {/* Filet de charte en pied de barre */}
-      <BrandBands className="h-[3px] rounded-none" />
     </motion.nav>
 
   );
