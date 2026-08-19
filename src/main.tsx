@@ -10,6 +10,15 @@ import { SupabaseAlignmentRepository } from '@/infrastructure/adapters/supabase/
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateAppConfig } from '@/config/app-validate';
 
+// Polyfill Buffer / global attendus par certaines librairies de rendu (PDF, parseurs).
+const globalScope = globalThis as typeof globalThis & { Buffer?: unknown; global?: unknown };
+if (!globalScope.global) globalScope.global = globalThis;
+if (!globalScope.Buffer) {
+  import('buffer').then(({ Buffer }) => {
+    globalScope.Buffer = Buffer;
+  }).catch(() => { /* noop */ });
+}
+
 // Validate VITE_* provider env vars at startup and warm the unified factory.
 try { validateAppConfig(); } catch (e) { console.warn('[validateAppConfig]', e); }
 try { RepositoryFactory.init(); } catch (e) { console.warn('[RepositoryFactory.init]', e); }
