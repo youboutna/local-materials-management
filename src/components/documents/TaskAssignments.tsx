@@ -545,6 +545,60 @@ const TaskAssignmentsComponent = () => {
                 </div>
               </div>
 
+              {/* Métré & main d'œuvre — issu du DQE, éditable (référentiel DQE_LABOR_REFERENTIAL) */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantité</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="any"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unité</Label>
+                  <Input
+                    id="unit"
+                    value={formData.unit}
+                    placeholder="m³, m², jour…"
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estimated_duration">Délai (jours)</Label>
+                  <Input
+                    id="estimated_duration"
+                    type="number"
+                    min={0}
+                    value={formData.estimated_duration}
+                    onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="daily_rate">
+                    Taux journalier {effortHint.isLabor ? '(main d\u2019œuvre)' : ''}
+                  </Label>
+                  <Input
+                    id="daily_rate"
+                    type="number"
+                    step="any"
+                    value={formData.daily_rate}
+                    placeholder={effortHint.dailyRate ? String(effortHint.dailyRate) : '—'}
+                    onChange={(e) => setFormData({ ...formData, daily_rate: e.target.value })}
+                  />
+                  {effortHint.isLabor && (
+                    <p className="text-xs text-muted-foreground">
+                      {effortHint.manDays ?? 0} homme·jour(s) — délai calculé {effortHint.durationDays} j
+                      {effortHint.dailyRate ? ` — taux suggéré ${effortHint.dailyRate}` : ''}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Statut</Label>
