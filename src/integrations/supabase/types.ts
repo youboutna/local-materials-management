@@ -1123,10 +1123,13 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
           created_at: string
+          expires_at: string | null
           id: string
           message: string
           metadata: Json | null
+          priority: string
           read: boolean
           recipient_id: string
           related_id: string | null
@@ -1135,10 +1138,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          action_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           message: string
           metadata?: Json | null
+          priority?: string
           read?: boolean
           recipient_id: string
           related_id?: string | null
@@ -1147,10 +1153,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          action_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           message?: string
           metadata?: Json | null
+          priority?: string
           read?: boolean
           recipient_id?: string
           related_id?: string | null

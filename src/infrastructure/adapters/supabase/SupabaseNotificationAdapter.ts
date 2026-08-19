@@ -19,32 +19,56 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async createNotification(notification: Omit<NotificationData, 'id' | 'created_at' | 'updated_at'>): Promise<{ notification: NotificationData | null; error: Error | null }> {
     try {
+      // Colonnes réellement persistées dans public.notifications
+      const payload = {
+        recipient_id: notification.recipient_id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        read: notification.read ?? false,
+        priority: notification.priority ?? 'medium',
+        expires_at: notification.expires_at ?? null,
+        action_url: notification.action_url ?? null,
+        metadata: notification.metadata ?? {},
+      };
+
       const { data, error } = await supabase
         .from('notifications')
-        .insert(notification)
+        .insert(payload as never)
         .select()
         .single();
 
       if (error) {
-        return { notification: null, error };
+        console.error('SupabaseNotificationAdapter.createNotification failed:', error.message, error);
+        return { notification: null, error: new Error(error.message) };
       }
 
+      const row = data as Record<string, unknown>;
       const notificationData: NotificationData = {
-        id: data.id,
-        recipient_id: data.recipient_id,
-        title: data.title,
-        message: data.message,
-        type: data.type as NotificationData['type'],
-        read: data.read,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        id: row.id as string,
+        recipient_id: row.recipient_id as string,
+        title: row.title as string,
+        message: row.message as string,
+        type: row.type as NotificationData['type'],
+        read: row.read as boolean,
+        created_at: row.created_at as string,
+        updated_at: row.updated_at as string,
+        priority: (row.priority as NotificationData['priority']) ?? undefined,
+        expires_at: (row.expires_at as string | null) ?? null,
+        action_url: (row.action_url as string | null) ?? null,
+        metadata:
+          row.metadata && typeof row.metadata === 'object'
+            ? (row.metadata as Record<string, unknown>)
+            : null,
       };
 
       return { notification: notificationData, error: null };
     } catch (error) {
+      console.error('SupabaseNotificationAdapter.createNotification exception:', error);
       return { notification: null, error: error as Error };
     }
   }
+
 
   /**
    * Get user notifications
@@ -72,20 +96,27 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         return { notifications: [], error };
       }
 
-      const notifications: NotificationData[] = data.map(item => ({
-        id: item.id,
-        recipient_id: item.recipient_id,
-        title: item.title,
-        message: item.message,
-        type: item.type as NotificationData['type'],
-        read: item.read,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        priority: undefined, // Pas dans la base de données actuelle
-        expires_at: null, // Pas dans la base de données actuelle
-        action_url: null, // Pas dans la base de données actuelle
-        metadata: item.metadata && typeof item.metadata === 'object' ? item.metadata as Record<string, any> : null
-      }));
+      const notifications: NotificationData[] = data.map(item => {
+        const row = item as Record<string, unknown>;
+        return {
+          id: row.id as string,
+          recipient_id: row.recipient_id as string,
+          title: row.title as string,
+          message: row.message as string,
+          type: row.type as NotificationData['type'],
+          read: row.read as boolean,
+          created_at: row.created_at as string,
+          updated_at: row.updated_at as string,
+          priority: (row.priority as NotificationData['priority']) ?? undefined,
+          expires_at: (row.expires_at as string | null) ?? null,
+          action_url: (row.action_url as string | null) ?? null,
+          metadata:
+            row.metadata && typeof row.metadata === 'object'
+              ? (row.metadata as Record<string, unknown>)
+              : null,
+        };
+      });
+
 
       console.log('SupabaseNotificationAdapter.getUserNotifications: Successfully mapped', notifications.length, 'notifications');
 
