@@ -33,6 +33,10 @@ export interface BoqDbRow {
   total_price?: number | null;
   total_value?: number | null;
   total_ht?: number | null;
+  total_tva?: number | null;
+  total_ras?: number | null;
+  total_ttc?: number | null;
+
   vat_rate?: number | null;
   ras_rate?: number | null;
   fees?: number | null;
