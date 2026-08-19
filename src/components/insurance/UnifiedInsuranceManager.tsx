@@ -11,7 +11,7 @@
 
 import { createInsuranceAction } from '@/application/services/enhancedActionService';
 import { getInsuranceService, InsuranceService } from '@/application/services/InsuranceService';
-import { getDocumentService } from '@/application/services/DocumentService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import InsuranceDocumentCell from '@/components/insurance/InsuranceDocumentCell';
@@ -106,7 +106,10 @@ const UnifiedInsuranceManager = () => {
   
   // Services
   const insuranceService = useMemo(() => getInsuranceService(), []);
-  const documentService = useMemo(() => getDocumentService(), []);
+  const documentService = useMemo(
+    () => new DocumentService(RepositoryFactory.getDocumentRepository()),
+    [],
+  );
   
   // State
   const [alerts, setAlerts] = useState<InsuranceAlertDTO[]>([]);
