@@ -1093,15 +1093,24 @@ export default function StrategicLinkageStep({
                   </Card>
                 )}
 
+                {/* Contrôles de cohérence budgétaire */}
+                {budgetLinks.length > 0 && (
+                  <BudgetConsistencyAlerts
+                    findings={budgetConsistency.findings}
+                    okLabel={`Cohérence vérifiée : budget projet encadré par CP (${budgetConsistency.ceilings.allocatedCp.toLocaleString('fr-FR')} ${currency}) et CE (${budgetConsistency.ceilings.allocatedCe.toLocaleString('fr-FR')} ${currency}).`}
+                  />
+                )}
+
                 {/* Budget Links List */}
                 {budgetLinks.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label>Liens budgétaires ({budgetLinks.length})</Label>
                       <div className="text-sm text-muted-foreground">
                         Total: {totalAllocations.ce.toLocaleString()} CE / {totalAllocations.cp.toLocaleString()} CP
                       </div>
                     </div>
+
                     <ScrollArea className="h-48 rounded-md border">
                       <ul className="divide-y">
                         {budgetLinks.map((link, index) => (
