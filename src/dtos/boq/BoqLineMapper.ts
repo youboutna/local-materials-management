@@ -174,7 +174,7 @@ export class BoqLineMapper {
       width: dto.width ?? null,
       height: dto.height ?? null,
       quantity: dto.quantity,
-      unit_price_ht: dto.unitPrice ?? null,
+      unit_price_ht: pu ?? (totalHt != null && qty ? (totalHt - fees) / qty : null),
       vat_rate: dto.vatRate ?? 0,
       ras_rate: dto.rasRate ?? 0,
       fees: dto.fees ?? 0,
