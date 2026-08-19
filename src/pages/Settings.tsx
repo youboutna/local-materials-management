@@ -45,6 +45,36 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type Translate = (key: string) => string;
+
+/** Sections de paramétrage (source unique : onglets desktop + sélecteur mobile). */
+const SETTINGS_TABS: Array<{
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: (t: Translate) => string;
+}> = [
+  { value: "appearance", icon: Palette, label: () => "Apparence" },
+  { value: "providers", icon: Cloud, label: () => "Providers" },
+  { value: "deployment", icon: Settings2, label: () => "Déploiement" },
+  { value: "database", icon: Database, label: (t) => t("settings.tabs.database") },
+  { value: "storage", icon: Folder, label: (t) => t("settings.tabs.storage") },
+  { value: "keycloak", icon: Key, label: (t) => t("settings.tabs.keycloak") },
+  { value: "keycloak-config", icon: Cog, label: (t) => t("settings.tabs.keycloak_config") },
+  { value: "system", icon: Cog, label: (t) => t("settings.tabs.system") },
+  { value: "alerts", icon: AlertTriangle, label: () => "Alertes" },
+  { value: "notifications", icon: Mail, label: () => "Emails" },
+  { value: "local-users", icon: Users, label: () => "Utilisateurs locaux" },
+];
+
+
 
 const Settings = () => {
   const { t } = useLanguage();
