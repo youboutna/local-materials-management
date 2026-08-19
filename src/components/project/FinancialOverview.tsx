@@ -112,22 +112,38 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
               <div>
                 <h4 className="text-sm font-medium mb-2">Variance des coûts (CV)</h4>
                 <p className={(costVariance ?? 0) < 0 ? "text-destructive" : "text-success"}>
-                  {costVariance === null ? 'Non évaluable' : formatAmount2(costVariance)}
+                  {costVariance === null ? NOT_EVALUABLE : formatAmount2(costVariance)}
                 </p>
+                {costVariance === null ? (
+                  <p className="text-xs text-muted-foreground mt-1">{NOT_EVALUABLE_REASON}</p>
+                ) : null}
               </div>
               <div>
                 <h4 className="text-sm font-medium mb-2">Indice de performance des coûts (CPI)</h4>
-                <p>
-                  {formatIndex2(
-                    financialMetrics.costPerformanceIndex ?? 0,
-                    financialMetrics.costPerformanceIndex != null,
-                  )}
-                </p>
+                {cpiAvailable ? (
+                  <p>{formatIndex2(cpi, true)}</p>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+                          {NOT_EVALUABLE}
+                          <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>{NOT_EVALUABLE_REASON}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {!cpiAvailable ? (
+                  <p className="text-xs text-muted-foreground mt-1">{NOT_EVALUABLE_REASON}</p>
+                ) : null}
               </div>
             </div>
           </CardContent>
         </Card>
       ) : null}
+
     </div>
   );
 };
