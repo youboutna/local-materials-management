@@ -1,9 +1,19 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Activity, AlertTriangle, TrendingUp, Wallet } from 'lucide-react';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { formatAmount2, formatIndex2, formatPercent2 } from '@/utils/reportNumbers';
+
 
 /**
  * PortfolioMetricsSummary — bandeau de synthèse du portefeuille projets.
