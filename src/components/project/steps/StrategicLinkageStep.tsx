@@ -348,7 +348,11 @@ export default function StrategicLinkageStep({
   onStrategyLinksChange,
   onBudgetLinksChange,
   readOnly = false,
+  projectBudget = null,
+  phaseBudgets = [],
+  currency = 'MRU',
 }: StrategicLinkageStepProps) {
+
   // State for strategy links
   const [strategyLinks, setStrategyLinks] = useState<CreateProjectStrategyLinkDTO[]>(initialStrategyLinks);
   
