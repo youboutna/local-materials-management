@@ -147,9 +147,10 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         completion_date: data.completion_date || null,
         status: data.status || 'pending',
         priority: data.priority || 'normal',
-        type: data.type || 'checkpoint',
+        milestone_type: data.type || 'checkpoint',
         weight: data.weight || 0.5,
-        dependencies: data.dependencies || [],
+        predecessor_ids: data.dependencies || [],
+
         notes: data.notes || null,
         stage_type: data.stage_type || data.type || null,
         material_usage: (data.material_usage as unknown as Json) || [],
