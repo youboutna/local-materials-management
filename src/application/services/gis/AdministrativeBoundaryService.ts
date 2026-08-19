@@ -17,6 +17,8 @@ import {
   getBoundaryReferenceByFeatureId,
   getBoundaryReferenceByName,
 } from '@/config/referentials/gis/wilaya-boundaries.referential';
+import { Location } from '@/domain/entities/Location';
+import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import type { MultiPolygon, Polygon, Position } from 'geojson';
 
 type Ring = Position[];
@@ -110,6 +112,59 @@ export class AdministrativeBoundaryService {
       nameFr: match.nameFr,
       nameAr: match.nameAr,
     };
+  }
+
+  /**
+   * Projection d'une limite administrative sur l'entité de domaine `Location`
+   * (type `region`) : un seul objet géographique dans tout le système, pas de
+   * concept dupliqué. La géométrie reste portée par le DTO cartographique.
+   */
+  toLocation(boundary: AdministrativeBoundaryDTO): Location {
+    return Location.create({
+      id: boundary.featureId,
+      code: boundary.code,
+      name: boundary.nameFr,
+      nameAr: boundary.nameAr,
+      type: 'region',
+      coordinates: boundary.center,
+    });
+  }
+
+  /** Toutes les wilayas exposées comme entités `Location` (régions). */
+  async listLocations(): Promise<Location[]> {
+    const boundaries = await this.listBoundaries();
+    return boundaries.map((boundary) => this.toLocation(boundary));
+  }
+
+  /**
+   * Localisation d'un point sous forme d'entité `Location` :
+   *  1. point-in-polygon sur les limites administratives (source de vérité locale) ;
+   *  2. à défaut (hors couverture / géométries absentes), repli sur le
+   *     reverse geocoding (base locale puis Nominatim) via `GeocodingService`.
+   */
+  async resolveLocationAt(lat: number, lng: number): Promise<Location | null> {
+    const boundaries = await this.listBoundaries().catch(() => [] as AdministrativeBoundaryDTO[]);
+    const match = boundaries.find((boundary) => isPointInGeometry(lat, lng, boundary.geometry));
+    if (match) return this.toLocation(match);
+
+    // Repli Nominatim / base locale : on réutilise le service de géocodage existant.
+    const [reverse] = await getGeocodingService()
+      .reverseGeocode(lat, lng)
+      .catch(() => []);
+    if (!reverse) return null;
+
+    const regionName = reverse.components?.region ?? reverse.components?.state ?? '';
+    const reference = regionName ? getBoundaryReferenceByName(regionName) : undefined;
+
+    return Location.create({
+      id: reference?.featureId ?? reverse.metadata?.code ?? `geo-${lat.toFixed(4)}-${lng.toFixed(4)}`,
+      code: reference?.code ?? reverse.metadata?.code ?? 'UNKNOWN',
+      name: reference?.nameFr ?? regionName ?? reverse.address,
+      nameAr: reference?.nameAr ?? '',
+      type: reverse.type === 'city' ? 'city' : 'region',
+      coordinates: { lat, lng },
+      parentCode: reverse.metadata?.parentCode,
+    });
   }
 
   /** Limite administrative par code interne ou nom (tolérant aux accents/casse). */
