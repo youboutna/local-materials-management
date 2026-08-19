@@ -711,7 +711,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="documents" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <FileText className="h-5 w-5" />
                   Gestion des Documents ({documents.length})
@@ -752,7 +752,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="insurance" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Shield className="h-5 w-5" />
                   Assurances du Projet ({insurancePolicies.length})
@@ -812,7 +812,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <TabsContent value="bank-guarantees" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Building className="h-5 w-5" />
                   Garanties Bancaires ({bankGuarantees.length})
