@@ -203,22 +203,28 @@ const EscalationThresholdsSettings: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">
-                                {threshold.threshold_unit === 'percentage' ? '%' : 
-                                 threshold.threshold_unit === 'days' ? 'jours' : threshold.threshold_unit}
+                                {ESCALATION_UNIT_LABELS[threshold.threshold_unit as EscalationUnit] ??
+                                  threshold.threshold_unit}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <select
-                                value={threshold.severity_level}
-                                onChange={(e) => updateThreshold(threshold.id, 'severity_level', e.target.value)}
-                                className="border rounded px-2 py-1 text-xs"
-                              >
-                                <option value="low">Faible</option>
-                                <option value="medium">Moyen</option>
-                                <option value="high">Élevé</option>
-                                <option value="critical">Critique</option>
-                              </select>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={threshold.severity_level}
+                                  onChange={(e) => updateThreshold(threshold.id, 'severity_level', e.target.value)}
+                                  className="border border-input bg-background text-foreground rounded px-2 py-1 text-xs"
+                                  aria-label="Sévérité du seuil"
+                                >
+                                  {ESCALATION_SEVERITIES.map((s) => (
+                                    <option key={s.value} value={s.value}>{s.label}</option>
+                                  ))}
+                                </select>
+                                <Badge variant={severityBadgeVariant(threshold.severity_level)} className="text-[10px]">
+                                  {ESCALATION_SEVERITIES.find(s => s.value === threshold.severity_level)?.label ?? threshold.severity_level}
+                                </Badge>
+                              </div>
                             </TableCell>
+
                             <TableCell>
                               <Input
                                 type="number"
