@@ -5,7 +5,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
  * Follows hexagonal architecture principles from PROMPTS.md
  */
 
-import { Supplier } from '@/domain/entities/Supplier';
+import { Supplier, SupplierProps } from '@/domain/entities/Supplier';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
 import {
     SearchSuppliersOptions,
@@ -84,36 +84,22 @@ export class SupplierService {
   /**
    * Create new supplier
    */
-  async createSupplier(supplierData: Partial<Supplier>): Promise<Supplier> {
+  async createSupplier(supplierData: Partial<SupplierProps> | Partial<Supplier>): Promise<Supplier> {
     try {
+      const props = supplierData as Partial<SupplierProps>;
       const id = crypto.randomUUID();
-      
-      // Create supplier via repository
-      const newSupplier = new Supplier(
-        id,
-        supplierData.name || '',
-        supplierData.email || null,
-        supplierData.phone || null,
-        supplierData.address || null,
-        supplierData.nif || null,
-        supplierData.category || null,
-        supplierData.status || 'active',
-        supplierData.rating || null,
-        supplierData.contacts || [],
-        supplierData.isVerified || false,
-        null,
-        supplierData.workspaceId || null,
-        new Date().toISOString(),
-        new Date().toISOString()
-      );
-      if (supplierData.externalRef !== undefined) {
-        newSupplier.externalRef = supplierData.externalRef;
-      }
-      
-      await this.supplierRepository.save(newSupplier);
-      
-      console.log('Supplier created successfully:', id);
 
+      const newSupplier = Supplier.create({
+        ...props,
+        id,
+        name: props.name || '',
+        status: props.status || 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as SupplierProps);
+
+      await this.supplierRepository.save(newSupplier);
+      console.log('Supplier created successfully:', id);
       return newSupplier;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
@@ -125,18 +111,19 @@ export class SupplierService {
   /**
    * Update supplier
    */
-  async updateSupplier(id: string, supplierData: Partial<Supplier>): Promise<Supplier> {
+  async updateSupplier(id: string, supplierData: Partial<SupplierProps> | Partial<Supplier>): Promise<Supplier> {
     try {
       const existing = await this.supplierRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Supplier not found');
       }
-      
-      await this.supplierRepository.update(id, supplierData);
-      
+
+      await this.supplierRepository.update(id, supplierData as Partial<Supplier>);
       console.log('Supplier updated successfully:', id);
 
-      return { ...existing, ...supplierData } as Supplier;
+      // Re-read to guarantee UI reflects the persisted state (round-trip UI -> DB -> UI)
+      const refreshed = await this.supplierRepository.findById(id);
+      return refreshed ?? existing;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update supplier';
       ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
