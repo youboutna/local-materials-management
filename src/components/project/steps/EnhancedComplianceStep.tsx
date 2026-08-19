@@ -774,12 +774,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucune assurance trouvée</p>
-                  <Button onClick={() => setIsInsuranceDialogOpen(true)} className="mt-4" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une assurance
-                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Utilisez « Ajouter » en haut à droite pour créer une police.
+                  </p>
                 </div>
               ) : (
+
                 <div className="space-y-3">
                   {insurancePolicies.slice(0, 5).map((policy) => (
                     <div key={policy.id} className="flex items-center justify-between p-3 border rounded-lg">
