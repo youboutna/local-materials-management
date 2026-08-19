@@ -92,13 +92,20 @@ export function useInspectionMonitoringHex(options?: {
     }
   });
 
-  // Fetch projects placeholder
+  // Fetch projects (hexagonal: ProjectService → DTO)
   const projectsQuery = useQuery({
     queryKey: ['monitoring-projects'],
+    staleTime: 60_000,
     queryFn: async (): Promise<MonitoringProject[]> => {
-      return [];
+      const projects = await getProjectService().findAll();
+      return projects.map((p: any) => ({
+        id: p.id,
+        title: p.title ?? p.name ?? p.id,
+        project_reference: p.projectReference ?? p.project_reference ?? null,
+      }));
     }
   });
+
 
   // Get current user info
   const userQuery = useQuery({
