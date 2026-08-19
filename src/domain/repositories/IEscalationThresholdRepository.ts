@@ -18,4 +18,7 @@ export interface EscalationThresholdRow {
 export interface IEscalationThresholdRepository {
   findAll(): Promise<EscalationThresholdRow[]>;
   update(id: string, updates: Partial<EscalationThresholdRow>): Promise<EscalationThresholdRow>;
+  /** Upsert par (threshold_type, threshold_name) — persistance d'un défaut référentiel. */
+  upsert(row: Omit<EscalationThresholdRow, 'id'>): Promise<EscalationThresholdRow>;
 }
+
