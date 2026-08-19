@@ -78,7 +78,7 @@ export function EvaluationPanelTabs({
       </CardHeader>
       <CardContent>
         <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as EvaluationCategory)}>
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
             {DEFAULT_CATEGORY_WEIGHTS.map((w) => {
               const done = completeness[w.category].complete;
               return (

@@ -125,7 +125,7 @@ const EscalationThresholdsSettings: React.FC = () => {
           </div>
 
           <Tabs defaultValue="project_delay" className="w-full">
-            <TabsList className="grid grid-cols-3 lg:grid-cols-6 mb-6">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 mb-6 sm:grid sm:grid-cols-3 lg:grid-cols-6">
               {thresholdTypes.map(type => {
                 const IconComponent = type.icon;
                 const count = getThresholdsByType(type.key).length;

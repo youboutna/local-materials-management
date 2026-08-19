@@ -266,7 +266,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
 
       {/* Tabs for different sections - using existing components */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
           <TabsTrigger value="overview" className="text-xs flex items-center gap-1">
             <ListTodo className="h-3 w-3" />
             Tâches
