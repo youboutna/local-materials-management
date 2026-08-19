@@ -183,13 +183,17 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
    */
   async update(id: string, data: UpdateMilestoneData): Promise<MilestoneDTO | null> {
     try {
-      const updateData = {
-        ...data,
+      const { type, dependencies, ...rest } = data;
+      const updateData: Record<string, unknown> = {
+        ...rest,
+        ...(type !== undefined ? { milestone_type: type } : {}),
+        ...(dependencies !== undefined ? { predecessor_ids: dependencies } : {}),
         material_usage: data.material_usage !== undefined
           ? (data.material_usage as unknown as Json)
           : undefined,
         updated_at: new Date().toISOString()
       };
+
 
       const { data: result, error } = await supabase
         .from('project_milestones')
