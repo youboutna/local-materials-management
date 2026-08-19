@@ -88,12 +88,6 @@ const RoleBasedInspectionMonitoring = () => {
   });
   const { inspections = [], isLoading } = inspectionData;
 
-  // Helper function to get project title - matching original
-  const getProjectTitle = (projectId: string) => {
-    // In real app, this would fetch from projects data
-    // For now, return the project ID as fallback
-    return `Projet ${projectId}`;
-  };
 
   // Helper function to send alert to hierarchy - matching original
   const sendAlertToHierarchy = async (inspectionId: string, message: string) => {

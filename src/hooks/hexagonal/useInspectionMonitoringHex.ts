@@ -5,6 +5,8 @@
 
 import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { InspectionService } from '@/application/services/InspectionService';
+import { getProjectService } from '@/application/services/ProjectService';
+import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -171,9 +173,9 @@ export function useInspectionMonitoringHex(options?: {
     }
   });
 
-  // Send notification mutation (placeholder)
+  // Send notification (hexagonal: NotificationService)
   const sendNotificationMutation = useMutation({
-    mutationFn: async (_params: {
+    mutationFn: async (params: {
       recipientId: string;
       title: string;
       message: string;
@@ -181,7 +183,18 @@ export function useInspectionMonitoringHex(options?: {
       relatedId: string;
       metadata?: Record<string, unknown>;
     }) => {
-      // Placeholder - would use NotificationService
+      const notificationService = new NotificationService(RepositoryFactory.getNotificationRepository());
+      await notificationService.createNotification({
+        recipientId: params.recipientId,
+        title: params.title,
+        message: params.message,
+        type: (params.type as any) || 'info',
+        relatedId: params.relatedId,
+        metadata: params.metadata,
+      } as any);
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   });
 
