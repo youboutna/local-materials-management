@@ -80,8 +80,53 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
 
   if (summary.count === 0) return null;
 
+  const totalAlerts = summary.criticalCount + summary.warningCount;
+
   return (
-    <div className={`grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 ${className ?? ''}`}>
+    <div
+      className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border bg-card px-3 py-2 text-xs ${className ?? ''}`}
+    >
+      <span className="flex items-center gap-1.5">
+        <TrendingUp className="h-3.5 w-3.5 text-primary" />
+        <span className="text-muted-foreground">Avancement</span>
+        <span className="font-semibold">{formatPercent2(summary.weightedProgress)}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Wallet className="h-3.5 w-3.5 text-primary" />
+        <span className="text-muted-foreground">Budget</span>
+        <span className="font-semibold">{formatAmount2(summary.totalBudget)}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Activity className="h-3.5 w-3.5 text-primary" />
+        <span className="text-muted-foreground">SPI / CPI</span>
+        <span className="font-semibold">
+          {formatIndex2(summary.avgSpi, summary.avgSpi !== null)} /{' '}
+          {formatIndex2(summary.avgCpi, summary.avgCpi !== null)}
+        </span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <AlertTriangle className="h-3.5 w-3.5 text-primary" />
+        <span className="text-muted-foreground">Alertes</span>
+        <span className="font-semibold">{totalAlerts}</span>
+      </span>
+      <span className="ml-auto flex items-center gap-2">
+        <span className="text-muted-foreground">{summary.count} projet(s)</span>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+              Détails
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Synthèse du portefeuille</SheetTitle>
+              <SheetDescription>
+                Indicateurs agrégés sur {summary.count} projet(s) — source unique :
+                ProjectMetricsOrchestrator.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-4 grid grid-cols-1 gap-3">
+
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
