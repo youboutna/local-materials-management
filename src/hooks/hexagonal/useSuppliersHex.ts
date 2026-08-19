@@ -3,6 +3,7 @@
  */
 
 import { getSupplierService } from "@/application/services/SupplierService";
+import { SupplierTransformer } from "@/dtos/transforms/SupplierTransformer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -48,7 +49,7 @@ export function useSuppliersHex(): UseSuppliersHexResult {
 
   const createSupplierMutation = useMutation({
     mutationFn: async (supplierData: any) => {
-      return await supplierService.createSupplier(supplierData);
+      return await supplierService.createSupplier(SupplierTransformer.fromFormData(supplierData));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -59,7 +60,7 @@ export function useSuppliersHex(): UseSuppliersHexResult {
 
   const updateSupplierMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return await supplierService.updateSupplier(id, data);
+      return await supplierService.updateSupplier(id, SupplierTransformer.fromFormData(data));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });

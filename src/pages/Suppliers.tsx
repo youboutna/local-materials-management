@@ -122,9 +122,9 @@ const Suppliers = () => {
       phone: supplier.phone || "",
       address: supplier.address || "",
       category: supplier.category || "",
-      rating: typeof supplier.rating === 'number' ? supplier.rating : 0,
+      rating: supplier.getOverallRating?.() ?? 0,
       nif: supplier.nif || "",
-      commerce_register_ref: "",
+      commerce_register_ref: supplier.commerceRegisterRef || "",
     });
     setEditingId(supplier.id);
     setIsCreating(true);
