@@ -1188,7 +1188,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </TabsContent>
 
             <TabsContent value="planning" className="mt-6">
-              <ProjectBudgetTracking projectId={projectId!} />
+              <ProjectBudgetTracking projectId={projectId!} projectBudget={project?.budget ?? null} />
               <div className="mt-4">
                 <PlanningVarianceView projectId={projectId!} />
               </div>
