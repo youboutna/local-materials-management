@@ -4,7 +4,8 @@
  */
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getStorageService } from '@/application/services/StorageService';
+import { getAuthService } from '@/application/services/AuthService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {
   DocumentFacetDef,

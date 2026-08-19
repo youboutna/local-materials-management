@@ -16,6 +16,7 @@ import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ReceptionDTO, ReceptionType, ReceptionStatus, ReceptionValidationDTO } from "@/dtos/entities/ReceptionDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
+import { getStorageService } from '@/application/services/StorageService';
 
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
