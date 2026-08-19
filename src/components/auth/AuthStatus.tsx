@@ -39,22 +39,22 @@ export function AuthStatus({
 
   const getStatusIcon = () => {
     if (loading) {
-      return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
+      return <RefreshCw className="h-4 w-4 animate-spin text-primary" />;
     }
     if (isAuthenticated) {
       return <CheckCircle className="h-4 w-4 text-success" />;
     }
-    return <XCircle className="h-4 w-4 text-red-500" />;
+    return <XCircle className="h-4 w-4 text-destructive" />;
   };
 
   const getStatusBadge = () => {
     if (loading) {
-      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Loading...</Badge>;
+      return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Loading...</Badge>;
     }
     if (isAuthenticated) {
       return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Authenticated</Badge>;
     }
-    return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Not Authenticated</Badge>;
+    return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Not Authenticated</Badge>;
   };
 
   const getProviderInfo = () => {
@@ -67,7 +67,7 @@ export function AuthStatus({
         {getStatusIcon()}
         {getStatusBadge()}
         {showProvider && (
-          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+          <Badge variant="outline" className="bg-muted text-foreground border-border">
             {getProviderInfo().label}
           </Badge>
         )}
@@ -101,7 +101,7 @@ export function AuthStatus({
         {/* User Information */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
+            <User className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">User:</span>
             {user ? (
               <div className="flex items-center gap-2">
@@ -113,18 +113,18 @@ export function AuthStatus({
                 )}
               </div>
             ) : (
-              <span className="text-gray-500">No user</span>
+              <span className="text-muted-foreground">No user</span>
             )}
           </div>
           
           {showProvider && (
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-gray-500" />
+              <Shield className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">Provider:</span>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                 {getProviderInfo().label}
               </Badge>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 {getProviderInfo().description}
               </span>
             </div>
@@ -135,7 +135,7 @@ export function AuthStatus({
         {showRoles && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-gray-500" />
+              <Shield className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">Roles:</span>
             </div>
             {userRoles.length > 0 ? (
@@ -154,7 +154,7 @@ export function AuthStatus({
                 ))}
               </div>
             ) : (
-              <span className="text-gray-500">No roles assigned</span>
+              <span className="text-muted-foreground">No roles assigned</span>
             )}
           </div>
         )}
@@ -163,10 +163,10 @@ export function AuthStatus({
         {showSession && session && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">Session:</span>
             </div>
-            <div className="text-sm text-gray-600 space-y-1">
+            <div className="text-sm text-muted-foreground space-y-1">
               <div>
                 <span className="font-medium">Provider:</span> {session.provider}
               </div>

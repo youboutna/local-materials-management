@@ -88,9 +88,9 @@ const statusOptions: { value: PhaseStatus; label: string; color: string; icon: R
 const getStatusColor = (status: PhaseStatus | string) => {
   switch (status) {
     case "completed": return "bg-success-soft text-success border-success/30";
-    case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
-    case "delayed": return "bg-red-100 text-red-800 border-red-200";
-    default: return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "in_progress": return "bg-primary/10 text-primary border-primary/30";
+    case "delayed": return "bg-destructive/10 text-destructive border-destructive/30";
+    default: return "bg-warning/10 text-warning border-warning/30";
   }
 };
 
@@ -567,8 +567,8 @@ const StepCard: React.FC<{
                     className={cn(
                       "flex items-center justify-between p-3 rounded-lg transition-colors group",
                       task.status === 'completed' ? "bg-success-soft/50" : 
-                      task.status === 'in_progress' ? "bg-blue-100/50" :
-                      task.status === 'delayed' ? "bg-red-100/50" : "bg-muted/50"
+                      task.status === 'in_progress' ? "bg-primary/10/50" :
+                      task.status === 'delayed' ? "bg-destructive/10/50" : "bg-muted/50"
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -840,7 +840,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
             <CheckCircle className="h-3 w-3 mr-1" />
             {completedCount}
           </Badge>
-            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
             <RefreshCw className="h-3 w-3 mr-1" />
             {normalizedSteps.filter(s => s.status === 'in_progress').length}
           </Badge>

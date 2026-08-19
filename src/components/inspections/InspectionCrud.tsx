@@ -51,12 +51,12 @@ const InspectionCrud: React.FC = () => {
   const deleteMutation = useDeleteInspection();
 
   const statusOptions = [
-    { value: 'scheduled', label: 'Programmée', color: 'bg-blue-100 text-blue-800', icon: Clock },
-    { value: 'in_progress', label: 'En cours', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+    { value: 'scheduled', label: 'Programmée', color: 'bg-primary/10 text-primary', icon: Clock },
+    { value: 'in_progress', label: 'En cours', color: 'bg-warning/10 text-warning', icon: Clock },
     { value: 'completed', label: 'Terminée', color: 'bg-success-soft text-success', icon: CheckCircle },
     { value: 'approved', label: 'Approuvée', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'rejected', label: 'Rejetée', color: 'bg-red-100 text-red-800', icon: AlertTriangle },
-    { value: 'cancelled', label: 'Annulée', color: 'bg-gray-100 text-gray-800', icon: AlertTriangle }
+    { value: 'rejected', label: 'Rejetée', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+    { value: 'cancelled', label: 'Annulée', color: 'bg-muted text-foreground', icon: AlertTriangle }
   ];
 
   const getStatusConfig = (status: string) => {

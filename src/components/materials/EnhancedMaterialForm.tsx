@@ -625,7 +625,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             <CardContent className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="name" className="text-sm font-medium text-foreground">
                     {t('materials.name') || 'Nom du matériau'}
                   </Label>
                   <Input
@@ -633,7 +633,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     value={formData.name || ''}
                     onChange={(e) => handleChange('name', e.target.value)}
                     placeholder={t('materials.name_placeholder') || 'Nom du matériau'}
-                    className="border-gray-300 focus:border-terracotta-500"
+                    className="border-border focus:border-terracotta-500"
                     required
                   />
                 </div>
@@ -648,7 +648,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="description" className="text-sm font-medium text-foreground">
                   {t('materials.description') || 'Description'}
                 </Label>
                 <Textarea
@@ -657,7 +657,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   onChange={(e) => handleChange('description', e.target.value)}
                   placeholder={t('materials.description_placeholder') || 'Description du matériau'}
                   rows={3}
-                  className="border-gray-300 focus:border-terracotta-500"
+                  className="border-border focus:border-terracotta-500"
                 />
               </div>
             </CardContent>
@@ -921,7 +921,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             <CardContent className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="quantity" className="text-sm font-medium text-foreground">
                     {t('materials.quantity') || 'Quantité'}
                   </Label>
                   <Input
@@ -931,12 +931,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.quantity || 0}
                     onChange={(e) => handleChange('quantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-success"
+                    className="border-border focus:border-success"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="availableQuantity" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="availableQuantity" className="text-sm font-medium text-foreground">
                     {t('materials.available_quantity') || 'Quantité disponible'}
                   </Label>
                   <Input
@@ -946,12 +946,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.availableQuantity || 0}
                     onChange={(e) => handleChange('availableQuantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-success"
+                    className="border-border focus:border-success"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="minQuantity" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="minQuantity" className="text-sm font-medium text-foreground">
                     {t('materials.min_quantity') || 'Quantité minimale'}
                   </Label>
                   <Input
@@ -961,12 +961,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.minQuantity || 0}
                     onChange={(e) => handleChange('minQuantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-success"
+                    className="border-border focus:border-success"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="pricePerUnit" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="pricePerUnit" className="text-sm font-medium text-foreground">
                     {t('materials.price_per_unit') || 'Prix unitaire'}
                   </Label>
                   <Input
@@ -976,7 +976,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.pricePerUnit || 0}
                     onChange={(e) => handleChange('pricePerUnit', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-success"
+                    className="border-border focus:border-success"
                   />
                 </div>
               </div>
@@ -996,7 +996,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             <CardContent className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="startDate" className="text-sm font-medium text-foreground">
                     {t('materials.start_date') || 'Date de début'}
                   </Label>
                   <Input
@@ -1004,12 +1004,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     type="date"
                     value={formData.timeline?.start ? new Date(formData.timeline.start).toISOString().split('T')[0] : ''}
                     onChange={(e) => handleTimelineChange('start', new Date(e.target.value))}
-                    className="border-gray-300 focus:border-blue-500"
+                    className="border-border focus:border-blue-500"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="endDate" className="text-sm font-medium text-foreground">
                     {t('materials.end_date') || 'Date de fin'}
                   </Label>
                   <Input
@@ -1017,12 +1017,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     type="date"
                     value={formData.timeline?.end ? new Date(formData.timeline.end).toISOString().split('T')[0] : ''}
                     onChange={(e) => handleTimelineChange('end', new Date(e.target.value))}
-                    className="border-gray-300 focus:border-blue-500"
+                    className="border-border focus:border-blue-500"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="estimatedDuration" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="estimatedDuration" className="text-sm font-medium text-foreground">
                     {t('materials.estimated_duration') || 'Durée estimée (jours)'}
                   </Label>
                   <Input
@@ -1031,7 +1031,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     min="1"
                     value={formData.timeline?.estimatedDuration || 0}
                     onChange={(e) => handleTimelineChange('estimatedDuration', String(parseInt(e.target.value) || 0))}
-                    className="border-gray-300 focus:border-blue-500"
+                    className="border-border focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -1108,12 +1108,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
                   {/* Document Types Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border rounded-lg bg-blue-50">
-                      <FileText className="h-5 w-5 mb-2 text-blue-600" />
+                    <div className="p-4 border rounded-lg bg-primary/10">
+                      <FileText className="h-5 w-5 mb-2 text-primary" />
                       <h4 className="font-medium text-sm text-blue-900 mb-1">
                         {t('materials.documents.types.invoice') || 'Factures'}
                       </h4>
-                      <p className="text-xs text-blue-700">
+                      <p className="text-xs text-primary">
                         {t('materials.documents.invoice_desc') || 'Preuves d\'achat et de livraison'}
                       </p>
                     </div>
@@ -1135,19 +1135,19 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                         {t('materials.documents.manual_desc') || 'Instructions d\'utilisation'}
                       </p>
                     </div>
-                    <div className="p-4 border rounded-lg bg-orange-50">
-                      <FileText className="h-5 w-5 mb-2 text-orange-600" />
+                    <div className="p-4 border rounded-lg bg-warning/10">
+                      <FileText className="h-5 w-5 mb-2 text-warning" />
                       <h4 className="font-medium text-sm text-orange-900 mb-1">
                         {t('materials.documents.types.warranty') || 'Garanties'}
                       </h4>
-                      <p className="text-xs text-orange-700">
+                      <p className="text-xs text-warning">
                         {t('materials.documents.warranty_desc') || 'Documents de garantie'}
                       </p>
                     </div>
                   </div>
 
                   {/* Save Reminder */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
                         <svg className="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
@@ -1155,10 +1155,10 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                         </svg>
                       </div>
                       <div className="ml-3">
-                        <h3 className="text-sm font-medium text-amber-800">
+                        <h3 className="text-sm font-medium text-warning">
                           {t('materials.documents.save_reminder_title') || 'Sauvegarde automatique'}
                         </h3>
-                        <p className="mt-1 text-sm text-amber-700">
+                        <p className="mt-1 text-sm text-warning">
                           {t('materials.documents.save_reminder_text') || 'Les documents seront automatiquement associés au matériau après sa création.'}
                         </p>
                       </div>

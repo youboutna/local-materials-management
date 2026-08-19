@@ -432,20 +432,20 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-success-soft text-success';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'blocked': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'in_progress': return 'bg-primary/10 text-primary';
+      case 'pending': return 'bg-warning/10 text-warning';
+      case 'blocked': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-foreground';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-blue-100 text-blue-800';
-      case 'low': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'urgent': return 'bg-destructive/10 text-destructive';
+      case 'high': return 'bg-warning/10 text-warning';
+      case 'medium': return 'bg-primary/10 text-primary';
+      case 'low': return 'bg-muted text-foreground';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -478,7 +478,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         <CardContent className="p-6">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvée</h3>
+            <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune phase trouvée</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des tâches.
             </p>
@@ -621,10 +621,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                       });
                                     }
                                   }}
-                                  className="rounded border-gray-300"
+                                  className="rounded border-border"
                                 />
                                 <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
-                                  <span className="text-gray-900 dark:text-gray-100">
+                                  <span className="text-foreground dark:text-gray-100">
                                     {phase.name || `Phase ${phase.id}`}
                                   </span>
                                   {phase.construction_phase && (
@@ -804,7 +804,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <CardContent className="p-6">
               <div className="text-center">
                 <Target className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tâche trouvée</h3>
+                <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune tâche trouvée</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Commencez par créer une nouvelle tâche pour ce projet.
                 </p>

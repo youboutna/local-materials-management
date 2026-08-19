@@ -81,8 +81,8 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
         {mapLocations.length > 0 ? (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Map className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Position sur la carte</span>
+              <Map className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Position sur la carte</span>
             </div>
             <ProjectMap
               locations={mapLocations}
@@ -93,11 +93,11 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
             />
           </div>
         ) : (
-          <div className="bg-gray-100 rounded-lg flex items-center justify-center" style={{ height }}>
+          <div className="bg-muted rounded-lg flex items-center justify-center" style={{ height }}>
             <div className="text-center">
-              <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600">Aucune localisation GPS disponible</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Aucune localisation GPS disponible</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 Utilisez la recherche ci-dessus pour définir une position
               </p>
             </div>
@@ -106,9 +106,9 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
 
         {/* Current Location Info */}
         {(material.adresse || material.origin_location) && (
-          <div className="bg-blue-50 p-3 rounded-md">
-            <p className="text-sm font-medium text-blue-800 mb-1">Informations actuelles:</p>
-            <div className="text-sm text-blue-700 space-y-1">
+          <div className="bg-primary/10 p-3 rounded-md">
+            <p className="text-sm font-medium text-primary mb-1">Informations actuelles:</p>
+            <div className="text-sm text-primary space-y-1">
               {material.adresse && (
                 <p><strong>Adresse:</strong> {material.adresse}</p>
               )}

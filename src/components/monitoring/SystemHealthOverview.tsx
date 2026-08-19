@@ -160,14 +160,14 @@ const SystemHealthOverview: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Garanties Bancaires</CardTitle>
-            <Shield className="h-4 w-4 text-blue-600" />
+            <Shield className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="text-2xl font-bold">{(stats as any)?.guarantees?.count || 0}</div>
               <div className="text-sm text-muted-foreground">
                 {((stats as any)?.guarantees?.expiring || 0) > 0 ? (
-                  <span className="text-orange-600">
+                  <span className="text-warning">
                     {(stats as any)?.guarantees?.expiring} expirent bientôt
                   </span>
                 ) : (
@@ -182,14 +182,14 @@ const SystemHealthOverview: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paiements</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="text-2xl font-bold">{(stats as any)?.payments?.count || 0}</div>
               <div className="text-sm text-muted-foreground">
                 {((stats as any)?.payments?.blocked || 0) > 0 ? (
-                  <span className="text-red-600">
+                  <span className="text-destructive">
                     {(stats as any)?.payments?.blocked} bloqué(s)
                   </span>
                 ) : (
@@ -211,7 +211,7 @@ const SystemHealthOverview: React.FC = () => {
               <div className="text-2xl font-bold">{(stats as any)?.inspections?.count || 0}</div>
               <div className="text-sm text-muted-foreground">
                 {((stats as any)?.inspections?.delayed || 0) > 0 ? (
-                  <span className="text-red-600">
+                  <span className="text-destructive">
                     {(stats as any)?.inspections?.delayed} en retard
                   </span>
                 ) : (

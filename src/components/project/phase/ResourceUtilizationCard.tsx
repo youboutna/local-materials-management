@@ -72,7 +72,7 @@ const ResourceUtilizationCard: React.FC<ResourceUtilizationCardProps> = ({ phase
           
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-amber-600" />
+              <Package className="h-4 w-4 text-warning" />
               <span className="text-sm font-medium">Matériaux</span>
             </div>
             <p className="text-2xl font-bold">{resources.totalMaterials}</p>
@@ -81,9 +81,9 @@ const ResourceUtilizationCard: React.FC<ResourceUtilizationCardProps> = ({ phase
         </div>
         
         {(resources.efficiency < 50 || resources.totalEmployees === 0) && (
-          <Alert className="py-2 border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-xs text-amber-700">
+          <Alert className="py-2 border-warning/30 bg-warning/10">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-xs text-warning">
               Ressources limitées détectées
             </AlertDescription>
           </Alert>

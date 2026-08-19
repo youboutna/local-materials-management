@@ -16,9 +16,9 @@ const getStatusConfig = (status: StatusType) => {
      case 'en cours':
      case 'encours':
        return {
-         bgColor: 'bg-blue-50',
-         textColor: 'text-blue-700',
-         borderColor: 'border-blue-200',
+         bgColor: 'bg-primary/10',
+         textColor: 'text-primary',
+         borderColor: 'border-primary/30',
          dotColor: 'bg-blue-500',
        };
      case 'terminé':
@@ -32,17 +32,17 @@ const getStatusConfig = (status: StatusType) => {
      case 'en attente':
      case 'en_attente':
        return {
-         bgColor: 'bg-amber-50',
-         textColor: 'text-amber-700',
-         borderColor: 'border-amber-200',
+         bgColor: 'bg-warning/10',
+         textColor: 'text-warning',
+         borderColor: 'border-warning/30',
          dotColor: 'bg-amber-500',
        };
      case 'en inspection':
      case 'en_inspection':
        return {
-         bgColor: 'bg-yellow-50',
-         textColor: 'text-yellow-700',
-         borderColor: 'border-yellow-200',
+         bgColor: 'bg-warning/10',
+         textColor: 'text-warning',
+         borderColor: 'border-warning/30',
          dotColor: 'bg-yellow-500',
        };
      case 'suspendu':
@@ -55,9 +55,9 @@ const getStatusConfig = (status: StatusType) => {
      case 'annulé':
      case 'annule':
        return {
-         bgColor: 'bg-red-50',
-         textColor: 'text-red-700',
-         borderColor: 'border-red-200',
+         bgColor: 'bg-destructive/10',
+         textColor: 'text-destructive',
+         borderColor: 'border-destructive/30',
          dotColor: 'bg-red-500',
        };
     // Inspection statuses
@@ -70,23 +70,23 @@ const getStatusConfig = (status: StatusType) => {
       };
     case 'rejetée':
       return {
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-700',
-        borderColor: 'border-red-200',
+        bgColor: 'bg-destructive/10',
+        textColor: 'text-destructive',
+        borderColor: 'border-destructive/30',
         dotColor: 'bg-red-500',
       };
     case 'modifications requises':
       return {
-        bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        borderColor: 'border-amber-200',
+        bgColor: 'bg-warning/10',
+        textColor: 'text-warning',
+        borderColor: 'border-warning/30',
         dotColor: 'bg-amber-500',
       };
     default:
       return {
-        bgColor: 'bg-gray-50',
-        textColor: 'text-gray-700',
-        borderColor: 'border-gray-200',
+        bgColor: 'bg-muted',
+        textColor: 'text-foreground',
+        borderColor: 'border-border',
         dotColor: 'bg-gray-500',
       };
   }

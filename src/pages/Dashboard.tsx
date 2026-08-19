@@ -118,22 +118,22 @@ const Dashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="max-w-md w-full mx-auto text-center p-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <Shield className="h-12 w-12 text-red-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-2">
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6">
+            <Shield className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-destructive mb-2">
               {t("dashboard.access_denied_title")}
             </h2>
-            <p className="text-red-600 mb-4">
+            <p className="text-destructive mb-4">
               {t("dashboard.access_restricted")}
             </p>
             <div className="space-y-2">
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 <strong>{t("dashboard.your_roles")}:</strong>{" "}
                 {userRoles.length > 0
                   ? userRoles.join(", ")
                   : t("dashboard.no_role_assigned")}
               </p>
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 <strong>{t("dashboard.required_roles_label")}:</strong>{" "}
                 admin, director, project_manager
               </p>
@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
   const dashboardActions = (
     <>
       {DEV_MODE && (
-        <Badge variant="outline" className="bg-amber-100 text-amber-800">
+        <Badge variant="outline" className="bg-warning/10 text-warning">
           🛠️ DEV MODE
         </Badge>
       )}

@@ -77,11 +77,11 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
       case 'approved':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-600" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       case 'rejected':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -91,11 +91,11 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
       case 'approved':
         return 'bg-success-soft text-success border-success/30';
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-primary/10 text-primary border-primary/30';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -476,7 +476,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                                 {i < step.tasks_completed ? (
                                   <CheckCircle className="h-4 w-4 text-success" />
                                 ) : (
-                                  <Clock className="h-4 w-4 text-gray-400" />
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
                                 )}
                                 <span className="text-sm">
                                   Tâche {i + 1} - {i < step.tasks_completed ? 'Terminée' : 'En attente'}

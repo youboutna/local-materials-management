@@ -121,14 +121,14 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Dépensé:</span>
-            <span className="font-medium text-amber-600">{formatCurrency(totalSpent)}</span>
+            <span className="font-medium text-warning">{formatCurrency(totalSpent)}</span>
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between font-medium">
             <span>Écart:</span>
             <span className={cn(
               (phaseCosts.costVariance ?? 0) > 0 
-                ? "text-red-600" 
+                ? "text-destructive" 
                 : "text-success"
             )}>
               {formatCurrency(phaseCosts.costVariance ?? 0)}
@@ -143,9 +143,9 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
             <span className={cn(
               "font-medium",
               phaseCosts.budgetUtilization > 90 
-                ? "text-red-600" 
+                ? "text-destructive" 
                 : phaseCosts.budgetUtilization > 75
-                ? "text-amber-600"
+                ? "text-warning"
                 : "text-success"
             )}>
               {phaseCosts.budgetUtilization.toFixed(1)}%

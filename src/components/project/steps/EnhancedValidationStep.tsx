@@ -300,7 +300,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Progression globale</span>
-              <span className="text-sm text-gray-500">{Math.round(overallProgress)}%</span>
+              <span className="text-sm text-muted-foreground">{Math.round(overallProgress)}%</span>
             </div>
             <Progress value={overallProgress} className="h-2" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
@@ -310,7 +310,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                     {getStatusIcon(field.status)}
                   </div>
                   <p className="font-medium text-xs">{field.name}</p>
-                  <p className="text-xs text-gray-500">{field.status}</p>
+                  <p className="text-xs text-muted-foreground">{field.status}</p>
                 </div>
               ))}
             </div>
@@ -477,15 +477,15 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-medium">{reception.type === 'provisional' ? 'Réception Provisoire' : 'Réception Définitive'}</h4>
-                          <p className="text-sm text-gray-500">Date: {reception.scheduledDate}</p>
-                          <p className="text-sm text-gray-500">Président: {reception.chairmanName}</p>
+                          <p className="text-sm text-muted-foreground">Date: {reception.scheduledDate}</p>
+                          <p className="text-sm text-muted-foreground">Président: {reception.chairmanName}</p>
                         </div>
                         <Badge variant={reception.status === 'approved' ? 'default' : 'secondary'}>
                           {reception.status}
                         </Badge>
                       </div>
                       {reception.notes && (
-                        <p className="text-sm text-gray-600 mt-2">{reception.notes}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{reception.notes}</p>
                       )}
                     </Card>
                   ))}
@@ -504,7 +504,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 La conformité réglementaire est gérée à travers l'étape 6 du workflow.
               </p>
             </CardContent>
@@ -524,9 +524,9 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <div key={field.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <h4 className="font-medium">{field.name}</h4>
-                    <p className="text-sm text-gray-500">{field.description}</p>
+                    <p className="text-sm text-muted-foreground">{field.description}</p>
                     {field.required && (
-                      <Badge variant="outline" className="text-red-500">
+                      <Badge variant="outline" className="text-destructive">
                         Obligatoire
                       </Badge>
                     )}

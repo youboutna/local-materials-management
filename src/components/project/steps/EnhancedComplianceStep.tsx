@@ -404,20 +404,20 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
       case 'approved': return 'text-success bg-success-soft';
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'rejected': return 'text-red-600 bg-red-100';
-      case 'in_review': return 'text-blue-600 bg-blue-100';
-      case 'draft': return 'text-gray-600 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'pending': return 'text-warning bg-warning/10';
+      case 'rejected': return 'text-destructive bg-destructive/10';
+      case 'in_review': return 'text-primary bg-primary/10';
+      case 'draft': return 'text-muted-foreground bg-muted';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
   const getPriorityColor = (priority: string): string => {
     switch (priority?.toLowerCase()) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'high': return 'text-destructive bg-destructive/10';
+      case 'medium': return 'text-warning bg-warning/10';
       case 'low': return 'text-success bg-success-soft';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
@@ -499,10 +499,10 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert className="mb-4 border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800">Mode Création - Aperçu</AlertTitle>
-              <AlertDescription className="text-blue-700">
+            <Alert className="mb-4 border-primary/30 bg-primary/10">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">Mode Création - Aperçu</AlertTitle>
+              <AlertDescription className="text-primary">
                 Les éléments de conformité (documents, assurances, garanties bancaires) 
                 seront disponibles <strong>après la sauvegarde du projet</strong>.
                 Vous pourrez ensuite les gérer via les interfaces dédiées.
@@ -592,15 +592,15 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="text-xs text-muted-foreground">Approuvés</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-yellow-600">{stats.pending}</div>
+                <div className="font-bold text-warning">{stats.pending}</div>
                 <div className="text-xs text-muted-foreground">En attente</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-red-600">{stats.rejected}</div>
+                <div className="font-bold text-destructive">{stats.rejected}</div>
                 <div className="text-xs text-muted-foreground">Rejetés</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-blue-600">{stats.total}</div>
+                <div className="font-bold text-primary">{stats.total}</div>
                 <div className="text-xs text-muted-foreground">Total</div>
               </div>
             </div>

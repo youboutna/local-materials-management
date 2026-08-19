@@ -72,7 +72,7 @@ export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
         </Table>
       </div>
       {parseResult.warnings.length > 0 && (
-        <p className="text-xs text-amber-600">{parseResult.warnings.join(' • ')}</p>
+        <p className="text-xs text-warning">{parseResult.warnings.join(' • ')}</p>
       )}
     </div>
   );

@@ -110,7 +110,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
         </DialogHeader>
         
         <div className="space-y-6">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Choisissez une étape du processus de marché public :
           </p>
 
@@ -120,21 +120,21 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`px-3 py-1 rounded text-sm ${selectionMode === 'single' ? 'bg-adrar-800 text-white' : 'bg-gray-100'}`}
+                className={`px-3 py-1 rounded text-sm ${selectionMode === 'single' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('single')}
               >
                 Étape unique
               </button>
               <button
                 type="button"
-                className={`px-3 py-1 rounded text-sm ${selectionMode === 'phase' ? 'bg-adrar-800 text-white' : 'bg-gray-100'}`}
+                className={`px-3 py-1 rounded text-sm ${selectionMode === 'phase' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('phase')}
               >
                 Phase entière
               </button>
               <button
                 type="button"
-                className={`px-3 py-1 rounded text-sm ${selectionMode === 'suggested' ? 'bg-adrar-800 text-white' : 'bg-gray-100'}`}
+                className={`px-3 py-1 rounded text-sm ${selectionMode === 'suggested' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('suggested')}
                 title="Ajouter les 5 phases standards de la commande publique"
               >
@@ -142,7 +142,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
               </button>
             </div>
             {selectionMode === 'suggested' && (
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 Toutes les phases (Planification → Publicité → Réception & Analyse → Attribution → Contrôle & Régulation) seront ajoutées dans l'ordre réglementaire.
               </p>
             )}
@@ -208,18 +208,18 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
 
           {/* Suggested Documents Section */}
           {selectedStage && (
-            <div className="border p-4 rounded-lg bg-gray-50">
+            <div className="border p-4 rounded-lg bg-muted">
               <h4 className="font-medium text-sm mb-3">
                 Documents suggérés pour: {selectedStage.label}
               </h4>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-muted-foreground mb-3">
                 Cochez les documents à inclure avec cette étape (optionnel)
               </p>
 
               <div className="space-y-2">
                 {suggestedDocs.length > 0 ? (
                   suggestedDocs.map((doc, index) => (
-                    <label key={index} className="flex items-start gap-2 p-2 bg-white rounded border hover:bg-gray-50">
+                    <label key={index} className="flex items-start gap-2 p-2 bg-white rounded border hover:bg-muted">
                       <input
                         type="checkbox"
                         checked={selectedDocuments.includes(doc.title)}
@@ -228,14 +228,14 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                       />
                       <div className="flex-1">
                         <p className="text-sm font-medium">{doc.title}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {doc.isRequired ? 'Requis' : 'Optionnel'} • {doc.category}
                         </p>
                       </div>
                     </label>
                   ))
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
+                  <div className="text-center py-4 text-muted-foreground">
                     <p className="text-sm">Aucune suggestion de document pour cette étape.</p>
                     <p className="text-xs mt-1">
                       Vous pourrez ajouter des documents manuellement après avoir créé l'étape.

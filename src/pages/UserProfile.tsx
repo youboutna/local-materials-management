@@ -63,7 +63,7 @@ const UserProfile = () => {
                     : user.username}
                 </h2>
                 {user.email && (
-                  <p className="text-gray-500 mt-1">{user.email}</p>
+                  <p className="text-muted-foreground mt-1">{user.email}</p>
                 )}
                 <div className="flex justify-center gap-2 mt-3">
                   {(user.roles ?? []).map((role) => (
@@ -80,19 +80,19 @@ const UserProfile = () => {
 
               <div className="grid md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-4">
-                  <h3 className="font-medium text-gray-700 flex items-center">
+                  <h3 className="font-medium text-foreground flex items-center">
                     <User className="h-4 w-4 mr-2" />
                     Information utilisateur
                   </h3>
                   <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="font-medium text-gray-500">
+                    <div className="font-medium text-muted-foreground">
                       Nom d'utilisateur
                     </div>
                     <div className="col-span-2">{user.username}</div>
 
-                    <div className="font-medium text-gray-500">ID Keycloak</div>
+                    <div className="font-medium text-muted-foreground">ID Keycloak</div>
                     <div className="col-span-2">
-                      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs">
                         {(user.keycloakId ?? '').slice(0, 8)}...
                         {(user.keycloakId ?? '').slice(-8)}
                       </code>
@@ -101,11 +101,11 @@ const UserProfile = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-medium text-gray-700 flex items-center">
+                  <h3 className="font-medium text-foreground flex items-center">
                     <Shield className="h-4 w-4 mr-2" />
                     Permissions
                   </h3>
-                  <ul className="list-disc list-inside text-sm space-y-1 text-gray-600">
+                  <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
                     {(user.roles ?? []).includes("admin") && (
                       <li>Accès complet à la gestion de projets</li>
                     )}

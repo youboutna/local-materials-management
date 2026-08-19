@@ -24,9 +24,9 @@ const Home = () => {
       title: "Projets en cours",
       value: "42",
       icon: Building,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/30",
     },
     {
       title: "Régions couvertes",
@@ -48,9 +48,9 @@ const Home = () => {
       title: "Croissance",
       value: "+24%",
       icon: TrendingUp,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+      borderColor: "border-warning/30",
     },
   ];
 
@@ -141,7 +141,7 @@ const Home = () => {
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-adrar-900 mb-6 bg-gradient-to-br from-adrar-800 to-adrar-600 bg-clip-text text-transparent">
               Gestion de Projets BTP
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-4xl mx-auto leading-relaxed">
               Plateforme complète de gestion des projets de construction,
               matériaux et équipes en Mauritanie
             </p>
@@ -186,7 +186,7 @@ const Home = () => {
                   className={`hover:shadow-xl transition-all duration-300 border-2 ${stat.borderColor} ${stat.bgColor} group hover:scale-105`}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-semibold text-gray-600">
+                    <CardTitle className="text-sm font-semibold text-muted-foreground">
                       {stat.title}
                     </CardTitle>
                     <div className={`p-2 rounded-lg ${stat.bgColor}`}>
@@ -216,7 +216,7 @@ const Home = () => {
                 variants={itemVariants}
                 whileHover={{ y: -5 }}
               >
-                <Card className="text-center hover:shadow-xl transition-all duration-300 border border-gray-200 group">
+                <Card className="text-center hover:shadow-xl transition-all duration-300 border border-border group">
                   <CardHeader>
                     <div
                       className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}
@@ -228,7 +228,7 @@ const Home = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 mb-4 leading-relaxed">
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
                       {feature.description}
                     </p>
                     <Link to={feature.link}>

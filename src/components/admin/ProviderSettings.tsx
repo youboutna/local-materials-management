@@ -201,7 +201,7 @@ const ProviderSettings = () => {
       case 'connected':
         return <Check className="h-4 w-4 text-success" />;
       case 'failed':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case 'testing':
         return <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />;
       default:

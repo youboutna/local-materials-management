@@ -107,7 +107,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
   const getMilestoneTypeIcon = (type?: string) => {
     switch (type?.toLowerCase()) {
       case "inspection":
-        return <ClipboardCheck className="h-3 w-3 text-blue-600" />;
+        return <ClipboardCheck className="h-3 w-3 text-primary" />;
       case "payment":
       case "paiement":
         return <DollarSign className="h-3 w-3 text-success" />;

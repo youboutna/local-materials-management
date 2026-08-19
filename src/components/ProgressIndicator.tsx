@@ -18,7 +18,7 @@ const ProgressIndicator = ({ value }: ProgressIndicatorProps) => {
           style={{ width: `${percentage}%` }}
         ></div>
       </div>
-      <div className="text-xs text-right mt-1 text-gray-600">
+      <div className="text-xs text-right mt-1 text-muted-foreground">
         {t('progress.percentage') ? t('progress.percentage').replace('{value}', percentage.toString()) : `${percentage}%`}
       </div>
     </div>

@@ -43,8 +43,8 @@ interface TBIWidgetProps {
 
 const STATUS_STYLE: Record<IndicatorStatus, string> = {
   green: 'bg-success/10 text-success dark:text-success border-success/30',
-  amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
-  red: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30',
+  amber: 'bg-amber-500/10 text-warning dark:text-amber-300 border-amber-500/30',
+  red: 'bg-red-500/10 text-destructive dark:text-red-300 border-red-500/30',
   unknown: 'bg-muted text-muted-foreground border-muted',
 };
 

@@ -76,10 +76,10 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const statusOptions = [
     { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
-    { value: 'claimed', label: 'Réclamée', color: 'bg-orange-100 text-orange-800' },
-    { value: 'released', label: 'Libérée', color: 'bg-blue-100 text-blue-800' },
-    { value: 'suspended', label: 'Suspendue', color: 'bg-gray-100 text-gray-800' }
+    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
+    { value: 'claimed', label: 'Réclamée', color: 'bg-warning/10 text-warning' },
+    { value: 'released', label: 'Libérée', color: 'bg-primary/10 text-primary' },
+    { value: 'suspended', label: 'Suspendue', color: 'bg-muted text-foreground' }
   ];
 
   const resetForm = () => {
@@ -209,7 +209,7 @@ const EnhancedBankGuaranteeCrud = () => {
   }, [guarantees, search, expiryFilter, typeFilter]);
 
   const getStatusColor = (status: string) => {
-    return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
+    return statusOptions.find(option => option.value === status)?.color || 'bg-muted text-foreground';
   };
 
   const isExpiringSoon = (expiryDate: string) => {
@@ -484,7 +484,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   <div className="flex items-center gap-2">
                     {new Date(guarantee.expiryDate || '').toLocaleDateString('fr-FR')}
                     {isExpiringSoon(guarantee.expiryDate || '') && (
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                      <AlertTriangle className="h-4 w-4 text-warning" />
                     )}
                   </div>
                 </TableCell>

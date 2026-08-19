@@ -21,8 +21,8 @@ interface DeviationBadgesProps {
 const SEVERITY_STYLE: Record<DeviationSeverity, string> = {
   info: 'bg-muted text-muted-foreground border-muted',
   low: 'bg-success/10 text-success dark:text-success border-success/30',
-  medium: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
-  high: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30',
+  medium: 'bg-amber-500/10 text-warning dark:text-amber-300 border-amber-500/30',
+  high: 'bg-red-500/10 text-destructive dark:text-red-300 border-red-500/30',
 };
 
 const DIM_ICON = {

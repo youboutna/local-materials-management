@@ -529,12 +529,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               )}
 
               {/* Search tips */}
-              <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+              <div className="bg-primary/10 p-3 rounded-md border border-primary/30">
                 <div className="flex items-start gap-2">
-                  <Crosshair className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Crosshair className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-blue-800 mb-1">Conseils de recherche</p>
-                    <ul className="text-blue-700 space-y-1 text-xs">
+                    <p className="font-medium text-primary mb-1">Conseils de recherche</p>
+                    <ul className="text-primary space-y-1 text-xs">
                       <li>• Utilisez l'autocomplete pour les régions et villes de Mauritanie</li>
                       <li>• Tapez une adresse complète pour une recherche mondiale</li>
                       <li>• Les coordonnées seront automatiquement détectées</li>
@@ -596,7 +596,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                       <span>Coordonnées valides</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-red-600">
+                    <div className="flex items-center gap-2 text-destructive">
                       <X className="h-4 w-4" />
                       <span>Coordonnées invalides</span>
                     </div>
@@ -605,12 +605,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               )}
 
               {/* Coordinate validation help */}
-              <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+              <div className="bg-primary/10 p-3 rounded-md border border-primary/30">
                 <div className="flex items-start gap-2">
-                  <Globe className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Globe className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-blue-800 mb-1">Format des coordonnées</p>
-                    <ul className="text-blue-700 space-y-1 text-xs">
+                    <p className="font-medium text-primary mb-1">Format des coordonnées</p>
+                    <ul className="text-primary space-y-1 text-xs">
                       <li>• Latitude: -90° à +90° (Nord positif, Sud négatif)</li>
                       <li>• Longitude: -180° à +180° (Est positif, Ouest négatif)</li>
                       <li>• Utilisez le point (.) comme séparateur décimal</li>
@@ -621,12 +621,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               </div>
 
               {areCoordinatesValid() && (
-                <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                <div className="bg-primary/10 p-3 rounded-md border border-primary/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Globe className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Coordonnées validées</span>
+                    <Globe className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Coordonnées validées</span>
                   </div>
-                  <p className="text-sm font-mono text-blue-700">
+                  <p className="text-sm font-mono text-primary">
                     {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
                   </p>
                   <Button
@@ -657,12 +657,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
           {showGPS && (
             <TabsContent value="gps" className="space-y-4">
               <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Navigation className="h-8 w-8 text-blue-600" />
+                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Navigation className="h-8 w-8 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium">Géolocalisation GPS</h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Utilisez la position actuelle de votre appareil
                   </p>
                 </div>
@@ -704,7 +704,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">Type de carte:</Label>
-                  <div className="flex bg-gray-100 rounded-md p-1">
+                  <div className="flex bg-muted rounded-md p-1">
                     <Button
                       variant={mapType === 'standard' ? 'default' : 'ghost'}
                       size="sm"
@@ -775,11 +775,11 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                           <strong className="text-success">
                             Position sélectionnée
                           </strong>
-                          <div className="text-xs text-gray-600 mt-1">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
                           </div>
                           {address && (
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-muted-foreground mt-1">
                               {address}
                             </div>
                           )}
@@ -805,12 +805,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               </div>
 
               {/* Map Instructions */}
-              <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+              <div className="bg-warning/10 p-3 rounded-md border border-warning/30">
                 <div className="flex items-start gap-2">
-                  <Map className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <Map className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-amber-800 mb-1">Contrôles de la carte</p>
-                    <ul className="text-amber-700 space-y-1 text-xs">
+                    <p className="font-medium text-warning mb-1">Contrôles de la carte</p>
+                    <ul className="text-warning space-y-1 text-xs">
                       <li>• Utilisez les boutons +/- pour zoomer</li>
                       <li>• Cliquez et faites glisser pour vous déplacer</li>
                       <li>• Double-cliquez pour zoomer rapidement</li>
@@ -845,22 +845,22 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               <Crosshair className="h-4 w-4" />
               Résumé de la localisation
             </h4>
-            <div className="bg-gray-50 p-3 rounded-md space-y-2">
+            <div className="bg-muted p-3 rounded-md space-y-2">
               {address && (
                 <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">Adresse</p>
-                    <p className="text-sm text-gray-600 break-words">{address}</p>
+                    <p className="text-sm text-muted-foreground break-words">{address}</p>
                   </div>
                 </div>
               )}
               {areCoordinatesValid() && (
                 <div className="flex items-start gap-2">
-                  <Globe className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <Globe className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">Coordonnées</p>
-                    <p className="text-sm font-mono text-gray-600">
+                    <p className="text-sm font-mono text-muted-foreground">
                       {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
                     </p>
                   </div>

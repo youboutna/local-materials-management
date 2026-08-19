@@ -92,26 +92,26 @@ const MainNavbar = () => {
                   {isSupplierOnly ? (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-foreground">
                           <Building2 className="h-5 w-5 mr-3" />
                           <span>{t('nav.supplier_portal') || 'Supplier Portal'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/supplier-tender" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/supplier-tender" className="flex items-center px-4 py-3 text-foreground">
                           <Building2 className="h-5 w-5 mr-3" />
                           <span>{t('nav.supplier_tender_portal') || 'Portail Soumissions'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
+                        <Link to="/supplier-access" className="flex items-center px-4 py-3 text-foreground bg-primary/5">
                           <Shield className="h-5 w-5 mr-3 text-primary" />
                           <span>{t('nav.supplier_access') || 'Supplier Document Access'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-gray-900 bg-amber-50">
-                          <Lock className="h-5 w-5 mr-3 text-amber-600" />
+                        <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-foreground bg-warning/10">
+                          <Lock className="h-5 w-5 mr-3 text-warning" />
                           <span>{t('nav.evaluation_access') || 'Evaluation Access'}</span>
                         </Link>
                       </DropdownMenuItem>
@@ -119,42 +119,42 @@ const MainNavbar = () => {
                   ) : (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to="/dashboard" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/dashboard" className="flex items-center px-4 py-3 text-foreground">
                           <Home className="h-5 w-5 mr-3" />
                           <span>{t('dashboard.title') || 'Dashboard'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/projects" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/projects" className="flex items-center px-4 py-3 text-foreground">
                           <Briefcase className="h-5 w-5 mr-3" />
                           <span>{t('nav.projects') || 'Projets'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/materials" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/materials" className="flex items-center px-4 py-3 text-foreground">
                           <Package className="h-5 w-5 mr-3" />
                           <span>{t('nav.materials') || 'Matériaux'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/documents" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/documents" className="flex items-center px-4 py-3 text-foreground">
                           <FileText className="h-5 w-5 mr-3" />
                           <span>{t('documents.title') || 'Documents'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/tasks" className="flex items-center px-4 py-3 text-foreground">
                           <ClipboardList className="h-5 w-5 mr-3" />
                           <span>{t('task.title') || 'Tâches'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/employees" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/employees" className="flex items-center px-4 py-3 text-foreground">
                           <Users className="h-5 w-5 mr-3" />
                           <span>{t('nav.employees') || 'Employés'}</span>
                         </Link>
@@ -163,14 +163,14 @@ const MainNavbar = () => {
                       {canManageUsers && (
                         <>
                           <DropdownMenuItem asChild>
-                            <Link to="/users" className="flex items-center px-4 py-3 text-gray-900">
+                            <Link to="/users" className="flex items-center px-4 py-3 text-foreground">
                               <Users className="h-5 w-5 mr-3" />
                               <span>{t('nav.users') || 'Utilisateurs'}</span>
                             </Link>
                           </DropdownMenuItem>
                           
                           <DropdownMenuItem asChild>
-                            <Link to="/settings" className="flex items-center px-4 py-3 text-gray-900">
+                            <Link to="/settings" className="flex items-center px-4 py-3 text-foreground">
                               <Cog className="h-5 w-5 mr-3" />
                               <span>{t('settings.title') || 'Settings'}</span>
                             </Link>
@@ -179,14 +179,14 @@ const MainNavbar = () => {
                       )}
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/suppliers" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/suppliers" className="flex items-center px-4 py-3 text-foreground">
                           <Building2 className="h-5 w-5 mr-3" />
                           <span>{t('nav.suppliers') || 'Fournisseurs'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
-                        <Link to="/tender-management" className="flex items-center px-4 py-3 text-gray-900">
+                        <Link to="/tender-management" className="flex items-center px-4 py-3 text-foreground">
                           <FileText className="h-5 w-5 mr-3" />
                           <span>{t('nav.tender_management') || "Appels d'Offres"}</span>
                         </Link>
@@ -280,7 +280,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/projects"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('projects.all') || 'Tous les projets'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -291,7 +291,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/projects/create"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('projects.new') || 'Nouveau projet'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -302,7 +302,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/projects/import"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none flex items-center">
                             <Upload className="h-4 w-4 mr-2" />
@@ -316,7 +316,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/insurance-management"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('insurance_management.title') || 'Insurance Management'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -327,7 +327,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/bank-guarantee-monitor"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('bank_guarantee.title') || 'Bank Guarantee Monitoring'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -338,7 +338,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/inspection-monitoring"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('inspection_monitoring.title') || 'Inspection Monitoring'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -349,7 +349,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/notifications-center"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('notifications_center.title') || 'Notifications Center'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -360,7 +360,7 @@ const MainNavbar = () => {
                       <NavigationMenuLink asChild>
                         <Link
                           to="/payment-control"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-foreground"
                         >
                           <div className="text-sm font-medium leading-none">{t('payment_control.title') || 'Payment Control'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">

@@ -122,7 +122,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
       supplier_completed: { variant: 'secondary', className: 'bg-success text-white' },
       approved: { variant: 'secondary', className: 'bg-success text-white' },
       rejected: { variant: 'destructive', className: '' },
-      expired: { variant: 'outline', className: 'text-red-500 border-red-500' }
+      expired: { variant: 'outline', className: 'text-destructive border-red-500' }
     };
     const config = configs[status] || { variant: 'outline' as const, className: '' };
     return <Badge variant={config.variant} className={config.className}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status}</Badge>;
@@ -279,12 +279,12 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
               </div>
 
               {selectedInitiation.supplierDeadline && (
-                <Alert className={isPast(new Date(selectedInitiation.supplierDeadline)) ? 'border-red-500 bg-red-50' : 'border-orange-200 bg-orange-50'}>
+                <Alert className={isPast(new Date(selectedInitiation.supplierDeadline)) ? 'border-red-500 bg-destructive/10' : 'border-warning/30 bg-warning/10'}>
                   <Clock className="h-4 w-4" />
                   <AlertDescription>
                     Date limite: {format(new Date(selectedInitiation.supplierDeadline), 'PPP', { locale: fr })}
                     {isPast(new Date(selectedInitiation.supplierDeadline)) && (
-                      <span className="text-red-600 font-medium ml-2">(Délai dépassé!)</span>
+                      <span className="text-destructive font-medium ml-2">(Délai dépassé!)</span>
                     )}
                   </AlertDescription>
                 </Alert>
@@ -352,7 +352,7 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
                 {ROLE_LABELS[initiation.initiatorRole as InitiatorRole]}
               </Badge>
               {initiation.supplierDeadline && (
-                <span className={`text-xs ${isExpired ? 'text-red-600' : isExpiring ? 'text-orange-600' : 'text-muted-foreground'}`}>
+                <span className={`text-xs ${isExpired ? 'text-destructive' : isExpiring ? 'text-warning' : 'text-muted-foreground'}`}>
                   <Clock className="h-3 w-3 inline mr-1" />
                   {isExpired 
                     ? 'Délai dépassé' 
@@ -386,7 +386,7 @@ const getStatusBadge = (status: string) => {
     supplier_completed: { variant: 'secondary', className: 'bg-success text-white' },
     approved: { variant: 'secondary', className: 'bg-success text-white' },
     rejected: { variant: 'destructive', className: '' },
-    expired: { variant: 'outline', className: 'text-red-500 border-red-500' }
+    expired: { variant: 'outline', className: 'text-destructive border-red-500' }
   };
   const config = configs[status] || { variant: 'outline' as const, className: '' };
   return <Badge variant={config.variant} className={config.className}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status}</Badge>;

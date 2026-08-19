@@ -73,7 +73,7 @@ export function NotificationDropdown() {
               return (
                 <DropdownMenuItem
                   key={notification.id}
-                  className={`p-3 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                  className={`p-3 cursor-pointer ${!notification.read ? 'bg-primary/10' : ''}`}
                   asChild
                 >
                   <Link
@@ -110,7 +110,7 @@ export function NotificationDropdown() {
                             href={d.file_url || d.fileUrl || d.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-xs text-blue-600 hover:underline block"
+                            className="text-xs text-primary hover:underline block"
                           >
                             {d.file_name || d.name || `Document ${i + 1}`}
                           </a>

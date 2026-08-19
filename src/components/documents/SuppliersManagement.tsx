@@ -243,7 +243,7 @@ const SuppliersManagement = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-2">
-                  <Building2 className="h-5 w-5 text-blue-500" />
+                  <Building2 className="h-5 w-5 text-primary" />
                   <div>
                     <h3 className="font-medium">{supplier.name}</h3>
                     {supplier.category && (
@@ -290,7 +290,7 @@ const SuppliersManagement = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-destructive hover:text-destructive"
                   onClick={() => handleDelete(supplier.id)}
                   disabled={deleteMutation.isPending}
                 >
@@ -305,8 +305,8 @@ const SuppliersManagement = () => {
       {suppliers?.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
-            <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Aucun fournisseur trouvé</p>
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Aucun fournisseur trouvé</p>
           </CardContent>
         </Card>
       )}

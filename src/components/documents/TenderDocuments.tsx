@@ -35,13 +35,13 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
       case 'approved':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'requires_revision':
-        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       case 'submitted':
-        return <Clock className="h-4 w-4 text-blue-600" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -50,13 +50,13 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
       case 'approved':
         return 'bg-success-soft text-success';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive';
       case 'requires_revision':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/10 text-warning';
       case 'submitted':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -137,7 +137,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                               {tenderDoc.title || tenderDoc.file_name || 'Document'}
                             </h4>
                             {tenderDoc.description && (
-                              <p className="text-xs text-gray-600 mb-2">
+                              <p className="text-xs text-muted-foreground mb-2">
                                 {tenderDoc.description}
                               </p>
                             )}
@@ -154,13 +154,13 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                       </CardHeader>
                       <CardContent className="pt-0">
                         {tenderDoc.file_name && (
-                          <div className="text-xs text-gray-500 mb-3">
+                          <div className="text-xs text-muted-foreground mb-3">
                             Fichier: {tenderDoc.file_name}
                           </div>
                         )}
                         
                         {tenderDoc.description && (
-                          <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded">
+                          <div className="text-xs text-muted-foreground mb-3 p-2 bg-muted rounded">
                             <strong>Notes:</strong> {tenderDoc.description}
                           </div>
                         )}
@@ -188,8 +188,8 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                 </div>
 
                 {filterDocumentsByCategory(category).length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvé pour ce projet.</p>
                   </div>
                 )}

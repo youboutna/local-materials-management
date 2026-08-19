@@ -397,7 +397,7 @@ const InsuranceCertificateManager = () => {
           ) : (
             <div className="grid gap-4">
               {alerts.map((alert, index) => (
-                <Card key={index} className={`${alert.alertLevel === 'expired' ? 'border-red-200' : alert.alertLevel === 'critical' ? 'border-orange-200' : 'border-yellow-200'}`}>
+                <Card key={index} className={`${alert.alertLevel === 'expired' ? 'border-destructive/30' : alert.alertLevel === 'critical' ? 'border-warning/30' : 'border-warning/30'}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -418,7 +418,7 @@ const InsuranceCertificateManager = () => {
                   <CardContent>
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           <strong>Expiration:</strong> {new Date(alert.expiryDate || '').toLocaleDateString()}
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -446,7 +446,7 @@ const InsuranceCertificateManager = () => {
           <Card>
             <CardContent className="flex items-center justify-center h-32">
               <div className="text-center">
-                <Calendar className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                <Calendar className="h-8 w-8 text-primary mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Les certificats actifs seront affichés ici</p>
               </div>
             </CardContent>
@@ -457,7 +457,7 @@ const InsuranceCertificateManager = () => {
           <Card>
             <CardContent className="flex items-center justify-center h-32">
               <div className="text-center">
-                <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Les certificats expirés seront affichés ici</p>
               </div>
             </CardContent>

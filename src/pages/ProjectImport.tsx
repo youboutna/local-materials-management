@@ -76,11 +76,11 @@ const ProjectImport = () => {
                 {t("projects.import.fileImportDescription")}
               </p>
 
-              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <div className="bg-primary/10 dark:bg-blue-950/30 border border-primary/30 dark:border-blue-800 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                   {t("projects.import.importantInfo")}:
                 </h3>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <ul className="text-sm text-primary dark:text-blue-200 space-y-1">
                   <li>
                     • {t("projects.import.supportedFormats")}: Excel (.xlsx,
                     .xls), JSON (.json), CSV (.csv)
@@ -120,11 +120,11 @@ const ProjectImport = () => {
                 {t("projects.importExport.predefinedDescription")}
               </p>
 
-              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <div className="bg-primary/10 dark:bg-blue-950/30 border border-primary/30 dark:border-blue-800 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                   {t("projects.importExport.includedProjects")}:
                 </h3>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <ul className="text-sm text-primary dark:text-blue-200 space-y-1">
                   <li>• {t("projects.importExport.infrastructureProjects")}</li>
                   <li>• {t("projects.importExport.diverseFunding")}</li>
                   <li>• {t("projects.importExport.variedMarkets")}</li>

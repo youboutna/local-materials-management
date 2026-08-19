@@ -75,11 +75,11 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
       case 'completed':
         return { icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', label: 'Payé' };
       case 'approved':
-        return { icon: Clock, color: 'text-blue-500', bgColor: 'bg-blue-500/10', label: 'Approuvé' };
+        return { icon: Clock, color: 'text-primary', bgColor: 'bg-blue-500/10', label: 'Approuvé' };
       case 'overdue':
         return { icon: AlertTriangle, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'En retard' };
       case 'blocked':
-        return { icon: Bell, color: 'text-amber-500', bgColor: 'bg-amber-500/10', label: 'Bloqué' };
+        return { icon: Bell, color: 'text-warning', bgColor: 'bg-amber-500/10', label: 'Bloqué' };
       case 'pending':
       default:
         return { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'En attente' };
@@ -163,7 +163,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
           )}>
             <div className={cn(
               "flex items-center gap-2 mb-2",
-              totalPenalties > 0 ? "text-orange-600" : "text-muted-foreground"
+              totalPenalties > 0 ? "text-warning" : "text-muted-foreground"
             )}>
               <TrendingDown className="h-4 w-4" />
               <span className="text-xs font-medium uppercase">Pénalités</span>

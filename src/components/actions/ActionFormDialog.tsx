@@ -232,13 +232,13 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
                   <span className="text-success">● Faible</span>
                 </SelectItem>
                 <SelectItem value="medium">
-                  <span className="text-yellow-600">● Moyenne</span>
+                  <span className="text-warning">● Moyenne</span>
                 </SelectItem>
                 <SelectItem value="high">
-                  <span className="text-orange-600">● Élevée</span>
+                  <span className="text-warning">● Élevée</span>
                 </SelectItem>
                 <SelectItem value="urgent">
-                  <span className="text-red-600">● Urgente</span>
+                  <span className="text-destructive">● Urgente</span>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -353,7 +353,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
                   }
                   return true;
                 }).length === 0 && (
-                  <p className="text-sm text-orange-600">
+                  <p className="text-sm text-warning">
                     {formData.actionType === 'sms' && 'Aucune personne avec numéro de téléphone disponible'}
                     {formData.actionType === 'email' && 'Aucune personne avec adresse email disponible'}
                     {formData.actionType === 'call' && 'Aucune personne avec numéro de téléphone disponible'}
@@ -370,7 +370,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               <div className="text-xs text-muted-foreground mb-2">
                 Les notifications seront automatiquement envoyées aux personnes du niveau hiérarchique sélectionné
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="p-3 bg-primary/10 rounded-lg">
                 <div className="text-sm">
                   <strong>Niveau sélectionné :</strong> {
                     formData.escalationLevel === 'team' && 'Équipe - Collègues de même niveau'

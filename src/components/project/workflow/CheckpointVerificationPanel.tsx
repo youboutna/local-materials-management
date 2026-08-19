@@ -55,8 +55,8 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'verified': return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-destructive" />;
+      case 'in_progress': return <Clock className="h-4 w-4 text-primary" />;
       default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
@@ -64,8 +64,8 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified': return 'bg-success-soft text-success border-success/30';
-      case 'failed': return 'bg-red-100 text-red-700 border-red-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'failed': return 'bg-destructive/10 text-destructive border-destructive/30';
+      case 'in_progress': return 'bg-primary/10 text-primary border-primary/30';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -87,7 +87,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
             {verificationStatus.pending}
           </span>
           <span className="flex items-center gap-1">
-            <XCircle className="h-3 w-3 text-red-600" />
+            <XCircle className="h-3 w-3 text-destructive" />
             {verificationStatus.failed}
           </span>
         </div>
@@ -130,8 +130,8 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
             <p className="text-lg font-bold">{verificationStatus.pending}</p>
             <p className="text-xs text-muted-foreground">En attente</p>
           </div>
-          <div className="p-2 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-lg font-bold text-red-600">{verificationStatus.failed}</p>
+          <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/30">
+            <p className="text-lg font-bold text-destructive">{verificationStatus.failed}</p>
             <p className="text-xs text-muted-foreground">Échoués</p>
           </div>
         </div>
@@ -152,7 +152,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Retenue</p>
-                <p className="font-medium text-amber-600">{formatCurrency(decompteData.retention_amount)}</p>
+                <p className="font-medium text-warning">{formatCurrency(decompteData.retention_amount)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Net</p>

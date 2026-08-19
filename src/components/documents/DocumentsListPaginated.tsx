@@ -214,7 +214,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                       {getDocumentTypeLabel(document.documentType)}
                     </Badge>
                     {document.isInternalOnly && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
                         Interne
                       </Badge>
                     )}
@@ -282,7 +282,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                       size="sm" 
                       variant="ghost"
                       onClick={() => onDocumentDelete(document)}
-                      className="flex items-center gap-2 text-red-500 hover:text-red-700"
+                      className="flex items-center gap-2 text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

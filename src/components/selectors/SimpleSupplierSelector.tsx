@@ -57,7 +57,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
       {label && <Label>{label}</Label>}
       
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
         <Input
           placeholder="Rechercher un fournisseur..."
           value={searchTerm}
@@ -89,7 +89,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                   )}
                 </div>
               ) : value ? (
-                <div className="flex items-center gap-2 text-orange-600">
+                <div className="flex items-center gap-2 text-warning">
                   <Building2 className="h-4 w-4" />
                   <span>Fournisseur sélectionné (ID: {value})</span>
                 </div>
@@ -105,7 +105,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                     <div>
                       <div className="font-medium">{supplier.name}</div>
                       {supplier.contact_person && (
-                        <div className="text-xs text-gray-500">{supplier.contact_person}</div>
+                        <div className="text-xs text-muted-foreground">{supplier.contact_person}</div>
                       )}
                     </div>
                   </div>

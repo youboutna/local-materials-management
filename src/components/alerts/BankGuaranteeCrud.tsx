@@ -51,9 +51,9 @@ const BankGuaranteeCrud = () => {
 
   const statusOptions = [
     { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
-    { value: 'cancelled', label: 'Annulée', color: 'bg-gray-100 text-gray-800' },
-    { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' }
+    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
+    { value: 'cancelled', label: 'Annulée', color: 'bg-muted text-foreground' },
+    { value: 'pending', label: 'En attente', color: 'bg-warning/10 text-warning' }
   ];
 
   const resetForm = () => {
@@ -173,7 +173,7 @@ const BankGuaranteeCrud = () => {
   };
 
   const getStatusColor = (status: string) => {
-    return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
+    return statusOptions.find(option => option.value === status)?.color || 'bg-muted text-foreground';
   };
 
   const isExpiringSoon = (expiryDate: string) => {
@@ -388,7 +388,7 @@ const BankGuaranteeCrud = () => {
                     <div className="flex items-center gap-2">
                       {new Date(guarantee.expiryDate || guarantee.expiry_date || '').toLocaleDateString('fr-FR')}
                       {isExpiringSoon(guarantee.expiryDate || guarantee.expiry_date || '') && (
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <AlertTriangle className="h-4 w-4 text-warning" />
                       )}
                     </div>
                   </TableCell>
@@ -422,7 +422,7 @@ const BankGuaranteeCrud = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(guarantee.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -432,7 +432,7 @@ const BankGuaranteeCrud = () => {
               ))}
               {guarantees.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Aucune garantie bancaire trouvée
                   </TableCell>
                 </TableRow>

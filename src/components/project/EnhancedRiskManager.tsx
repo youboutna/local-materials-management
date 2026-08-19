@@ -86,10 +86,10 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   const getRiskLevelColor = (level: string) => {
     switch (level) {
       case 'low': return 'bg-success-soft text-success';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'critical': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'medium': return 'bg-warning/10 text-warning';
+      case 'high': return 'bg-warning/10 text-warning';
+      case 'critical': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -190,7 +190,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   if (error) {
     return (
       <div className="p-6">
-        <div className="text-red-600">Erreur: {error instanceof Error ? error.message : 'Erreur inconnue'}</div>
+        <div className="text-destructive">Erreur: {error instanceof Error ? error.message : 'Erreur inconnue'}</div>
       </div>
     );
   }

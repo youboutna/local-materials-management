@@ -262,7 +262,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                         status?.available 
                           ? 'bg-success-soft border-success/30 dark:bg-success dark:border-success'
                           : docType.required
-                            ? 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+                            ? 'bg-destructive/10 border-destructive/30 dark:bg-red-950 dark:border-red-800'
                             : 'bg-muted/30'
                       )}
                     >

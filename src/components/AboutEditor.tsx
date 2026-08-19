@@ -60,7 +60,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
   };
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-muted">
       <div className="container mx-auto px-4">
         <Card className="max-w-4xl mx-auto">
           <CardHeader className="text-center">
@@ -114,7 +114,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                   className="min-h-[300px] text-base leading-relaxed"
                   placeholder={t('footer.about_desc')}
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {t('footer.about_desc')}
                 </p>
               </div>

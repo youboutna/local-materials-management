@@ -277,11 +277,11 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   return (
     <Card className="border-l-4 border-l-blue-600">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardTitle className="flex items-center gap-2 text-blue-800">
+        <CardTitle className="flex items-center gap-2 text-primary">
           <Calculator className="h-5 w-5" />
           Calcul des métrés
         </CardTitle>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div>
             <Badge variant="outline">{calculations.length} calculs</Badge>
           </div>
@@ -301,9 +301,9 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
           </TabsList>
 
           <TabsContent value="automatic" className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-800 mb-2">Calcul automatique des métrés</h3>
-              <p className="text-sm text-blue-700 mb-4">
+            <div className="bg-primary/10 p-4 rounded-lg">
+              <h3 className="font-medium text-primary mb-2">Calcul automatique des métrés</h3>
+              <p className="text-sm text-primary mb-4">
                 Les métrés seront calculés automatiquement en fonction des matériaux du projet et de leurs catégories.
               </p>
               <Button onClick={generateAutomaticCalculations} className="bg-blue-600 hover:bg-blue-700">
@@ -329,7 +329,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
           <div className="space-y-4">
             <h4 className="font-medium">Calculs de métré</h4>
             {calculations.map((calc, index) => (
-              <Card key={index} className="border border-gray-200">
+              <Card key={index} className="border border-border">
                 <CardContent className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Material Selection */}
@@ -399,7 +399,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         variant="outline"
                         size="icon"
                         onClick={() => removeCalculation(index)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -448,7 +448,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         type="number"
                         value={calc.quantity.toFixed(2)}
                         readOnly
-                        className="bg-gray-50"
+                        className="bg-muted"
                       />
                     </div>
                   </div>

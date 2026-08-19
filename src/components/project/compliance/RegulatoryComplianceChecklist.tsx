@@ -40,9 +40,9 @@ interface Props {
 
 const ANSWER_COLORS: Record<RegulatoryAnswer, string> = {
   compliant: 'bg-success-soft text-success',
-  in_progress: 'bg-blue-100 text-blue-800',
-  non_compliant: 'bg-red-100 text-red-800',
-  not_applicable: 'bg-gray-100 text-gray-700',
+  in_progress: 'bg-primary/10 text-primary',
+  non_compliant: 'bg-destructive/10 text-destructive',
+  not_applicable: 'bg-muted text-foreground',
 };
 
 function statusToAnswer(status?: string): RegulatoryAnswer {

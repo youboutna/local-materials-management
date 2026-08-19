@@ -96,10 +96,10 @@ const PaymentControlContent = () => {
     switch (type) {
       case 'payment_completed': return <CheckCircle className="h-4 w-4 text-success" />;
       case 'payment_failed':
-      case 'payment_blocked': return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case 'payment_blocked': return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case 'payment_due':
-      case 'payment_warning': return <Clock className="h-4 w-4 text-orange-500" />;
-      default: return <CreditCard className="h-4 w-4 text-blue-500" />;
+      case 'payment_warning': return <Clock className="h-4 w-4 text-warning" />;
+      default: return <CreditCard className="h-4 w-4 text-primary" />;
     }
   };
 
@@ -107,10 +107,10 @@ const PaymentControlContent = () => {
     switch (type) {
       case 'payment_completed': return 'bg-success-soft text-success border-success/30';
       case 'payment_failed':
-      case 'payment_blocked': return 'bg-red-100 text-red-800 border-red-200';
+      case 'payment_blocked': return 'bg-destructive/10 text-destructive border-destructive/30';
       case 'payment_due':
-      case 'payment_warning': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'payment_warning': return 'bg-warning/10 text-warning border-warning/30';
+      default: return 'bg-primary/10 text-primary border-primary/30';
     }
   };
 
@@ -127,20 +127,20 @@ const PaymentControlContent = () => {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Contrôle des Paiements</h1>
-              <p className="text-gray-600 mt-2">Gestion et validation des paiements avec notifications en temps réel</p>
+              <h1 className="text-3xl font-bold text-foreground">Contrôle des Paiements</h1>
+              <p className="text-muted-foreground mt-2">Gestion et validation des paiements avec notifications en temps réel</p>
             </div>
             <Button variant="outline" onClick={runChecks}>Actualiser</Button>
           </div>
@@ -187,7 +187,7 @@ const PaymentControlContent = () => {
                   ) : (
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {paymentNotifications.map((n: any) => (
-                        <div key={n.id} className={`p-4 rounded-lg border ${!n.read ? 'border-l-4 border-l-primary bg-blue-50' : 'bg-white'}`}>
+                        <div key={n.id} className={`p-4 rounded-lg border ${!n.read ? 'border-l-4 border-l-primary bg-primary/10' : 'bg-white'}`}>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">

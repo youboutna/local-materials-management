@@ -100,11 +100,11 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     Calcul des métrés disponible après création
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     Le calcul automatique et manuel des métrés sera disponible une fois le projet créé.
                     Vous pourrez alors accéder aux fonctionnalités avancées de calcul de quantités.
                   </p>

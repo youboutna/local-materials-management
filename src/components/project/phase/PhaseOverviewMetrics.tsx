@@ -122,14 +122,14 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
             <div className="mt-3 pt-3 border-t border-success/30/30 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Payé:</span>
-                <span className="font-medium text-blue-600">
+                <span className="font-medium text-primary">
                   {formatCurrency(phaseCosts.totalPayments)}
                 </span>
               </div>
               
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Dépenses:</span>
-                <span className="font-medium text-orange-600">
+                <span className="font-medium text-warning">
                   {formatCurrency(phaseCosts.totalExpenses)}
                 </span>
               </div>
@@ -141,7 +141,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
                 <span className={cn(
                   "font-bold",
                   phaseCosts.totalSpent > (phase.estimatedCost || 0) 
-                    ? "text-red-600" 
+                    ? "text-destructive" 
                     : "text-success"
                 )}>
                   {formatCurrency(phaseCosts.totalSpent)}
@@ -159,14 +159,14 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
         <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent">
           <div className="flex items-center justify-between">
             <div className="p-2 rounded-xl bg-blue-500/10">
-              <Calendar className="h-5 w-5 text-blue-600" />
+              <Calendar className="h-5 w-5 text-primary" />
             </div>
           </div>
           <div className="mt-3">
             <p className="text-2xl font-bold">{calculateRemainingDays(phase.endDate)}</p>
             <p className="text-sm text-muted-foreground">Jours restants</p>
           </div>
-          <p className="text-xs text-blue-600 mt-2">
+          <p className="text-xs text-primary mt-2">
             Fin: {formatDate(phase.endDate)}
           </p>
         </div>

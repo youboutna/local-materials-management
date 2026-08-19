@@ -220,8 +220,8 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
             
             {/* Completion Validation Warning */}
             {!completionValidation.canComplete && (
-              <Alert className="ml-6 border-amber-200 bg-amber-50">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <Alert className="ml-6 border-warning/30 bg-warning/10">
+                <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-sm">
                   <span className="font-medium">Impossible de marquer comme terminé</span>
                   <ul className="mt-1 space-y-1 text-muted-foreground">

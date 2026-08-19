@@ -56,12 +56,12 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
   const getPaymentStatusColor = (status: string) => {
     const colors = {
       'paid': 'bg-success-soft text-success',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'overdue': 'bg-red-100 text-red-800',
-      'cancelled': 'bg-gray-100 text-gray-800',
-      'processing': 'bg-blue-100 text-blue-800',
+      'pending': 'bg-warning/10 text-warning',
+      'overdue': 'bg-destructive/10 text-destructive',
+      'cancelled': 'bg-muted text-foreground',
+      'processing': 'bg-primary/10 text-primary',
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[status as keyof typeof colors] || 'bg-muted text-foreground';
   };
 
   const calculateTotals = () => {
@@ -397,11 +397,11 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">En attente</p>
-            <p className="font-bold text-lg text-yellow-600">{formatNumber2(calculateTotals().pendingAmount)} MRU</p>
+            <p className="font-bold text-lg text-warning">{formatNumber2(calculateTotals().pendingAmount)} MRU</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Retard</p>
-            <p className="font-bold text-lg text-red-600">{formatNumber2(calculateTotals().overdueAmount)} MRU</p>
+            <p className="font-bold text-lg text-destructive">{formatNumber2(calculateTotals().overdueAmount)} MRU</p>
           </div>
         </div>
 

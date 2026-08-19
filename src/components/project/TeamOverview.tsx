@@ -207,7 +207,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
         <CardContent className="p-6">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvée</h3>
+            <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune phase trouvée</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des ressources.
             </p>
@@ -320,10 +320,10 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                                     });
                                   }
                                 }}
-                                className="rounded border-gray-300"
+                                className="rounded border-border"
                               />
                               <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
-                                <span className="text-gray-900 dark:text-gray-100">
+                                <span className="text-foreground dark:text-gray-100">
                                   {phase.phase_name || `Phase ${phase.id}`}
                                 </span>
                                 {phase.construction_phase && (

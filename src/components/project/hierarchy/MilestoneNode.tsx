@@ -106,7 +106,7 @@ export const MilestoneNode: React.FC<MilestoneNodeProps> = ({
         return {
           label: "Inspection",
           icon: <ClipboardCheck className="h-4 w-4" />,
-          className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+          className: "bg-primary/10 text-primary dark:bg-blue-900/30 dark:text-blue-400",
           action: "Programmer inspection",
         };
       case "payment":
@@ -129,7 +129,7 @@ export const MilestoneNode: React.FC<MilestoneNodeProps> = ({
         return {
           label: "Livraison",
           icon: <Truck className="h-4 w-4" />,
-          className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+          className: "bg-warning/10 text-warning dark:bg-amber-900/30 dark:text-amber-400",
           action: "Confirmer livraison",
         };
       default:

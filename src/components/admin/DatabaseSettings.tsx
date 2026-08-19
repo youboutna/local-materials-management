@@ -158,15 +158,15 @@ const DatabaseSettings = () => {
               onValueChange={(value) => setProvider(value as DatabaseProvider)}
               className="grid grid-cols-3 gap-4 mt-2"
             >
-              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
+              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="supabase" id="supabase" />
                 <Label htmlFor="supabase" className="cursor-pointer font-medium">Supabase</Label>
               </div>
-              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
+              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="postgresql" id="postgresql" />
                 <Label htmlFor="postgresql" className="cursor-pointer font-medium">PostgreSQL</Label>
               </div>
-              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
+              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="mysql" id="mysql" />
                 <Label htmlFor="mysql" className="cursor-pointer font-medium">MySQL</Label>
               </div>

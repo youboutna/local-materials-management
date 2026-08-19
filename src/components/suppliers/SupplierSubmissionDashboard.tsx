@@ -74,11 +74,11 @@ const SupplierSubmissionDashboard = () => {
       case 'approved':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'under_review':
-        return <Clock className="h-4 w-4 text-blue-600" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       default:
-        return <FileText className="h-4 w-4 text-gray-600" />;
+        return <FileText className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -87,11 +87,11 @@ const SupplierSubmissionDashboard = () => {
       case 'approved':
         return 'bg-success-soft text-success border-success/30';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       case 'under_review':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-primary/10 text-primary border-primary/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -121,10 +121,10 @@ const SupplierSubmissionDashboard = () => {
     if (!validationResult) return null;
 
     if (!validationResult.is_valid) {
-      return { icon: <XCircle className="h-4 w-4" />, color: 'text-red-600', label: 'Invalide' };
+      return { icon: <XCircle className="h-4 w-4" />, color: 'text-destructive', label: 'Invalide' };
     }
     if (validationResult.warnings?.length > 0) {
-      return { icon: <AlertTriangle className="h-4 w-4" />, color: 'text-yellow-600', label: 'Avertissements' };
+      return { icon: <AlertTriangle className="h-4 w-4" />, color: 'text-warning', label: 'Avertissements' };
     }
     return { icon: <CheckCircle className="h-4 w-4" />, color: 'text-success', label: 'Valide' };
   };
@@ -199,7 +199,7 @@ const SupplierSubmissionDashboard = () => {
                   <p className="text-sm text-muted-foreground">Soumises</p>
                   <p className="text-2xl font-bold">{stats.submitted}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-gray-500" />
+                <TrendingUp className="h-8 w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
@@ -211,7 +211,7 @@ const SupplierSubmissionDashboard = () => {
                   <p className="text-sm text-muted-foreground">En évaluation</p>
                   <p className="text-2xl font-bold">{stats.under_review}</p>
                 </div>
-                <Clock className="h-8 w-8 text-blue-500" />
+                <Clock className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -235,7 +235,7 @@ const SupplierSubmissionDashboard = () => {
                   <p className="text-sm text-muted-foreground">Rejetées</p>
                   <p className="text-2xl font-bold">{stats.rejected}</p>
                 </div>
-                <XCircle className="h-8 w-8 text-red-500" />
+                <XCircle className="h-8 w-8 text-destructive" />
               </div>
             </CardContent>
           </Card>

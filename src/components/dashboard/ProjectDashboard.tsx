@@ -209,15 +209,15 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
         return <CheckCircle className="h-4 w-4 text-success" />;
       case ProjectStatus.EN_COURS:
       case ProjectStatus.EN_CONSTRUCTION:
-        return <Activity className="h-4 w-4 text-blue-500" />;
+        return <Activity className="h-4 w-4 text-primary" />;
       case ProjectStatus.EN_RETARD:
       case ProjectStatus.SUSPENDU:
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 text-warning" />;
       case ProjectStatus.ANNULE:
       case ProjectStatus.CANCELLED:
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   }
 
@@ -287,7 +287,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                   <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
                   <p className="text-2xl font-bold">{projectStats.total}</p>
                 </div>
-                <Building className="h-8 w-8 text-blue-500" />
+                <Building className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -297,9 +297,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
-                  <p className="text-2xl font-bold text-blue-600">{projectStats.activeProjects}</p>
+                  <p className="text-2xl font-bold text-primary">{projectStats.activeProjects}</p>
                 </div>
-                <Activity className="h-8 w-8 text-blue-500" />
+                <Activity className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -611,7 +611,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                     <div key={material.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <Package className="h-8 w-8 text-blue-500" />
+                          <Package className="h-8 w-8 text-primary" />
                           <div>
                             <h4 className="font-semibold">{material.material_name || material.material_id}</h4>
                             <p className="text-sm text-muted-foreground">{material.material_type || ''}</p>

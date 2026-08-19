@@ -559,9 +559,9 @@ export default function ProjectFileImporter({
           </div>
         </div>
 
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="border-2 border-dashed border-border rounded-lg p-6">
           <div className="text-center">
-            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
             <div className="mt-4">
               <label htmlFor="file-upload" className="cursor-pointer">
                 <span className="mt-2 block text-sm font-medium">
@@ -582,17 +582,17 @@ export default function ProjectFileImporter({
         </div>
 
         {selectedFile && (
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
             <div className="flex items-center gap-3">
               {selectedFile.type.includes("excel") ||
               selectedFile.type.includes("spreadsheet") ? (
                 <FileSpreadsheet className="h-5 w-5 text-success" />
               ) : (
-                <FileText className="h-5 w-5 text-blue-600" />
+                <FileText className="h-5 w-5 text-primary" />
               )}
               <div>
                 <p className="text-sm font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {formatFileSize(selectedFile.size)}
                 </p>
               </div>
@@ -618,17 +618,17 @@ export default function ProjectFileImporter({
             className={
               importResult.success
                 ? "border-success/30 bg-success-soft"
-                : "border-red-200 bg-red-50"
+                : "border-destructive/30 bg-destructive/10"
             }
           >
             {importResult.success ? (
               <CheckCircle className="h-4 w-4 text-success" />
             ) : (
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertTriangle className="h-4 w-4 text-destructive" />
             )}
             <AlertDescription
               className={
-                importResult.success ? "text-success" : "text-red-800"
+                importResult.success ? "text-success" : "text-destructive"
               }
             >
               {importResult.message}

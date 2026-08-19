@@ -91,7 +91,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
               <Progress value={result.byCategory[weighting.category] ?? 0} className="h-2" />
 
               {!completeness.complete && (
-                <p className="flex items-center gap-1 text-xs text-amber-600">
+                <p className="flex items-center gap-1 text-xs text-warning">
                   <AlertCircle className="h-3 w-3" />
                   Critères obligatoires non notés : {completeness.missing.join(', ')}
                 </p>

@@ -170,7 +170,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
     <div className="space-y-2">
       {label && (
         <Label>
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
       

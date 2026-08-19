@@ -196,7 +196,7 @@ const Projects: React.FC = () => {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-red-600">
+        <div className="text-center text-destructive">
           Erreur lors du chargement des projets
         </div>
       </div>
@@ -356,7 +356,7 @@ const Projects: React.FC = () => {
                           <h4 className="font-medium text-lg mb-2">
                             {location.name}
                           </h4>
-                          <div className="space-y-1 text-sm text-gray-600">
+                          <div className="space-y-1 text-sm text-muted-foreground">
                             <p>
                               <strong>Région:</strong> {location.region}
                             </p>
@@ -365,12 +365,12 @@ const Projects: React.FC = () => {
                               <span
                                 className={`ml-1 px-2 py-1 rounded text-xs ${
                                   location.status === "en cours"
-                                    ? "bg-blue-100 text-blue-800"
+                                    ? "bg-primary/10 text-primary"
                                     : location.status === "terminé"
                                     ? "bg-success-soft text-success"
                                     : location.status === "en attente"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-gray-100 text-gray-800"
+                                    ? "bg-warning/10 text-warning"
+                                    : "bg-muted text-foreground"
                                 }`}
                               >
                                 {location.status}
@@ -391,7 +391,7 @@ const Projects: React.FC = () => {
                                 </p>
                               </>
                             )}
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               Coordonnées: {location.latitude.toFixed(6)},{" "}
                               {location.longitude.toFixed(6)}
                             </p>
@@ -416,7 +416,7 @@ const Projects: React.FC = () => {
               originalMapLocations.length > 0 && (
                 <Card>
                   <CardContent className="text-center py-8">
-                    <div className="text-gray-500">
+                    <div className="text-muted-foreground">
                       <Map className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">
                         Aucun projet trouvé

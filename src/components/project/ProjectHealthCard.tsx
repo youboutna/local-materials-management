@@ -149,11 +149,11 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
       case 'excellent':
         return <CheckCircle className="h-5 w-5 text-success" />;
       case 'good':
-        return <TrendingUp className="h-5 w-5 text-blue-500" />;
+        return <TrendingUp className="h-5 w-5 text-primary" />;
       case 'at_risk':
-        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+        return <AlertTriangle className="h-5 w-5 text-warning" />;
       case 'critical':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
     }
   };
 
@@ -258,8 +258,8 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
     <Card 
       className={cn(
         "overflow-hidden transition-all hover:shadow-lg cursor-pointer group",
-        healthAnalysis.status === 'critical' && "border-red-200",
-        healthAnalysis.status === 'at_risk' && "border-orange-200"
+        healthAnalysis.status === 'critical' && "border-destructive/30",
+        healthAnalysis.status === 'at_risk' && "border-warning/30"
       )}
       onClick={onClick}
     >
@@ -291,9 +291,9 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
                     className={cn(
                       "text-xs",
                       healthAnalysis.status === 'excellent' && "bg-success-soft text-success border-success/30",
-                      healthAnalysis.status === 'good' && "bg-blue-50 text-blue-700 border-blue-200",
-                      healthAnalysis.status === 'at_risk' && "bg-orange-50 text-orange-700 border-orange-200",
-                      healthAnalysis.status === 'critical' && "bg-red-50 text-red-700 border-red-200"
+                      healthAnalysis.status === 'good' && "bg-primary/10 text-primary border-primary/30",
+                      healthAnalysis.status === 'at_risk' && "bg-warning/10 text-warning border-warning/30",
+                      healthAnalysis.status === 'critical' && "bg-destructive/10 text-destructive border-destructive/30"
                     )}
                   >
                     {getHealthLabel(healthAnalysis.status)}
@@ -353,7 +353,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
           {daysInfo && (
             <div className={cn(
               "flex items-center gap-1",
-              daysInfo.isOverdue && "text-red-600"
+              daysInfo.isOverdue && "text-destructive"
             )}>
               <Calendar className="h-3.5 w-3.5" />
               <span>
@@ -387,7 +387,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
 
         {/* Alerts */}
         {(project.milestonesOverdue && project.milestonesOverdue > 0) && (
-          <div className="flex items-center gap-2 mt-3 p-2 bg-red-50 rounded-md text-red-700 text-sm">
+          <div className="flex items-center gap-2 mt-3 p-2 bg-destructive/10 rounded-md text-destructive text-sm">
             <AlertTriangle className="h-4 w-4" />
             <span>{project.milestonesOverdue} jalon(s) en retard</span>
           </div>

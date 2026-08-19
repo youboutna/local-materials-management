@@ -22,15 +22,15 @@ const getStatusConfig = (status: string) => {
     },
     rejected: {
       label: 'Rejetée',
-      className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+      className: 'bg-destructive/10 text-destructive dark:bg-red-900 dark:text-red-100'
     },
     in_progress: {
       label: 'En cours',
-      className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+      className: 'bg-primary/10 text-primary dark:bg-blue-900 dark:text-blue-100'
     },
     requires_changes: {
       label: 'Modifications requises',
-      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100'
+      className: 'bg-warning/10 text-warning dark:bg-orange-900 dark:text-orange-100'
     },
     scheduled: {
       label: 'Programmée',
@@ -40,7 +40,7 @@ const getStatusConfig = (status: string) => {
 
   return configs[status as keyof typeof configs] || {
     label: status,
-    className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100'
+    className: 'bg-muted text-foreground dark:bg-gray-900 dark:text-gray-100'
   };
 };
 

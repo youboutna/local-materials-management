@@ -98,7 +98,7 @@ const PasswordResetHandler = () => {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-adrar-600"></div>
       </div>
     );
@@ -106,7 +106,7 @@ const PasswordResetHandler = () => {
 
   if (!isValidLink) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-center">Lien invalide</CardTitle>
@@ -130,7 +130,7 @@ const PasswordResetHandler = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">

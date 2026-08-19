@@ -96,7 +96,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           <Progress value={latestInspection.progress_at_inspection} className="h-2 mt-1" />
           
           {latestInspection.comments && (
-            <div className="mt-2 bg-gray-50 p-3 rounded-md border text-sm">
+            <div className="mt-2 bg-muted p-3 rounded-md border text-sm">
               <div className="font-medium mb-1">Commentaires:</div>
               <p>{latestInspection.comments}</p>
             </div>
@@ -108,7 +108,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
               <div className="space-y-4">
                 <div className="font-medium">Historique des inspections</div>
                 {sortedInspections.slice(1).map((inspection, index) => (
-                  <div key={index} className="bg-gray-50 p-3 rounded-md border">
+                  <div key={index} className="bg-muted p-3 rounded-md border">
                     <div className="flex justify-between items-center">
                       <div className="font-medium">{format(new Date(inspection.date), 'dd/MM/yyyy')}</div>
                       <Badge className={`${getStatusColor(inspection.status as InspectionStatus)} text-white`}>
@@ -122,7 +122,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
                     {inspection.comments && (
                       <div className="mt-2 text-sm">
                         <div>Commentaires:</div>
-                        <p className="text-gray-700">{inspection.comments}</p>
+                        <p className="text-foreground">{inspection.comments}</p>
                       </div>
                     )}
                   </div>
@@ -132,9 +132,9 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           )}
           
           {latestInspection.status === 'requires_changes' && (
-            <div className="bg-amber-50 border border-amber-200 p-3 rounded-md mt-3">
-              <div className="font-medium text-amber-800">Actions requises</div>
-              <p className="text-sm text-amber-700 mt-1">
+            <div className="bg-warning/10 border border-warning/30 p-3 rounded-md mt-3">
+              <div className="font-medium text-warning">Actions requises</div>
+              <p className="text-sm text-warning mt-1">
                 Des modifications ont été demandées suite à l'inspection. 
                 Veuillez apporter les corrections nécessaires avant de demander une nouvelle inspection.
               </p>

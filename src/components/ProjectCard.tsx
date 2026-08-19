@@ -75,7 +75,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
-      <Card className="h-full hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 bg-white border-gray-200">
+      <Card className="h-full hover:shadow-elegant transition-all duration-300 hover:-translate-y-1 bg-white border-border">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start mb-2">
             <CardTitle className="text-lg font-serif text-adrar-800 line-clamp-2 flex-1 mr-3">
@@ -87,35 +87,35 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
                 <div className="flex items-center gap-1">
                   <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                     projectHealth === 'healthy' ? 'bg-success-soft text-success' :
-                    projectHealth === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
+                    projectHealth === 'warning' ? 'bg-warning/10 text-warning' :
+                    'bg-destructive/10 text-destructive'
                   }`}>
                     {projectHealth === 'healthy' && <CheckCircle className="w-3 h-3" />}
                     {projectHealth === 'warning' && <AlertTriangle className="w-3 h-3" />}
                     {projectHealth === 'critical' && <AlertTriangle className="w-3 h-3" />}
                   </div>
                   <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-blue-500" />
-                    <span className="text-xs text-gray-500">{projectProgress}%</span>
+                    <TrendingUp className="w-3 h-3 text-primary" />
+                    <span className="text-xs text-muted-foreground">{projectProgress}%</span>
                   </div>
                 </div>
               )}
             </div>
           </div>
           
-          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {project.description}
           </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <MapPin className="w-4 h-4 mr-2 text-terracotta-500" />
               <span className="truncate">{project.location}</span>
             </div>
 
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Calendar className="w-4 h-4 mr-2 text-terracotta-500" />
               <span>{formatDate(project.startDate)}</span>
               {project.endDate && (
@@ -126,15 +126,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
               )}
             </div>
 
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Users className="w-4 h-4 mr-2 text-terracotta-500" />
               <span>{project.teamSize} {t("projects.team_members")}</span>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-gray-100">
+          <div className="pt-2 border-t border-border">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-700">{t("projects.progress")}</span>
+              <span className="text-sm font-medium text-foreground">{t("projects.progress")}</span>
               <span className="text-sm font-semibold text-adrar-700">{project.progress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -147,7 +147,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index = 0, showAnaly
 
           <div className="flex justify-between items-center pt-2">
             <div>
-              <p className="text-xs text-gray-500 mb-1">{t("projects.budget")}</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("projects.budget")}</p>
               <p className="font-semibold text-adrar-800">{formatCurrency(project.budget)}</p>
             </div>
             

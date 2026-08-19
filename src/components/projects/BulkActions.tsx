@@ -30,7 +30,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
     .map((project) => project.title);
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
           </div>
 
           {selectedProjectNames.length > 0 && (
-            <div className="text-sm text-gray-600 max-w-md truncate">
+            <div className="text-sm text-muted-foreground max-w-md truncate">
               {selectedProjectNames.join(", ")}
             </div>
           )}

@@ -166,7 +166,7 @@ const SupplierPasswordReset = () => {
             <Lock className="h-6 w-6" />
             Définir votre mot de passe
           </CardTitle>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Créez un mot de passe sécurisé pour accéder à votre portail fournisseur
           </p>
         </CardHeader>

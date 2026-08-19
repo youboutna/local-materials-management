@@ -127,11 +127,11 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'submitted': return 'bg-blue-100 text-blue-800';
-      case 'under_review': return 'bg-yellow-100 text-yellow-800';
+      case 'submitted': return 'bg-primary/10 text-primary';
+      case 'under_review': return 'bg-warning/10 text-warning';
       case 'approved': return 'bg-success-soft text-success';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'rejected': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -321,7 +321,7 @@ const AdministrativeEvaluation: React.FC<{
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Vérification Administrative</h3>
-        <Badge className={isComplete ? 'bg-success-soft text-success' : 'bg-red-100 text-red-800'}>
+        <Badge className={isComplete ? 'bg-success-soft text-success' : 'bg-destructive/10 text-destructive'}>
           {isComplete ? 'Recevable' : 'Non Recevable'}
         </Badge>
       </div>
@@ -338,7 +338,7 @@ const AdministrativeEvaluation: React.FC<{
                   {hasDoc ? (
                     <CheckCircle className="h-5 w-5 text-success" />
                   ) : (
-                    <XCircle className="h-5 w-5 text-red-600" />
+                    <XCircle className="h-5 w-5 text-destructive" />
                   )}
                 </div>
               );

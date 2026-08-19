@@ -52,7 +52,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 <div>
                   <div className="font-medium">{category.name}</div>
                   {category.description && (
-                    <div className="text-sm text-gray-500">{category.description}</div>
+                    <div className="text-sm text-muted-foreground">{category.description}</div>
                   )}
                 </div>
               </SelectItem>
@@ -73,7 +73,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 <SelectItem key={subcategory.id} value={subcategory.id}>
                   <div>
                     <div className="font-medium">{subcategory.name}</div>
-                    <div className="text-sm text-gray-500">Unité: {subcategory.unit}</div>
+                    <div className="text-sm text-muted-foreground">Unité: {subcategory.unit}</div>
                   </div>
                 </SelectItem>
               ))}

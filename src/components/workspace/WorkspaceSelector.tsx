@@ -84,11 +84,11 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
       case OperationalStatus.active:
         return <CheckCircle className="h-4 w-4 text-success" />;
       case OperationalStatus.inactive:
-        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       case OperationalStatus.closed:
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -112,11 +112,11 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
       case OperationalStatus.active:
         return 'bg-success-soft text-success border-success/30';
       case OperationalStatus.inactive:
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       case OperationalStatus.closed:
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -129,7 +129,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-2 block">
+        <label className="text-sm font-medium text-foreground mb-2 block">
           Espace de travail
         </label>
         <Popover open={open} onOpenChange={setOpen}>
@@ -148,14 +148,14 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                       <span className="font-medium text-sm truncate">{selectedWorkspace.name}</span>
                       {getStatusIcon(selectedWorkspace.status)}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3 flex-shrink-0" />
                       <span className="truncate">{typeof selectedWorkspace.location === 'string' ? selectedWorkspace.location : selectedWorkspace.location.name}</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Building className="h-4 w-4" />
                   <span>Sélectionner un espace de travail</span>
                 </div>
@@ -168,12 +168,12 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
               <CommandInput placeholder="Rechercher un espace de travail..." />
               <CommandEmpty>
                 {workspaces.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-muted-foreground">
                     <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>Aucun espace de travail disponible</p>
                   </div>
                 ) : (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-muted-foreground">
                     <p>Aucun espace de travail trouvé</p>
                   </div>
                 )}
@@ -193,7 +193,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                           <span className="font-medium text-sm truncate">{workspace.name}</span>
                           {getStatusIcon(workspace.status)}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{typeof workspace.location === 'string' ? workspace.location : workspace.location.name}</span>
                         </div>
@@ -216,7 +216,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         </Popover>
         
         {workspaces.length === 0 && (
-          <p className="text-sm text-red-600 mt-2">
+          <p className="text-sm text-destructive mt-2">
             Aucun espace de travail configuré. Veuillez contacter l'administrateur.
           </p>
         )}
@@ -258,7 +258,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>{typeof selectedWorkspace.location === 'string' ? selectedWorkspace.location : selectedWorkspace.location.name}</span>
             </div>
@@ -266,8 +266,8 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
             {selectedWorkspace.contact && (
               <div className="space-y-1">
                 <p className="text-sm font-medium">Contact:</p>
-                <p className="text-sm text-gray-600">{selectedWorkspace.contact.manager}</p>
-                <p className="text-sm text-gray-600">{selectedWorkspace.contact.phone}</p>
+                <p className="text-sm text-muted-foreground">{selectedWorkspace.contact.manager}</p>
+                <p className="text-sm text-muted-foreground">{selectedWorkspace.contact.phone}</p>
               </div>
             )}
 
@@ -278,7 +278,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                   {selectedWorkspace.facilities.map((facility, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
                     >
                       {facility}
                     </span>

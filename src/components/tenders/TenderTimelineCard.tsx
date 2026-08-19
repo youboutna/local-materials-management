@@ -70,7 +70,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'active':
-        return <AlertCircle className="h-4 w-4 text-amber-600" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       default:
         return <Circle className="h-4 w-4 text-muted-foreground" />;
     }
@@ -81,7 +81,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
       case 'completed':
         return 'bg-success-soft border-success/30';
       case 'active':
-        return 'bg-amber-100 border-amber-300';
+        return 'bg-warning/10 border-warning/30';
       default:
         return 'bg-muted border-muted-foreground/20';
     }

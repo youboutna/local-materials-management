@@ -21,8 +21,8 @@ interface QuickLinksProps {
 const badgeStyles = {
   default: "bg-muted text-muted-foreground",
   success: "bg-success-soft text-success",
-  warning: "bg-yellow-100 text-yellow-700",
-  destructive: "bg-red-100 text-red-700",
+  warning: "bg-warning/10 text-warning",
+  destructive: "bg-destructive/10 text-destructive",
 };
 
 export function QuickLinks({ links, title, className, variant = "horizontal" }: QuickLinksProps) {

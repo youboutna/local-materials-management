@@ -292,7 +292,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
-                        <Clock className="h-3 w-3 text-blue-500" />
+                        <Clock className="h-3 w-3 text-primary" />
                         En cours
                       </span>
                       <span className="font-medium">

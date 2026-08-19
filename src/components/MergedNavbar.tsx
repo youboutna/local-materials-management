@@ -243,7 +243,7 @@ const MergedNavbar = () => {
                       className={`text-sm font-medium ${
                         location.pathname === "/dashboard"
                           ? "text-terracotta-600 bg-terracotta-50"
-                          : "text-gray-700 hover:text-terracotta-600"
+                          : "text-foreground hover:text-terracotta-600"
                       }`}
                       size="sm"
                       asChild
@@ -257,7 +257,7 @@ const MergedNavbar = () => {
 
                   {/* Projects Dropdown */}
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-sm font-medium text-gray-700 data-[state=open]:text-terracotta-600 data-[state=open]:bg-terracotta-50">
+                    <NavigationMenuTrigger className="text-sm font-medium text-foreground data-[state=open]:text-terracotta-600 data-[state=open]:bg-terracotta-50">
                       <Briefcase className="h-4 w-4 mr-2" />
                       {t("nav.projects")}
                     </NavigationMenuTrigger>
@@ -267,17 +267,17 @@ const MergedNavbar = () => {
                           <NavigationMenuLink key={item.name} asChild>
                             <Link
                               to={item.href}
-                              className="flex items-start space-x-3 p-3 rounded-md hover:bg-gray-50 transition-colors group w-full"
+                              className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted transition-colors group w-full"
                             >
                               {item.icon && (
-                                <item.icon className="h-4 w-4 mt-0.5 text-gray-500 group-hover:text-terracotta-600 flex-shrink-0" />
+                                <item.icon className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-terracotta-600 flex-shrink-0" />
                               )}
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-gray-900 group-hover:text-terracotta-600 whitespace-nowrap">
+                                <div className="text-sm font-medium text-foreground group-hover:text-terracotta-600 whitespace-nowrap">
                                   {item.name}
                                 </div>
                                 {item.description && (
-                                  <p className="text-xs text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                  <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                                     {item.description}
                                   </p>
                                 )}
@@ -296,7 +296,7 @@ const MergedNavbar = () => {
                       className={`text-sm font-medium ${
                         location.pathname === "/materials"
                           ? "text-terracotta-600 bg-terracotta-50"
-                          : "text-gray-700 hover:text-terracotta-600"
+                          : "text-foreground hover:text-terracotta-600"
                       }`}
                       size="sm"
                       asChild
@@ -315,7 +315,7 @@ const MergedNavbar = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-sm font-medium text-gray-700 hover:text-terracotta-600"
+                          className="text-sm font-medium text-foreground hover:text-terracotta-600"
                         >
                           <MoreHorizontal className="h-4 w-4 mr-2" />
                           More
@@ -340,7 +340,7 @@ const MergedNavbar = () => {
                                   to={item.href}
                                   className="flex items-center space-x-3 cursor-pointer py-2.5"
                                 >
-                                  <IconComponent className="h-4 w-4 text-gray-500" />
+                                  <IconComponent className="h-4 w-4 text-muted-foreground" />
                                   <span className="text-sm font-medium">
                                     {item.name}
                                   </span>
@@ -357,7 +357,7 @@ const MergedNavbar = () => {
                                 to="/settings"
                                 className="flex items-center space-x-3 cursor-pointer py-2.5"
                               >
-                                <Cog className="h-4 w-4 text-gray-500" />
+                                <Cog className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm font-medium">
                                   {t("settings.title")}
                                 </span>
@@ -384,7 +384,7 @@ const MergedNavbar = () => {
                       <NavigationMenuItem key={item.name}>
                         <Button
                           variant="ghost"
-                          className="text-sm font-medium text-gray-700 hover:text-terracotta-600"
+                          className="text-sm font-medium text-foreground hover:text-terracotta-600"
                           size="sm"
                           asChild
                         >
@@ -456,7 +456,7 @@ const MergedNavbar = () => {
                   {!DEV_MODE && (
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
+                      className="cursor-pointer text-destructive focus:text-destructive"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>{t("auth.logout")}</span>
@@ -482,7 +482,7 @@ const MergedNavbar = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-700 hover:bg-gray-100"
+                    className="text-foreground hover:bg-muted"
                   >
                     {isOpen ? (
                       <X className="h-5 w-5" />
@@ -512,7 +512,7 @@ const MergedNavbar = () => {
                           <DropdownMenuItem key={item.name} asChild>
                             <Link
                               to={item.href}
-                              className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-gray-700 hover:text-terracotta-600 hover:bg-gray-50 w-full"
+                              className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
                               onClick={() => setIsOpen(false)}
                             >
                               <IconComponent className="h-4 w-4" />
@@ -528,7 +528,7 @@ const MergedNavbar = () => {
                     <div className="px-4 py-3 space-y-3">
                       {isAuthenticated ? (
                         <>
-                          <div className="flex items-center space-x-3 p-2 rounded-md bg-gray-50">
+                          <div className="flex items-center space-x-3 p-2 rounded-md bg-muted">
                             <Avatar className="h-8 w-8">
                               <AvatarImage
                                 src={getUserAvatarUrl()}
@@ -539,10 +539,10 @@ const MergedNavbar = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {getUserDisplayName()}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-muted-foreground truncate">
                                 {user?.email}
                               </p>
                             </div>

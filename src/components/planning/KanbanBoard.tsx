@@ -237,7 +237,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                              <div className={cn(
                                "flex items-center gap-1 text-xs",
                                isOverdue && "text-destructive",
-                               isDueSoon && "text-amber-600",
+                               isDueSoon && "text-warning",
                                !isOverdue && !isDueSoon && "text-muted-foreground"
                              )}>
                                <Calendar className="h-3 w-3" />

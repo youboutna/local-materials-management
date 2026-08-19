@@ -101,8 +101,8 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
       const daysLate = differenceInDays(today, targetDate);
       return { 
         icon: AlertTriangle, 
-        color: 'text-red-500', 
-        bgColor: 'bg-red-100',
+        color: 'text-destructive', 
+        bgColor: 'bg-destructive/10',
         label: `En retard (${daysLate}j)` 
       };
     }
@@ -111,16 +111,16 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
     if (daysUntil <= 7) {
       return { 
         icon: Clock, 
-        color: 'text-orange-500', 
-        bgColor: 'bg-orange-100',
+        color: 'text-warning', 
+        bgColor: 'bg-warning/10',
         label: `Dans ${daysUntil}j` 
       };
     }
 
     return { 
       icon: Clock, 
-      color: 'text-blue-500', 
-      bgColor: 'bg-blue-100',
+      color: 'text-primary', 
+      bgColor: 'bg-primary/10',
       label: 'À venir' 
     };
   };
@@ -223,13 +223,13 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
             {/* Status indicators */}
             <div className="flex flex-wrap gap-4 text-sm">
               {progress.overdueMilestones && progress.overdueMilestones.length > 0 && (
-                <div className="flex items-center gap-2 text-red-600">
+                <div className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-4 w-4" />
                   {progress.overdueMilestones.length} jalon(s) en retard
                 </div>
               )}
               {progress.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
-                <div className="flex items-center gap-2 text-orange-600">
+                <div className="flex items-center gap-2 text-warning">
                   <Clock className="h-4 w-4" />
                   {progress.upcomingMilestones.length} jalon(s) à venir (14j)
                 </div>
@@ -237,7 +237,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
               {progress.criticalPath_status !== 'on_track' && (
                 <div className={cn(
                   "flex items-center gap-2",
-                  progress.criticalPath_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
+                  progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-warning'
                 )}>
                   <ShieldCheck className="h-4 w-4" />
                   Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}

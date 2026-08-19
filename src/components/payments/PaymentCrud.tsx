@@ -171,7 +171,7 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
   };
 
   if (loading || projectsLoading) return <div className="py-8 text-center">Chargement des paiements...</div>;
-  if (!payments) return <div className="py-8 text-center text-red-500">Erreur de chargement</div>;
+  if (!payments) return <div className="py-8 text-center text-destructive">Erreur de chargement</div>;
 
   return (
     <div>
@@ -277,14 +277,14 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
                         </Button>
                       )}
                       {isPending && (
-                        <Button variant="ghost" size="sm" onClick={() => handleReject(payment)} title="Rejeter" className="text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" onClick={() => handleReject(payment)} title="Rejeter" className="text-destructive hover:text-destructive">
                           <X className="h-4 w-4" />
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" onClick={() => handleViewDocuments(payment)} title={hasDocs ? 'Voir les documents' : 'Aucun document'} disabled={!hasDocs}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(payment)} title="Supprimer" className="text-red-600 hover:text-red-700">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(payment)} title="Supprimer" className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

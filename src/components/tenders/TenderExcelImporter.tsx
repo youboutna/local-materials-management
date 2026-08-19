@@ -291,8 +291,8 @@ const TenderExcelImporter: React.FC = () => {
           </div>
 
           {file && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
+              <p className="text-sm text-primary">
                 <strong>Fichier sélectionné:</strong> {file.name}
               </p>
             </div>
@@ -323,7 +323,7 @@ const TenderExcelImporter: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h4 className="font-medium text-sm">{item.ordre}. {item.objet}</h4>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-gray-600">
+                        <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-muted-foreground">
                           <span><strong>Type:</strong> {item.type_contrat}</span>
                           <span><strong>Mode:</strong> {item.mode_selection}</span>
                           <span><strong>Lancement:</strong> {item.date_lancement}</span>
@@ -337,7 +337,7 @@ const TenderExcelImporter: React.FC = () => {
                   </div>
                 ))}
                 {preview.length > 10 && (
-                  <p className="text-center text-sm text-gray-500 py-2">
+                  <p className="text-center text-sm text-muted-foreground py-2">
                     ... et {preview.length - 10} autres éléments
                   </p>
                 )}
@@ -354,7 +354,7 @@ const TenderExcelImporter: React.FC = () => {
               {importResults.errors === 0 ? (
                 <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-orange-600" />
+                <AlertCircle className="h-5 w-5 text-warning" />
               )}
               Résultats de l'import
             </CardTitle>
@@ -363,24 +363,24 @@ const TenderExcelImporter: React.FC = () => {
             <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
                 <div className="text-2xl font-bold text-success">{importResults.success}</div>
-                <div className="text-sm text-gray-600">Succès</div>
+                <div className="text-sm text-muted-foreground">Succès</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">{importResults.errors}</div>
-                <div className="text-sm text-gray-600">Erreurs</div>
+                <div className="text-2xl font-bold text-destructive">{importResults.errors}</div>
+                <div className="text-sm text-muted-foreground">Erreurs</div>
               </div>
               <div>
                 <div className="text-2xl font-bold">{importResults.total}</div>
-                <div className="text-sm text-gray-600">Total</div>
+                <div className="text-sm text-muted-foreground">Total</div>
               </div>
             </div>
             
             {importResults.errorMessages.length > 0 && (
               <div className="mt-4">
                 <h4 className="font-medium text-sm mb-2">Détails des erreurs:</h4>
-                <div className="max-h-32 overflow-auto bg-red-50 border border-red-200 rounded p-2">
+                <div className="max-h-32 overflow-auto bg-destructive/10 border border-destructive/30 rounded p-2">
                   {importResults.errorMessages.map((error, index) => (
-                    <div key={index} className="text-xs text-red-700 mb-1">
+                    <div key={index} className="text-xs text-destructive mb-1">
                       {error}
                     </div>
                   ))}

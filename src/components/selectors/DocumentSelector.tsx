@@ -66,10 +66,10 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'approved': return 'bg-success-soft text-success';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'under_review': return 'bg-blue-100 text-blue-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'draft': return 'bg-warning/10 text-warning';
+      case 'under_review': return 'bg-primary/10 text-primary';
+      case 'rejected': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -87,10 +87,10 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label>{label} {required && <span className="text-red-500">*</span>}</Label>
+      <Label>{label} {required && <span className="text-destructive">*</span>}</Label>
       
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher un document..."
           value={searchTerm}
@@ -119,10 +119,10 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
               <SelectItem key={document.id} value={document.id}>
                 <div className="flex items-center justify-between w-full min-w-0">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{document.title}</div>
-                      <div className="text-xs text-gray-500 truncate">
+                      <div className="text-xs text-muted-foreground truncate">
                         {document.document_type} • {document.file_name}
                       </div>
                     </div>
@@ -134,7 +134,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
                       </Badge>
                     )}
                     {document.file_size && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatFileSize(document.file_size)}
                       </span>
                     )}
@@ -147,7 +147,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
       )}
 
       {selectedDocument && (
-        <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+        <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
             <span className="font-medium">Document sélectionné:</span>
             {selectedDocument.status && (
@@ -157,15 +157,15 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
             )}
           </div>
           <div>{selectedDocument.title}</div>
-          <div className="text-gray-600">Type: {selectedDocument.document_type}</div>
+          <div className="text-muted-foreground">Type: {selectedDocument.document_type}</div>
           {selectedDocument.file_name && (
-            <div className="text-gray-600">📎 {selectedDocument.file_name}</div>
+            <div className="text-muted-foreground">📎 {selectedDocument.file_name}</div>
           )}
           {selectedDocument.file_size && (
-            <div className="text-gray-600">Taille: {formatFileSize(selectedDocument.file_size)}</div>
+            <div className="text-muted-foreground">Taille: {formatFileSize(selectedDocument.file_size)}</div>
           )}
           {selectedDocument.created_at && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-3 w-3" />
               Créé le {formatDate(selectedDocument.created_at)}
             </div>

@@ -104,7 +104,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           {allowMultipleSelection ? 'Sélectionnez les documents à partager:' : 'Sélectionnez un document à partager:'}
         </p>
         <Badge variant="outline">
@@ -120,7 +120,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
               <div
                 key={doc.id}
                 className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                  isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'
+                  isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-border'
                 }`}
                 onClick={() => handleDocumentToggle(doc.id)}
               >
@@ -129,13 +129,13 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
                     <Checkbox checked={isSelected} />
                   ) : (
                     <div className={`w-4 h-4 rounded-full border-2 ${
-                      isSelected ? 'border-primary bg-primary' : 'border-gray-300'
+                      isSelected ? 'border-primary bg-primary' : 'border-border'
                     }`}>
                       {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                     </div>
                   )}
                   
-                  <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <FileText className="h-5 w-5 text-primary flex-shrink-0" />
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -145,7 +145,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: fr })}
@@ -165,7 +165,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
             );
           })
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>Aucun document trouvé pour cet appel d'offres</p>
             <p className="text-sm mt-1">Ajoutez des documents dans l'onglet "Documents" pour les partager.</p>

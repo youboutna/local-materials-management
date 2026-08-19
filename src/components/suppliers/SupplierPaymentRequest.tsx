@@ -267,10 +267,10 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
+      pending: { color: 'bg-warning/10 text-warning', label: 'En attente' },
       approved: { color: 'bg-success-soft text-success', label: 'Approuvé' },
-      rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
-      processed: { color: 'bg-blue-100 text-blue-800', label: 'Traité' },
+      rejected: { color: 'bg-destructive/10 text-destructive', label: 'Rejeté' },
+      processed: { color: 'bg-primary/10 text-primary', label: 'Traité' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -378,7 +378,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                   />
                   <label
                     htmlFor="document-upload"
-                    className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                    className="cursor-pointer inline-flex items-center px-4 py-2 bg-muted border border-border rounded-md hover:bg-gray-200"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Télécharger un document
@@ -454,7 +454,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
               ))}
               {paymentRequests.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Aucune demande de paiement
                   </TableCell>
                 </TableRow>

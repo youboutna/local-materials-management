@@ -91,13 +91,13 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const getInspectionStatusColor = (status: string) => {
     const colors = {
       'passed': 'bg-success-soft text-success',
-      'failed': 'bg-red-100 text-red-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'in_progress': 'bg-blue-100 text-blue-800',
+      'failed': 'bg-destructive/10 text-destructive',
+      'pending': 'bg-warning/10 text-warning',
+      'in_progress': 'bg-primary/10 text-primary',
       'approved': 'bg-success-soft text-success',
-      'requires_changes': 'bg-orange-100 text-orange-800',
+      'requires_changes': 'bg-warning/10 text-warning',
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[status as keyof typeof colors] || 'bg-muted text-foreground';
   };
 
   const generateInspectionReportContent = () => {
@@ -490,7 +490,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Taux de Conformité</p>
-              <p className="font-bold text-lg text-blue-600">{formatPercent2(metrics.complianceRate)}</p>
+              <p className="font-bold text-lg text-primary">{formatPercent2(metrics.complianceRate)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Score Moyen</p>

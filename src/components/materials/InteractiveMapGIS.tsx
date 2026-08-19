@@ -349,20 +349,20 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     <Marker key={index} position={[city.lat, city.lng]}>
                       <Popup>
                         <div className="text-center">
-                          <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
+                          <strong className={city.isCapital ? "text-destructive" : "text-primary"}>
                             {city.name}
                           </strong>
-                          {city.isCapital && <div className="text-xs text-red-500 font-semibold">Capitale</div>}
-                          <div className="text-xs text-gray-600 mt-1">
+                          {city.isCapital && <div className="text-xs text-destructive font-semibold">Capitale</div>}
+                          <div className="text-xs text-muted-foreground mt-1">
                             Région: {getWilayaByCode(city.parentCode)?.name || city.parentCode}
                           </div>
                           {city.economicImportance && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               Importance: {city.economicImportance}
                             </div>
                           )}
                           {city.population && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               Population: {city.population.toLocaleString()}
                             </div>
                           )}
@@ -370,7 +370,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                             <div className="text-xs text-success">🛫 Aéroport</div>
                           )}
                           {city.hasPort && (
-                            <div className="text-xs text-blue-600">⚓ Port</div>
+                            <div className="text-xs text-primary">⚓ Port</div>
                           )}
                           {city.hasUniversity && (
                             <div className="text-xs text-purple-600">🎓 Université</div>
@@ -533,7 +533,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     >
                       <Popup>
                         <strong>Forme tracée</strong>
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-muted-foreground">
                           Type: {mapData?.shapeType || 'polygon'}
                         </div>
                       </Popup>

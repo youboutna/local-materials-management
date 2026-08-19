@@ -31,10 +31,10 @@ const EnhancedPaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
-            <Ban className="h-4 w-4 text-red-500" />
+            <Ban className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.blockedPayments}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.blockedPayments}</div>
             <p className="text-xs text-muted-foreground">Ce mois</p>
           </CardContent>
         </Card>
@@ -42,10 +42,10 @@ const EnhancedPaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assurances Expirées</CardTitle>
-            <Shield className="h-4 w-4 text-orange-500" />
+            <Shield className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.expiredInsurances}</div>
+            <div className="text-2xl font-bold text-warning">{stats.expiredInsurances}</div>
             <p className="text-xs text-muted-foreground">Entrepreneurs concernés</p>
           </CardContent>
         </Card>
@@ -53,10 +53,10 @@ const EnhancedPaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Projets en Retard</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.delayedProjects}</div>
+            <div className="text-2xl font-bold text-warning">{stats.delayedProjects}</div>
             <p className="text-xs text-muted-foreground">Retards &gt; 20%</p>
           </CardContent>
         </Card>
@@ -64,10 +64,10 @@ const EnhancedPaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
+            <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.missingDocuments}</div>
+            <div className="text-2xl font-bold text-primary">{stats.missingDocuments}</div>
             <p className="text-xs text-muted-foreground">Paiements en attente</p>
           </CardContent>
         </Card>
@@ -86,7 +86,7 @@ const EnhancedPaymentBlockingInterface = () => {
               {recentBlocks.slice(0, 5).map((block) => (
                 <div key={block.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Ban className="h-5 w-5 text-red-500" />
+                    <Ban className="h-5 w-5 text-destructive" />
                     <div>
                       <p className="font-medium">{block.contractorName}</p>
                       <p className="text-sm text-muted-foreground">

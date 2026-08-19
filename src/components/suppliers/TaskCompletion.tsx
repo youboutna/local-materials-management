@@ -67,26 +67,26 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       case 'high':
-        return <AlertCircle className="h-4 w-4 text-orange-500" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       case 'medium':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-warning" />;
       default:
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-primary" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       case 'high':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-primary/10 text-primary border-primary/30';
     }
   };
 
@@ -95,9 +95,9 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
       case 'completed':
         return 'bg-success-soft text-success border-success/30';
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-primary/10 text-primary border-primary/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -111,7 +111,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
               {task.title}
             </CardTitle>
             {task.projects && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Projet: {task.projects.title} - {task.projects.location}
               </p>
             )}
@@ -136,15 +136,15 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
       <CardContent className="space-y-4">
         {task.description && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-            <p className="text-gray-600 text-sm">{task.description}</p>
+            <h4 className="font-medium text-foreground mb-2">Description</h4>
+            <p className="text-muted-foreground text-sm">{task.description}</p>
           </div>
         )}
 
         {task.due_date && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-1">Échéance</h4>
-            <p className="text-sm text-gray-600">
+            <h4 className="font-medium text-foreground mb-1">Échéance</h4>
+            <p className="text-sm text-muted-foreground">
               {new Date(task.due_date).toLocaleDateString('fr-FR')}
             </p>
           </div>
@@ -153,7 +153,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
         {task.status !== 'completed' && (
           <div className="space-y-3">
             <div>
-              <label htmlFor="completion-notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="completion-notes" className="block text-sm font-medium text-foreground mb-2">
                 Notes de completion (optionnel)
               </label>
               <Textarea

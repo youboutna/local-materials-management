@@ -104,7 +104,7 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-mobile-sm lg:text-sm text-gray-700 hover:text-terracotta-600 transition-colors duration-200 font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-gray-50"
+                className="text-mobile-sm lg:text-sm text-foreground hover:text-terracotta-600 transition-colors duration-200 font-medium whitespace-nowrap px-2 py-1 rounded-md hover:bg-muted"
               >
                 {item.name}
               </Link>
@@ -185,7 +185,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-700 hover:bg-gray-100"
+                  className="text-foreground hover:bg-muted"
                 >
                   {isOpen ? (
                     <X className="h-6 w-6" />
@@ -206,7 +206,7 @@ const Navbar = () => {
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
                           to={item.href}
-                          className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-gray-700 hover:text-terracotta-600 hover:bg-gray-50 w-full"
+                          className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
                           onClick={() => setIsOpen(false)}
                         >
                           <IconComponent className="h-5 w-5" />
@@ -227,7 +227,7 @@ const Navbar = () => {
                     
                     {user ? (
                       <div className="space-y-3">
-                        <div className="flex items-center space-x-3 p-2 rounded-md bg-gray-50">
+                        <div className="flex items-center space-x-3 p-2 rounded-md bg-muted">
                           <Avatar className="h-8 w-8">
                             <AvatarImage
                               src={getUserAvatarUrl()}
@@ -238,10 +238,10 @@ const Navbar = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {getUserDisplayName()}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {user.email}
                             </p>
                           </div>

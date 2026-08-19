@@ -170,14 +170,14 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-amber-50">
+      <Card className="border-warning/30 bg-warning/10">
         <CardContent className="p-4 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
           <div>
-            <h4 className="font-medium text-amber-800">
+            <h4 className="font-medium text-warning">
               {t('tenders.supplierSecure.security_notice')}
             </h4>
-            <p className="text-sm text-amber-600 mt-1">
+            <p className="text-sm text-warning mt-1">
               {t('tenders.supplierSecure.security_notice_desc')}
             </p>
           </div>

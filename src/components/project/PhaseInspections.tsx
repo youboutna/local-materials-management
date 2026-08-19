@@ -183,9 +183,9 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'bg-success-soft text-success';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
+      case 'pending': return 'bg-warning/10 text-warning';
+      case 'rejected': return 'bg-destructive/10 text-destructive';
+      case 'completed': return 'bg-primary/10 text-primary';
       default: return 'bg-muted text-muted-foreground';
     }
   };

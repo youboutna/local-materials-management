@@ -186,7 +186,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
               {/* Badges stats */}
               <div className="hidden md:flex items-center gap-1">
                 {stats.byType.inspection > 0 && (
-                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
                     <ClipboardCheck className="h-3 w-3 mr-1" />
                     {stats.byType.inspection}
                   </Badge>
@@ -288,7 +288,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
             {groupedMilestones.inspection.length > 0 && (
               <div>
                 <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider flex items-center gap-2">
-                  <ClipboardCheck className="h-3 w-3 text-blue-600" />
+                  <ClipboardCheck className="h-3 w-3 text-primary" />
                   Inspections ({groupedMilestones.inspection.length})
                 </div>
                 <div className="space-y-2">

@@ -82,9 +82,9 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
 
   const priorityLevels = [
     { value: 'low', label: 'Faible', color: 'bg-success-soft text-success', icon: Target },
-    { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800', icon: Target },
-    { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800', icon: AlertTriangle },
-    { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800', icon: AlertTriangle }
+    { value: 'medium', label: 'Moyen', color: 'bg-primary/10 text-primary', icon: Target },
+    { value: 'high', label: 'Élevé', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    { value: 'urgent', label: 'Urgent', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle }
   ];
 
   const escalationLevels = [
@@ -230,14 +230,14 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
       case 'sms':
       case 'call':
         return (
-          <div className="p-4 bg-blue-50 rounded-lg">
+          <div className="p-4 bg-primary/10 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              {actionType === 'sms' ? <MessageSquare className="h-4 w-4 text-blue-600" /> : <Phone className="h-4 w-4 text-blue-600" />}
-              <span className="text-sm font-medium text-blue-800">
+              {actionType === 'sms' ? <MessageSquare className="h-4 w-4 text-primary" /> : <Phone className="h-4 w-4 text-primary" />}
+              <span className="text-sm font-medium text-primary">
                 Communication directe
               </span>
             </div>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-primary">
               {actionType === 'sms' 
                 ? 'Un SMS sera envoyé aux destinataires sélectionnés avec le message spécifié.'
                 : 'Un appel téléphonique sera programmé avec les destinataires sélectionnés.'

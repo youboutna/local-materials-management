@@ -197,14 +197,14 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
             <div>Sécurité: <strong className="text-foreground">{progressMetrics?.safety ?? 95}%</strong></div>
           </div>
           <div className="mt-3">
-            <Badge className="bg-blue-50 text-blue-700">{phase?.status || 'En cours'}</Badge>
+            <Badge className="bg-primary/10 text-primary">{phase?.status || 'En cours'}</Badge>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
             Prochaine: {milestones?.[0]?.name || 'Inspection finalisation'} • {milestones?.[0]?.due_date ? new Date(milestones[0].due_date).toLocaleDateString('fr-FR') : '—'}
           </div>
             <div className="mt-3 space-y-2">
               {phaseCosts?.isOverBudget && (
-                <div className="flex items-center gap-2 text-sm text-red-600"><AlertTriangle className="h-4 w-4" /> Sur budget</div>
+                <div className="flex items-center gap-2 text-sm text-destructive"><AlertTriangle className="h-4 w-4" /> Sur budget</div>
               )}
               {typeof phaseCosts?.unlockable === 'number' && (
                 <div className="flex items-center gap-2 text-sm text-success"><DollarSign className="h-4 w-4" /> Déblocable: {formatCurrency(phaseCosts.unlockable)}</div>

@@ -9,7 +9,7 @@ const TenderImport = () => {
     <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Import d'Appels d'Offres</h1>
-        <p className="text-gray-600 mt-2">Importer les appels d'offres depuis un fichier Excel</p>
+        <p className="text-muted-foreground mt-2">Importer les appels d'offres depuis un fichier Excel</p>
       </div>
 
       <Card>
@@ -32,14 +32,14 @@ const TenderImport = () => {
               <li><strong>Date d'Attribution</strong> - Date d'attribution (format DD/MM/YYYY)</li>
             </ol>
             
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 text-sm">
+            <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+              <p className="text-primary text-sm">
                 <strong>Note:</strong> Vous pouvez télécharger un template Excel pour vous assurer du bon format.
               </p>
             </div>
             
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">
+            <div className="mt-4 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+              <p className="text-warning text-sm">
                 <strong>Attention:</strong> Tous les appels d'offres importés seront créés avec le statut "Brouillon". 
                 Vous pourrez les modifier individuellement après l'import.
               </p>

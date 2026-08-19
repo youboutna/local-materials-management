@@ -84,11 +84,11 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
       case 'approved':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'validation_pending':
-        return <Clock className="h-4 w-4 text-amber-600" />;
+        return <Clock className="h-4 w-4 text-warning" />;
       case 'inspection_scheduled':
-        return <Calendar className="h-4 w-4 text-blue-600" />;
+        return <Calendar className="h-4 w-4 text-primary" />;
       case 'in_progress':
-        return <Play className="h-4 w-4 text-blue-600" />;
+        return <Play className="h-4 w-4 text-primary" />;
       default:
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
@@ -111,11 +111,11 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'text-red-600 bg-red-50 border-red-200';
+        return 'text-destructive bg-destructive/10 border-destructive/30';
       case 'medium':
-        return 'text-amber-600 bg-amber-50 border-amber-200';
+        return 'text-warning bg-warning/10 border-warning/30';
       default:
-        return 'text-blue-600 bg-blue-50 border-blue-200';
+        return 'text-primary bg-primary/10 border-primary/30';
     }
   };
 
@@ -226,7 +226,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {/* Scheduled Inspection */}
             {workflowMetrics.scheduledInspections > 0 && lastInspectionDate && (
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-600" />
+                <Clock className="h-4 w-4 text-warning" />
                 <span className="text-muted-foreground">Inspection prévue:</span>
                 <span className="font-medium">
                   {format(new Date(lastInspectionDate), 'd MMM yyyy', { locale: fr })}
@@ -262,8 +262,8 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 variant="outline" 
                 className={cn(
                   workflowMetrics.currentStage === 'payment_available' && "bg-success-soft text-success border-success/30",
-                  workflowMetrics.currentStage === 'approved' && "bg-blue-50 text-blue-700 border-blue-200",
-                  workflowMetrics.currentStage === 'validation_pending' && "bg-amber-50 text-amber-700 border-amber-200"
+                  workflowMetrics.currentStage === 'approved' && "bg-primary/10 text-primary border-primary/30",
+                  workflowMetrics.currentStage === 'validation_pending' && "bg-warning/10 text-warning border-warning/30"
                 )}
               >
                 {getStageLabel(workflowMetrics.currentStage)}
@@ -317,7 +317,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 </div>
               )}
               {workflowMetrics.insuranceReleaseTriggered && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 text-blue-700 text-sm">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 text-primary text-sm">
                   <Shield className="h-4 w-4" />
                   <span>Mainlevée assurances déclenchée</span>
                 </div>

@@ -192,10 +192,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       )}
       
       {/* Project Summary Card - Enhanced design */}
-      <Card className="border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
+      <Card className="border-2 border-dashed border-border bg-gradient-to-br from-gray-50 to-gray-100">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-blue-600" />
+            <CreditCard className="h-5 w-5 text-primary" />
             Résumé du projet
           </CardTitle>
           <CardDescription>
@@ -211,11 +211,11 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                 <span className="text-sm text-muted-foreground">Déjà payé</span>
-                <span className="font-semibold text-lg text-red-600">{formatAmount2(totalPaid)}</span>
+                <span className="font-semibold text-lg text-destructive">{formatAmount2(totalPaid)}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                 <span className="text-sm text-muted-foreground">Progression</span>
-                <span className="font-semibold text-lg text-blue-600">{project.progress}%</span>
+                <span className="font-semibold text-lg text-primary">{project.progress}%</span>
               </div>
             </div>
             
@@ -226,9 +226,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                   <span className="font-bold text-lg text-success">{formatAmount2(maxInitialPayment)}</span>
                 </div>
               ) : (
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <span className="text-sm text-blue-700">Montant basé sur progression</span>
-                  <span className="font-bold text-lg text-blue-800">{formatAmount2(progressBasedAmount)}</span>
+                <div className="flex justify-between items-center p-3 bg-primary/10 rounded-lg border border-primary/30">
+                  <span className="text-sm text-primary">Montant basé sur progression</span>
+                  <span className="font-bold text-lg text-primary">{formatAmount2(progressBasedAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
@@ -279,10 +279,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       )}
       
       {paymentStatus === "inspection_required" && (
-        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Inspection requise</AlertTitle>
-          <AlertDescription className="text-amber-700">
+        <Alert variant="destructive" className="bg-warning/10 border-warning/30">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning">Inspection requise</AlertTitle>
+          <AlertDescription className="text-warning">
             Une inspection approuvée est requise avant de pouvoir effectuer un paiement pour ce projet 
             avec une progression ≥ 25%.
           </AlertDescription>
@@ -290,10 +290,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       )}
       
       {paymentStatus === "requires_changes" && (
-        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Paiement avec tolérance étendue</AlertTitle>
-          <AlertDescription className="text-amber-700">
+        <Alert variant="destructive" className="bg-warning/10 border-warning/30">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning">Paiement avec tolérance étendue</AlertTitle>
+          <AlertDescription className="text-warning">
             L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à 
             {formatAmount2(maxToleranceAmount)} (1.5x le montant basé sur la progression).
           </AlertDescription>
@@ -410,17 +410,17 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                             className={`relative cursor-pointer rounded-lg border-2 p-4 hover:shadow-md transition-all ${
                               isSelected 
                                 ? `border-${method.color}-500 bg-${method.color}-50` 
-                                : 'border-gray-200 hover:border-gray-300'
+                                : 'border-border hover:border-border'
                             }`}
                             onClick={() => field.onChange(method.value)}
                           >
                             <div className="flex flex-col items-center text-center space-y-2">
-                              <Icon className={`h-8 w-8 ${isSelected ? `text-${method.color}-600` : 'text-gray-400'}`} />
+                              <Icon className={`h-8 w-8 ${isSelected ? `text-${method.color}-600` : 'text-muted-foreground'}`} />
                               <div>
-                                <p className={`font-medium text-sm ${isSelected ? `text-${method.color}-800` : 'text-gray-700'}`}>
+                                <p className={`font-medium text-sm ${isSelected ? `text-${method.color}-800` : 'text-foreground'}`}>
                                   {method.label}
                                 </p>
-                                <p className={`text-xs ${isSelected ? `text-${method.color}-600` : 'text-gray-500'}`}>
+                                <p className={`text-xs ${isSelected ? `text-${method.color}-600` : 'text-muted-foreground'}`}>
                                   {method.description}
                                 </p>
                               </div>
@@ -441,9 +441,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
 
           {/* Method-specific fields - Enhanced responsive design */}
           {selectedPaymentMethod === "virement" && (
-            <Card className="border-blue-200 bg-blue-50">
+            <Card className="border-primary/30 bg-primary/10">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-blue-800">
+                <CardTitle className="text-base flex items-center gap-2 text-primary">
                   <Building className="h-5 w-5" />
                   Informations bancaires
                 </CardTitle>
@@ -575,9 +575,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           )}
 
           {selectedPaymentMethod === "especes" && (
-            <Card className="border-yellow-200 bg-yellow-50">
+            <Card className="border-warning/30 bg-warning/10">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2 text-yellow-800">
+                <CardTitle className="text-base flex items-center gap-2 text-warning">
                   <Banknote className="h-5 w-5" />
                   Paiement en espèces
                 </CardTitle>

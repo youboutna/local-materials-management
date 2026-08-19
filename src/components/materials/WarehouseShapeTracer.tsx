@@ -135,7 +135,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
       <div className="space-y-4">
         <Label>Tracez la forme de votre entrepôt ou bâtiment</Label>
         
-        <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="border rounded-lg p-4 bg-muted">
           <svg
             width="300"
             height="200"
@@ -174,7 +174,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
         </div>
         
         {isDrawing && (
-          <div className="text-sm text-blue-600">
+          <div className="text-sm text-primary">
             Cliquez sur le canevas pour ajouter des points. 
             <Button
               type="button"
@@ -188,7 +188,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
         )}
         
         {currentPoints.length > 0 && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             {currentPoints.length} points définis
           </div>
         )}

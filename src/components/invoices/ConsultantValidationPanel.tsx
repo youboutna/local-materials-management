@@ -256,10 +256,10 @@ export function ConsultantValidationPanel() {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { color: string; label: string }> = {
-      supplier_submitted: { color: 'bg-yellow-100 text-yellow-800', label: 'Soumis' },
-      consultant_reviewing: { color: 'bg-blue-100 text-blue-800', label: 'En cours' },
+      supplier_submitted: { color: 'bg-warning/10 text-warning', label: 'Soumis' },
+      consultant_reviewing: { color: 'bg-primary/10 text-primary', label: 'En cours' },
       consultant_approved: { color: 'bg-success-soft text-success', label: 'Approuvé' },
-      consultant_rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
+      consultant_rejected: { color: 'bg-destructive/10 text-destructive', label: 'Rejeté' },
     };
     
     const cfg = config[status] || config.supplier_submitted;

@@ -62,10 +62,10 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     switch (status) {
       case 'draft': return 'bg-muted text-muted-foreground';
       case 'pending_review':
-      case 'pending_approval': return 'bg-yellow-100 text-yellow-800';
+      case 'pending_approval': return 'bg-warning/10 text-warning';
       case 'approved': return 'bg-success-soft text-success';
       case 'rejected': return 'bg-destructive/10 text-destructive';
-      case 'archived': return 'bg-blue-100 text-blue-800';
+      case 'archived': return 'bg-primary/10 text-primary';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -144,7 +144,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
 
   if (error) {
     return (
-      <div className="text-center py-8 text-red-600">
+      <div className="text-center py-8 text-destructive">
         Erreur lors du chargement des documents: {(error as Error).message}
       </div>
     );
@@ -262,8 +262,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       {documents?.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
               {filterType !== 'all' ? 
                 `Aucun document de type "${getDocumentTypeLabel(filterType)}" trouvé` : 
                 'Aucun document trouvé'

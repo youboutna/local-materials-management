@@ -744,11 +744,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "bg-success-soft text-success border-success/30";
-      case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "delayed": return "bg-red-100 text-red-800 border-red-200";
-      case "on_hold": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "planned": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "in_progress": return "bg-primary/10 text-primary border-primary/30";
+      case "delayed": return "bg-destructive/10 text-destructive border-destructive/30";
+      case "on_hold": return "bg-warning/10 text-warning border-warning/30";
+      case "planned": return "bg-muted text-foreground border-border";
+      default: return "bg-muted text-foreground border-border";
     }
   };
 
@@ -1423,7 +1423,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">Émission: {new Date(guarantee.issue_date).toLocaleDateString()}</p>
                             <p className="text-sm text-muted-foreground">Échéance: {new Date(guarantee.expiry_date).toLocaleDateString()}</p>
                           </div>
-                          <Badge className={guarantee.status === "active" ? "bg-success-soft text-success" : "bg-red-100 text-red-800"}>
+                          <Badge className={guarantee.status === "active" ? "bg-success-soft text-success" : "bg-destructive/10 text-destructive"}>
                             {guarantee.status}
                           </Badge>
                         </div>
@@ -1457,7 +1457,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">Validité: {new Date(cert.valid_from).toLocaleDateString()} - {new Date(cert.valid_until).toLocaleDateString()}</p>
                             {cert.notes && <p className="text-sm text-muted-foreground mt-2">Notes: {cert.notes}</p>}
                           </div>
-                          <Badge className={(cert as any).status === "active" ? "bg-success-soft text-success" : "bg-red-100 text-red-800"}>
+                          <Badge className={(cert as any).status === "active" ? "bg-success-soft text-success" : "bg-destructive/10 text-destructive"}>
                             {(cert as any).status || 'N/A'}
                           </Badge>
                         </div>
@@ -1489,7 +1489,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             {doc.description && <p className="text-sm text-muted-foreground">{doc.description}</p>}
                             <p className="text-sm text-muted-foreground">Créé le: {new Date(doc.created_at).toLocaleDateString()}</p>
                           </div>
-                          <Badge className={doc.status === "approved" ? "bg-success-soft text-success" : doc.status === "pending" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}>
+                          <Badge className={doc.status === "approved" ? "bg-success-soft text-success" : doc.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-foreground"}>
                             {doc.status}
                           </Badge>
                         </div>

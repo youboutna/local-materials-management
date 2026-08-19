@@ -161,7 +161,7 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
     <div className="space-y-6">
       {/* Selection Header - NEW */}
       {onProjectSelect && (
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
           <div className="flex items-center gap-3">
             <Checkbox
               checked={allSelectedOnPage}

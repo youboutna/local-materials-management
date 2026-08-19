@@ -81,9 +81,9 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
 
   const priorityLevels = [
     { value: 'low', label: 'Faible', color: 'bg-success-soft text-success' },
-    { value: 'medium', label: 'Moyen', color: 'bg-blue-100 text-blue-800' },
-    { value: 'high', label: 'Élevé', color: 'bg-orange-100 text-orange-800' },
-    { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' }
+    { value: 'medium', label: 'Moyen', color: 'bg-primary/10 text-primary' },
+    { value: 'high', label: 'Élevé', color: 'bg-warning/10 text-warning' },
+    { value: 'urgent', label: 'Urgent', color: 'bg-destructive/10 text-destructive' }
   ];
 
   const escalationLevels = [
@@ -229,14 +229,14 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       </CardHeader>
       <CardContent>
         {blockingReasons.length > 0 && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="mb-4 p-3 bg-warning/10 border border-warning/30 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <span className="font-medium text-yellow-800">Raisons de blocage</span>
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <span className="font-medium text-warning">Raisons de blocage</span>
             </div>
             <ul className="space-y-1">
               {blockingReasons.map((reason, index) => (
-                <li key={index} className="text-sm text-yellow-700">
+                <li key={index} className="text-sm text-warning">
                   <span className="font-medium">{reason.reason}:</span> {reason.description}
                 </li>
               ))}

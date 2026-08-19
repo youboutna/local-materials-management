@@ -235,19 +235,19 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-adrar-600">{materials.length}</p>
-              <p className="text-sm text-gray-600">Types de matériaux</p>
+              <p className="text-sm text-muted-foreground">Types de matériaux</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-terracotta-600">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
-              <p className="text-sm text-gray-600">Valeur totale</p>
+              <p className="text-sm text-muted-foreground">Valeur totale</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-success">
                 {materials.reduce((total, item) => total + item.quantity, 0)}
               </p>
-              <p className="text-sm text-gray-600">Quantité totale</p>
+              <p className="text-sm text-muted-foreground">Quantité totale</p>
             </div>
           </div>
         </CardContent>
@@ -257,9 +257,9 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
       {materials.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun matériau assigné</h3>
-            <p className="text-gray-600 mb-4">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Aucun matériau assigné</h3>
+            <p className="text-muted-foreground mb-4">
               Commencez par ajouter des matériaux à ce projet. Les métrés seront calculés automatiquement.
             </p>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -280,14 +280,14 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.material.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{item.material.description}</p>
+                      <h3 className="font-medium text-foreground">{item.material.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{item.material.description}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveMaterial(item.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -302,13 +302,13 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Prix unitaire:</span>
+                      <span className="text-muted-foreground">Prix unitaire:</span>
                       <span className="font-medium">
                         {(item.material.price_per_unit || 0).toLocaleString('fr-FR')} MRU/{item.material.unit}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Valeur totale:</span>
+                      <span className="text-muted-foreground">Valeur totale:</span>
                       <span className="font-medium text-terracotta-600">
                         {(item.quantity * (item.material.price_per_unit || 0)).toLocaleString('fr-FR')} MRU
                       </span>
@@ -316,7 +316,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                   </div>
 
                   {item.material.origin_location && (
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       <span>{item.material.origin_location}</span>
                     </div>

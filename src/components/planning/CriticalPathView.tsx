@@ -148,7 +148,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
             <p className="text-2xl font-bold">{criticalPath.totalDurationDays}j</p>
           </div>
           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/20">
-            <div className="flex items-center gap-2 text-amber-600 mb-2">
+            <div className="flex items-center gap-2 text-warning mb-2">
               <AlertTriangle className="h-4 w-4" />
               <span className="text-xs font-medium uppercase">Proche critique</span>
             </div>
@@ -229,7 +229,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
         {/* Near Critical Milestones */}
         {nearCriticalMilestones.length > 0 && (
           <div className="space-y-3 mt-6">
-            <h4 className="font-medium text-sm flex items-center gap-2 text-amber-600">
+            <h4 className="font-medium text-sm flex items-center gap-2 text-warning">
               <AlertTriangle className="h-4 w-4" />
               Jalons Proches du Critique
               <Badge variant="secondary" className="text-xs">

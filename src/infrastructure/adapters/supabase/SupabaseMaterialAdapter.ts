@@ -189,6 +189,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       }
       if (data.materialStatus !== undefined) updateData.material_status = data.materialStatus;
       if (data.tags !== undefined) updateData.tags = data.tags;
+      updateData.updated_at = new Date().toISOString();
 
       const { error } = await supabase
         .from(this.tableName)

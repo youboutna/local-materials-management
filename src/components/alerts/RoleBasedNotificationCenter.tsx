@@ -129,7 +129,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <AlertTriangle className="h-5 w-5 text-destructive" />
                 Tableau de Bord Exécutif
               </span>
               <div className="flex gap-2">
@@ -140,16 +140,16 @@ const RoleBasedNotificationCenter: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{notificationCounts.bank_guarantee}</div>
+              <div className="text-center p-3 bg-destructive/10 rounded-lg">
+                <div className="text-2xl font-bold text-destructive">{notificationCounts.bank_guarantee}</div>
                 <div className="text-sm text-muted-foreground">Garanties Bancaires</div>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{notificationCounts.inspections}</div>
+              <div className="text-center p-3 bg-warning/10 rounded-lg">
+                <div className="text-2xl font-bold text-warning">{notificationCounts.inspections}</div>
                 <div className="text-sm text-muted-foreground">Inspections</div>
               </div>
-              <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">{notificationCounts.compliance}</div>
+              <div className="text-center p-3 bg-warning/10 rounded-lg">
+                <div className="text-2xl font-bold text-warning">{notificationCounts.compliance}</div>
                 <div className="text-sm text-muted-foreground">Conformité</div>
               </div>
             </div>
@@ -251,17 +251,17 @@ const RoleBasedNotificationCenter: React.FC = () => {
                             {notification.metadata && (
                               <div className="flex flex-wrap gap-2 text-xs">
                                 {notification.metadata.delay_percentage && (
-                                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
+                                  <span className="px-2 py-1 bg-destructive/10 text-destructive rounded">
                                     Retard: {notification.metadata.delay_percentage}%
                                   </span>
                                 )}
                                 {notification.metadata.contract_guarantee_amount && (
-                                  <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded">
+                                  <span className="px-2 py-1 bg-warning/10 text-warning rounded">
                                     Garantie: {notification.metadata.contract_guarantee_amount.toLocaleString()} MRU
                                   </span>
                                 )}
                                 {notification.metadata.contractor_name && (
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                                  <span className="px-2 py-1 bg-primary/10 text-primary rounded">
                                     {notification.metadata.contractor_name}
                                   </span>
                                 )}

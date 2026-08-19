@@ -486,7 +486,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
             <DialogTitle className="flex items-center gap-2">
               {actionDialog.action === 'inspection' && (
                 <>
-                  <ClipboardCheck className="h-5 w-5 text-blue-600" />
+                  <ClipboardCheck className="h-5 w-5 text-primary" />
                   Déclencher une Inspection
                 </>
               )}
@@ -520,7 +520,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   className="w-full justify-start gap-3 h-auto py-3"
                   onClick={handleScheduleInspection}
                 >
-                  <CalendarPlus className="h-5 w-5 text-blue-600" />
+                  <CalendarPlus className="h-5 w-5 text-primary" />
                   <div className="text-left">
                     <p className="font-medium">Programmer une inspection</p>
                     <p className="text-xs text-muted-foreground">Créer une notification de programmation</p>

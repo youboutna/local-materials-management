@@ -546,11 +546,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
       case 'completed': return 'bg-success-soft text-success';
 
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-primary/10 text-primary';
 
-      case 'delayed': return 'bg-red-100 text-red-800';
+      case 'delayed': return 'bg-destructive/10 text-destructive';
 
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-foreground';
 
     }
 
@@ -1312,7 +1312,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         {allPhases.length === 0 ? (
 
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
 
             <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
 
@@ -1336,7 +1336,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <h3 className="font-medium">{(phase as PhaseData).title || (phase as PhaseDTO).name}</h3>
 
-                      <p className="text-sm text-gray-600">{phase.description}</p>
+                      <p className="text-sm text-muted-foreground">{phase.description}</p>
 
                     </div>
 
@@ -1414,11 +1414,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex items-center gap-2">
 
-                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
 
                       <div>
 
-                        <p className="text-xs text-gray-500">Dates</p>
+                        <p className="text-xs text-muted-foreground">Dates</p>
 
                         <p className="text-sm">{phase.startDate} - {phase.endDate}</p>
 
@@ -1430,11 +1430,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex items-center gap-2">
 
-                      <DollarSign className="h-4 w-4 text-gray-500" />
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
 
                       <div>
 
-                        <p className="text-xs text-gray-500">Budget</p>
+                        <p className="text-xs text-muted-foreground">Budget</p>
 
                         <p className="text-sm">{(phase.budget || 0).toLocaleString()} MRU</p>
 
@@ -1446,11 +1446,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex items-center gap-2">
 
-                      <Package className="h-4 w-4 text-gray-500" />
+                      <Package className="h-4 w-4 text-muted-foreground" />
 
                       <div>
 
-                        <p className="text-xs text-gray-500">Matériaux</p>
+                        <p className="text-xs text-muted-foreground">Matériaux</p>
 
                         <p className="text-sm">{getPhaseCounts(phase.id).materials} éléments</p>
 
@@ -1462,11 +1462,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex items-center gap-2">
 
-                      <Users className="h-4 w-4 text-gray-500" />
+                      <Users className="h-4 w-4 text-muted-foreground" />
 
                       <div>
 
-                        <p className="text-xs text-gray-500">Ressources</p>
+                        <p className="text-xs text-muted-foreground">Ressources</p>
 
                         <p className="text-sm">{getPhaseCounts(phase.id).employees} rôles</p>
 
@@ -1478,11 +1478,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex items-center gap-2">
 
-                      <Calculator className="h-4 w-4 text-gray-500" />
+                      <Calculator className="h-4 w-4 text-muted-foreground" />
 
                       <div>
 
-                        <p className="text-xs text-gray-500">Analyse métré</p>
+                        <p className="text-xs text-muted-foreground">Analyse métré</p>
 
                         <p className="text-sm">{getPhaseCounts(phase.id).takeoffs} métré(s)</p>
 
@@ -2050,7 +2050,7 @@ const CustomPhaseCreator: React.FC<{
 
             {customPhase.customStages.map((stage) => (
 
-              <div key={stage.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={stage.id} className="flex items-center justify-between p-2 bg-muted rounded">
 
                 <span className="text-sm">{stage.order}. {stage.name}</span>
 
@@ -2432,15 +2432,15 @@ const ProcurementPhaseCreator: React.FC<{
 
     <div className="space-y-4">
 
-      <div className="bg-blue-50 p-4 rounded-lg border">
+      <div className="bg-primary/10 p-4 rounded-lg border">
 
-        <h4 className="font-medium text-blue-800 mb-2">
+        <h4 className="font-medium text-primary mb-2">
 
           Workflow des Marchés Publics en Mauritanie
 
         </h4>
 
-        <p className="text-sm text-blue-700">
+        <p className="text-sm text-primary">
 
           Procédure officielle des marchés publics utilisée par les entreprises publiques mauritaniennes.
 

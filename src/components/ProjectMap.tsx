@@ -146,7 +146,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   if (!mapLocations.length && !zoneOverlays.length) {
     return (
       <div className={`relative ${className}`} style={{ height }}>
-        <div className="h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg">
+        <div className="h-full flex items-center justify-center text-muted-foreground bg-muted rounded-lg">
           {t('dashboard.map_no_data')}
         </div>
       </div>
@@ -178,9 +178,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             <Popup>
               <div className="p-2">
                 <h3 className="font-semibold text-sm">{location.name}</h3>
-                <p className="text-xs text-gray-600 mb-2">{location.region}</p>
+                <p className="text-xs text-muted-foreground mb-2">{location.region}</p>
                 {location.adresse && (
-                  <p className="text-xs text-gray-600 mb-2">
+                  <p className="text-xs text-muted-foreground mb-2">
                     📍 {location.adresse}
                   </p>
                 )}

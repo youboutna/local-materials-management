@@ -141,7 +141,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Taux d'achèvement</p>
                 <p className="text-2xl font-bold">{completionRate.toFixed(1)}%</p>
               </div>
-              <BarChart3 className="h-8 w-8 text-blue-500" />
+              <BarChart3 className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -165,7 +165,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Tâches en retard</p>
                 <p className="text-2xl font-bold">{delayedTasks}</p>
               </div>
-              <Users className="h-8 w-8 text-red-500" />
+              <Users className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -258,7 +258,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
                       </div>
                     </div>
                     
-                    <div className="flex-1 relative h-8 bg-gray-100 rounded">
+                    <div className="flex-1 relative h-8 bg-muted rounded">
                       {position && (
                         <div
                           className={`absolute top-0 h-full rounded ${getStatusColor(task.status)} opacity-80`}

@@ -66,9 +66,9 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
           <div className="border-t pt-6">
             <h3 className="text-lg font-medium mb-4">Rattachement des ressources</h3>
             <div className="space-y-4">
-              <div className="p-4 border rounded-lg bg-blue-50">
+              <div className="p-4 border rounded-lg bg-primary/10">
                 <h4 className="font-medium mb-2">Organisation par phases</h4>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-muted-foreground mb-3">
                   Les matériaux peuvent être rattachés à des phases spécifiques ou à des tâches individuelles
                 </p>
                 <div className="space-y-2">
@@ -135,12 +135,12 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
             {/* Résumé des matériaux sélectionnés */}
             <div className="border-t pt-6">
               <h3 className="text-lg font-medium mb-4">Résumé des matériaux</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">
                   <strong>{selectedMaterials.length}</strong> matériau(x) sélectionné(s)
                 </p>
                 {selectedMaterials.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     Quantité totale d'articles: {selectedMaterials.reduce((sum, m) => sum + m.quantity, 0)}
                   </div>
                 )}

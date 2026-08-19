@@ -47,7 +47,7 @@ const EnhancedDashboardContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted">
         <div className="container mx-auto px-4 py-8 pt-20">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -58,15 +58,15 @@ const EnhancedDashboardContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-                <p className="text-gray-600 mt-2">Vue d'ensemble des activités et alertes du projet</p>
+                <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
+                <p className="text-muted-foreground mt-2">Vue d'ensemble des activités et alertes du projet</p>
               </div>
               <div className="flex items-center gap-4">
                 {criticalAlerts.length > 0 && (
@@ -85,19 +85,19 @@ const EnhancedDashboardContent = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
+                <div className="text-2xl font-bold text-destructive">{stats.criticalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Alertes critiques</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-orange-500">{stats.highAlerts || 0}</div>
+                <div className="text-2xl font-bold text-warning">{stats.highAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes élevées</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-blue-500">{stats.openAlerts || 0}</div>
+                <div className="text-2xl font-bold text-primary">{stats.openAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
               </CardContent>
             </Card>
@@ -117,9 +117,9 @@ const EnhancedDashboardContent = () => {
 
           {/* Alertes critiques */}
           {criticalAlerts.length > 0 && (
-            <Card className="mb-8 border-red-200 bg-red-50">
+            <Card className="mb-8 border-destructive/30 bg-destructive/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
+                <CardTitle className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-5 w-5" />
                   Alertes Critiques
                   <Badge variant="destructive">{criticalAlerts.length}</Badge>
@@ -128,19 +128,19 @@ const EnhancedDashboardContent = () => {
               <CardContent>
                 <div className="space-y-3">
                   {criticalAlerts.map((alert) => (
-                    <div key={alert.id} className="p-4 bg-white border border-red-200 rounded-lg">
+                    <div key={alert.id} className="p-4 bg-white border border-destructive/30 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xl">{alert.icon}</span>
-                            <p className="font-medium text-red-800">
+                            <p className="font-medium text-destructive">
                               {alert.displayName}
                             </p>
                           </div>
-                          <p className="text-sm text-red-600 mt-1">
+                          <p className="text-sm text-destructive mt-1">
                             Sévérité: {alert.severity} | Type: {alert.type}
                           </p>
-                          <p className="text-xs text-red-500 mt-1">
+                          <p className="text-xs text-destructive mt-1">
                             Détecté le: {alert.formattedDate}
                           </p>
                         </div>
@@ -180,8 +180,8 @@ const EnhancedDashboardContent = () => {
                     <div
                       key={alert.id}
                       className={`p-4 rounded-lg border ${
-                        alert.severity === 'critical' ? 'border-red-200 bg-red-50' :
-                        alert.severity === 'high' ? 'border-orange-200 bg-orange-50' :
+                        alert.severity === 'critical' ? 'border-destructive/30 bg-destructive/10' :
+                        alert.severity === 'high' ? 'border-warning/30 bg-warning/10' :
                         'bg-white'
                       } hover:shadow-md transition-shadow`}
                     >
@@ -196,9 +196,9 @@ const EnhancedDashboardContent = () => {
                             <Badge 
                               variant="secondary"
                               className={
-                                alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
-                                alert.severity === 'high' ? 'bg-orange-100 text-orange-800' :
-                                'bg-blue-100 text-blue-800'
+                                alert.severity === 'critical' ? 'bg-destructive/10 text-destructive' :
+                                alert.severity === 'high' ? 'bg-warning/10 text-warning' :
+                                'bg-primary/10 text-primary'
                               }
                             >
                               {alert.severity}

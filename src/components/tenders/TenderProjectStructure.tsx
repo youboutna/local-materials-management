@@ -186,12 +186,12 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
       case 'en cours':
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       case 'delayed':
       case 'en retard':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -261,13 +261,13 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
             )}
             {project.location && (
               <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-blue-600" />
+                <MapPin className="h-4 w-4 text-primary" />
                 <span className="truncate">{project.location}</span>
               </div>
             )}
             {project.start_date && (
               <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-orange-600" />
+                <Calendar className="h-4 w-4 text-warning" />
                 <span>{format(new Date(project.start_date), 'd MMM yyyy', { locale: fr })}</span>
               </div>
             )}

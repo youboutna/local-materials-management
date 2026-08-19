@@ -444,7 +444,7 @@ export function UnifiedPaymentFormDialog({
                       <span className="text-sm truncate">{doc.title || doc.fileName}</span>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} title="Voir"><Eye className="h-4 w-4" /></Button>
-                        {isEdit && <Button variant="ghost" size="sm" onClick={() => handleRemoveDocument(doc.id)} title="Retirer" className="text-red-500"><Trash2 className="h-4 w-4" /></Button>}
+                        {isEdit && <Button variant="ghost" size="sm" onClick={() => handleRemoveDocument(doc.id)} title="Retirer" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>}
                       </div>
                     </div>
                   ))}

@@ -76,10 +76,10 @@ const ManagementActions: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('management_actions.critical_actions') || 'Actions critiques'}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-destructive">
               {actionItems.filter(item => item.urgency === 'critical').length}
             </div>
             <p className="text-xs text-muted-foreground">{t('management_actions.critical_attention') || 'Attention immédiate requise'}</p>
@@ -89,10 +89,10 @@ const ManagementActions: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('management_actions.validations_pending') || 'Validations en attente'}</CardTitle>
-            <CheckCircle className="h-4 w-4 text-orange-600" />
+            <CheckCircle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-warning">
               {actionItems.filter(item => item.category === 'approval').length}
             </div>
             <p className="text-xs text-muted-foreground">{t('management_actions.pending_validation') || 'En attente de validation'}</p>
@@ -102,10 +102,10 @@ const ManagementActions: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('management_actions.urgent_tasks') || 'Tâches urgentes'}</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-warning">
               {actionItems.filter(item => item.category === 'task' && item.urgency === 'high').length}
             </div>
             <p className="text-xs text-muted-foreground">{t('management_actions.to_do_quickly') || 'À faire rapidement'}</p>
@@ -115,10 +115,10 @@ const ManagementActions: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('management_actions.decisions_required') || 'Décisions requises'}</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-primary">
               {actionItems.filter(item => item.category === 'decision').length}
             </div>
             <p className="text-xs text-muted-foreground">{t('management_actions.managerial_decisions') || 'Décisions managériales'}</p>
@@ -163,7 +163,7 @@ const ManagementActions: React.FC = () => {
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
                         {item.projectName && (
-                          <p className="text-xs text-blue-600">
+                          <p className="text-xs text-primary">
                             <strong>{t('management_actions.project') || 'Projet'}:</strong> {item.projectName}
                           </p>
                         )}

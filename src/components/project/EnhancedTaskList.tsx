@@ -115,8 +115,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-destructive text-destructive-foreground';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'high': return 'bg-warning/10 text-warning';
+      case 'medium': return 'bg-warning/10 text-warning';
       case 'low': return 'bg-success-soft text-success';
       default: return 'bg-muted text-muted-foreground';
     }
@@ -125,7 +125,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-success-soft text-success';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-primary/10 text-primary';
       case 'pending': return 'bg-muted text-muted-foreground';
       case 'cancelled': return 'bg-destructive/10 text-destructive';
       default: return 'bg-muted text-muted-foreground';
@@ -373,7 +373,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleDelete(task.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                         disabled={deleteMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4" />

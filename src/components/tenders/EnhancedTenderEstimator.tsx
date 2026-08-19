@@ -269,8 +269,8 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     {workflowSteps.map((step, index) => (
                       <Card key={step.id} className={`transition-all duration-200 ${
                         step.status === 'completed' ? 'border-success bg-success-soft' :
-                        step.status === 'in_progress' ? 'border-primary bg-blue-50' :
-                        'border-gray-200'
+                        step.status === 'in_progress' ? 'border-primary bg-primary/10' :
+                        'border-border'
                       }`}>
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
@@ -278,7 +278,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                                 step.status === 'completed' ? 'bg-success text-white' :
                                 step.status === 'in_progress' ? 'bg-primary text-white' :
-                                'bg-gray-200 text-gray-600'
+                                'bg-gray-200 text-muted-foreground'
                               }`}>
                                 {step.status === 'completed' ? (
                                   <CheckCircle className="w-4 h-4" />
@@ -288,7 +288,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                               </div>
                               <div>
                                 <h4 className="font-medium">{step.title}</h4>
-                                <p className="text-sm text-gray-600">{step.description}</p>
+                                <p className="text-sm text-muted-foreground">{step.description}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -338,18 +338,18 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                           <div className="flex justify-between items-start mb-3">
                             <div>
                               <h4 className="font-medium">{template.name}</h4>
-                              <p className="text-sm text-gray-600">{template.description}</p>
+                              <p className="text-sm text-muted-foreground">{template.description}</p>
                             </div>
                             <Badge variant="outline">{template.items.length} éléments</Badge>
                           </div>
                           <div className="space-y-2 mb-4">
                             {template.items.slice(0, 3).map((item, index) => (
-                              <div key={index} className="text-sm text-gray-600">
+                              <div key={index} className="text-sm text-muted-foreground">
                                 • {item.description}
                               </div>
                             ))}
                             {template.items.length > 3 && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 +{template.items.length - 3} autres éléments
                               </div>
                             )}
@@ -376,7 +376,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center gap-3">
                       <DollarSign className="h-8 w-8 text-success" />
                       <div>
-                        <p className="text-sm text-gray-600">Estimation Totale</p>
+                        <p className="text-sm text-muted-foreground">Estimation Totale</p>
                         <p className="text-2xl font-bold">2,450,000 MRU</p>
                       </div>
                     </div>
@@ -386,9 +386,9 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <Clock className="h-8 w-8 text-blue-600" />
+                      <Clock className="h-8 w-8 text-primary" />
                       <div>
-                        <p className="text-sm text-gray-600">Durée Estimée</p>
+                        <p className="text-sm text-muted-foreground">Durée Estimée</p>
                         <p className="text-2xl font-bold">45 jours</p>
                       </div>
                     </div>
@@ -400,7 +400,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center gap-3">
                       <Calculator className="h-8 w-8 text-purple-600" />
                       <div>
-                        <p className="text-sm text-gray-600">Éléments Calculés</p>
+                        <p className="text-sm text-muted-foreground">Éléments Calculés</p>
                         <p className="text-2xl font-bold">23</p>
                       </div>
                     </div>
@@ -448,21 +448,21 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">Fluctuation des prix des matériaux</p>
-                        <p className="text-sm text-gray-600">Impact potentiel sur le budget</p>
+                        <p className="text-sm text-muted-foreground">Impact potentiel sur le budget</p>
                       </div>
                       <Badge variant="destructive">Élevé</Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">Disponibilité de la main-d'œuvre</p>
-                        <p className="text-sm text-gray-600">Risque de retard</p>
+                        <p className="text-sm text-muted-foreground">Risque de retard</p>
                       </div>
                       <Badge variant="outline">Moyen</Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">Conditions météorologiques</p>
-                        <p className="text-sm text-gray-600">Impact sur le planning</p>
+                        <p className="text-sm text-muted-foreground">Impact sur le planning</p>
                       </div>
                       <Badge variant="secondary">Faible</Badge>
                     </div>
