@@ -65,6 +65,8 @@ interface EnhancedMaterialFormProps {
   showSubmitButton?: boolean;
   language?: string;
   materialId?: string; // For document management
+  /** Onglet ouvert par défaut (ex: 'documents' après création) */
+  defaultTab?: string;
 }
 
 const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
@@ -75,7 +77,9 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   showSubmitButton = true,
   language = 'fr',
   materialId,
+  defaultTab = 'basic',
 }, ref) => {
+
   const { t } = useLanguage();
 
   // Hexagonal Architecture hooks
