@@ -1023,7 +1023,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <ProjectConsultantDesignation projectId={projectId} />
         </TabsContent>
 
-        </TabsContent>
+
 
 
         {/* ===== FINANCIAL ===== */}
