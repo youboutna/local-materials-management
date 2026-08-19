@@ -153,11 +153,19 @@ const Footer = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="border-t border-adrar-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center"
+          className="border-t border-adrar-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-3"
         >
-          <p className="text-adrar-300 text-sm">
-            © {currentYear} BTP Manager. {t("footer.rights")}
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-terracotta-500 to-adrar-600">
+              <span className="text-white font-bold">A</span>
+            </span>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold text-white">HadraTech-GPI</p>
+              <p className="text-adrar-300 text-xs">
+                © {currentYear} · {t("footer.rights")}
+              </p>
+            </div>
+          </div>
           <Link
             to="https://hadratech.com/"
             className="text-adrar-300 hover:text-terracotta-400 transition-colors text-sm flex items-center gap-2 mt-2 md:mt-0"
@@ -165,6 +173,7 @@ const Footer = () => {
             <Building2 className="h-4 w-4" />
             {t("footer.by_hadratech")}
           </Link>
+
         </motion.div>
       </div>
     </footer>
