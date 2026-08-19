@@ -35,7 +35,7 @@ import {
 import type { Region, City } from '@/utils/mauritania';
 import { WorkspaceDTO, SupplierDTO, LocationDTO } from '@/dtos';
 import { CreateMaterialRequestDto } from '@/dtos/transforms';
-import MaterialDocuments from './MaterialDocuments';
+import MaterialDocumentsPanel from './MaterialDocumentsPanel';
 import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
@@ -1068,9 +1068,11 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               {materialId ? (
-                <MaterialDocuments
+                <MaterialDocumentsPanel
                   materialId={materialId}
-                  readonly={false}
+                  materialName={formData.name}
+                  supplierId={formData.supplier?.supplierId}
+                  supplierName={formData.supplier?.name}
                 />
               ) : (
                 <div className="space-y-6">
