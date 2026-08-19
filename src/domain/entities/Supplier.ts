@@ -32,6 +32,11 @@ export interface SupplierRating {
 export interface SupplierProps {
   id: string;
   externalRef?: string | null;
+  contactPerson?: string | null;
+  commerceRegisterRef?: string | null;
+  bankName?: string | null;
+  rib?: string | null;
+  accountNumber?: string | null;
   name: string;
   email?: string | null;
   phone?: string | null;
@@ -50,6 +55,11 @@ export interface SupplierProps {
 
 export class Supplier {
   private _externalRef: string | null;
+  private _contactPerson: string | null = null;
+  private _commerceRegisterRef: string | null = null;
+  private _bankName: string | null = null;
+  private _rib: string | null = null;
+  private _accountNumber: string | null = null;
   // Private fields for encapsulation
   private _id: string;
   private _name: string;
@@ -105,6 +115,16 @@ export class Supplier {
   // ============= Getters =============
   get id(): string { return this._id; }
   get externalRef(): string | null { return this._externalRef; }
+  get contactPerson(): string | null { return this._contactPerson ?? this._contacts[0]?.name ?? null; }
+  set contactPerson(value: string | null) { this._contactPerson = value?.trim() || null; }
+  get commerceRegisterRef(): string | null { return this._commerceRegisterRef; }
+  set commerceRegisterRef(value: string | null) { this._commerceRegisterRef = value?.trim() || null; }
+  get bankName(): string | null { return this._bankName; }
+  set bankName(value: string | null) { this._bankName = value?.trim() || null; }
+  get rib(): string | null { return this._rib; }
+  set rib(value: string | null) { this._rib = value?.trim() || null; }
+  get accountNumber(): string | null { return this._accountNumber; }
+  set accountNumber(value: string | null) { this._accountNumber = value?.trim() || null; }
   get name(): string { return this._name; }
   get email(): string | null { return this._email; }
   get phone(): string | null { return this._phone; }
@@ -243,6 +263,11 @@ export class Supplier {
       props.updatedAt ?? new Date().toISOString()
     );
     supplier._externalRef = props.externalRef ?? null;
+    supplier._contactPerson = props.contactPerson ?? props.contacts?.[0]?.name ?? null;
+    supplier._commerceRegisterRef = props.commerceRegisterRef ?? null;
+    supplier._bankName = props.bankName ?? null;
+    supplier._rib = props.rib ?? null;
+    supplier._accountNumber = props.accountNumber ?? null;
     return supplier;
   }
 
@@ -273,6 +298,11 @@ export class Supplier {
     return {
       id: this._id,
       externalRef: this._externalRef,
+      contactPerson: this._contactPerson,
+      commerceRegisterRef: this._commerceRegisterRef,
+      bankName: this._bankName,
+      rib: this._rib,
+      accountNumber: this._accountNumber,
       name: this._name,
       email: this._email,
       phone: this._phone,

@@ -48,7 +48,14 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
         communication: Number(row.rating),
         overall: Number(row.rating)
       } : null,
-      contacts: [],
+      contacts: row.contact_person
+        ? [{ name: row.contact_person as string, email: (row.email as string) || '', phone: (row.phone as string) || undefined }]
+        : [],
+      contactPerson: (row.contact_person as string) || null,
+      commerceRegisterRef: (row.commerce_register_ref as string) || null,
+      bankName: (row.bank_name as string) || null,
+      rib: (row.rib as string) || null,
+      accountNumber: (row.account_number as string) || null,
       isVerified: Boolean(row.is_verified) || false,
       verifiedAt: (row.verified_at as string) || null,
       workspaceId: (row.workspace_id as string) || (row.user_id as string) || null,
@@ -72,8 +79,42 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       nif: entity.nif,
       category: entity.category,
       is_active: entity.status === 'active',
-      rating: entity.rating?.overall,
+      rating: entity.rating?.overall ?? null,
+      contact_person: entity.contactPerson,
+      commerce_register_ref: entity.commerceRegisterRef,
+      bank_name: entity.bankName,
+      rib: entity.rib,
+      account_number: entity.accountNumber,
       user_id: entity.workspaceId,
+    };
+  }
+
+  /**
+   * UI form data (snake_case, legacy forms) → Partial<SupplierProps>
+   * Guarantees the full round-trip UI → DB for every editable field.
+   */
+  static fromFormData(form: Record<string, unknown>): Partial<SupplierProps> & { name: string } {
+    const ratingValue = form.rating != null && Number(form.rating) > 0 ? Number(form.rating) : null;
+    const contactPerson = (form.contact_person ?? form.contactPerson ?? null) as string | null;
+    const email = (form.email as string) || null;
+    const phone = (form.phone as string) || null;
+    return {
+      name: ((form.name as string) || '').trim(),
+      email,
+      phone,
+      address: (form.address as string) || null,
+      category: ((form.category as string) || null) as SupplierCategory | null,
+      nif: (form.nif as string) || null,
+      contactPerson: contactPerson || null,
+      contacts: contactPerson ? [{ name: contactPerson, email: email || '', phone: phone || undefined }] : [],
+      commerceRegisterRef: (form.commerce_register_ref ?? form.commerceRegisterRef ?? null) as string | null,
+      bankName: (form.bank_name ?? form.bankName ?? null) as string | null,
+      rib: (form.rib as string) || null,
+      accountNumber: (form.account_number ?? form.accountNumber ?? null) as string | null,
+      rating: ratingValue
+        ? { quality: ratingValue, delivery: ratingValue, price: ratingValue, communication: ratingValue, overall: ratingValue }
+        : null,
+      status: form.is_active === false ? 'inactive' : 'active',
     };
   }
 
@@ -92,19 +133,19 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       email: entity.email || undefined,
       phone: entity.phone || undefined,
       address: entity.address || undefined,
-      contactPerson: entity.contacts[0]?.name || undefined,
+      contactPerson: entity.contactPerson || undefined,
       category: entity.category || undefined,
       rating: entity.rating?.overall || undefined,
       isActive: entity.status === 'active',
       nif: entity.nif || undefined,
-      commerceRegisterRef: undefined,
+      commerceRegisterRef: entity.commerceRegisterRef || undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      accountNumber: undefined,
-      bankName: undefined,
+      accountNumber: entity.accountNumber || undefined,
+      bankName: entity.bankName || undefined,
       defaultPasswordResetRequired: undefined,
-      rib: undefined,
-      userId: undefined,
+      rib: entity.rib || undefined,
+      userId: entity.workspaceId || undefined,
     };
   }
 
@@ -122,6 +163,11 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
         quality: dto.rating, delivery: dto.rating, price: dto.rating, communication: dto.rating, overall: dto.rating
       } : null,
       contacts: dto.contactPerson ? [{ name: dto.contactPerson, email: dto.email || '', phone: dto.phone || '' }] : [],
+      contactPerson: dto.contactPerson || null,
+      commerceRegisterRef: dto.commerceRegisterRef || null,
+      bankName: dto.bankName || null,
+      rib: dto.rib || null,
+      accountNumber: dto.accountNumber || null,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt
     });

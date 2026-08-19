@@ -5,6 +5,7 @@
 
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface SupplierFormData {
@@ -25,21 +26,21 @@ export function useSuppliersList() {
     queryKey: ['suppliers'],
     queryFn: async () => {
       const service = getSupplierService();
-      const result = await service.searchSuppliers({ limit: 500 });
-      return result.suppliers.map(s => ({
+      const suppliers = await service.getAllSuppliers();
+      return suppliers.map(s => ({
         id: s.id,
         name: s.name,
-        contact_person: null,
-        email: null,
-        phone: null,
-        address: null,
+        contact_person: s.contactPerson,
+        email: s.email,
+        phone: s.phone,
+        address: s.address,
         category: s.category || null,
-        rating: s.rating || null,
-        nif: null,
-        commerce_register_ref: null,
-        is_active: s.isActive,
-        created_at: null,
-        updated_at: null,
+        rating: s.rating?.overall ?? null,
+        nif: s.nif,
+        commerce_register_ref: s.commerceRegisterRef,
+        is_active: s.status === 'active',
+        created_at: s.createdAt,
+        updated_at: s.updatedAt,
       }));
     }
   });
@@ -52,7 +53,7 @@ export function useCreateSupplier() {
   return useMutation({
     mutationFn: async (supplierData: SupplierFormData) => {
       const service = getSupplierService();
-      return await service.createSupplier(supplierData as any);
+      return await service.createSupplier(SupplierTransformer.fromFormData(supplierData as unknown as Record<string, unknown>));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -67,7 +68,7 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: SupplierFormData }) => {
       const service = getSupplierService();
-      return await service.updateSupplier(id, data as any);
+      return await service.updateSupplier(id, SupplierTransformer.fromFormData(data as unknown as Record<string, unknown>));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });

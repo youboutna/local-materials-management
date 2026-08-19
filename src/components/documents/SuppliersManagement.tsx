@@ -86,7 +86,7 @@ const SuppliersManagement = () => {
 }) => {
     setFormData({
       name: supplier.name || '',
-      contactPerson: supplier.contacts?.[0]?.name || '',
+      contactPerson: (supplier as { contactPerson?: string }).contactPerson || supplier.contacts?.[0]?.name || '',
       email: supplier.email || '',
       phone: supplier.phone || '',
       address: supplier.address || '',
