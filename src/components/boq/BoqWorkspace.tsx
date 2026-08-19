@@ -255,15 +255,37 @@ export function BoqWorkspace({
       milestoneId: effectiveWbs.milestoneId,
       taskId: effectiveWbs.taskId,
       vatRate: profile.vatRate,
-      note: [category === 'overhead' ? 'Frais généraux' : null, overheadNote].filter(Boolean).join(' • ') || null,
+      note: [
+        category === 'overhead' ? 'Frais généraux' : null,
+        overheadNote,
+        effectiveOpenings ? `Ouvertures déduites : ${openings.count} × ${openings.width}×${openings.height} m` : null,
+      ].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
       status: 'submitted',
     };
-    setPendingLines((prev) => [...prev, draft]);
+    // Recommandations du référentiel → 1 ligne article par recommandation.
+    const recoDrafts: BoqLineDTO[] = (autoRecs ? recommendations : []).map((rec) => ({
+      ...draft,
+      designation: `${draft.designation} — ${rec.label}`,
+      elementType: null,
+      length: null, width: null, height: null,
+      unit: rec.unit ?? draft.unit,
+      quantity: rec.quantity ?? 1,
+      totalHt: (rec.quantity ?? 1) * effectivePu,
+      note: ['Recommandation', overheadNote].filter(Boolean).join(' • '),
+      sourceType: 'avance',
+    }));
+    setPendingLines((prev) => [...prev, draft, ...recoDrafts]);
     resetForm();
     setOpenManual(false);
-    toast({ title: 'Ligne ajoutée au brouillon', description: 'Cliquez « Enregistrer le DQE » pour persister.' });
+    toast({
+      title: 'Ligne ajoutée au brouillon',
+      description: recoDrafts.length
+        ? `1 ligne + ${recoDrafts.length} recommandation(s). Cliquez « Enregistrer le DQE » pour persister.`
+        : 'Cliquez « Enregistrer le DQE » pour persister.',
+    });
   };
+
 
   const persistPending = async (silent = false): Promise<boolean> => {
     if (pendingLines.length === 0) return true;
