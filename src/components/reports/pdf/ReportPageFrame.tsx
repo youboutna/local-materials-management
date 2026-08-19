@@ -169,7 +169,6 @@ export function ReportHeader({ title, subtitle, company, extra, showFullHeader =
             </View>
             {extra ?? null}
 
-            {extra}
           </View>
         </View>
       )}
