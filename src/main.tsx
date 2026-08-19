@@ -11,13 +11,11 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateAppConfig } from '@/config/app-validate';
 
 // Polyfill Buffer / global attendus par certaines librairies de rendu (PDF, parseurs).
+import { Buffer as BufferPolyfill } from 'buffer';
 const globalScope = globalThis as typeof globalThis & { Buffer?: unknown; global?: unknown };
 if (!globalScope.global) globalScope.global = globalThis;
-if (!globalScope.Buffer) {
-  import('buffer').then(({ Buffer }) => {
-    globalScope.Buffer = Buffer;
-  }).catch(() => { /* noop */ });
-}
+if (!globalScope.Buffer) globalScope.Buffer = BufferPolyfill;
+
 
 // Validate VITE_* provider env vars at startup and warm the unified factory.
 try { validateAppConfig(); } catch (e) { console.warn('[validateAppConfig]', e); }
