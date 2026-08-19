@@ -147,8 +147,31 @@ export const UiThemeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return <UiThemeContext.Provider value={value}>{children}</UiThemeContext.Provider>;
 };
 
+/** Valeur de repli si le hook est appelé hors provider (ex. HMR, portails isolés). */
+const FALLBACK_VALUE: UiThemeContextValue = {
+  themeId: DEFAULT_UI_THEME_ID,
+  theme: getUiTheme(DEFAULT_UI_THEME_ID),
+  themes: UI_THEMES,
+  setThemeId: () => {},
+  darkMode: false,
+  toggleDarkMode: () => {},
+  branding: resolveBranding(DEFAULT_BRANDING_ID, {}),
+  brandingId: DEFAULT_BRANDING_ID,
+  brandingProfiles: BRANDING_PROFILES,
+  setBrandingId: () => {},
+  brandingOverrides: {},
+  setBrandingOverrides: () => {},
+  resetBrandingOverrides: () => {},
+};
+
 export const useUiTheme = (): UiThemeContextValue => {
   const ctx = useContext(UiThemeContext);
-  if (!ctx) throw new Error('useUiTheme must be used within a UiThemeProvider');
+  if (!ctx) {
+    if (import.meta.env.DEV) {
+      console.warn('[UiTheme] useUiTheme appelé hors UiThemeProvider — valeurs par défaut utilisées.');
+    }
+    return FALLBACK_VALUE;
+  }
   return ctx;
 };
+
