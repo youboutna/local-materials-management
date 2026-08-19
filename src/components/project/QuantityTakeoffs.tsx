@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calculator, FileSpreadsheet, RefreshCw } from 'lucide-react';
+import { Plus, FileSpreadsheet, RefreshCw, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import QuantityTakeoffsList from './QuantityTakeoffsList';
 import { BoqWorkspace } from '@/components/boq/BoqWorkspace';
+import { BoqImportDialog } from '@/components/boq/BoqImportDialog';
 import type { ReferentialType } from '@/config/referentials';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
@@ -36,9 +37,11 @@ interface QuantityTakeoffsProps {
   projectId: string;
   /** Référentiel projet courant — piloté par la page appelante. */
   referentialCode?: ReferentialType;
+  /** Contexte phase optionnel : rattache les imports/lignes à la phase. */
+  phaseId?: string;
 }
 
-const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps) => {
+const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeoffsProps) => {
   const [takeoffs, setTakeoffs] = useState<QuantityTakeoff[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
@@ -168,7 +171,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps)
       <Card>
         <CardContent className="p-6">
           <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-adrar-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
