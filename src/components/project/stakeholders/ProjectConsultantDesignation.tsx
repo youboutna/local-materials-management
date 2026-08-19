@@ -64,8 +64,31 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
   } = useProjectConsultantHex(projectId);
 
   const [selected, setSelected] = useState<string>('');
+  const [open, setOpen] = useState(false);
+  const [kindFilter, setKindFilter] = useState<'all' | EntityKind>('all');
 
-  const eligible = stakeholders.filter((s) => !s.isConsultant);
+  const eligible = useMemo(() => stakeholders.filter((s) => !s.isConsultant), [stakeholders]);
+
+  /** Regroupement par type d'entité, filtré par l'onglet actif. */
+  const groups = useMemo(() => {
+    const base: Record<EntityKind, ProjectConsultantDTO[]> = {
+      organization: [],
+      supplier: [],
+      employee: [],
+    };
+    for (const s of eligible) base[classify(s)].push(s);
+    (Object.keys(base) as EntityKind[]).forEach((k) =>
+      base[k].sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    );
+    if (kindFilter === 'all') return base;
+    return { organization: [], supplier: [], employee: [], [kindFilter]: base[kindFilter] } as Record<
+      EntityKind,
+      ProjectConsultantDTO[]
+    >;
+  }, [eligible, kindFilter]);
+
+  const selectedLabel = eligible.find((s) => s.stakeholderId === selected)?.name ?? '';
+  const visibleCount = (Object.values(groups) as ProjectConsultantDTO[][]).reduce((n, g) => n + g.length, 0);
 
   return (
     <Card className={className}>
