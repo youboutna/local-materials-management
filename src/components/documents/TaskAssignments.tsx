@@ -46,6 +46,14 @@ import {
 
 type Project = { id: string; title: string };
 
+/** `assignedTo` est un tableau côté DTO : l'UI n'expose qu'un assigné principal. */
+const firstAssignee = (task: any): string => {
+  const raw = task?.assignedTo ?? task?.assigned_to;
+  if (Array.isArray(raw)) return raw[0] || '';
+  return raw || '';
+};
+
+
 // Local form data type
 interface TaskFormData {
   title: string;
