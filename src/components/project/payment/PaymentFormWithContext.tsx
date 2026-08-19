@@ -234,9 +234,9 @@ export function PaymentFormWithContext({
                       <span className="text-muted-foreground block text-xs">Progression</span>
                       <span className="font-semibold text-blue-600">{context.project.progress}%</span>
                     </div>
-                    <div className="p-2 bg-green-50 rounded border border-green-200">
-                      <span className="text-green-700 block text-xs">Maximum autorisé</span>
-                      <span className="font-bold text-green-800">{context.maxAllowedAmount.toLocaleString()} MRU</span>
+                    <div className="p-2 bg-success-soft rounded border border-success/30">
+                      <span className="text-success block text-xs">Maximum autorisé</span>
+                      <span className="font-bold text-success">{context.maxAllowedAmount.toLocaleString()} MRU</span>
                     </div>
                   </div>
                   
@@ -249,10 +249,10 @@ export function PaymentFormWithContext({
                   </div>
 
                   {context.isInitialPaymentAllowed && (
-                    <Alert className="bg-green-50 border-green-200">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertTitle className="text-green-800 text-sm">Paiement initial autorisé</AlertTitle>
-                      <AlertDescription className="text-green-700 text-xs">
+                    <Alert className="bg-success-soft border-success/30">
+                      <CheckCircle className="h-4 w-4 text-success" />
+                      <AlertTitle className="text-success text-sm">Paiement initial autorisé</AlertTitle>
+                      <AlertDescription className="text-success text-xs">
                         Montant initial autorisé: {context.initialPaymentAmount.toLocaleString()} MRU
                       </AlertDescription>
                     </Alert>

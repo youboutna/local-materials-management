@@ -150,11 +150,11 @@ const ProjectImport = () => {
                 {t("projects.export.description")}
               </p>
 
-              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-green-900 dark:text-green-100 mb-2">
+              <div className="bg-success-soft dark:bg-success/30 border border-success/30 dark:border-success rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-success dark:text-success-foreground mb-2">
                   {t("projects.export.availableFormats")}:
                 </h3>
-                <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                <ul className="text-sm text-success dark:text-success-foreground space-y-1">
                   <li>
                     • <strong>JSON</strong>: {t("projects.export.jsonDesc")}
                   </li>

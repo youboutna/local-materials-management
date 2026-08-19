@@ -72,11 +72,11 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
                 <React.Fragment key={step.code}>
                   <div
                     className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
-                      active ? 'border-primary bg-primary/5' : done ? 'border-emerald-200 bg-emerald-50' : 'bg-muted/20'
+                      active ? 'border-primary bg-primary/5' : done ? 'border-success/30 bg-success-soft' : 'bg-muted/20'
                     }`}
                   >
                     {done ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                     ) : (
                       <Circle className={`h-4 w-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
                     )}

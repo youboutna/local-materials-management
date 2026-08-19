@@ -167,7 +167,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
     switch (status.toLowerCase()) {
       case 'completed':
       case 'terminé':
-        return 'bg-green-500';
+        return 'bg-success';
       case 'in_progress':
       case 'en cours':
         return 'bg-blue-500';
@@ -183,7 +183,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
     switch (status.toLowerCase()) {
       case 'completed':
       case 'terminé':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
       case 'en cours':
         return <Clock className="h-4 w-4 text-blue-500" />;
@@ -253,7 +253,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
             {project.budget && (
               <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-4 w-4 text-green-600" />
+                <DollarSign className="h-4 w-4 text-success" />
                 <span className="font-medium">
                   {(project.budget / 1000000).toFixed(1)}M MRU
                 </span>

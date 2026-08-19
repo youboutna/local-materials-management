@@ -43,7 +43,7 @@ const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: 'todo', title: 'À faire', status: 'todo', wipLimit: 10, color: 'bg-blue-500' },
   { id: 'in_progress', title: 'En cours', status: 'in_progress', wipLimit: 5, color: 'bg-amber-500' },
   { id: 'review', title: 'En revue', status: 'review', wipLimit: 3, color: 'bg-purple-500' },
-  { id: 'done', title: 'Terminé', status: 'done', color: 'bg-green-500' }
+  { id: 'done', title: 'Terminé', status: 'done', color: 'bg-success' }
 ];
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({

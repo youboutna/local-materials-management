@@ -42,7 +42,7 @@ export function AuthStatus({
       return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
     }
     if (isAuthenticated) {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+      return <CheckCircle className="h-4 w-4 text-success" />;
     }
     return <XCircle className="h-4 w-4 text-red-500" />;
   };
@@ -52,7 +52,7 @@ export function AuthStatus({
       return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Loading...</Badge>;
     }
     if (isAuthenticated) {
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Authenticated</Badge>;
+      return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Authenticated</Badge>;
     }
     return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Not Authenticated</Badge>;
   };

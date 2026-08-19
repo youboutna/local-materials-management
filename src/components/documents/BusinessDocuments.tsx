@@ -275,7 +275,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
               {parsedInvoice.length > 0 && (
                 <div className="p-4 border rounded-lg bg-muted/50">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <FileCheck className="h-4 w-4 text-green-600" />
+                    <FileCheck className="h-4 w-4 text-success" />
                     Analyse automatique de la facture
                   </h4>
                   <div className="text-sm text-muted-foreground mb-2">

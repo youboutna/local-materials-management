@@ -134,7 +134,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
   const getHealthColor = (status: HealthStatus) => {
     switch (status) {
       case 'excellent':
-        return 'bg-green-500';
+        return 'bg-success';
       case 'good':
         return 'bg-blue-500';
       case 'at_risk':
@@ -147,7 +147,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
   const getHealthIcon = (status: HealthStatus) => {
     switch (status) {
       case 'excellent':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'good':
         return <TrendingUp className="h-5 w-5 text-blue-500" />;
       case 'at_risk':
@@ -199,7 +199,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
                 <div
                   className={cn(
                     "h-2 flex-1 rounded-full transition-colors",
-                    phase.status === 'completed' ? 'bg-green-500' :
+                    phase.status === 'completed' ? 'bg-success' :
                     phase.status === 'in_progress' ? 'bg-blue-500' :
                     'bg-gray-200'
                   )}
@@ -290,7 +290,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
                     variant="outline" 
                     className={cn(
                       "text-xs",
-                      healthAnalysis.status === 'excellent' && "bg-green-50 text-green-700 border-green-200",
+                      healthAnalysis.status === 'excellent' && "bg-success-soft text-success border-success/30",
                       healthAnalysis.status === 'good' && "bg-blue-50 text-blue-700 border-blue-200",
                       healthAnalysis.status === 'at_risk' && "bg-orange-50 text-orange-700 border-orange-200",
                       healthAnalysis.status === 'critical' && "bg-red-50 text-red-700 border-red-200"

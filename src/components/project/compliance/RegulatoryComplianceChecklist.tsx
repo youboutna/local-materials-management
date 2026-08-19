@@ -39,7 +39,7 @@ interface Props {
 }
 
 const ANSWER_COLORS: Record<RegulatoryAnswer, string> = {
-  compliant: 'bg-green-100 text-green-800',
+  compliant: 'bg-success-soft text-success',
   in_progress: 'bg-blue-100 text-blue-800',
   non_compliant: 'bg-red-100 text-red-800',
   not_applicable: 'bg-gray-100 text-gray-700',

@@ -81,7 +81,7 @@ const InspectionDocumentsStep: React.FC<InspectionDocumentsStepProps> = ({
       </div>
 
       <div className="flex justify-between items-center">
-        <Badge variant="outline" className={allRequiredSelected ? 'bg-green-50 text-green-700' : ''}>
+        <Badge variant="outline" className={allRequiredSelected ? 'bg-success-soft text-success' : ''}>
           {selectedDocuments.length} / {requiredDocs.length} documents sélectionnés
         </Badge>
         <Button variant="outline" size="sm" onClick={selectAllRequired}>

@@ -101,14 +101,14 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   <span className={cn(
                     phaseCosts.costVariance > 0 
                       ? "text-red-600" 
-                      : "text-green-600"
+                      : "text-success"
                   )}>
                     {formatCurrency(phaseCosts.costVariance)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Budget restant:</span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-success">
                     {formatCurrency(phaseCosts.remainingBudget)}
                   </span>
                 </div>
@@ -203,7 +203,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   <span className="text-muted-foreground">Utilisation:</span>
                   <span className={cn(
                     "font-medium",
-                    phaseCosts.budgetUtilization > 100 ? "text-red-600" : "text-green-600"
+                    phaseCosts.budgetUtilization > 100 ? "text-red-600" : "text-success"
                   )}>
                     {phaseCosts.budgetUtilization.toFixed(1)}%
                   </span>

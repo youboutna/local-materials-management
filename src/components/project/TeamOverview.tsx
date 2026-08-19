@@ -332,7 +332,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                                   </span>
                                 )}
                                 {phase.status && (
-                                  <span className="text-xs text-green-600 ml-2">
+                                  <span className="text-xs text-success ml-2">
                                     [{phase.status}]
                                   </span>
                                 )}

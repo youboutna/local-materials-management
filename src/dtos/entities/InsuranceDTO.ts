@@ -307,7 +307,7 @@ export function getInsuranceStatusLabel(status: InsuranceStatus): string {
  */
 export function getInsuranceStatusColor(status: InsuranceStatus): string {
   const colors: Record<string, string> = {
-    'active': 'bg-green-100 text-green-800',
+    'active': 'bg-success-soft text-success',
     'expired': 'bg-red-100 text-red-800',
     'expiring_soon': 'bg-orange-100 text-orange-800',
     'missing': 'bg-gray-100 text-gray-800',
@@ -318,9 +318,9 @@ export function getInsuranceStatusColor(status: InsuranceStatus): string {
     'cancelled': 'bg-red-200 text-red-800',
     'archived': 'bg-gray-200 text-gray-800',
     'rejected': 'bg-red-300 text-red-800',
-    'approved': 'bg-green-200 text-green-800',
+    'approved': 'bg-success-soft text-success',
     'sent': 'bg-blue-300 text-blue-800',
-    'received': 'bg-green-300 text-green-800',
+    'received': 'bg-success text-success',
     'test': 'bg-red-400 text-red-800',
     'awaiting_approval': 'bg-yellow-200 text-yellow-800'
   };

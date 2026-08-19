@@ -248,7 +248,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     const targetDate = parseISO(milestone.targetDate);
     
     if (milestone.status === 'completed') {
-      return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-100' };
+      return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft' };
     }
     if (isBefore(targetDate, today)) {
       return { icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-100' };
@@ -472,7 +472,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                             Cible: {format(parseISO(milestone.targetDate), 'd MMM yyyy', { locale: fr })}
                           </span>
                           {milestone.completionDate && (
-                            <span className="text-green-600">
+                            <span className="text-success">
                               ✓ {format(parseISO(milestone.completionDate), 'd MMM', { locale: fr })}
                             </span>
                           )}
@@ -495,7 +495,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                           >
                             <CheckCircle className={cn(
                               "h-4 w-4",
-                              milestone.status === 'completed' ? "text-green-500" : "text-muted-foreground"
+                              milestone.status === 'completed' ? "text-success" : "text-muted-foreground"
                             )} />
                           </Button>
                           <Button

@@ -367,9 +367,9 @@ const ProjectManagementPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{statistics.metrics.completedProjects}</p>
+                  <p className="text-2xl font-bold text-success">{statistics.metrics.completedProjects}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -449,7 +449,7 @@ const ProjectManagementPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Remaining</span>
-                    <span className="text-sm font-bold text-green-600">
+                    <span className="text-sm font-bold text-success">
                       ${statistics?.budgetAnalysis.remaining?.toLocaleString()}
                     </span>
                   </div>
@@ -481,7 +481,7 @@ const ProjectManagementPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">Average Progress</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-success">
                     {statistics?.performanceMetrics.onTimeDelivery}%
                   </div>
                   <p className="text-sm text-muted-foreground">On-Time Delivery</p>

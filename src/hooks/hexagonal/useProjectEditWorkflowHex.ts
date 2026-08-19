@@ -67,7 +67,7 @@ export function useProjectEditWorkflowHex(projectId?: string) {
         toast({
           title: "Étape sauvegardée",
           description: `L'étape a été sauvegardée avec succès.`,
-          className: 'bg-green-100 border-green-300 text-green-800',
+          className: 'bg-success-soft border-success/30 text-success',
         });
         
         if (result.projectId) {
@@ -144,7 +144,7 @@ export function useProjectEditWorkflowHex(projectId?: string) {
         toast({
           title: "Workflow terminé",
           description: "Toutes les modifications ont été sauvegardées.",
-          className: 'bg-green-100 border-green-300 text-green-800',
+          className: 'bg-success-soft border-success/30 text-success',
         });
         
         if (result.projectId) {

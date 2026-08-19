@@ -50,7 +50,7 @@ const BankGuaranteeCrud = () => {
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
+    { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
     { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
     { value: 'cancelled', label: 'Annulée', color: 'bg-gray-100 text-gray-800' },
     { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' }

@@ -492,7 +492,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
               )}
               {actionDialog.action === 'payment' && (
                 <>
-                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <DollarSign className="h-5 w-5 text-success" />
                   Déclencher un Paiement
                 </>
               )}
@@ -532,7 +532,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   className="w-full justify-start gap-3 h-auto py-3"
                   onClick={handleExecuteInspection}
                 >
-                  <Play className="h-5 w-5 text-green-600" />
+                  <Play className="h-5 w-5 text-success" />
                   <div className="text-left">
                     <p className="font-medium">Exécuter une inspection</p>
                     <p className="text-xs text-muted-foreground">Lancer une inspection déjà programmée</p>
@@ -561,7 +561,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   className="w-full justify-start gap-3 h-auto py-3"
                   onClick={handleSchedulePayment}
                 >
-                  <CalendarPlus className="h-5 w-5 text-green-600" />
+                  <CalendarPlus className="h-5 w-5 text-success" />
                   <div className="text-left">
                     <p className="font-medium">Programmer un paiement</p>
                     <p className="text-xs text-muted-foreground">Créer une notification de programmation</p>

@@ -465,8 +465,8 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
                   {/* Cost calculation */}
                   {calc.materialId && (
-                    <div className="bg-green-50 p-3 rounded border border-green-200">
-                      <div className="text-sm text-green-800">
+                    <div className="bg-success-soft p-3 rounded border border-success/30">
+                      <div className="text-sm text-success">
                         {(() => {
                           const material = materials.find(m => m.id === calc.materialId);
                           const cost = material ? calc.quantity * material.price_per_unit : 0;
@@ -475,7 +475,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                               <span className="font-medium">Coût estimé: </span>
                               {cost.toLocaleString('fr-FR')} MRU
                               {material && (
-                                <span className="text-green-600 ml-2">
+                                <span className="text-success ml-2">
                                   ({calc.quantity.toFixed(2)} × {material.price_per_unit.toLocaleString('fr-FR')} MRU)
                                 </span>
                               )}

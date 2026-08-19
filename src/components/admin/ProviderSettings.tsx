@@ -199,7 +199,7 @@ const ProviderSettings = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected':
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check className="h-4 w-4 text-success" />;
       case 'failed':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case 'testing':

@@ -20,7 +20,7 @@ interface QuickLinksProps {
 
 const badgeStyles = {
   default: "bg-muted text-muted-foreground",
-  success: "bg-green-100 text-green-700",
+  success: "bg-success-soft text-success",
   warning: "bg-yellow-100 text-yellow-700",
   destructive: "bg-red-100 text-red-700",
 };

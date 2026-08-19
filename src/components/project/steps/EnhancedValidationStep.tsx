@@ -269,7 +269,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
   // Get status badge color
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
+      case 'completed': return 'bg-success';
       case 'in_progress': return 'bg-blue-500';
       case 'failed': return 'bg-red-500';
       default: return 'bg-gray-500';

@@ -136,7 +136,7 @@ export function useStakeholdersHex(projectId?: string) {
       toast({
         title: 'Partie prenante ajoutée',
         description: `${result.name} a été ajouté au projet avec succès.`,
-        className: 'bg-green-100 border-green-300 text-green-800',
+        className: 'bg-success-soft border-success/30 text-success',
       });
 
       queryClient.invalidateQueries({ queryKey: ['stakeholders', projectId] });
@@ -331,7 +331,7 @@ export function useStakeholdersHex(projectId?: string) {
       toast({
         title: 'Statut mis à jour',
         description: `${result.name} est maintenant ${result.isActive ? 'actif' : 'inactif'}.`,
-        className: result.isActive ? 'bg-green-100 border-green-300 text-green-800' : 'bg-gray-100 border-gray-300 text-gray-800',
+        className: result.isActive ? 'bg-success-soft border-success/30 text-success' : 'bg-gray-100 border-gray-300 text-gray-800',
       });
 
       queryClient.invalidateQueries({ queryKey: ['stakeholders', projectId] });

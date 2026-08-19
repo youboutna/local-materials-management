@@ -83,7 +83,7 @@ export function EvaluationPanelTabs({
               const done = completeness[w.category].complete;
               return (
                 <TabsTrigger key={w.category} value={w.category} className="gap-2">
-                  {done ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <AlertCircle className="h-3.5 w-3.5 text-amber-500" />}
+                  {done ? <CheckCircle2 className="h-3.5 w-3.5 text-success" /> : <AlertCircle className="h-3.5 w-3.5 text-amber-500" />}
                   {w.label}
                   <Badge variant="outline" className="ml-1 h-5 text-[10px]">{w.globalWeight}%</Badge>
                 </TabsTrigger>

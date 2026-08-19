@@ -119,8 +119,8 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
     const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', className: string }> = {
       supplier_notified: { variant: 'default', className: 'bg-blue-500' },
       ready_for_supplier: { variant: 'default', className: 'bg-blue-500' },
-      supplier_completed: { variant: 'secondary', className: 'bg-green-500 text-white' },
-      approved: { variant: 'secondary', className: 'bg-green-600 text-white' },
+      supplier_completed: { variant: 'secondary', className: 'bg-success text-white' },
+      approved: { variant: 'secondary', className: 'bg-success text-white' },
       rejected: { variant: 'destructive', className: '' },
       expired: { variant: 'outline', className: 'text-red-500 border-red-500' }
     };
@@ -383,8 +383,8 @@ const getStatusBadge = (status: string) => {
   const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', className: string }> = {
     supplier_notified: { variant: 'default', className: 'bg-blue-500' },
     ready_for_supplier: { variant: 'default', className: 'bg-blue-500' },
-    supplier_completed: { variant: 'secondary', className: 'bg-green-500 text-white' },
-    approved: { variant: 'secondary', className: 'bg-green-600 text-white' },
+    supplier_completed: { variant: 'secondary', className: 'bg-success text-white' },
+    approved: { variant: 'secondary', className: 'bg-success text-white' },
     rejected: { variant: 'destructive', className: '' },
     expired: { variant: 'outline', className: 'text-red-500 border-red-500' }
   };

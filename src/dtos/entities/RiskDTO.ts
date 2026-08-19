@@ -72,7 +72,7 @@ export enum RiskImpact {
  */
 export const RISK_CATEGORY_LABELS = {
   [RiskCategory.TECHNICAL]: { label: 'Technique', color: 'bg-blue-100 text-blue-800' },
-  [RiskCategory.FINANCIAL]: { label: 'Financier', color: 'bg-green-100 text-green-800' },
+  [RiskCategory.FINANCIAL]: { label: 'Financier', color: 'bg-success-soft text-success' },
   [RiskCategory.OPERATIONAL]: { label: 'Opérationnel', color: 'bg-orange-100 text-orange-800' },
   [RiskCategory.STRATEGIC]: { label: 'Stratégique', color: 'bg-indigo-100 text-indigo-800' },
   [RiskCategory.COMPLIANCE]: { label: 'Conformité', color: 'bg-purple-100 text-purple-800' },

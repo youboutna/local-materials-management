@@ -42,14 +42,14 @@ interface TBIWidgetProps {
 }
 
 const STATUS_STYLE: Record<IndicatorStatus, string> = {
-  green: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+  green: 'bg-success/10 text-success dark:text-success border-success/30',
   amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
   red: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30',
   unknown: 'bg-muted text-muted-foreground border-muted',
 };
 
 const STATUS_DOT: Record<IndicatorStatus, string> = {
-  green: 'bg-emerald-500',
+  green: 'bg-success',
   amber: 'bg-amber-500',
   red: 'bg-red-500',
   unknown: 'bg-muted-foreground/40',

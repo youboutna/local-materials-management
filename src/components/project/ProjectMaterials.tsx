@@ -244,7 +244,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
               <p className="text-sm text-gray-600">Valeur totale</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-success">
                 {materials.reduce((total, item) => total + item.quantity, 0)}
               </p>
               <p className="text-sm text-gray-600">Quantité totale</p>

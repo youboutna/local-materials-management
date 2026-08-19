@@ -906,7 +906,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
         <TabsContent value="quantities" className="space-y-6">
           {/* Quantities and Pricing */}
           <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardHeader className="bg-gradient-to-r from-success/10 to-success/10">
               <CardTitle className="text-adrar-800">
                 {t('materials.quantities_pricing') || 'Quantités et prix'}
               </CardTitle>
@@ -924,7 +924,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.quantity || 0}
                     onChange={(e) => handleChange('quantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-green-500"
+                    className="border-gray-300 focus:border-success"
                   />
                 </div>
                 
@@ -939,7 +939,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.availableQuantity || 0}
                     onChange={(e) => handleChange('availableQuantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-green-500"
+                    className="border-gray-300 focus:border-success"
                   />
                 </div>
                 
@@ -954,7 +954,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.minQuantity || 0}
                     onChange={(e) => handleChange('minQuantity', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-green-500"
+                    className="border-gray-300 focus:border-success"
                   />
                 </div>
                 
@@ -969,7 +969,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     step="0.01"
                     value={formData.pricePerUnit || 0}
                     onChange={(e) => handleChange('pricePerUnit', parseFloat(e.target.value) || 0)}
-                    className="border-gray-300 focus:border-green-500"
+                    className="border-gray-300 focus:border-success"
                   />
                 </div>
               </div>
@@ -1103,12 +1103,12 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                         {t('materials.documents.invoice_desc') || 'Preuves d\'achat et de livraison'}
                       </p>
                     </div>
-                    <div className="p-4 border rounded-lg bg-green-50">
-                      <FileText className="h-5 w-5 mb-2 text-green-600" />
-                      <h4 className="font-medium text-sm text-green-900 mb-1">
+                    <div className="p-4 border rounded-lg bg-success-soft">
+                      <FileText className="h-5 w-5 mb-2 text-success" />
+                      <h4 className="font-medium text-sm text-success mb-1">
                         {t('materials.documents.types.certificate') || 'Certificats'}
                       </h4>
-                      <p className="text-xs text-green-700">
+                      <p className="text-xs text-success">
                         {t('materials.documents.certificate_desc') || 'Qualité, conformité, sécurité'}
                       </p>
                     </div>

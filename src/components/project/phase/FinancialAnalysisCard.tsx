@@ -93,7 +93,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
                 ? "[&>div]:bg-red-500" 
                 : phaseCosts.budgetUtilization > 75
                 ? "[&>div]:bg-amber-500"
-                : "[&>div]:bg-green-500"
+                : "[&>div]:bg-success"
             )}
           />
         </CardContent>
@@ -129,7 +129,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
             <span className={cn(
               (phaseCosts.costVariance ?? 0) > 0 
                 ? "text-red-600" 
-                : "text-green-600"
+                : "text-success"
             )}>
               {formatCurrency(phaseCosts.costVariance ?? 0)}
             </span>
@@ -146,7 +146,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
                 ? "text-red-600" 
                 : phaseCosts.budgetUtilization > 75
                 ? "text-amber-600"
-                : "text-green-600"
+                : "text-success"
             )}>
               {phaseCosts.budgetUtilization.toFixed(1)}%
             </span>
@@ -159,7 +159,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
                 ? "[&>div]:bg-red-600" 
                 : phaseCosts.budgetUtilization > 75
                 ? "[&>div]:bg-amber-600"
-                : "[&>div]:bg-green-600"
+                : "[&>div]:bg-success"
             )}
           />
         </div>
@@ -192,7 +192,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
           <div className="pt-2 border-t">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Budget restant:</span>
-              <span className="font-medium text-green-600">
+              <span className="font-medium text-success">
                 {formatCurrency(remainingBudget)}
               </span>
             </div>

@@ -71,7 +71,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
     const colors = {
       'draft': 'bg-gray-100 text-gray-800',
       'published': 'bg-blue-100 text-blue-800',
-      'open': 'bg-green-100 text-green-800',
+      'open': 'bg-success-soft text-success',
       'evaluation': 'bg-yellow-100 text-yellow-800',
       'awarded': 'bg-purple-100 text-purple-800',
       'closed': 'bg-red-100 text-red-800',

@@ -39,7 +39,22 @@ export default {
 				},
 				success: {
 					DEFAULT: 'hsl(var(--success))',
-					foreground: 'hsl(var(--success-foreground))'
+					foreground: 'hsl(var(--success-foreground))',
+					soft: 'hsl(var(--success-soft))',
+					'soft-foreground': 'hsl(var(--success-soft-foreground))',
+					border: 'hsl(var(--success-border))'
+				},
+				// Fonds standardisés (voir index.css) — transitions fluides entre thèmes
+				surface: {
+					DEFAULT: 'hsl(var(--surface))',
+					muted: 'hsl(var(--surface-muted))',
+					subtle: 'hsl(var(--surface-subtle))',
+					accent: 'hsl(var(--surface-accent))',
+					foreground: 'hsl(var(--surface-foreground))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))'
 				},
 				warning: {
 					DEFAULT: 'hsl(var(--warning))',

@@ -243,7 +243,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <span className="text-gray-500">Budget:</span>
-                            <div className="font-medium text-green-600">
+                            <div className="font-medium text-success">
                               {formatBudget(project.budget)}
                             </div>
                           </div>
@@ -296,7 +296,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
               <Marker position={[selectedCoords.lat, selectedCoords.lng]}>
                 <Popup>
                   <div className="text-center">
-                    <strong className="text-green-600">Position sélectionnée</strong>
+                    <strong className="text-success">Position sélectionnée</strong>
                     <div className="text-xs text-gray-500 mt-1">
                       {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
                     </div>

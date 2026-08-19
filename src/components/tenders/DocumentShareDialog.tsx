@@ -92,7 +92,7 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
                     key={doc.id}
                     className={`cursor-pointer transition-all ${
                       isSelected ? 'ring-2 ring-primary' : ''
-                    } ${isAlreadyShared ? 'bg-green-50 border-green-200' : ''}`}
+                    } ${isAlreadyShared ? 'bg-success-soft border-success/30' : ''}`}
                     onClick={() => toggleDocumentSelection(doc.id)}
                   >
                     <CardContent className="p-4">

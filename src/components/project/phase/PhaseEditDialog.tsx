@@ -276,7 +276,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                                 "h-2 w-2 rounded-full",
                                 !completionValidation.canComplete 
                                   ? "bg-gray-300" 
-                                  : "bg-green-500"
+                                  : "bg-success"
                               )} />
                               Terminé
                               {!completionValidation.canComplete && (

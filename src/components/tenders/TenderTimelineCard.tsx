@@ -68,7 +68,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   const getStatusIcon = (status: TimelineEvent['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'active':
         return <AlertCircle className="h-4 w-4 text-amber-600" />;
       default:
@@ -79,7 +79,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   const getStatusColor = (status: TimelineEvent['status']) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 border-green-300';
+        return 'bg-success-soft border-success/30';
       case 'active':
         return 'bg-amber-100 border-amber-300';
       default:

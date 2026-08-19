@@ -268,7 +268,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
-      approved: { color: 'bg-green-100 text-green-800', label: 'Approuvé' },
+      approved: { color: 'bg-success-soft text-success', label: 'Approuvé' },
       rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
       processed: { color: 'bg-blue-100 text-blue-800', label: 'Traité' },
     };
@@ -387,7 +387,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {uploadedDocuments.map((doc, index) => (
-                      <div key={index} className="flex items-center text-sm text-green-600">
+                      <div key={index} className="flex items-center text-sm text-success">
                         <FileText className="mr-1 h-3 w-3" />
                         Document {index + 1} téléchargé
                       </div>

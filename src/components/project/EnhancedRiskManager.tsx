@@ -85,7 +85,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
   // Get risk level color
   const getRiskLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-green-100 text-green-800';
+      case 'low': return 'bg-success-soft text-success';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
       case 'high': return 'bg-orange-100 text-orange-800';
       case 'critical': return 'bg-red-100 text-red-800';

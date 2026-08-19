@@ -123,7 +123,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Confiance 95%</p>
                 <p className="text-2xl font-bold">{confidenceLevel95Days} j</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <TrendingUp className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -135,7 +135,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Chemin critique</p>
                 <p className="text-2xl font-bold">{criticalPath.length} tâches</p>
               </div>
-              <AlertTriangle className={`h-8 w-8 ${riskStatus === 'high' ? 'text-destructive' : riskStatus === 'medium' ? 'text-orange-500' : 'text-green-500'}`} />
+              <AlertTriangle className={`h-8 w-8 ${riskStatus === 'high' ? 'text-destructive' : riskStatus === 'medium' ? 'text-orange-500' : 'text-success'}`} />
             </div>
           </CardContent>
         </Card>

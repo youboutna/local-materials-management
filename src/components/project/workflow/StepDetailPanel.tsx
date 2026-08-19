@@ -130,9 +130,9 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+      case 'completed': return 'bg-success-soft text-success dark:bg-success dark:text-success';
       case 'in_progress': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
-      case 'approved': return 'bg-green-100 text-green-700';
+      case 'approved': return 'bg-success-soft text-success';
       default: return 'bg-muted text-muted-foreground';
     }
   };

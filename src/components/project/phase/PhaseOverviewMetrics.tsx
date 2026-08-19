@@ -93,10 +93,10 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
 
       {/* Budget Card */}
       <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-        <div className="p-4 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent">
+        <div className="p-4 bg-gradient-to-br from-success/10 via-success/5 to-transparent">
           <div className="flex items-center justify-between">
-            <div className="p-2 rounded-xl bg-green-500/10">
-              <DollarSign className="h-5 w-5 text-green-600" />
+            <div className="p-2 rounded-xl bg-success/10">
+              <DollarSign className="h-5 w-5 text-success" />
             </div>
             {loadingCosts ? (
               <Skeleton className="h-5 w-16" />
@@ -119,7 +119,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
               <Skeleton className="h-4 w-3/4" />
             </div>
           ) : phaseCosts ? (
-            <div className="mt-3 pt-3 border-t border-green-200/30 space-y-2">
+            <div className="mt-3 pt-3 border-t border-success/30/30 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Payé:</span>
                 <span className="font-medium text-blue-600">
@@ -142,7 +142,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
                   "font-bold",
                   phaseCosts.totalSpent > (phase.estimatedCost || 0) 
                     ? "text-red-600" 
-                    : "text-green-600"
+                    : "text-success"
                 )}>
                   {formatCurrency(phaseCosts.totalSpent)}
                 </span>

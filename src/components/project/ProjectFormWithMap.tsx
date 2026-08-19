@@ -641,9 +641,9 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 {facilitiesMapData.center && (
-                  <div className="bg-green-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-green-800">Position GPS du projet:</p>
-                    <p className="text-sm text-green-700 font-mono">
+                  <div className="bg-success-soft p-3 rounded-md">
+                    <p className="text-sm font-medium text-success">Position GPS du projet:</p>
+                    <p className="text-sm text-success font-mono">
                       Latitude: {facilitiesMapData.center.lat.toFixed(6)}, 
                       Longitude: {facilitiesMapData.center.lng.toFixed(6)}
                     </p>

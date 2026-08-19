@@ -544,7 +544,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
     switch (status) {
 
-      case 'completed': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-success-soft text-success';
 
       case 'in_progress': return 'bg-blue-100 text-blue-800';
 

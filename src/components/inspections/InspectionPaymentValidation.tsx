@@ -63,7 +63,7 @@ type PaymentStatus = 'pending' | 'approved' | 'info_missing' | 'amount_inconsist
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: 'pending', label: 'En attente', icon: AlertTriangle, color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'approved', label: 'Paiement accepté', icon: CheckCircle, color: 'bg-green-100 text-green-800' },
+  { value: 'approved', label: 'Paiement accepté', icon: CheckCircle, color: 'bg-success-soft text-success' },
   { value: 'info_missing', label: 'Informations manquantes', icon: XCircle, color: 'bg-red-100 text-red-800' },
   { value: 'amount_inconsistent', label: 'Somme non cohérente avec le taux d\'avancement', icon: AlertTriangle, color: 'bg-orange-100 text-orange-800' },
 ];
@@ -260,7 +260,7 @@ const InspectionPaymentValidation: React.FC = () => {
     const statusConfig: Record<string, { label: string; className: string }> = {
       scheduled: { label: 'Planifiée', className: 'bg-blue-100 text-blue-800' },
       in_progress: { label: 'En cours', className: 'bg-yellow-100 text-yellow-800' },
-      approved: { label: 'Approuvée', className: 'bg-green-100 text-green-800' },
+      approved: { label: 'Approuvée', className: 'bg-success-soft text-success' },
       rejected: { label: 'Rejetée', className: 'bg-red-100 text-red-800' },
       requires_changes: { label: 'Modifications requises', className: 'bg-orange-100 text-orange-800' },
     };

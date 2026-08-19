@@ -25,7 +25,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'submitted':
         return <CheckCircle className="h-4 w-4 text-blue-600" />;
       case 'rejected':
@@ -38,7 +38,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case 'submitted':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'rejected':
@@ -81,7 +81,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
               return (
                 <div key={index} className="flex items-center gap-2 p-2 border rounded">
                   {hasDocument ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : (
                     <AlertTriangle className="h-4 w-4 text-orange-500" />
                   )}

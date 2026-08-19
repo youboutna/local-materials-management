@@ -33,13 +33,13 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
   const { kpiMetrics, loading } = useKPIMetricsHex();
 
   const getSPIColor = (spi: number) => {
-    if (spi >= 1) return 'text-green-600';
+    if (spi >= 1) return 'text-success';
     if (spi >= 0.9) return 'text-orange-500';
     return 'text-red-600';
   };
 
   const getCPIColor = (cpi: number) => {
-    if (cpi >= 1) return 'text-green-600';
+    if (cpi >= 1) return 'text-success';
     if (cpi >= 0.9) return 'text-orange-500';
     return 'text-red-600';
   };
@@ -110,7 +110,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">SPI</span>
               {kpiMetrics.spi >= 1 ? (
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className="h-4 w-4 text-success" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-red-500" />
               )}
@@ -128,7 +128,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">CPI</span>
               {kpiMetrics.cpi >= 1 ? (
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className="h-4 w-4 text-success" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-red-500" />
               )}
@@ -146,7 +146,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
         <div className="space-y-2">
           <h4 className="text-sm font-medium">État des Projets</h4>
           <div className="flex gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex-1 justify-center py-2">
+            <Badge variant="outline" className="bg-success-soft text-success border-success/30 flex-1 justify-center py-2">
               <CheckCircle className="h-3 w-3 mr-1" />
               {kpiMetrics.projectsOnTrack} En bonne voie
             </Badge>

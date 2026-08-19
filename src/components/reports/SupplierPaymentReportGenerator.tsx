@@ -55,7 +55,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
 
   const getPaymentStatusColor = (status: string) => {
     const colors = {
-      'paid': 'bg-green-100 text-green-800',
+      'paid': 'bg-success-soft text-success',
       'pending': 'bg-yellow-100 text-yellow-800',
       'overdue': 'bg-red-100 text-red-800',
       'cancelled': 'bg-gray-100 text-gray-800',
@@ -393,7 +393,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Payé</p>
-            <p className="font-bold text-lg text-green-600">{formatNumber2(calculateTotals().paidAmount)} MRU</p>
+            <p className="font-bold text-lg text-success">{formatNumber2(calculateTotals().paidAmount)} MRU</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">En attente</p>

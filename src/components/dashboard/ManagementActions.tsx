@@ -141,7 +141,7 @@ const ManagementActions: React.FC = () => {
           <div className="space-y-4">
             {actionItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
                 <p>Aucune action en attente</p>
               </div>
             ) : (

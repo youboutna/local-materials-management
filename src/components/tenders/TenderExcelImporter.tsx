@@ -352,7 +352,7 @@ const TenderExcelImporter: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {importResults.errors === 0 ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
                 <AlertCircle className="h-5 w-5 text-orange-600" />
               )}
@@ -362,7 +362,7 @@ const TenderExcelImporter: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
-                <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
+                <div className="text-2xl font-bold text-success">{importResults.success}</div>
                 <div className="text-sm text-gray-600">Succès</div>
               </div>
               <div>

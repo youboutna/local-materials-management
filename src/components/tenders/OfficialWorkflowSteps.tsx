@@ -103,7 +103,7 @@ export const getStepIcon = (category: string) => {
 export const getStepColor = (category: string) => {
   switch (category) {
     case 'planning': return 'bg-blue-100 border-blue-300 text-blue-800';
-    case 'publicity': return 'bg-green-100 border-green-300 text-green-800';
+    case 'publicity': return 'bg-success-soft border-success/30 text-success';
     case 'analysis': return 'bg-yellow-100 border-yellow-300 text-yellow-800';
     case 'attribution': return 'bg-purple-100 border-purple-300 text-purple-800';
     case 'control': return 'bg-red-100 border-red-300 text-red-800';

@@ -218,7 +218,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                     <div className="flex justify-between"><span>Total HT</span><span className="font-semibold">{totalHt.toLocaleString('fr-FR')} MRU</span></div>
                     <div className="flex justify-between"><span>TVA 16%</span><span>{tva.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
                     <div className="flex justify-between"><span>RAS BIC 3%</span><span className="text-destructive">-{ras.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
-                    <div className="flex justify-between border-t pt-1"><span className="font-medium">Total TTC</span><span className="font-bold text-green-600">{ttc.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between border-t pt-1"><span className="font-medium">Total TTC</span><span className="font-bold text-success">{ttc.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
                   </div>
                 </div>
               );

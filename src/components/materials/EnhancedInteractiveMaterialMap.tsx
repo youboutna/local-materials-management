@@ -112,9 +112,9 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
 
   return (
     <Card className="border-2 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950">
+      <CardHeader className="bg-gradient-to-r from-success/10 to-blue-50 dark:from-success dark:to-blue-950">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <MapPin className="h-5 w-5 text-green-600" />
+          <MapPin className="h-5 w-5 text-success" />
           Carte Interactive des Matériaux
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -122,7 +122,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
         </p>
         <div className="flex flex-wrap gap-2 mt-2">
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <div className="w-2 h-2 rounded-full bg-success"></div>
             Stock Élevé
           </Badge>
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
@@ -188,7 +188,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                         <h4 className="font-semibold text-base text-primary">
                           {material.name}
                         </h4>
-                        <div className={`w-3 h-3 rounded-full ${getStockColor(stockLevel) === '#10b981' ? 'bg-green-500' : getStockColor(stockLevel) === '#f59e0b' ? 'bg-yellow-500' : getStockColor(stockLevel) === '#f97316' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
+                        <div className={`w-3 h-3 rounded-full ${getStockColor(stockLevel) === '#10b981' ? 'bg-success' : getStockColor(stockLevel) === '#f59e0b' ? 'bg-yellow-500' : getStockColor(stockLevel) === '#f97316' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
                       </div>
                       
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -202,7 +202,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-green-500" />
+                          <MapPin className="h-4 w-4 text-success" />
                           <span>{material.originLocation || 'Région non spécifiée'}</span>
                         </div>
                         
@@ -215,8 +215,8 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                         
                         <div className="flex justify-between items-center pt-2 border-t">
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                            <span className="font-medium text-green-600 text-sm">
+                            <DollarSign className="h-4 w-4 text-success" />
+                            <span className="font-medium text-success text-sm">
                               {formatPrice(material.pricePerUnit)}/{material.unit}
                             </span>
                           </div>

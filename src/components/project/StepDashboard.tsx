@@ -207,7 +207,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
                 <div className="flex items-center gap-2 text-sm text-red-600"><AlertTriangle className="h-4 w-4" /> Sur budget</div>
               )}
               {typeof phaseCosts?.unlockable === 'number' && (
-                <div className="flex items-center gap-2 text-sm text-green-700"><DollarSign className="h-4 w-4" /> Déblocable: {formatCurrency(phaseCosts.unlockable)}</div>
+                <div className="flex items-center gap-2 text-sm text-success"><DollarSign className="h-4 w-4" /> Déblocable: {formatCurrency(phaseCosts.unlockable)}</div>
               )}
             </div>
         </div>

@@ -72,7 +72,7 @@ const SupplierSubmissionDashboard = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'rejected':
         return <XCircle className="h-4 w-4 text-red-600" />;
       case 'under_review':
@@ -85,7 +85,7 @@ const SupplierSubmissionDashboard = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case 'rejected':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'under_review':
@@ -126,7 +126,7 @@ const SupplierSubmissionDashboard = () => {
     if (validationResult.warnings?.length > 0) {
       return { icon: <AlertTriangle className="h-4 w-4" />, color: 'text-yellow-600', label: 'Avertissements' };
     }
-    return { icon: <CheckCircle className="h-4 w-4" />, color: 'text-green-600', label: 'Valide' };
+    return { icon: <CheckCircle className="h-4 w-4" />, color: 'text-success', label: 'Valide' };
   };
 
   const handleDownloadDocument = async (url: string, fileName: string) => {
@@ -223,7 +223,7 @@ const SupplierSubmissionDashboard = () => {
                   <p className="text-sm text-muted-foreground">Approuvées</p>
                   <p className="text-2xl font-bold">{stats.approved}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>

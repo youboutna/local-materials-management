@@ -582,11 +582,11 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               </p>
             </div>
 
-            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-              <h3 className="font-medium text-green-900 dark:text-green-100 mb-2">
+            <div className="bg-success-soft dark:bg-success/30 border border-success/30 dark:border-success rounded-lg p-4">
+              <h3 className="font-medium text-success dark:text-success-foreground mb-2">
                 MS Project - Planification
               </h3>
-              <p className="text-sm text-green-800 dark:text-green-200">
+              <p className="text-sm text-success dark:text-success-foreground">
                 Importez vos projets depuis Microsoft Project (format XML). Les tâches principales deviennent des projets.
               </p>
             </div>
@@ -680,7 +680,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               {selectedFile.name.endsWith('.geojson') || selectedFile.name.endsWith('.kml') ? (
                 <Map className="h-5 w-5 text-blue-600" />
               ) : selectedFile.name.endsWith('.xml') ? (
-                <Calendar className="h-5 w-5 text-green-600" />
+                <Calendar className="h-5 w-5 text-success" />
               ) : (
                 <FileText className="h-5 w-5 text-gray-600" />
               )}
@@ -706,13 +706,13 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         )}
 
         {importResult && (
-          <Alert className={importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+          <Alert className={importResult.success ? 'border-success/30 bg-success-soft' : 'border-red-200 bg-red-50'}>
             {importResult.success ? (
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-success" />
             ) : (
               <AlertTriangle className="h-4 w-4 text-red-600" />
             )}
-            <AlertDescription className={importResult.success ? 'text-green-800' : 'text-red-800'}>
+            <AlertDescription className={importResult.success ? 'text-success' : 'text-red-800'}>
               {importResult.message}
               {importResult.errors && importResult.errors.length > 0 && (
                 <details className="mt-2">

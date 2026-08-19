@@ -258,7 +258,7 @@ export function ConsultantValidationPanel() {
     const config: Record<string, { color: string; label: string }> = {
       supplier_submitted: { color: 'bg-yellow-100 text-yellow-800', label: 'Soumis' },
       consultant_reviewing: { color: 'bg-blue-100 text-blue-800', label: 'En cours' },
-      consultant_approved: { color: 'bg-green-100 text-green-800', label: 'Approuvé' },
+      consultant_approved: { color: 'bg-success-soft text-success', label: 'Approuvé' },
       consultant_rejected: { color: 'bg-red-100 text-red-800', label: 'Rejeté' },
     };
     

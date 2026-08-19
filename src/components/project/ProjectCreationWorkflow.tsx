@@ -416,7 +416,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </>
           ) : lastSavedLabel ? (
             <>
-              <CheckCircle className="h-3 w-3 text-emerald-600" />
+              <CheckCircle className="h-3 w-3 text-success" />
               Sauvegardé · {lastSavedLabel}
             </>
           ) : null}
@@ -446,7 +446,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 active
                   ? "bg-primary/10 text-primary border-b-2 border-primary"
                   : done
-                    ? "text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-400"
+                    ? "text-success hover:bg-success/10 dark:text-success"
                     : "text-muted-foreground hover:bg-muted/60"
               )}
               whileTap={{ scale: 0.97 }}
@@ -454,7 +454,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               <step.icon className="h-3.5 w-3.5 shrink-0" />
               <span className="hidden sm:inline whitespace-nowrap">{step.title}</span>
               <span className="sm:hidden">{idx + 1}</span>
-              {done && !active && <CheckCircle className="h-3 w-3 text-emerald-600" />}
+              {done && !active && <CheckCircle className="h-3 w-3 text-success" />}
             </motion.button>
           );
         })}

@@ -114,7 +114,7 @@ export const MilestoneNode: React.FC<MilestoneNodeProps> = ({
         return {
           label: "Paiement",
           icon: <DollarSign className="h-4 w-4" />,
-          className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+          className: "bg-success-soft text-success dark:bg-success/30 dark:text-success",
           action: "Initier paiement",
         };
       case "validation":

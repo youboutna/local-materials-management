@@ -245,7 +245,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
               <p className="text-sm text-gray-600">{t('projects.takeoffs.total.value')}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-success">
                 {takeoffs.reduce((total, takeoff) => total + takeoff.quantity, 0).toFixed(2)}
               </p>
               <p className="text-sm text-gray-600">{t('projects.takeoffs.total.quantity')}</p>

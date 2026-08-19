@@ -90,11 +90,11 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
 
   const getInspectionStatusColor = (status: string) => {
     const colors = {
-      'passed': 'bg-green-100 text-green-800',
+      'passed': 'bg-success-soft text-success',
       'failed': 'bg-red-100 text-red-800',
       'pending': 'bg-yellow-100 text-yellow-800',
       'in_progress': 'bg-blue-100 text-blue-800',
-      'approved': 'bg-green-100 text-green-800',
+      'approved': 'bg-success-soft text-success',
       'requires_changes': 'bg-orange-100 text-orange-800',
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
@@ -486,7 +486,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Réussies</p>
-              <p className="font-bold text-lg text-green-600">{metrics.passedInspections}</p>
+              <p className="font-bold text-lg text-success">{metrics.passedInspections}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Taux de Conformité</p>

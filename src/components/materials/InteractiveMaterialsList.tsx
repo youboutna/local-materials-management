@@ -84,7 +84,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
 
   return (
     <Card className="border-2 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950 dark:to-green-950">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-success/10 dark:from-blue-950 dark:to-success">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Package className="h-5 w-5 text-primary" />
           Matériaux avec Coordonnées GPS

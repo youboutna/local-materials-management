@@ -586,7 +586,7 @@ export default function ProjectFileImporter({
             <div className="flex items-center gap-3">
               {selectedFile.type.includes("excel") ||
               selectedFile.type.includes("spreadsheet") ? (
-                <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                <FileSpreadsheet className="h-5 w-5 text-success" />
               ) : (
                 <FileText className="h-5 w-5 text-blue-600" />
               )}
@@ -617,18 +617,18 @@ export default function ProjectFileImporter({
           <Alert
             className={
               importResult.success
-                ? "border-green-200 bg-green-50"
+                ? "border-success/30 bg-success-soft"
                 : "border-red-200 bg-red-50"
             }
           >
             {importResult.success ? (
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-success" />
             ) : (
               <AlertTriangle className="h-4 w-4 text-red-600" />
             )}
             <AlertDescription
               className={
-                importResult.success ? "text-green-800" : "text-red-800"
+                importResult.success ? "text-success" : "text-red-800"
               }
             >
               {importResult.message}

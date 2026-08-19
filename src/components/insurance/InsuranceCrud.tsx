@@ -87,7 +87,7 @@ const InsuranceCrud: React.FC = () => {
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
+    { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
     { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
     { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
     { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' }

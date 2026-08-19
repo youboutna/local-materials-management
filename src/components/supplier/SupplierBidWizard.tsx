@@ -106,7 +106,7 @@ export function SupplierBidWizard({ tenderTitle, deadlineDate, renderStep, onSub
                     <span
                       className={cn(
                         'flex h-6 w-6 items-center justify-center rounded-full text-xs shrink-0',
-                        isDone ? 'bg-emerald-100 text-emerald-700' : isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                        isDone ? 'bg-success-soft text-success' : isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
                       )}
                     >
                       {isDone ? <Check className="h-3 w-3" /> : idx + 1}

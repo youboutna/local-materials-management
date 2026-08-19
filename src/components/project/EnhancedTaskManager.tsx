@@ -431,7 +431,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-success-soft text-success';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'blocked': return 'bg-red-100 text-red-800';
@@ -633,7 +633,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                     </span>
                                   )}
                                   {phase.status && (
-                                    <span className="text-xs text-green-600 ml-2">
+                                    <span className="text-xs text-success ml-2">
                                       [{phase.status}]
                                     </span>
                                   )}

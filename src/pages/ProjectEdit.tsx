@@ -322,7 +322,7 @@ const ProjectEdit = () => {
               {progress}%
             </Badge>
             {isComplete && (
-              <Badge variant="default" className="bg-green-600">
+              <Badge variant="default" className="bg-success">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Complet
               </Badge>
@@ -373,10 +373,10 @@ const ProjectEdit = () => {
 
         {/* Success: All steps complete */}
         {isComplete && (
-          <Alert className="mb-4 border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">Projet complet</AlertTitle>
-            <AlertDescription className="text-green-700">
+          <Alert className="mb-4 border-success/30 bg-success-soft">
+            <CheckCircle className="h-4 w-4 text-success" />
+            <AlertTitle className="text-success">Projet complet</AlertTitle>
+            <AlertDescription className="text-success">
               Toutes les étapes sont complétées. Vous pouvez maintenant mettre à jour le projet.
             </AlertDescription>
           </Alert>

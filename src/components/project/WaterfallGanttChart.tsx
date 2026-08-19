@@ -55,7 +55,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
   // Mauritanian Procurement Workflow Steps
   const procurementSteps = [
     { id: 1, name: "Planification des achats", color: "bg-blue-500" },
-    { id: 2, name: "Publicité et appel d'offres", color: "bg-green-500" },
+    { id: 2, name: "Publicité et appel d'offres", color: "bg-success" },
     { id: 3, name: "Réception et analyse", color: "bg-yellow-500" },
     { id: 4, name: "Attribution du marché", color: "bg-purple-500" },
     { id: 5, name: "Contrôle et régulation", color: "bg-red-500" }
@@ -93,7 +93,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
+      case 'completed': return 'bg-success';
       case 'in_progress': return 'bg-blue-500';
       case 'delayed': return 'bg-red-500';
       default: return 'bg-gray-400';
@@ -153,7 +153,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Tâches terminées</p>
                 <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
               </div>
-              <Clock className="h-8 w-8 text-green-500" />
+              <Clock className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -266,7 +266,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
                         >
                           <div className="relative h-full">
                             <div 
-                              className="bg-green-400 h-full rounded"
+                              className="bg-success h-full rounded"
                               style={{ width: `${task.progress}%` }}
                             />
                             <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium">

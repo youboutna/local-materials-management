@@ -80,9 +80,9 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
   const getStageIcon = (stage: WorkflowStage) => {
     switch (stage) {
       case 'payment_available':
-        return <Zap className="h-4 w-4 text-green-600" />;
+        return <Zap className="h-4 w-4 text-success" />;
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'validation_pending':
         return <Clock className="h-4 w-4 text-amber-600" />;
       case 'inspection_scheduled':
@@ -237,7 +237,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {/* Last Validated PV */}
             {lastValidatedPV && (
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
                 <span className="text-muted-foreground">Dernier PV validé:</span>
                 <span className="font-medium">{lastValidatedPV}</span>
               </div>
@@ -261,7 +261,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
               <Badge 
                 variant="outline" 
                 className={cn(
-                  workflowMetrics.currentStage === 'payment_available' && "bg-green-50 text-green-700 border-green-200",
+                  workflowMetrics.currentStage === 'payment_available' && "bg-success-soft text-success border-success/30",
                   workflowMetrics.currentStage === 'approved' && "bg-blue-50 text-blue-700 border-blue-200",
                   workflowMetrics.currentStage === 'validation_pending' && "bg-amber-50 text-amber-700 border-amber-200"
                 )}
@@ -311,7 +311,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             <Separator />
             <div className="space-y-2">
               {workflowMetrics.guaranteeReleaseTriggered && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 text-green-700 text-sm">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-success-soft text-success text-sm">
                   <Shield className="h-4 w-4" />
                   <span>Mainlevée garanties déclenchée</span>
                 </div>

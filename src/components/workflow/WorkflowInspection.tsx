@@ -111,7 +111,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
   const getStatusIcon = (status: InspectionStatus | string) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-600" />;
       case 'requires_changes':
@@ -126,7 +126,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
   const getStatusColor = (status: InspectionStatus | string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-soft text-success border-success/30';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'requires_changes':
@@ -338,7 +338,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               <h4 className="font-medium mb-3">{t('projects.overview.description')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-success">
                     {sortedInspections.filter((i) => i.status === 'approved').length}
                   </div>
                   <div className="text-muted-foreground">

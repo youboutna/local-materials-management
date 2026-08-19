@@ -110,7 +110,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
         return <ClipboardCheck className="h-3 w-3 text-blue-600" />;
       case "payment":
       case "paiement":
-        return <DollarSign className="h-3 w-3 text-green-600" />;
+        return <DollarSign className="h-3 w-3 text-success" />;
       case "validation":
         return <CheckCircle className="h-3 w-3 text-purple-600" />;
       default:

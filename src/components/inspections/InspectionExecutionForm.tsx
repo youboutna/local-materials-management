@@ -178,7 +178,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                 {syncResult.success ? (
                   <div className="space-y-1">
                     <p className="font-medium flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-success" />
                       Synchronisation réussie
                     </p>
                     {syncResult.actions.map((action, i) => (

@@ -20,7 +20,7 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
     if (score >= 56) return { label: "Critique", color: "bg-red-100 text-red-800 border-red-200" };
     if (score >= 36) return { label: "Élevé", color: "bg-orange-100 text-orange-800 border-orange-200" };
     if (score >= 16) return { label: "Moyen", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
-    return { label: "Faible", color: "bg-green-100 text-green-800 border-green-200" };
+    return { label: "Faible", color: "bg-success-soft text-success border-success/30" };
   };
 
   return (

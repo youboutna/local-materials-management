@@ -280,7 +280,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {importResult.success > 0 ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
                 <AlertCircle className="h-5 w-5 text-red-600" />
               )}
@@ -289,9 +289,9 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{importResult.success}</div>
-                <div className="text-sm text-green-800">Appels d'offres importés</div>
+              <div className="text-center p-4 bg-success-soft rounded-lg">
+                <div className="text-2xl font-bold text-success">{importResult.success}</div>
+                <div className="text-sm text-success">Appels d'offres importés</div>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg">
                 <div className="text-2xl font-bold text-red-600">{importResult.errors.length}</div>

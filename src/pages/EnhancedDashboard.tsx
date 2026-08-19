@@ -109,7 +109,7 @@ const EnhancedDashboardContent = () => {
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-500">{stats.totalAlerts}</div>
+                <div className="text-2xl font-bold text-success">{stats.totalAlerts}</div>
                 <p className="text-sm text-muted-foreground">Total alertes</p>
               </CardContent>
             </Card>
@@ -171,7 +171,7 @@ const EnhancedDashboardContent = () => {
             <CardContent>
               {uiAlerts.length === 0 ? (
                 <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                  <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
                   <p className="text-muted-foreground">Aucune alerte à afficher</p>
                 </div>
               ) : (

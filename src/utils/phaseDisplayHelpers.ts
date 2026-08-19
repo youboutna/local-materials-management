@@ -10,7 +10,7 @@ import { PhaseStatus } from "@/dtos/types/phase-dto";
 export const getStatusColor = (status: PhaseStatus | string): string => {
   switch (status) {
     case "completed":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success-soft text-success border-success/30";
     case "in_progress":
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "delayed":
@@ -40,8 +40,8 @@ export const getStatusLabel = (status: PhaseStatus | string): string => {
 // Financial health display helpers
 export const getFinancialHealthColor = (health: string): string => {
   switch (health) {
-    case 'excellent': return 'text-green-600 bg-green-100 border-green-200';
-    case 'good': return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+    case 'excellent': return 'text-success bg-success-soft border-success/30';
+    case 'good': return 'text-success bg-success-soft border-success/30';
     case 'warning': return 'text-amber-600 bg-amber-100 border-amber-200';
     case 'critical': return 'text-red-600 bg-red-100 border-red-200';
     default: return 'text-gray-600 bg-gray-100 border-gray-200';
@@ -126,12 +126,12 @@ export const getBudgetUtilizationColor = (utilization: number): string => {
   if (utilization > 100) return "text-red-600";
   if (utilization > 90) return "text-amber-600";
   if (utilization > 75) return "text-yellow-600";
-  return "text-green-600";
+  return "text-success";
 };
 
 // Progress bar color based on percentage
 export const getProgressBarClass = (percentage: number): string => {
-  if (percentage >= 100) return "bg-green-100 [&>div]:bg-green-600";
+  if (percentage >= 100) return "bg-success-soft [&>div]:bg-success";
   if (percentage >= 75) return "bg-blue-100 [&>div]:bg-blue-600";
   if (percentage >= 50) return "bg-yellow-100 [&>div]:bg-yellow-600";
   if (percentage >= 25) return "bg-amber-100 [&>div]:bg-amber-600";

@@ -91,8 +91,8 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
     if (milestone.status === 'completed') {
       return { 
         icon: CheckCircle, 
-        color: 'text-green-500', 
-        bgColor: 'bg-green-100',
+        color: 'text-success', 
+        bgColor: 'bg-success-soft',
         label: 'Terminé' 
       };
     }
@@ -309,7 +309,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                 {milestone.completionDate && (
                                   <>
                                     <span>•</span>
-                                    <span className="text-green-600">
+                                    <span className="text-success">
                                       Terminé le {format(parseISO(milestone.completionDate), 'd MMM', { locale: fr })}
                                     </span>
                                   </>

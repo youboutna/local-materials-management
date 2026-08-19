@@ -422,7 +422,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               </div>
               <p className="text-3xl font-bold">{tasksSummary?.total || 0}</p>
               <div className="flex gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                <Badge variant="secondary" className="text-xs bg-success-soft text-success">
                   {tasksSummary?.completed || 0} ✓
                 </Badge>
                 <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
@@ -447,7 +447,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               </div>
               <p className="text-3xl font-bold">{inspectionsSummary?.total || 0}</p>
               <div className="flex gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                <Badge variant="secondary" className="text-xs bg-success-soft text-success">
                   {inspectionsSummary?.approved || 0} ✓
                 </Badge>
                 <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-700">
@@ -465,8 +465,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               )}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-4 w-4 text-green-600" />
+                <div className="p-2 bg-success-soft rounded-lg">
+                  <DollarSign className="h-4 w-4 text-success" />
                 </div>
                 <span className="font-medium text-sm">Paiements</span>
               </div>
@@ -594,10 +594,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1.5 bg-green-50 hover:bg-green-100 border-green-200"
+                            className="gap-1.5 bg-success-soft hover:bg-success-soft border-success/30"
                             onClick={() => handleMilestoneAction(milestone, 'payment')}
                           >
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <DollarSign className="h-4 w-4 text-success" />
                             <span className="hidden sm:inline">Paiement</span>
                           </Button>
                           <Button
@@ -667,7 +667,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <Card className="shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <DollarSign className="h-5 w-5 text-success" />
                   Paiements de la phase
                 </CardTitle>
               </CardHeader>
@@ -790,7 +790,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {actionDialog.action === 'inspection' && <ClipboardCheck className="h-5 w-5 text-orange-600" />}
-              {actionDialog.action === 'payment' && <DollarSign className="h-5 w-5 text-green-600" />}
+              {actionDialog.action === 'payment' && <DollarSign className="h-5 w-5 text-success" />}
               {actionDialog.action === 'complete' && <CheckCircle className="h-5 w-5 text-success" />}
               {actionDialog.action === 'inspection' && "Actions d'inspection"}
               {actionDialog.action === 'payment' && "Actions de paiement"}
@@ -855,7 +855,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 {/* NEW: Create directly button */}
                 <Button
                   variant="default"
-                  className="w-full justify-start gap-3 h-auto py-4 bg-green-600 hover:bg-green-700"
+                  className="w-full justify-start gap-3 h-auto py-4 bg-success hover:bg-success"
                   onClick={() => {
                     if (actionDialog.milestone) {
                       setSelectedMilestoneContext(buildMilestoneContext(actionDialog.milestone));

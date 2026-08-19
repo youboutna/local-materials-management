@@ -165,7 +165,7 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
 
   const getProgressColor = (progress?: number) => {
     if (!progress) return 'bg-gray-300';
-    if (progress >= 80) return 'bg-green-600';
+    if (progress >= 80) return 'bg-success';
     if (progress >= 50) return 'bg-yellow-500';
     return 'bg-red-500';
   };
@@ -272,7 +272,7 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
                         {isBlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                       </Button>
                       {isPending && (
-                        <Button variant="ghost" size="sm" onClick={() => handleApprove(payment)} title="Valider" className="text-green-600 hover:text-green-700">
+                        <Button variant="ghost" size="sm" onClick={() => handleApprove(payment)} title="Valider" className="text-success hover:text-success">
                           <Check className="h-4 w-4" />
                         </Button>
                       )}

@@ -308,7 +308,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                   ${totalBudget.toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
+              <DollarSign className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>

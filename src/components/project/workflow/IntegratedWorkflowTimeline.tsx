@@ -271,7 +271,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       const targetDate = parseISO(item.date);
       
       if (item.status === 'completed') {
-        return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30', label: 'Terminé' };
+        return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: 'Terminé' };
       }
       if (isBefore(targetDate, today)) {
         const daysLate = differenceInDays(today, targetDate);
@@ -282,7 +282,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
     
     // Step status
     switch (item.status) {
-      case 'completed': return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30', label: 'Terminée' };
+      case 'completed': return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: 'Terminée' };
       case 'in_progress': return { icon: Play, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30', label: 'En cours' };
       case 'delayed': return { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30', label: 'Retard' };
       default: return { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted', label: 'Planifiée' };
@@ -341,7 +341,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                   variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
-                    progress.schedulePerformance_index >= 1 && "bg-green-600"
+                    progress.schedulePerformance_index >= 1 && "bg-success"
                   )}
                 >
                   {progress.schedulePerformance_index >= 1 ? (

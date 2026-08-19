@@ -94,7 +94,7 @@ const PaymentControlContent = () => {
 
   const getPaymentStatusIcon = (type: string) => {
     switch (type) {
-      case 'payment_completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'payment_completed': return <CheckCircle className="h-4 w-4 text-success" />;
       case 'payment_failed':
       case 'payment_blocked': return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case 'payment_due':
@@ -105,7 +105,7 @@ const PaymentControlContent = () => {
 
   const getPaymentStatusColor = (type: string) => {
     switch (type) {
-      case 'payment_completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'payment_completed': return 'bg-success-soft text-success border-success/30';
       case 'payment_failed':
       case 'payment_blocked': return 'bg-red-100 text-red-800 border-red-200';
       case 'payment_due':
@@ -200,7 +200,7 @@ const PaymentControlContent = () => {
                               </div>
                               <p className="text-sm text-muted-foreground">{n.message}</p>
                               {n.metadata?.payment_amount && (
-                                <Badge variant="outline" className="text-green-600 mt-2">
+                                <Badge variant="outline" className="text-success mt-2">
                                   {formatAmount2(n.metadata.payment_amount, '€')}
                                 </Badge>
                               )}
