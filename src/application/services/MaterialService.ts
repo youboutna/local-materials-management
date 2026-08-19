@@ -743,7 +743,8 @@ export class MaterialService {
         estimatedDuration: formData.timeline.estimatedDuration || 0
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
+
     };
     return this.updateMaterial(id, dto);
   }
