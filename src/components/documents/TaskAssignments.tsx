@@ -3,9 +3,10 @@
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService } from '@/application/services/NotificationService';
+import { resolveDqeEffort } from '@/config/referentials/dqe/dqe-dispatch.referential';
 import { TaskAssignmentService, getTaskAssignmentService} from '@/application/services/TaskAssignmentService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
