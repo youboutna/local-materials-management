@@ -1288,10 +1288,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <TabsContent value="tasks-exec">
                   <EnhancedTaskManager
                     projectId={projectId!}
-                    tasks={tasks}
-                    setTasks={setTasks}
                     phases={computedPhases}
                   />
+
                 </TabsContent>
 
                 <TabsContent value="inspections">

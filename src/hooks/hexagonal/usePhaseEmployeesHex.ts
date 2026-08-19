@@ -1,115 +1,86 @@
-// hooks/hexagonal/usePhaseEmployeesHex.ts - Hexagonal hook for phase employees management
-// Uses EmployeeService instead of non-existent phase repo methods
+/**
+ * usePhaseEmployeesHex — main d'œuvre d'une phase (btp.phase_employees)
+ *
+ * Architecture : UI → Hook → PhaseEmployeeService → Repository → Adapter → DB
+ * Aucun accès direct à Supabase ici.
+ */
 
-import { getEmployeeService } from '@/application/services/EmployeeService';
+import { getPhaseEmployeeService } from '@/application/services/PhaseEmployeeService';
+import type {
+  PhaseEmployeeInput,
+  PhaseEmployeeRow,
+} from '@/domain/repositories/IPhaseEmployeeRepository';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export interface PhaseEmployee {
-  id: string;
-  phase_id: string;
-  employee_name: string;
-  employee_role: string;
-  daily_rate?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  employee_contact?: string | null;
-  is_primary_supplier?: boolean | null;
-}
-
-export interface EmployeeFormData {
-  employee_name: string;
-  employee_role: string;
-  daily_rate?: number;
-  start_date?: string;
-  end_date?: string;
-  employee_contact?: string;
-}
+export type PhaseEmployee = PhaseEmployeeRow;
+export type EmployeeFormData = Omit<PhaseEmployeeInput, 'phaseId'>;
 
 export const usePhaseEmployeesHex = (phaseId: string) => {
   const queryClient = useQueryClient();
-  const employeeService = getEmployeeService();
+  const service = getPhaseEmployeeService();
 
   const {
     data: employees = [],
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ['phase-employees-hex', phaseId],
-    queryFn: async (): Promise<PhaseEmployee[]> => {
-      // There is no phase_employees join table in the schema (employees are
-      // only linked at the project level), so there is no real per-phase
-      // assignment data to source. Returning a typed empty result until
-      // that linkage exists in the database.
-      return [];
-    },
-    enabled: !!phaseId
+    queryFn: (): Promise<PhaseEmployee[]> => service.getByPhase(phaseId),
+    enabled: !!phaseId,
   });
 
-  // No phase_employees join table exists in the schema: assignments are only
-  // tracked at project level. Rather than faking persistence, surface an
-  // explicit, honest error so callers/UI can react accordingly.
-  const notSupported = (action: string) => {
-    throw new Error(
-      `${action} n'est pas disponible : aucune table de rattachement employé/phase n'existe en base.`
-    );
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
+    queryClient.invalidateQueries({ queryKey: ['phase-resource-counts'] });
   };
 
   const addMutation = useMutation({
-    mutationFn: async (employeeData: EmployeeFormData) => {
-      return notSupported('Ajout d\'un employé à une phase') as never;
-    },
+    mutationFn: (data: EmployeeFormData) => service.assign({ ...data, phaseId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({ title: 'Employé ajouté', description: "L'employé a été assigné à la phase" });
+      invalidate();
+      toast({ title: 'Membre ajouté', description: 'Le membre a été affecté à la phase' });
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erreur', description: `Erreur lors de l'ajout: ${error.message}`, variant: 'destructive' });
-    }
+    onError: (err: Error) => {
+      toast({ title: 'Erreur', description: `Ajout impossible : ${err.message}`, variant: 'destructive' });
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => {
-      return notSupported('Mise à jour d\'un employé de phase') as never;
-    },
+    mutationFn: ({ id, data }: { id: string; data: Partial<EmployeeFormData> }) => service.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({ title: 'Employé mis à jour', description: 'Les informations ont été mises à jour' });
+      invalidate();
+      toast({ title: 'Membre mis à jour', description: 'Les informations ont été enregistrées' });
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erreur', description: `Erreur lors de la mise à jour: ${error.message}`, variant: 'destructive' });
-    }
+    onError: (err: Error) => {
+      toast({ title: 'Erreur', description: `Mise à jour impossible : ${err.message}`, variant: 'destructive' });
+    },
   });
 
   const removeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      notSupported('Suppression d\'un employé de phase');
-    },
+    mutationFn: (id: string) => service.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-employees-hex', phaseId] });
-      toast({ title: 'Employé retiré', description: "L'employé a été retiré de la phase" });
+      invalidate();
+      toast({ title: 'Membre retiré', description: 'Le membre a été retiré de la phase' });
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erreur', description: `Erreur lors de la suppression: ${error.message}`, variant: 'destructive' });
-    }
+    onError: (err: Error) => {
+      toast({ title: 'Erreur', description: `Suppression impossible : ${err.message}`, variant: 'destructive' });
+    },
   });
-
-  const totalLaborCost = employees.reduce((sum, emp) => sum + (emp.daily_rate || 0), 0);
-  const totalEmployees = employees.length;
 
   return {
     employees,
     isLoading,
-    error,
+    error: error as Error | null,
     refetch,
-    totalLaborCost,
-    totalEmployees,
+    totalLaborCost: service.totalDailyCost(employees),
+    totalEmployees: employees.length,
     addEmployee: addMutation.mutateAsync,
     updateEmployee: updateMutation.mutateAsync,
     removeEmployee: removeMutation.mutateAsync,
     isAdding: addMutation.isPending,
     isUpdating: updateMutation.isPending,
-    isRemoving: removeMutation.isPending
+    isRemoving: removeMutation.isPending,
   };
 };

@@ -30,6 +30,8 @@ export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
 
 import { SupabasePhaseMaterialAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseMaterialAdapter';
 import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
+import { SupabasePhaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseEmployeeAdapter';
+import type { IPhaseEmployeeRepository } from '@/domain/repositories/IPhaseEmployeeRepository';
 import {
   SupabaseAlertAdapter,
   SupabaseAuthAdapter,
@@ -240,6 +242,7 @@ interface RepositoryRegistry {
   inspectionScheduling?: IInspectionSchedulingRepository;
   quantityTakeoff?: IQuantityTakeoffRepository;
   phaseMaterial?: IPhaseMaterialRepository;
+  phaseEmployee?: IPhaseEmployeeRepository;
   projectResource?: IProjectResourceRepository;
   taskDependency?: ITaskDependencyRepository;
   systemSettings?: ISystemSettingsRepository;
@@ -708,6 +711,12 @@ export class RepositoryFactory {
     if (registry.quantityTakeoff) return registry.quantityTakeoff;
     registry.quantityTakeoff = new SupabaseQuantityTakeoffAdapter();
     return registry.quantityTakeoff;
+  }
+
+  static getPhaseEmployeeRepository(): IPhaseEmployeeRepository {
+    if (registry.phaseEmployee) return registry.phaseEmployee;
+    registry.phaseEmployee = new SupabasePhaseEmployeeAdapter();
+    return registry.phaseEmployee;
   }
 
   static getPhaseMaterialRepository(): IPhaseMaterialRepository {

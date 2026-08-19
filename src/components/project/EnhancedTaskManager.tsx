@@ -174,7 +174,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: fetchedTasks, isLoading } = useProjectTasks(projectId);
 
   // Use props or fallback to fetched data
-  const currentTasks = propTasks || fetchedTasks || [];
+  // Source de vérité : service (TaskAssignmentService). Les props ne servent
+  // que si elles contiennent réellement des données (compat héritée).
+  const currentTasks = (propTasks && propTasks.length > 0) ? propTasks : (fetchedTasks || []);
 
   // Fetch task dependencies (hexagonal: hook -> service -> adapter)
   const { dependencies } = useProjectTaskDependenciesHex(
@@ -186,8 +188,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: phases = [] } = useProjectPhasesForTasks(projectId);
 
   // Use props or fallback to fetched data
-  const currentPhases = propPhases || phases || [];
-  console.log('ðŸ“‹ Current phases in TaskManager:', currentPhases);
+  const currentPhases = (propPhases && propPhases.length > 0) ? propPhases : (phases || []);
 
   // Fetch employees for assignment
   const { data: employees = [] } = useQuery({
