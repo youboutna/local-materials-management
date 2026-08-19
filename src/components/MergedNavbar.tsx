@@ -43,6 +43,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { BrandBands, BrandIdentity } from "@/components/branding/BrandIdentity";
+
 
 const MergedNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
