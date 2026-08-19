@@ -71,6 +71,11 @@ export class TaskAssignmentService {
     if (dto.assigneeEmail !== undefined) entity.assigneeEmail = dto.assigneeEmail;
     if (dto.estimatedDuration !== undefined) entity.estimatedDuration = dto.estimatedDuration;
     if (dto.actualDuration !== undefined) entity.actualDuration = dto.actualDuration;
+    if (dto.quantity !== undefined) entity.quantity = dto.quantity;
+    if (dto.unit !== undefined) entity.unit = dto.unit;
+    if (dto.dailyRate !== undefined) entity.dailyRate = dto.dailyRate;
+    if (dto.estimatedCost !== undefined) entity.estimatedCost = dto.estimatedCost;
+    if (dto.metadata !== undefined) entity.metadata = dto.metadata;
     if (dto.dependencies !== undefined) entity.dependencies = dto.dependencies;
     if (dto.notes !== undefined) entity.notes = dto.notes;
     if (dto.status !== undefined) entity.updateStatus(normalizeTaskStatus(dto.status as string));

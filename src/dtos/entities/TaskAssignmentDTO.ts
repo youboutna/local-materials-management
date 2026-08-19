@@ -136,6 +136,9 @@ export interface UpdateTaskAssignmentDTO {
   assigneeEmail?: string;
   estimatedDuration?: number;
   actualDuration?: number;
+  quantity?: number;
+  unit?: string;
+  dailyRate?: number;
   estimatedCost?: number;
   actualCost?: number;
   dependencies?: string[];
