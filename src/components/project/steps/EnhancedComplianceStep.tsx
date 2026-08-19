@@ -834,12 +834,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="text-center py-8">
                   <Building className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Aucune garantie bancaire trouvée</p>
-                  <Button onClick={() => setIsBankGuaranteeDialogOpen(true)} className="mt-4" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une garantie
-                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Utilisez « Ajouter » en haut à droite pour créer une garantie.
+                  </p>
                 </div>
               ) : (
+
                 <div className="space-y-3">
                   {bankGuarantees.slice(0, 5).map((guarantee) => (
                     <div key={guarantee.id} className="flex items-center justify-between p-3 border rounded-lg">
