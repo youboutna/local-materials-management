@@ -142,34 +142,86 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
 
         {/* Désignation */}
         {canDesignate ? (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Select value={selected} onValueChange={setSelected}>
-              <SelectTrigger aria-label="Sélectionner une partie prenante" className="sm:flex-1">
-                <SelectValue placeholder="Sélectionner une partie prenante" />
-              </SelectTrigger>
-              <SelectContent>
-                {eligible.length === 0 && (
-                  <SelectItem value="__none" disabled>
-                    Aucune partie prenante disponible
-                  </SelectItem>
-                )}
-                {eligible.map((s) => (
-                  <SelectItem key={s.stakeholderId} value={s.stakeholderId}>
-                    {s.name} — {s.businessRole || s.entityType || 'partie prenante'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              disabled={!selected || selected === '__none' || isPending || !projectId}
-              onClick={async () => {
-                const ok = await designateConsultant(selected);
-                if (ok) setSelected('');
-              }}
-            >
-              <UserCheck className="h-4 w-4 mr-1" />
-              {labels.designate}
-            </Button>
+          <div className="space-y-2">
+            <Tabs value={kindFilter} onValueChange={(v) => setKindFilter(v as 'all' | EntityKind)}>
+              <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto sm:grid sm:grid-cols-4">
+                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
+                <TabsTrigger value="organization" className="text-xs">Organisations</TabsTrigger>
+                <TabsTrigger value="supplier" className="text-xs">Fournisseurs</TabsTrigger>
+                <TabsTrigger value="employee" className="text-xs">Employés</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    aria-label="Rechercher une partie prenante"
+                    className="sm:flex-1 justify-between font-normal"
+                  >
+                    <span className={cn('truncate', !selectedLabel && 'text-muted-foreground')}>
+                      {selectedLabel || 'Rechercher une organisation, un fournisseur, un employé…'}
+                    </span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-[min(28rem,90vw)]" align="start">
+                  <Command>
+                    <CommandInput placeholder="Saisir un nom…" />
+                    <CommandList>
+                      <CommandEmpty>
+                        {visibleCount === 0
+                          ? 'Aucune partie prenante disponible pour ce type.'
+                          : 'Aucun résultat.'}
+                      </CommandEmpty>
+                      {(Object.keys(KIND_META) as EntityKind[]).map((kind) => {
+                        const items = groups[kind];
+                        if (!items.length) return null;
+                        const Icon = KIND_META[kind].icon;
+                        return (
+                          <CommandGroup key={kind} heading={KIND_META[kind].label}>
+                            {items.map((s) => (
+                              <CommandItem
+                                key={s.stakeholderId}
+                                value={`${s.name} ${s.businessRole} ${s.entityType}`}
+                                onSelect={() => {
+                                  setSelected(s.stakeholderId);
+                                  setOpen(false);
+                                }}
+                              >
+                                <Icon className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm truncate">{s.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {s.businessRole || s.entityType || 'partie prenante'}
+                                  </p>
+                                </div>
+                                {selected === s.stakeholderId && (
+                                  <Check className="h-4 w-4 text-primary shrink-0" />
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        );
+                      })}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <Button
+                disabled={!selected || isPending || !projectId}
+                onClick={async () => {
+                  const ok = await designateConsultant(selected);
+                  if (ok) setSelected('');
+                }}
+              >
+                <UserCheck className="h-4 w-4 mr-1" />
+                {labels.designate}
+              </Button>
+            </div>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">{labels.unauthorized}</p>
