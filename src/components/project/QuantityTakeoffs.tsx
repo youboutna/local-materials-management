@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Calculator, FileSpreadsheet, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import QuantityTakeoffForm from './QuantityTakeoffForm';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import QuantityTakeoffsList from './QuantityTakeoffsList';
-import AdvancedQuantityCalculator from './AdvancedQuantityCalculator';
+import { BoqWorkspace } from '@/components/boq/BoqWorkspace';
+import type { ReferentialType } from '@/config/referentials';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 import { getMaterialService } from '@/application/services/MaterialService';
@@ -35,9 +34,11 @@ interface QuantityTakeoff {
 
 interface QuantityTakeoffsProps {
   projectId: string;
+  /** Référentiel projet courant — piloté par la page appelante. */
+  referentialCode?: ReferentialType;
 }
 
-const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
+const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps) => {
   const [takeoffs, setTakeoffs] = useState<QuantityTakeoff[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
@@ -194,6 +195,8 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
               <RefreshCw className={`mr-2 h-4 w-4 ${syncToBoq.isPending ? 'animate-spin' : ''}`} />
               Générer le DQE
             </Button>
+            {/* Saisie manuelle : déléguée au module DQE (moteur de métré unifié :
+                types d'ouvrage, ouvertures déduites, recommandations, WBS, fiscalité). */}
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -201,32 +204,21 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                   {t('projects.tab.takeoffs') + ' ' + t('projects.add')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{t('projects.tab.takeoffs') + ' ' + t('projects.add')}</DialogTitle>
+                  <DialogDescription>
+                    Saisie et import des métrés via le module DQE unifié — le calcul par type
+                    d'ouvrage et les recommandations sont appliqués automatiquement.
+                  </DialogDescription>
                 </DialogHeader>
-                <Tabs defaultValue="manual" className="w-full">
-                  <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-                    <TabsTrigger value="manual">{t('projects.takeoffs.form.basic_info')}</TabsTrigger>
-                    <TabsTrigger value="advanced">{t('projects.takeoffs.form.advanced')}</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="manual" className="space-y-4">
-                    <QuantityTakeoffForm
-                      projectId={projectId}
-                      onSubmitSuccess={handleTakeoffAdded}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="advanced" className="space-y-4">
-                    <AdvancedQuantityCalculator projectId={projectId} onPersisted={() => { handleTakeoffAdded(); setIsFormDialogOpen(false); }} />
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsFormDialogOpen(false)}>
-                        {t('common.cancel')}
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <BoqWorkspace
+                  source="quantity_takeoff"
+                  contextId={projectId}
+                  projectId={projectId}
+                  mode="planning"
+                  referentialCode={referentialCode}
+                />
               </DialogContent>
             </Dialog>
             </div>

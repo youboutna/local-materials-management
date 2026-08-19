@@ -9,4 +9,5 @@ export * from './formulas.referential';
 export * from './default-values.referential';
 export * from './validation-rules.referential';
 export * from './resource-phase-affinity.referential';
+export * from './recommendations.referential';
 

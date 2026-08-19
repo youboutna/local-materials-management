@@ -36,6 +36,7 @@ import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -101,6 +102,10 @@ export function BoqWorkspace({
   const [materialId, setMaterialId] = useState<string>('');
   const [depotId, setDepotId] = useState<string>('');
   const [elementType, setElementType] = useState<ElementTypeCode>('generic');
+  /** Ouvertures à déduire (référentiel element-types : `deductOpenings`). */
+  const [openings, setOpenings] = useState<{ count: number; width: number; height: number }>({ count: 0, width: 0, height: 0 });
+  /** Génère une ligne article par recommandation du référentiel. */
+  const [autoRecs, setAutoRecs] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
@@ -153,6 +158,8 @@ export function BoqWorkspace({
   const resetForm = () => {
     setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
     setMaterialId(''); setCategory('material'); setElementType('generic');
+    setOpenings({ count: 0, width: 0, height: 0 });
+    setAutoRecs(false);
     // Réapplique le WBS par défaut (fallback contexte de saisie)
     setWbs({ ...wbsDefault });
   };
@@ -175,6 +182,16 @@ export function BoqWorkspace({
   const elDef = getElementType(elementType);
   const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
 
+  /** Ouvertures effectives (référentiel `element-types.deductOpenings`). */
+  const effectiveOpenings = useMemo(() => (
+    elDef?.deductOpenings && openings.count > 0 && openings.width > 0 && openings.height > 0
+      ? [{ width: openings.width, height: openings.height, count: openings.count }]
+      : undefined
+  ), [elDef, openings]);
+
+  /** Recommandations du référentiel pour le type d'ouvrage courant. */
+  const recommendations = useMemo(() => (useAdvanced ? getRecommendationItems(elementType) : []), [useAdvanced, elementType]);
+
   // Dynamic quantity — recomputed from L/W/H + element type (or user-entered on generic/RH)
   const computedQuantity = useMemo(() => {
     if (!useAdvanced) return Number(form.quantity) || 0;
@@ -188,9 +205,11 @@ export function BoqWorkspace({
       height: form.height ?? null,
       quantity: 0,
       unitPrice: form.unitPrice ?? 0,
+      openings: effectiveOpenings,
     });
     return r.quantity;
-  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId]);
+  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId, effectiveOpenings]);
+
 
   const manualPreview = useMemo(() => {
     const pu = Number(form.unitPrice) || 0;
@@ -238,15 +257,37 @@ export function BoqWorkspace({
       milestoneId: effectiveWbs.milestoneId,
       taskId: effectiveWbs.taskId,
       vatRate: profile.vatRate,
-      note: [category === 'overhead' ? 'Frais généraux' : null, overheadNote].filter(Boolean).join(' • ') || null,
+      note: [
+        category === 'overhead' ? 'Frais généraux' : null,
+        overheadNote,
+        effectiveOpenings ? `Ouvertures déduites : ${openings.count} × ${openings.width}×${openings.height} m` : null,
+      ].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
       status: 'submitted',
     };
-    setPendingLines((prev) => [...prev, draft]);
+    // Recommandations du référentiel → 1 ligne article par recommandation.
+    const recoDrafts: BoqLineDTO[] = (autoRecs ? recommendations : []).map((rec) => ({
+      ...draft,
+      designation: `${draft.designation} — ${rec.label}`,
+      elementType: null,
+      length: null, width: null, height: null,
+      unit: rec.unit ?? draft.unit,
+      quantity: rec.quantity ?? 1,
+      totalHt: (rec.quantity ?? 1) * effectivePu,
+      note: ['Recommandation', overheadNote].filter(Boolean).join(' • '),
+      sourceType: 'avance',
+    }));
+    setPendingLines((prev) => [...prev, draft, ...recoDrafts]);
     resetForm();
     setOpenManual(false);
-    toast({ title: 'Ligne ajoutée au brouillon', description: 'Cliquez « Enregistrer le DQE » pour persister.' });
+    toast({
+      title: 'Ligne ajoutée au brouillon',
+      description: recoDrafts.length
+        ? `1 ligne + ${recoDrafts.length} recommandation(s). Cliquez « Enregistrer le DQE » pour persister.`
+        : 'Cliquez « Enregistrer le DQE » pour persister.',
+    });
   };
+
 
   const persistPending = async (silent = false): Promise<boolean> => {
     if (pendingLines.length === 0) return true;
@@ -627,6 +668,26 @@ export function BoqWorkspace({
                   </>
                 )}
 
+                {/* Ouvertures à déduire — piloté par le référentiel element-types */}
+                {useAdvanced && elDef?.deductOpenings && (
+                  <>
+                    <div className="col-span-2">
+                      <Label>Ouvertures (nb)</Label>
+                      <Input type="number" min={0} value={openings.count || ''} onChange={(e) => setOpenings({ ...openings, count: Number(e.target.value) || 0 })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Ouverture larg. (m)</Label>
+                      <Input type="number" min={0} step={0.01} value={openings.width || ''} onChange={(e) => setOpenings({ ...openings, width: Number(e.target.value) || 0 })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Ouverture haut. (m)</Label>
+                      <Input type="number" min={0} step={0.01} value={openings.height || ''} onChange={(e) => setOpenings({ ...openings, height: Number(e.target.value) || 0 })} />
+                    </div>
+                  </>
+                )}
+
+
+
                 <div className="col-span-1">
                   <Label>PU (MRU)</Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
@@ -642,6 +703,28 @@ export function BoqWorkspace({
                   />
                 </div>
               </div>
+
+              {/* Recommandations métier (référentiel) pour le type d'ouvrage */}
+              {recommendations.length > 0 && (
+                <div className="mt-3 rounded-md border border-dashed p-3">
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4"
+                      checked={autoRecs}
+                      onChange={(e) => setAutoRecs(e.target.checked)}
+                    />
+                    <span>
+                      Générer une ligne article par recommandation ({recommendations.length}) — PU / unité de la ligne principale
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {recommendations.map((r) => r.label).join(' • ')}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              )}
+
+
 
               <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
                 <div>Qté : <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>

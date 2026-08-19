@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogContent as DialogContentUI, DialogDescription, DialogHeader, DialogHeader as DialogHeaderUI, DialogTitle, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WorkspaceTabsList } from "@/components/common/WorkspaceTabsList";
 import { ReferentialType } from "@/config/referentials";
 import { getProjectTabs } from "@/config/referentials/projects/project-views.referential";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1109,11 +1110,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* ===== PHASES ===== */}
         <TabsContent value="phases" className="mt-6">
           <Tabs defaultValue="wbs" className="space-y-4">
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
+            <WorkspaceTabsList variant="underline">
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
               <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
-            </TabsList>
+            </WorkspaceTabsList>
 
             <TabsContent value="wbs" className="mt-6">
               <div className="space-y-4">
@@ -1192,13 +1193,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <PlanningVarianceView projectId={projectId!} />
               </div>
               <Tabs defaultValue="gantt" className="space-y-4 mt-4">
-                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
+                <WorkspaceTabsList variant="underline">
                   <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
                   <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
                   <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
                   <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
                   <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="gantt">
                   {metrics ? (
@@ -1228,11 +1229,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
             <TabsContent value="milestones" className="mt-6">
               <Tabs defaultValue="timeline" className="space-y-4">
-                <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
+                <WorkspaceTabsList variant="underline">
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
                   <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
                   <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="timeline">
                   <UnifiedMilestoneManager 
@@ -1278,11 +1279,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             const defaultExecTab = status.includes('inspection') ? 'inspections' : 'tasks-exec';
             return (
               <Tabs defaultValue={defaultExecTab} className="space-y-4">
-                <TabsList>
+                <WorkspaceTabsList variant="underline">
                   <TabsTrigger value="tasks-exec">Tâches</TabsTrigger>
                   <TabsTrigger value="inspections">Inspections</TabsTrigger>
                   <TabsTrigger value="payments-exec">Paiements</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="tasks-exec">
                   <EnhancedTaskManager
