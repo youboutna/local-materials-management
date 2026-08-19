@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Search, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUsersSelector, UserProfile } from '@/hooks/hexagonal';
+import { useUsersSelector } from '@/hooks/hexagonal';
+import type { UserProfile } from '@/hooks/hexagonal/useSelectorsHex';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface UserSelectorProps {
