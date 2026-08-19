@@ -18,7 +18,6 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { getAuthService } from '@/application/services/AuthService';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
