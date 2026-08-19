@@ -186,17 +186,17 @@ const Dashboard: React.FC = () => {
             {t("dashboard.badges.roles_label")}: {userRoles.join(", ")}
           </Badge>
           {userRoles.includes("admin") && (
-            <Badge className="bg-red-500 text-white text-xs">
+            <Badge className="bg-destructive text-destructive-foreground text-xs">
               {t("dashboard.badges.administrator")}
             </Badge>
           )}
           {userRoles.includes("director") && (
-            <Badge className="bg-blue-500 text-white text-xs">
+            <Badge className="bg-info text-info-foreground text-xs">
               {t("dashboard.badges.director")}
             </Badge>
           )}
           {userRoles.includes("project_manager") && (
-            <Badge className="bg-success text-white text-xs">
+            <Badge className="bg-success text-success-foreground text-xs">
               {t("dashboard.badges.project_manager")}
             </Badge>
           )}

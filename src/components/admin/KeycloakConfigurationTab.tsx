@@ -170,7 +170,7 @@ jobs:
 
   return (
     <Tabs defaultValue="development" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-2 mb-6">
+      <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 mb-6 sm:grid sm:grid-cols-2">
         <TabsTrigger value="development" className="flex items-center gap-2">
           <Server className="h-4 w-4" /> Développement
         </TabsTrigger>

@@ -127,7 +127,7 @@ const Materials: React.FC = () => {
       pageTitle={t("nav.materials")}
       pageDescription={`${filteredMaterials.length} matériaux`}
       actions={
-        <Button asChild className="bg-adrar-600 hover:bg-adrar-700">
+        <Button asChild className="bg-primary hover:bg-primary/90">
           <Link to="/materials/create">
             <Plus className="w-4 h-4 mr-2" />
             Ajouter un matériau

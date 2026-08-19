@@ -28,12 +28,12 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
 
   const getStatusBadge = () => {
     if (!isAvailable) {
-      return <Badge className="bg-red-500 text-white">Rupture de stock</Badge>;
+      return <Badge className="bg-destructive text-destructive-foreground">Rupture de stock</Badge>;
     }
     if (isLowStock) {
-      return <Badge className="bg-yellow-500 text-white">Stock faible</Badge>;
+      return <Badge className="bg-warning text-warning-foreground">Stock faible</Badge>;
     }
-    return <Badge className="bg-success text-white">Disponible</Badge>;
+    return <Badge className="bg-success text-success-foreground">Disponible</Badge>;
   };
 
   const getTotalValue = () => {
@@ -53,7 +53,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
           <div className="flex items-center gap-2">
             {getStatusIcon()}
             <div>
-              <p className="text-2xl font-bold text-adrar-900">
+              <p className="text-2xl font-bold text-primary">
                 {material.available_quantity.toLocaleString('fr-FR')}
               </p>
               <p className="text-sm text-muted-foreground">{material.unit} en stock</p>
@@ -71,7 +71,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Valeur totale</p>
-            <p className="font-medium text-terracotta-600">
+            <p className="font-medium text-accent-foreground">
               {getTotalValue().toLocaleString('fr-FR')} MRU
             </p>
           </div>

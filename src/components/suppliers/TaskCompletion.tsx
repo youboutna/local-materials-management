@@ -6,8 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useTaskAssignmentsHex } from '@/hooks/hexagonal';
 
 interface Task {
   id: string;
@@ -32,19 +31,15 @@ interface TaskCompletionProps {
 const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const { completeTaskAsync, addNoteAsync } = useTaskAssignmentsHex();
 
   const handleCompleteTask = async () => {
     setLoading(true);
     try {
-      const { error } = await btpClient.from('task_assignments')
-        .update({ 
-          status: 'completed',
-          completion_date: new Date().toISOString(),
-          notes: notes || null
-        })
-        .eq('id', task.id);
-
-      if (error) throw error;
+      if (notes.trim()) {
+        await addNoteAsync({ id: task.id, note: notes.trim() });
+      }
+      await completeTaskAsync(task.id);
 
       toast({
         title: "Tâche terminée",

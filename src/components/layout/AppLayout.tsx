@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
+import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
 import { BrandBandsBackground } from "@/components/branding/BrandIdentity";
@@ -141,6 +142,7 @@ export function AppLayout({
                 {/* Actions + sélecteur de thème (l'identité client est en barre principale) */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {actions}
+                  <SecretAccessManager />
                   <ThemeSwitcher />
                 </div>
 

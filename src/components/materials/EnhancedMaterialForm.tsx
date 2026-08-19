@@ -615,9 +615,9 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
         <TabsContent value="basic" className="space-y-6">
           {/* Basic Information */}
-          <Card className="border-l-4 border-l-terracotta-500">
-            <CardHeader className="bg-gradient-to-r from-terracotta-50 to-adrar-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
+          <Card className="border-l-4 border-l-accent">
+            <CardHeader className="bg-muted/40">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Package className="h-5 w-5" />
                 {t('materials.basic_info') || 'Informations de base'}
               </CardTitle>
@@ -633,7 +633,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     value={formData.name || ''}
                     onChange={(e) => handleChange('name', e.target.value)}
                     placeholder={t('materials.name_placeholder') || 'Nom du matériau'}
-                    className="border-border focus:border-terracotta-500"
+                    className="border-border focus:border-primary"
                     required
                   />
                 </div>
@@ -657,7 +657,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   onChange={(e) => handleChange('description', e.target.value)}
                   placeholder={t('materials.description_placeholder') || 'Description du matériau'}
                   rows={3}
-                  className="border-border focus:border-terracotta-500"
+                  className="border-border focus:border-primary"
                 />
               </div>
             </CardContent>
@@ -794,9 +794,9 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
         <TabsContent value="location" className="space-y-6">
           {/* Warehouse and Location */}
-          <Card className="border-l-4 border-l-adrar-500">
-            <CardHeader className="bg-gradient-to-r from-adrar-50 to-terracotta-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-muted/40">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Warehouse className="h-5 w-5" />
                 {t('materials.warehouse_location') || 'Entrepôt et localisation'}
               </CardTitle>
@@ -914,7 +914,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
           {/* Quantities and Pricing */}
           <Card className="border-l-4 border-l-green-500">
             <CardHeader className="bg-gradient-to-r from-success/10 to-success/10">
-              <CardTitle className="text-adrar-800">
+              <CardTitle className="text-foreground">
                 {t('materials.quantities_pricing') || 'Quantités et prix'}
               </CardTitle>
             </CardHeader>
@@ -988,7 +988,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
           {/* Timeline */}
           <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Clock className="h-5 w-5" />
                 {t('materials.timeline') || 'Planning'}
               </CardTitle>
@@ -1176,7 +1176,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
         <div className="flex justify-end gap-4 pt-6">
           <Button 
             type="submit" 
-            className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
             {t('materials.create') || 'Créer le matériau'}
           </Button>
