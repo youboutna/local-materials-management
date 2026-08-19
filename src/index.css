@@ -410,6 +410,13 @@
   --primary-foreground: 0 0% 98%;
   --primary-glow: 142 76% 35%;
 
+  /* Charte nationale : vert dominant + or + rouge */
+  --brand-band-1: 142 76% 22%;
+  --brand-band-2: 48 96% 53%;
+  --brand-band-3: 355 78% 44%;
+
+
+
   --secondary: 45 35% 88%;
   --secondary-foreground: 210 25% 8%;
 
