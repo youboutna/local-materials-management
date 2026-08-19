@@ -18,6 +18,8 @@ const MaterialCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<{ submit: () => void; getFormData: () => Partial<MaterialFormDataDTO> } | null>(null);
+
 
   // Hexagonal Architecture: Use the hexagonal hook for material operations
   const { createMaterial } = useMaterialsHex();
