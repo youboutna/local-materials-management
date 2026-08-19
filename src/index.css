@@ -2,6 +2,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================================
+   Polices officielles « Louguiya » (charte graphique RIM)
+   ========================================================================== */
+@font-face {
+  font-family: 'LouguiyaFR';
+  src: url('/__l5e/assets-v1/9130b571-3899-4e1f-b9d1-3f855b8fbe90/LouguiyaFR.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LouguiyaFR';
+  src: url('/__l5e/assets-v1/5b577e0e-6cf2-488b-9b6a-9e0b7c068855/LouguiyaFR-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Louguiya';
+  src: url('/__l5e/assets-v1/f31405fe-b892-488d-8385-5decb1b80877/Louguiya.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Louguiya';
+  src: url('/__l5e/assets-v1/69d2085c-fe65-438b-a97f-f650fc19b07b/Louguiya-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
  
 @layer base {
   :root {
