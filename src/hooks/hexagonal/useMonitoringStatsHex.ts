@@ -4,10 +4,18 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
+export interface MonitoringMetric {
+  /** Nombre total d'enregistrements du domaine. */
+  total: number;
+  /** Nombre d'enregistrements nécessitant une action (expiration, retard, blocage). */
+  count: number;
+  status: string;
+}
+
 export interface MonitoringStats {
-  guarantees: { count: number; status: string };
-  payments: { count: number; status: string };
-  inspections: { count: number; status: string };
+  guarantees: MonitoringMetric;
+  payments: MonitoringMetric;
+  inspections: MonitoringMetric;
 }
 
 async function fetchMonitoringStats(): Promise<MonitoringStats> {
@@ -15,28 +23,35 @@ async function fetchMonitoringStats(): Promise<MonitoringStats> {
   const paymentBlockingRepo = RepositoryFactory.getPaymentBlockingRepository();
   const inspectionRepo = RepositoryFactory.getInspectionRepository();
 
-  const [guarantees, blockedPayments, inspections] = await Promise.all([
-    bankGuaranteeRepo.findAll().then(all => all.filter((g: any) => {
-      const exp = new Date(g.expiry_date || g.expiryDate);
-      const threshold = new Date(); threshold.setDate(threshold.getDate() + 30);
-      return exp <= threshold && (g.status === 'active');
-    })).catch(() => []),
+  const [allGuarantees, blockedPayments, allInspections, overdueInspections] = await Promise.all([
+    bankGuaranteeRepo.findAll().catch(() => []),
     paymentBlockingRepo.getActiveBlocks().catch(() => []),
+    inspectionRepo.findAll().catch(() => []),
     inspectionRepo.findOverdue().catch(() => []),
   ]);
 
+  const threshold = new Date();
+  threshold.setDate(threshold.getDate() + 30);
+  const expiringGuarantees = (allGuarantees as any[]).filter((g: any) => {
+    const exp = new Date(g.expiry_date || g.expiryDate);
+    return !Number.isNaN(exp.getTime()) && exp <= threshold && g.status === 'active';
+  });
+
   return {
     guarantees: {
-      count: guarantees?.length || 0,
-      status: guarantees?.length ? `${guarantees.length} alertes` : 'Actif'
+      total: allGuarantees?.length || 0,
+      count: expiringGuarantees.length,
+      status: expiringGuarantees.length ? `${expiringGuarantees.length} alertes` : 'Actif'
     },
     payments: {
+      total: blockedPayments?.length || 0,
       count: blockedPayments?.length || 0,
-      status: blockedPayments?.length ? `${blockedPayments.length} en retard` : 'Actif'
+      status: blockedPayments?.length ? `${blockedPayments.length} bloqué(s)` : 'Actif'
     },
     inspections: {
-      count: inspections?.length || 0,
-      status: inspections?.length ? `${inspections.length} en retard` : 'Actif'
+      total: allInspections?.length || 0,
+      count: overdueInspections?.length || 0,
+      status: overdueInspections?.length ? `${overdueInspections.length} en retard` : 'Actif'
     }
   };
 }
@@ -51,9 +66,9 @@ export function useMonitoringStatsHex() {
 
   return {
     stats: data || {
-      guarantees: { count: 0, status: 'Actif' },
-      payments: { count: 0, status: 'Actif' },
-      inspections: { count: 0, status: 'Actif' }
+      guarantees: { total: 0, count: 0, status: 'Actif' },
+      payments: { total: 0, count: 0, status: 'Actif' },
+      inspections: { total: 0, count: 0, status: 'Actif' }
     },
     loading: isLoading,
     error,
