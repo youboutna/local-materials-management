@@ -137,7 +137,7 @@ export const PROJECT_WORKFLOW_STEPS: WorkflowStepConfig[] = [
     title: 'Validation',
     description: 'Réception définitive et clôture',
     icon: 'check-circle',
-    color: 'bg-teal-500',
+    color: 'bg-success',
     validate: () => true,
   },
 ];

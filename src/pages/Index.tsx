@@ -80,14 +80,14 @@ const Index = () => {
       title: safeT("index.feature.monitoring.title", "Suivi & Contrôle"),
       description: safeT("index.feature.monitoring.description", "PTBA, PPM, PED et écarts"),
       link: "/monitoring",
-      gradient: "from-cyan-500 to-teal-500",
+      gradient: "from-accent to-success",
     },
     {
       icon: CheckSquare,
       title: safeT("index.feature.tasks.title", "Tâches"),
       description: safeT("index.feature.tasks.description", "Affectation et suivi des tâches"),
       link: "/tasks",
-      gradient: "from-teal-500 to-success",
+      gradient: "from-success to-accent",
     },
     {
       icon: Activity,
@@ -101,14 +101,14 @@ const Index = () => {
       title: safeT("index.feature.materials.title", "Matériaux"),
       description: safeT("index.feature.materials.description", "Référentiel et stocks"),
       link: "/materials",
-      gradient: "from-success to-lime-500",
+      gradient: "from-success to-success-soft",
     },
     {
       icon: Truck,
       title: safeT("index.feature.suppliers.title", "Fournisseurs"),
       description: safeT("index.feature.suppliers.description", "Annuaire et performance"),
       link: "/suppliers",
-      gradient: "from-lime-500 to-yellow-500",
+      gradient: "from-success-soft to-secondary",
     },
     {
       icon: ClipboardList,

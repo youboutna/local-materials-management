@@ -195,7 +195,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
       'communication': 'bg-orange-100 text-orange-800',
       'contractuel': 'bg-indigo-100 text-indigo-800',
       'comptable': 'bg-pink-100 text-pink-800',
-      'performance': 'bg-teal-100 text-teal-800'
+      'performance': 'bg-success-soft text-success-soft-foreground'
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
