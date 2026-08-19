@@ -35,6 +35,9 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
   const remaining = budget - spent;
   const percentageSpent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
   const costVariance = financialMetrics?.costVariance ?? null;
+  const cpi = financialMetrics?.costPerformanceIndex ?? null;
+  const cpiAvailable = cpi != null && Number.isFinite(Number(cpi)) && Number(cpi) !== 0;
+
 
   return (
     <div className="space-y-6">
