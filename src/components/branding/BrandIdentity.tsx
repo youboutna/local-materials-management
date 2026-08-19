@@ -50,13 +50,14 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
     brandingOverrides.ownerName?.trim() || organization?.name || branding.ownerName;
   const ownerSubtitle =
     brandingOverrides.ownerSubtitle?.trim() ||
-    organization?.description?.trim() ||
     organization?.orgType?.trim() ||
     branding.ownerSubtitle;
   const sealUrl =
     brandingOverrides.sealUrl?.trim() || organization?.logoUrl?.trim() || branding.sealUrl;
 
-  const showSeal = branding.showSeal && !!sealUrl;
+  const [sealFailed, setSealFailed] = React.useState(false);
+  React.useEffect(() => setSealFailed(false), [sealUrl]);
+  const showSeal = branding.showSeal && !!sealUrl && !sealFailed;
   if (!showSeal && (hideText || !ownerName)) return <>{fallback ?? null}</>;
 
   const seal = showSeal ? (
@@ -64,6 +65,7 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
       src={sealUrl}
       alt={`Sceau ${ownerName}`}
       loading="lazy"
+      onError={() => setSealFailed(true)}
       className={cn('shrink-0 object-contain', SEAL_SIZES[size])}
     />
   ) : null;
