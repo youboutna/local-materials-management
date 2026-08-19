@@ -55,6 +55,11 @@ export interface SupplierProps {
 
 export class Supplier {
   private _externalRef: string | null;
+  private _contactPerson: string | null = null;
+  private _commerceRegisterRef: string | null = null;
+  private _bankName: string | null = null;
+  private _rib: string | null = null;
+  private _accountNumber: string | null = null;
   // Private fields for encapsulation
   private _id: string;
   private _name: string;
