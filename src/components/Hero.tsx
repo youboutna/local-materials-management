@@ -80,7 +80,7 @@ const Hero = () => {
                   "Système de suivi des projets et Gestion des Matériaux"
                 )}
               </span>
-              <span className="block bg-gradient-to-r from-terracotta-400 to-terracotta-300 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-sandstone-300 to-sandstone-200 bg-clip-text text-transparent">
                 {safeT("index.features.management", "Management System")}
               </span>
             </motion.h1>
