@@ -136,11 +136,13 @@ export function AppLayout({
                 </div>
 
                 {/* Page Actions + sélecteur de thème */}
+                {/* Identité client + actions + sélecteur de thème */}
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  <BrandIdentity className="mr-2 hidden lg:flex max-w-[220px]" />
                   {actions}
                   <ThemeSwitcher />
                 </div>
-              </div>
+
             </div>
           </div>
         )}
