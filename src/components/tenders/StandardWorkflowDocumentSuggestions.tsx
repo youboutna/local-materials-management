@@ -70,7 +70,7 @@ const StandardWorkflowDocumentSuggestions = ({
           <Badge variant="outline" className="text-sm">
             Phase: {PROCUREMENT_PHASE_LABELS[selectedPhase] || selectedPhase}
           </Badge>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Sélectionnez une étape pour voir les documents recommandés
           </p>
         </div>
@@ -94,8 +94,8 @@ const StandardWorkflowDocumentSuggestions = ({
                   </Button>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-4 text-gray-500">
-                  <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <div className="col-span-2 text-center py-4 text-muted-foreground">
+                  <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm">Aucune étape disponible pour cette phase.</p>
                 </div>
               )}
@@ -122,9 +122,9 @@ const StandardWorkflowDocumentSuggestions = ({
                     const isAdded = isDocumentAlreadyAdded(doc.title);
 
                     return (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted">
                         <div className="flex items-center gap-3">
-                          <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{doc.title}</p>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -164,8 +164,8 @@ const StandardWorkflowDocumentSuggestions = ({
                     );
                   })
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <div className="text-center py-4 text-muted-foreground">
+                    <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm">Aucune suggestion de document pour cette étape.</p>
                     <p className="text-xs mt-1">
                       Vous pourrez ajouter des documents manuellement après avoir créé l'étape.
@@ -174,8 +174,8 @@ const StandardWorkflowDocumentSuggestions = ({
                 )}
               </div>
 
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-800">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <p className="text-xs text-primary">
                   <strong>Note:</strong> Ces documents sont spécifiques à l'étape sélectionnée 
                   et sont basés sur les standards des marchés publics mauritaniens.
                 </p>
@@ -184,8 +184,8 @@ const StandardWorkflowDocumentSuggestions = ({
           )}
 
           {!selectedStage && phaseStages.length > 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-sm">Sélectionnez une étape pour voir les documents suggérés</p>
             </div>
           )}

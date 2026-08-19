@@ -137,7 +137,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     <Card className="mb-6 shadow-md">
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-5 w-5 text-gray-600" />
+          <Filter className="h-5 w-5 text-muted-foreground" />
           <h3 className="text-lg font-medium">Filtres de la carte</h3>
           <Badge variant="secondary" className="ml-auto">
             {locations.length} projet{locations.length > 1 ? 's' : ''}
@@ -206,7 +206,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="all">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-gray-400" />
+                    <MapPin className="h-3 w-3 text-muted-foreground" />
                     Toutes les régions
                   </div>
                 </SelectItem>
@@ -263,8 +263,8 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
               Résultats
             </Label>
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-gray-900">
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="text-lg font-bold text-foreground">
                 {(() => {
                   let count = locations.length;
                   
@@ -320,7 +320,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               </div>
               
               {/* Enhanced Debug Info */}
-              <div className="mt-2 text-xs text-gray-500 border-t pt-2">
+              <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
                 <div>Total disponible: {locations.length}</div>
                 {regionFilter !== 'all' && (() => {
                   const region = getWilayaByCode(regionFilter);
@@ -343,7 +343,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
 
         {/* Active Filters Display */}
         {(statusFilter !== 'all' || regionFilter !== 'all') && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Filtres actifs:</span>
               {statusFilter !== 'all' && (

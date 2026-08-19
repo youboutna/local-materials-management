@@ -157,8 +157,8 @@ const StorageSettings = () => {
       case 'gcs':
         return (
           <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-yellow-800">
+            <div className="p-4 bg-warning/10 border border-warning/30 rounded-md">
+              <p className="text-warning">
                 Ce fournisseur de stockage n'est pas encore implémenté. 
                 Veuillez choisir un autre fournisseur.
               </p>
@@ -222,24 +222,24 @@ const StorageSettings = () => {
               {connectionStatus ? (
                 <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
+                <XCircle className="h-5 w-5 text-destructive" />
               )}
             </div>
           )}
         </div>
 
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="p-4 bg-primary/10 border border-primary/30 rounded-md">
           <h4 className="font-medium text-blue-900 mb-2">Configuration actuelle</h4>
-          <p className="text-blue-800">
+          <p className="text-primary">
             Fournisseur: <strong>{config.provider}</strong>
           </p>
           {config.bucket && (
-            <p className="text-blue-800">
+            <p className="text-primary">
               Bucket: <strong>{config.bucket}</strong>
             </p>
           )}
           {config.host && (
-            <p className="text-blue-800">
+            <p className="text-primary">
               Hôte: <strong>{config.host}:{config.port || 21}</strong>
             </p>
           )}

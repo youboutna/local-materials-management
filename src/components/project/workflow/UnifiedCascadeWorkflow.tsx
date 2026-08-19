@@ -105,8 +105,8 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
   const getStepStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-success-soft text-success border-success/30 dark:bg-success/30 dark:text-success';
-      case 'in_progress': return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'delayed': return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400';
+      case 'in_progress': return 'bg-primary/10 text-primary border-primary/30 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'delayed': return 'bg-destructive/10 text-destructive border-destructive/30 dark:bg-red-900/30 dark:text-red-400';
       default: return 'bg-muted text-muted-foreground border-muted';
     }
   };
@@ -114,8 +114,8 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
   const getStepIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'in_progress': return <Play className="h-4 w-4 text-blue-600" />;
-      case 'delayed': return <AlertTriangle className="h-4 w-4 text-red-600" />;
+      case 'in_progress': return <Play className="h-4 w-4 text-primary" />;
+      case 'delayed': return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default: return <Target className="h-4 w-4 text-muted-foreground" />;
     }
   };
@@ -186,9 +186,9 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
               <p className="text-xs text-muted-foreground">Brut calculé</p>
               <p className="text-lg font-bold">{formatCurrency(decompteInfo.grossAmount)}</p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-center">
+            <div className="p-3 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30 text-center">
               <p className="text-xs text-muted-foreground">Garantie (10%)</p>
-              <p className="text-lg font-bold text-amber-600">{formatCurrency(decompteInfo.guaranteeRetention)}</p>
+              <p className="text-lg font-bold text-warning">{formatCurrency(decompteInfo.guaranteeRetention)}</p>
             </div>
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-center">
               <p className="text-xs text-muted-foreground">Net à payer</p>

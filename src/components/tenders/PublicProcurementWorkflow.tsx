@@ -517,9 +517,9 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
       case 'completed':
         return 'text-success bg-success-soft';
       case 'in_progress':
-        return 'text-blue-600 bg-blue-100';
+        return 'text-primary bg-primary/10';
       default:
-        return 'text-gray-400 bg-gray-100';
+        return 'text-muted-foreground bg-muted';
     }
   };
 
@@ -549,7 +549,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
             </CardTitle>
           </div>
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Workflow standardisé pour les projets de travaux publics en Mauritanie
           {selectedTender && (
             <span className="block mt-1 text-primary font-medium">

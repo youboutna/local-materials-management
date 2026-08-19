@@ -169,7 +169,7 @@ const Auth = () => {
               <CardTitle className="text-2xl text-adrar-800">
                 Accès au Portail
               </CardTitle>
-              <p className="text-gray-600">Connectez-vous ou créez un compte</p>
+              <p className="text-muted-foreground">Connectez-vous ou créez un compte</p>
             </CardHeader>
             <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -197,9 +197,9 @@ const Auth = () => {
               <TabsContent value="login">
                 {/* 🔥 Éditeur d'email / mot de passe (s'affiche si email non confirmé) */}
                 {showEmailEditor && (
-                  <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
-                    <h3 className="font-semibold text-yellow-800">Email non confirmé</h3>
-                    <p className="text-sm text-yellow-700">
+                  <div className="mb-6 p-4 border border-warning/30 bg-warning/10 rounded-md">
+                    <h3 className="font-semibold text-warning">Email non confirmé</h3>
+                    <p className="text-sm text-warning">
                       L'email <strong>{unconfirmedEmail}</strong> n'a pas été confirmé.
                       Vous pouvez corriger votre email et/ou votre mot de passe ci‑dessous.
                     </p>
@@ -225,7 +225,7 @@ const Auth = () => {
                           Annuler
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Un nouveau lien de confirmation sera envoyé à la nouvelle adresse.
                       </p>
                     </div>
@@ -236,7 +236,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-email"
                         type="email"
@@ -253,7 +253,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Mot de passe</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="login-password"
                         type={showPassword ? "text" : "password"}
@@ -290,14 +290,14 @@ const Auth = () => {
                       type="button"
                       variant="link"
                       onClick={() => setActiveTab("reset-password")}
-                      className="text-sm text-gray-600 hover:text-gray-800"
+                      className="text-sm text-muted-foreground hover:text-foreground"
                     >
                       Mot de passe oublié ?
                     </Button>
                   </div>
 
                   {DEV_MODE && (
-                    <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                    <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3">
                       <div className="flex items-center gap-2 mb-2 text-amber-900 text-sm font-medium">
                         <ShieldCheck className="h-4 w-4" />
                         DEV_MODE — Connexion locale (aucun appel réseau)
@@ -317,7 +317,7 @@ const Auth = () => {
                           </Button>
                         ))}
                       </div>
-                      <p className="text-[11px] text-amber-800 mt-2">
+                      <p className="text-[11px] text-warning mt-2">
                         Utilisateurs DEV : {Object.values(DEV_USERS).map((u) => u.email).join(' · ')}
                       </p>
                     </div>
@@ -330,7 +330,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="register-name">Nom complet</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="register-name"
                         type="text"
@@ -346,7 +346,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="register-email">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="register-email"
                         type="email"
@@ -385,7 +385,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Mot de passe</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="register-password"
                         type={showPassword ? "text" : "password"}

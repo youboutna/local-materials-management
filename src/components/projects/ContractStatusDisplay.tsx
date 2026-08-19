@@ -97,15 +97,15 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Lancement appel d'offres</span>
+                <span className="text-sm font-medium text-muted-foreground">Lancement appel d'offres</span>
                 <span className="text-sm">{formatDate(project.launchDate)}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Attribution du marché</span>
+                <span className="text-sm font-medium text-muted-foreground">Attribution du marché</span>
                 <span className="text-sm">{formatDate(project.attributionDate)}</span>
                 {tenderDuration && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     ({tenderDuration} jours après le lancement)
                   </span>
                 )}
@@ -114,12 +114,12 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
             
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Début des travaux</span>
+                <span className="text-sm font-medium text-muted-foreground">Début des travaux</span>
                 <span className="text-sm">{formatDate(project.startDate)}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Fin prévue</span>
+                <span className="text-sm font-medium text-muted-foreground">Fin prévue</span>
                 <span className="text-sm">{formatDate(project.endDate)}</span>
               </div>
             </div>
@@ -136,24 +136,24 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Type de marché</span>
+                <span className="text-sm font-medium text-muted-foreground">Type de marché</span>
                 <span className="text-sm">{project.marketType || 'Non spécifié'}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Mode de sélection</span>
+                <span className="text-sm font-medium text-muted-foreground">Mode de sélection</span>
                 <span className="text-sm">{project.selectionMode || 'Non spécifié'}</span>
               </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Source de financement</span>
+                <span className="text-sm font-medium text-muted-foreground">Source de financement</span>
                 <span className="text-sm">{project.financingSource || 'Non spécifiée'}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-600">Référence</span>
+                <span className="text-sm font-medium text-muted-foreground">Référence</span>
                 <span className="text-sm font-mono">{project.projectReference || 'Non attribuée'}</span>
               </div>
             </div>
@@ -162,11 +162,11 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
 
         {/* Alerts and Warnings */}
         {contractPhase.phase === 'tender_active' && (
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+          <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-warning mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-orange-800">Appel d'offres en cours</p>
-              <p className="text-xs text-orange-700">
+              <p className="text-sm font-medium text-warning">Appel d'offres en cours</p>
+              <p className="text-xs text-warning">
                 La procédure d'appel d'offres est actuellement active. L'attribution est prévue le {formatDate(project.attributionDate)}.
               </p>
             </div>
@@ -174,11 +174,11 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
         )}
 
         {contractPhase.phase === 'contract_preparation' && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+          <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-primary mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Préparation du contrat</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-sm font-medium text-primary">Préparation du contrat</p>
+              <p className="text-xs text-primary">
                 Le marché a été attribué. Le contrat est en cours de préparation avant le début des travaux.
               </p>
             </div>

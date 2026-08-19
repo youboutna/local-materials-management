@@ -242,15 +242,15 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
               </Card>
 
               {/* Security Notice */}
-              <Card className="border-amber-200 bg-amber-50/50">
+              <Card className="border-warning/30 bg-warning/10/50">
                 <CardContent className="pt-6">
                   <div className="flex gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-amber-900">
                         Instructions de sécurité
                       </p>
-                      <p className="text-sm text-amber-700">
+                      <p className="text-sm text-warning">
                         Partagez ce code uniquement avec les membres autorisés de la commission d'évaluation.
                         Le code permet l'accès complet au dossier de soumission.
                       </p>

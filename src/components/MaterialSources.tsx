@@ -33,13 +33,13 @@ const MaterialSources = ({
         {sources.length > 0 ? (
           <div className="space-y-4">
             {sources.map(source => (
-              <div key={source.id} className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+              <div key={source.id} className="p-3 bg-white rounded-lg border border-border shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-adrar-700">{source.name}</h3>
                     <p className="text-sm text-adrar-600">{source.type}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-success-soft text-success' : 'bg-amber-100 text-amber-800'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-success-soft text-success' : 'bg-warning/10 text-warning'}`}>
                     {source.availability}% {t('materials.available') || 'disponible'}
                   </span>
                 </div>

@@ -40,8 +40,8 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) =
       return (
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-2">Accès refusé</h1>
-            <p className="text-gray-600 mb-6">
+            <h1 className="text-2xl font-bold text-destructive mb-2">Accès refusé</h1>
+            <p className="text-muted-foreground mb-6">
               Vous n'avez pas les autorisations nécessaires pour accéder à cette page.
             </p>
           </div>

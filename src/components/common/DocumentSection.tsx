@@ -163,7 +163,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
 
     if (documents.length === 0) {
       return (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
           <p>Aucun document associé à ce projet</p>
         </div>
@@ -177,20 +177,20 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <FileText className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                  <FileText className="h-8 w-8 text-primary flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <h4 className="font-medium text-sm truncate">{document.title}</h4>
-                    <p className="text-xs text-gray-500 truncate">{document.fileName || 'Sans fichier'}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground truncate">{document.fileName || 'Sans fichier'}</p>
+                    <p className="text-xs text-muted-foreground">
                       {document.createdAt ? new Date(document.createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
                       {document.uploadedBy && ` • ${document.uploadedBy}`}
                     </p>
                     {document.status && (
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         document.status === 'approved' ? 'bg-success-soft text-success' :
-                        document.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
-                        document.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        document.status === 'pending_approval' ? 'bg-warning/10 text-warning' :
+                        document.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                        'bg-muted text-foreground'
                       }`}>
                         {document.status}
                       </span>

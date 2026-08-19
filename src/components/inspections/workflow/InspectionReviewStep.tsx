@@ -48,9 +48,9 @@ const INSPECTION_TYPE_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_LABELS: Record<string, { label: string; class: string }> = {
-  low: { label: 'Basse', class: 'bg-gray-100 text-gray-700' },
-  medium: { label: 'Moyenne', class: 'bg-blue-100 text-blue-700' },
-  high: { label: 'Haute', class: 'bg-orange-100 text-orange-700' },
+  low: { label: 'Basse', class: 'bg-muted text-foreground' },
+  medium: { label: 'Moyenne', class: 'bg-primary/10 text-primary' },
+  high: { label: 'Haute', class: 'bg-warning/10 text-warning' },
 };
 
 const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({

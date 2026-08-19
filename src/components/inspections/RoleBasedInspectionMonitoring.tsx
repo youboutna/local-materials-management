@@ -279,7 +279,7 @@ const RoleBasedInspectionMonitoring = () => {
         !['completed', 'approved'].includes(i.status)
       ).length > 0 && (
         <div className="border-l-4 border-red-500 pl-4">
-          <h4 className="font-semibold text-red-700 mb-2"> Inspections en retard</h4>
+          <h4 className="font-semibold text-destructive mb-2"> Inspections en retard</h4>
           <div className="space-y-2">
             {inspections
               .filter(i => 
@@ -287,7 +287,7 @@ const RoleBasedInspectionMonitoring = () => {
                 !['completed', 'approved'].includes(i.status)
               )
               .map(inspection => (
-                <div key={inspection.id} className="flex items-center justify-between bg-red-50 p-3 rounded">
+                <div key={inspection.id} className="flex items-center justify-between bg-destructive/10 p-3 rounded">
                   <div>
                     <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
                     <p className="text-sm text-muted-foreground">
@@ -450,7 +450,7 @@ const RoleBasedInspectionMonitoring = () => {
                             {isAdmin && (
                               <DropdownMenuItem 
                                 onClick={() => handleDelete(inspection.id)}
-                                className="text-red-600"
+                                className="text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer

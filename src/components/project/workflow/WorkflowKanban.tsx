@@ -99,9 +99,9 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'in_progress':
-        return <Play className="h-4 w-4 text-blue-600" />;
+        return <Play className="h-4 w-4 text-primary" />;
       case 'delayed':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
@@ -110,9 +110,9 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   const getStatusBadge = useCallback((status: string) => {
     const configs: Record<string, { label: string; className: string }> = {
       completed: { label: '✅ Terminée', className: 'bg-success-soft text-success border-success/30' },
-      in_progress: { label: '🟡 En cours', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-      delayed: { label: '🔴 Retard', className: 'bg-red-100 text-red-800 border-red-200' },
-      pending: { label: '🔵 À venir', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+      in_progress: { label: '🟡 En cours', className: 'bg-primary/10 text-primary border-primary/30' },
+      delayed: { label: '🔴 Retard', className: 'bg-destructive/10 text-destructive border-destructive/30' },
+      pending: { label: '🔵 À venir', className: 'bg-muted text-foreground border-border' },
     };
     const config = configs[status] || configs.pending;
     return <Badge variant="outline" className={cn("text-xs", config.className)}>{config.label}</Badge>;
@@ -129,13 +129,13 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
         );
       }
       return (
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
+        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-xs">
           ⏳ {date}
         </Badge>
       );
     }
     return (
-      <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 text-xs">
+      <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs">
         Non planifiée
       </Badge>
     );
@@ -157,7 +157,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
       );
     }
     return (
-      <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 text-xs">
+      <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs">
         0%
       </Badge>
     );
@@ -269,7 +269,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                     className={cn(
                       "grid grid-cols-12 gap-2 px-4 py-3 items-center transition-colors cursor-pointer",
                       step.status === 'completed' && "bg-success-soft/50",
-                      step.status === 'in_progress' && "bg-blue-50/50",
+                      step.status === 'in_progress' && "bg-primary/10/50",
                       isExpanded && "bg-muted/30",
                       "hover:bg-muted/50"
                     )}

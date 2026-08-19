@@ -133,7 +133,7 @@ const Settings = () => {
         </Card>
 
         {isDevelopmentMode && (
-            <Card className="mb-8 border-amber-300 bg-amber-50">
+            <Card className="mb-8 border-warning/30 bg-warning/10">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Shield className="mr-2 h-5 w-5" />
@@ -145,7 +145,7 @@ const Settings = () => {
                 <div className="flex flex-col space-y-4">
                   <p className="font-medium">
                     {t("settings.current_role")}:{" "}
-                    <span className="text-amber-700">{activeDevRole.role}</span>
+                    <span className="text-warning">{activeDevRole.role}</span>
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -169,7 +169,7 @@ const Settings = () => {
                     ))}
                   </div>
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {activeDevRole.description}
                   </p>
                 </div>

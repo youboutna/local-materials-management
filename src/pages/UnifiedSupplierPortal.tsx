@@ -625,10 +625,10 @@ const UnifiedSupplierPortal = () => {
                 <CardTitle className="text-sm font-medium">
                   Paiements en Attente
                 </CardTitle>
-                <TrendingUp className="h-4 w-4 text-orange-600" />
+                <TrendingUp className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
+                <div className="text-2xl font-bold text-warning">
                   {pendingPayments}
                 </div>
                 <p className="text-xs text-muted-foreground">En traitement</p>
@@ -640,10 +640,10 @@ const UnifiedSupplierPortal = () => {
                 <CardTitle className="text-sm font-medium">
                   Notifications
                 </CardTitle>
-                <Bell className="h-4 w-4 text-blue-600" />
+                <Bell className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-primary">
                   {unreadNotifications}
                 </div>
                 <p className="text-xs text-muted-foreground">Non lues</p>
@@ -911,7 +911,7 @@ const UnifiedSupplierPortal = () => {
                                     Montant estimé: {formatAmount2(metadata?.estimated_amount || 0)}
                                   </span>
                                   {metadata?.deadline && (
-                                    <span className="text-orange-600">
+                                    <span className="text-warning">
                                       <Clock className="inline h-3 w-3 mr-1" />
                                       Délai: {new Date(metadata.deadline).toLocaleDateString("fr-FR")}
                                     </span>
@@ -945,7 +945,7 @@ const UnifiedSupplierPortal = () => {
                           className={`p-4 rounded-lg border ${
                             notification.used_at
                               ? "bg-muted/50"
-                              : "bg-blue-50 border-blue-200"
+                              : "bg-primary/10 border-primary/30"
                           }`}
                         >
                           <div className="flex items-start justify-between">
@@ -971,7 +971,7 @@ const UnifiedSupplierPortal = () => {
                             {!notification.used_at && (
                               <Badge
                                 variant="secondary"
-                                className="bg-blue-100 text-blue-800"
+                                className="bg-primary/10 text-primary"
                               >
                                 Nouveau
                               </Badge>

@@ -248,7 +248,7 @@ const PerformanceMetrics: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Requêtes/sec</CardTitle>
-            <Activity className="h-4 w-4 text-blue-600" />
+            <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.requests.perSecond.toFixed(1)}</div>
@@ -274,7 +274,7 @@ const PerformanceMetrics: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Utilisation Mémoire</CardTitle>
-            <Gauge className="h-4 w-4 text-orange-600" />
+            <Gauge className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.memory.percentage.toFixed(0)}%</div>
@@ -291,7 +291,7 @@ const PerformanceMetrics: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Taux d'Erreur</CardTitle>
-            <TrendingUp className="h-4 w-4 text-red-600" />
+            <TrendingUp className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${getPerformanceColor(data.errors.rate, 'ERROR_RATE_PCT')}`}>
@@ -367,7 +367,7 @@ const PerformanceMetrics: React.FC = () => {
           <CardContent>
             <div className="space-y-2">
               {data.errors.recent.map((error, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-red-50 rounded">
+                <div key={index} className="flex items-center justify-between p-2 bg-destructive/10 rounded">
                   <div className="flex-1">
                     <div className="text-sm font-medium">
                       Status {error.status} - {error.url}

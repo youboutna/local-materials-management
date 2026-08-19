@@ -411,7 +411,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </>
           ) : workflowState?.isDirty ? (
             <>
-              <CircleDashed className="h-3 w-3 text-amber-500" />
+              <CircleDashed className="h-3 w-3 text-warning" />
               Modifications non sauvegardées
             </>
           ) : lastSavedLabel ? (

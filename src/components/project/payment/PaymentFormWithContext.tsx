@@ -228,11 +228,11 @@ export function PaymentFormWithContext({
                     </div>
                     <div className="p-2 bg-background rounded">
                       <span className="text-muted-foreground block text-xs">Déjà payé</span>
-                      <span className="font-semibold text-red-600">{context.financialSummary.totalPaid.toLocaleString()} MRU</span>
+                      <span className="font-semibold text-destructive">{context.financialSummary.totalPaid.toLocaleString()} MRU</span>
                     </div>
                     <div className="p-2 bg-background rounded">
                       <span className="text-muted-foreground block text-xs">Progression</span>
-                      <span className="font-semibold text-blue-600">{context.project.progress}%</span>
+                      <span className="font-semibold text-primary">{context.project.progress}%</span>
                     </div>
                     <div className="p-2 bg-success-soft rounded border border-success/30">
                       <span className="text-success block text-xs">Maximum autorisé</span>

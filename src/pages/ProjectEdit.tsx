@@ -358,10 +358,10 @@ const ProjectEdit = () => {
 
         {/* Warning: Missing steps */}
         {currentStep === WORKFLOW_STEPS.length && !isSubmitting && !isComplete && (
-          <Alert className="mb-4 border-yellow-200 bg-yellow-50">
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle className="text-yellow-800">Validation finale</AlertTitle>
-            <AlertDescription className="text-yellow-700">
+          <Alert className="mb-4 border-warning/30 bg-warning/10">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <AlertTitle className="text-warning">Validation finale</AlertTitle>
+            <AlertDescription className="text-warning">
               {completedSteps.length < WORKFLOW_STEPS.filter(s => s.required).length ? (
                 `Veuillez compléter toutes les étapes requises avant de valider le projet.`
               ) : (

@@ -44,19 +44,19 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   const getDepartmentBadgeColor = (department: string | null | undefined) => {
     switch (department?.toLowerCase()) {
       case 'engineering':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       case 'management':
         return 'bg-purple-100 text-purple-800';
       case 'quality':
         return 'bg-success-soft text-success';
       case 'hse':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-warning/10 text-warning';
       case 'finance':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/10 text-warning';
       case 'administration':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -64,7 +64,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
     <div className="space-y-2">
       {label && (
         <Label>
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
       

@@ -238,12 +238,12 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   // Get status badge color
   const getStatusBadge = (status: string) => {
     const colors = {
-      draft: 'bg-gray-100 text-gray-800',
+      draft: 'bg-muted text-foreground',
       published: 'bg-success-soft text-success',
-      closed: 'bg-red-100 text-red-800',
-      awarded: 'bg-blue-100 text-blue-800'
+      closed: 'bg-destructive/10 text-destructive',
+      awarded: 'bg-primary/10 text-primary'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[status as keyof typeof colors] || 'bg-muted text-foreground';
   };
 
   const isLoading = tendersLoading || projectsLoading;

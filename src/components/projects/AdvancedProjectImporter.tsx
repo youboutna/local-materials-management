@@ -573,11 +573,11 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               </AlertDescription>
             </Alert>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="bg-primary/10 dark:bg-blue-950/30 border border-primary/30 dark:border-blue-800 rounded-lg p-4">
               <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                 QField/QGIS - Données terrain
               </h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+              <p className="text-sm text-primary dark:text-blue-200">
                 Importez vos relevés terrain depuis QField. Les coordonnées GPS sont automatiquement extraites de la géométrie.
               </p>
             </div>
@@ -652,9 +652,9 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
           </p>
         </div>
 
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="border-2 border-dashed border-border rounded-lg p-6">
           <div className="text-center">
-            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
             <div className="mt-4">
               <label htmlFor="advanced-file-upload" className="cursor-pointer">
                 <span className="mt-2 block text-sm font-medium">
@@ -675,18 +675,18 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         </div>
 
         {selectedFile && (
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-muted dark:bg-gray-900 rounded-lg">
             <div className="flex items-center gap-3">
               {selectedFile.name.endsWith('.geojson') || selectedFile.name.endsWith('.kml') ? (
-                <Map className="h-5 w-5 text-blue-600" />
+                <Map className="h-5 w-5 text-primary" />
               ) : selectedFile.name.endsWith('.xml') ? (
                 <Calendar className="h-5 w-5 text-success" />
               ) : (
-                <FileText className="h-5 w-5 text-gray-600" />
+                <FileText className="h-5 w-5 text-muted-foreground" />
               )}
               <div>
                 <p className="text-sm font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={clearSelection}>
@@ -706,13 +706,13 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         )}
 
         {importResult && (
-          <Alert className={importResult.success ? 'border-success/30 bg-success-soft' : 'border-red-200 bg-red-50'}>
+          <Alert className={importResult.success ? 'border-success/30 bg-success-soft' : 'border-destructive/30 bg-destructive/10'}>
             {importResult.success ? (
               <CheckCircle className="h-4 w-4 text-success" />
             ) : (
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertTriangle className="h-4 w-4 text-destructive" />
             )}
-            <AlertDescription className={importResult.success ? 'text-success' : 'text-red-800'}>
+            <AlertDescription className={importResult.success ? 'text-success' : 'text-destructive'}>
               {importResult.message}
               {importResult.errors && importResult.errors.length > 0 && (
                 <details className="mt-2">

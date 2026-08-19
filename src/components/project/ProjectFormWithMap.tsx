@@ -429,7 +429,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                             <div className="flex flex-col">
                               <span className="font-medium">{employee.fullName}</span>
                               {(employee.position || employee.department) && (
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-muted-foreground">
                                   {employee.position && employee.department 
                                     ? `${employee.position} - ${employee.department}`
                                     : employee.position || employee.department
@@ -442,7 +442,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Sélectionnez l'employé responsable de ce projet
                   </p>
                 </div>
@@ -454,14 +454,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     onChange={handleContractorChange}
                     allowCustom={true}
                   />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Sélectionnez un fournisseur existant ou saisissez un contractant personnalisé
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Consultant Ingénierie</h3>
+                <h3 className="text-lg font-semibold text-foreground">Consultant Ingénierie</h3>
                 <div className="space-y-2">
                   <Label>Bureau d'études / Consultant</Label>
                   <SupplierSelector
@@ -469,7 +469,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     onChange={handleEngineeringConsultantChange}
                     allowCustom={true}
                   />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Bureau d'études ou consultant technique pour le projet.
                   </p>
                 </div>
@@ -570,7 +570,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
               
               {formData.allowsInitialPayment && (
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="space-y-4 p-4 bg-primary/10 rounded-lg border border-primary/30">
                   <div>
                     <Label htmlFor="initialPaymentPercentage">Pourcentage de paiement initial autorisé (%)</Label>
                     <Input
@@ -582,13 +582,13 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                       onChange={(e) => handleChange('initialPaymentPercentage', parseFloat(e.target.value) || 0)}
                       className="mt-2"
                     />
-                    <p className="text-sm text-blue-600 mt-2">
+                    <p className="text-sm text-primary mt-2">
                       Ce pourcentage permet un paiement anticipé selon les termes du contrat (maximum 30%)
                     </p>
                   </div>
                   
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-sm text-amber-800">
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
+                    <p className="text-sm text-warning">
                       <strong>Note :</strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement. 
                       Cette option facilite le démarrage des projets nécessitant des investissements initiaux importants.
                     </p>
@@ -651,18 +651,18 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 )}
                 
                 {facilitiesMapData.warehouseShape && facilitiesMapData.warehouseShape.length > 0 && (
-                  <div className="bg-blue-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-blue-800">Zone d'entrepôt tracée:</p>
-                    <p className="text-sm text-blue-700">
+                  <div className="bg-primary/10 p-3 rounded-md">
+                    <p className="text-sm font-medium text-primary">Zone d'entrepôt tracée:</p>
+                    <p className="text-sm text-primary">
                       Type: {facilitiesMapData.shapeType || 'polygone'} - {facilitiesMapData.warehouseShape.length} points
                     </p>
                   </div>
                 )}
                 
                 {facilitiesMapData.address && (
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-gray-800">Adresse:</p>
-                    <p className="text-sm text-gray-700">{facilitiesMapData.address}</p>
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="text-sm font-medium text-foreground">Adresse:</p>
+                    <p className="text-sm text-foreground">{facilitiesMapData.address}</p>
                   </div>
                 )}
 

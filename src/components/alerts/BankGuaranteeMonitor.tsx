@@ -394,9 +394,9 @@ const BankGuaranteeMonitor: React.FC = () => {
     <div className="space-y-4">
       {/* Alert Stats Summary */}
       {bankGuaranteeAlerts.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-destructive/30 bg-destructive/10">
           <CardHeader>
-            <CardTitle className="text-red-800 flex items-center gap-2 text-lg">
+            <CardTitle className="text-destructive flex items-center gap-2 text-lg">
               <Bell className="h-5 w-5" />
               {t('bank_guarantee.alerts_title')}
               <Badge variant="destructive">{bankGuaranteeAlerts.length}</Badge>
@@ -408,17 +408,17 @@ const BankGuaranteeMonitor: React.FC = () => {
                 <div 
                   key={alert.id} 
                   className={`p-3 bg-white border rounded-lg flex items-center justify-between ${
-                    alert.severity === 'critical' ? 'border-red-300' :
-                    alert.severity === 'high' ? 'border-orange-300' :
-                    'border-yellow-300'
+                    alert.severity === 'critical' ? 'border-destructive/30' :
+                    alert.severity === 'high' ? 'border-warning/30' :
+                    'border-warning/30'
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className={`h-4 w-4 ${
-                        alert.severity === 'critical' ? 'text-red-500' :
-                        alert.severity === 'high' ? 'text-orange-500' :
-                        'text-yellow-500'
+                        alert.severity === 'critical' ? 'text-destructive' :
+                        alert.severity === 'high' ? 'text-warning' :
+                        'text-warning'
                       }`} />
                       <p className="font-medium text-sm">{alert.title || alert.message}</p>
                     </div>
@@ -429,9 +429,9 @@ const BankGuaranteeMonitor: React.FC = () => {
                       <Badge 
                         variant="outline" 
                         className={`text-xs ${
-                          alert.severity === 'critical' ? 'text-red-600 border-red-200' :
-                          alert.severity === 'high' ? 'text-orange-600 border-orange-200' :
-                          'text-yellow-600 border-yellow-200'
+                          alert.severity === 'critical' ? 'text-destructive border-destructive/30' :
+                          alert.severity === 'high' ? 'text-warning border-warning/30' :
+                          'text-warning border-warning/30'
                         }`}
                       >
                         {alert.severity}
@@ -477,7 +477,7 @@ const BankGuaranteeMonitor: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertTriangle className="h-5 w-5 text-warning" />
             {t('bank_guarantee.title')}
           </CardTitle>
         </CardHeader>
@@ -612,25 +612,25 @@ const BankGuaranteeMonitor: React.FC = () => {
         <CollapsibleContent>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-            <div className="p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
+            <div className="p-2 bg-warning/10 rounded border-l-4 border-yellow-400">
               <div className="font-medium">{t('bank_guarantee.severity_labels.delay_alert')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.WARNING}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
-            <div className="p-2 bg-orange-50 rounded border-l-4 border-orange-400">
+            <div className="p-2 bg-warning/10 rounded border-l-4 border-orange-400">
               <div className="font-medium">{t('bank_guarantee.severity_labels.bank_notification')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.BANK_NOTIFICATION}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
-            <div className="p-2 bg-red-50 rounded border-l-4 border-red-400">
+            <div className="p-2 bg-destructive/10 rounded border-l-4 border-red-400">
               <div className="font-medium">{t('bank_guarantee.severity_labels.guarantee_trigger')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.GUARANTEE_TRIGGER}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
-            <div className="p-2 bg-gray-50 rounded border-l-4 border-gray-400">
+            <div className="p-2 bg-muted rounded border-l-4 border-gray-400">
               <div className="font-medium">{t('bank_guarantee.escalation.legal')}</div>
               <div className="text-muted-foreground">
                 ≥ {DELAY_THRESHOLDS.LEGAL_ESCALATION}% {t('bank_guarantee.delay_percentage_suffix')}

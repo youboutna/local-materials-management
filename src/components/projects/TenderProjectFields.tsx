@@ -54,7 +54,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
               Date de lancement de l'appel d'offres
             </Label>
             {readOnly ? (
-              <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+              <div className="p-2 border border-border rounded-md bg-muted">
                 {formatDateForDisplay(formData.launchDate) || 'Non spécifiée'}
               </div>
             ) : (
@@ -65,7 +65,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 onChange={(e) => onChange('launchDate', e.target.value)}
               />
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Date de publication de l'appel d'offres
             </p>
           </div>
@@ -76,7 +76,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
               Date d'attribution du marché
             </Label>
             {readOnly ? (
-              <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+              <div className="p-2 border border-border rounded-md bg-muted">
                 {formatDateForDisplay(formData.attributionDate) || 'Non spécifiée'}
               </div>
             ) : (
@@ -87,7 +87,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 onChange={(e) => onChange('attributionDate', e.target.value)}
               />
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Date d'attribution officielle du contrat
             </p>
           </div>
@@ -98,7 +98,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
           <div className="space-y-2">
             <Label htmlFor="marketType">Type de marché</Label>
             {readOnly ? (
-              <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+              <div className="p-2 border border-border rounded-md bg-muted">
                 {formData.marketType || 'Non spécifié'}
               </div>
             ) : (
@@ -127,7 +127,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
           <div className="space-y-2">
             <Label htmlFor="selectionMode">Mode de sélection</Label>
             {readOnly ? (
-              <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+              <div className="p-2 border border-border rounded-md bg-muted">
                 {formData.selectionMode || 'Non spécifié'}
               </div>
             ) : (
@@ -161,7 +161,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
             Source de financement
           </Label>
           {readOnly ? (
-            <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+            <div className="p-2 border border-border rounded-md bg-muted">
               {formData.financingSource || 'Non spécifiée'}
             </div>
           ) : (
@@ -193,7 +193,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
         <div className="space-y-2">
           <Label htmlFor="projectReference">Référence du projet/contrat</Label>
           {readOnly ? (
-            <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+            <div className="p-2 border border-border rounded-md bg-muted">
               {formData.projectReference || 'Non spécifiée'}
             </div>
           ) : (
@@ -204,16 +204,16 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
               placeholder="Ex: PRJ-2024-001, CONT-MR-2024-INF-001"
             />
           )}
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Référence officielle du projet ou du contrat
           </p>
         </div>
 
         {/* Timeline Summary */}
         {(formData.launchDate || formData.attributionDate) && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Chronologie de l'appel d'offres</h4>
-            <div className="space-y-1 text-sm text-blue-800">
+            <div className="space-y-1 text-sm text-primary">
               {formData.launchDate && (
                 <div className="flex justify-between">
                   <span>Lancement de l'appel d'offres:</span>
@@ -227,7 +227,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 </div>
               )}
               {formData.launchDate && formData.attributionDate && (
-                <div className="flex justify-between border-t border-blue-300 pt-1 mt-2">
+                <div className="flex justify-between border-t border-primary/30 pt-1 mt-2">
                   <span>Durée de la procédure:</span>
                   <span className="font-medium">
                     {Math.ceil((new Date(formData.attributionDate).getTime() - new Date(formData.launchDate).getTime()) / (1000 * 60 * 60 * 24))} jours

@@ -211,7 +211,7 @@ const ProjectImporter2025 = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Cette action importera {projects2025.length} projets planifiés pour l'année 2025.
               </p>
               <Button
@@ -225,7 +225,7 @@ const ProjectImporter2025 = () => {
             {(isImporting || importProgress > 0) && (
               <div className="space-y-2">
                 <Progress value={importProgress} className="w-full" />
-                <p className="text-sm text-center text-gray-500">
+                <p className="text-sm text-center text-muted-foreground">
                   {Math.round(importProgress)}% complété
                 </p>
               </div>
@@ -257,7 +257,7 @@ const ProjectImporter2025 = () => {
         <CardContent>
           <div className="space-y-4">
             {projects2025.map((project, index) => (
-              <Card key={index} className="p-4 bg-gray-50">
+              <Card key={index} className="p-4 bg-muted">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
@@ -265,7 +265,7 @@ const ProjectImporter2025 = () => {
                       <h3 className="font-medium text-sm">{project.title}</h3>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <MapPin className="h-3 w-3" />
                         <span>{project.location}</span>

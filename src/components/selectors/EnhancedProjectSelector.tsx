@@ -84,18 +84,18 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         return { color: 'bg-success-soft text-success border-success/30', label: 'Terminé' };
       case 'inprogress':
       case 'en cours':
-        return { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'En cours' };
+        return { color: 'bg-primary/10 text-primary border-primary/30', label: 'En cours' };
       case 'planning':
       case 'planification':
-        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Planification' };
+        return { color: 'bg-warning/10 text-warning border-warning/30', label: 'Planification' };
       case 'onhold':
       case 'en attente':
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'En attente' };
+        return { color: 'bg-muted text-foreground border-border', label: 'En attente' };
       case 'cancelled':
       case 'annulé':
-        return { color: 'bg-red-100 text-red-800 border-red-200', label: 'Annulé' };
+        return { color: 'bg-destructive/10 text-destructive border-destructive/30', label: 'Annulé' };
       default:
-        return { color: 'bg-gray-100 text-gray-800 border-gray-200', label: status || 'Non spécifié' };
+        return { color: 'bg-muted text-foreground border-border', label: status || 'Non spécifié' };
     }
   };
 
@@ -132,7 +132,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">
-            {label} {required && <span className="text-red-500">*</span>}
+            {label} {required && <span className="text-destructive">*</span>}
           </Label>
           {value && (
             <Button
@@ -161,7 +161,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
 
         {/* Messages d'erreur/loading */}
         {projectsError && (
-          <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+          <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
             Erreur lors du chargement des projets
           </div>
         )}
@@ -242,7 +242,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         </Select>
 
         {error && (
-          <p className="text-sm text-red-500">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         )}
         {helpText && !error && (
           <p className="text-sm text-muted-foreground">{helpText}</p>

@@ -322,7 +322,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("projects.search")}
                 value={searchTerm}
@@ -351,13 +351,13 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
       {filteredDocuments.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               {documents.length === 0
                 ? t("documents.tabs.documents")
                 : t("documents.tabs.documents")}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {documents.length === 0
                 ? t("documents.tender.add_description")
                 : t("projects.empty")}
@@ -389,11 +389,11 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                       <div className="flex items-start gap-3 flex-1">
                         <IconComponent className="h-6 w-6 text-adrar-600 mt-1" />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate">
+                          <h3 className="font-medium text-foreground truncate">
                             {doc.file_name || t("documents.tabs.documents")}
                           </h3>
                           {doc.description && (
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                               {doc.description}
                             </p>
                           )}
@@ -403,7 +403,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -416,7 +416,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                       <Badge variant="outline">{doc.status}</Badge>
                     </div>
 
-                    <div className="space-y-1 text-xs text-gray-500">
+                    <div className="space-y-1 text-xs text-muted-foreground">
                       {doc.file_name && (
                         <div className="flex justify-between">
                           <span>{t("documents.tabs.documents")}:</span>

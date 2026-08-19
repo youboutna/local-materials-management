@@ -193,7 +193,7 @@ const NotificationsCenterPage = () => {
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
                     <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
-                  <Bell className="h-8 w-8 text-blue-500" />
+                  <Bell className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -203,9 +203,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Non lues</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.unread}</p>
+                    <p className="text-2xl font-bold text-warning">{stats.unread}</p>
                   </div>
-                  <EyeOff className="h-8 w-8 text-orange-500" />
+                  <EyeOff className="h-8 w-8 text-warning" />
                 </div>
               </CardContent>
             </Card>
@@ -215,9 +215,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Urgentes</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.urgent}</p>
+                    <p className="text-2xl font-bold text-destructive">{stats.urgent}</p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
                 </div>
               </CardContent>
             </Card>
@@ -263,9 +263,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Tâches</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.tasks}</p>
+                    <p className="text-2xl font-bold text-primary">{stats.tasks}</p>
                   </div>
-                  <CheckSquare className="h-8 w-8 text-blue-500" />
+                  <CheckSquare className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -287,9 +287,9 @@ const NotificationsCenterPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Système</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.system}</p>
+                    <p className="text-2xl font-bold text-warning">{stats.system}</p>
                   </div>
-                  <Settings className="h-8 w-8 text-yellow-500" />
+                  <Settings className="h-8 w-8 text-warning" />
                 </div>
               </CardContent>
             </Card>
@@ -423,7 +423,7 @@ const NotificationsCenterPage = () => {
                                         href={d.file_url || d.fileUrl || d.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="text-xs text-blue-600 hover:underline block"
+                                        className="text-xs text-primary hover:underline block"
                                       >
                                         {d.file_name || d.name || `Document ${i + 1}`}
                                       </a>
@@ -514,7 +514,7 @@ const NotificationsCenterPage = () => {
                                           href={d.file_url || d.fileUrl || d.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-xs text-blue-600 hover:underline block"
+                                          className="text-xs text-primary hover:underline block"
                                         >
                                           {d.file_name || d.name || `Document ${i + 1}`}
                                         </a>
@@ -628,7 +628,7 @@ const NotificationsCenterPage = () => {
                                           href={d.file_url || d.fileUrl || d.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-xs text-blue-600 hover:underline block"
+                                          className="text-xs text-primary hover:underline block"
                                         >
                                           {d.file_name || d.name || `Document ${i + 1}`}
                                         </a>
@@ -735,7 +735,7 @@ const NotificationsCenterPage = () => {
                                           href={d.file_url || d.fileUrl || d.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-xs text-blue-600 hover:underline block"
+                                          className="text-xs text-primary hover:underline block"
                                         >
                                           {d.file_name || d.name || `Document ${i + 1}`}
                                         </a>
@@ -751,7 +751,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 {notification.metadata?.due_date && (
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline" className="text-orange-600">
+                                    <Badge variant="outline" className="text-warning">
                                       Échéance: {new Date(notification.metadata.due_date).toLocaleDateString('fr-FR')}
                                     </Badge>
                                   </div>
@@ -839,7 +839,7 @@ const NotificationsCenterPage = () => {
                                     <Badge variant="destructive">Rejeté</Badge>
                                   )}
                                   {notification.type.includes('shared') && (
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-600">Partagé</Badge>
+                                    <Badge variant="outline" className="bg-primary/10 text-primary">Partagé</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -857,7 +857,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 {notification.metadata?.shared_with && (
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline" className="text-blue-600">
+                                    <Badge variant="outline" className="text-primary">
                                       Partagé avec: {notification.metadata.shared_with.join(', ')}
                                     </Badge>
                                   </div>

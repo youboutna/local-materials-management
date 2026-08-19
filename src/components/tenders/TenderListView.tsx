@@ -38,13 +38,13 @@ interface Props {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-800',
+  draft: 'bg-muted text-foreground',
   published: 'bg-success-soft text-success',
   open: 'bg-success-soft text-success',
-  under_evaluation: 'bg-amber-100 text-amber-800',
-  awarded: 'bg-blue-100 text-blue-800',
+  under_evaluation: 'bg-warning/10 text-warning',
+  awarded: 'bg-primary/10 text-primary',
   contracted: 'bg-indigo-100 text-indigo-800',
-  closed: 'bg-red-100 text-red-800',
+  closed: 'bg-destructive/10 text-destructive',
   cancelled: 'bg-neutral-200 text-neutral-700',
 };
 

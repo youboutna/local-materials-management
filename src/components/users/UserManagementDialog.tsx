@@ -246,7 +246,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               disabled={mode === 'edit'} // Disable email editing for now
             />
             {mode === 'edit' && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 La modification de l'email nécessite des privilèges avancés
               </p>
             )}
@@ -303,7 +303,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                     minLength={6}
                     disabled // Disable password editing for now
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     La modification du mot de passe nécessite des privilèges avancés
                   </p>
                 </div>
@@ -315,13 +315,13 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                   <div className="flex flex-wrap gap-2 mt-2">
                     {user && user.roles && user.roles.length > 0 ? (
                       user.roles.map(role => (
-                        <div key={role} className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                        <div key={role} className="flex items-center gap-2 bg-muted rounded-lg p-2">
                           <RoleBadge role={role as RoleType} />
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRoleRemove(role)}
-                            className="h-6 w-6 p-0 hover:bg-red-100"
+                            className="h-6 w-6 p-0 hover:bg-destructive/10"
                             title="Supprimer"
                           >
                             ×
@@ -329,7 +329,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                         </div>
                       ))
                     ) : (
-                      <span className="text-sm text-gray-500">{t('users.none_found') || 'Aucun rôle trouvé'}</span>
+                      <span className="text-sm text-muted-foreground">{t('users.none_found') || 'Aucun rôle trouvé'}</span>
                     )}
                   </div>
                 </div>
@@ -372,7 +372,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             <Label htmlFor="is_active" className="font-medium">
               {t('users.active') || 'Actif'}
             </Label>
-            <span className="text-sm text-gray-500 ml-2">
+            <span className="text-sm text-muted-foreground ml-2">
               {formData.is_active ? t('users.active') || 'Actif' : t('users.inactive') || 'Inactif'}
             </span>
           </div>
@@ -380,7 +380,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           {/* Admin Password Reset Section */}
           {mode === 'edit' && (
             <div className="space-y-4 pt-4 border-t">
-              <h4 className="text-sm font-medium text-gray-700">Réinitialisation du mot de passe</h4>
+              <h4 className="text-sm font-medium text-foreground">Réinitialisation du mot de passe</h4>
               <div className="space-y-2">
                 <Label htmlFor="newPassword">Nouveau mot de passe (optionnel)</Label>
                 <Input

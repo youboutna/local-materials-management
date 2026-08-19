@@ -75,12 +75,12 @@ const NotificationCrud: React.FC = () => {
   });
 
   const notificationTypes = [
-    { value: 'info', label: 'Information', color: 'bg-blue-100 text-blue-800', icon: Info },
-    { value: 'warning', label: 'Avertissement', color: 'bg-yellow-100 text-yellow-800', icon: AlertTriangle },
-    { value: 'error', label: 'Erreur', color: 'bg-red-100 text-red-800', icon: AlertTriangle },
+    { value: 'info', label: 'Information', color: 'bg-primary/10 text-primary', icon: Info },
+    { value: 'warning', label: 'Avertissement', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    { value: 'error', label: 'Erreur', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
     { value: 'success', label: 'Succès', color: 'bg-success-soft text-success', icon: CheckCircle },
     { value: 'project_update', label: 'Mise à jour projet', color: 'bg-purple-100 text-purple-800', icon: Bell },
-    { value: 'compliance_alert', label: 'Alerte conformité', color: 'bg-orange-100 text-orange-800', icon: AlertTriangle },
+    { value: 'compliance_alert', label: 'Alerte conformité', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
     { value: 'payment_reminder', label: 'Rappel paiement', color: 'bg-indigo-100 text-indigo-800', icon: Bell }
   ];
 
@@ -383,7 +383,7 @@ const NotificationCrud: React.FC = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => markAsRead(notification.id)}
-                            className="text-blue-600 hover:text-blue-700"
+                            className="text-primary hover:text-primary"
                           >
                             <CheckCircle className="h-4 w-4" />
                           </Button>
@@ -406,7 +406,7 @@ const NotificationCrud: React.FC = () => {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDelete(notification.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -417,7 +417,7 @@ const NotificationCrud: React.FC = () => {
               })}
               {notifications.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Aucune notification trouvée
                   </TableCell>
                 </TableRow>

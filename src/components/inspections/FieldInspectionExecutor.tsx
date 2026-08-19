@@ -536,7 +536,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                 <ScrollArea className="h-[250px]">
                   <div className="space-y-2">
                     {executionData.observations?.map((obs) => (
-                      <div key={obs.id} className={`p-3 rounded-lg border ${obs.conformity === 'conforme' ? 'bg-success-soft border-success/30' : obs.conformity === 'non_conforme' ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                      <div key={obs.id} className={`p-3 rounded-lg border ${obs.conformity === 'conforme' ? 'bg-success-soft border-success/30' : obs.conformity === 'non_conforme' ? 'bg-destructive/10 border-destructive/30' : 'bg-warning/10 border-warning/30'}`}>
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2">
@@ -605,7 +605,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-2">
                     {executionData.measurements?.map((m) => (
-                      <div key={m.id} className={`flex items-center justify-between p-3 rounded-lg border ${m.isWithinRange ? 'bg-success-soft' : 'bg-red-50'}`}>
+                      <div key={m.id} className={`flex items-center justify-between p-3 rounded-lg border ${m.isWithinRange ? 'bg-success-soft' : 'bg-destructive/10'}`}>
                         <div><p className="font-medium">{m.parameter}</p><p className="text-sm text-muted-foreground">{m.value} {m.unit}</p></div>
                         <Badge variant={m.isWithinRange ? 'default' : 'destructive'}>{m.isWithinRange ? 'OK' : 'Hors norme'}</Badge>
                       </div>

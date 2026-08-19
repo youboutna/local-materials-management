@@ -180,9 +180,9 @@ jobs:
       </TabsList>
       
       <TabsContent value="development" className="space-y-6">
-        <Alert className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-700">
+        <Alert className="bg-warning/10 border-warning/30">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-warning">
             Configuration pour l'environnement de développement uniquement. Utilisez Docker Compose pour une mise en place rapide.
           </AlertDescription>
         </Alert>
@@ -260,9 +260,9 @@ jobs:
       </TabsContent>
       
       <TabsContent value="production" className="space-y-6">
-        <Alert className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-700">
+        <Alert className="bg-warning/10 border-warning/30">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-warning">
             Configuration pour l'environnement de production. Utiliser avec précaution sur des serveurs dédiés.
           </AlertDescription>
         </Alert>

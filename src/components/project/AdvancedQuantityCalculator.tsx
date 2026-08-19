@@ -995,15 +995,15 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted">
                   <tr>{/* No whitespace here */}
-                    <th className=" border border-gray-200 px-1 py-1 ">#</th>
-                    <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
+                    <th className=" border border-border px-1 py-1 ">#</th>
+                    <th className="border border-border px-1 py-1 uppercase">Élément</th>
                     <th className="border border-gray- px-1 py-1 uppercase">Dimensions</th>
         
-                    <th className="border border-gray-300 px-2 py-1 uppercase">Détail des ressources</th>
-                    <th className="border border-gray-300 px-2 py-1 uppercase">Actions</th>
-                    <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
+                    <th className="border border-border px-2 py-1 uppercase">Détail des ressources</th>
+                    <th className="border border-border px-2 py-1 uppercase">Actions</th>
+                    <th className="border border-border px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -1011,15 +1011,15 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                   const i = pageStart + localIdx;
                   return (
                     <tr key={i}>{/* No whitespace here */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{i + 1}</td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                         {getElementLabel(calc.elementType || 'basic_calculator')
                        }
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {isImported(calc) && !calc.dimensions ? (
-                          <span className="text-xs text-gray-400">—</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         ) : (
                           <>
                             {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
@@ -1028,14 +1028,14 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </>
                         )}
                         {calc.openings && calc.openings.length > 0 && (
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-muted-foreground mt-1">
                             Ouvertures: {calc.openings.map(o =>
                               `${o.length.toFixed(2)}×${o.width.toFixed(2)}${o.height ? `×${o.height.toFixed(2)}` : ''}`
                             ).join(', ')}
                           </div>
                         )}
                       </td>
-                       <td className="px-3 py-2 text-sm text-gray-600 min-w-[280px]">
+                       <td className="px-3 py-2 text-sm text-muted-foreground min-w-[280px]">
                         {isImported(calc) ? (
                           <div className="space-y-2">
                             <Input
@@ -1084,13 +1084,13 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                         )}
                         {getRecommendations(calc.elementType || 'basic_calculator') && !isImported(calc) && (
-                          <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                          <div className="mt-2 p-2 bg-primary/10 rounded text-xs">
                             <div className="font-medium">Recommandations:</div>
                             {getRecommendations(calc.elementType || 'basic_calculator')}
                           </div>
                         )}
                       </td>
-                 <td className="border border-gray-300 px-2 py-1 text-center">
+                 <td className="border border-border px-2 py-1 text-center">
                       {editIndex === i && isImported(calc) ? (
                         <div className="space-y-2 text-left">
                           <div>
@@ -1307,7 +1307,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                         </div>
                       )}
                     </td>
-                    <td className="border border-gray-300 px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
+                    <td className="border border-border px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
                      
                   </tr>
                   );

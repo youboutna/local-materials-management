@@ -477,8 +477,8 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 onClick={handleTriggerInspection}
                 disabled={hasApprovedInspectionWithProgress()}
               >
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <ClipboardCheck className="h-4 w-4 text-orange-600" />
+                <div className="p-2 bg-warning/10 rounded-lg">
+                  <ClipboardCheck className="h-4 w-4 text-warning" />
                 </div>
                 <div className="text-left flex-1">
                   <p className="font-medium">Déclencher une inspection</p>

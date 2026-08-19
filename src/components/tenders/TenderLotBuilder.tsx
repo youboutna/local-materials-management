@@ -506,8 +506,8 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                 </>
               ) : (
                 <>
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <span className="text-amber-600">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  <span className="text-warning">
                     {lots.filter(l => !l.title || !l.estimatedAmount).length} lot(s) incomplet(s)
                   </span>
                 </>

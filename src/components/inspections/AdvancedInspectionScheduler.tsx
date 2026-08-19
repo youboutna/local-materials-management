@@ -446,7 +446,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium">{inspector.full_name}</span>
                                   {isEngConsultant && (
-                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
                                       Consultant
                                     </span>
                                   )}
@@ -461,12 +461,12 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                     </span>
                                   )}
                                   {isResponsable && !isSupplier && (
-                                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                    <span className="text-xs bg-warning/10 text-warning px-2 py-1 rounded">
                                       Responsable
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-sm text-gray-500 space-y-1">
+                                <div className="text-sm text-muted-foreground space-y-1">
                                   {inspector.position && (
                                     <div>📋 {inspector.position}</div>
                                   )}
@@ -567,7 +567,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                 id="notifyContractor"
                 checked={notifyContractor}
                 onChange={(e) => setNotifyContractor(e.target.checked)}
-                className="rounded border-gray-300"
+                className="rounded border-border"
               />
               <Label htmlFor="notifyContractor" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />

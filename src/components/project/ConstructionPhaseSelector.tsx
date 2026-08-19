@@ -54,7 +54,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
   return (
     <Card className="border-l-4 border-l-blue-600">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardTitle className="flex items-center gap-2 text-blue-800">
+        <CardTitle className="flex items-center gap-2 text-primary">
           <Calendar className="h-5 w-5" />
           Phases de construction
         </CardTitle>
@@ -62,8 +62,8 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
       <CardContent className="space-y-6 pt-6">
         {/* Construction Timeline Preview */}
         {currentPhase && (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Séquence de construction</h4>
+          <div className="bg-muted rounded-lg p-4 space-y-3">
+            <h4 className="text-sm font-medium text-foreground mb-3">Séquence de construction</h4>
             <div className="space-y-2">
               {CONSTRUCTION_PHASES.map((phase, index) => {
                 const isCompleted = CONSTRUCTION_PHASES.findIndex(p => p.value === currentPhase) > index;
@@ -77,23 +77,23 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                         <CheckCircle className="h-5 w-5 text-success" />
                       )}
                       {isCurrent && (
-                        <Clock className="h-5 w-5 text-blue-500" />
+                        <Clock className="h-5 w-5 text-primary" />
                       )}
                       {isPending && (
-                        <AlertTriangle className="h-5 w-5 text-gray-400" />
+                        <AlertTriangle className="h-5 w-5 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`text-sm font-medium ${
                           isCompleted ? 'text-success' : 
-                          isCurrent ? 'text-blue-700' : 
-                          'text-gray-500'
+                          isCurrent ? 'text-primary' : 
+                          'text-muted-foreground'
                         }`}>
                           {phase.label}
                         </span>
                         {isCurrent && (
-                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
                             En cours
                           </Badge>
                         )}
@@ -103,7 +103,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">{phase.description}</p>
+                      <p className="text-xs text-muted-foreground">{phase.description}</p>
                     </div>
                   </div>
                 );

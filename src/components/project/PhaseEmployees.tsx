@@ -426,12 +426,12 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
             )}
 
             {primarySupplier && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Star className="h-4 w-4 text-yellow-600" />
-                  <span className="font-medium text-yellow-800">Fournisseur principal</span>
+                  <Star className="h-4 w-4 text-warning" />
+                  <span className="font-medium text-warning">Fournisseur principal</span>
                 </div>
-                <p className="text-sm text-yellow-700">
+                <p className="text-sm text-warning">
                   {primarySupplier.employee_name} - {primarySupplier.employee_role}
                 </p>
               </div>
@@ -444,7 +444,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">{employee.employee_name}</h3>
                       {employee.is_primary_supplier && (
-                        <Star className="h-4 w-4 text-yellow-500" />
+                        <Star className="h-4 w-4 text-warning" />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{employee.employee_role}</p>

@@ -54,7 +54,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO
                 {format(new Date(project.inspections[0].date), 'dd/MM/yyyy')} -{' '}
                 <span className={`${
                   project.inspections[0].status === 'approved' ? 'text-success' : 
-                  project.inspections[0].status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
+                  project.inspections[0].status === 'rejected' ? 'text-destructive' : 'text-warning'
                 }`}>
                   {project.inspections[0].status === 'approved' ? 'APPROUVÉE' : 
                    project.inspections[0].status === 'rejected' ? 'REJETÉE' : 

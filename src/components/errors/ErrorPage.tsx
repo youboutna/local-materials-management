@@ -58,7 +58,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
 
       case '503':
         return {
-          icon: <AlertTriangle className="h-16 w-16 text-orange-500" />,
+          icon: <AlertTriangle className="h-16 w-16 text-warning" />,
           title: title || 'Service temporairement indisponible',
           description: description || 'Le service est en maintenance. Veuillez réessayer dans quelques minutes.',
           actions: [
@@ -69,7 +69,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
 
       case 'network':
         return {
-          icon: <AlertTriangle className="h-16 w-16 text-orange-500" />,
+          icon: <AlertTriangle className="h-16 w-16 text-warning" />,
           title: title || 'Problème de connexion',
           description: description || 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.',
           actions: [

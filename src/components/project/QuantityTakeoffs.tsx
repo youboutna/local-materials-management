@@ -236,19 +236,19 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-adrar-600">{takeoffs.length}</p>
-              <p className="text-sm text-gray-600">{t('projects.takeoffs.elements.measured')}</p>
+              <p className="text-sm text-muted-foreground">{t('projects.takeoffs.elements.measured')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-terracotta-600">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
-              <p className="text-sm text-gray-600">{t('projects.takeoffs.total.value')}</p>
+              <p className="text-sm text-muted-foreground">{t('projects.takeoffs.total.value')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-success">
                 {takeoffs.reduce((total, takeoff) => total + takeoff.quantity, 0).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-600">{t('projects.takeoffs.total.quantity')}</p>
+              <p className="text-sm text-muted-foreground">{t('projects.takeoffs.total.quantity')}</p>
             </div>
           </div>
         </CardContent>

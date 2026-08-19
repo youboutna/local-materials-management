@@ -60,27 +60,27 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-600 text-sm line-clamp-3">
+              <p className="text-muted-foreground text-sm line-clamp-3">
                 {project.description}
               </p>
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>{project.location}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
                     {new Date(project.startDate).toLocaleDateString("fr-FR")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" />
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   <span>{project.teamSize} membres</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <span>{project.budget.toLocaleString()} MRO</span>
                 </div>
               </div>

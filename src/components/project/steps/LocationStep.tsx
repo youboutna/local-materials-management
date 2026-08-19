@@ -134,7 +134,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 <input 
                   type="checkbox" 
                   id="hasUtilities"
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                   checked={(formData as unknown as { has_utilities?: boolean }).has_utilities || false}
                   onChange={(e) => onUpdate({ has_utilities: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />
@@ -146,7 +146,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 <input 
                   type="checkbox" 
                   id="requiresPermits"
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                   checked={(formData as unknown as { requires_permits?: boolean }).requires_permits || false}
                   onChange={(e) => onUpdate({ requires_permits: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />

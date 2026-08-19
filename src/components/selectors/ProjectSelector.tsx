@@ -43,11 +43,11 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
   const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
       case 'Completed': return 'bg-success-soft text-success';
-      case 'InProgress': return 'bg-blue-100 text-blue-800';
-      case 'Planning': return 'bg-yellow-100 text-yellow-800';
-      case 'OnHold': return 'bg-gray-100 text-gray-800';
-      case 'Cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'InProgress': return 'bg-primary/10 text-primary';
+      case 'Planning': return 'bg-warning/10 text-warning';
+      case 'OnHold': return 'bg-muted text-foreground';
+      case 'Cancelled': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -58,10 +58,10 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
 
   return (
     <div ref={ref} className="space-y-2">
-      <Label>{label} {required && <span className="text-red-500">*</span>}</Label>
+      <Label>{label} {required && <span className="text-destructive">*</span>}</Label>
       
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher un projet..."
           value={searchTerm}
@@ -90,14 +90,14 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
               <SelectItem key={project.id} value={project.id}>
                 <div className="flex items-center justify-between w-full min-w-0">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Building2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{project.title}</div>
                       {project.project_reference && (
-                        <div className="text-xs text-gray-500 truncate">Réf: {project.project_reference}</div>
+                        <div className="text-xs text-muted-foreground truncate">Réf: {project.project_reference}</div>
                       )}
                       {!secureMode && project.location && (
-                        <div className="text-xs text-gray-500 truncate">{project.location}</div>
+                        <div className="text-xs text-muted-foreground truncate">{project.location}</div>
                       )}
                     </div>
                   </div>
@@ -109,7 +109,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
                         </Badge>
                       )}
                       {project.budget && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {project.budget.toLocaleString()} MRU
                         </span>
                       )}
@@ -123,7 +123,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
       )}
 
       {selectedProject && (
-        <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+        <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
             <span className="font-medium">Projet sélectionné:</span>
             {!secureMode && selectedProject.status && (
@@ -134,13 +134,13 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
           </div>
           <div>{selectedProject.title}</div>
           {selectedProject.project_reference && (
-            <div className="text-gray-600">ðŸ“‹ Réf: {selectedProject.project_reference}</div>
+            <div className="text-muted-foreground">ðŸ“‹ Réf: {selectedProject.project_reference}</div>
           )}
           {!secureMode && selectedProject.location && (
-            <div className="text-gray-600">ðŸ“ {selectedProject.location}</div>
+            <div className="text-muted-foreground">ðŸ“ {selectedProject.location}</div>
           )}
           {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-3 w-3" />
               {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
             </div>

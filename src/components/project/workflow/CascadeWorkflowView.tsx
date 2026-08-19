@@ -210,9 +210,9 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
               {/* Étape */}
               <div className={cn(
                 "flex-1 p-3 rounded-lg border-2 transition-all",
-                step.status === 'active' && "border-blue-300 bg-blue-50/50",
+                step.status === 'active' && "border-primary/30 bg-primary/10/50",
                 step.status === 'completed' && "border-success/30 bg-success-soft/30",
-                step.status === 'blocked' && "border-red-200 bg-red-50/30",
+                step.status === 'blocked' && "border-destructive/30 bg-destructive/10/30",
                 step.status === 'pending' && "border-muted bg-muted/20",
               )}>
                 <div className="flex items-center gap-2 mb-2">

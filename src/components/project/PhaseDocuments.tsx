@@ -53,13 +53,13 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
 
   const getDocumentTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      plan: 'bg-blue-100 text-blue-800',
+      plan: 'bg-primary/10 text-primary',
       contract: 'bg-success-soft text-success',
-      inspection_report: 'bg-orange-100 text-orange-800',
+      inspection_report: 'bg-warning/10 text-warning',
       invoice: 'bg-purple-100 text-purple-800',
-      permit: 'bg-yellow-100 text-yellow-800',
+      permit: 'bg-warning/10 text-warning',
       photo: 'bg-pink-100 text-pink-800',
-      other: 'bg-gray-100 text-gray-800',
+      other: 'bg-muted text-foreground',
     };
     return colors[type] || colors.other;
   };

@@ -49,7 +49,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
         </DialogHeader>
         
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Choisissez une phase puis une étape du workflow standard mauritanien :
           </p>
           
@@ -76,7 +76,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {phase.stages.length} étapes disponibles
                         </p>
                       </CardContent>
@@ -119,14 +119,14 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {stage.tasks.length} tâches définies
                         </p>
                       </CardContent>
                     </Card>
                   );
                 }) : (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-muted-foreground py-8">
                     <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Sélectionnez d'abord une phase</p>
                   </div>

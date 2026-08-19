@@ -90,11 +90,11 @@ const MaterialDetail = () => {
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="p-8 text-center">
-            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Matériau non trouvé
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Le matériau demandé n'existe pas ou a été supprimé.
             </p>
             <Button asChild>
@@ -203,29 +203,29 @@ const MaterialDetail = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-                <p className="text-gray-600">{material.description}</p>
+                <h3 className="font-medium text-foreground mb-2">Description</h3>
+                <p className="text-muted-foreground">{material.description}</p>
               </div>
 
               <Separator />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Prix unitaire</p>
+                  <p className="text-sm text-muted-foreground">Prix unitaire</p>
                   <p className="font-medium">
                     {formatAmount2(material.pricePerUnit)}/
                     {material.unit}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Unité de mesure</p>
+                  <p className="text-sm text-muted-foreground">Unité de mesure</p>
                   <p className="font-medium">{material.unit}</p>
                 </div>
               </div>
 
               {material.category && (
                 <div>
-                  <p className="text-sm text-gray-600">Catégorie</p>
+                  <p className="text-sm text-muted-foreground">Catégorie</p>
                   <Badge variant="secondary">{material.category}</Badge>
                 </div>
               )}
@@ -246,14 +246,14 @@ const MaterialDetail = () => {
             <CardContent className="space-y-3">
               {material.adresse && (
                 <div>
-                  <p className="text-sm text-gray-600">Adresse</p>
+                  <p className="text-sm text-muted-foreground">Adresse</p>
                   <p className="font-medium">{typeof material.adresse === 'string' ? material.adresse : ''}</p>
                 </div>
               )}
 
               {material.originLocation && (
                 <div>
-                  <p className="text-sm text-gray-600">Origine</p>
+                  <p className="text-sm text-muted-foreground">Origine</p>
                   <p className="font-medium">{material.originLocation}</p>
                 </div>
               )}
@@ -261,7 +261,7 @@ const MaterialDetail = () => {
               {material.coordinatesLatitude &&
                 material.coordinatesLongitude && (
                   <div>
-                    <p className="text-sm text-gray-600">Coordonnées GPS</p>
+                    <p className="text-sm text-muted-foreground">Coordonnées GPS</p>
                     <p className="font-mono text-sm">
                       {material.coordinatesLatitude.toFixed(6)},{" "}
                       {material.coordinatesLongitude.toFixed(6)}
@@ -271,7 +271,7 @@ const MaterialDetail = () => {
 
               {material.localisation && Array.isArray(material.localisation) && material.localisation.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Coordonnées de localisation
                   </p>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -293,8 +293,8 @@ const MaterialDetail = () => {
               {/* Zones d'intervention */}
               {interventionZones.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600">Zones de couverture</p>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-muted-foreground">Zones de couverture</p>
+                  <p className="text-sm text-foreground">
                     {interventionZones.length} zone(s) définie(s)
                   </p>
                   <div className="flex flex-wrap gap-1 mt-1">

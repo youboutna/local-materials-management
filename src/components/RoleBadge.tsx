@@ -17,18 +17,18 @@ const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {
   const getRoleColor = (role: RoleType) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
+        return 'bg-destructive/10 text-destructive hover:bg-red-200';
       case 'project_manager':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+        return 'bg-primary/10 text-primary hover:bg-blue-200';
       case 'supervisor':
         return 'bg-success-soft text-success hover:bg-success-soft';
       case 'inspector':
         return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
       case 'supplier':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+        return 'bg-warning/10 text-warning hover:bg-amber-200';
       case 'viewer':
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        return 'bg-muted text-foreground hover:bg-gray-200';
     }
   };
 

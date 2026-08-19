@@ -88,9 +88,9 @@ const InsuranceCrud: React.FC = () => {
 
   const statusOptions = [
     { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
-    { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
-    { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' }
+    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
+    { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-warning/10 text-warning' },
+    { value: 'missing', label: 'Manquante', color: 'bg-muted text-foreground' }
   ];
 
   const resetForm = () => {
@@ -222,7 +222,7 @@ const InsuranceCrud: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
-    return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
+    return statusOptions.find(option => option.value === status)?.color || 'bg-muted text-foreground';
   };
 
   const isExpiringSoon = (expiryDate: string) => {
@@ -467,7 +467,7 @@ const InsuranceCrud: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {new Date(certificate.endDate).toLocaleDateString('fr-FR')}
                       {isExpiringSoon(certificate.endDate) && (
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <AlertTriangle className="h-4 w-4 text-warning" />
                       )}
                     </div>
                   </TableCell>

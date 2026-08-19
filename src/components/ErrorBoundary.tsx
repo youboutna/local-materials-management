@@ -49,7 +49,7 @@ class ErrorBoundary extends Component<Props, State> {
             
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-2">Détails de l'erreur:</h3>
-              <div className="bg-gray-100 p-4 rounded text-sm font-mono overflow-auto max-h-40">
+              <div className="bg-muted p-4 rounded text-sm font-mono overflow-auto max-h-40">
                 {this.state.error?.message || "Erreur inconnue"}
               </div>
             </div>

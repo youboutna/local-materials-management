@@ -113,13 +113,13 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       case 'approved':
         return <CheckCircle className="h-5 w-5 text-success" />;
       case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-600" />;
+        return <Clock className="h-5 w-5 text-warning" />;
       case 'requires_changes':
-        return <AlertTriangle className="h-5 w-5 text-orange-600" />;
+        return <AlertTriangle className="h-5 w-5 text-warning" />;
       case 'rejected':
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Clock className="h-5 w-5 text-gray-400" />;
+        return <Clock className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -128,13 +128,13 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       case 'approved':
         return 'bg-success-soft text-success border-success/30';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       case 'requires_changes':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -203,10 +203,10 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         {sortedInspections.length === 0 ? (
           <div className="text-center py-8">
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-foreground mb-2">
               {t('inspection.dialog.new_inspection')}
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-muted-foreground mb-4">
               {t('inspection.dialog.description').replace('{project}', projectForDialog.title)}
             </p>
             <InspectionDialog
@@ -227,7 +227,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                     className={`flex items-start gap-4 p-4 rounded-lg border transition-all cursor-pointer ${
                       selectedStep === index
                         ? 'bg-adrar-50 border-adrar-200'
-                        : 'hover:bg-gray-50'
+                        : 'hover:bg-muted'
                     }`}
                     onClick={() => setSelectedStep(selectedStep === index ? null : index)}
                   >
@@ -236,7 +236,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="font-medium text-foreground">
                             {t('inspection.dialog.title')} #{totalInspections - index}
                           </h4>
                           <Badge className={getStatusColor(inspection.status)}>
@@ -300,7 +300,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                                 <h5 className="font-medium mb-2">
                                   {t('inspection.dialog.comments')}
                                 </h5>
-                                <div className="bg-gray-50 p-3 rounded text-sm">
+                                <div className="bg-muted p-3 rounded text-sm">
                                   {inspection.comments}
                                 </div>
                               </div>
@@ -308,14 +308,14 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                           </div>
 
                           {inspection.status === 'requires_changes' && (
-                            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                              <div className="flex items-center gap-2 text-orange-800">
+                            <div className="mt-4 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                              <div className="flex items-center gap-2 text-warning">
                                 <AlertTriangle className="h-4 w-4" />
                                 <span className="font-medium">
                                   {t('inspection.dialog.status_requires_changes')}
                                 </span>
                               </div>
-                              <p className="text-sm text-orange-700 mt-1">
+                              <p className="text-sm text-warning mt-1">
                                 {t('inspection.dialog.status_requires_changes')}
                               </p>
                             </div>
@@ -325,7 +325,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                     </div>
 
                     {index < sortedInspections.length - 1 && (
-                      <ArrowRight className="h-4 w-4 text-gray-400 mt-2" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground mt-2" />
                     )}
                   </div>
                 </div>
@@ -334,7 +334,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
 
             <Separator />
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted rounded-lg p-4">
               <h4 className="font-medium mb-3">{t('projects.overview.description')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
@@ -346,7 +346,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-warning">
                     {sortedInspections.filter((i) => i.status === 'pending').length}
                   </div>
                   <div className="text-muted-foreground">
@@ -354,7 +354,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-2xl font-bold text-warning">
                     {sortedInspections.filter((i) => i.status === 'requires_changes').length}
                   </div>
                   <div className="text-muted-foreground">
@@ -362,7 +362,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-destructive">
                     {sortedInspections.filter((i) => i.status === 'rejected').length}
                   </div>
                   <div className="text-muted-foreground">

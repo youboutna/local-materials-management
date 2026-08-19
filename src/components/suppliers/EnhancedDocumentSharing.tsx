@@ -344,7 +344,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   <div>
                     <label className="text-sm font-medium">Rechercher</label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Titre ou description..."
                         value={searchTerm}
@@ -398,12 +398,12 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {documents?.length ? (
                       documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted">
                           <div className="flex items-center space-x-3">
-                            <FileText className="h-5 w-5 text-blue-500" />
+                            <FileText className="h-5 w-5 text-primary" />
                             <div className="flex-1">
                               <div className="font-medium">{doc.title}</div>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Badge variant="outline">
                                   {DOCUMENT_TYPES.find(t => t.value === ((doc as any).document_type || doc.documentType))?.label || (doc as any).document_type || doc.documentType}
                                 </Badge>
@@ -411,7 +411,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                                 <span>{(doc.createdAt || (doc as any).created_at) ? new Date(doc.createdAt || (doc as any).created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}</span>
                               </div>
                               {doc.description && (
-                                <div className="text-sm text-gray-600 mt-1">{doc.description}</div>
+                                <div className="text-sm text-muted-foreground mt-1">{doc.description}</div>
                               )}
                             </div>
                           </div>
@@ -425,7 +425,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-muted-foreground">
                         <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                         <p>Aucun document trouvé</p>
                       </div>
@@ -502,7 +502,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                     required
                   />
                   {selectedFile && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Fichier sélectionné: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                     </p>
                   )}

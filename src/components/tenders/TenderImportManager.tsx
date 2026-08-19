@@ -282,7 +282,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
               {importResult.success > 0 ? (
                 <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-red-600" />
+                <AlertCircle className="h-5 w-5 text-destructive" />
               )}
               Résultat de l'Import
             </CardTitle>
@@ -293,18 +293,18 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
                 <div className="text-2xl font-bold text-success">{importResult.success}</div>
                 <div className="text-sm text-success">Appels d'offres importés</div>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{importResult.errors.length}</div>
-                <div className="text-sm text-red-800">Erreurs détectées</div>
+              <div className="text-center p-4 bg-destructive/10 rounded-lg">
+                <div className="text-2xl font-bold text-destructive">{importResult.errors.length}</div>
+                <div className="text-sm text-destructive">Erreurs détectées</div>
               </div>
             </div>
 
             {importResult.errors.length > 0 && (
               <div>
-                <h4 className="font-medium text-red-800 mb-2">Erreurs détectées:</h4>
+                <h4 className="font-medium text-destructive mb-2">Erreurs détectées:</h4>
                 <div className="max-h-40 overflow-y-auto space-y-1">
                   {importResult.errors.map((error, index) => (
-                    <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                    <div key={index} className="text-sm text-destructive bg-destructive/10 p-2 rounded">
                       {error}
                     </div>
                   ))}

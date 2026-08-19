@@ -34,24 +34,24 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
 
   const getSPIColor = (spi: number) => {
     if (spi >= 1) return 'text-success';
-    if (spi >= 0.9) return 'text-orange-500';
-    return 'text-red-600';
+    if (spi >= 0.9) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getCPIColor = (cpi: number) => {
     if (cpi >= 1) return 'text-success';
-    if (cpi >= 0.9) return 'text-orange-500';
-    return 'text-red-600';
+    if (cpi >= 0.9) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getSeverityStyles = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-50 border-red-200 text-red-800';
+        return 'bg-destructive/10 border-destructive/30 text-destructive';
       case 'warning':
-        return 'bg-orange-50 border-orange-200 text-orange-800';
+        return 'bg-warning/10 border-warning/30 text-warning';
       default:
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+        return 'bg-primary/10 border-primary/30 text-primary';
     }
   };
 
@@ -112,7 +112,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               {kpiMetrics.spi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className="h-4 w-4 text-destructive" />
               )}
             </div>
             <div className={cn("text-3xl font-bold", getSPIColor(kpiMetrics.spi))}>
@@ -130,7 +130,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               {kpiMetrics.cpi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className="h-4 w-4 text-destructive" />
               )}
             </div>
             <div className={cn("text-3xl font-bold", getCPIColor(kpiMetrics.cpi))}>
@@ -150,11 +150,11 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               <CheckCircle className="h-3 w-3 mr-1" />
               {kpiMetrics.projectsOnTrack} En bonne voie
             </Badge>
-            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex-1 justify-center py-2">
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 flex-1 justify-center py-2">
               <AlertTriangle className="h-3 w-3 mr-1" />
               {kpiMetrics.projectsAtRisk} À risque
             </Badge>
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex-1 justify-center py-2">
+            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 flex-1 justify-center py-2">
               <XCircle className="h-3 w-3 mr-1" />
               {kpiMetrics.projectsDelayed} En retard
             </Badge>
@@ -176,7 +176,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             </span>
           </div>
           {kpiMetrics.milestonesOverdue > 0 && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
+            <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4" />
               {kpiMetrics.milestonesOverdue} jalon(s) en retard
             </div>
@@ -187,7 +187,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
         {kpiMetrics.criticalAlerts.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-medium flex items-center gap-2">
-              <Bell className="h-4 w-4 text-red-500" />
+              <Bell className="h-4 w-4 text-destructive" />
               Alertes Critiques
             </h4>
             <div className="space-y-2">

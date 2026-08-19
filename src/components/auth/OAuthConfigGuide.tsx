@@ -33,7 +33,7 @@ const OAuthConfigGuide = () => {
           <AlertDescription>
             <strong>URLs à configurer dans {providerConfig?.name || "OAuth Console"} :</strong>
             <br />
-            <code className="block mt-2 p-2 bg-gray-100 rounded text-sm">
+            <code className="block mt-2 p-2 bg-muted rounded text-sm">
               {redirectUris.length > 1 ? (
                 <>
                   Authorized JavaScript origins: {currentDomain}
@@ -53,7 +53,7 @@ const OAuthConfigGuide = () => {
 
         <div className="space-y-2">
           <p className="text-sm font-medium">Étapes de configuration :</p>
-          <ol className="list-decimal list-inside text-sm space-y-1 text-gray-600">
+          <ol className="list-decimal list-inside text-sm space-y-1 text-muted-foreground">
             {setupInstructions.length > 0 ? (
               setupInstructions.map((instruction, index) => <li key={index}>{instruction}</li>)
             ) : (

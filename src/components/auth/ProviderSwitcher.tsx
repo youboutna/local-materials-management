@@ -99,13 +99,13 @@ export function ProviderSwitcher({
       case 'available':
         return <CheckCircle className="h-4 w-4 text-success" />;
       case 'unavailable':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case 'testing':
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-primary animate-spin" />;
       default:
-        return <RefreshCw className="h-4 w-4 text-gray-500" />;
+        return <RefreshCw className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -114,13 +114,13 @@ export function ProviderSwitcher({
       case 'available':
         return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Available</Badge>;
       case 'unavailable':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Unavailable</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Unavailable</Badge>;
       case 'error':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Error</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Error</Badge>;
       case 'testing':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Testing...</Badge>;
+        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Testing...</Badge>;
       default:
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Unknown</Badge>;
+        return <Badge variant="outline" className="bg-muted text-foreground border-border">Unknown</Badge>;
     }
   };
 
@@ -149,7 +149,7 @@ export function ProviderSwitcher({
               </SelectContent>
             </Select>
             {isSwitching && (
-              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
             )}
           </div>
         )}
@@ -163,7 +163,7 @@ export function ProviderSwitcher({
         <CardTitle className="flex items-center justify-between">
           <span>Authentication Provider</span>
           {showCurrentProvider && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
               Current: {currentProvider}
             </Badge>
           )}
@@ -195,7 +195,7 @@ export function ProviderSwitcher({
                         )}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {provider.description}
                     </div>
                   </SelectItem>
@@ -229,8 +229,8 @@ export function ProviderSwitcher({
               key={provider.value}
               className={`p-3 rounded-lg border ${
                 provider.value === currentProvider
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200'
+                  ? 'border-blue-500 bg-primary/10'
+                  : 'border-border'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -243,7 +243,7 @@ export function ProviderSwitcher({
                   <Badge variant="default" className="bg-blue-500 text-white text-xs">Current</Badge>
                 )}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {provider.description}
               </div>
             </div>

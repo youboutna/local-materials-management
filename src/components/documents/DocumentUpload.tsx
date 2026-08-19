@@ -275,11 +275,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   // File icon
   // ============================================================
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-6 w-6 text-blue-500" />;
-    if (fileType === 'application/pdf') return <FileText className="h-6 w-6 text-red-500" />;
-    if (fileType.includes('word') || fileType.includes('document')) return <FileText className="h-6 w-6 text-blue-600" />;
-    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('archive')) return <FileArchive className="h-6 w-6 text-yellow-600" />;
-    return <File className="h-6 w-6 text-gray-500" />;
+    if (fileType.startsWith('image/')) return <Image className="h-6 w-6 text-primary" />;
+    if (fileType === 'application/pdf') return <FileText className="h-6 w-6 text-destructive" />;
+    if (fileType.includes('word') || fileType.includes('document')) return <FileText className="h-6 w-6 text-primary" />;
+    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('archive')) return <FileArchive className="h-6 w-6 text-warning" />;
+    return <File className="h-6 w-6 text-muted-foreground" />;
   };
 
   // ============================================================
@@ -313,7 +313,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="title">
-          Titre <span className="text-red-500">*</span>
+          Titre <span className="text-destructive">*</span>
         </Label>
         <Input
           id="title"
@@ -326,7 +326,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="documentType">
-          Type de Document <span className="text-red-500">*</span>
+          Type de Document <span className="text-destructive">*</span>
         </Label>
         <Select 
           value={formData.documentType} 
@@ -381,7 +381,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* File upload area */}
       <div className="space-y-2">
         <Label>
-          Fichier <span className="text-red-500">*</span>
+          Fichier <span className="text-destructive">*</span>
         </Label>
         <div
           className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${

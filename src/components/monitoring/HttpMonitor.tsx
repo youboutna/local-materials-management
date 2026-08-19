@@ -98,7 +98,7 @@ const HttpMonitor: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.error_rate')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.errorRate.toFixed(1)}%</div>
@@ -108,7 +108,7 @@ const HttpMonitor: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.avg_response_time')}</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.averageResponseTime}ms</div>

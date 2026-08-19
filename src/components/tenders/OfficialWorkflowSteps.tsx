@@ -102,11 +102,11 @@ export const getStepIcon = (category: string) => {
 
 export const getStepColor = (category: string) => {
   switch (category) {
-    case 'planning': return 'bg-blue-100 border-blue-300 text-blue-800';
+    case 'planning': return 'bg-primary/10 border-primary/30 text-primary';
     case 'publicity': return 'bg-success-soft border-success/30 text-success';
-    case 'analysis': return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+    case 'analysis': return 'bg-warning/10 border-warning/30 text-warning';
     case 'attribution': return 'bg-purple-100 border-purple-300 text-purple-800';
-    case 'control': return 'bg-red-100 border-red-300 text-red-800';
-    default: return 'bg-gray-100 border-gray-300 text-gray-800';
+    case 'control': return 'bg-destructive/10 border-destructive/30 text-destructive';
+    default: return 'bg-muted border-border text-foreground';
   }
 };

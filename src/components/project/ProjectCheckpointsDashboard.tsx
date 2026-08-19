@@ -91,7 +91,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               className={cn(
                 projectVerification.allVerified 
                   ? 'bg-success-soft text-success border-success/30' 
-                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-warning/10 text-warning border-warning/30'
               )}
             >
               {projectVerification.allVerified ? (
@@ -112,9 +112,9 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               <p className="text-xs text-muted-foreground">Total payé</p>
               <p className="text-lg font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-center">
+            <div className="p-3 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30 text-center">
               <p className="text-xs text-muted-foreground">Retenue garantie</p>
-              <p className="text-lg font-bold text-amber-600">{formatCurrency(metrics.totalRetained)}</p>
+              <p className="text-lg font-bold text-warning">{formatCurrency(metrics.totalRetained)}</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border text-center">
               <p className="text-xs text-muted-foreground">Checkpoints</p>
@@ -160,7 +160,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                 'text-sm',
                 projectVerification.allVerified 
                   ? 'bg-success-soft text-success border-success/30' 
-                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-warning/10 text-warning border-warning/30'
               )}
             >
               Score: {(projectVerification as any).verificationScore ?? 0}%
@@ -191,16 +191,16 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               </div>
               <p className="text-xl font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
-            <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200">
+            <div className="p-4 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30">
               <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-4 w-4 text-amber-600" />
+                <Shield className="h-4 w-4 text-warning" />
                 <span className="text-xs text-muted-foreground">Retenue</span>
               </div>
-              <p className="text-xl font-bold text-amber-600">{formatCurrency(metrics.totalRetained)}</p>
+              <p className="text-xl font-bold text-warning">{formatCurrency(metrics.totalRetained)}</p>
             </div>
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200">
+            <div className="p-4 rounded-lg bg-primary/10 dark:bg-blue-900/20 border border-primary/30">
               <div className="flex items-center gap-2 mb-2">
-                <FileCheck className="h-4 w-4 text-blue-600" />
+                <FileCheck className="h-4 w-4 text-primary" />
                 <span className="text-xs text-muted-foreground">Checkpoints</span>
               </div>
               <p className="text-xl font-bold">
@@ -312,7 +312,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                           <CheckCircle className="h-3 w-3 mr-1" /> Vérifié
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
                           <Clock className="h-3 w-3 mr-1" /> En cours
                         </Badge>
                       )}

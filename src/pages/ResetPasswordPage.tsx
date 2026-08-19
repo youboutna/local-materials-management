@@ -85,13 +85,13 @@ const ResetPasswordPage = () => {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <Card className="w-full max-w-md">
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-            <p className="text-center mt-4 text-gray-600">Vérification du lien...</p>
+            <p className="text-center mt-4 text-muted-foreground">Vérification du lien...</p>
           </CardContent>
         </Card>
       </div>
@@ -100,13 +100,13 @@ const ResetPasswordPage = () => {
 
   if (!isValidLink) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center text-red-600">Lien invalide</CardTitle>
+            <CardTitle className="text-center text-destructive">Lien invalide</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <p className="text-center text-gray-600 mb-4">
+            <p className="text-center text-muted-foreground mb-4">
               {error || 'Ce lien de réinitialisation est invalide ou a expiré.'}
             </p>
             <Button 
@@ -122,10 +122,10 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold text-blue-600 flex items-center justify-center gap-2">
+          <CardTitle className="text-center text-2xl font-bold text-primary flex items-center justify-center gap-2">
             <Lock className="h-6 w-6" />
             Nouveau mot de passe
           </CardTitle>
@@ -133,7 +133,7 @@ const ResetPasswordPage = () => {
         <CardContent className="p-6">
           <form onSubmit={handlePasswordReset} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded">
                 {error}
               </div>
             )}
@@ -152,7 +152,7 @@ const ResetPasswordPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -173,7 +173,7 @@ const ResetPasswordPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

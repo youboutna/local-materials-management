@@ -178,7 +178,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
               <Shield className="h-3 w-3" />
               Retenue de garantie ({guaranteeRetentionRate}%)
             </span>
-            <span className="font-medium text-amber-600">
+            <span className="font-medium text-warning">
               -{formatCurrency(decompte.guaranteeRetention)}
             </span>
           </div>
@@ -208,11 +208,11 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
 
         {/* Warning if no amount to pay */}
         {!hasAmountToPay && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
-            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30">
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-amber-800">Aucun montant à décompter</p>
-              <p className="text-amber-700 text-xs mt-1">
+              <p className="font-medium text-warning">Aucun montant à décompter</p>
+              <p className="text-warning text-xs mt-1">
                 La progression validée ({validatedProgress}%) ne permet pas un nouveau paiement. 
                 Prochain palier à {Math.ceil(validatedProgress / 25) * 25}%.
               </p>

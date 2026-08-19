@@ -294,7 +294,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                 <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
                 <p className="text-2xl font-bold">{filteredProjects.length}</p>
               </div>
-              <Building className="h-8 w-8 text-blue-500" />
+              <Building className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -334,7 +334,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                   {filteredProjects.filter(p => p.status === 'en_cours').length}
                 </p>
               </div>
-              <Users className="h-8 w-8 text-orange-500" />
+              <Users className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>

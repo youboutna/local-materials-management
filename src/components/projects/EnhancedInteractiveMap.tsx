@@ -188,10 +188,10 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
               <Marker key={`city-${index}`} position={[city.lat, city.lng]}>
                 <Popup>
                   <div className="text-center">
-                    <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
+                    <strong className={city.isCapital ? "text-destructive" : "text-primary"}>
                       {city.name}
                     </strong>
-                    {city.isCapital && <div className="text-xs text-red-500">Capitale</div>}
+                    {city.isCapital && <div className="text-xs text-destructive">Capitale</div>}
                   </div>
                 </Popup>
               </Marker>
@@ -212,7 +212,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                     <div className="space-y-3">
                       {/* Project Header */}
                       <div className="border-b pb-2">
-                        <h4 className="font-semibold text-lg text-gray-800 mb-1">
+                        <h4 className="font-semibold text-lg text-foreground mb-1">
                           {project.title}
                         </h4>
                         <div className="flex items-center justify-between">
@@ -226,7 +226,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                           >
                             {project.status}
                           </span>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Navigation className="h-3 w-3" />
                             {getProjectCoordinates(project)!.latitude.toFixed(4)}, {getProjectCoordinates(project)!.longitude.toFixed(4)}
                           </div>
@@ -236,30 +236,30 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                       {/* Project Details */}
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-blue-600" />
-                          <span className="text-gray-700">{project.location}</span>
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="text-foreground">{project.location}</span>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <span className="text-gray-500">Budget:</span>
+                            <span className="text-muted-foreground">Budget:</span>
                             <div className="font-medium text-success">
                               {formatBudget(project.budget)}
                             </div>
                           </div>
                           <div>
-                            <span className="text-gray-500">Équipe:</span>
+                            <span className="text-muted-foreground">Équipe:</span>
                             <div className="font-medium">{project.teamSize} membres</div>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <span className="text-gray-500">Progrès:</span>
+                            <span className="text-muted-foreground">Progrès:</span>
                             <div className="font-medium">{project.progress}%</div>
                           </div>
                           <div>
-                            <span className="text-gray-500">Début:</span>
+                            <span className="text-muted-foreground">Début:</span>
                             <div className="font-medium text-xs">{formatDate(project.startDate)}</div>
                           </div>
                         </div>
@@ -297,7 +297,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                 <Popup>
                   <div className="text-center">
                     <strong className="text-success">Position sélectionnée</strong>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
                     </div>
                   </div>

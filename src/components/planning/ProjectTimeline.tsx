@@ -123,7 +123,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
               <span className="font-medium">Timeline projet</span>
             </div>
             <div className="flex items-center gap-2">
-              <GitBranch className="h-4 w-4 text-orange-500" />
+              <GitBranch className="h-4 w-4 text-warning" />
               <span className="text-muted-foreground">PERT:</span>
               <span className="font-medium">Analyse risques</span>
             </div>

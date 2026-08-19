@@ -62,10 +62,10 @@ type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
 type PaymentStatus = 'pending' | 'approved' | 'info_missing' | 'amount_inconsistent';
 
 const PAYMENT_STATUS_OPTIONS = [
-  { value: 'pending', label: 'En attente', icon: AlertTriangle, color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'pending', label: 'En attente', icon: AlertTriangle, color: 'bg-warning/10 text-warning' },
   { value: 'approved', label: 'Paiement accepté', icon: CheckCircle, color: 'bg-success-soft text-success' },
-  { value: 'info_missing', label: 'Informations manquantes', icon: XCircle, color: 'bg-red-100 text-red-800' },
-  { value: 'amount_inconsistent', label: 'Somme non cohérente avec le taux d\'avancement', icon: AlertTriangle, color: 'bg-orange-100 text-orange-800' },
+  { value: 'info_missing', label: 'Informations manquantes', icon: XCircle, color: 'bg-destructive/10 text-destructive' },
+  { value: 'amount_inconsistent', label: 'Somme non cohérente avec le taux d\'avancement', icon: AlertTriangle, color: 'bg-warning/10 text-warning' },
 ];
 
 const InspectionPaymentValidation: React.FC = () => {
@@ -258,14 +258,14 @@ const InspectionPaymentValidation: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
-      scheduled: { label: 'Planifiée', className: 'bg-blue-100 text-blue-800' },
-      in_progress: { label: 'En cours', className: 'bg-yellow-100 text-yellow-800' },
+      scheduled: { label: 'Planifiée', className: 'bg-primary/10 text-primary' },
+      in_progress: { label: 'En cours', className: 'bg-warning/10 text-warning' },
       approved: { label: 'Approuvée', className: 'bg-success-soft text-success' },
-      rejected: { label: 'Rejetée', className: 'bg-red-100 text-red-800' },
-      requires_changes: { label: 'Modifications requises', className: 'bg-orange-100 text-orange-800' },
+      rejected: { label: 'Rejetée', className: 'bg-destructive/10 text-destructive' },
+      requires_changes: { label: 'Modifications requises', className: 'bg-warning/10 text-warning' },
     };
 
-    const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+    const config = statusConfig[status] || { label: status, className: 'bg-muted text-foreground' };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 

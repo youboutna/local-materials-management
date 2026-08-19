@@ -171,8 +171,8 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
 
 function StatChip({ label, value, tone }: { label: string; value: number; tone?: 'blue' | 'amber' | 'emerald' }) {
   const toneClass =
-    tone === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-200'
-    : tone === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-200'
+    tone === 'blue' ? 'bg-primary/10 text-primary border-primary/30'
+    : tone === 'amber' ? 'bg-warning/10 text-warning border-warning/30'
     : tone === 'emerald' ? 'bg-success-soft text-success border-success/30'
     : 'bg-muted text-foreground';
   return (

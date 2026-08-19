@@ -104,10 +104,10 @@ const AlertsDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.critical')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-destructive">
               {stats.critical}
             </div>
           </CardContent>
@@ -116,10 +116,10 @@ const AlertsDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.high')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-warning">
               {stats.high}
             </div>
           </CardContent>
@@ -128,10 +128,10 @@ const AlertsDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.medium')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-warning">
               {stats.medium}
             </div>
           </CardContent>
@@ -140,10 +140,10 @@ const AlertsDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.low')}</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-blue-600" />
+            <AlertTriangle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.low}</div>
+            <div className="text-2xl font-bold text-primary">{stats.low}</div>
           </CardContent>
         </Card>
       </div>

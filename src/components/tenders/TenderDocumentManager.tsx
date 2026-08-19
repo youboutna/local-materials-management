@@ -480,18 +480,18 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved': return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'rejected': return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'requires_revision': return <AlertCircle className="h-4 w-4 text-yellow-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
+      case 'rejected': return <XCircle className="h-4 w-4 text-destructive" />;
+      case 'requires_revision': return <AlertCircle className="h-4 w-4 text-warning" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'bg-success-soft text-success';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'requires_revision': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'rejected': return 'bg-destructive/10 text-destructive';
+      case 'requires_revision': return 'bg-warning/10 text-warning';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -574,13 +574,13 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                               )}
                             </h4>
                             {tenderDoc.subcategory === 'workflow_step' ? (
-                              <p className="text-xs text-gray-500 flex items-center">
+                              <p className="text-xs text-muted-foreground flex items-center">
                                 <FileText className="h-3 w-3 mr-1" />
                                 Étape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
                               </p>
                             ) : (
                               tenderDoc.document?.title && (
-                                <p className="text-xs text-gray-600 mb-2">
+                                <p className="text-xs text-muted-foreground mb-2">
                                   {tenderDoc.document.title}
                                 </p>
                               )
@@ -605,13 +605,13 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                       </CardHeader>
                       <CardContent className="pt-0">
                         {tenderDoc.document?.file_name && (
-                          <div className="text-xs text-gray-500 mb-3">
+                          <div className="text-xs text-muted-foreground mb-3">
                             Fichier: {tenderDoc.document.file_name}
                           </div>
                         )}
                         
                         {tenderDoc.reviewer_notes && (
-                          <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded">
+                          <div className="text-xs text-muted-foreground mb-3 p-2 bg-muted rounded">
                             <strong>Notes:</strong> {tenderDoc.reviewer_notes}
                           </div>
                         )}
@@ -651,8 +651,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 </div>
 
                 {filterDocumentsByCategory(category).length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvé.</p>
                   </div>
                 )}
@@ -683,7 +683,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                 {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
                               </h4>
                               {tenderDoc.document?.title && (
-                                <p className="text-xs text-gray-600 mb-2">
+                                <p className="text-xs text-muted-foreground mb-2">
                                   {tenderDoc.document.title}
                                 </p>
                               )}
@@ -707,13 +707,13 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                         </CardHeader>
                         <CardContent className="pt-0">
                           {tenderDoc.document?.description && (
-                            <p className="text-xs text-gray-600 mb-3">
+                            <p className="text-xs text-muted-foreground mb-3">
                               {tenderDoc.document.description}
                             </p>
                           )}
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <FileText className="h-3 w-3" />
                               {tenderDoc.document?.file_name}
                             </div>
@@ -734,8 +734,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                     ))}
                   </div>
                   {filterDocumentsByCategory('financial').length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p>Aucun document financier trouvé.</p>
                     </div>
                   )}
@@ -863,10 +863,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
             {/* Show special message for quantitative estimate */}
             {(uploadFormData.subcategory as string) === 'devis_quantitatif_estimatif' && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+              <div className="p-3 bg-primary/10 border border-primary/30 rounded">
                 <div className="flex items-start gap-2">
-                  <Calculator className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800">
+                  <Calculator className="h-4 w-4 text-primary mt-0.5" />
+                  <div className="text-sm text-primary">
                     <p className="font-medium">Devis Quantitatif Estimatif</p>
                     <p>Vous pouvez créer un devis calculé à partir du référentiel matériaux ou télécharger une facture/bon de commande existant.</p>
                   </div>
@@ -902,7 +902,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 required
               />
               {selectedFile && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Fichier sélectionné: {selectedFile.name}
                 </p>
               )}

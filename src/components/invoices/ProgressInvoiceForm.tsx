@@ -116,13 +116,13 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   <div>Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong></div>
                   <div>Source de financement: <strong>{projectData.funding_source || 'N/A'}</strong></div>
                   {workflowRequirements.requiresConsultant && (
-                    <div className="text-orange-600">âœ“ Validation ingénieur conseil requise</div>
+                    <div className="text-warning">âœ“ Validation ingénieur conseil requise</div>
                   )}
                   {workflowRequirements.requiresMinistry && (
-                    <div className="text-orange-600">âœ“ Approbation ministère requise</div>
+                    <div className="text-warning">âœ“ Approbation ministère requise</div>
                   )}
                   {workflowRequirements.requiresDonor && (
-                    <div className="text-orange-600">âœ“ Approbation bailleur de fonds requise</div>
+                    <div className="text-warning">âœ“ Approbation bailleur de fonds requise</div>
                   )}
                 </div>
               </AlertDescription>
@@ -137,7 +137,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
               placeholder="Sélectionner un projet"
             />
             {errors.project_id && (
-              <p className="text-sm text-red-600 mt-1">{errors.project_id.message}</p>
+              <p className="text-sm text-destructive mt-1">{errors.project_id.message}</p>
             )}
           </div>
 
@@ -174,10 +174,10 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   {...register('progress_percentage', { valueAsNumber: true })}
                 />
                 {errors.progress_percentage && (
-                  <p className="text-sm text-red-600 mt-1">{errors.progress_percentage.message}</p>
+                  <p className="text-sm text-destructive mt-1">{errors.progress_percentage.message}</p>
                 )}
                 {previousProgress > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Progression précédente: {previousProgress}%
                   </p>
                 )}
@@ -193,7 +193,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   {...register('invoice_amount', { valueAsNumber: true })}
                 />
                 {errors.invoice_amount && (
-                  <p className="text-sm text-red-600 mt-1">{errors.invoice_amount.message}</p>
+                  <p className="text-sm text-destructive mt-1">{errors.invoice_amount.message}</p>
                 )}
               </div>
 
@@ -205,7 +205,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                   {...register('work_description')}
                 />
                 {errors.work_description && (
-                  <p className="text-sm text-red-600 mt-1">{errors.work_description.message}</p>
+                  <p className="text-sm text-destructive mt-1">{errors.work_description.message}</p>
                 )}
               </div>
 
@@ -232,7 +232,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                 {uploadedDocs.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {uploadedDocs.map((doc, index) => (
-                      <div key={index} className="text-sm text-gray-600 flex items-center gap-2">
+                      <div key={index} className="text-sm text-muted-foreground flex items-center gap-2">
                         <FileText className="h-3 w-3" />
                         Document {index + 1}
                       </div>

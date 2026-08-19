@@ -63,13 +63,13 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      draft: 'bg-gray-100 text-gray-800',
-      pending_review: 'bg-yellow-100 text-yellow-800',
+      draft: 'bg-muted text-foreground',
+      pending_review: 'bg-warning/10 text-warning',
       approved: 'bg-success-soft text-success',
-      rejected: 'bg-red-100 text-red-800',
-      archived: 'bg-blue-100 text-blue-800'
+      rejected: 'bg-destructive/10 text-destructive',
+      archived: 'bg-primary/10 text-primary'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[status as keyof typeof colors] || 'bg-muted text-foreground';
   };
 
   const getStatusLabel = (status: string) => {
@@ -160,8 +160,8 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const renderDocumentContent = () => {
     if (!document.file_url) {
       return (
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-          <div className="text-center text-gray-500">
+        <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
+          <div className="text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
             <p>Aucun fichier disponible</p>
           </div>
@@ -171,7 +171,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
 
     if (isImage(document.mime_type, document.file_name)) {
       return (
-        <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4 relative group">
+        <div className="flex items-center justify-center bg-muted rounded-lg p-4 relative group">
           <img 
             src={document.file_url} 
             alt={document.title}
@@ -194,7 +194,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
-          <div className="hidden text-center text-gray-500">
+          <div className="hidden text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
             <p>Impossible de charger l'image</p>
           </div>
@@ -204,7 +204,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
 
     if (isPDF(document.mime_type, document.file_name)) {
       return (
-        <div className="w-full h-96 bg-gray-50 rounded-lg overflow-hidden">
+        <div className="w-full h-96 bg-muted rounded-lg overflow-hidden">
           <iframe 
             src={`${document.file_url}#toolbar=1&navpanes=1&scrollbar=1`}
             className="w-full h-full border-0"
@@ -223,7 +223,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
 
     if (isVideo(document.mime_type, document.file_name)) {
       return (
-        <div className="w-full bg-gray-50 rounded-lg overflow-hidden">
+        <div className="w-full bg-muted rounded-lg overflow-hidden">
           <video 
             src={document.file_url}
             controls
@@ -243,8 +243,8 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
     }
 
     return (
-      <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
-        <div className="text-center text-gray-500">
+      <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
+        <div className="text-center text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2" />
           <p>Prévisualisation non disponible pour ce type de fichier</p>
           <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
@@ -272,7 +272,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
               <IconComponent className="h-6 w-6 text-terracotta-600" />
               <div>
                 <CardTitle className="text-lg">{document.title}</CardTitle>
-                <p className="text-sm text-gray-600">{document.file_name}</p>
+                <p className="text-sm text-muted-foreground">{document.file_name}</p>
               </div>
             </div>
             <Badge className={getStatusColor(document.status)}>
@@ -284,7 +284,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
         <CardContent className="space-y-6">
           {/* Document Content */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Contenu du document</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">Contenu du document</h3>
             {renderDocumentContent()}
           </div>
 
@@ -293,24 +293,24 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
           {/* Document Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Informations</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">Informations</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Type:</span>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Type:</span>
                   <span className="font-medium">{getDocumentTypeLabel(document.document_type)}</span>
                 </div>
                 {document.file_size && (
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Taille:</span>
+                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Taille:</span>
                     <span className="font-medium">{formatFileSize(document.file_size)}</span>
                   </div>
                 )}
                 {document.mime_type && (
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Format:</span>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Format:</span>
                     <span className="font-medium">{document.mime_type}</span>
                   </div>
                 )}
@@ -318,11 +318,11 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Métadonnées</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">Métadonnées</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Créé le:</span>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Créé le:</span>
                   <span className="font-medium">
                     {new Date(document.created_at).toLocaleDateString('fr-FR', {
                       year: 'numeric',
@@ -332,8 +332,8 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Par:</span>
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Par:</span>
                   <span className="font-medium">{document.uploaded_by}</span>
                 </div>
               </div>
@@ -345,8 +345,8 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             <>
               <Separator />
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-                <p className="text-sm text-gray-600">{document.description}</p>
+                <h3 className="text-sm font-medium text-foreground mb-2">Description</h3>
+                <p className="text-sm text-muted-foreground">{document.description}</p>
               </div>
             </>
           )}

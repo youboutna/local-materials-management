@@ -188,16 +188,16 @@ const OrganizationalHierarchyManager: React.FC = () => {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      'décisionnel': 'bg-red-100 text-red-800',
-      'technique': 'bg-blue-100 text-blue-800',
+      'décisionnel': 'bg-destructive/10 text-destructive',
+      'technique': 'bg-primary/10 text-primary',
       'opérationnel': 'bg-success-soft text-success',
       'budgétaire': 'bg-purple-100 text-purple-800',
-      'communication': 'bg-orange-100 text-orange-800',
+      'communication': 'bg-warning/10 text-warning',
       'contractuel': 'bg-indigo-100 text-indigo-800',
       'comptable': 'bg-pink-100 text-pink-800',
       'performance': 'bg-success-soft text-success-soft-foreground'
     };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[category as keyof typeof colors] || 'bg-muted text-foreground';
   };
 
   const handleSaveTemplate = async () => {

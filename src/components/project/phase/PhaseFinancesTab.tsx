@@ -91,7 +91,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Engagé:</span>
-                  <span className="font-medium text-amber-600">
+                  <span className="font-medium text-warning">
                     {formatCurrency(phaseCosts.totalSpent)}
                   </span>
                 </div>
@@ -100,7 +100,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   <span>Écart:</span>
                   <span className={cn(
                     phaseCosts.costVariance > 0 
-                      ? "text-red-600" 
+                      ? "text-destructive" 
                       : "text-success"
                   )}>
                     {formatCurrency(phaseCosts.costVariance)}
@@ -150,7 +150,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                     </div>
                     <Progress 
                       value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalPayments / phaseCosts.totalSpent) * 100 : 0} 
-                      className="h-1.5 bg-blue-100 [&>div]:bg-blue-500" 
+                      className="h-1.5 bg-primary/10 [&>div]:bg-blue-500" 
                     />
                   </div>
                 )}
@@ -173,7 +173,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                     </div>
                     <Progress 
                       value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalExpenses / phaseCosts.totalSpent) * 100 : 0} 
-                      className="h-1.5 bg-orange-100 [&>div]:bg-orange-500" 
+                      className="h-1.5 bg-warning/10 [&>div]:bg-orange-500" 
                     />
                   </div>
                 )}
@@ -203,7 +203,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   <span className="text-muted-foreground">Utilisation:</span>
                   <span className={cn(
                     "font-medium",
-                    phaseCosts.budgetUtilization > 100 ? "text-red-600" : "text-success"
+                    phaseCosts.budgetUtilization > 100 ? "text-destructive" : "text-success"
                   )}>
                     {phaseCosts.budgetUtilization.toFixed(1)}%
                   </span>
@@ -224,7 +224,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-blue-600" />
+                  <Wallet className="h-4 w-4 text-primary" />
                   Distribution par contractant
                 </CardTitle>
               </CardHeader>
@@ -257,7 +257,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <PieChart className="h-4 w-4 text-orange-600" />
+                  <PieChart className="h-4 w-4 text-warning" />
                   Dépenses par catégorie
                 </CardTitle>
               </CardHeader>
@@ -325,13 +325,13 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
               {phaseResources.totalMaterials > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <Package className="h-4 w-4 text-amber-600" />
+                    <Package className="h-4 w-4 text-warning" />
                     Matériaux ({phaseResources.totalMaterials} unités)
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Coût total matériaux</span>
-                      <span className="font-medium text-amber-600">
+                      <span className="font-medium text-warning">
                         {formatCurrency(phaseResources.materialMetrics?.estimatedCost ?? 0)}
                       </span>
                     </div>

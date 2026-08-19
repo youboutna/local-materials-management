@@ -179,20 +179,20 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-success-soft text-success border-success/30';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'planned': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'delayed': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'in_progress': return 'bg-primary/10 text-primary border-primary/30';
+      case 'planned': return 'bg-muted text-foreground border-border';
+      case 'delayed': return 'bg-destructive/10 text-destructive border-destructive/30';
+      default: return 'bg-muted text-foreground border-border';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle2 className="h-4 w-4 text-success" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'planned': return <Calendar className="h-4 w-4 text-gray-600" />;
-      case 'delayed': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
+      case 'in_progress': return <Clock className="h-4 w-4 text-primary" />;
+      case 'planned': return <Calendar className="h-4 w-4 text-muted-foreground" />;
+      case 'delayed': return <AlertTriangle className="h-4 w-4 text-destructive" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -446,7 +446,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-blue-500" />
+                          <FileText className="h-5 w-5 text-primary" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.documents_count}</p>
                             <p className="text-sm text-muted-foreground">Documents</p>
@@ -482,7 +482,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-5 w-5 text-orange-500" />
+                          <CreditCard className="h-5 w-5 text-warning" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.payments_count}</p>
                             <p className="text-sm text-muted-foreground">Paiements</p>

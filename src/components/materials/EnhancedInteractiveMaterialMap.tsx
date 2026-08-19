@@ -164,7 +164,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                 <Popup>
                   <div className="text-center">
                     <h4 className="font-medium">{city.name}</h4>
-                    <p className="text-sm text-gray-600">Ville de Mauritanie</p>
+                    <p className="text-sm text-muted-foreground">Ville de Mauritanie</p>
                   </div>
                 </Popup>
               </Marker>
@@ -191,13 +191,13 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                         <div className={`w-3 h-3 rounded-full ${getStockColor(stockLevel) === '#10b981' ? 'bg-success' : getStockColor(stockLevel) === '#f59e0b' ? 'bg-yellow-500' : getStockColor(stockLevel) === '#f97316' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
                       </div>
                       
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                         {material.description}
                       </p>
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-blue-500" />
+                          <Package className="h-4 w-4 text-primary" />
                           <span>{material.category}</span>
                         </div>
                         
@@ -224,7 +224,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                             <div className="font-medium text-sm">
                               {material.availableQuantity} {material.unit}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {stockLevel === 'high' && 'Stock élevé'}
                               {stockLevel === 'medium' && 'Stock moyen'}
                               {stockLevel === 'low' && 'Stock faible'}
@@ -257,7 +257,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                 <Popup>
                   <div className="text-center">
                     <h4 className="font-medium">Position sélectionnée</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {selectedCoords[0].toFixed(6)}, {selectedCoords[1].toFixed(6)}
                     </p>
                   </div>

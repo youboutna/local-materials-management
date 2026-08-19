@@ -182,8 +182,8 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
 
           {paginatedTakeoffs.length === 0 && (
             <div className="text-center py-8">
-              <Calculator className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-gray-600 mt-2">Aucun métré trouvé pour ce projet</p>
+              <Calculator className="mx-auto h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground mt-2">Aucun métré trouvé pour ce projet</p>
             </div>
           )}
         </div>

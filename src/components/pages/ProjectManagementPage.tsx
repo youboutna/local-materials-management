@@ -345,7 +345,7 @@ const ProjectManagementPage: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
                   <p className="text-2xl font-bold">{statistics.metrics.totalProjects}</p>
                 </div>
-                <Building className="h-8 w-8 text-blue-500" />
+                <Building className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -355,9 +355,9 @@ const ProjectManagementPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
-                  <p className="text-2xl font-bold text-blue-600">{statistics.metrics.activeProjects}</p>
+                  <p className="text-2xl font-bold text-primary">{statistics.metrics.activeProjects}</p>
                 </div>
-                <Activity className="h-8 w-8 text-blue-500" />
+                <Activity className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -443,7 +443,7 @@ const ProjectManagementPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Spent Budget</span>
-                    <span className="text-sm font-bold text-orange-600">
+                    <span className="text-sm font-bold text-warning">
                       ${statistics?.budgetAnalysis.spent?.toLocaleString()}
                     </span>
                   </div>
@@ -475,7 +475,7 @@ const ProjectManagementPage: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-primary">
                     {statistics?.performanceMetrics.averageProgress}%
                   </div>
                   <p className="text-sm text-muted-foreground">Average Progress</p>

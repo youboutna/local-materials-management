@@ -251,9 +251,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft' };
     }
     if (isBefore(targetDate, today)) {
-      return { icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-100' };
+      return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' };
     }
-    return { icon: Clock, color: 'text-blue-500', bg: 'bg-blue-100' };
+    return { icon: Clock, color: 'text-primary', bg: 'bg-primary/10' };
   };
 
   const getTypeIcon = (type: MilestoneType) => {
@@ -443,7 +443,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   className={cn(
                     "flex items-start gap-3 p-3 rounded-lg border",
                     milestone.status === 'completed' && "bg-muted/50",
-                    milestone.priority === 'critical' && milestone.status !== 'completed' && "border-red-200"
+                    milestone.priority === 'critical' && milestone.status !== 'completed' && "border-destructive/30"
                   )}
                 >
                   <div className={cn("p-1.5 rounded-full", status.bg)}>

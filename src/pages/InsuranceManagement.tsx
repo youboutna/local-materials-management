@@ -333,9 +333,9 @@ const InsuranceContent = () => {
 
           {/* Alertes d'assurance */}
           {insuranceAlerts.length > 0 && (
-            <Card className="mb-8 border-orange-200 bg-orange-50">
+            <Card className="mb-8 border-warning/30 bg-warning/10">
               <CardHeader>
-                <CardTitle className="text-orange-800 flex items-center gap-2">
+                <CardTitle className="text-warning flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
                   Alertes d'Assurance
                   <Badge variant="destructive" className="ml-2">
@@ -349,20 +349,20 @@ const InsuranceContent = () => {
                     <div 
                       key={alert.id} 
                       className={`p-4 bg-white border rounded-lg ${
-                        alert.severity === 'critical' ? 'border-red-300' :
-                        alert.severity === 'high' ? 'border-orange-300' :
-                        'border-orange-200'
+                        alert.severity === 'critical' ? 'border-destructive/30' :
+                        alert.severity === 'high' ? 'border-warning/30' :
+                        'border-warning/30'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <AlertTriangle className={`h-4 w-4 ${
-                              alert.severity === 'critical' ? 'text-red-500' :
-                              alert.severity === 'high' ? 'text-orange-500' :
-                              'text-yellow-500'
+                              alert.severity === 'critical' ? 'text-destructive' :
+                              alert.severity === 'high' ? 'text-warning' :
+                              'text-warning'
                             }`} />
-                            <p className="font-medium text-orange-800">
+                            <p className="font-medium text-warning">
                               {alert.message || alert.title || 'Alerte'}
                             </p>
                           </div>
@@ -373,9 +373,9 @@ const InsuranceContent = () => {
                             <Badge 
                               variant="outline" 
                               className={`text-xs ${
-                                alert.severity === 'critical' ? 'text-red-600 border-red-200' :
-                                alert.severity === 'high' ? 'text-orange-600 border-orange-200' :
-                                'text-yellow-600 border-yellow-200'
+                                alert.severity === 'critical' ? 'text-destructive border-destructive/30' :
+                                alert.severity === 'high' ? 'text-warning border-warning/30' :
+                                'text-warning border-warning/30'
                               }`}
                             >
                               {alert.severity || 'medium'}
@@ -540,7 +540,7 @@ const InsuranceManagementPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Erreur de chargement</h2>
           <p className="text-muted-foreground">
             {error || 'Aucun projet trouvé. Veuillez créer un projet d\'abord.'}

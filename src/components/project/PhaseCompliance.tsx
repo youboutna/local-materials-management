@@ -134,11 +134,11 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       case "compliant":
         return <CheckCircle className="h-4 w-4 text-success" />;
       case "non_compliant":
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case "in_review":
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       default:
-        return <Clock className="h-4 w-4 text-orange-500" />;
+        return <Clock className="h-4 w-4 text-warning" />;
     }
   };
 
@@ -147,24 +147,24 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       case "compliant":
         return "bg-success-soft text-success";
       case "non_compliant":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive";
       case "in_review":
-        return "bg-blue-100 text-blue-800";
+        return "bg-primary/10 text-primary";
       default:
-        return "bg-orange-100 text-orange-800";
+        return "bg-warning/10 text-warning";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "critical":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive";
       case "high":
-        return "bg-orange-100 text-orange-800";
+        return "bg-warning/10 text-warning";
       case "medium":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-warning/10 text-warning";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-foreground";
     }
   };
 

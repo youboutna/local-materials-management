@@ -14,11 +14,11 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">{t("notfound.message")}</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
+        <p className="text-xl text-muted-foreground mb-4">{t("notfound.message")}</p>
+        <a href="/" className="text-primary hover:text-primary underline">
           {t("notfound.return_home")}
         </a>
       </div>

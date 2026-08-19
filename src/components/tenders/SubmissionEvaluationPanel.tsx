@@ -397,7 +397,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   <span className="font-medium">Score Administratif (30%)</span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.administrative_score}</span>
-                    <Star className="h-5 w-5 text-yellow-500" />
+                    <Star className="h-5 w-5 text-warning" />
                   </div>
                 </div>
                 
@@ -405,7 +405,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   <span className="font-medium">Score Technique (40%)</span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.technical_score}</span>
-                    <Star className="h-5 w-5 text-yellow-500" />
+                    <Star className="h-5 w-5 text-warning" />
                   </div>
                 </div>
                 
@@ -413,7 +413,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   <span className="font-medium">Score Financier (30%)</span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.financial_score}</span>
-                    <Star className="h-5 w-5 text-yellow-500" />
+                    <Star className="h-5 w-5 text-warning" />
                   </div>
                 </div>
 
@@ -434,12 +434,12 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                     <span className="font-medium text-lg">Recommandé pour attribution</span>
                   </div>
                 ) : parseFloat(calculateTotalScore()) >= 50 ? (
-                  <div className="flex items-center gap-2 text-amber-600">
+                  <div className="flex items-center gap-2 text-warning">
                     <AlertCircle className="h-6 w-6" />
                     <span className="font-medium text-lg">Évaluation supplémentaire requise</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-red-600">
+                  <div className="flex items-center gap-2 text-destructive">
                     <AlertCircle className="h-6 w-6" />
                     <span className="font-medium text-lg">Non recommandé</span>
                   </div>

@@ -137,11 +137,11 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
       case "completed":
         return <CheckCircle className="h-4 w-4 text-success" />;
       case "in_progress":
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       case "delayed":
-        return <Clock className="h-4 w-4 text-red-500" />;
+        return <Clock className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-orange-500" />;
+        return <Clock className="h-4 w-4 text-warning" />;
     }
   };
 
@@ -150,11 +150,11 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
       case "completed":
         return "bg-success-soft text-success";
       case "in_progress":
-        return "bg-blue-100 text-blue-800";
+        return "bg-primary/10 text-primary";
       case "delayed":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive";
       default:
-        return "bg-orange-100 text-orange-800";
+        return "bg-warning/10 text-warning";
     }
   };
 

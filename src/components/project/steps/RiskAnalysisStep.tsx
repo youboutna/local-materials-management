@@ -117,7 +117,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
   };
 
   const getCategoryColor = (category: string) => {
-    return RISK_CATEGORY_LABELS[category as RiskCategory]?.color || 'bg-gray-100 text-gray-800';
+    return RISK_CATEGORY_LABELS[category as RiskCategory]?.color || 'bg-muted text-foreground';
   };
 
   const calculateRiskMetrics = () => {
@@ -135,26 +135,26 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-red-500" />
+          <AlertTriangle className="h-5 w-5 text-destructive" />
           Analyse des Risques
         </CardTitle>
         
         {/* Risk Metrics Dashboard */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <div className="p-3 bg-blue-50 rounded-lg">
+          <div className="p-3 bg-primary/10 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-blue-600" />
+              <AlertTriangle className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium">Total</span>
             </div>
-            <p className="text-2xl font-bold text-blue-600">{metrics.totalRisks}</p>
+            <p className="text-2xl font-bold text-primary">{metrics.totalRisks}</p>
           </div>
           
-          <div className="p-3 bg-red-50 rounded-lg">
+          <div className="p-3 bg-destructive/10 rounded-lg">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-red-600" />
+              <TrendingUp className="h-4 w-4 text-destructive" />
               <span className="text-sm font-medium">Critiques</span>
             </div>
-            <p className="text-2xl font-bold text-red-600">{metrics.highRisks}</p>
+            <p className="text-2xl font-bold text-destructive">{metrics.highRisks}</p>
           </div>
           
           <div className="p-3 bg-success-soft rounded-lg">
@@ -165,11 +165,11 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
             <p className="text-2xl font-bold text-success">{metrics.mitigatedRisks}</p>
           </div>
           
-          <div className="p-3 bg-orange-50 rounded-lg">
+          <div className="p-3 bg-warning/10 rounded-lg">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Score moyen</span>
             </div>
-            <p className="text-2xl font-bold text-orange-600">{metrics.averageScore.toFixed(1)}</p>
+            <p className="text-2xl font-bold text-warning">{metrics.averageScore.toFixed(1)}</p>
           </div>
         </div>
       </CardHeader>
@@ -382,7 +382,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => removeRisk(risk.id)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

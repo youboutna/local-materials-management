@@ -415,8 +415,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               )}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <CheckSquare className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <CheckSquare className="h-4 w-4 text-primary" />
                 </div>
                 <span className="font-medium text-sm">Tâches</span>
               </div>
@@ -425,7 +425,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <Badge variant="secondary" className="text-xs bg-success-soft text-success">
                   {tasksSummary?.completed || 0} ✓
                 </Badge>
-                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                   {tasksSummary?.inProgress || 0} →
                 </Badge>
               </div>
@@ -440,8 +440,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               )}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <ClipboardCheck className="h-4 w-4 text-orange-600" />
+                <div className="p-2 bg-warning/10 rounded-lg">
+                  <ClipboardCheck className="h-4 w-4 text-warning" />
                 </div>
                 <span className="font-medium text-sm">Inspections</span>
               </div>
@@ -450,7 +450,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <Badge variant="secondary" className="text-xs bg-success-soft text-success">
                   {inspectionsSummary?.approved || 0} ✓
                 </Badge>
-                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-700">
+                <Badge variant="secondary" className="text-xs bg-warning/10 text-warning">
                   {inspectionsSummary?.pending || 0} ⏳
                 </Badge>
               </div>
@@ -585,10 +585,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1.5 bg-orange-50 hover:bg-orange-100 border-orange-200"
+                            className="gap-1.5 bg-warning/10 hover:bg-warning/10 border-warning/30"
                             onClick={() => handleMilestoneAction(milestone, 'inspection')}
                           >
-                            <ClipboardCheck className="h-4 w-4 text-orange-600" />
+                            <ClipboardCheck className="h-4 w-4 text-warning" />
                             <span className="hidden sm:inline">Inspection</span>
                           </Button>
                           <Button
@@ -639,7 +639,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <Card className="shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                  <CheckSquare className="h-5 w-5 text-primary" />
                   Tâches de la phase
                 </CardTitle>
               </CardHeader>
@@ -653,7 +653,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <Card className="shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5 text-orange-600" />
+                  <ClipboardCheck className="h-5 w-5 text-warning" />
                   Inspections de la phase
                 </CardTitle>
               </CardHeader>
@@ -789,7 +789,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {actionDialog.action === 'inspection' && <ClipboardCheck className="h-5 w-5 text-orange-600" />}
+              {actionDialog.action === 'inspection' && <ClipboardCheck className="h-5 w-5 text-warning" />}
               {actionDialog.action === 'payment' && <DollarSign className="h-5 w-5 text-success" />}
               {actionDialog.action === 'complete' && <CheckCircle className="h-5 w-5 text-success" />}
               {actionDialog.action === 'inspection' && "Actions d'inspection"}
@@ -837,8 +837,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   className="w-full justify-start gap-3 h-auto py-4"
                   onClick={handleNavigateToInspection}
                 >
-                  <div className="p-2.5 bg-gray-100 rounded-xl">
-                    <ExternalLink className="h-5 w-5 text-gray-600" />
+                  <div className="p-2.5 bg-muted rounded-xl">
+                    <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="text-left">
                     <p className="font-semibold">Accéder au service inspection</p>
@@ -882,8 +882,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   className="w-full justify-start gap-3 h-auto py-4"
                   onClick={handleNavigateToPayment}
                 >
-                  <div className="p-2.5 bg-gray-100 rounded-xl">
-                    <ExternalLink className="h-5 w-5 text-gray-600" />
+                  <div className="p-2.5 bg-muted rounded-xl">
+                    <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="text-left">
                     <p className="font-semibold">Accéder au contrôle paiements</p>

@@ -192,7 +192,7 @@ const Users = () => {
       }
     >
       {isDevelopmentMode && (
-        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
+        <div className="fixed top-20 right-4 z-50 bg-warning/10 text-warning px-4 py-2 rounded-md shadow-md text-sm">
           ðŸ› ï¸ {t("dev_mode.active") || "Mode développement actif"}
         </div>
       )}
@@ -307,7 +307,7 @@ const Users = () => {
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-muted-foreground">
                           {profile.email || "-"}
                         </span>
                       </TableCell>
@@ -327,7 +327,7 @@ const Users = () => {
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             profile.is_active !== false
                               ? "bg-success-soft text-success"
-                              : "bg-red-100 text-red-800"
+                              : "bg-destructive/10 text-destructive"
                           }`}
                         >
                           {profile.is_active !== false
@@ -351,7 +351,7 @@ const Users = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 border-blue-200 hover:border-blue-300"
+                                className="h-8 border-primary/30 hover:border-primary/30"
                                 onClick={() => handleEditUser(profile)}
                               >
                                 <Edit className="h-4 w-4" />
@@ -363,7 +363,7 @@ const Users = () => {
                                 size="sm"
                                 className={`h-8 ${
                                   profile.is_active !== false
-                                    ? "border-red-200 hover:border-red-300 text-red-600"
+                                    ? "border-destructive/30 hover:border-destructive/30 text-destructive"
                                     : "border-success/30 hover:border-success/30 text-success"
                                 }`}
                                 onClick={() => handleToggleUserStatus(profile)}

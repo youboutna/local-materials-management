@@ -52,7 +52,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
   }
 
   if (error) {
-    return <div className="text-red-500">Erreur lors du chargement des paiements.</div>;
+    return <div className="text-destructive">Erreur lors du chargement des paiements.</div>;
   }
 
   return (

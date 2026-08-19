@@ -90,10 +90,10 @@ const COVERAGE_TYPES = [
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-  { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
-  { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' },
-  { value: 'missing', label: 'Manquante', color: 'bg-gray-100 text-gray-800' },
-  { value: 'pending', label: 'En attente', color: 'bg-yellow-100 text-yellow-800' }
+  { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
+  { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-warning/10 text-warning' },
+  { value: 'missing', label: 'Manquante', color: 'bg-muted text-foreground' },
+  { value: 'pending', label: 'En attente', color: 'bg-warning/10 text-warning' }
 ];
 
 // ============================================================
@@ -495,7 +495,7 @@ const UnifiedInsuranceManager = () => {
   };
 
   const getStatusColor = (status: string) => {
-    return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800';
+    return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-muted text-foreground';
   };
 
   const getStatusLabel = (status: string) => {
@@ -582,25 +582,25 @@ const UnifiedInsuranceManager = () => {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-orange-500">{stats.expiring}</div>
+            <div className="text-2xl font-bold text-warning">{stats.expiring}</div>
             <p className="text-sm text-muted-foreground">Expire bientôt</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.expired}</div>
             <p className="text-sm text-muted-foreground">Expirés</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-gray-600">{stats.missing}</div>
+            <div className="text-2xl font-bold text-muted-foreground">{stats.missing}</div>
             <p className="text-sm text-muted-foreground">Manquants</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-primary">
               {stats.coverageTotal.toLocaleString()} MRU
             </div>
             <p className="text-sm text-muted-foreground">Couverture totale</p>
@@ -632,9 +632,9 @@ const UnifiedInsuranceManager = () => {
             <div className="grid gap-4">
               {paginatedAlerts.map((alert, index) => (
                 <Card key={index} className={`
-                  ${alert.alertLevel === 'expired' ? 'border-red-200' : 
-                    alert.alertLevel === 'critical' ? 'border-orange-200' : 
-                    'border-yellow-200'}
+                  ${alert.alertLevel === 'expired' ? 'border-destructive/30' : 
+                    alert.alertLevel === 'critical' ? 'border-warning/30' : 
+                    'border-warning/30'}
                 `}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -736,7 +736,7 @@ const UnifiedInsuranceManager = () => {
                         <div className="flex items-center gap-2">
                           {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
                           {isExpiringSoon(cert.validUntil || '') && (
-                            <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            <AlertTriangle className="h-4 w-4 text-warning" />
                           )}
                         </div>
                       </TableCell>
@@ -874,7 +874,7 @@ const UnifiedInsuranceManager = () => {
                         <div className="flex items-center gap-2">
                           {cert.validUntil && new Date(cert.validUntil).toLocaleDateString('fr-FR')}
                           {isExpiringSoon(cert.validUntil || '') && (
-                            <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            <AlertTriangle className="h-4 w-4 text-warning" />
                           )}
                         </div>
                       </TableCell>

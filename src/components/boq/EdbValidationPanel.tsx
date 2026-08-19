@@ -26,7 +26,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
     <section className="rounded-md border p-3 space-y-3" aria-labelledby="edb-validation-title">
       <header className="flex items-center justify-between gap-2">
         <h4 id="edb-validation-title" className="text-sm font-medium flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden />
+          <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           Validation de l’expression de besoin (EDB)
         </h4>
         <Badge variant={report.status === 'READY' ? 'secondary' : 'outline'}>{report.status}</Badge>
@@ -63,8 +63,8 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
 
       {warnings.length > 0 && (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2">
-          <span className="text-sm font-medium text-amber-700">Alertes ({warnings.length})</span>
-          <ul className="text-xs text-amber-800/90 space-y-0.5 pl-5 list-disc mt-1 max-h-28 overflow-y-auto">
+          <span className="text-sm font-medium text-warning">Alertes ({warnings.length})</span>
+          <ul className="text-xs text-warning/90 space-y-0.5 pl-5 list-disc mt-1 max-h-28 overflow-y-auto">
             {warnings.map((w, i) => <li key={i}>{w.message}</li>)}
           </ul>
         </div>
@@ -83,7 +83,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
             </div>
             <div className="rounded border p-2">
               <span className="block text-muted-foreground">Écart</span>
-              <strong className="text-amber-700">
+              <strong className="text-warning">
                 {d.difference > 0 ? '+' : ''}{fmt(d.difference)} MRU ({d.percentage.toFixed(2)} %)
               </strong>
             </div>

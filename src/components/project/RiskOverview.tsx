@@ -17,9 +17,9 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
 
   const getRiskSeverity = (probability: number, impact: number) => {
     const score = probability * impact / 100;
-    if (score >= 56) return { label: "Critique", color: "bg-red-100 text-red-800 border-red-200" };
-    if (score >= 36) return { label: "Élevé", color: "bg-orange-100 text-orange-800 border-orange-200" };
-    if (score >= 16) return { label: "Moyen", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
+    if (score >= 56) return { label: "Critique", color: "bg-destructive/10 text-destructive border-destructive/30" };
+    if (score >= 36) return { label: "Élevé", color: "bg-warning/10 text-warning border-warning/30" };
+    if (score >= 16) return { label: "Moyen", color: "bg-warning/10 text-warning border-warning/30" };
     return { label: "Faible", color: "bg-success-soft text-success border-success/30" };
   };
 

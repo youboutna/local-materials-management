@@ -374,12 +374,12 @@ const PaymentBlockingInterface = () => {
             {/* Validation Results */}
             {validationResult && (
               <div className="mt-6 space-y-4">
-                <div className={`p-4 rounded-lg border ${validationResult.canProceed ? 'border-success/30 bg-success-soft' : 'border-red-200 bg-red-50'}`}>
+                <div className={`p-4 rounded-lg border ${validationResult.canProceed ? 'border-success/30 bg-success-soft' : 'border-destructive/30 bg-destructive/10'}`}>
                   <div className="flex items-center gap-2 mb-2">
                     {validationResult.canProceed ? (
                       <CheckCircle className="h-5 w-5 text-success" />
                     ) : (
-                      <Ban className="h-5 w-5 text-red-600" />
+                      <Ban className="h-5 w-5 text-destructive" />
                     )}
                     <h3 className="font-medium">
                       {validationResult.canProceed ? 'Paiement autorisé' : 'Paiement bloqué'}
@@ -388,9 +388,9 @@ const PaymentBlockingInterface = () => {
                   
                   {(validationResult.blockingReasons || []).length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-red-700">Problèmes bloquants:</p>
+                      <p className="text-sm font-medium text-destructive">Problèmes bloquants:</p>
                       {(validationResult.blockingReasons || []).map((reason: any, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm text-red-600">
+                        <div key={index} className="flex items-center gap-2 text-sm text-destructive">
                           {getReasonIcon(reason.blockReason || reason.reason || '')}
                           <span>{getReasonLabel(reason.blockReason || reason.reason || '')}: {reason.description || reason.blockReason || ''}</span>
                         </div>
@@ -400,9 +400,9 @@ const PaymentBlockingInterface = () => {
                   
                   {(validationResult.warningReasons || []).length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <p className="text-sm font-medium text-orange-700">Avertissements:</p>
+                      <p className="text-sm font-medium text-warning">Avertissements:</p>
                       {(validationResult.warningReasons || []).map((reason: any, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm text-orange-600">
+                        <div key={index} className="flex items-center gap-2 text-sm text-warning">
                           {getReasonIcon(reason.warningType || reason.reason || '')}
                           <span>{getReasonLabel(reason.warningType || reason.reason || '')}: {reason.description || reason.warningType || ''}</span>
                         </div>
@@ -421,10 +421,10 @@ const PaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
-            <Ban className="h-4 w-4 text-red-500" />
+            <Ban className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.blockedPayments}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.blockedPayments}</div>
             <p className="text-xs text-muted-foreground">
               Ce mois
             </p>
@@ -434,10 +434,10 @@ const PaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assurances Expirées</CardTitle>
-            <Shield className="h-4 w-4 text-orange-500" />
+            <Shield className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.expiredInsurances}</div>
+            <div className="text-2xl font-bold text-warning">{stats.expiredInsurances}</div>
             <p className="text-xs text-muted-foreground">
               Entrepreneurs concernés
             </p>
@@ -447,10 +447,10 @@ const PaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Projets en Retard</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.delayedProjects}</div>
+            <div className="text-2xl font-bold text-warning">{stats.delayedProjects}</div>
             <p className="text-xs text-muted-foreground">
               Retards &gt; 20%
             </p>
@@ -460,10 +460,10 @@ const PaymentBlockingInterface = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.missingDocuments}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.missingDocuments}</div>
             <p className="text-xs text-muted-foreground">
               À fournir
             </p>
@@ -485,7 +485,7 @@ const PaymentBlockingInterface = () => {
               blockHistory.map((block: any) => (
                 <div key={block.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Ban className="h-5 w-5 text-red-500" />
+                    <Ban className="h-5 w-5 text-destructive" />
                     <div>
                       <p className="font-medium">{block.suppliers?.name || 'Entrepreneur inconnu'}</p>
                       <p className="text-sm text-muted-foreground">

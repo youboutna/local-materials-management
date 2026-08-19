@@ -625,7 +625,7 @@ const EnhancedSupplierTenderPortal = () => {
                         </>
                       ) : (
                         <>
-                          <XCircle className="h-5 w-5 text-red-600" />
+                          <XCircle className="h-5 w-5 text-destructive" />
                           <span className="text-sm">Phase de soumission fermée</span>
                         </>
                       )}

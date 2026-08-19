@@ -275,16 +275,16 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       }
       if (isBefore(targetDate, today)) {
         const daysLate = differenceInDays(today, targetDate);
-        return { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30', label: `En retard (${daysLate}j)` };
+        return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10 dark:bg-red-900/30', label: `En retard (${daysLate}j)` };
       }
-      return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30', label: 'À venir' };
+      return { icon: Clock, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: 'À venir' };
     }
     
     // Step status
     switch (item.status) {
       case 'completed': return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: 'Terminée' };
-      case 'in_progress': return { icon: Play, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30', label: 'En cours' };
-      case 'delayed': return { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30', label: 'Retard' };
+      case 'in_progress': return { icon: Play, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: 'En cours' };
+      case 'delayed': return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10 dark:bg-red-900/30', label: 'Retard' };
       default: return { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted', label: 'Planifiée' };
     }
   };
@@ -378,7 +378,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
               </div>
             )}
             {progress?.upcomingMilestones && progress.upcomingMilestones.length > 0 && (
-              <div className="flex items-center gap-1.5 text-amber-600">
+              <div className="flex items-center gap-1.5 text-warning">
                 <Clock className="h-4 w-4" />
                 <span>{progress.upcomingMilestones.length} à venir (14j)</span>
               </div>
@@ -386,7 +386,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             {progress?.criticalPath_status && progress.criticalPath_status !== 'on_track' && (
               <div className={cn(
                 "flex items-center gap-1.5",
-                progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-amber-600'
+                progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-warning'
               )}>
                 <ShieldCheck className="h-4 w-4" />
                 <span>Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}</span>

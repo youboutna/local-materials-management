@@ -51,7 +51,7 @@ const KpiCard = ({
             tone === 'danger'
               ? 'text-2xl font-semibold text-destructive'
               : tone === 'warning'
-                ? 'text-2xl font-semibold text-amber-600'
+                ? 'text-2xl font-semibold text-warning'
                 : 'text-2xl font-semibold text-foreground'
           }
         >

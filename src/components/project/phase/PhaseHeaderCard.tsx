@@ -152,7 +152,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
             <p className={cn(
               "text-sm font-medium",
               typeof remainingDays === 'number' && remainingDays < 7 
-                ? "text-red-600" 
+                ? "text-destructive" 
                 : "text-foreground"
             )}>
               {typeof remainingDays === 'number' ? `${remainingDays} jours` : remainingDays}

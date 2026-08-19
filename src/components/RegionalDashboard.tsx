@@ -110,7 +110,7 @@ const RegionalDashboard = () => {
               {stat.projectCount > 0 && (
                 <div className="flex justify-between text-sm">
                   <div className="text-center">
-                    <div className="font-semibold text-blue-600">{stat.activeProjects}</div>
+                    <div className="font-semibold text-primary">{stat.activeProjects}</div>
                     <div className="text-xs text-adrar-600">En cours</div>
                   </div>
                   <div className="text-center">
