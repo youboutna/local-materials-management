@@ -3,8 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DollarSign, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { formatAmount2, formatPercent2, formatIndex2 } from '@/utils/reportNumbers';
+
+/** Libellés unifiés avec les alertes métier (« CPI non évaluable sans dépense engagée »). */
+const NOT_EVALUABLE = 'Non évaluable';
+const NOT_EVALUABLE_REASON = 'Aucune dépense engagée : le CPI ne peut pas être calculé.';
+
 
 interface FinancialOverviewProps {
   budget: number;
