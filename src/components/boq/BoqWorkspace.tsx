@@ -158,6 +158,8 @@ export function BoqWorkspace({
   const resetForm = () => {
     setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
     setMaterialId(''); setCategory('material'); setElementType('generic');
+    setOpenings({ count: 0, width: 0, height: 0 });
+    setAutoRecs(false);
     // Réapplique le WBS par défaut (fallback contexte de saisie)
     setWbs({ ...wbsDefault });
   };
