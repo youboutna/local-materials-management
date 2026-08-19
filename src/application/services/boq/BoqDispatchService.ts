@@ -13,6 +13,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import {
   DQE_DISPATCH_REFERENTIAL,
   applyDispatchTemplate,
+  resolveDqeEffort,
   resolveDqeLot,
 } from '@/config/referentials/dqe/dqe-dispatch.referential';
 import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
@@ -144,6 +145,13 @@ export class BoqDispatchService {
       // Jalon de fin de lot
       const phaseMilestones = await this.milestones.findByPhaseId(phaseId).catch(() => []);
       const milestoneTitle = applyDispatchTemplate(rule.milestoneTitleTemplate, group.lot);
+      const milestoneTargetDate = (phaseMilestones.find((m) => m.title === milestoneTitle) as
+        | { targetDate?: string | null; target_date?: string | null }
+        | undefined)?.targetDate
+        ?? (phaseMilestones.find((m) => m.title === milestoneTitle) as
+          | { target_date?: string | null }
+          | undefined)?.target_date
+        ?? null;
       if (!phaseMilestones.some((m) => m.title === milestoneTitle)) {
         const created = await this.milestones
           .create({
@@ -159,23 +167,74 @@ export class BoqDispatchService {
         if (created) milestonesCreated += 1;
       }
 
-      // Tâches = postes DQE
+      // Dates héritées : phase > jalon > projet (fallback pour le calcul de délai)
+      const phaseRecord = (existing.find((p) => p.id === phaseId) ?? null) as
+        | { startDate?: string | null; endDate?: string | null }
+        | null;
+      const inheritedStart = phaseRecord?.startDate ?? null;
+      const inheritedEnd = phaseRecord?.endDate ?? milestoneTargetDate ?? null;
+
+      // Tâches = postes DQE (quantité / unité / délai / taux journalier reportés)
       const existingTasks = await this.tasks.findByPhaseId(phaseId).catch(() => []);
-      const existingTitles = new Set(existingTasks.map((t) => t.title));
+      const existingByTitle = new Map<string, TaskAssignment>(
+        existingTasks.map((t) => [t.title, t] as [string, TaskAssignment]),
+      );
+
       for (const line of group.lines) {
         propagationLines.push({ ...line, phaseId });
-        if (existingTitles.has(line.designation)) continue;
-        const task = TaskAssignment.create({
-          id: crypto.randomUUID(),
+        const meta = (line.metadata ?? {}) as { durationDays?: number; crewSize?: number };
+        const effort = resolveDqeEffort({
+          quantity: line.quantity,
+          unit: line.unit,
+          unitPrice: line.unitPrice,
+          totalHt: line.totalHt,
+          durationDays: meta.durationDays ?? null,
+          crewSize: meta.crewSize ?? null,
+          inheritedStart,
+          inheritedEnd,
+        });
+
+        const taskProps = {
           title: line.designation,
-          description: `${line.quantity} ${line.unit} — ${line.code ?? group.lot}`,
+          description: `${effort.quantity} ${effort.unit ?? ''} — ${line.code ?? group.lot}`.trim(),
           projectId,
           phaseId,
           status: rule.taskStatus,
           priority: rule.taskPriority,
           progress: 0,
+          quantity: effort.quantity,
+          unit: effort.unit ?? undefined,
+          dailyRate: effort.dailyRate ?? undefined,
+          estimatedCost: effort.estimatedCost,
+          estimatedDuration: effort.durationDays || undefined,
+          startDate: effort.startDate ? new Date(effort.startDate) : undefined,
+          endDate: effort.endDate ? new Date(effort.endDate) : undefined,
+          dueDate: effort.endDate ? new Date(effort.endDate) : undefined,
           notes: `DQE ${line.code ?? group.lot}`,
-        });
+          metadata: {
+            source: 'dqe_dispatch',
+            boqLineId: line.id,
+            lot: group.lot,
+            effortKind: effort.kind,
+            isLabor: effort.isLabor,
+            manDays: effort.manDays,
+            durationSource: effort.durationSource,
+          },
+        };
+
+        const existingTask = existingByTitle.get(line.designation);
+        if (existingTask) {
+          // CRUD : mise à jour des données DQE sur la tâche déjà générée
+          await this.tasks
+            .update(
+              existingTask.id,
+              TaskAssignment.create({ ...taskProps, id: existingTask.id, createdAt: existingTask.createdAt }),
+            )
+            .catch(() => undefined);
+          continue;
+        }
+
+        const task = TaskAssignment.create({ id: crypto.randomUUID(), ...taskProps });
         const saved = await this.tasks.save(task).catch(() => null);
         if (saved) tasksCreated += 1;
       }

@@ -40,6 +40,15 @@ export interface TaskAssignmentProps {
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  /** Quantité issue du DQE. */
+  quantity?: number;
+  /** Unité issue du DQE (m³, jour, forfait...). */
+  unit?: string;
+  /** Taux journalier (main d'œuvre). */
+  dailyRate?: number;
+  /** Coût estimé (total HT du poste DQE). */
+  estimatedCost?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export class TaskAssignment {
@@ -69,6 +78,11 @@ export class TaskAssignment {
     public notes: string | undefined,
     public createdAt: Date,
     public updatedAt: Date,
+    public quantity: number | undefined = undefined,
+    public unit: string | undefined = undefined,
+    public dailyRate: number | undefined = undefined,
+    public estimatedCost: number | undefined = undefined,
+    public metadata: Record<string, unknown> = {},
   ) {
     if (!id) throw new Error('TaskAssignment id is required');
     if (!title || title.trim().length === 0) throw new Error('TaskAssignment title is required');
@@ -103,6 +117,11 @@ export class TaskAssignment {
       props.notes,
       props.createdAt ?? now,
       props.updatedAt ?? now,
+      props.quantity,
+      props.unit,
+      props.dailyRate,
+      props.estimatedCost,
+      props.metadata ?? {},
     );
   }
 
@@ -166,6 +185,11 @@ export class TaskAssignment {
       actualDuration: this.actualDuration,
       dependencies: this.dependencies,
       notes: this.notes,
+      quantity: this.quantity,
+      unit: this.unit,
+      dailyRate: this.dailyRate,
+      estimatedCost: this.estimatedCost,
+      metadata: this.metadata,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };

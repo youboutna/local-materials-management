@@ -3,9 +3,10 @@
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService } from '@/application/services/NotificationService';
+import { resolveDqeEffort } from '@/config/referentials/dqe/dqe-dispatch.referential';
 import { TaskAssignmentService, getTaskAssignmentService} from '@/application/services/TaskAssignmentService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,19 @@ interface TaskFormData {
   priority: string;
   status: string;
   notes: string;
+  /** Métré DQE reporté sur la tâche. */
+  quantity: string;
+  unit: string;
+  /** Délai en jours (estimated_duration). */
+  estimated_duration: string;
+  /** Taux journalier main d'œuvre. */
+  daily_rate: string;
 }
+
+const toNum = (value: string): number | undefined => {
+  const n = Number(value);
+  return value !== "" && Number.isFinite(n) ? n : undefined;
+};
 
 const TaskAssignmentsComponent = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -88,7 +101,23 @@ const TaskAssignmentsComponent = () => {
     priority: "medium",
     status: "pending",
     notes: "",
+    quantity: "",
+    unit: "",
+    estimated_duration: "",
+    daily_rate: "",
   });
+  // Dérivation référentielle : main d'œuvre (homme·jour), délai et taux journalier
+  const effortHint = useMemo(
+    () =>
+      resolveDqeEffort({
+        quantity: toNum(formData.quantity) ?? 0,
+        unit: formData.unit,
+        durationDays: toNum(formData.estimated_duration) ?? null,
+        unitPrice: toNum(formData.daily_rate) ?? null,
+      }),
+    [formData.quantity, formData.unit, formData.estimated_duration, formData.daily_rate],
+  );
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
@@ -158,6 +187,10 @@ const TaskAssignmentsComponent = () => {
           assigneeEmail: taskData.assignee_email || undefined,
           dueDate: taskData.due_date || undefined,
           assignmentNotes: taskData.notes || undefined,
+          quantity: toNum(taskData.quantity),
+          unit: taskData.unit || undefined,
+          estimatedDuration: toNum(taskData.estimated_duration),
+          dailyRate: toNum(taskData.daily_rate),
 
         }, 
         assignedBy: user?.id 
@@ -199,6 +232,10 @@ const TaskAssignmentsComponent = () => {
           status: data.status as any,
           dueDate: data.due_date || undefined,
           assignmentNotes: data.notes || undefined,
+          quantity: toNum(data.quantity),
+          unit: data.unit || undefined,
+          estimatedDuration: toNum(data.estimated_duration),
+          dailyRate: toNum(data.daily_rate),
         }
       });
 
@@ -248,6 +285,10 @@ const TaskAssignmentsComponent = () => {
       priority: "medium",
       status: "pending",
       notes: "",
+      quantity: "",
+      unit: "",
+      estimated_duration: "",
+      daily_rate: "",
     });
     setIsCreating(false);
     setEditingId(null);
@@ -276,6 +317,14 @@ const TaskAssignmentsComponent = () => {
       priority: task.priority || "medium",
       status: task.status || "pending",
       notes: task.notes || task.assignmentNotes || "",
+      quantity: task.quantity !== undefined && task.quantity !== null ? String(task.quantity) : "",
+      unit: task.unit || "",
+      estimated_duration:
+        task.estimated_duration ?? task.estimatedDuration
+          ? String(task.estimated_duration ?? task.estimatedDuration)
+          : "",
+      daily_rate:
+        task.daily_rate ?? task.dailyRate ? String(task.daily_rate ?? task.dailyRate) : "",
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -544,6 +593,60 @@ const TaskAssignmentsComponent = () => {
                   </Select>
                 </div>
               </div>
+
+              {/* Métré & main d'œuvre — issu du DQE, éditable (référentiel DQE_LABOR_REFERENTIAL) */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantité</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="any"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unité</Label>
+                  <Input
+                    id="unit"
+                    value={formData.unit}
+                    placeholder="m³, m², jour…"
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="estimated_duration">Délai (jours)</Label>
+                  <Input
+                    id="estimated_duration"
+                    type="number"
+                    min={0}
+                    value={formData.estimated_duration}
+                    onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="daily_rate">
+                    Taux journalier {effortHint.isLabor ? '(main d\u2019œuvre)' : ''}
+                  </Label>
+                  <Input
+                    id="daily_rate"
+                    type="number"
+                    step="any"
+                    value={formData.daily_rate}
+                    placeholder={effortHint.dailyRate ? String(effortHint.dailyRate) : '—'}
+                    onChange={(e) => setFormData({ ...formData, daily_rate: e.target.value })}
+                  />
+                  {effortHint.isLabor && (
+                    <p className="text-xs text-muted-foreground">
+                      {effortHint.manDays ?? 0} homme·jour(s) — délai calculé {effortHint.durationDays} j
+                      {effortHint.dailyRate ? ` — taux suggéré ${effortHint.dailyRate}` : ''}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
