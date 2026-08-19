@@ -6,7 +6,7 @@ import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
-import { BrandBands, BrandIdentity } from "@/components/branding/BrandIdentity";
+import { BrandBandsBackground, BrandIdentity } from "@/components/branding/BrandIdentity";
 
 
 interface AppLayoutProps {
