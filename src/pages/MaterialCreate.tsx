@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { ArrowLeft, Package } from "lucide-react";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { CreateMaterialRequestDto } from "@/dtos/transforms";
+
 
 const MaterialCreate = () => {
   const { t } = useLanguage();
