@@ -1063,10 +1063,10 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
         <TabsContent value="documents" className="space-y-6">
           {/* Material Documents */}
-          <Card className="border-l-4 border-l-indigo-500">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
-                <FileText className="h-5 w-5" />
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-surface-muted">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <FileText className="h-5 w-5" aria-hidden="true" />
                 {t('materials.documents.title') || 'Documents du matériau'}
               </CardTitle>
               {materialId && (
@@ -1080,9 +1080,10 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 <MaterialDocumentsPanel
                   materialId={materialId}
                   materialName={formData.name}
-                  supplierId={formData.supplier?.supplierId}
+                  supplierId={formData.supplier?.supplierId || formData.supplierId}
                   supplierName={formData.supplier?.name}
                 />
+
               ) : (
                 <div className="space-y-6">
                   {/* Document Upload Section for New Materials */}
