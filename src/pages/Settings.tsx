@@ -9,6 +9,8 @@ import ProviderSettings from "@/components/admin/ProviderSettings";
 import StorageSettings from "@/components/admin/StorageSettings";
 import { AppLayout } from "@/components/layout";
 import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
+import AppearanceSettings from "@/components/settings/AppearanceSettings";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
