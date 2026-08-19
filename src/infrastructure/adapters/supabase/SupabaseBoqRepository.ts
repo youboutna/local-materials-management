@@ -49,7 +49,20 @@ export class SupabaseBoqRepository implements IBoqRepository {
 
   async update(id: string, dto: Partial<BoqLineDTO>): Promise<BoqLineDTO> {
     if (!dto.source) throw new Error('BoqLineDTO.source required for update');
-    const payload = BoqLineMapper.toDb({ ...dto, id } as BoqLineDTO);
+    // Mise à jour partielle : on fusionne avec la ligne existante avant d'écrire,
+    // sinon les valeurs par défaut du mapper (project_id, statut, fiscalité,
+    // montants) écrasent des données valides.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: current, error: readError } = await (supabase as any)
+      .from(TABLE).select('*').eq('id', id).maybeSingle();
+    if (readError) throw new Error(readError.message);
+    const existing = current ? BoqLineMapper.fromDb(current as BoqDbRow, dto.source) : null;
+    const merged = { ...(existing ?? {}), ...dto, id } as BoqLineDTO;
+    // Le total est recalculé sauf s'il est explicitement fourni dans le patch.
+    if (dto.totalHt === undefined && (dto.quantity !== undefined || dto.unitPrice !== undefined || dto.fees !== undefined)) {
+      merged.totalHt = null;
+    }
+    const payload = BoqLineMapper.toDb(merged);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).from(TABLE).update(payload).eq('id', id).select().single();
     if (error) throw new Error(error.message);

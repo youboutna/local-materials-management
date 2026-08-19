@@ -41,8 +41,8 @@ export function BoqComparisonTable({ reference, candidate, labels }: Props) {
         </TableHeader>
         <TableBody>
           {rows.map(([k, { ref, cand }]) => {
-            const rHt = ref?.totalHt ?? (ref ? ref.quantity * (ref.unitPrice ?? 0) : 0);
-            const cHt = cand?.totalHt ?? (cand ? cand.quantity * (cand.unitPrice ?? 0) : 0);
+            const rHt = ref?.totalHt || (ref ? ref.quantity * (ref.unitPrice ?? 0) : 0);
+            const cHt = cand?.totalHt || (cand ? cand.quantity * (cand.unitPrice ?? 0) : 0);
             const delta = cHt - rHt;
             const pct = rHt ? (delta / rHt) * 100 : 0;
             return (

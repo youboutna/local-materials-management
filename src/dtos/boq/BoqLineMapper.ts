@@ -33,6 +33,10 @@ export interface BoqDbRow {
   total_price?: number | null;
   total_value?: number | null;
   total_ht?: number | null;
+  total_tva?: number | null;
+  total_ras?: number | null;
+  total_ttc?: number | null;
+
   vat_rate?: number | null;
   ras_rate?: number | null;
   fees?: number | null;
@@ -92,8 +96,18 @@ export class BoqLineMapper {
         : source === 'tender_estimate'
           ? String(row.tender_id ?? row.estimate_id ?? '')
           : String(row.submission_id ?? row.estimate_id ?? row.sender_id ?? '');
-    const unitPrice = row.unit_price_ht ?? row.unit_price ?? null;
     const quantity = Number(row.quantity ?? 0);
+    // Montant ligne stocké : 0 (défaut colonne) est traité comme « non valorisé »
+    // afin de retomber sur qté × PU au lieu d'afficher un total vide (PDF/récap).
+    const storedTotal = [row.total_ht, row.total_price, row.total_value]
+      .map((v) => (v == null ? null : Number(v)))
+      .find((v) => v != null && v !== 0) ?? null;
+    const storedPu = [row.unit_price_ht, row.unit_price]
+      .map((v) => (v == null ? null : Number(v)))
+      .find((v) => v != null && v !== 0) ?? null;
+    // PU absent mais montant présent (DQE forfaitaires) : PU reconstitué.
+    const unitPrice = storedPu ?? (storedTotal != null && quantity ? storedTotal / quantity : null);
+
     return {
       id: row.id,
       source,
@@ -109,7 +123,7 @@ export class BoqLineMapper {
       vatRate: row.vat_rate ?? 0,
       rasRate: row.ras_rate ?? 0,
       fees: row.fees ?? 0,
-      totalHt: row.total_ht ?? row.total_price ?? row.total_value ?? (unitPrice != null ? quantity * unitPrice : null),
+      totalHt: storedTotal ?? (unitPrice != null ? quantity * unitPrice + Number(row.fees ?? 0) : null),
       materialId: row.resource_id ?? row.material_id ?? null,
       phaseId: row.phase_id ?? row.phase_code ?? null,
       milestoneId: row.milestone_id ?? row.milestone_code ?? null,
@@ -133,7 +147,23 @@ export class BoqLineMapper {
   }
 
   static toDb(dto: BoqLineDTO): BoqDbRow {
+    // Montants dérivés persistés (source unique de vérité pour PDF / récaps /
+    // suivi budgétaire) : sans eux, les colonnes total_* restent à 0 en base.
+    const qty = Number(dto.quantity ?? 0);
+    const pu = dto.unitPrice ?? null;
+    const fees = Number(dto.fees ?? 0);
+    const totalHt = dto.totalHt ?? (pu != null ? qty * pu + fees : null);
+    const totals = totalHt == null
+      ? {}
+      : {
+          total_ht: totalHt,
+          total_tva: totalHt * Number(dto.vatRate ?? 0),
+          total_ras: totalHt * Number(dto.rasRate ?? 0),
+          total_ttc: totalHt * (1 + Number(dto.vatRate ?? 0)),
+        };
     return {
+      ...totals,
+
       project_id: dto.source === 'quantity_takeoff' || dto.source === 'dqe' ? dto.contextId : null,
       tender_id: dto.source === 'tender_estimate' ? dto.contextId : null,
       submission_id: dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
@@ -148,7 +178,7 @@ export class BoqLineMapper {
       width: dto.width ?? null,
       height: dto.height ?? null,
       quantity: dto.quantity,
-      unit_price_ht: dto.unitPrice ?? null,
+      unit_price_ht: pu ?? (totalHt != null && qty ? (totalHt - fees) / qty : null),
       vat_rate: dto.vatRate ?? 0,
       ras_rate: dto.rasRate ?? 0,
       fees: dto.fees ?? 0,

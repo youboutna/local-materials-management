@@ -75,7 +75,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const phaseOf = (id?: string | null) => phases.find((p) => p.id === id);
   const milestoneOf = (phaseId?: string | null, milestoneId?: string | null) => phaseOf(phaseId)?.milestones.find((m) => m.id === milestoneId);
   const taskOf = (phaseId?: string | null, milestoneId?: string | null, taskId?: string | null) => milestoneOf(phaseId, milestoneId)?.tasks.find((t) => t.id === taskId);
-  const lineTotal = (l: BoqLineDTO) => l.totalHt ?? ((l.quantity || 0) * (l.unitPrice ?? 0) + (l.fees ?? 0));
+  const lineTotal = (l: BoqLineDTO) => l.totalHt || ((l.quantity || 0) * (l.unitPrice ?? 0) + (l.fees ?? 0));
   const total = lines.reduce((acc, l) => acc + lineTotal(l), 0);
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
