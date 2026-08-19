@@ -369,9 +369,21 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
     };
   }
+
+  /**
+   * Résout l'identifiant fournisseur quel que soit l'endroit où l'UI le stocke
+   * (racine du formulaire, ou objet `supplier` du SupplierSelector).
+   */
+  static resolveSupplierId(formData: Partial<MaterialFormDataDTO>): string | undefined {
+    const nested = formData.supplier as
+      | { supplierId?: string; id?: string }
+      | undefined;
+    return formData.supplierId || nested?.supplierId || nested?.id || undefined;
+  }
+
 
   // ============================================================================
   // VALIDATION
