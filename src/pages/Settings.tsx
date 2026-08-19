@@ -147,44 +147,36 @@ const Settings = () => {
             </Card>
           )}
 
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <div className="-mx-1 mb-6 overflow-x-auto px-1 pb-1">
-              <TabsList className="flex h-auto w-max min-w-full flex-wrap justify-start gap-1 p-1">
-                <TabsTrigger value="appearance" className="flex items-center">
-                  <Palette className="mr-2 h-4 w-4" /> Apparence
-                </TabsTrigger>
-                <TabsTrigger value="providers" className="flex items-center">
-                  <Cloud className="mr-2 h-4 w-4" /> Providers
-                </TabsTrigger>
-                <TabsTrigger value="deployment" className="flex items-center">
-                  <Settings2 className="mr-2 h-4 w-4" /> Deployment
-                </TabsTrigger>
-                <TabsTrigger value="database" className="flex items-center">
-                  <Database className="mr-2 h-4 w-4" /> {t("settings.tabs.database")}
-                </TabsTrigger>
-                <TabsTrigger value="storage" className="flex items-center">
-                  <Folder className="mr-2 h-4 w-4" /> {t("settings.tabs.storage")}
-                </TabsTrigger>
-                <TabsTrigger value="keycloak" className="flex items-center">
-                  <Key className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak")}
-                </TabsTrigger>
-                <TabsTrigger value="keycloak-config" className="flex items-center">
-                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak_config")}
-                </TabsTrigger>
-                <TabsTrigger value="system" className="flex items-center">
-                  <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
-                </TabsTrigger>
-                <TabsTrigger value="alerts" className="flex items-center">
-                  <AlertTriangle className="mr-2 h-4 w-4" /> Alertes
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center">
-                  <Mail className="mr-2 h-4 w-4" /> Emails
-                </TabsTrigger>
-                <TabsTrigger value="local-users" className="flex items-center">
-                  <Users className="mr-2 h-4 w-4" /> Utilisateurs locaux
-                </TabsTrigger>
-              </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {/* Mobile : sélecteur compact — Desktop : onglets qui passent à la ligne */}
+            <div className="mb-6 sm:hidden">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger aria-label="Section des paramètres">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SETTINGS_TABS.map((tab) => (
+                    <SelectItem key={tab.value} value={tab.value}>
+                      {tab.label(t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <TabsList className="mb-6 hidden h-auto w-full flex-wrap justify-start gap-1 p-1 sm:flex">
+              {SETTINGS_TABS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{tab.label(t)}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
 
             <TabsContent value="appearance">
               <AppearanceSettings />
