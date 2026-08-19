@@ -609,7 +609,10 @@ const MergedNavbar = () => {
           </div>
         </div>
       </div>
+      {/* Filet de charte en pied de barre */}
+      <BrandBands className="h-[3px] rounded-none" />
     </motion.nav>
+
   );
 };
 
