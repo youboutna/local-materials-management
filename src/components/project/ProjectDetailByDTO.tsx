@@ -1114,7 +1114,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
               <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
-            </TabsList>
+            </WorkspaceTabsList>
 
             <TabsContent value="wbs" className="mt-6">
               <div className="space-y-4">
@@ -1199,7 +1199,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
                   <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
                   <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="gantt">
                   {metrics ? (
@@ -1233,7 +1233,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
                   <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
                   <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="timeline">
                   <UnifiedMilestoneManager 
@@ -1283,7 +1283,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <TabsTrigger value="tasks-exec">Tâches</TabsTrigger>
                   <TabsTrigger value="inspections">Inspections</TabsTrigger>
                   <TabsTrigger value="payments-exec">Paiements</TabsTrigger>
-                </TabsList>
+                </WorkspaceTabsList>
 
                 <TabsContent value="tasks-exec">
                   <EnhancedTaskManager
