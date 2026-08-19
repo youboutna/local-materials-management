@@ -135,24 +135,29 @@ const MaterialEdit = () => {
         </CardHeader>
         <CardContent>
           <EnhancedMaterialForm
-            ref={(formRef) => { if (formRef) window.materialFormRef = formRef; }}
+            ref={(formRef) => {
+              formRefLocal.current = formRef;
+              if (formRef) window.materialFormRef = formRef;
+            }}
             onSubmit={handleSubmit}
             initialData={formData}
             workspaces={transformedWorkspaces as unknown as WorkspaceDTO[]}
             suppliers={suppliers}
             showSubmitButton={false}
             materialId={id}
+            defaultTab={defaultTab}
           />
 
-          <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t">
             <Button variant="outline" onClick={() => navigate("/materials")} disabled={isUpdating}>
               {t("materials.cancel")}
             </Button>
             <Button
               onClick={() => {
-                const formRef = window.materialFormRef;
+                const formRef = formRefLocal.current;
                 if (formRef?.getFormData) {
                   handleSubmit(formRef.getFormData());
+
                 }
               }}
               disabled={isUpdating}
