@@ -80,9 +80,18 @@ const Settings = () => {
   const { t } = useLanguage();
   const { isDevelopmentMode } = useAuth();
   const { config, isValid } = useAppConfig();
-  const [activeTab, setActiveTab] = useState("database");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const activeTab =
+    urlTab && SETTINGS_TABS.some((s) => s.value === urlTab) ? urlTab : "database";
+  const setActiveTab = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
   const [activeDevRole, setDevRole] = useState(getActiveDevRole());
   const { toast } = useToast();
+
 
   const handleRoleChange = (role: string) => {
     setActiveDevRole(role);
