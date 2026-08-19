@@ -666,22 +666,36 @@ export default function StrategicLinkageStep({
     setSelectedAction(suggestion);
     setLineQuery('');
     setSelectedLine(null);
+    const ceiling = BudgetConsistencyService.referentialCeilingForLink({
+      projectId,
+      actionCode: suggestion.id,
+    });
     setSelectedBudget(prev => ({
       ...prev,
       programCode: prev.programCode || suggestion.parentCode,
       actionCode: suggestion.id,
+      // Auto-alimentation depuis le référentiel Loi de Finances
+      allocatedCe: ceiling.ce > 0 ? ceiling.ce : prev.allocatedCe,
+      allocatedCp: ceiling.cp > 0 ? ceiling.cp : prev.allocatedCp,
     }));
-  }, []);
+  }, [projectId]);
 
   const handleLineSelect = useCallback((suggestion: AutocompleteSuggestion) => {
     setLineQuery(suggestion.label.fr);
     setSelectedLine(suggestion);
+    const ceiling = BudgetConsistencyService.referentialCeilingForLink({
+      projectId,
+      lineCode: suggestion.id,
+    });
     setSelectedBudget(prev => ({
       ...prev,
       actionCode: prev.actionCode || suggestion.parentCode,
       lineCode: suggestion.id,
+      allocatedCe: ceiling.ce > 0 ? ceiling.ce : prev.allocatedCe,
+      allocatedCp: ceiling.cp > 0 ? ceiling.cp : prev.allocatedCp,
     }));
-  }, []);
+  }, [projectId]);
+
 
   // Remove strategy link
   const handleRemoveStrategyLink = useCallback((index: number) => {
