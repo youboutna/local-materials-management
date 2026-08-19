@@ -180,6 +180,16 @@ export function BoqWorkspace({
   const elDef = getElementType(elementType);
   const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
 
+  /** Ouvertures effectives (référentiel `element-types.deductOpenings`). */
+  const effectiveOpenings = useMemo(() => (
+    elDef?.deductOpenings && openings.count > 0 && openings.width > 0 && openings.height > 0
+      ? [{ width: openings.width, height: openings.height, count: openings.count }]
+      : undefined
+  ), [elDef, openings]);
+
+  /** Recommandations du référentiel pour le type d'ouvrage courant. */
+  const recommendations = useMemo(() => (useAdvanced ? getRecommendationItems(elementType) : []), [useAdvanced, elementType]);
+
   // Dynamic quantity — recomputed from L/W/H + element type (or user-entered on generic/RH)
   const computedQuantity = useMemo(() => {
     if (!useAdvanced) return Number(form.quantity) || 0;
@@ -193,9 +203,11 @@ export function BoqWorkspace({
       height: form.height ?? null,
       quantity: 0,
       unitPrice: form.unitPrice ?? 0,
+      openings: effectiveOpenings,
     });
     return r.quantity;
-  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId]);
+  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId, effectiveOpenings]);
+
 
   const manualPreview = useMemo(() => {
     const pu = Number(form.unitPrice) || 0;
