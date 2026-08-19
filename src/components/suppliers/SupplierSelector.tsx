@@ -1,142 +1,181 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search } from 'lucide-react';
+import { Building2, Search, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useSuppliersSelector } from '@/hooks/hexagonal'
+import { useSuppliersSelector } from '@/hooks/hexagonal';
+
+export interface SupplierSelectorValue {
+  id?: string;
+  name?: string;
+  contact?: string;
+  leadTime?: number;
+}
 
 interface SupplierSelectorProps {
-  value?: {
-    id?: string;
-    name?: string;
-    contact?: string;
-    leadTime?: number;
-  };
-  onChange: (supplier: {
-    id?: string;
-    name: string;
-    contact: string;
-    leadTime: number;
-  }) => void;
+  value?: SupplierSelectorValue;
+  onChange: (supplier: { id?: string; name: string; contact: string; leadTime: number }) => void;
   allowCustom?: boolean;
   disabled?: boolean;
-  suppliers?: any[]; // Add suppliers prop
+  /** Liste préchargée (page Matériaux). Sinon le hook interne prend le relais. */
+  suppliers?: Array<Record<string, unknown>>;
 }
+
+const CUSTOM_OPTION = 'custom';
 
 const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>(({
   value,
   onChange,
   allowCustom = true,
   disabled = false,
-  suppliers: passedSuppliers
+  suppliers: passedSuppliers,
 }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCustom, setIsCustom] = useState(!value?.id);
+  const [isCustom, setIsCustom] = useState(false);
   const [customSupplier, setCustomSupplier] = useState({
     name: value?.name || '',
     contact: value?.contact || '',
-    leadTime: value?.leadTime || 7
+    leadTime: value?.leadTime ?? 7,
   });
 
   const { data: hookSuppliers, isLoading: hookLoading } = useSuppliersSelector(searchTerm);
 
-  // Use passed suppliers if available, otherwise use hook data
-  const suppliers = passedSuppliers || hookSuppliers;
+  const allSuppliers = (passedSuppliers ?? hookSuppliers ?? []) as Array<Record<string, any>>;
   const isLoading = passedSuppliers ? false : hookLoading;
 
+  // La liste préchargée n'est pas filtrée côté serveur : on filtre localement.
+  const suppliers = useMemo(() => {
+    if (!passedSuppliers || !searchTerm.trim()) return allSuppliers;
+    const q = searchTerm.trim().toLowerCase();
+    return allSuppliers.filter((s) =>
+      [s.name, s.contact_person, s.email, s.category]
+        .filter(Boolean)
+        .some((f: string) => String(f).toLowerCase().includes(q))
+    );
+  }, [allSuppliers, passedSuppliers, searchTerm]);
+
+  // Synchronisation avec les données chargées de façon asynchrone (mode édition).
+  useEffect(() => {
+    if (value?.id) {
+      setIsCustom(false);
+      return;
+    }
+    if (value?.name) {
+      setIsCustom(true);
+      setCustomSupplier({
+        name: value.name,
+        contact: value.contact || '',
+        leadTime: value.leadTime ?? 7,
+      });
+    }
+  }, [value?.id, value?.name, value?.contact, value?.leadTime]);
+
   const handleSupplierSelect = (supplierId: string) => {
-    if (supplierId === 'custom') {
+    if (supplierId === CUSTOM_OPTION) {
       setIsCustom(true);
       onChange({
         name: customSupplier.name,
         contact: customSupplier.contact,
-        leadTime: customSupplier.leadTime
+        leadTime: customSupplier.leadTime,
       });
       return;
     }
 
-    const supplier = suppliers?.find(s => s.id === supplierId);
-    if (supplier) {
-      setIsCustom(false);
-      onChange({
-        id: supplier.id,
-        name: supplier.name,
-        contact: supplier.contact_person || supplier.phone || supplier.email || '',
-        leadTime: 7
-      });
-    }
+    const supplier = suppliers.find((s) => s.id === supplierId);
+    if (!supplier) return;
+
+    setIsCustom(false);
+    onChange({
+      id: supplier.id as string,
+      name: (supplier.name as string) || '',
+      contact: (supplier.contact_person || supplier.phone || supplier.email || '') as string,
+      leadTime: (supplier.lead_time_days as number) ?? value?.leadTime ?? 7,
+    });
   };
 
-  const handleCustomSupplierChange = (field: string, val: any) => {
+  const handleCustomSupplierChange = (field: 'name' | 'contact' | 'leadTime', val: string | number) => {
     const updated = { ...customSupplier, [field]: val };
     setCustomSupplier(updated);
     onChange({
       name: updated.name,
       contact: updated.contact,
-      leadTime: updated.leadTime
+      leadTime: updated.leadTime,
     });
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>â˜…</span>
-    ));
-  };
+  const renderStars = (rating: number) => (
+    <span className="flex items-center" aria-label={`Note ${rating} sur 5`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          className={`h-3 w-3 ${i < rating ? 'fill-secondary text-secondary' : 'text-muted-foreground/40'}`}
+          aria-hidden="true"
+        />
+      ))}
+    </span>
+  );
 
   return (
     <div ref={ref} className="space-y-4">
-      <div>
-        <Label>Fournisseur</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="supplierSearch">Fournisseur</Label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
+            id="supplierSearch"
             placeholder="Rechercher un fournisseur..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={disabled}
             className="pl-10"
           />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+        <div className="flex justify-center py-4" role="status" aria-live="polite">
+          <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          <span className="sr-only">Chargement des fournisseurs…</span>
         </div>
       ) : (
-        <Select 
-          value={isCustom ? 'custom' : value?.id || ''} 
+        <Select
+          value={isCustom ? CUSTOM_OPTION : value?.id || ''}
           onValueChange={handleSupplierSelect}
+          disabled={disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Sélectionner un fournisseur">
             <SelectValue placeholder="Sélectionner un fournisseur" />
           </SelectTrigger>
           <SelectContent>
-            {suppliers?.map((supplier) => (
-              <SelectItem key={supplier.id} value={supplier.id}>
-                <div className="flex items-center justify-between w-full">
+            {suppliers.length === 0 && !allowCustom && (
+              <div className="px-3 py-2 text-sm text-muted-foreground">Aucun fournisseur disponible</div>
+            )}
+            {suppliers.map((supplier) => (
+              <SelectItem key={supplier.id as string} value={supplier.id as string}>
+                <div className="flex items-center justify-between gap-3 w-full">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
+                    <Building2 className="h-4 w-4" aria-hidden="true" />
                     <div>
-                      <div className="font-medium">{supplier.name}</div>
+                      <div className="font-medium">{supplier.name as string}</div>
                       {supplier.contact_person && (
-                        <div className="text-xs text-gray-500">{supplier.contact_person}</div>
+                        <div className="text-xs text-muted-foreground">{supplier.contact_person as string}</div>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {supplier.category && (
-                      <Badge variant="outline" className="text-xs">{supplier.category}</Badge>
+                      <Badge variant="outline" className="text-xs">{supplier.category as string}</Badge>
                     )}
-                    {supplier.rating && <div className="flex">{renderStars(supplier.rating)}</div>}
+                    {typeof supplier.rating === 'number' && renderStars(supplier.rating as number)}
                   </div>
                 </div>
               </SelectItem>
             ))}
             {allowCustom && (
-              <SelectItem value="custom">
+              <SelectItem value={CUSTOM_OPTION}>
                 <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
+                  <Building2 className="h-4 w-4" aria-hidden="true" />
                   <span>Autre fournisseur (saisie manuelle)</span>
                 </div>
               </SelectItem>
@@ -146,33 +185,36 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
       )}
 
       {isCustom && (
-        <div className="space-y-3 p-4 border rounded-lg bg-gray-50">
-          <div>
+        <div className="space-y-3 p-4 border rounded-lg bg-surface-muted">
+          <div className="space-y-1.5">
             <Label htmlFor="supplierName">Nom du fournisseur</Label>
             <Input
               id="supplierName"
               value={customSupplier.name}
+              disabled={disabled}
               onChange={(e) => handleCustomSupplierChange('name', e.target.value)}
               placeholder="Nom du fournisseur"
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="supplierContact">Contact</Label>
             <Input
               id="supplierContact"
               value={customSupplier.contact}
+              disabled={disabled}
               onChange={(e) => handleCustomSupplierChange('contact', e.target.value)}
               placeholder="Téléphone ou email"
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
             <Input
               id="leadTime"
               type="number"
-              min="1"
+              min={1}
+              disabled={disabled}
               value={customSupplier.leadTime}
-              onChange={(e) => handleCustomSupplierChange('leadTime', parseInt(e.target.value) || 1)}
+              onChange={(e) => handleCustomSupplierChange('leadTime', parseInt(e.target.value, 10) || 1)}
             />
           </div>
         </div>
@@ -180,6 +222,6 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
     </div>
   );
 });
-SupplierSelector.displayName = "SupplierSelector";
+SupplierSelector.displayName = 'SupplierSelector';
 
 export default SupplierSelector;
