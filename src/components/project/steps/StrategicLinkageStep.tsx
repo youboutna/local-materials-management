@@ -33,6 +33,9 @@ import {
 } from '@/config/referentials/strategies/scapp-national-strategy.referential';
 import type { CreateProjectStrategyLinkDTO } from '@/dtos/entities/ProjectStrategyLinkDTO';
 import type { CreateProjectBudgetLinkDTO } from '@/dtos/entities/ProjectBudgetLinkDTO';
+import { BudgetConsistencyService } from '@/application/services/BudgetConsistencyService';
+import BudgetConsistencyAlerts from '@/components/project/BudgetConsistencyAlerts';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
