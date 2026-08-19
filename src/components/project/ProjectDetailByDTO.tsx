@@ -912,98 +912,93 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
 
         {/* ===== OVERVIEW ===== */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informations générales</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium">Date de début</p>
-                  <p className="text-sm text-muted-foreground">
-                    {project.startDate
-                      ? new Date(project.startDate).toLocaleDateString()
-                      : "Non définie"}
-                  </p>
+        <TabsContent value="overview" className="space-y-3">
+          {/* Synthèse compacte : identité du marché + statut, une seule carte */}
+          <Card>
+            <CardContent className="grid grid-cols-1 gap-x-8 gap-y-3 p-4 lg:grid-cols-2">
+              <dl className="space-y-2 text-sm">
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted-foreground">Période</dt>
+                  <dd className="text-right font-medium">
+                    {project.startDate ? new Date(project.startDate).toLocaleDateString() : "—"}
+                    {" → "}
+                    {project.endDate ? new Date(project.endDate).toLocaleDateString() : "—"}
+                  </dd>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Date de fin prévue</p>
-                  <p className="text-sm text-muted-foreground">
-                    {project.endDate
-                      ? new Date(project.endDate).toLocaleDateString()
-                      : "Non définie"}
-                  </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted-foreground">Financement</dt>
+                  <dd className="text-right font-medium">{project.financingSource || "Non spécifié"}</dd>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Source de financement</p>
-                  <p className="text-sm text-muted-foreground">
-                    {project.financingSource || "Non spécifiée"}
-                  </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted-foreground">Type de marché</dt>
+                  <dd className="text-right font-medium">{project.marketType || "Non spécifié"}</dd>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Type de marché</p>
-                  <p className="text-sm text-muted-foreground">
-                    {project.marketType || "Non spécifié"}
-                  </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted-foreground">Localisation</dt>
+                  <dd className="text-right font-medium">
+                    {project.location || "Non spécifiée"}
+                    {(() => {
+                      const lat =
+                        project?.coordinates?.latitude ??
+                        (project as unknown as { latitude?: number }).latitude;
+                      const lng =
+                        project?.coordinates?.longitude ??
+                        (project as unknown as { longitude?: number }).longitude;
+                      const hasCoords = typeof lat === "number" && typeof lng === "number";
+                      return (
+                        <span className="block text-xs font-normal text-muted-foreground">
+                          {hasCoords
+                            ? `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`
+                            : "Aucune coordonnée — voir Cartographie"}
+                        </span>
+                      );
+                    })()}
+                  </dd>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Localisation</p>
-                  <p className="text-sm text-muted-foreground">
-                    {project.location || "Localisation non spécifiée"}
-                  </p>
-                  {(() => {
-                    const lat =
-                      project?.coordinates?.latitude ??
-                      (project as unknown as { latitude?: number }).latitude;
-                    const lng =
-                      project?.coordinates?.longitude ??
-                      (project as unknown as { longitude?: number }).longitude;
-                    const hasCoords =
-                      typeof lat === "number" && typeof lng === "number";
-                    return (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {hasCoords
-                          ? `Coordonnées : ${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`
-                          : "Aucune coordonnée — voir l'onglet Cartographie"}
-                      </p>
-                    );
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
+              </dl>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Statut du projet</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Phase actuelle</span>
-                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"}>
-                    {currentPhaseInfo.currentPhase || "Aucune phase définie"}
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Phase actuelle</span>
+                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
+                    {currentPhaseInfo.currentPhase || "Aucune phase"}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Étape actuelle</span>
-                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Étape actuelle</span>
+                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
                     {currentPhaseInfo.currentStage || "N/A"}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Méthodologie</span>
-                  <Badge variant="outline">{projectMethodology}</Badge>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Méthodologie</span>
+                  <Badge variant="outline" className="text-[11px]">{projectMethodology}</Badge>
                 </div>
-                <Progress value={metrics?.progress ?? 0} className="mt-4" />
-                <p className="text-xs text-center text-muted-foreground">
-                  Progression globale pondérée: {metrics?.formatted.progress ?? "N/A"}
+                <Progress value={metrics?.progress ?? 0} className="h-2" />
+                <p className="text-xs text-muted-foreground">
+                  Avancement pondéré : {metrics?.formatted.progress ?? "N/A"} ·{" "}
+                  {metrics?.progressBasisLabel ?? "projet (aucune phase)"}
                 </p>
-                <p className="text-xs text-center text-muted-foreground mt-1">
-                  Source unique : {metrics?.progressBasisLabel ?? "projet (aucune phase)"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-2 text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Target className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-muted-foreground">Jalons</span>
+                    <span className="font-semibold">
+                      {metrics?.milestoneProgress.completed ?? 0}/{metrics?.milestoneProgress.total ?? 0}
+                    </span>
+                    <span className="text-muted-foreground">
+                      ({metrics?.formatted.milestoneProgress ?? "0,00 %"})
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-muted-foreground">Documents</span>
+                    <span className="font-semibold">{documentsData.length}</span>
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <ProjectCheckpointsDashboard
             projectId={projectId!}
@@ -1014,7 +1009,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
           <ActionableProjectMilestones
             projectId={projectId!}
-            maxItems={6}
+            maxItems={5}
             showHeader={true}
             onMilestoneClick={(milestoneId, phaseId) => {
               if (phaseId) {
@@ -1025,53 +1020,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             }}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Package className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium">Matériaux</p>
-                    <p className="text-lg font-bold">
-                      {computedPhases.reduce((total: number, phase) => {
-                        return total + 0;
-                      }, 0) || 0}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Target className="h-8 w-8 text-green-600" />
-                  <div>
-                    <p className="text-sm font-medium">Jalons</p>
-                    <p className="text-lg font-bold">
-                      {metrics?.milestoneProgress.completed ?? 0} / {metrics?.milestoneProgress.total ?? 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Progression: {metrics?.formatted.milestoneProgress ?? '0,00 %'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-orange-600" />
-                  <div>
-                    <p className="text-sm font-medium">Documents</p>
-                    <p className="text-lg font-bold">{documentsData.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Désignation du consultant projet */}
           <ProjectConsultantDesignation projectId={projectId} />
+        </TabsContent>
+
         </TabsContent>
 
 
