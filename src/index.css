@@ -116,7 +116,46 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  
     --radius: 0.5rem;
+
+    /* Typographie du thème */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Lora', 'Amiri', Georgia, serif;
+
+    /* Palettes de marque (consommées par Tailwind : adrar-*, terracotta-*, sandstone-*) */
+    --adrar-50: 45 32% 93%;
+    --adrar-100: 45 32% 85%;
+    --adrar-200: 44 32% 70%;
+    --adrar-300: 44 32% 55%;
+    --adrar-400: 45 37% 44%;
+    --adrar-500: 45 46% 34%;
+    --adrar-600: 46 46% 28%;
+    --adrar-700: 47 46% 22%;
+    --adrar-800: 49 45% 16%;
+    --adrar-900: 52 44% 11%;
+
+    --terracotta-50: 17 68% 93%;
+    --terracotta-100: 17 70% 85%;
+    --terracotta-200: 17 71% 71%;
+    --terracotta-300: 17 63% 60%;
+    --terracotta-400: 15 56% 51%;
+    --terracotta-500: 14 59% 45%;
+    --terracotta-600: 14 58% 38%;
+    --terracotta-700: 14 58% 30%;
+    --terracotta-800: 15 58% 22%;
+    --terracotta-900: 14 57% 15%;
+
+    --sandstone-50: 40 43% 96%;
+    --sandstone-100: 40 43% 92%;
+    --sandstone-200: 38 44% 84%;
+    --sandstone-300: 38 38% 76%;
+    --sandstone-400: 40 34% 68%;
+    --sandstone-500: 40 32% 60%;
+    --sandstone-600: 38 29% 53%;
+    --sandstone-700: 38 26% 43%;
+    --sandstone-800: 38 26% 33%;
+    --sandstone-900: 39 26% 24%;
   }
+
  
   .dark {
     --background: 222.2 84% 4.9%;
