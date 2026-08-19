@@ -661,10 +661,21 @@ export class MaterialService {
         image: updates.image ?? existing.image,
         coordinatesLatitude: updates.coordinatesLatitude ?? existing.coordinatesLatitude,
         coordinatesLongitude: updates.coordinatesLongitude ?? existing.coordinatesLongitude,
-        multilangLabels: updates.multilangLabels ?? existing.multilangLabels
+        multilangLabels: updates.multilangLabels ?? existing.multilangLabels,
+        // Champs métier à ne jamais perdre lors d'une mise à jour partielle
+        supplierId: updates.supplierId ?? existing.supplierId,
+        leadTimeDays: updates.supplier?.leadTime ?? existing.leadTimeDays,
+        materialCode: existing.materialCode,
+        minimumStock: existing.minimumStock,
+        maximumStock: existing.maximumStock,
+        qualityGrade: existing.qualityGrade,
+        technicalSpecifications: existing.technicalSpecifications,
+        materialStatus: existing.materialStatus,
+        tags: existing.tags
       }
     );
   }
+
 
   // ============================================================================
   // FORM INTEGRATION
