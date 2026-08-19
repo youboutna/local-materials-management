@@ -180,6 +180,10 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
     if (partial.phaseId !== undefined) row.phase_id = partial.phaseId ?? null;
     if (partial.dueDate !== undefined) row.due_date = partial.dueDate?.toISOString() ?? null;
     if (partial.completedAt !== undefined) row.completed_at = partial.completedAt?.toISOString() ?? null;
+    if (partial.quantity !== undefined) row.quantity = partial.quantity ?? null;
+    if (partial.unit !== undefined) row.unit = partial.unit ?? null;
+    if (partial.dailyRate !== undefined) row.daily_rate = partial.dailyRate ?? null;
+    if (partial.estimatedDuration !== undefined) row.estimated_duration = partial.estimatedDuration ?? null;
     if (partial.assignedTo !== undefined) {
       const list = partial.assignedTo ?? [];
       row.assigned_to = list.length > 0 ? `{${list.join(',')}}` : null;
