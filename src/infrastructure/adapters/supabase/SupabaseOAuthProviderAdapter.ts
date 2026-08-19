@@ -54,9 +54,11 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .order('provider_name');
 
     if (error) {
-      console.error('❌ SupabaseOAuthProviderAdapter.findEnabled error:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch enabled OAuth providers', error);
+      // Lecture non critique : la page de connexion ne doit jamais échouer sur un 401/permission denied.
+      console.warn('⚠️ SupabaseOAuthProviderAdapter.findEnabled unavailable:', error.message);
+      return [];
     }
+
 
     return OAuthProviderTransformer.manyFromDB(data || []);
   }
