@@ -291,10 +291,23 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           </div>
         )}
         {milestones.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun jalon pour cette phase
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Aucun jalon pour cette phase — vous pouvez les générer depuis le référentiel
+              projet puis les ajuster.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateFromReferential}
+              disabled={generating}
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              {generating ? 'Génération…' : 'Générer les jalons du référentiel'}
+            </Button>
           </div>
         ) : (
+
           <div className="space-y-4">
             {milestones.map((milestone) => (
               <div
