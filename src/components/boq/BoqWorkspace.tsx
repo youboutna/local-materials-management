@@ -36,6 +36,7 @@ import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
