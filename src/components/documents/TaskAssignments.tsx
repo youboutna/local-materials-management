@@ -46,6 +46,14 @@ import {
 
 type Project = { id: string; title: string };
 
+/** `assignedTo` est un tableau côté DTO : l'UI n'expose qu'un assigné principal. */
+const firstAssignee = (task: any): string => {
+  const raw = task?.assignedTo ?? task?.assigned_to;
+  if (Array.isArray(raw)) return raw[0] || '';
+  return raw || '';
+};
+
+
 // Local form data type
 interface TaskFormData {
   title: string;
@@ -145,8 +153,12 @@ const TaskAssignmentsComponent = () => {
           title: taskData.title,
           description: taskData.description || undefined,
           priority: taskData.priority as any,
+          status: taskData.status as any,
+          assigneeName: taskData.assignee_name || undefined,
+          assigneeEmail: taskData.assignee_email || undefined,
           dueDate: taskData.due_date || undefined,
           assignmentNotes: taskData.notes || undefined,
+
         }, 
         assignedBy: user?.id 
       });
@@ -172,17 +184,24 @@ const TaskAssignmentsComponent = () => {
     mutationFn: async ({ id, data }: { id: string; data: TaskFormData }) => {
       const taskService = getTaskAssignmentService();
       
-      // Build proper update DTO
-      return await taskService.updateTaskAssignment({ 
-        id, 
+      // Mise à jour complète : on ne perd plus titre / projet / assigné
+      return await taskService.updateTaskAssignment({
+        id,
         updates: {
+          title: data.title,
+          description: data.description || undefined,
+          projectId: data.project_id || undefined,
+          assignedTo: data.assigned_to ? [data.assigned_to] : [],
+          assigneeType: (data.assignee_type || 'user') as any,
+          assigneeName: data.assignee_name || undefined,
+          assigneeEmail: data.assignee_email || undefined,
           priority: data.priority as any,
           status: data.status as any,
           dueDate: data.due_date || undefined,
           assignmentNotes: data.notes || undefined,
-          progress: 0,
         }
       });
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
@@ -248,11 +267,12 @@ const TaskAssignmentsComponent = () => {
       title: task.title || "",
       description: task.description || "",
       project_id: task.project_id || task.projectId || "",
-      assigned_to: task.assigned_to || task.assignedTo || "",
+      assigned_to: firstAssignee(task),
       assignee_type: (task.assignee_type || task.assigneeType || "") as any,
       assignee_name: task.assignee_name || task.assigneeName || "",
       assignee_email: task.assignee_email || task.assigneeEmail || "",
-      due_date: task.due_date || task.dueDate || "",
+      due_date: (task.due_date || task.dueDate || "").slice(0, 10),
+
       priority: task.priority || "medium",
       status: task.status || "pending",
       notes: task.notes || task.assignmentNotes || "",
@@ -302,9 +322,10 @@ const TaskAssignmentsComponent = () => {
     if (name) {
       return `${name}${type ? ` (${type})` : ''}`;
     }
-    const assignedTo = task.assigned_to || task.assignedTo;
+    const assignedTo = firstAssignee(task);
     if (!assignedTo) return t("task.unassigned") || "Non assigné";
     return assignedTo;
+
   };
 
   // Pagination
@@ -480,12 +501,21 @@ const TaskAssignmentsComponent = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Assigné à</Label>
                   <UserSelector
+                    label="Assigné à"
                     value={formData.assigned_to}
-                    onChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, assigned_to: value }))}
+                    onSelect={(user) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        assignee_type: prev.assignee_type || 'user',
+                        assignee_name: user?.full_name || prev.assignee_name,
+                        assignee_email: user?.email || prev.assignee_email,
+                      }))
+                    }
                     placeholder="Sélectionner"
                   />
+
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="due_date">Date d'échéance</Label>
