@@ -66,8 +66,12 @@ export class NotificationService {
       const result = await this.notificationRepository.createNotification(notificationData);
       
       if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create notification');
+        throw new AppError(
+          ErrorCode.INTERNAL_ERROR,
+          `Failed to create notification: ${result.error.message}`
+        );
       }
+
 
       if (!result.notification) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'No notification created');
