@@ -202,46 +202,8 @@ const ProjectCreate = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
-        {/* Workflow Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Progression du workflow</span>
-            <span className="text-sm text-muted-foreground">{progress}%</span>
-          </div>
-          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-primary rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            {workflowSteps.map((step) => (
-              <div
-                key={step.number}
-                className={`flex items-center gap-1 cursor-pointer transition-colors ${
-                  currentStep === step.number ? 'text-primary font-medium' :
-                  completedSteps.includes(step.number) ? 'text-green-600' :
-                  'text-muted-foreground'
-                }`}
-                onClick={() => setCurrentStep(step.number)}
-              >
-                <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-xs">
-                  {completedSteps.includes(step.number) ? (
-                    <CheckCircle className="h-3 w-3" />
-                  ) : (
-                    step.number
-                  )}
-                </span>
-                <span className="hidden sm:inline">{step.title}</span>
-                {step.required && (
-                  <span className="text-red-500 text-[10px]">*</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Stepper unique géré par ProjectCreationWorkflow (onglets) */}
+
 
         {/* Error Alert */}
         {error && (
