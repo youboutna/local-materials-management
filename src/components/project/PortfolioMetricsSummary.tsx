@@ -195,8 +195,13 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
           </div>
         </CardContent>
       </Card>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </span>
     </div>
   );
+
 };
 
 export default PortfolioMetricsSummary;
