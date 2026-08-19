@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WorkspaceTabsList } from '@/components/common/WorkspaceTabsList';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
@@ -287,7 +288,7 @@ const PhaseDetail: React.FC = () => {
           {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
           <TabsContent value="planification" className="space-y-6">
             <Tabs defaultValue="steps" className="space-y-4">
-              <TabsList className="flex flex-wrap h-auto">
+              <WorkspaceTabsList variant="underline">
                 <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" />Étapes</TabsTrigger>
                 <TabsTrigger value="tasks">Tâches</TabsTrigger>
                 <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
@@ -298,7 +299,7 @@ const PhaseDetail: React.FC = () => {
                 <TabsTrigger value="critical">Chemin critique</TabsTrigger>
                 <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" />Jalons</TabsTrigger>
                 <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" />Équipe</TabsTrigger>
-              </TabsList>
+              </WorkspaceTabsList>
               <TabsContent value="steps">
                 <PhaseStepsManager
                   steps={steps}
@@ -354,12 +355,12 @@ const PhaseDetail: React.FC = () => {
           {/* Exécution: ressources consommées, finances, livrables, échéances */}
           <TabsContent value="execution" className="space-y-6">
             <Tabs defaultValue="resources" className="space-y-4">
-              <TabsList className="flex flex-wrap h-auto">
+              <WorkspaceTabsList variant="underline">
                 <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
                 <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" />Finances</TabsTrigger>
                 <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" />Livrables</TabsTrigger>
                 <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" />Échéances</TabsTrigger>
-              </TabsList>
+              </WorkspaceTabsList>
               <TabsContent value="resources">
                 <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
               </TabsContent>
