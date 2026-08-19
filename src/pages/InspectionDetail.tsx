@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { InspectionDocumentsPanel } from '@/components/documents/panels';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -124,7 +125,7 @@ const InspectionDetail = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4 mb-6">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5 mb-6">
               <TabsTrigger value="details" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Détails
@@ -143,7 +144,15 @@ const InspectionDetail = () => {
                 <FileText className="h-4 w-4" />
                 Paiements
               </TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Documents
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="documents">
+              {id && <InspectionDocumentsPanel inspectionId={id} />}
+            </TabsContent>
 
             <TabsContent value="details">
               <Card>
