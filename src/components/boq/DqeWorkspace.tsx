@@ -165,6 +165,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: ['boq'] }),
         queryClient.invalidateQueries({ queryKey: ['boq-documents'] }),
+        queryClient.invalidateQueries({ queryKey: ['boq-list'] }),
         queryClient.invalidateQueries({ queryKey: ['project-alerts'] }),
         queryClient.invalidateQueries({ queryKey: ['payment-requests'] }),
       ]);
