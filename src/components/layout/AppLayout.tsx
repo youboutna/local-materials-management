@@ -4,10 +4,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ContextualSidebar } from "@/components/navigation/ContextualSidebar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
-import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
-import ThemeSwitcher from "@/components/settings/ThemeSwitcher";
 import { BrandBandsBackground } from "@/components/branding/BrandIdentity";
+
 
 
 interface AppLayoutProps {
