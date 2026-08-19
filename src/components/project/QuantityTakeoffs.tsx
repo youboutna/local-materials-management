@@ -34,9 +34,11 @@ interface QuantityTakeoff {
 
 interface QuantityTakeoffsProps {
   projectId: string;
+  /** Référentiel projet courant — piloté par la page appelante. */
+  referentialCode?: ReferentialType;
 }
 
-const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
+const QuantityTakeoffs = ({ projectId, referentialCode }: QuantityTakeoffsProps) => {
   const [takeoffs, setTakeoffs] = useState<QuantityTakeoff[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
