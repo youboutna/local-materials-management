@@ -1,17 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Clock, DollarSign, Shield, Settings, Save, RefreshCw, LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEscalationThresholdsHex } from '@/hooks/hexagonal/useEscalationThresholdsHex';
 import type { EscalationThresholdRow } from '@/domain/repositories/IEscalationThresholdRepository';
+import {
+  ESCALATION_SEVERITIES,
+  ESCALATION_THRESHOLD_CATEGORIES,
+  ESCALATION_UNIT_LABELS,
+  type EscalationUnit,
+} from '@/config/referentials/kpi/escalation-thresholds.referential';
 
 type EscalationThreshold = EscalationThresholdRow;
+
+/** Résolution des icônes référentielles (le référentiel reste sans dépendance UI). */
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  clock: Clock,
+  shield: Shield,
+  money: DollarSign,
+  alert: AlertTriangle,
+  settings: Settings,
+};
 
 const EscalationThresholdsSettings: React.FC = () => {
   const [thresholds, setThresholds] = useState<EscalationThreshold[]>([]);
@@ -23,14 +37,18 @@ const EscalationThresholdsSettings: React.FC = () => {
     isSaving: saving,
   } = useEscalationThresholdsHex();
 
-  const thresholdTypes = [
-    { key: 'project_delay', label: 'Retards de Projet', icon: Clock },
-    { key: 'insurance_expiry', label: 'Expiration d\'Assurance', icon: Shield },
-    { key: 'payment_validation', label: 'Validation Paiement', icon: DollarSign },
-    { key: 'inspection_overdue', label: 'Inspections en Retard', icon: AlertTriangle },
-    { key: 'material_wastage', label: 'Gaspillage Matériau', icon: Settings },
-    { key: 'budget_allocation', label: 'Allocation Budget', icon: Settings }
-  ];
+  const thresholdTypes = useMemo(
+    () =>
+      ESCALATION_THRESHOLD_CATEGORIES.map((category) => ({
+        key: category.key,
+        label: category.label,
+        description: category.description,
+        highlighted: category.highlighted,
+        icon: CATEGORY_ICONS[category.icon] ?? Settings,
+      })),
+    []
+  );
+
 
   useEffect(() => {
     setThresholds(loadedThresholds);
