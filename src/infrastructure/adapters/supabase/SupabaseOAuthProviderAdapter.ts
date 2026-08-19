@@ -38,9 +38,10 @@ export class SupabaseOAuthProviderAdapter implements IOAuthProviderRepository {
       .maybeSingle();
 
     if (error) {
-      console.error('❌ SupabaseOAuthProviderAdapter.findByName error:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch OAuth provider', error);
+      console.warn('⚠️ SupabaseOAuthProviderAdapter.findByName unavailable:', error.message);
+      return null;
     }
+
 
     return data ? OAuthProviderTransformer.fromDB(data) : null;
   }
