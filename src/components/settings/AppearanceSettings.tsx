@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Moon, RotateCcw, Sun } from 'lucide-react';
 import { useUiTheme } from '@/contexts/UiThemeContext';
 import { BrandBandsBackground, BrandIdentity } from '@/components/branding/BrandIdentity';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
 
 export const AppearanceSettings: React.FC = () => {
@@ -114,7 +115,7 @@ export const AppearanceSettings: React.FC = () => {
               <Input
                 id="owner-name"
                 value={brandingOverrides.ownerName ?? ''}
-                placeholder={branding.ownerName}
+                placeholder={ownerOrganization?.name ?? branding.ownerName}
                 onChange={(e) => setBrandingOverrides({ ownerName: e.target.value })}
               />
             </div>
@@ -123,7 +124,7 @@ export const AppearanceSettings: React.FC = () => {
               <Input
                 id="owner-subtitle"
                 value={brandingOverrides.ownerSubtitle ?? ''}
-                placeholder={branding.ownerSubtitle ?? '—'}
+                placeholder={ownerOrganization?.description ?? branding.ownerSubtitle ?? '—'}
                 onChange={(e) => setBrandingOverrides({ ownerSubtitle: e.target.value })}
               />
             </div>
