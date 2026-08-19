@@ -124,12 +124,12 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
     if (!empId || !empRole) return;
     try {
       await phaseEmployees.addEmployee({
-        employee_name: empId,
-        employee_role: empRole,
-        daily_rate: dailyRate,
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-        employee_contact: JSON.stringify({ stepId, employeeId: empId }),
+        employeeName: empId,
+        employeeRole: empRole,
+        dailyRate: dailyRate ?? null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+        employeeContact: JSON.stringify({ stepId, employeeId: empId }),
       });
       toast({ title: "Main d'œuvre ajoutée" });
       setEmpId("");
