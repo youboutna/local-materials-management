@@ -102,11 +102,6 @@ export interface TenderOption {
 
 // ============= Hooks =============
 
-export function useUsersSelector(options?: {
-  searchTerm?: string;
-  roleFilter?: string[];
-  enabled?: boolean;
-}) {
 const normalizeName = (value?: string | null) =>
   (value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
