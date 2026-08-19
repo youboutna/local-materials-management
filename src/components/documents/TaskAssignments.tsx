@@ -501,12 +501,21 @@ const TaskAssignmentsComponent = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Assigné à</Label>
                   <UserSelector
+                    label="Assigné à"
                     value={formData.assigned_to}
-                    onChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, assigned_to: value }))}
+                    onSelect={(user) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        assignee_type: prev.assignee_type || 'user',
+                        assignee_name: user?.full_name || prev.assignee_name,
+                        assignee_email: user?.email || prev.assignee_email,
+                      }))
+                    }
                     placeholder="Sélectionner"
                   />
+
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="due_date">Date d'échéance</Label>
