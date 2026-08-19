@@ -29,7 +29,15 @@ export function useBoqDocument(filter: BoqLineFilter) {
   }, [qc]);
 
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['boq'] });
+  /** Invalide les lignes + la vue liste, puis force un refetch immédiat de la table courante. */
+  const invalidate = async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['boq'] }),
+      qc.invalidateQueries({ queryKey: ['boq-list'] }),
+      qc.invalidateQueries({ queryKey: ['boq-documents'] }),
+    ]);
+    await query.refetch();
+  };
 
   const createMut = useMutation({
     mutationFn: (dto: BoqLineDTO) => boqRepository.create(dto),
