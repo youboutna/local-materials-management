@@ -67,7 +67,19 @@ interface TaskFormData {
   priority: string;
   status: string;
   notes: string;
+  /** Métré DQE reporté sur la tâche. */
+  quantity: string;
+  unit: string;
+  /** Délai en jours (estimated_duration). */
+  estimated_duration: string;
+  /** Taux journalier main d'œuvre. */
+  daily_rate: string;
 }
+
+const toNum = (value: string): number | undefined => {
+  const n = Number(value);
+  return value !== "" && Number.isFinite(n) ? n : undefined;
+};
 
 const TaskAssignmentsComponent = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -88,7 +100,23 @@ const TaskAssignmentsComponent = () => {
     priority: "medium",
     status: "pending",
     notes: "",
+    quantity: "",
+    unit: "",
+    estimated_duration: "",
+    daily_rate: "",
   });
+  // Dérivation référentielle : main d'œuvre (homme·jour), délai et taux journalier
+  const effortHint = useMemo(
+    () =>
+      resolveDqeEffort({
+        quantity: toNum(formData.quantity) ?? 0,
+        unit: formData.unit,
+        durationDays: toNum(formData.estimated_duration) ?? null,
+        unitPrice: toNum(formData.daily_rate) ?? null,
+      }),
+    [formData.quantity, formData.unit, formData.estimated_duration, formData.daily_rate],
+  );
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
@@ -158,6 +186,10 @@ const TaskAssignmentsComponent = () => {
           assigneeEmail: taskData.assignee_email || undefined,
           dueDate: taskData.due_date || undefined,
           assignmentNotes: taskData.notes || undefined,
+          quantity: toNum(taskData.quantity),
+          unit: taskData.unit || undefined,
+          estimatedDuration: toNum(taskData.estimated_duration),
+          dailyRate: toNum(taskData.daily_rate),
 
         }, 
         assignedBy: user?.id 
@@ -199,6 +231,10 @@ const TaskAssignmentsComponent = () => {
           status: data.status as any,
           dueDate: data.due_date || undefined,
           assignmentNotes: data.notes || undefined,
+          quantity: toNum(data.quantity),
+          unit: data.unit || undefined,
+          estimatedDuration: toNum(data.estimated_duration),
+          dailyRate: toNum(data.daily_rate),
         }
       });
 
@@ -248,6 +284,10 @@ const TaskAssignmentsComponent = () => {
       priority: "medium",
       status: "pending",
       notes: "",
+      quantity: "",
+      unit: "",
+      estimated_duration: "",
+      daily_rate: "",
     });
     setIsCreating(false);
     setEditingId(null);
@@ -276,6 +316,14 @@ const TaskAssignmentsComponent = () => {
       priority: task.priority || "medium",
       status: task.status || "pending",
       notes: task.notes || task.assignmentNotes || "",
+      quantity: task.quantity !== undefined && task.quantity !== null ? String(task.quantity) : "",
+      unit: task.unit || "",
+      estimated_duration:
+        task.estimated_duration ?? task.estimatedDuration
+          ? String(task.estimated_duration ?? task.estimatedDuration)
+          : "",
+      daily_rate:
+        task.daily_rate ?? task.dailyRate ? String(task.daily_rate ?? task.dailyRate) : "",
     });
     setEditingId(task.id);
     setIsCreating(true);
