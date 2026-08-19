@@ -15,7 +15,7 @@ import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import { CriticalPathView, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
-import FinancialOverview from "@/components/project/FinaancialOverview";
+import FinancialOverview from "@/components/project/FinancialOverview";
 import { InspectionsList } from "@/components/project/InspectionsList";
 import { UnifiedMilestoneManager } from "@/components/project/milestones";
 import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
