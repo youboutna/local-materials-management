@@ -474,23 +474,60 @@
   --popover: 0 0% 100%;
   --popover-foreground: 210 25% 8%;
 
-  --primary: 142 76% 18%;
+  /* Couleurs officielles de la charte : vert #00A95C, or #FFD700, rouge #D01C1F */
+  --primary: 153 100% 26%;
   --primary-foreground: 0 0% 98%;
-  --primary-glow: 142 76% 35%;
+  --primary-glow: 153 100% 33%;
 
-  /* Charte nationale : vert dominant + or + rouge */
-  --brand-band-1: 142 76% 22%;
-  --brand-band-2: 48 96% 53%;
-  --brand-band-3: 355 78% 44%;
+  --brand-band-1: 153 100% 33%;
+  --brand-band-2: 51 100% 50%;
+  --brand-band-3: 359 76% 46%;
 
+  /* Typographie officielle « Louguiya » */
+  --font-sans: 'LouguiyaFR', 'Louguiya', 'Inter', system-ui, sans-serif;
+  --font-serif: 'LouguiyaFR', 'Louguiya', 'Amiri', Georgia, serif;
 
+  /* Palettes de marque re-mappées sur la charte nationale */
+  --adrar-50: 153 100% 96%;
+  --adrar-100: 153 100% 90%;
+  --adrar-200: 153 100% 78%;
+  --adrar-300: 153 60% 64%;
+  --adrar-400: 153 70% 45%;
+  --adrar-500: 153 100% 33%;
+  --adrar-600: 153 100% 28%;
+  --adrar-700: 153 100% 22%;
+  --adrar-800: 153 100% 16%;
+  --adrar-900: 153 100% 11%;
 
-  --secondary: 45 35% 88%;
+  --terracotta-50: 359 76% 96%;
+  --terracotta-100: 359 76% 91%;
+  --terracotta-200: 359 76% 82%;
+  --terracotta-300: 359 76% 70%;
+  --terracotta-400: 359 76% 58%;
+  --terracotta-500: 359 76% 46%;
+  --terracotta-600: 359 76% 39%;
+  --terracotta-700: 359 76% 31%;
+  --terracotta-800: 359 76% 23%;
+  --terracotta-900: 359 76% 15%;
+
+  --sandstone-50: 51 100% 97%;
+  --sandstone-100: 51 100% 92%;
+  --sandstone-200: 51 100% 84%;
+  --sandstone-300: 51 100% 72%;
+  --sandstone-400: 51 100% 62%;
+  --sandstone-500: 51 100% 50%;
+  --sandstone-600: 51 100% 44%;
+  --sandstone-700: 51 90% 34%;
+  --sandstone-800: 51 85% 26%;
+  --sandstone-900: 51 80% 18%;
+
+  --secondary: 51 60% 92%;
   --secondary-foreground: 210 25% 8%;
 
-  --accent: 48 96% 53%;
+  --accent: 51 100% 50%;
   --accent-foreground: 210 25% 8%;
-  --accent-muted: 48 60% 85%;
+  --accent-muted: 51 80% 88%;
+
 
   --muted: 45 15% 94%;
   --muted-foreground: 210 15% 46%;
