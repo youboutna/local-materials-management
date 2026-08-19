@@ -139,12 +139,11 @@ export function AppLayout({
                   </div>
                 </div>
 
-                {/* Actions + sélecteur de thème (l'identité client est en barre principale) */}
+                {/* Actions de page (thème → /settings, secrets → barre latérale) */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {actions}
-                  <SecretAccessManager />
-                  <ThemeSwitcher />
                 </div>
+
 
               </div>
             </div>
