@@ -1034,16 +1034,21 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
         <TabsContent value="supplier" className="space-y-6">
           {/* Supplier Information */}
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
-                <User className="h-5 w-5" />
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-surface-muted">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <User className="h-5 w-5" aria-hidden="true" />
                 {t('materials.supplier_info.title') || 'Informations fournisseur'}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <SupplierSelector
-                value={formData.supplier}
+                value={{
+                  id: formData.supplier?.supplierId,
+                  name: formData.supplier?.name,
+                  contact: formData.supplier?.contact,
+                  leadTime: formData.supplier?.leadTime,
+                }}
                 onChange={handleSupplierChange}
                 allowCustom={true}
                 suppliers={suppliers}
@@ -1051,6 +1056,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="documents" className="space-y-6">
           {/* Material Documents */}
