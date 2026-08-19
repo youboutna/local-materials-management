@@ -21,11 +21,14 @@ import { getPerformanceMonitoringService } from '@/application/services/Performa
 interface DatabaseMetricsDTO { totalSize?: number; activeConnections?: number; queryPerformance?: number; }
 interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; errorRate?: number; throughput?: number; }
 import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/monitoringCalculations';
+import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
 const SystemHealthOverview: React.FC = () => {
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { stats: monitoringStats, refetch: refetchMonitoringStats } = useMonitoringStatsHex();
+
 
   useEffect(() => {
     loadData();
