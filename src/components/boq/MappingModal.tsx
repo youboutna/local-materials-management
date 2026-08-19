@@ -6,7 +6,7 @@
  * Composant présentation pur : reçoit `columns`, `mapping`, `onChange`.
  */
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +35,10 @@ export const MappingModal: React.FC<Props> = ({ open, onOpenChange, columns, map
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Correspondance colonnes → champs</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Correspondance colonnes → champs</DialogTitle>
+          <DialogDescription>Associez chaque colonne du fichier au champ métier correspondant.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           {MAPPING_FIELDS.map(({ key, label }) => (
             <div key={key} className="grid grid-cols-3 items-center gap-2">

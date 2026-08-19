@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DevisPDFDocument } from '@/components/reports/pdf/DevisPDFDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
@@ -235,6 +235,7 @@ export function BoqDevisDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><FileDown className="h-5 w-5" />Générer {label} PDF</DialogTitle>
+          <DialogDescription>Renseignez les informations du document avant génération du PDF.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

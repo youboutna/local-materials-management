@@ -14,7 +14,7 @@ import { EdbValidationService } from '@/application/services/boq/EdbValidationSe
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { getProjectService } from '@/application/services/ProjectService';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getPhasesForReferential, getReferentialOptions, type ReferentialType } from '@/config/referentials';
@@ -272,7 +272,10 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle>
+          <DialogDescription>Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.</DialogDescription>
+        </DialogHeader>
 
         {!parseResult && (
           <div className="space-y-3">
