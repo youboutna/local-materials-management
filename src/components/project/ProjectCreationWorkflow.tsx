@@ -621,8 +621,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
            {currentStep === 6 && (
              <StrategicLinkageStep
                projectId={formData?.projectId || workflowState?.projectId || ''}
+               projectBudget={Number((formData as any)?.budget ?? 0) || null}
+               phaseBudgets={(((formData?.relatedData as any)?.phases ?? []) as any[]).map((p) => Number(p?.budget ?? p?.plannedBudget ?? 0))}
+               currency={((formData as any)?.currency as string) || 'MRU'}
                initialStrategyLinks={(formData?.relatedData as any)?.strategyLinks || []}
                initialBudgetLinks={(formData?.relatedData as any)?.budgetLinks || []}
+
                onStrategyLinksChange={(links) => {
                  updateFormData({
                    relatedData: {
