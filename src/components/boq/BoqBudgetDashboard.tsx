@@ -20,7 +20,13 @@ interface Props {
   planned: BoqLineDTO[];      // quantity_takeoff
   actual: BoqLineDTO[];       // dqe / supplier_bid
   currency?: string;
+  /** Libellés réels des phases du projet (id → nom), prioritaires sur le référentiel. */
+  phaseLabels?: Record<string, string>;
+  /** Libellés réels des jalons du projet (id → titre). */
+  milestoneLabels?: Record<string, string>;
 }
+
+const UNASSIGNED = 'Hors WBS (à affecter)';
 
 interface Row {
   key: string;
@@ -32,10 +38,14 @@ interface Row {
   actualTtc: number;
 }
 
-function bucketize(lines: BoqLineDTO[]): Map<string, { ht: number; ttc: number }> {
+type Labeller = (phaseId?: string, milestoneId?: string) => { phaseLabel: string; milestoneLabel: string };
+
+/** Regroupe par libellé résolu : toutes les lignes non affectées fusionnent en une seule ligne. */
+function bucketize(lines: BoqLineDTO[], label: Labeller): Map<string, { ht: number; ttc: number }> {
   const m = new Map<string, { ht: number; ttc: number }>();
   for (const l of lines) {
-    const key = `${l.phaseId ?? '__'}::${l.milestoneId ?? '__'}`;
+    const { phaseLabel, milestoneLabel } = label(l.phaseId ?? undefined, l.milestoneId ?? undefined);
+    const key = `${phaseLabel}::${milestoneLabel}`;
     const t = BoqCalculatorService.computeTotals({
       unit: l.unit,
       length: l.length,
@@ -54,33 +64,50 @@ function bucketize(lines: BoqLineDTO[]): Map<string, { ht: number; ttc: number }
 const fmt = (n: number, ccy = 'MRU') =>
   `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)} ${ccy}`;
 
-export const BoqBudgetDashboard: React.FC<Props> = ({ planned, actual, currency = 'MRU' }) => {
+export const BoqBudgetDashboard: React.FC<Props> = ({
+  planned,
+  actual,
+  currency = 'MRU',
+  phaseLabels,
+  milestoneLabels,
+}) => {
+  const label = useMemo<Labeller>(() => (phaseId, milestoneId) => {
+    const phaseLabel =
+      (phaseId ? phaseLabels?.[phaseId] : undefined) ??
+      getPhase(phaseId)?.label ??
+      UNASSIGNED;
+    const milestoneLabel =
+      (milestoneId ? milestoneLabels?.[milestoneId] : undefined) ??
+      getMilestone(phaseId, milestoneId)?.label ??
+      '—';
+    return { phaseLabel, milestoneLabel };
+  }, [phaseLabels, milestoneLabels]);
+
   const rows = useMemo<Row[]>(() => {
-    const p = bucketize(planned);
-    const a = bucketize(actual);
+    const p = bucketize(planned, label);
+    const a = bucketize(actual, label);
     const keys = new Set<string>([...p.keys(), ...a.keys()]);
     const out: Row[] = [];
     for (const k of keys) {
-      const [phaseId, milestoneId] = k.split('::');
-      const phase = getPhase(phaseId === '__' ? undefined : phaseId);
-      const milestone = getMilestone(
-        phaseId === '__' ? undefined : phaseId,
-        milestoneId === '__' ? undefined : milestoneId,
-      );
+      const [phaseLabel, milestoneLabel] = k.split('::');
       const pv = p.get(k) ?? { ht: 0, ttc: 0 };
       const av = a.get(k) ?? { ht: 0, ttc: 0 };
       out.push({
         key: k,
-        phaseLabel: phase?.label ?? 'Non affecté',
-        milestoneLabel: milestone?.label ?? '—',
+        phaseLabel,
+        milestoneLabel,
         plannedHt: pv.ht,
         actualHt: av.ht,
         plannedTtc: pv.ttc,
         actualTtc: av.ttc,
       });
     }
-    return out.sort((x, y) => x.phaseLabel.localeCompare(y.phaseLabel));
-  }, [planned, actual]);
+    // Les lignes non affectées apparaissent en dernier.
+    return out.sort((x, y) =>
+      (x.phaseLabel === UNASSIGNED ? 1 : 0) - (y.phaseLabel === UNASSIGNED ? 1 : 0) ||
+      x.phaseLabel.localeCompare(y.phaseLabel) ||
+      x.milestoneLabel.localeCompare(y.milestoneLabel));
+  }, [planned, actual, label]);
 
   const totalPlanned = rows.reduce((s, r) => s + r.plannedHt, 0);
   const totalActual = rows.reduce((s, r) => s + r.actualHt, 0);

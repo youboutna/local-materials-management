@@ -25,6 +25,7 @@ import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantH
 import { Badge } from '@/components/ui/badge';
 import { BoqTransferService } from '@/application/services/boq/BoqTransferService';
 import { BoqPartyResolverService, partyHintsFromLines } from '@/application/services/boq/BoqPartyResolverService';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 
 interface Props {
   ctx: BoqContext;
@@ -122,7 +123,43 @@ export const BoqActionsBar: React.FC<Props> = ({
     [ctx.routeContext, lines],
   );
 
+  // Signature persistée : réhydratée depuis les lignes (metadata.signature)
+  // → le document reste éditable tant qu'aucune signature n'existe.
+  const persistedSignature = React.useMemo(() => {
+    for (const l of lines) {
+      const sig = (l.metadata as { signature?: { signedBy?: string; signedAt?: string } } | null)?.signature;
+      if (sig?.signedAt) {
+        return {
+          by: sig.signedBy ?? '—',
+          at: new Date(sig.signedAt).toLocaleString('fr-FR'),
+        };
+      }
+    }
+    return null;
+  }, [lines]);
+  React.useEffect(() => {
+    if (persistedSignature) setSignedInfo(persistedSignature);
+  }, [persistedSignature]);
+
+  // En-tête PDF : côté gestionnaire c'est l'organisation propriétaire
+  // (maître d'ouvrage) ; côté fournisseur c'est l'émetteur (fournisseur).
+  const { organization: ownerOrg } = useOwnerOrganization();
+  const isSupplierContext = ctx.routeContext === 'supplier-bid' || ctx.routeContext === 'supplier-invoice';
+  const company = React.useMemo(() => {
+    if (isSupplierContext) {
+      return parties.senderName ? { name: parties.senderName } : undefined;
+    }
+    if (!ownerOrg) return undefined;
+    return {
+      name: ownerOrg.name,
+      address: ownerOrg.address ?? undefined,
+      phone: ownerOrg.phone ?? undefined,
+      email: ownerOrg.email ?? undefined,
+    };
+  }, [isSupplierContext, parties.senderName, ownerOrg]);
+
   const baseDocCtx = {
+    company,
     docPrefix: ctx.docPrefix,
     title: ctx.title,
     source: ctx.source,
@@ -189,6 +226,14 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const handleTransfer = () => withGuard('transfer', async () => {
     try {
+      // Contexte projet : « Soumettre pour validation » englobe la demande de
+      // validation (alerte budgétaire / arbitrage A/B/C) — action unique, plus
+      // de bouton « Demander validation » en doublon.
+      if (ctx.routeContext === 'project-dqe') {
+        window.dispatchEvent(new CustomEvent('boq-request-validation', {
+          detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+        }));
+      }
       const res = await BoqTransferService.transfer({
         routeContext: ctx.routeContext,
         lines,
@@ -227,12 +272,6 @@ export const BoqActionsBar: React.FC<Props> = ({
     }));
   });
 
-  // Workflow de validation : alerte budgétaire + options A/B/C.
-  const handleRequestValidation = () => withGuard('validation', async () => {
-    window.dispatchEvent(new CustomEvent('boq-request-validation', {
-      detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
-    }));
-  });
 
   const isProjectDqe = ctx.routeContext === 'project-dqe';
 
@@ -274,21 +313,14 @@ export const BoqActionsBar: React.FC<Props> = ({
           </Button>
         )}
         {isProjectDqe && (
-          <>
-            <Button size="sm" variant="outline" onClick={handleDispatch}
-              disabled={disabled || busy !== null || !gate.allowed}
-              title={gate.allowed
-                ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
-                : gate.reasons.join(' ')}>
-              {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
-              Transférer vers les phases
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleRequestValidation} disabled={disabled || busy !== null}
-              title="Créer le workflow de validation (alerte budgétaire, options A/B/C)">
-              {iconOf('validation') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
-              Demander validation
-            </Button>
-          </>
+          <Button size="sm" variant="outline" onClick={handleDispatch}
+            disabled={disabled || busy !== null || !gate.allowed}
+            title={gate.allowed
+              ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
+              : gate.reasons.join(' ')}>
+            {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
+            Transférer vers les phases
+          </Button>
         )}
         {gateKind && !gate.allowed && (
           <>

@@ -6,7 +6,7 @@
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { BoqPdfRenderer, type BoqPdfContext } from './BoqPdfRenderer';
+import { BoqPdfRenderer, type BoqPdfContext, type BoqPdfCompany } from './BoqPdfRenderer';
 
 export interface DocumentContext {
   docPrefix: string;
@@ -22,6 +22,8 @@ export interface DocumentContext {
   signed?: boolean;
   signedBy?: string;
   signedAt?: string;
+  /** Entête du document : organisation propriétaire (gestionnaire) ou fournisseur (émetteur). */
+  company?: BoqPdfCompany;
 }
 
 async function loadLines(ctx: DocumentContext, fallback: BoqLineDTO[]): Promise<BoqLineDTO[]> {
@@ -52,6 +54,7 @@ function toPdfCtx(ctx: DocumentContext): BoqPdfContext {
     signed: ctx.signed,
     signedBy: ctx.signedBy,
     signedAt: ctx.signedAt,
+    company: ctx.company,
   };
 }
 
