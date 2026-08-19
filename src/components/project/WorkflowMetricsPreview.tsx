@@ -1,7 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Activity } from 'lucide-react';
 import ProjectMetricsPanel from '@/components/project/ProjectMetricsPanel';
 import type { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
+
 
 /**
  * WorkflowMetricsPreview — aperçu temps réel des métriques projet pendant les
