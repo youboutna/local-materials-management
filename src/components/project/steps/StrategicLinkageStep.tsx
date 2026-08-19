@@ -687,10 +687,10 @@ export default function StrategicLinkageStep({
       ...prev,
       programCode: prev.programCode || suggestion.parentCode,
       actionCode: suggestion.id,
-      // Auto-alimentation depuis le référentiel Loi de Finances
-      allocatedCe: ceiling.ce > 0 ? ceiling.ce : prev.allocatedCe,
-      allocatedCp: ceiling.cp > 0 ? ceiling.cp : prev.allocatedCp,
     }));
+    // Auto-alimentation CE/CP depuis le référentiel Loi de Finances
+    if (ceiling.ce > 0) setAllocatedCe(String(ceiling.ce));
+    if (ceiling.cp > 0) setAllocatedCp(String(ceiling.cp));
   }, [projectId]);
 
   const handleLineSelect = useCallback((suggestion: AutocompleteSuggestion) => {
@@ -704,9 +704,9 @@ export default function StrategicLinkageStep({
       ...prev,
       actionCode: prev.actionCode || suggestion.parentCode,
       lineCode: suggestion.id,
-      allocatedCe: ceiling.ce > 0 ? ceiling.ce : prev.allocatedCe,
-      allocatedCp: ceiling.cp > 0 ? ceiling.cp : prev.allocatedCp,
     }));
+    if (ceiling.ce > 0) setAllocatedCe(String(ceiling.ce));
+    if (ceiling.cp > 0) setAllocatedCp(String(ceiling.cp));
   }, [projectId]);
 
 
