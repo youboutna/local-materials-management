@@ -25,6 +25,7 @@ import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantH
 import { Badge } from '@/components/ui/badge';
 import { BoqTransferService } from '@/application/services/boq/BoqTransferService';
 import { BoqPartyResolverService, partyHintsFromLines } from '@/application/services/boq/BoqPartyResolverService';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 
 interface Props {
   ctx: BoqContext;
