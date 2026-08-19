@@ -35,4 +35,19 @@ export class SupabaseEscalationThresholdAdapter implements IEscalationThresholdR
     if (error) throw error;
     return data as EscalationThresholdRow;
   }
+
+  async upsert(row: Omit<EscalationThresholdRow, 'id'>): Promise<EscalationThresholdRow> {
+    const { data, error } = await btpClient
+      .from('escalation_thresholds')
+      .upsert(
+        { ...row, updated_at: new Date().toISOString() } as never,
+        { onConflict: 'threshold_type,threshold_name' }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as EscalationThresholdRow;
+  }
 }
+
