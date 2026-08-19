@@ -102,6 +102,10 @@ export function BoqWorkspace({
   const [materialId, setMaterialId] = useState<string>('');
   const [depotId, setDepotId] = useState<string>('');
   const [elementType, setElementType] = useState<ElementTypeCode>('generic');
+  /** Ouvertures à déduire (référentiel element-types : `deductOpenings`). */
+  const [openings, setOpenings] = useState<{ count: number; width: number; height: number }>({ count: 0, width: 0, height: 0 });
+  /** Génère une ligne article par recommandation du référentiel. */
+  const [autoRecs, setAutoRecs] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
