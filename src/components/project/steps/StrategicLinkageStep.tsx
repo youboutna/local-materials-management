@@ -33,6 +33,9 @@ import {
 } from '@/config/referentials/strategies/scapp-national-strategy.referential';
 import type { CreateProjectStrategyLinkDTO } from '@/dtos/entities/ProjectStrategyLinkDTO';
 import type { CreateProjectBudgetLinkDTO } from '@/dtos/entities/ProjectBudgetLinkDTO';
+import { BudgetConsistencyService } from '@/application/services/BudgetConsistencyService';
+import BudgetConsistencyAlerts from '@/components/project/BudgetConsistencyAlerts';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,7 +74,13 @@ interface StrategicLinkageStepProps {
   onStrategyLinksChange?: (links: CreateProjectStrategyLinkDTO[]) => void;
   onBudgetLinksChange?: (links: CreateProjectBudgetLinkDTO[]) => void;
   readOnly?: boolean;
+  /** Budget du projet (étape 1) — sert au contrôle CP ≤ budget ≤ CE. */
+  projectBudget?: number | null;
+  /** Budgets des phases déjà planifiées — cumul ≤ budget projet. */
+  phaseBudgets?: number[];
+  currency?: string;
 }
+
 
 // Type for search functions that can accept optional parent code or limit
 type SearchFunction = 
@@ -342,7 +351,11 @@ export default function StrategicLinkageStep({
   onStrategyLinksChange,
   onBudgetLinksChange,
   readOnly = false,
+  projectBudget = null,
+  phaseBudgets = [],
+  currency = 'MRU',
 }: StrategicLinkageStepProps) {
+
   // State for strategy links
   const [strategyLinks, setStrategyLinks] = useState<CreateProjectStrategyLinkDTO[]>(initialStrategyLinks);
   
@@ -453,6 +466,19 @@ export default function StrategicLinkageStep({
       cp: budgetLinks.reduce((sum, link) => sum + (link.allocatedCp || 0), 0),
     };
   }, [budgetLinks]);
+
+  // Contrôles de cohérence budgétaire (référentiel: budget-consistency)
+  const budgetConsistency = useMemo(
+    () =>
+      BudgetConsistencyService.evaluate({
+        projectBudget,
+        budgetLinks,
+        phaseBudgets,
+        currency,
+      }),
+    [projectBudget, budgetLinks, phaseBudgets, currency],
+  );
+
 
   // Resolve human-readable labels for a budget link from the LF referential
   const resolveBudgetLabel = useCallback((link: CreateProjectBudgetLinkDTO): string => {
@@ -653,22 +679,36 @@ export default function StrategicLinkageStep({
     setSelectedAction(suggestion);
     setLineQuery('');
     setSelectedLine(null);
+    const ceiling = BudgetConsistencyService.referentialCeilingForLink({
+      projectId,
+      actionCode: suggestion.id,
+    });
     setSelectedBudget(prev => ({
       ...prev,
       programCode: prev.programCode || suggestion.parentCode,
       actionCode: suggestion.id,
     }));
-  }, []);
+    // Auto-alimentation CE/CP depuis le référentiel Loi de Finances
+    if (ceiling.ce > 0) setAllocatedCe(String(ceiling.ce));
+    if (ceiling.cp > 0) setAllocatedCp(String(ceiling.cp));
+  }, [projectId]);
 
   const handleLineSelect = useCallback((suggestion: AutocompleteSuggestion) => {
     setLineQuery(suggestion.label.fr);
     setSelectedLine(suggestion);
+    const ceiling = BudgetConsistencyService.referentialCeilingForLink({
+      projectId,
+      lineCode: suggestion.id,
+    });
     setSelectedBudget(prev => ({
       ...prev,
       actionCode: prev.actionCode || suggestion.parentCode,
       lineCode: suggestion.id,
     }));
-  }, []);
+    if (ceiling.ce > 0) setAllocatedCe(String(ceiling.ce));
+    if (ceiling.cp > 0) setAllocatedCp(String(ceiling.cp));
+  }, [projectId]);
+
 
   // Remove strategy link
   const handleRemoveStrategyLink = useCallback((index: number) => {
@@ -1053,15 +1093,24 @@ export default function StrategicLinkageStep({
                   </Card>
                 )}
 
+                {/* Contrôles de cohérence budgétaire */}
+                {budgetLinks.length > 0 && (
+                  <BudgetConsistencyAlerts
+                    findings={budgetConsistency.findings}
+                    okLabel={`Cohérence vérifiée : budget projet encadré par CP (${budgetConsistency.ceilings.allocatedCp.toLocaleString('fr-FR')} ${currency}) et CE (${budgetConsistency.ceilings.allocatedCe.toLocaleString('fr-FR')} ${currency}).`}
+                  />
+                )}
+
                 {/* Budget Links List */}
                 {budgetLinks.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label>Liens budgétaires ({budgetLinks.length})</Label>
                       <div className="text-sm text-muted-foreground">
                         Total: {totalAllocations.ce.toLocaleString()} CE / {totalAllocations.cp.toLocaleString()} CP
                       </div>
                     </div>
+
                     <ScrollArea className="h-48 rounded-md border">
                       <ul className="divide-y">
                         {budgetLinks.map((link, index) => (

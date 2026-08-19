@@ -195,8 +195,17 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
   }
 
   static toSummaryDTO(entity: Supplier): SupplierSummaryDTO {
-    return { id: entity.id, name: entity.name, category: entity.category || undefined, isActive: entity.status === 'active', rating: entity.rating?.overall || undefined };
+    return {
+      id: entity.id,
+      name: entity.name,
+      email: entity.email || undefined,
+      phone: entity.phone || undefined,
+      category: entity.category || undefined,
+      isActive: entity.status === 'active',
+      rating: entity.rating?.overall || undefined,
+    };
   }
+
 
   static toSummaryDTOList(entities: Supplier[]): SupplierSummaryDTO[] {
     return entities.map(entity => this.toSummaryDTO(entity));

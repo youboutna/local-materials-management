@@ -9,9 +9,9 @@ import { BoqBudgetDashboard, useBoqDocument } from '@/components/boq';
 import { useProjectPhasesHex } from '@/hooks/hexagonal';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
 
-interface Props { projectId: string }
+interface Props { projectId: string; projectBudget?: number | null }
 
-const ProjectBudgetTracking: React.FC<Props> = ({ projectId }) => {
+const ProjectBudgetTracking: React.FC<Props> = ({ projectId, projectBudget = null }) => {
   const planned = useBoqDocument({ source: 'quantity_takeoff', contextId: projectId, projectId });
   const actual = useBoqDocument({ source: 'dqe', contextId: projectId, projectId });
   const { phases } = useProjectPhasesHex(projectId);
@@ -43,6 +43,7 @@ const ProjectBudgetTracking: React.FC<Props> = ({ projectId }) => {
           actual={actual.lines}
           phaseLabels={phaseLabels}
           milestoneLabels={milestoneLabels}
+          projectBudget={projectBudget}
         />
       </CardContent>
     </Card>

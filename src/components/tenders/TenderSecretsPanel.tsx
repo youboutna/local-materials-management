@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ShieldX, Trash2, Plus, Link as LinkIcon } from 'lucide-react';
+import { Copy, ShieldX, Trash2, Plus, Link as LinkIcon, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useTenderSharingSecrets,
@@ -14,6 +14,7 @@ import {
   useDeleteTenderSecret,
 } from '@/hooks/hexagonal';
 import { SecureSharingDialog } from './SecureSharingDialog';
+import ShareSecretWithSupplierDialog from './ShareSecretWithSupplierDialog';
 
 interface TenderSecretsPanelProps {
   tenderId: string;
@@ -22,6 +23,7 @@ interface TenderSecretsPanelProps {
 
 export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [shareTarget, setShareTarget] = useState<any | null>(null);
   const { data: secrets = [], isLoading } = useTenderSharingSecrets(tenderId);
   const revoke = useRevokeTenderSecret();
   const remove = useDeleteTenderSecret();
@@ -79,6 +81,9 @@ export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanel
                       <Button size="sm" variant="ghost" title="Copier le lien portail" onClick={() => copyPortalLink(s.secretCode)}>
                         <LinkIcon className="h-4 w-4" />
                       </Button>
+                      <Button size="sm" variant="ghost" title="Partager avec un fournisseur" onClick={() => setShareTarget(s)}>
+                        <Mail className="h-4 w-4" />
+                      </Button>
                       {s.isActive && (
                         <Button size="sm" variant="outline" title="Révoquer" onClick={() => revoke.mutate(s.id)} disabled={revoke.isPending}>
                           <ShieldX className="h-4 w-4" />
@@ -95,6 +100,18 @@ export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanel
           )}
         </CardContent>
       </Card>
+
+      {shareTarget && (
+        <ShareSecretWithSupplierDialog
+          open={!!shareTarget}
+          onOpenChange={(o) => !o && setShareTarget(null)}
+          tenderId={tenderId}
+          tenderTitle={tenderTitle}
+          secretCode={shareTarget.secretCode}
+          secretId={shareTarget.id}
+          expiresAt={shareTarget.expiresAt ?? null}
+        />
+      )}
 
       <SecureSharingDialog
         isOpen={dialogOpen}
