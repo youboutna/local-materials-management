@@ -122,7 +122,43 @@ export const BoqActionsBar: React.FC<Props> = ({
     [ctx.routeContext, lines],
   );
 
+  // Signature persistée : réhydratée depuis les lignes (metadata.signature)
+  // → le document reste éditable tant qu'aucune signature n'existe.
+  const persistedSignature = React.useMemo(() => {
+    for (const l of lines) {
+      const sig = (l.metadata as { signature?: { signedBy?: string; signedAt?: string } } | null)?.signature;
+      if (sig?.signedAt) {
+        return {
+          by: sig.signedBy ?? '—',
+          at: new Date(sig.signedAt).toLocaleString('fr-FR'),
+        };
+      }
+    }
+    return null;
+  }, [lines]);
+  React.useEffect(() => {
+    if (persistedSignature) setSignedInfo(persistedSignature);
+  }, [persistedSignature]);
+
+  // En-tête PDF : côté gestionnaire c'est l'organisation propriétaire
+  // (maître d'ouvrage) ; côté fournisseur c'est l'émetteur (fournisseur).
+  const { organization: ownerOrg } = useOwnerOrganization();
+  const isSupplierContext = ctx.routeContext === 'supplier-bid' || ctx.routeContext === 'supplier-invoice';
+  const company = React.useMemo(() => {
+    if (isSupplierContext) {
+      return parties.senderName ? { name: parties.senderName } : undefined;
+    }
+    if (!ownerOrg) return undefined;
+    return {
+      name: ownerOrg.name,
+      address: ownerOrg.address ?? undefined,
+      phone: ownerOrg.phone ?? undefined,
+      email: ownerOrg.email ?? undefined,
+    };
+  }, [isSupplierContext, parties.senderName, ownerOrg]);
+
   const baseDocCtx = {
+    company,
     docPrefix: ctx.docPrefix,
     title: ctx.title,
     source: ctx.source,
