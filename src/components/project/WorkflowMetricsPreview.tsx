@@ -1,25 +1,31 @@
 import React, { useMemo, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Activity } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Activity } from 'lucide-react';
 import ProjectMetricsPanel from '@/components/project/ProjectMetricsPanel';
 import type { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 
-
 /**
- * WorkflowMetricsPreview — aperçu temps réel des métriques projet pendant les
+ * WorkflowMetricsPreview — accès discret aux métriques projet pendant les
  * workflows de création et d'édition.
  *
- * Source unique : ProjectMetricsOrchestrator (via ProjectMetricsPanel), donc
- * les valeurs et le formatage sont identiques au détail projet, au dashboard
- * monitoring et au rapport PDF.
+ * Le bandeau plein écran a été remplacé par un simple déclencheur : les
+ * indicateurs s'ouvrent dans un panneau latéral, sans masquer le workflow.
+ * Source unique : ProjectMetricsOrchestrator (via ProjectMetricsPanel).
  */
 interface Props {
   formData?: ProjectWorkflowData | null;
   mode: 'create' | 'edit';
   className?: string;
-  /** Replie le bandeau par défaut afin de ne pas masquer le workflow. */
+  /** Conservé pour compatibilité : ouvre le panneau au montage. */
   defaultOpen?: boolean;
 }
 
@@ -34,19 +40,27 @@ export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, classN
   const hasMinimalData = Boolean(project?.title || project?.budget || phases.length > 0);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className={className}>
-      <Card>
-        <CardContent className="p-2">
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-full justify-between">
-              <span className="flex items-center gap-2 text-sm font-medium">
-                <Activity className="h-4 w-4" />
-                Indicateurs temps réel (avancement, EVM, alertes)
-              </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-3">
+    <div className={`flex justify-end ${className ?? ''}`}>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Indicateurs
+            {phases.length > 0 ? (
+              <Badge variant="secondary" className="text-[10px]">
+                {phases.length} phase(s)
+              </Badge>
+            ) : null}
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
+          <SheetHeader>
+            <SheetTitle>Indicateurs temps réel</SheetTitle>
+            <SheetDescription>
+              Avancement pondéré, EVM et alertes calculés à partir des données saisies.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4">
             {hasMinimalData ? (
               <ProjectMetricsPanel
                 variant="compact"
@@ -60,17 +74,16 @@ export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, classN
                 showAlerts={mode === 'edit' || Boolean(project?.startDate && project?.endDate)}
               />
             ) : (
-              <p className="p-2 text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Les indicateurs (avancement pondéré, EVM, alertes) apparaîtront dès que le titre, le
                 budget ou les phases seront renseignés.
               </p>
             )}
-          </CollapsibleContent>
-        </CardContent>
-      </Card>
-    </Collapsible>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
-
 };
 
 export default WorkflowMetricsPreview;
