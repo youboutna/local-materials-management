@@ -143,7 +143,23 @@ export class BoqLineMapper {
   }
 
   static toDb(dto: BoqLineDTO): BoqDbRow {
+    // Montants dérivés persistés (source unique de vérité pour PDF / récaps /
+    // suivi budgétaire) : sans eux, les colonnes total_* restent à 0 en base.
+    const qty = Number(dto.quantity ?? 0);
+    const pu = dto.unitPrice ?? null;
+    const fees = Number(dto.fees ?? 0);
+    const totalHt = dto.totalHt ?? (pu != null ? qty * pu + fees : null);
+    const totals = totalHt == null
+      ? {}
+      : {
+          total_ht: totalHt,
+          total_tva: totalHt * Number(dto.vatRate ?? 0),
+          total_ras: totalHt * Number(dto.rasRate ?? 0),
+          total_ttc: totalHt * (1 + Number(dto.vatRate ?? 0)),
+        };
     return {
+      ...totals,
+
       project_id: dto.source === 'quantity_takeoff' || dto.source === 'dqe' ? dto.contextId : null,
       tender_id: dto.source === 'tender_estimate' ? dto.contextId : null,
       submission_id: dto.source === 'supplier_bid' || dto.source === 'invoice' ? dto.contextId : null,
