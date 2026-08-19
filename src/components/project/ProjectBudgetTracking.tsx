@@ -38,7 +38,12 @@ const ProjectBudgetTracking: React.FC<Props> = ({ projectId }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <BoqBudgetDashboard planned={planned.lines} actual={actual.lines} />
+        <BoqBudgetDashboard
+          planned={planned.lines}
+          actual={actual.lines}
+          phaseLabels={phaseLabels}
+          milestoneLabels={milestoneLabels}
+        />
       </CardContent>
     </Card>
   );
