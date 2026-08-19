@@ -32,6 +32,11 @@ export interface SupplierRating {
 export interface SupplierProps {
   id: string;
   externalRef?: string | null;
+  contactPerson?: string | null;
+  commerceRegisterRef?: string | null;
+  bankName?: string | null;
+  rib?: string | null;
+  accountNumber?: string | null;
   name: string;
   email?: string | null;
   phone?: string | null;
