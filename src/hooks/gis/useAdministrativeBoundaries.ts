@@ -33,3 +33,28 @@ export const useAdministrativeBoundaries = (
     error: (query.error as Error) ?? null,
   };
 };
+
+/**
+ * Localisation administrative d'un couple de coordonnées, sous forme d'entité
+ * `Location` : limites administratives d'abord, repli reverse geocoding
+ * (base locale puis Nominatim) assuré par le service.
+ */
+export const useLocationAtCoordinates = (
+  lat?: number | null,
+  lng?: number | null,
+): { location: Location | null; isLoading: boolean; isError: boolean } => {
+  const enabled = Number.isFinite(lat ?? NaN) && Number.isFinite(lng ?? NaN);
+
+  const query = useQuery({
+    queryKey: ['gis', 'location-at', lat, lng],
+    queryFn: () => getAdministrativeBoundaryService().resolveLocationAt(lat as number, lng as number),
+    enabled,
+    staleTime: Infinity,
+  });
+
+  return {
+    location: query.data ?? null,
+    isLoading: query.isLoading && enabled,
+    isError: query.isError,
+  };
+};
