@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Check, Moon, RotateCcw, Sun } from 'lucide-react';
 import { useUiTheme } from '@/contexts/UiThemeContext';
-import { BrandBands, BrandIdentity } from '@/components/branding/BrandIdentity';
+import { BrandBandsBackground, BrandIdentity } from '@/components/branding/BrandIdentity';
 import { cn } from '@/lib/utils';
 
 export const AppearanceSettings: React.FC = () => {
@@ -161,8 +161,10 @@ export const AppearanceSettings: React.FC = () => {
             <div className="mb-2 flex items-center gap-2">
               <Badge variant="secondary">Aperçu</Badge>
             </div>
-            <BrandBands className="mb-3 rounded" />
-            <BrandIdentity size="md" />
+            <div className="relative isolate overflow-hidden rounded-md p-3">
+              <BrandBandsBackground />
+              <BrandIdentity size="md" withBands />
+            </div>
           </div>
 
           <Button variant="outline" size="sm" onClick={resetBrandingOverrides} className="gap-2">
