@@ -165,11 +165,11 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.guarantees?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.guarantees.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.guarantees?.expiring || 0) > 0 ? (
+                {monitoringStats.guarantees.count > 0 ? (
                   <span className="text-warning">
-                    {(stats as any)?.guarantees?.expiring} expirent bientôt
+                    {monitoringStats.guarantees.count} expirent bientôt
                   </span>
                 ) : (
                   'Toutes valides'
@@ -187,11 +187,11 @@ const SystemHealthOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.payments?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.payments.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.payments?.blocked || 0) > 0 ? (
+                {monitoringStats.payments.count > 0 ? (
                   <span className="text-destructive">
-                    {(stats as any)?.payments?.blocked} bloqué(s)
+                    {monitoringStats.payments.count} bloqué(s)
                   </span>
                 ) : (
                   'Aucun blocage'
@@ -205,21 +205,22 @@ const SystemHealthOverview: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Inspections</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <TrendingUp className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-2xl font-bold">{(stats as any)?.inspections?.count || 0}</div>
+              <div className="text-2xl font-bold">{monitoringStats.inspections.count}</div>
               <div className="text-sm text-muted-foreground">
-                {((stats as any)?.inspections?.delayed || 0) > 0 ? (
+                {monitoringStats.inspections.count > 0 ? (
                   <span className="text-destructive">
-                    {(stats as any)?.inspections?.delayed} en retard
+                    {monitoringStats.inspections.count} en retard
                   </span>
                 ) : (
                   'À jour'
                 )}
               </div>
             </div>
+
           </CardContent>
         </Card>
       </div>
