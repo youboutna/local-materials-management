@@ -1120,9 +1120,10 @@ export const translations = {
             },
         },
         materials: {
+            updating: "Mise à jour...",
             estimated_duration: "Durée estimée",
             back_to_list: "Retour à la liste",
-            edit: "Modifier,",
+            edit: "Modifier",
             edit_details: "Modifier les détails",
             cancel: "Annuler",
             save_changes: "Enregistrer les modifications",
@@ -2652,6 +2653,7 @@ export const translations = {
             },
         },
         materials: {
+            updating: "جارٍ التحديث...",
             estimated_duration: "المدة المقدرة",
             back_to_list: "العودة إلى القائمة",
             edit_details: "تعديل التفاصيل",
@@ -4171,6 +4173,7 @@ procurement_features: {
             }
         },
         materials: {
+            updating: "Updating...",
             estimated_duration: "Estimated Duration",
             back_to_list: "Back to List",
             edit_details: "Edit Details",
