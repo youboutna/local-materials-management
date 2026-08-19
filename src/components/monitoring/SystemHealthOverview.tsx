@@ -149,9 +149,10 @@ const SystemHealthOverview: React.FC = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Disponibilité</span>
-                <span>{formatMetric(99.9, 'percentage')}</span>
+                <span>{formatMetric(availability, 'percentage')}</span>
               </div>
-              <Progress value={99.9} className="mt-2" />
+              <Progress value={availability} className="mt-2" />
+
             </div>
           </CardContent>
         </Card>
