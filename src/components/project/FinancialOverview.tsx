@@ -3,8 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DollarSign, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { formatAmount2, formatPercent2, formatIndex2 } from '@/utils/reportNumbers';
+
+/** Libellés unifiés avec les alertes métier (« CPI non évaluable sans dépense engagée »). */
+const NOT_EVALUABLE = 'Non évaluable';
+const NOT_EVALUABLE_REASON = 'Aucune dépense engagée : le CPI ne peut pas être calculé.';
+
 
 interface FinancialOverviewProps {
   budget: number;
@@ -29,6 +35,9 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
   const remaining = budget - spent;
   const percentageSpent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
   const costVariance = financialMetrics?.costVariance ?? null;
+  const cpi = financialMetrics?.costPerformanceIndex ?? null;
+  const cpiAvailable = cpi != null && Number.isFinite(Number(cpi)) && Number(cpi) !== 0;
+
 
   return (
     <div className="space-y-6">
@@ -112,22 +121,38 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
               <div>
                 <h4 className="text-sm font-medium mb-2">Variance des coûts (CV)</h4>
                 <p className={(costVariance ?? 0) < 0 ? "text-destructive" : "text-success"}>
-                  {costVariance === null ? 'Non évaluable' : formatAmount2(costVariance)}
+                  {costVariance === null ? NOT_EVALUABLE : formatAmount2(costVariance)}
                 </p>
+                {costVariance === null ? (
+                  <p className="text-xs text-muted-foreground mt-1">{NOT_EVALUABLE_REASON}</p>
+                ) : null}
               </div>
               <div>
                 <h4 className="text-sm font-medium mb-2">Indice de performance des coûts (CPI)</h4>
-                <p>
-                  {formatIndex2(
-                    financialMetrics.costPerformanceIndex ?? 0,
-                    financialMetrics.costPerformanceIndex != null,
-                  )}
-                </p>
+                {cpiAvailable ? (
+                  <p>{formatIndex2(cpi, true)}</p>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+                          {NOT_EVALUABLE}
+                          <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>{NOT_EVALUABLE_REASON}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {!cpiAvailable ? (
+                  <p className="text-xs text-muted-foreground mt-1">{NOT_EVALUABLE_REASON}</p>
+                ) : null}
               </div>
             </div>
           </CardContent>
         </Card>
       ) : null}
+
     </div>
   );
 };
