@@ -202,6 +202,73 @@ export class BoqLineMapper {
     };
   }
 
+  /**
+   * toDbPatch — mise à jour partielle SÛRE : n'écrit que les champs réellement
+   * fournis. `toDb` applique des valeurs par défaut (status='draft', project_id
+   * null, vat_rate 0…) qui, sur un UPDATE partiel, effaçaient le rattachement
+   * projet, la fiscalité et le statut de la ligne.
+   */
+  static toDbPatch(dto: Partial<BoqLineDTO>): BoqDbRow {
+    const row: BoqDbRow = {};
+    if (dto.designation !== undefined) row.designation = dto.designation;
+    if (dto.elementType !== undefined) row.element_type = dto.elementType ?? null;
+    if (dto.materialId !== undefined) row.resource_id = dto.materialId ?? null;
+    if (dto.resourceType !== undefined) row.resource_kind = dto.resourceType;
+    if (dto.unit !== undefined) row.unit = dto.unit;
+    if (dto.length !== undefined) row.length = dto.length ?? null;
+    if (dto.width !== undefined) row.width = dto.width ?? null;
+    if (dto.height !== undefined) row.height = dto.height ?? null;
+    if (dto.quantity !== undefined) row.quantity = dto.quantity;
+    if (dto.unitPrice !== undefined) row.unit_price_ht = dto.unitPrice ?? null;
+    if (dto.vatRate !== undefined) row.vat_rate = dto.vatRate ?? 0;
+    if (dto.rasRate !== undefined) row.ras_rate = dto.rasRate ?? 0;
+    if (dto.fees !== undefined) row.fees = dto.fees ?? 0;
+    if (dto.phaseId !== undefined) {
+      row.phase_id = idOrCode(dto.phaseId).id;
+      row.phase_code = idOrCode(dto.phaseId).code;
+    }
+    if (dto.milestoneId !== undefined) {
+      row.milestone_id = idOrCode(dto.milestoneId).id;
+      row.milestone_code = idOrCode(dto.milestoneId).code;
+    }
+    if (dto.taskId !== undefined) {
+      row.task_id = idOrCode(dto.taskId).id;
+      row.task_code = idOrCode(dto.taskId).code;
+    }
+    if (dto.note !== undefined) row.note = dto.note ?? null;
+    if (dto.category !== undefined) row.category = dto.category ?? null;
+    if (dto.code !== undefined || dto.btpCode !== undefined) {
+      row.code = dto.code ?? dto.btpCode ?? null;
+      row.btp_code = dto.btpCode ?? dto.code ?? null;
+    }
+    if (dto.dqeType !== undefined) row.dqe_type = dto.dqeType ? normalizeDQEType(dto.dqeType) : null;
+    if (dto.status !== undefined) row.status = dto.status;
+    if (dto.documentId !== undefined) row.document_id = dto.documentId ?? null;
+    if (dto.metadata !== undefined || dto.title !== undefined) {
+      row.metadata = { ...(dto.metadata ?? {}), ...(dto.title ? { title: dto.title } : {}) };
+    }
+
+    // Recalcul des montants dès qu'une composante de prix change.
+    const touchesMoney =
+      dto.quantity !== undefined || dto.unitPrice !== undefined ||
+      dto.fees !== undefined || dto.vatRate !== undefined ||
+      dto.rasRate !== undefined || dto.totalHt !== undefined;
+    if (touchesMoney) {
+      const qty = Number(dto.quantity ?? 0);
+      const pu = dto.unitPrice ?? null;
+      const fees = Number(dto.fees ?? 0);
+      const ht = dto.totalHt ?? (pu != null ? qty * pu + fees : null);
+      if (ht != null) {
+        row.total_ht = ht;
+        row.total_tva = ht * Number(dto.vatRate ?? 0);
+        row.total_ras = ht * Number(dto.rasRate ?? 0);
+        row.total_ttc = ht * (1 + Number(dto.vatRate ?? 0));
+      }
+    }
+    return row;
+  }
+
+
   /** Reproject a tender estimate line onto a newly created project as a quantity takeoff. */
   static reproject(dto: BoqLineDTO, targetProjectId: string): BoqLineDTO {
     return {
