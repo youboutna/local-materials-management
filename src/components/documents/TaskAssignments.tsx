@@ -172,17 +172,24 @@ const TaskAssignmentsComponent = () => {
     mutationFn: async ({ id, data }: { id: string; data: TaskFormData }) => {
       const taskService = getTaskAssignmentService();
       
-      // Build proper update DTO
-      return await taskService.updateTaskAssignment({ 
-        id, 
+      // Mise à jour complète : on ne perd plus titre / projet / assigné
+      return await taskService.updateTaskAssignment({
+        id,
         updates: {
+          title: data.title,
+          description: data.description || undefined,
+          projectId: data.project_id || undefined,
+          assignedTo: data.assigned_to ? [data.assigned_to] : [],
+          assigneeType: (data.assignee_type || 'user') as any,
+          assigneeName: data.assignee_name || undefined,
+          assigneeEmail: data.assignee_email || undefined,
           priority: data.priority as any,
           status: data.status as any,
           dueDate: data.due_date || undefined,
           assignmentNotes: data.notes || undefined,
-          progress: 0,
         }
       });
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
