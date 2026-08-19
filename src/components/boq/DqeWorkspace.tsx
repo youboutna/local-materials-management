@@ -22,6 +22,8 @@ import { BoqDocumentList } from './BoqDocumentList';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
+import { useProjectPhasesHex } from '@/hooks/hexagonal';
+import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
 import { BoqContextService, type BoqRouteContext } from '@/application/services/boq/BoqContextService';
 import { getBoqDispatchService } from '@/application/services/boq/BoqDispatchService';
 import { toast } from '@/hooks/use-toast';
@@ -63,6 +65,16 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   }), [props.routeContext, props.projectId, props.tenderId, props.submissionId, props.senderId]);
 
   const mode = MODE_BY_ROUTE[props.routeContext];
+  const { phases } = useProjectPhasesHex(props.projectId);
+  const { milestones } = useMilestonesHex(props.projectId);
+  const phaseLabels = useMemo(
+    () => Object.fromEntries((phases ?? []).map((p) => [p.id, p.name || p.phaseName || 'Phase'])),
+    [phases],
+  );
+  const milestoneLabels = useMemo(
+    () => Object.fromEntries((milestones ?? []).map((m) => [m.id, m.title])),
+    [milestones],
+  );
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -259,7 +271,12 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
                 {doc.isLoading || dqeCompare.isLoading ? (
                   <div className="text-sm text-muted-foreground">Chargement…</div>
                 ) : (
-                  <BoqBudgetDashboard planned={doc.lines ?? []} actual={dqeCompare.lines ?? []} />
+                  <BoqBudgetDashboard
+                    planned={doc.lines ?? []}
+                    actual={dqeCompare.lines ?? []}
+                    phaseLabels={phaseLabels}
+                    milestoneLabels={milestoneLabels}
+                  />
                 )}
               </TabsContent>
             </Tabs>
