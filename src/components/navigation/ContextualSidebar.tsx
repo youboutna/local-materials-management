@@ -31,7 +31,10 @@ import {
   Flag,
   Target,
   BarChart3,
+  Palette,
 } from "lucide-react";
+import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
+
 
 interface NavItem {
   label: string;
