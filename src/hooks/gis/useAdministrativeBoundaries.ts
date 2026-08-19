@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAdministrativeBoundaryService } from '@/application/services/gis/AdministrativeBoundaryServiceFactory';
 import type { AdministrativeBoundaryDTO } from '@/dtos/entities/AdministrativeBoundaryDTO';
+import type { Location } from '@/domain/entities/Location';
 
 export const ADMINISTRATIVE_BOUNDARIES_QUERY_KEY = ['gis', 'administrative-boundaries'] as const;
 
