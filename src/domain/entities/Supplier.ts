@@ -298,6 +298,11 @@ export class Supplier {
     return {
       id: this._id,
       externalRef: this._externalRef,
+      contactPerson: this._contactPerson,
+      commerceRegisterRef: this._commerceRegisterRef,
+      bankName: this._bankName,
+      rib: this._rib,
+      accountNumber: this._accountNumber,
       name: this._name,
       email: this._email,
       phone: this._phone,
