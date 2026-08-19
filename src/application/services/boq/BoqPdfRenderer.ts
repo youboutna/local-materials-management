@@ -130,7 +130,7 @@ export const BoqPdfRenderer = {
     const body = lines.map((l, i) => {
       const qty = Number(l.quantity ?? 0);
       const pu = Number(l.unitPrice ?? 0);
-      const total = Number(l.totalHt ?? qty * pu);
+      const total = Number(l.totalHt || qty * pu + Number(l.fees ?? 0));
       return [
         String(i + 1),
         l.designation ?? '',
