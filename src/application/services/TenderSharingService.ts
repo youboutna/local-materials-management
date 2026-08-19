@@ -66,6 +66,61 @@ export class TenderSharingService {
   }
 
   /**
+   * Partage direct d'un code secret avec un fournisseur (même logique que le
+   * partage de document) : envoi de l'e-mail via l'edge function de notification
+   * puis journalisation de l'accès partagé.
+   */
+  static async shareWithSupplier(params: {
+    tenderId: string;
+    tenderTitle: string;
+    secretCode: string;
+    supplierEmail: string;
+    supplierName?: string;
+    expiresAt?: string | null;
+    message?: string;
+  }): Promise<void> {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const portalUrl = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(params.secretCode)}`;
+    const expiry = params.expiresAt
+      ? new Date(params.expiresAt).toLocaleDateString('fr-FR')
+      : 'sans date limite';
+
+    const body = [
+      `Bonjour ${params.supplierName ?? ''}`.trim() + ',',
+      '',
+      `Vous êtes invité à consulter l'appel d'offres « ${params.tenderTitle} » via le portail fournisseur sécurisé.`,
+      '',
+      `Code d'accès : ${params.secretCode}`,
+      `Lien d'accès : ${portalUrl}`,
+      `Validité : ${expiry}`,
+      params.message ? `\n${params.message}` : '',
+      '',
+      'Ce code est personnel et son utilisation est journalisée.',
+    ].join('\n');
+
+    const { error } = await supabase.functions.invoke('send-email-notification', {
+      body: {
+        to: params.supplierEmail,
+        subject: `Accès sécurisé — ${params.tenderTitle}`,
+        message: body,
+        priority: 'high',
+        actionType: 'tender_secret_shared',
+      },
+    });
+    if (error) throw new Error(error.message || "Échec de l'envoi de l'e-mail de partage");
+
+    try {
+      await this.logAccess({
+        secretCode: params.secretCode,
+        supplierEmail: params.supplierEmail,
+        accessType: 'shared_by_email',
+      } as CreateAccessLogDTO);
+    } catch {
+      // journalisation non bloquante
+    }
+
+
+  /**
    * Revoke a sharing secret
    */
   static async revokeSecret(secretId: string): Promise<void> {
