@@ -3,7 +3,7 @@ import { useDocumentViewer } from "@/components/documents/viewer";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -327,6 +327,9 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Ajouter un document</DialogTitle>
+                  <DialogDescription>
+                    Sélectionnez le fichier et sa catégorie pour l'attacher à ce matériau.
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
