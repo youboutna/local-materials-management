@@ -1,9 +1,14 @@
 /**
  * BrandIdentity — sceau (logo) + nom de l'organisation propriétaire.
- * 100 % paramétrable via le référentiel `BRANDING_PROFILES` + surcharges client.
+ *
+ * Données : la table des organisations est la source de vérité (organisation
+ * propriétaire de l'ensemble des projets). Le référentiel `BRANDING_PROFILES`
+ * ne sert que de repli, et les surcharges client (Paramètres → Apparence)
+ * restent prioritaires. Aucun texte métier codé en dur dans ce composant.
  */
 import React from 'react';
 import { useUiTheme } from '@/contexts/UiThemeContext';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
 
 interface BrandIdentityProps {
@@ -12,32 +17,49 @@ interface BrandIdentityProps {
   size?: 'sm' | 'md';
   /** Masque le texte (sceau uniquement). */
   hideText?: boolean;
+  /** Affiche les bandeaux d'accent en filet vertical accolé à l'identité. */
+  withBands?: boolean;
 }
 
 export const BrandIdentity: React.FC<BrandIdentityProps> = ({
   className,
   size = 'sm',
   hideText = false,
+  withBands = false,
 }) => {
-  const { branding } = useUiTheme();
-  const showSeal = branding.showSeal && !!branding.sealUrl;
+  const { branding, brandingOverrides } = useUiTheme();
+  const { organization } = useOwnerOrganization();
+
+  // Surcharge explicite > donnée réelle (organisation propriétaire) > référentiel
+  const ownerName =
+    brandingOverrides.ownerName?.trim() || organization?.name || branding.ownerName;
+  const ownerSubtitle =
+    brandingOverrides.ownerSubtitle?.trim() ||
+    organization?.description?.trim() ||
+    organization?.orgType?.trim() ||
+    branding.ownerSubtitle;
+  const sealUrl =
+    brandingOverrides.sealUrl?.trim() || organization?.logoUrl?.trim() || branding.sealUrl;
+
+  const showSeal = branding.showSeal && !!sealUrl;
   if (!showSeal && hideText) return null;
 
   return (
     <div className={cn('flex items-center gap-2 min-w-0', className)}>
+      {withBands && <BrandBands orientation="vertical" className="h-8" />}
       {showSeal && (
         <img
-          src={branding.sealUrl}
-          alt={`Sceau ${branding.ownerName}`}
+          src={sealUrl}
+          alt={`Sceau ${ownerName}`}
           loading="lazy"
           className={cn('shrink-0 object-contain', size === 'md' ? 'h-10 w-10' : 'h-7 w-7')}
         />
       )}
       {!hideText && (
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-xs font-semibold text-foreground">{branding.ownerName}</p>
-          {branding.ownerSubtitle && (
-            <p className="truncate text-[10px] text-muted-foreground">{branding.ownerSubtitle}</p>
+          <p className="truncate text-xs font-semibold text-foreground">{ownerName}</p>
+          {ownerSubtitle && (
+            <p className="truncate text-[10px] text-muted-foreground">{ownerSubtitle}</p>
           )}
         </div>
       )}
@@ -48,16 +70,49 @@ export const BrandIdentity: React.FC<BrandIdentityProps> = ({
 /**
  * BrandBands — bandeaux d'accent (tokens `--brand-band-*` du thème actif).
  * Pour le thème RIM : vert + or + rouge (charte graphique nationale).
+ *
+ * - `horizontal` : filet fin (usage ponctuel, ex. aperçu dans les réglages)
+ * - `vertical`   : filet inline, accolé à l'identité (usage barre d'en-tête)
  */
-export const BrandBands: React.FC<{ className?: string }> = ({ className }) => {
+export const BrandBands: React.FC<{
+  className?: string;
+  orientation?: 'horizontal' | 'vertical';
+}> = ({ className, orientation = 'horizontal' }) => {
   const { branding } = useUiTheme();
   if (!branding.showBands) return null;
+  const vertical = orientation === 'vertical';
   return (
-    <div className={cn('flex h-1 w-full overflow-hidden', className)} aria-hidden="true">
+    <div
+      className={cn(
+        'overflow-hidden rounded-full',
+        vertical ? 'flex w-1 flex-col shrink-0' : 'flex h-1 w-full',
+        className,
+      )}
+      aria-hidden="true"
+    >
       <span className="flex-[6]" style={{ backgroundColor: 'hsl(var(--brand-band-1))' }} />
       <span className="flex-[1]" style={{ backgroundColor: 'hsl(var(--brand-band-2))' }} />
       <span className="flex-[1]" style={{ backgroundColor: 'hsl(var(--brand-band-3))' }} />
     </div>
+  );
+};
+
+/**
+ * BrandBandsBackground — dégradé de charte très discret, utilisable en fond
+ * de bandeau (barre d'en-tête) sans ajouter de ligne de séparation.
+ */
+export const BrandBandsBackground: React.FC<{ className?: string }> = ({ className }) => {
+  const { branding } = useUiTheme();
+  if (!branding.showBands) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('pointer-events-none absolute inset-0 -z-10', className)}
+      style={{
+        background:
+          'linear-gradient(90deg, hsl(var(--brand-band-1) / 0.10) 0%, hsl(var(--brand-band-2) / 0.07) 62%, hsl(var(--brand-band-3) / 0.08) 100%)',
+      }}
+    />
   );
 };
 
