@@ -180,6 +180,9 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       if (data.image !== undefined) updateData.image = data.image;
       if (data.multilangLabels !== undefined) updateData.multilang_labels = data.multilangLabels;
       if (data.supplier !== undefined) updateData.supplier = data.supplier;
+      if (data.supplierId !== undefined) updateData.supplier_id = data.supplierId || null;
+      if (data.leadTimeDays !== undefined) updateData.lead_time_days = data.leadTimeDays;
+
       if (data.timeline !== undefined) updateData.timeline = data.timeline;
       if (data.lastRestock !== undefined) {
         updateData.last_restock = data.lastRestock instanceof Date ? data.lastRestock.toISOString() : data.lastRestock;

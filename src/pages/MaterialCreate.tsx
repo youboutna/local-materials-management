@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,13 @@ import { ArrowLeft, Package } from "lucide-react";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { CreateMaterialRequestDto } from "@/dtos/transforms";
 
+
 const MaterialCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<{ submit: () => void; getFormData: () => Partial<MaterialFormDataDTO> } | null>(null);
+
 
   // Hexagonal Architecture: Use the hexagonal hook for material operations
   const { createMaterial } = useMaterialsHex();
@@ -121,13 +124,15 @@ const MaterialCreate = () => {
       supplier: formData.supplier
     } as CreateMaterialRequestDto);
 
-    // Add supplier ID if a real supplier was selected from the list
-    if (completeFormData.supplier?.supplierId) {
-      createDto.supplierId = completeFormData.supplier.supplierId;
-      createDto.supplierName = completeFormData.supplier.name;
+    // Rattachement du fournisseur référencé (clé étrangère) ou saisie libre
+    const resolvedSupplierId = MaterialTransformer.resolveSupplierId(formData);
+    if (resolvedSupplierId) {
+      createDto.supplierId = resolvedSupplierId;
+      createDto.supplierName = completeFormData.supplier?.name;
     } else if (completeFormData.supplier?.name) {
       createDto.supplierName = completeFormData.supplier.name;
     }
+
 
     // Add workspace ID (already provided by form)
     if (completeFormData.workspaceId) {
@@ -145,13 +150,14 @@ const MaterialCreate = () => {
       onSuccess: (createdMaterial) => {
         toast({
           title: t('common.success'),
-          description: "Matériau créé avec succès!",
+          description: "Matériau créé. Vous pouvez maintenant joindre ses documents.",
           variant: "default",
         });
 
-        // Navigate to material details or list
-        navigate(`/materials/${createdMaterial.id}`);
+        // Étape 2 du workflow découplé : les documents nécessitent l'ID du matériau
+        navigate(`/materials/${createdMaterial.id}/edit?tab=documents`);
       },
+
       onError: (error) => {
         console.error('Material creation failed:', error);
         toast({
@@ -167,15 +173,14 @@ const MaterialCreate = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="bg-card shadow-sm border-b">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/materials")}
-              className="text-gray-600 hover:text-gray-900"
               aria-label="Retour à la liste des matériaux"
             >
               <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -183,11 +188,11 @@ const MaterialCreate = () => {
             </Button>
           </div>
           <div className="mt-4">
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Package className="h-8 w-8 text-terracotta-500" aria-hidden="true" />
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+              <Package className="h-7 w-7 text-primary" aria-hidden="true" />
               Nouveau matériau
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               Ajouter un nouveau matériau à votre inventaire
             </p>
           </div>
@@ -202,24 +207,24 @@ const MaterialCreate = () => {
             </CardHeader>
             <CardContent>
               <EnhancedMaterialForm
+                ref={formRef}
                 onSubmit={handleSubmit}
                 workspaces={transformedWorkspaces}
                 suppliers={suppliers}
                 showSubmitButton={false}
               />
-              <div className="flex justify-end gap-4 pt-6 mt-6 border-t">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t">
                 <Button variant="outline" onClick={() => navigate("/materials")} disabled={isSubmitting}>
                   Annuler
                 </Button>
                 <Button
                   onClick={() => {
-                    const formElement = document.querySelector("form");
-                    if (formElement) formElement.requestSubmit();
+                    const data = formRef.current?.getFormData();
+                    if (data) handleSubmit(data);
                   }}
                   disabled={isSubmitting}
                   aria-busy={isSubmitting}
                   aria-label={isSubmitting ? "Création en cours" : "Créer le matériau"}
-                  className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white"
                 >
                   {isSubmitting ? "Création..." : "Créer le matériau"}
                 </Button>
@@ -230,6 +235,7 @@ const MaterialCreate = () => {
       </main>
     </div>
   );
+
 };
 
 export default MaterialCreate;

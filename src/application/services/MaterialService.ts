@@ -661,10 +661,21 @@ export class MaterialService {
         image: updates.image ?? existing.image,
         coordinatesLatitude: updates.coordinatesLatitude ?? existing.coordinatesLatitude,
         coordinatesLongitude: updates.coordinatesLongitude ?? existing.coordinatesLongitude,
-        multilangLabels: updates.multilangLabels ?? existing.multilangLabels
+        multilangLabels: updates.multilangLabels ?? existing.multilangLabels,
+        // Champs métier à ne jamais perdre lors d'une mise à jour partielle
+        supplierId: updates.supplierId ?? existing.supplierId,
+        leadTimeDays: updates.supplier?.leadTime ?? existing.leadTimeDays,
+        materialCode: existing.materialCode,
+        minimumStock: existing.minimumStock,
+        maximumStock: existing.maximumStock,
+        qualityGrade: existing.qualityGrade,
+        technicalSpecifications: existing.technicalSpecifications,
+        materialStatus: existing.materialStatus,
+        tags: existing.tags
       }
     );
   }
+
 
   // ============================================================================
   // FORM INTEGRATION
@@ -699,7 +710,8 @@ export class MaterialService {
         estimatedDuration: formData.timeline.estimatedDuration || 0
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
+
     };
     return this.createMaterial(dto);
   }
@@ -732,7 +744,8 @@ export class MaterialService {
         estimatedDuration: formData.timeline.estimatedDuration || 0
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
+
     };
     return this.updateMaterial(id, dto);
   }

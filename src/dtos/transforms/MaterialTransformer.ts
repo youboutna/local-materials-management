@@ -103,6 +103,9 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
       coordinates_longitude: entity.coordinatesLongitude,
       multilang_labels: entity.multilangLabels,
       supplier: entity.supplier,
+      supplier_id: entity.supplierId ?? null,
+      lead_time_days: entity.leadTimeDays ?? entity.supplier?.leadTime ?? null,
+
       timeline: entity.timeline,
       last_restock: entity.lastRestock instanceof Date ? entity.lastRestock.toISOString() : entity.lastRestock,
       material_status: entity.materialStatus,
@@ -333,7 +336,8 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
+
     };
   }
 
@@ -368,9 +372,22 @@ export class MaterialTransformer implements EntityToDTOMapper<Material, Material
         estimatedDuration: formData.timeline.estimatedDuration
       } : undefined,
       supplier: formData.supplier,
-      supplierId: formData.supplierId
+      supplierId: MaterialTransformer.resolveSupplierId(formData)
     };
   }
+
+  /**
+   * Résout l'identifiant fournisseur quel que soit l'endroit où l'UI le stocke
+   * (racine du formulaire, ou objet `supplier` du SupplierSelector).
+   */
+  static resolveSupplierId(formData: { supplierId?: string; supplier?: unknown } | undefined | null): string | undefined {
+    if (!formData) return undefined;
+    const nested = formData.supplier as
+      | { supplierId?: string; id?: string }
+      | undefined;
+    return formData.supplierId || nested?.supplierId || nested?.id || undefined;
+  }
+
 
   // ============================================================================
   // VALIDATION

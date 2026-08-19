@@ -65,6 +65,8 @@ interface EnhancedMaterialFormProps {
   showSubmitButton?: boolean;
   language?: string;
   materialId?: string; // For document management
+  /** Onglet ouvert par défaut (ex: 'documents' après création) */
+  defaultTab?: string;
 }
 
 const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
@@ -75,7 +77,9 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   showSubmitButton = true,
   language = 'fr',
   materialId,
+  defaultTab = 'basic',
 }, ref) => {
+
   const { t } = useLanguage();
 
   // Hexagonal Architecture hooks
@@ -121,7 +125,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     ...initialData
   });
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [mapData, setMapData] = useState<MapData>({});
   const [address, setAddress] = useState(initialData?.adresse || '');
   const [selectedRegion, setSelectedRegion] = useState<LocationDTO | null>(null);
@@ -268,6 +272,8 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
     setFormData(prev => ({
       ...prev,
+      // La racine `supplierId` est la clé étrangère persistée ; `supplier` reste le snapshot JSON.
+      supplierId: supplier.id,
       supplier: {
         name: supplier.name,
         contact: supplier.contact,
@@ -276,6 +282,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
       }
     }));
   };
+
 
   const handleMapChange = (mapData: MapData) => {
     console.log('Map data changed:', mapData);
@@ -1034,16 +1041,21 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
         <TabsContent value="supplier" className="space-y-6">
           {/* Supplier Information */}
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
-                <User className="h-5 w-5" />
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-surface-muted">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <User className="h-5 w-5" aria-hidden="true" />
                 {t('materials.supplier_info.title') || 'Informations fournisseur'}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <SupplierSelector
-                value={formData.supplier}
+                value={{
+                  id: formData.supplier?.supplierId || formData.supplierId,
+                  name: formData.supplier?.name,
+                  contact: formData.supplier?.contact,
+                  leadTime: formData.supplier?.leadTime,
+                }}
                 onChange={handleSupplierChange}
                 allowCustom={true}
                 suppliers={suppliers}
@@ -1052,12 +1064,13 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
           </Card>
         </TabsContent>
 
+
         <TabsContent value="documents" className="space-y-6">
           {/* Material Documents */}
-          <Card className="border-l-4 border-l-indigo-500">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
-              <CardTitle className="flex items-center gap-2 text-adrar-800">
-                <FileText className="h-5 w-5" />
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-surface-muted">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <FileText className="h-5 w-5" aria-hidden="true" />
                 {t('materials.documents.title') || 'Documents du matériau'}
               </CardTitle>
               {materialId && (
@@ -1071,9 +1084,10 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 <MaterialDocumentsPanel
                   materialId={materialId}
                   materialName={formData.name}
-                  supplierId={formData.supplier?.supplierId}
+                  supplierId={formData.supplier?.supplierId || formData.supplierId}
                   supplierName={formData.supplier?.name}
                 />
+
               ) : (
                 <div className="space-y-6">
                   {/* Document Upload Section for New Materials */}

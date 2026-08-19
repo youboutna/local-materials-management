@@ -1157,8 +1157,13 @@ export interface MaterialFormDataDTO {
     name: string;
     contact: string;
     leadTime: number;
+    /** Identifiant du fournisseur référencé (btp.suppliers.id) */
+    supplierId?: string;
   };
+  /** Identifiant fournisseur au niveau racine (hydratation depuis la DB) */
+  supplierId?: string;
 }
+
 
 // Performance Monitoring DTOs
 export interface DatabaseMetricsDTO {
