@@ -32,6 +32,8 @@ import {
   Target,
   BarChart3,
   Palette,
+  KeyRound,
+
 } from "lucide-react";
 import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 
