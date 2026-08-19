@@ -16,6 +16,7 @@ import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ReceptionDTO, ReceptionType, ReceptionStatus, ReceptionValidationDTO } from "@/dtos/entities/ReceptionDTO";
 import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
+import { getStorageService } from '@/application/services/StorageService';
 
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
@@ -140,8 +141,8 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
     }
 
     try {
-      // Real implementation: upload files to Supabase storage and persist documents
-      const { supabase } = await import('@/integrations/supabase/client');
+      // Persistance via services hexagonaux (aucun accès Supabase direct côté UI)
+      const storageService = getStorageService();
       const projectId = formData.id || '';
 
       const uploadedDocs = await Promise.all(
@@ -149,16 +150,13 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
           const docId = crypto.randomUUID();
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const path = `receptions/${projectId || 'unassigned'}/${docId}-${safeName}`;
-          const { error: upErr } = await supabase.storage
-            .from('project-documents')
-            .upload(path, file, { upsert: false, contentType: file.type });
-          if (upErr) throw upErr;
-          const { data: pub } = supabase.storage.from('project-documents').getPublicUrl(path);
+          await storageService.uploadFile({ bucket: 'project-documents', path, file });
+          const publicUrl = storageService.getPublicUrl({ bucket: 'project-documents', path });
           return {
             id: docId,
             name: file.name,
             type: file.type as any,
-            url: pub.publicUrl,
+            url: publicUrl,
             size: file.size,
             uploadedAt: new Date().toISOString(),
           };

@@ -4,7 +4,8 @@
  */
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getStorageService } from '@/application/services/StorageService';
+import { getAuthService } from '@/application/services/AuthService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {
   DocumentFacetDef,
@@ -110,13 +111,9 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
     // 1. Upload file to Storage
     const safeName = input.file.name.replace(/[^\w.\-]+/g, '_');
     const path = `${pathPrefix ?? scopeLabel.toLowerCase().replace(/\s+/g, '-')}/${Date.now()}_${safeName}`;
-    const { error: upErr } = await supabase.storage.from(bucket).upload(path, input.file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: input.file.type,
-    });
-    if (upErr) throw upErr;
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+    const storageService = getStorageService();
+    await storageService.uploadFile({ bucket, path, file: input.file });
+    const publicUrl = storageService.getPublicUrl({ bucket, path });
 
     // 2. Insert document row
     const filterDefaults: Record<string, unknown> = {};
@@ -124,17 +121,17 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
       if (f.column === 'metadata_material_id' || f.column === 'metadata_scope') continue;
       filterDefaults[f.column] = f.value;
     }
-    const { data: userData } = await supabase.auth.getUser();
+    const currentUser = await getAuthService().getCurrentUser();
 
     const insertPayload: Record<string, unknown> = {
       title: input.title,
       description: input.description ?? null,
-      file_url: pub.publicUrl,
+      file_url: publicUrl,
       file_name: input.file.name,
       mime_type: input.file.type,
       file_size: input.file.size,
       document_type: input.category ?? 'other',
-      uploaded_by: userData.user?.id ?? null,
+      uploaded_by: currentUser?.id ?? null,
       ...filterDefaults,
       ...insertDefaults,
       ...(input.extras ?? {}),

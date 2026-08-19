@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getAuthService } from '@/application/services/AuthService';
 import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
@@ -40,8 +40,8 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
     setLoading(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const ownerId = authData.user?.id;
+      const currentUser = await getAuthService().getCurrentUser();
+      const ownerId = currentUser?.id;
       if (!ownerId) throw new Error("Utilisateur non authentifié");
 
       const payload: BtpTablesInsert<'workspaces'> = {

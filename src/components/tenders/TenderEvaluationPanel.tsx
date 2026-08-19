@@ -18,7 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/hexagonal';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getAuthService } from '@/application/services/AuthService';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
 interface TenderEvaluationPanelProps {
@@ -95,9 +95,9 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
       const updateData: any = { [field]: value };
       
       if (field === 'status' && value !== 'submitted') {
-        const currentUser = await supabase.auth.getUser();
-        if (currentUser.data?.user?.id) {
-          updateData.reviewer_id = currentUser.data.user.id;
+        const currentUser = await getAuthService().getCurrentUser();
+        if (currentUser?.id) {
+          updateData.reviewer_id = currentUser.id;
         }
         updateData.reviewed_at = new Date().toISOString();
       }
