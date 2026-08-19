@@ -54,6 +54,14 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
     if (data.category !== undefined) updateData.category = data.category;
     if (data.status !== undefined) updateData.is_active = data.status === 'active';
     if (data.externalRef !== undefined) updateData.external_ref = data.externalRef;
+    if (data.rating !== undefined) updateData.rating = data.rating?.overall ?? null;
+    if (data.contactPerson !== undefined) updateData.contact_person = data.contactPerson;
+    else if (data.contacts !== undefined) updateData.contact_person = data.contacts?.[0]?.name ?? null;
+    if (data.commerceRegisterRef !== undefined) updateData.commerce_register_ref = data.commerceRegisterRef;
+    if (data.bankName !== undefined) updateData.bank_name = data.bankName;
+    if (data.rib !== undefined) updateData.rib = data.rib;
+    if (data.accountNumber !== undefined) updateData.account_number = data.accountNumber;
+    updateData.updated_at = new Date().toISOString();
 
     const { error } = await supabase.from('suppliers').update(updateData as BtpRow).eq('id', id);
     if (error) throw new Error(`Failed to update supplier: ${error.message}`);

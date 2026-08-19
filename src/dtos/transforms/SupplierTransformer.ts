@@ -133,19 +133,19 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
       email: entity.email || undefined,
       phone: entity.phone || undefined,
       address: entity.address || undefined,
-      contactPerson: entity.contacts[0]?.name || undefined,
+      contactPerson: entity.contactPerson || undefined,
       category: entity.category || undefined,
       rating: entity.rating?.overall || undefined,
       isActive: entity.status === 'active',
       nif: entity.nif || undefined,
-      commerceRegisterRef: undefined,
+      commerceRegisterRef: entity.commerceRegisterRef || undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      accountNumber: undefined,
-      bankName: undefined,
+      accountNumber: entity.accountNumber || undefined,
+      bankName: entity.bankName || undefined,
       defaultPasswordResetRequired: undefined,
-      rib: undefined,
-      userId: undefined,
+      rib: entity.rib || undefined,
+      userId: entity.workspaceId || undefined,
     };
   }
 
@@ -163,6 +163,11 @@ export class SupplierTransformer implements EntityToDTOMapper<Supplier, Supplier
         quality: dto.rating, delivery: dto.rating, price: dto.rating, communication: dto.rating, overall: dto.rating
       } : null,
       contacts: dto.contactPerson ? [{ name: dto.contactPerson, email: dto.email || '', phone: dto.phone || '' }] : [],
+      contactPerson: dto.contactPerson || null,
+      commerceRegisterRef: dto.commerceRegisterRef || null,
+      bankName: dto.bankName || null,
+      rib: dto.rib || null,
+      accountNumber: dto.accountNumber || null,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt
     });
