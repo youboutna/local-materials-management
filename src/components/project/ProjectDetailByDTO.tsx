@@ -881,32 +881,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </TabsList>
 
           <div className="flex shrink-0 items-center gap-1.5 pl-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
-                  <FileDown className="h-4 w-4" />
-                  <span className="hidden sm:inline">Rapport compact</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-                <DialogHeader>
-                  <DialogTitle>Générer un Rapport Compact</DialogTitle>
-                  <DialogDescription>
-                    Créez un rapport PDF compact avec les informations essentielles du projet.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto pr-1 max-h-[75vh]">
-                  {projectDataForReport && (
-                    <CompactProjectReportGenerator project={projectDataForReport as any} />
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-            <ReportManager
-              data={{ project: (projectDataForReport ?? project) as any }}
-              reportType="project"
-            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setActiveTab("rapports")}
+            >
+              <FileDown className="h-4 w-4" />
+              <span className="hidden sm:inline">Rapports</span>
+            </Button>
           </div>
+
         </div>
 
 
