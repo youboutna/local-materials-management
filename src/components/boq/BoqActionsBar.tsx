@@ -189,6 +189,14 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const handleTransfer = () => withGuard('transfer', async () => {
     try {
+      // Contexte projet : « Soumettre pour validation » englobe la demande de
+      // validation (alerte budgétaire / arbitrage A/B/C) — action unique, plus
+      // de bouton « Demander validation » en doublon.
+      if (ctx.routeContext === 'project-dqe') {
+        window.dispatchEvent(new CustomEvent('boq-request-validation', {
+          detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
+        }));
+      }
       const res = await BoqTransferService.transfer({
         routeContext: ctx.routeContext,
         lines,
