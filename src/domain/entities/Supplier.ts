@@ -115,6 +115,16 @@ export class Supplier {
   // ============= Getters =============
   get id(): string { return this._id; }
   get externalRef(): string | null { return this._externalRef; }
+  get contactPerson(): string | null { return this._contactPerson ?? this._contacts[0]?.name ?? null; }
+  set contactPerson(value: string | null) { this._contactPerson = value?.trim() || null; }
+  get commerceRegisterRef(): string | null { return this._commerceRegisterRef; }
+  set commerceRegisterRef(value: string | null) { this._commerceRegisterRef = value?.trim() || null; }
+  get bankName(): string | null { return this._bankName; }
+  set bankName(value: string | null) { this._bankName = value?.trim() || null; }
+  get rib(): string | null { return this._rib; }
+  set rib(value: string | null) { this._rib = value?.trim() || null; }
+  get accountNumber(): string | null { return this._accountNumber; }
+  set accountNumber(value: string | null) { this._accountNumber = value?.trim() || null; }
   get name(): string { return this._name; }
   get email(): string | null { return this._email; }
   get phone(): string | null { return this._phone; }
