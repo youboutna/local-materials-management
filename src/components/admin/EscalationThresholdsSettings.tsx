@@ -89,19 +89,25 @@ const EscalationThresholdsSettings: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const severityBadgeVariant = (
+    severity: string
+  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (severity) {
-      case 'critical': return 'bg-red-500 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'critical':
+        return 'destructive';
+      case 'high':
+        return 'default';
+      case 'medium':
+        return 'secondary';
+      default:
+        return 'outline';
     }
   };
 
   const getThresholdsByType = (type: string) => {
     return thresholds.filter(t => t.threshold_type === type);
   };
+
 
   if (loading) {
     return (
