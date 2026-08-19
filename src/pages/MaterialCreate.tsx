@@ -124,13 +124,15 @@ const MaterialCreate = () => {
       supplier: formData.supplier
     } as CreateMaterialRequestDto);
 
-    // Add supplier ID if a real supplier was selected from the list
-    if (completeFormData.supplier?.supplierId) {
-      createDto.supplierId = completeFormData.supplier.supplierId;
-      createDto.supplierName = completeFormData.supplier.name;
+    // Rattachement du fournisseur référencé (clé étrangère) ou saisie libre
+    const resolvedSupplierId = MaterialTransformer.resolveSupplierId(formData);
+    if (resolvedSupplierId) {
+      createDto.supplierId = resolvedSupplierId;
+      createDto.supplierName = completeFormData.supplier?.name;
     } else if (completeFormData.supplier?.name) {
       createDto.supplierName = completeFormData.supplier.name;
     }
+
 
     // Add workspace ID (already provided by form)
     if (completeFormData.workspaceId) {
