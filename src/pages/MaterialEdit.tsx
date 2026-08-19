@@ -29,6 +29,10 @@ const MaterialEdit = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const safeId = id || '';
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'basic';
+  const formRefLocal = useRef<{ submit: () => void; getFormData: () => Partial<MaterialFormDataDTO> } | null>(null);
+
 
   const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);
   const { workspaces } = useWorkspacesHex();
