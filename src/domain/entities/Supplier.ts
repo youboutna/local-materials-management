@@ -263,6 +263,11 @@ export class Supplier {
       props.updatedAt ?? new Date().toISOString()
     );
     supplier._externalRef = props.externalRef ?? null;
+    supplier._contactPerson = props.contactPerson ?? props.contacts?.[0]?.name ?? null;
+    supplier._commerceRegisterRef = props.commerceRegisterRef ?? null;
+    supplier._bankName = props.bankName ?? null;
+    supplier._rib = props.rib ?? null;
+    supplier._accountNumber = props.accountNumber ?? null;
     return supplier;
   }
 
