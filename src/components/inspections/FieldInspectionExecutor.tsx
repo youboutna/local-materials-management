@@ -26,6 +26,7 @@ import {
   ConformityStatus,
   OBSERVATION_CATEGORIES,
 } from '@/dtos/entities/InspectionDTO';
+import { InspectionDocumentsPanel } from '@/components/documents/panels';
 
 // Local types for UI-specific fields not in DTOs
 interface LocalMeasurement {
@@ -316,34 +317,6 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
     toast.success('Mesure ajoutée');
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files?.length) return;
-
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} n'est pas une image`);
-        continue;
-      }
-
-      const doc: InspectionDocumentEntity = {
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: 'photo',
-        url: URL.createObjectURL(file),
-        uploadedAt: new Date().toISOString(),
-        size: file.size,
-        mime_type: file.type,
-      };
-      
-      setExecutionData(prev => ({
-        ...prev,
-        documents: [...(prev.documents || []), doc],
-      }));
-      toast.success(`Photo ${file.name} ajoutée`);
-    }
-  };
-
   const getCompletionPercentage = () => {
     let score = 0;
     let total = 4;
@@ -564,25 +537,12 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Photos & Documents</CardTitle>
-                <CardDescription>{executionData.documents?.length || 0} document(s)</CardDescription>
+                <CardDescription>
+                  Pièces jointes gérées par la GED (chargement, visionneuse intégrée, filtres)
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center mb-4">
-                  <input type="file" id="photo-upload" multiple accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                  <label htmlFor="photo-upload" className="cursor-pointer">
-                    <Camera className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Cliquez pour ajouter des photos</p>
-                    <Button variant="outline" size="sm" className="mt-2" asChild><span><Upload className="h-4 w-4 mr-2" />Sélectionner</span></Button>
-                  </label>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {executionData.documents?.filter(d => d.type === 'photo').map((doc) => (
-                    <div key={doc.id} className="relative aspect-square rounded-lg overflow-hidden border">
-                      <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 truncate">{doc.name}</div>
-                    </div>
-                  ))}
-                </div>
+                <InspectionDocumentsPanel inspectionId={inspection.id} />
               </CardContent>
             </Card>
           </TabsContent>
