@@ -208,29 +208,51 @@ export class NotificationService {
    */
   async updateNotification(id: string, data: UpdateNotificationRequestDTO): Promise<NotificationDTO> {
     try {
-      // This is a placeholder since updateNotification doesn't exist in the repository
-      // For now, we'll return a mock response
-      console.warn('NotificationService.updateNotification: Repository method not available');
-      
+      if (!this.notificationRepository.updateNotification) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Update notification not supported by repository');
+      }
+
+      const patch: Partial<Omit<NotificationData, 'id' | 'created_at'>> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (data.title !== undefined) patch.title = data.title;
+      if (data.message !== undefined) patch.message = data.message;
+      if (data.type !== undefined) patch.type = normalizeNotificationType(data.type) as NotificationData['type'];
+      if (data.read !== undefined) patch.read = data.read;
+      if (data.priority !== undefined) patch.priority = data.priority;
+      if (data.expiresAt !== undefined) patch.expires_at = data.expiresAt;
+      if (data.actionUrl !== undefined) patch.action_url = data.actionUrl;
+      if (data.metadata !== undefined) patch.metadata = data.metadata;
+
+      const result = await this.notificationRepository.updateNotification(id, patch);
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to update notification: ${result.error.message}`);
+      }
+      if (!result.notification) {
+        throw new AppError(ErrorCode.NOT_FOUND, 'Notification not found');
+      }
+
+      const row = result.notification;
       return {
-        id,
-        recipientId: 'system',
-        title: data.title || 'Updated Notification',
-        message: data.message || 'Updated message',
-        type: data.type || 'info',
-        read: data.read || false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        priority: data.priority || 'medium',
-        expiresAt: data.expiresAt,
-        actionUrl: data.actionUrl,
-        metadata: data.metadata,
+        id: row.id,
+        recipientId: row.recipient_id,
+        title: row.title,
+        message: row.message,
+        type: row.type,
+        read: row.read,
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at,
+        priority: row.priority,
+        expiresAt: row.expires_at || undefined,
+        actionUrl: row.action_url || undefined,
+        metadata: row.metadata || undefined,
       };
     } catch (error) {
       console.error('NotificationService.updateNotification failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update notification');
     }
   }
+
 
   /**
    * Mark notification as read
