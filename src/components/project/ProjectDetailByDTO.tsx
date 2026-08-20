@@ -8,8 +8,7 @@
  * - Toutes les données proviennent des services
  */
 
-import { getProjectAnalyticsService} from '@/application/services/ProjectAnalyticsService';
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import { CriticalPathView, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
@@ -25,47 +24,42 @@ import PhaseList from "@/components/project/PhaseList";
 import PlanningVarianceView from "@/components/project/PlanningVarianceView";
 import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
-import ProjectGantt from "@/components/project/ProjectGantt";
 import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
 import ProjectConsultantDesignation from "@/components/project/stakeholders/ProjectConsultantDesignation";
 
+import { getActualCostService } from "@/application/services/ActualCostService";
+import { WorkspaceTabsList } from "@/components/common/WorkspaceTabsList";
+import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DialogContent as DialogContentUI, DialogDescription, DialogHeader, DialogHeader as DialogHeaderUI, DialogTitle, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
+import { DialogContent as DialogContentUI, DialogHeader as DialogHeaderUI, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WorkspaceTabsList } from "@/components/common/WorkspaceTabsList";
 import { ReferentialType } from "@/config/referentials";
 import { getProjectTabs } from "@/config/referentials/projects/project-views.referential";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { InspectionDTO } from "@/dtos/entities/InspectionDTO";
+import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
-import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
-import { useProjectMetrics } from "@/hooks/useProjectMetrics";
-import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
-import { formatAmount2 } from "@/utils/reportNumbers";
 import { toast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
+import { useProjectMetrics } from "@/hooks/useProjectMetrics";
+import { formatAmount2 } from "@/utils/reportNumbers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getActualCostService } from "@/application/services/ActualCostService";
 import {
-    AlertTriangle,
-    BarChart3,
-    Calendar,
-    CheckCircle,
-    Clock,
-    DollarSign,
-    FileDown,
-    FileText,
-    Shield,
-    Target,
-    TrendingUp
+  AlertTriangle,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  Shield,
+  Target
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -73,11 +67,11 @@ import { ElectricSpinner } from "../loading-page";
 import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
 import { Label } from "../ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "../ui/select";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import { ProjectHeader } from "./hierarchy";
@@ -881,18 +875,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             ))}
           </TabsList>
 
-          <div className="flex shrink-0 items-center gap-1.5 pl-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => setActiveTab("rapports")}
-            >
-              <FileDown className="h-4 w-4" />
-              <span className="hidden sm:inline">Rapports</span>
-            </Button>
-          </div>
-
         </div>
 
 
@@ -1543,7 +1525,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               reportType="project"
             />
           </div>
-          <CompactProjectReportGenerator project={projectDetail as any} />
+         <CompactProjectReportGenerator project={(projectDetail || project) as any} />
         </TabsContent>
 
 
