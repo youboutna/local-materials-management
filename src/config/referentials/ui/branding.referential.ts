@@ -48,7 +48,7 @@ export const BRANDING_PROFILES: BrandingDefinition[] = [
     appName: 'HadraTech-GPI',
     ownerName: 'République Islamique de Mauritanie',
     ownerSubtitle: 'Ministère en charge des infrastructures',
-    sealUrl: sealRim.url,
+    sealUrl: window.location.origin + sealRim.url,
     showSeal: true,
     showBands: true,
     suggestedThemeId: 'rim',

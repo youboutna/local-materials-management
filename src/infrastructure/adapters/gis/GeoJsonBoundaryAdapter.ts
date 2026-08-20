@@ -12,7 +12,7 @@ export class GeoJsonBoundaryAdapter implements IAdministrativeBoundaryRepository
   private cache: AdministrativeBoundaryFeature[] | null = null;
   private inflight: Promise<AdministrativeBoundaryFeature[]> | null = null;
 
-  constructor(private readonly sourceUrl: string = wilayasAsset.url) {}
+  constructor(private readonly sourceUrl: string = window.location.origin + wilayasAsset.url) {}
 
   async findAll(): Promise<AdministrativeBoundaryFeature[]> {
     if (this.cache) return this.cache;
