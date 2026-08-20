@@ -55,7 +55,7 @@ export class NotificationService {
         recipient_id: data.recipientId,
         title: data.title,
         message: data.message,
-        type: data.type,
+        type: normalizeNotificationType(data.type) as NotificationData['type'],
         read: false,
         priority: data.priority || 'medium',
         expires_at: data.expiresAt || undefined,
