@@ -16,6 +16,7 @@ import {
     NotificationDTO,
     UpdateNotificationRequestDTO
 } from '@/dtos/entities/NotificationDTO';
+import { normalizeNotificationType } from '@/config/referentials/notifications/notification-types.referential';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
