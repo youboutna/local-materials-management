@@ -161,3 +161,4 @@ export * from './projects/project-views.referential';
 export * from './dqe/dqe-categories.referential';
 export * from './kpi/health-thresholds.referential';
 export * from './projects/project-workflow-steps.referential';
+export * from './notifications/notification-types.referential';
