@@ -1,79 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createEmailService } from '../_shared/EmailServiceFactory.ts';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface TaskAssignmentRequest {
-  assigneeId: string;
-  assigneeName: string;
-  assigneeEmail?: string;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  dueDate?: string;
-  projectId?: string | null;
-  relatedId?: string | null;
-  actionType: string;
-  metadata?: Record<string, unknown>;
-}
-
-interface TaskAssignment {
-  id: string;
-  assigned_to: string;
-  assignee_name: string;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  due_date?: string;
-  project_id?: string | null;
-  related_id?: string | null;
-  action_type: string;
-  status: 'assigned' | 'completed' | 'cancelled';
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
-
-interface NotificationPayload {
-  recipient_id: string;
-  title: string;
-  message: string;
-  type: string;
-  related_id?: string | null;
-  metadata: Record<string, unknown>;
-}
-
-interface EmailPayload {
-  to: string;
-  subject: string;
-  message: string;
-  priority: string;
-  actionType: string;
-  metadata: Record<string, unknown>;
-}
-
-interface TaskAssignmentResponse {
-  success: boolean;
-  task: TaskAssignment;
-  notification?: NotificationPayload | null;
-  message: string;
-}
-
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { 
-      status: 405, 
-      headers: corsHeaders 
-    });
   }
 
   try {
@@ -82,25 +18,10 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { 
-      assigneeId, 
-      assigneeName, 
-      assigneeEmail, 
-      title, 
-      description, 
-      priority, 
-      dueDate, 
-      projectId, 
-      relatedId, 
-      actionType, 
-      metadata 
-    }: TaskAssignmentRequest = await req.json();
+    const { assigneeId, assigneeName, assigneeEmail, title, description, priority, dueDate, projectId, relatedId, actionType, metadata } = await req.json();
 
-    console.log("Assigning task to employee:", { assigneeId, assigneeName, title, priority });
-
-    // Create task assignment record
-    const taskAssignment: TaskAssignment = {
-      id: `task-${Date.now()}`,
+    // Persister la tâche
+    const task = {
       assigned_to: assigneeId,
       assignee_name: assigneeName,
       title,
@@ -113,112 +34,56 @@ const handler = async (req: Request): Promise<Response> => {
       status: 'assigned',
       metadata: metadata || {},
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
-    // Store the task assignment
     const { data: createdTask, error: taskError } = await supabase
       .from('task_assignments')
-      .insert([taskAssignment])
+      .insert([task])
       .select()
       .single();
 
-    if (taskError) {
-      console.error("Error creating task assignment:", taskError);
-      // Continue with notification even if task storage fails
-    }
+    if (taskError) console.error('Task storage error:', taskError);
 
-    // Create notification for the assignee
-    const notificationPayload: NotificationPayload = {
-      recipient_id: assigneeId,
-      title: `📋 Nouvelle tâche assignée: ${title}`,
-      message: `${description}\n\nPriorité: ${priority.toUpperCase()}${dueDate ? `\nÉchéance: ${new Date(dueDate).toLocaleDateString('fr-FR')}` : ''}`,
-      type: 'task_assigned',
-      related_id: relatedId || projectId,
-      metadata: {
-        ...metadata,
-        task_id: taskAssignment.id,
-        priority,
-        due_date: dueDate,
-        action_type: actionType
-      }
-    };
-
-    const { data: notification, error: notificationError } = await supabase
+    // Notification interne
+    await supabase
       .from('notifications')
-      .insert([notificationPayload])
-      .select()
-      .single();
+      .insert({
+        recipient_id: assigneeId,
+        title: `📋 Nouvelle tâche assignée: ${title}`,
+        message: `${description}\n\nPriorité: ${priority.toUpperCase()}${dueDate ? `\nÉchéance: ${new Date(dueDate).toLocaleDateString('fr-FR')}` : ''}`,
+        type: 'task_assigned',
+        related_id: relatedId || projectId,
+        metadata: { task_id: createdTask?.id || task.id, priority, due_date: dueDate },
+      });
 
-    if (notificationError) {
-      console.error("Error creating notification:", notificationError);
-    }
-
-    // If email is provided, also send email notification
+    // Email si fourni
     if (assigneeEmail) {
-      try {
-        const emailPayload: EmailPayload = {
-          to: assigneeEmail,
-          subject: `Nouvelle tâche assignée: ${title}`,
-          message: description,
-          priority,
-          actionType,
-          metadata: {
-            ...metadata,
-            task_id: taskAssignment.id,
-            due_date: dueDate
-          }
-        };
-
-        const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email-notification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
-          },
-          body: JSON.stringify(emailPayload)
-        });
-
-        if (!emailResponse.ok) {
-          console.error("Failed to send email notification");
-        } else {
-          console.log("Email notification sent successfully");
-        }
-      } catch (emailError) {
-        console.error("Error sending email notification:", emailError);
-      }
+      const emailService = createEmailService();
+      await emailService.sendEmail({
+        to: assigneeEmail,
+        subject: `Nouvelle tâche assignée: ${title}`,
+        html: `
+          <h2>Nouvelle tâche</h2>
+          <p><strong>${title}</strong></p>
+          <p>${description}</p>
+          <p>Priorité: ${priority}</p>
+          ${dueDate ? `<p>Échéance: ${new Date(dueDate).toLocaleDateString('fr-FR')}</p>` : ''}
+          <p>Projet: ${projectId || 'Non spécifié'}</p>
+        `,
+      });
     }
 
-    console.log("Task assigned successfully:", taskAssignment);
-
-    const response: TaskAssignmentResponse = {
-      success: true,
-      task: createdTask || taskAssignment,
-      notification: notification,
-      message: "Task assigned successfully"
-    };
-
     return new Response(
-      JSON.stringify(response),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
+      JSON.stringify({ success: true, task: createdTask || task }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error("Error in assign-task-to-employee function:", error);
+
+  } catch (error) {
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-};
-
-serve(handler);
+});

@@ -5,11 +5,11 @@
  * et la méthode getAllDocuments pour récupérer tous les documents
  */
 
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { Document } from '@/domain/entities/Document';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { CreateDocumentDTO, DocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
-import { DocumentDTO, CreateDocumentDTO, UpdateDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { getStorageService } from './StorageService';
 
@@ -428,6 +428,143 @@ export class DocumentService {
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download document');
     }
   }
+  /**
+ * Valide un document selon des critères (taille, MIME, extensions, etc.)
+ * et journalise le résultat.
+ */
+async validateDocument(
+  documentId: string,
+  submissionId: string,
+  expectedCategory?: string
+): Promise<{
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  metadata: { fileSize: number; mimeType: string; fileName: string };
+}> {
+  const doc = await this.documentRepository.findById(documentId);
+  if (!doc) throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
+
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // 1. Taille
+  const maxSize = this.getMaxSizeForCategory(expectedCategory || 'administrative');
+  if (doc.fileSize && doc.fileSize > maxSize) {
+    errors.push(`Taille dépassée (${(doc.fileSize / 1024 / 1024).toFixed(2)} MB > ${(maxSize / 1024 / 1024).toFixed(2)} MB)`);
+  }
+
+  // 2. MIME
+  const allowedTypes = this.getAllowedMimeTypesForCategory(expectedCategory || 'administrative');
+  if (doc.mimeType && !allowedTypes.includes(doc.mimeType)) {
+    errors.push(`Type MIME non autorisé: ${doc.mimeType}`);
+  }
+
+  // 3. Nom de fichier
+  if (!doc.fileName || doc.fileName.trim().length === 0) {
+    errors.push('Nom de fichier invalide');
+  }
+
+  // 4. Extensions dangereuses
+  const dangerousExts = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.vbs', '.js', '.msi'];
+  const ext = doc.fileName?.toLowerCase().split('.').pop() || '';
+  if (dangerousExts.some(e => e === `.${ext}`)) {
+    errors.push(`Extension dangereuse: .${ext}`);
+  }
+
+  // 5. Accessibilité URL
+  if (!doc.fileUrl) {
+    errors.push('URL du fichier manquante');
+  } else {
+    try {
+      const res = await fetch(doc.fileUrl, { method: 'HEAD' });
+      if (!res.ok) warnings.push('Le fichier pourrait ne pas être accessible');
+    } catch {
+      warnings.push('Erreur de vérification d\'accessibilité');
+    }
+  }
+
+  // 6. PDF trop petit
+  if (doc.mimeType === 'application/pdf' && doc.fileSize && doc.fileSize < 1024) {
+    warnings.push('PDF semble vide');
+  }
+
+  const isValid = errors.length === 0;
+  const result = {
+    isValid,
+    errors,
+    warnings,
+    metadata: {
+      fileSize: doc.fileSize || 0,
+      mimeType: doc.mimeType || 'unknown',
+      fileName: doc.fileName || 'unknown',
+    },
+  };
+
+  // Mettre à jour le document avec le résultat de validation
+  await this.documentRepository.update(doc.id, {
+    metadata: {
+      ...(doc.metadata || {}),
+      validationResult: result,
+      validatedAt: new Date().toISOString(),
+    },
+  });
+
+  // Journaliser la validation (via l'adaptateur)
+  try {
+    const logRepo = RepositoryFactory.getDocumentValidationLogRepository();
+    await logRepo.create({
+      documentId: doc.id,
+      submissionId,
+      isValid,
+      errors: errors.length > 0 ? errors : [],
+      warnings: warnings.length > 0 ? warnings : [],
+      validatedAt: new Date().toISOString(),
+    });
+  } catch (logError) {
+    console.warn('Failed to save validation log:', logError);
+    // Non bloquant
+  }
+
+  return result;
+}
+
+// Helpers privés (à ajouter dans la classe)
+private getMaxSizeForCategory(category: string): number {
+  const sizes: Record<string, number> = {
+    administrative: 10 * 1024 * 1024,
+    technical: 20 * 1024 * 1024,
+    financial: 15 * 1024 * 1024,
+  };
+  return sizes[category] || sizes.administrative;
+}
+
+private getAllowedMimeTypesForCategory(category: string): string[] {
+  const types: Record<string, string[]> = {
+    administrative: [
+      'application/pdf',
+      'application/json',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg', 'image/png', 'image/jpg'
+    ],
+    technical: [
+      'application/pdf',
+      'application/json',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/jpeg', 'image/png', 'application/zip'
+    ],
+    financial: [
+      'application/json',
+      'application/pdf',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ],
+  };
+  return types[category] || types.administrative;
+}
 }
 
 let documentServiceInstance: DocumentService | null = null;

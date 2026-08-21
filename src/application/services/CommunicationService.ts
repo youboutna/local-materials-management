@@ -1,14 +1,11 @@
+// src/application/services/CommunicationService.ts
 /**
  * Communication Service - Hexagonal Architecture
- *
- * Thin façade around NotificationService for cross-channel side-effects
- * (task assignment, email, SMS, scheduled call, postal mail). Real transport
- * providers (SendGrid, Twilio, etc.) are wired downstream via edge functions;
- * here we persist a traceable notification per invocation so the domain layer
- * remains provider-agnostic.
+ * Utilise désormais EmailService pour l’envoi réel (découplé de Supabase)
  */
 
 import { NotificationService } from './NotificationService';
+import { createEmailService } from './email/EmailServiceFactory';
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -81,6 +78,7 @@ export class CommunicationService {
   }
 
   static async sendEmail(payload: SendEmailPayload): Promise<CommunicationResult> {
+    // 1. Persister la notification (comportement existant)
     await NotificationService.createNotification({
       recipientId: payload.to,
       title: `📧 ${payload.subject}`,
@@ -94,7 +92,23 @@ export class CommunicationService {
         ...(payload.metadata ?? {}),
       },
     });
-    return { success: true, channel: 'email' };
+
+    // 2. Envoyer l'email via le service multi‑provider
+    try {
+      const emailService = createEmailService();
+      const result = await emailService.sendEmail({
+        to: payload.to,
+        subject: payload.subject,
+        html: payload.message.replace(/\n/g, '<br>'),
+        text: payload.message,
+      });
+      console.log(`Email sent via ${process.env.EMAIL_PROVIDER || 'smtp'} to ${payload.to}`);
+      return { success: true, channel: 'email', reference: result.messageId };
+    } catch (error) {
+      console.error('CommunicationService.sendEmail: error', error);
+      // On ne throw pas pour ne pas bloquer le workflow
+      return { success: false, channel: 'email' };
+    }
   }
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {

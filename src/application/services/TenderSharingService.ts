@@ -7,6 +7,7 @@ import {
     ValidateSecretResponseDTO
 } from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { CommunicationService } from './CommunicationService';
 
 /**
  * Service for managing secure tender document sharing
@@ -67,8 +68,8 @@ export class TenderSharingService {
 
   /**
    * Partage direct d'un code secret avec un fournisseur (même logique que le
-   * partage de document) : envoi de l'e-mail via l'edge function de notification
-   * puis journalisation de l'accès partagé.
+   * partage de document) : envoi de l'e-mail via CommunicationService
+   * (qui utilise l'adaptateur de notification) puis journalisation.
    */
   static async shareWithSupplier(params: {
     tenderId: string;
@@ -80,7 +81,6 @@ export class TenderSharingService {
     expiresAt?: string | null;
     message?: string;
   }): Promise<void> {
-    const { supabase } = await import('@/integrations/supabase/client');
     const portalUrl = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(params.secretCode)}`;
     const expiry = params.expiresAt
       ? new Date(params.expiresAt).toLocaleDateString('fr-FR')
@@ -99,17 +99,22 @@ export class TenderSharingService {
       'Ce code est personnel et son utilisation est journalisée.',
     ].join('\n');
 
-    const { error } = await supabase.functions.invoke('send-email-notification', {
-      body: {
-        to: params.supplierEmail,
-        subject: `Accès sécurisé — ${params.tenderTitle}`,
-        message: body,
-        priority: 'high',
-        actionType: 'tender_secret_shared',
+    // Utiliser CommunicationService.sendEmail (qui appelle l'adaptateur)
+    await CommunicationService.sendEmail({
+      to: params.supplierEmail,
+      subject: `Accès sécurisé — ${params.tenderTitle}`,
+      message: body,
+      priority: 'high',
+      actionType: 'tender_secret_shared',
+      metadata: {
+        tenderId: params.tenderId,
+        secretId: params.secretId,
+        secretCode: params.secretCode,
+        supplierEmail: params.supplierEmail,
       },
     });
-    if (error) throw new Error(error.message || "Échec de l'envoi de l'e-mail de partage");
 
+    // Journaliser l'accès (non bloquant)
     try {
       if (params.secretId) {
         await this.logAccess({
@@ -125,9 +130,6 @@ export class TenderSharingService {
       // journalisation non bloquante
     }
   }
-
-
-
 
   /**
    * Revoke a sharing secret
@@ -211,5 +213,3 @@ export class TenderSharingService {
       }));
   }
 }
-
-
