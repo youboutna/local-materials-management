@@ -88,6 +88,13 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
     });
   };
 
+  const copyPortalLink = (code: string) => {
+    const url = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(code)}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Lien copié', description: url });
+  };
+
+
   const deactivateSecret = useMutation({
     mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
     onSuccess: () => {
