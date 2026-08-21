@@ -30,4 +30,4 @@ export-monitor.ps1
 -export-manager.ps1
 
 #add docker local files
-/supabase/docker/*
+/supabase/docker/*.env
