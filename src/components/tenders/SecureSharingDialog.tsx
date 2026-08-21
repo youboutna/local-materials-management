@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
 import { CreateSharingSecretDTO } from '@/dtos/entities/tender-sharing-dto';
-import { Copy, Check, Shield, Clock, Users, Lock, Eye, Download } from 'lucide-react';
+import { Copy, Check, Shield, Clock, Users, Lock, Eye, Download, Link as LinkIcon } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
@@ -87,6 +87,13 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       description: 'Le code a été copié dans le presse-papiers'
     });
   };
+
+  const copyPortalLink = (code: string) => {
+    const url = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(code)}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Lien copié', description: url });
+  };
+
 
   const deactivateSecret = useMutation({
     mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
@@ -214,6 +221,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                             <Button
                               variant="ghost"
                               size="sm"
+                              title="Copier le code"
                               onClick={() => copyToClipboard(secret.secretCode)}
                             >
                               {copiedCode === secret.secretCode ? (
@@ -222,7 +230,16 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                                 <Copy className="h-4 w-4" />
                               )}
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              title="Copier le lien du portail"
+                              onClick={() => copyPortalLink(secret.secretCode)}
+                            >
+                              <LinkIcon className="h-4 w-4" />
+                            </Button>
                           </div>
+
                           
                           <div className="flex flex-wrap gap-2 text-xs">
                             {secret.supplierEmail && (

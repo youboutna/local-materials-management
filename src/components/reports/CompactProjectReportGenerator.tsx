@@ -78,12 +78,37 @@ export function CompactProjectReportGenerator({
   const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
   const [singlePertAnalysis, setSinglePertAnalysis] = useState<PertAnalysis | null>(null);
 
-  const projectList = useMemo(() => projects || (project ? [project] : []), [projects, project]);
-  const isSingleProject = !projects && project;
+  // Repli : si aucun projet n'est fourni en props (ou pas encore hydraté),
+  // on charge les projets via le service pour que le bouton PDF reste actif.
+  const [fallbackProjects, setFallbackProjects] = useState<ProjectDTO[]>([]);
+
+  const projectList = useMemo(
+    () => projects || (project ? [project] : fallbackProjects),
+    [projects, project, fallbackProjects],
+  );
+  const isSingleProject = !projects && !!project;
 
   // Create service instance
   const reportingService = useMemo(() => getReportingService(), []);
   const organizationService = useMemo(() => getOrganizationService(), []);
+
+  useEffect(() => {
+    if (projects || project) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getProjectService } = await import('@/application/services/ProjectService');
+        const all = await getProjectService().findAll();
+        if (!cancelled) setFallbackProjects(all ?? []);
+      } catch (error) {
+        console.warn('[CompactProjectReportGenerator] projects fallback unavailable', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projects, project]);
+
 
   // Organisation propriétaire : celle du projet, sinon l'organisation par défaut.
   useEffect(() => {
