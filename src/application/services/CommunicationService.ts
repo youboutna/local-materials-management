@@ -5,7 +5,6 @@
  */
 
 import { NotificationService } from './NotificationService';
-import { createEmailService } from './email/EmailServiceFactory';
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
