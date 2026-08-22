@@ -157,7 +157,9 @@ export class TenderSharingService {
           sharingSecretId: params.secretId,
           accessedAt: new Date().toISOString(),
           accessedBy: params.supplierEmail,
+          sharedBy: params.senderEmail ?? null,
           actionType: 'share',
+
           metadata: {
             channel: 'email',
             supplierName: params.supplierName ?? null,

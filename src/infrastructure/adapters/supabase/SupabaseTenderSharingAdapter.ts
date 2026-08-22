@@ -232,11 +232,12 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
         },
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('tender_access_logs')
         .insert([insertData])
         .select()
         .single();
+
 
       if (error) {
         console.warn('SupabaseTenderSharingAdapter: createAccessLog failed', error);
