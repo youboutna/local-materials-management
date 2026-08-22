@@ -4,22 +4,38 @@ set -e
 SHARED_DIR="supabase/functions/_shared"
 TEMPLATES_DIR="supabase/functions/_templates"
 
-# Nettoyer et recréer _shared
+echo "🧹 Nettoyage complet des fichiers _shared/..."
+
+# ============================================================
+# 1. Supprimer tous les fichiers avec des noms invalides
+# ============================================================
+if [ -d "$SHARED_DIR" ]; then
+  # Supprimer les fichiers avec des noms contenant des points multiples
+  find "$SHARED_DIR" -type f -name "*.*.*" -delete 2>/dev/null || true
+  # Supprimer les fichiers avec des noms incorrects
+  find "$SHARED_DIR" -type f -name "*Factory.ts.ts*" -delete 2>/dev/null || true
+  find "$SHARED_DIR" -type f -name "*Service.ts.ts*" -delete 2>/dev/null || true
+  find "$SHARED_DIR" -type f -name "*Adapter.ts.ts*" -delete 2>/dev/null || true
+fi
+
+# ============================================================
+# 2. Recréer _shared/ avec les bons noms de fichiers
+# ============================================================
+echo "📁 Recréation de _shared/ avec les bons fichiers..."
+
 rm -rf "$SHARED_DIR"
 mkdir -p "$SHARED_DIR"
 mkdir -p "$TEMPLATES_DIR"
 
-echo "📁 Copie de tous les fichiers partagés à la racine de _shared/"
-
-# Copier tous les fichiers partagés dans _shared/ (sans sous-dossiers)
+# Copier les fichiers email (noms exacts)
 cp src/application/services/email/EmailProvider.ts "$SHARED_DIR/"
 cp src/application/services/email/EmailService.ts "$SHARED_DIR/"
 cp src/application/services/email/EmailServiceFactory.ts "$SHARED_DIR/"
 
-# Adaptateurs email (recherche dans les emplacements possibles)
-find src -path "*/email/SmtpAdapter.ts" -exec cp {} "$SHARED_DIR/" \; 2>/dev/null || echo "⚠️ SmtpAdapter non trouvé"
-find src -path "*/email/ResendAdapter.ts" -exec cp {} "$SHARED_DIR/" \; 2>/dev/null || echo "⚠️ ResendAdapter non trouvé"
-find src -path "*/email/SendGridAdapter.ts" -exec cp {} "$SHARED_DIR/" \; 2>/dev/null || echo "⚠️ SendGridAdapter non trouvé"
+# Copier les adaptateurs (chercher dans les deux emplacements possibles)
+find src -path "*/email/SmtpAdapter.ts" -exec cp {} "$SHARED_DIR/SmtpAdapter.ts" \; 2>/dev/null || echo "⚠️ SmtpAdapter non trouvé"
+find src -path "*/email/ResendAdapter.ts" -exec cp {} "$SHARED_DIR/ResendAdapter.ts" \; 2>/dev/null || echo "⚠️ ResendAdapter non trouvé"
+find src -path "*/email/SendGridAdapter.ts" -exec cp {} "$SHARED_DIR/SendGridAdapter.ts" \; 2>/dev/null || echo "⚠️ SendGridAdapter non trouvé"
 
 # DocumentValidationService (service léger)
 cat > "$SHARED_DIR/DocumentValidationService.ts" << 'EOF'
@@ -133,27 +149,73 @@ export class DocumentValidationService {
 }
 EOF
 
-# ---------- CORRECTION DES IMPORTS (tout en relatif) ----------
-echo "🔧 Correction des imports dans les fichiers copiés..."
+# ============================================================
+# 3. Correction des imports dans _shared/
+# ============================================================
+echo "🔧 Correction des imports dans _shared/..."
 
-# Pour chaque fichier .ts dans _shared/, remplacer les imports @/ par des imports relatifs
 for file in "$SHARED_DIR"/*.ts; do
   [ -f "$file" ] || continue
+  # Remplacer les imports @/ par des imports relatifs
   sed -i 's|@/infrastructure/email/SmtpAdapter|./SmtpAdapter.ts|g' "$file"
   sed -i 's|@/infrastructure/email/ResendAdapter|./ResendAdapter.ts|g' "$file"
   sed -i 's|@/infrastructure/email/SendGridAdapter|./SendGridAdapter.ts|g' "$file"
   sed -i 's|@/application/services/email/EmailProvider|./EmailProvider.ts|g' "$file"
   sed -i 's|@/application/services/email/EmailService|./EmailService.ts|g' "$file"
-  # Ajouter .ts aux imports relatifs
+  # Ajouter .ts aux imports relatifs si manquant
   sed -i -E "s|from '\./([^'\.]+)'|from './\1.ts'|g" "$file"
   sed -i -E 's|from "\./([^"\.]+)"|from "./\1.ts"|g' "$file"
 done
 
-# ---------- SUPPRESSION DES FICHIERS INUTILES ----------
+# ============================================================
+# 4. Correction des imports dans les Edge Functions
+# ============================================================
+echo "🔧 Correction des imports dans les Edge Functions..."
+
+FUNCTIONS=(
+  "assign-task-to-employee"
+  "send-email-notification"
+  "send-project-report"
+  "send-supplier-notification"
+  "send-tender-report"
+  "send-tender-submission-notification"
+  "validate-document"
+)
+
+for func in "${FUNCTIONS[@]}"; do
+  index_file="supabase/functions/$func/index.ts"
+  [ -f "$index_file" ] || continue
+
+  echo "  - Correction de $func..."
+
+  # Remplacer les imports @/ par des imports vers _shared/ (sans extension)
+  sed -i 's|@/application/services/email/EmailServiceFactory|../_shared/EmailServiceFactory|g' "$index_file"
+  sed -i 's|@/application/services/email/EmailService|../_shared/EmailService|g' "$index_file"
+  sed -i 's|@/application/services/email/EmailProvider|../_shared/EmailProvider|g' "$index_file"
+  sed -i 's|@/infrastructure/email/SmtpAdapter|../_shared/SmtpAdapter|g' "$index_file"
+  sed -i 's|@/infrastructure/email/ResendAdapter|../_shared/ResendAdapter|g' "$index_file"
+  sed -i 's|@/infrastructure/email/SendGridAdapter|../_shared/SendGridAdapter|g' "$index_file"
+  sed -i 's|@/application/services/DocumentService|../_shared/DocumentValidationService|g' "$index_file"
+
+  # Ajouter .ts UNIQUEMENT si l'import ne se termine pas déjà par .ts
+  sed -i -E 's|\.\./_shared/EmailServiceFactory([^\.])|../_shared/EmailServiceFactory.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/EmailService([^\.])|../_shared/EmailService.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/EmailProvider([^\.])|../_shared/EmailProvider.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/SmtpAdapter([^\.])|../_shared/SmtpAdapter.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/ResendAdapter([^\.])|../_shared/ResendAdapter.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/SendGridAdapter([^\.])|../_shared/SendGridAdapter.ts\1|g' "$index_file"
+  sed -i -E 's|\.\./_shared/DocumentValidationService([^\.])|../_shared/DocumentValidationService.ts\1|g' "$index_file"
+done
+
+# ============================================================
+# 5. Supprimer les fichiers inutiles
+# ============================================================
 rm -f supabase/functions/send-email-notification/deno.json 2>/dev/null || true
 rm -f supabase/import_map.json 2>/dev/null || true
 
-# ---------- TEMPLATES (copie sans écrasement) ----------
+# ============================================================
+# 6. Templates
+# ============================================================
 echo "📄 Vérification des templates dans $TEMPLATES_DIR..."
 
 copy_template_if_missing() {
@@ -204,6 +266,8 @@ export const renderSupplierConfirmationEmail = (props: { supplier_name: string; 
 EOF
 fi
 
-echo "✅ Terminé ! Tous les fichiers partagés sont à la racine de _shared/."
-echo "   Les Edge Functions doivent importer depuis '../_shared/NomFichier.ts'."
+echo "✅ Terminé !"
+echo "   - Fichiers recréés avec les noms corrects dans _shared/"
+echo "   - Imports relatifs dans _shared/"
+echo "   - Edge Functions importent depuis '../_shared/NomFichier.ts'"
 echo "👉 Lancez le déploiement : npx supabase functions deploy --project-ref ttrfbzonzcyimfmezuqv"

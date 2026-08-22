@@ -1,27 +1,24 @@
-/**
- * TenderSecretsPanel — Gestion centralisée des codes secrets d'AO (Lot 5)
- * Utilise ITenderSharingRepository via useTenderSharingSecrets/useRevokeTenderSecret/useDeleteTenderSecret.
- */
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ShieldX, Trash2, Plus, Link as LinkIcon, Mail } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  useTenderSharingSecrets,
-  useRevokeTenderSecret,
   useDeleteTenderSecret,
+  useRevokeTenderSecret,
+  useTenderSharingSecrets,
 } from '@/hooks/hexagonal';
+import { useToast } from '@/hooks/use-toast';
+import { Copy, Link as LinkIcon, Mail, Plus, ShieldX, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { SecureSharingDialog } from './SecureSharingDialog';
 import ShareSecretWithSupplierDialog from './ShareSecretWithSupplierDialog';
 
 interface TenderSecretsPanelProps {
   tenderId: string;
   tenderTitle: string;
+  tenderStatus?: string;
 }
 
-export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanelProps) {
+export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: TenderSecretsPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [shareTarget, setShareTarget] = useState<any | null>(null);
   const { data: secrets = [], isLoading } = useTenderSharingSecrets(tenderId);
@@ -75,21 +72,52 @@ export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanel
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Button size="sm" variant="ghost" title="Copier le code" onClick={() => { navigator.clipboard.writeText(s.secretCode); toast({ title: 'Code copié' }); }}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Copier le code"
+                        onClick={() => {
+                          navigator.clipboard.writeText(s.secretCode);
+                          toast({ title: 'Code copié' });
+                        }}
+                      >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Copier le lien portail" onClick={() => copyPortalLink(s.secretCode)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Copier le lien portail"
+                        onClick={() => copyPortalLink(s.secretCode)}
+                      >
                         <LinkIcon className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Partager avec un fournisseur" onClick={() => setShareTarget(s)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title={s.supplierEmail ? 'Partager avec un fournisseur' : 'Aucun email associé'}
+                        onClick={() => setShareTarget(s)}
+                        disabled={!s.supplierEmail}
+                      >
                         <Mail className="h-4 w-4" />
                       </Button>
                       {s.isActive && (
-                        <Button size="sm" variant="outline" title="Révoquer" onClick={() => revoke.mutate(s.id)} disabled={revoke.isPending}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Révoquer"
+                          onClick={() => revoke.mutate(s.id)}
+                          disabled={revoke.isPending}
+                        >
                           <ShieldX className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" title="Supprimer" onClick={() => remove.mutate(s.id)} disabled={remove.isPending}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Supprimer"
+                        onClick={() => remove.mutate(s.id)}
+                        disabled={remove.isPending}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -101,6 +129,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanel
         </CardContent>
       </Card>
 
+      {/* Dialogue de partage avec un fournisseur */}
       {shareTarget && (
         <ShareSecretWithSupplierDialog
           open={!!shareTarget}
@@ -110,14 +139,17 @@ export function TenderSecretsPanel({ tenderId, tenderTitle }: TenderSecretsPanel
           secretCode={shareTarget.secretCode}
           secretId={shareTarget.id}
           expiresAt={shareTarget.expiresAt ?? null}
+          defaultEmail={shareTarget.supplierEmail || ''}
         />
       )}
 
+      {/* Dialogue de création de code */}
       <SecureSharingDialog
         isOpen={dialogOpen}
         onOpenChange={setDialogOpen}
         tenderId={tenderId}
         tenderTitle={tenderTitle}
+        tenderStatus={tenderStatus}
       />
     </>
   );

@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { TenderSharingService } from '@/application/services/TenderSharingService';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { TenderSharingService } from '@/application/services/TenderSharingService';
 import { CreateSharingSecretDTO } from '@/dtos/entities/tender-sharing-dto';
-import { Copy, Check, Shield, Clock, Users, Lock, Eye, Download, Link as LinkIcon } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { Check, Clock, Copy, Eye, Lock, Shield, Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SecureSharingDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   tenderId: string;
   tenderTitle: string;
+  tenderStatus?: string;
   documentIds?: string[];
   workflowPhase?: string;
   workflowStage?: string;
@@ -27,6 +28,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   onOpenChange,
   tenderId,
   tenderTitle,
+  tenderStatus = 'draft',
   documentIds = [],
   workflowPhase,
   workflowStage
@@ -37,6 +39,9 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Vérifier si le tender est actif
+  const isTenderActive = ['published', 'active', 'en_cours'].includes(tenderStatus.toLowerCase());
 
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
@@ -62,7 +67,9 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       return await TenderSharingService.createSharingSecret(dto);
     },
     onSuccess: (data) => {
+      // 🔥 Invalider les caches pour rafraîchir la liste
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
+      queryClient.invalidateQueries({ queryKey: ['tender-secrets', tenderId] });
       toast({
         title: 'Code de partage créé',
         description: `Code: ${data.secretCode}`,
@@ -87,13 +94,6 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       description: 'Le code a été copié dans le presse-papiers'
     });
   };
-
-  const copyPortalLink = (code: string) => {
-    const url = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(code)}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: 'Lien copié', description: url });
-  };
-
 
   const deactivateSecret = useMutation({
     mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
@@ -131,6 +131,13 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 <Lock className="h-4 w-4" />
                 Créer un nouveau code de partage
               </h3>
+
+              {/* Message si tender inactif */}
+              {!isTenderActive && (
+                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-sm text-warning-foreground">
+                  ⚠️ Ce dossier n'est pas actif. La génération de codes de partage est réservée aux appels d'offres publiés.
+                </div>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
@@ -188,7 +195,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
 
               <Button 
                 onClick={() => createSecretMutation.mutate()}
-                disabled={createSecretMutation.isPending}
+                disabled={createSecretMutation.isPending || !isTenderActive}
                 className="w-full"
               >
                 {createSecretMutation.isPending ? 'Création...' : 'Générer le code de partage'}
@@ -221,7 +228,6 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                             <Button
                               variant="ghost"
                               size="sm"
-                              title="Copier le code"
                               onClick={() => copyToClipboard(secret.secretCode)}
                             >
                               {copiedCode === secret.secretCode ? (
@@ -230,16 +236,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                                 <Copy className="h-4 w-4" />
                               )}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Copier le lien du portail"
-                              onClick={() => copyPortalLink(secret.secretCode)}
-                            >
-                              <LinkIcon className="h-4 w-4" />
-                            </Button>
                           </div>
-
                           
                           <div className="flex flex-wrap gap-2 text-xs">
                             {secret.supplierEmail && (
@@ -314,3 +311,5 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
     </Dialog>
   );
 };
+
+export default SecureSharingDialog;

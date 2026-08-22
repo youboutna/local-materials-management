@@ -2,7 +2,7 @@
 /**
  * EmailServiceFactory – Composition root
  * Instancie le bon adaptateur selon EMAIL_PROVIDER et construit le service
- * Application Layer – Point d’entrée pour l’injection
+ * Utilise getAppConfig() pour la configuration centralisée
  */
 
 import { ResendAdapter } from '@/infrastructure/adapters/email/ResendAdapter';
@@ -10,9 +10,12 @@ import { SendGridAdapter } from '@/infrastructure/adapters/email/SendGridAdapter
 import { SmtpAdapter } from '@/infrastructure/adapters/email/SmtpAdapter';
 import { EmailProvider } from './EmailProvider';
 import { EmailService } from './EmailService';
+import { getEmailProvider } from '@/config/app';
 
 export function createEmailService(): EmailService {
-  const providerName = (process.env.EMAIL_PROVIDER || Deno.env.get('EMAIL_PROVIDER') || 'smtp').toLowerCase();
+  const providerName = getEmailProvider();
+  console.log('[EmailServiceFactory] Using EMAIL_PROVIDER:', providerName);
+
   let provider: EmailProvider;
 
   switch (providerName) {
@@ -26,7 +29,8 @@ export function createEmailService(): EmailService {
       provider = new SendGridAdapter();
       break;
     default:
-      throw new Error(`Unsupported email provider: ${providerName}`);
+      console.warn(`[EmailServiceFactory] Unsupported provider "${providerName}", falling back to Resend`);
+      provider = new ResendAdapter();
   }
 
   return new EmailService(provider);

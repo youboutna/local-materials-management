@@ -1,11 +1,7 @@
-/**
- * ShareSecretWithSupplierDialog — partage direct d'un code secret avec un
- * fournisseur (même ergonomie que le partage de document).
- * Sélection du fournisseur via `useSuppliersSelector` (hexagonal), envoi via
- * `TenderSharingService.shareWithSupplier`. Aucun appel Supabase dans l'UI.
- */
-import React, { useMemo, useState } from 'react';
-import { Check, Loader2, Mail, Search } from 'lucide-react';
+import { TenderSharingService } from '@/application/services/TenderSharingService';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,16 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
-import { TenderSharingService } from '@/application/services/TenderSharingService';
+import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Building2, Check, Loader2, Mail, Pencil, Search, User } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface Props {
   open: boolean;
@@ -33,6 +29,7 @@ interface Props {
   secretCode: string;
   secretId?: string;
   expiresAt?: string | null;
+  defaultEmail?: string; // Email pré-rempli depuis le secret
 }
 
 export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
@@ -43,12 +40,14 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
   secretCode,
   secretId,
   expiresAt,
+  defaultEmail = '',
 }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const debounced = useDebounce(search, 300);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(defaultEmail);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -59,17 +58,42 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
     [suppliers, selectedId],
   );
 
-  const targetEmail = email.trim() || selected?.email || '';
+  // Mettre à jour l'email quand un fournisseur est sélectionné
+  useEffect(() => {
+    if (selected) {
+      setEmail(selected.email || '');
+    }
+  }, [selected]);
+
+  // Mettre à jour l'email par défaut quand le dialogue s'ouvre
+  useEffect(() => {
+    if (open && defaultEmail) {
+      setEmail(defaultEmail);
+    }
+  }, [open, defaultEmail]);
+
+  const recipientId = selected?.id || null;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const handleSend = async () => {
+    const targetEmail = email.trim();
     if (!targetEmail) {
       toast({
         title: 'E-mail requis',
-        description: 'Sélectionnez un fournisseur disposant d’un e-mail ou saisissez une adresse.',
+        description: 'Veuillez saisir une adresse email valide.',
         variant: 'destructive',
       });
       return;
     }
+
     setSending(true);
     try {
       await TenderSharingService.shareWithSupplier({
@@ -78,19 +102,28 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
         secretCode,
         secretId,
         supplierEmail: targetEmail,
-        supplierName: selected?.name,
+        supplierName: selected?.name || 'Fournisseur',
+        recipientId: recipientId || undefined,
+        senderName: user?.fullName || user?.email || 'Utilisateur',
+        senderEmail: user?.email || 'non disponible',
+        senderId: user?.id || undefined,
         expiresAt: expiresAt ?? null,
         message: message.trim() || undefined,
       });
-      toast({ title: 'Code partagé', description: `Envoyé à ${targetEmail}` });
+
+      toast({
+        title: 'Code partagé',
+        description: `Envoyé à ${targetEmail}${selected?.name ? ` (${selected.name})` : ''}`,
+      });
       onOpenChange(false);
       setMessage('');
       setEmail('');
       setSelectedId(null);
-    } catch (e) {
+      setSearch('');
+    } catch (error) {
       toast({
         title: 'Échec du partage',
-        description: e instanceof Error ? e.message : 'Erreur inconnue',
+        description: error instanceof Error ? error.message : 'Erreur inconnue',
         variant: 'destructive',
       });
     } finally {
@@ -110,8 +143,26 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Émetteur */}
+          {user && (
+            <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{getInitials(user.fullName || user.email || 'U')}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user.fullName || 'Utilisateur'}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  <User className="inline h-3 w-3 mr-1" />
+                  {user.email}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs">Émetteur</Badge>
+            </div>
+          )}
+
+          {/* Sélecteur de fournisseur */}
           <div className="space-y-2">
-            <Label htmlFor="share-supplier-search">Fournisseur</Label>
+            <Label htmlFor="share-supplier-search">Fournisseur destinataire</Label>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -135,13 +186,14 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
                         type="button"
                         onClick={() => {
                           setSelectedId(s.id);
-                          setEmail(s.email ?? '');
+                          // L'email sera mis à jour via useEffect
                         }}
                         className="flex w-full items-center justify-between gap-2 p-3 text-left hover:bg-muted/50"
                       >
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-medium">{s.name}</span>
                           <span className="block truncate text-xs text-muted-foreground">
+                            <Building2 className="inline h-3 w-3 mr-1" />
                             {s.email || 'e-mail non renseigné'}
                           </span>
                         </span>
@@ -154,17 +206,32 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
             </ScrollArea>
           </div>
 
+          {/* Email modifiable */}
           <div className="space-y-2">
-            <Label htmlFor="share-supplier-email">E-mail destinataire</Label>
-            <Input
-              id="share-supplier-email"
-              type="email"
-              placeholder="fournisseur@exemple.mr"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <Label htmlFor="share-supplier-email" className="flex items-center gap-2">
+              E-mail destinataire
+              <span className="text-xs text-muted-foreground font-normal">(modifiable)</span>
+            </Label>
+            <div className="relative">
+              <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="share-supplier-email"
+                type="email"
+                className="pl-8"
+                placeholder="fournisseur@exemple.mr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            {selected && email !== selected.email && selected.email && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Pencil className="h-3 w-3" />
+                Email modifié manuellement. L'UUID du fournisseur est conservé pour le suivi.
+              </p>
+            )}
           </div>
 
+          {/* Message optionnel */}
           <div className="space-y-2">
             <Label htmlFor="share-supplier-message">Message (optionnel)</Label>
             <Textarea
@@ -176,13 +243,13 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
             />
           </div>
 
+          {/* Code secret */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="outline" className="font-mono">
               {secretCode}
             </Badge>
             <span>
-              expire{' '}
-              {expiresAt ? new Date(expiresAt).toLocaleDateString('fr-FR') : 'sans date limite'}
+              expire {expiresAt ? new Date(expiresAt).toLocaleDateString('fr-FR') : 'sans date limite'}
             </span>
           </div>
         </div>
@@ -191,7 +258,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
             Annuler
           </Button>
-          <Button onClick={handleSend} disabled={sending || !targetEmail}>
+          <Button onClick={handleSend} disabled={sending || !email.trim()}>
             {sending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (

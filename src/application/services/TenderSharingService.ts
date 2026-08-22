@@ -1,10 +1,11 @@
+// src/application/services/TenderSharingService.ts
 // Service for secure tender document sharing with ACID principles
 import { ITenderSharingRepository } from '@/domain/repositories';
 import {
-    CreateAccessLogDTO,
-    CreateSharingSecretDTO,
-    TenderSharingSecretDTO,
-    ValidateSecretResponseDTO
+  CreateAccessLogDTO,
+  CreateSharingSecretDTO,
+  TenderSharingSecretDTO,
+  ValidateSecretResponseDTO
 } from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { CommunicationService } from './CommunicationService';
@@ -67,9 +68,10 @@ export class TenderSharingService {
   }
 
   /**
-   * Partage direct d'un code secret avec un fournisseur (même logique que le
-   * partage de document) : envoi de l'e-mail via CommunicationService
-   * (qui utilise l'adaptateur de notification) puis journalisation.
+   * Partage direct d'un code secret avec un fournisseur.
+   * Envoi de l'e-mail via CommunicationService (qui utilise l'adaptateur de notification)
+   * puis journalisation.
+   * CORRIGÉ : ajout de recipientId (UUID) et senderName pour la notification interne.
    */
   static async shareWithSupplier(params: {
     tenderId: string;
@@ -78,6 +80,10 @@ export class TenderSharingService {
     secretId?: string;
     supplierEmail: string;
     supplierName?: string;
+    recipientId?: string;    // UUID du fournisseur (pour notification interne)
+    senderName?: string;    // Nom de l'émetteur
+    senderEmail?: string;   // Email de l'émetteur (pour logs)
+    senderId?: string;      // UUID de l'émetteur (pour logs)
     expiresAt?: string | null;
     message?: string;
   }): Promise<void> {
@@ -89,7 +95,7 @@ export class TenderSharingService {
     const body = [
       `Bonjour ${params.supplierName ?? ''}`.trim() + ',',
       '',
-      `Vous êtes invité à consulter l'appel d'offres « ${params.tenderTitle} » via le portail fournisseur sécurisé.`,
+      `${params.senderName ? `M. ${params.senderName}` : 'Le responsable'} vous a partagé un accès sécurisé pour l'appel d'offres « ${params.tenderTitle} ».`,
       '',
       `Code d'accès : ${params.secretCode}`,
       `Lien d'accès : ${portalUrl}`,
@@ -99,7 +105,23 @@ export class TenderSharingService {
       'Ce code est personnel et son utilisation est journalisée.',
     ].join('\n');
 
-    // Utiliser CommunicationService.sendEmail (qui appelle l'adaptateur)
+    // --- LOG DÉTAILLÉ AVANT ENVOI ---
+    console.log('[TenderSharingService] Partage sécurisé :', {
+      timestamp: new Date().toISOString(),
+      tenderId: params.tenderId,
+      tenderTitle: params.tenderTitle,
+      secretId: params.secretId,
+      secretCode: params.secretCode,
+      supplierName: params.supplierName,
+      supplierEmail: params.supplierEmail,
+      recipientId: params.recipientId || 'non fourni',
+      senderName: params.senderName,
+      senderEmail: params.senderEmail || 'non fourni',
+      expiresAt: params.expiresAt,
+      message: params.message || 'non fourni',
+    });
+
+    // Envoyer l'email via CommunicationService
     await CommunicationService.sendEmail({
       to: params.supplierEmail,
       subject: `Accès sécurisé — ${params.tenderTitle}`,
@@ -111,23 +133,79 @@ export class TenderSharingService {
         secretId: params.secretId,
         secretCode: params.secretCode,
         supplierEmail: params.supplierEmail,
+        supplierName: params.supplierName,
+        recipientId: params.recipientId, // UUID pour notification
+        senderName: params.senderName,
+        senderEmail: params.senderEmail,
+        senderId: params.senderId,
+        expiresAt: params.expiresAt,
+        message: params.message,
+        // Vérifier si l'email modifié diffère de l'email officiel
+        isEmailModified: params.recipientId 
+          ? await this.isSupplierEmailDifferent(params.recipientId, params.supplierEmail)
+          : false,
+        originalSupplierEmail: params.recipientId 
+          ? await this.getSupplierEmailById(params.recipientId) 
+          : null,
       },
     });
 
-    // Journaliser l'accès (non bloquant)
+    // Journalisation dans la base (log Access)
     try {
       if (params.secretId) {
         await this.logAccess({
           sharingSecretId: params.secretId,
           accessedAt: new Date().toISOString(),
           accessedBy: params.supplierEmail,
-          sharedBy: null,
-          actionType: 'view',
-          metadata: { channel: 'email', supplierName: params.supplierName ?? null },
+          actionType: 'share',
+          metadata: {
+            channel: 'email',
+            supplierName: params.supplierName ?? null,
+            senderName: params.senderName ?? null,
+            senderEmail: params.senderEmail ?? null,
+            senderId: params.senderId ?? null,
+            recipientId: params.recipientId ?? null,
+            isEmailModified: params.recipientId 
+              ? await this.isSupplierEmailDifferent(params.recipientId, params.supplierEmail)
+              : false,
+            originalSupplierEmail: params.recipientId 
+              ? await this.getSupplierEmailById(params.recipientId) 
+              : null,
+            secretCode: params.secretCode,
+            tenderId: params.tenderId,
+            tenderTitle: params.tenderTitle,
+            expiresAt: params.expiresAt,
+            message: params.message,
+          },
         });
       }
     } catch {
-      // journalisation non bloquante
+      // non bloquant
+    }
+  }
+
+  /**
+   * Vérifie si l'email saisi diffère de l'email officiel du fournisseur
+   */
+  private static async isSupplierEmailDifferent(supplierId: string, currentEmail: string): Promise<boolean> {
+    try {
+      const originalEmail = await this.getSupplierEmailById(supplierId);
+      return originalEmail !== currentEmail;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Récupère l'email officiel d'un fournisseur par son UUID
+   */
+  private static async getSupplierEmailById(supplierId: string): Promise<string | null> {
+    try {
+      const repo = RepositoryFactory.getSupplierRepository();
+      const supplier = await repo.findById(supplierId);
+      return supplier?.email || null;
+    } catch {
+      return null;
     }
   }
 
@@ -159,7 +237,6 @@ export class TenderSharingService {
   /**
    * Fetch documents shared with suppliers for a given tender, optionally
    * restricted to a whitelist of document IDs (the gate's allowedDocuments).
-   * Kept in the service layer so UI components never touch supabase directly.
    */
   static async getSharedDocuments(
     tenderId: string,
@@ -173,7 +250,6 @@ export class TenderSharingService {
   }>> {
     const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
 
-    // First, look up the tender's project so we can include project-level docs.
     const { data: tenderRow } = await supabase
       .from('tenders')
       .select('project_id')

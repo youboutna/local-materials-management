@@ -6,6 +6,8 @@
 
 import { NotificationService } from './NotificationService';
 import { createEmailService } from './email/EmailServiceFactory';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getEmailProvider } from '@/config/app';
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -57,6 +59,13 @@ export interface CommunicationResult {
   reference?: string;
 }
 
+/**
+ * Vérifie si une chaîne est un UUID valide
+ */
+const isUuid = (value: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+};
+
 export class CommunicationService {
   static async assignTask(payload: AssignTaskPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
@@ -78,22 +87,27 @@ export class CommunicationService {
   }
 
   static async sendEmail(payload: SendEmailPayload): Promise<CommunicationResult> {
-    // 1. Persister la notification (comportement existant)
-    await NotificationService.createNotification({
-      recipientId: payload.to,
-      title: `📧 ${payload.subject}`,
-      message: payload.message,
-      type: 'system',
-      metadata: {
-        channel: 'email',
-        to: payload.to,
-        priority: payload.priority,
-        actionType: payload.actionType,
-        ...(payload.metadata ?? {}),
-      },
-    });
+    // 1. Créer la notification SEULEMENT SI le destinataire est un UUID (utilisateur interne)
+    const recipientId = isUuid(payload.to) ? payload.to : null;
+    if (recipientId) {
+      await NotificationService.createNotification({
+        recipientId,
+        title: `📧 ${payload.subject}`,
+        message: payload.message,
+        type: 'system',
+        metadata: {
+          channel: 'email',
+          to: payload.to,
+          priority: payload.priority,
+          actionType: payload.actionType,
+          ...(payload.metadata ?? {}),
+        },
+      });
+    } else {
+      console.log(`[CommunicationService] Notification ignorée pour l'email externe: ${payload.to}`);
+    }
 
-    // 2. Envoyer l'email via le service multi‑provider
+    // 2. Toujours envoyer l'email via le service multi‑provider
     try {
       const emailService = createEmailService();
       const result = await emailService.sendEmail({
@@ -102,29 +116,50 @@ export class CommunicationService {
         html: payload.message.replace(/\n/g, '<br>'),
         text: payload.message,
       });
-      console.log(`Email sent via ${process.env.EMAIL_PROVIDER || 'smtp'} to ${payload.to}`);
+      const provider = getEmailProvider();
+      console.log(`[CommunicationService] Email sent via ${provider} to ${payload.to}`);
       return { success: true, channel: 'email', reference: result.messageId };
     } catch (error) {
-      console.error('CommunicationService.sendEmail: error', error);
-      // On ne throw pas pour ne pas bloquer le workflow
+      console.error('[CommunicationService] sendEmail error:', error);
       return { success: false, channel: 'email' };
     }
   }
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {
-    await NotificationService.createNotification({
-      recipientId: payload.to,
-      title: '📱 SMS',
-      message: payload.message,
-      type: 'system',
-      metadata: {
-        channel: 'sms',
-        to: payload.to,
-        priority: payload.priority,
-        actionType: payload.actionType,
-        ...(payload.metadata ?? {}),
-      },
-    });
+    const recipientId = isUuid(payload.to) ? payload.to : null;
+    if (recipientId) {
+      await NotificationService.createNotification({
+        recipientId,
+        title: '📱 SMS',
+        message: payload.message,
+        type: 'system',
+        metadata: {
+          channel: 'sms',
+          to: payload.to,
+          priority: payload.priority,
+          actionType: payload.actionType,
+          ...(payload.metadata ?? {}),
+        },
+      });
+    }
+
+    try {
+      const repo = RepositoryFactory.getNotificationRepository();
+      if (repo && typeof repo.sendSMS === 'function') {
+        const { error } = await repo.sendSMS({
+          to: payload.to,
+          message: payload.message,
+        });
+        if (error) {
+          console.error('CommunicationService.sendSMS: error', error);
+        }
+      } else {
+        console.warn('[CommunicationService] sendSMS not implemented by repository');
+      }
+    } catch (error) {
+      console.error('CommunicationService.sendSMS: exception', error);
+    }
+
     return { success: true, channel: 'sms' };
   }
 
@@ -143,23 +178,45 @@ export class CommunicationService {
         ...(payload.metadata ?? {}),
       },
     });
+
+    try {
+      const repo = RepositoryFactory.getNotificationRepository();
+      if (repo && typeof repo.scheduleCall === 'function') {
+        await repo.scheduleCall({
+          phoneNumber: payload.recipientPhone,
+          scheduledFor: payload.scheduledFor,
+          message: payload.message,
+        });
+      } else {
+        console.warn('[CommunicationService] scheduleCall not implemented by repository');
+      }
+    } catch (error) {
+      console.error('CommunicationService.scheduleCall: exception', error);
+    }
+
     return { success: true, channel: 'call' };
   }
 
   static async sendMail(payload: SendEmailPayload): Promise<CommunicationResult> {
-    await NotificationService.createNotification({
-      recipientId: payload.to,
-      title: `📮 Courrier: ${payload.subject}`,
-      message: payload.message,
-      type: 'system',
-      metadata: {
-        channel: 'mail',
-        to: payload.to,
-        priority: payload.priority,
-        actionType: payload.actionType,
-        ...(payload.metadata ?? {}),
-      },
-    });
+    const recipientId = isUuid(payload.to) ? payload.to : null;
+    if (recipientId) {
+      await NotificationService.createNotification({
+        recipientId,
+        title: `📮 Courrier: ${payload.subject}`,
+        message: payload.message,
+        type: 'system',
+        metadata: {
+          channel: 'mail',
+          to: payload.to,
+          priority: payload.priority,
+          actionType: payload.actionType,
+          ...(payload.metadata ?? {}),
+        },
+      });
+    }
+
+    console.log(`[CommunicationService] Courrier à envoyer à ${payload.to}`);
+
     return { success: true, channel: 'mail' };
   }
 }

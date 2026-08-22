@@ -1,23 +1,43 @@
-// src/infrastructure/email/SendGridAdapter.ts
+// src/infrastructure/adapters/email/SendGridAdapter.ts
 /**
  * SendGridAdapter – Adaptateur SendGrid
  * Infrastructure Layer – Implémentation concrète
  */
 
 import { EmailOptions, EmailProvider } from './EmailProvider.ts';
+import { getEmailProvider } from './config/app.ts';
+
+const getEnv = (key: string): string | undefined => {
+  if (typeof Deno !== 'undefined' && Deno.env) {
+    return Deno.env.get(key);
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key];
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    return import.meta.env[key] || import.meta.env[`VITE_${key}`];
+  }
+  return undefined;
+};
 
 export class SendGridAdapter implements EmailProvider {
   private apiKey: string;
   private defaultFrom: string;
 
   constructor() {
-    const env = typeof Deno !== 'undefined' ? Deno.env : process.env;
-    this.apiKey = env.get('SENDGRID_API_KEY') || '';
-    this.defaultFrom = env.get('SENDGRID_FROM') || 'noreply@hadratech.com';
+    const config = getAppConfig();
+    this.apiKey = getEnv('SENDGRID_API_KEY') || '';
+    this.defaultFrom = config.email?.from || getEnv('SENDGRID_FROM') || 'noreply@hadratech.com';
   }
 
   async send(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
-    if (!this.apiKey) throw new Error('SendGrid API key missing');
+    if (!this.apiKey) {
+      throw new Error('SendGrid API key is not configured.');
+    }
+
+    const to = Array.isArray(options.to) ? options.to.map((email) => ({ email })) : [{ email: options.to }];
+    const from = options.from || this.defaultFrom;
+    const html = options.html || options.text || '';
 
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
@@ -26,16 +46,10 @@ export class SendGridAdapter implements EmailProvider {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        personalizations: [
-          {
-            to: Array.isArray(options.to)
-              ? options.to.map((email) => ({ email }))
-              : [{ email: options.to }],
-          },
-        ],
-        from: { email: options.from || this.defaultFrom },
+        personalizations: [{ to }],
+        from: { email: from },
         subject: options.subject,
-        content: [{ type: 'text/html', value: options.html || options.text || '' }],
+        content: [{ type: 'text/html', value: html }],
       }),
     });
 
@@ -43,6 +57,7 @@ export class SendGridAdapter implements EmailProvider {
       const text = await response.text();
       throw new Error(`SendGrid error: ${response.status} - ${text}`);
     }
+
     return { success: true, messageId: 'sg-' + Date.now() };
   }
 }

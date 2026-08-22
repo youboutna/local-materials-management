@@ -1,17 +1,18 @@
+// src/infrastructure/adapters/supabase/SupabaseTenderSharingAdapter.ts
 /**
  * SupabaseTenderSharingAdapter - Infrastructure Adapter
  * Implements ITenderSharingRepository for Supabase
  */
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { 
-  TenderSharingSecretDTO, 
-  CreateSharingSecretDTO, 
-  AccessLogDTO, 
-  CreateAccessLogDTO,
-  ValidateSecretResponseDTO 
-} from '@/dtos/entities/tender-sharing-dto';
 import { ITenderSharingRepository } from '@/domain/repositories/ITenderSharingRepository';
+import {
+  AccessLogDTO,
+  CreateAccessLogDTO,
+  CreateSharingSecretDTO,
+  TenderSharingSecretDTO,
+  ValidateSecretResponseDTO
+} from '@/dtos/entities/tender-sharing-dto';
+import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 const mapDbRowToTenderSharingSecretDTO = (row: any): TenderSharingSecretDTO => ({
   id: row.id,
@@ -30,17 +31,6 @@ const mapDbRowToTenderSharingSecretDTO = (row: any): TenderSharingSecretDTO => (
   metadata: row.metadata,
   createdAt: row.created_at,
   updatedAt: row.updated_at
-});
-
-const mapDbRowToAccessLogDTO = (row: any): AccessLogDTO => ({
-  id: row.id,
-  sharingSecretId: row.sharing_secret_id,
-  accessedAt: row.accessed_at,
-  ipAddress: row.ip_address,
-  userAgent: row.user_agent,
-  accessedDocuments: row.accessed_documents,
-  actionType: row.action_type,
-  metadata: row.metadata
 });
 
 export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
@@ -192,7 +182,6 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
   async incrementAccessCount(secretId: string): Promise<void> {
     try {
-      // Manual increment since RPC may not exist
       const { data } = await supabase
         .from('tender_sharing_secrets')
         .select('access_count')
@@ -212,8 +201,70 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
   async createAccessLog(dto: CreateAccessLogDTO): Promise<AccessLogDTO> {
     try {
-      // Use tender_sharing_secrets table as fallback since tender_sharing_access_logs may not exist
-      console.warn('SupabaseTenderSharingAdapter: access log table may not exist, returning mock');
+      const insertData: any = {
+        sharing_secret_id: dto.sharingSecretId,
+        accessed_at: dto.accessedAt || new Date().toISOString(),
+        action_type: dto.actionType || 'share',
+        
+        // Destinataire
+        accessed_by: dto.accessedBy || dto.metadata?.supplierEmail || null,
+        recipient_id: dto.metadata?.recipientId || null,
+        recipient_name: dto.metadata?.supplierName || null,
+        is_email_modified: dto.metadata?.isEmailModified || false,
+        
+        // Émetteur
+        shared_by: dto.metadata?.senderEmail || null,
+        sender_name: dto.metadata?.senderName || null,
+        sender_id: dto.metadata?.senderId || null,
+        
+        // Contexte
+        secret_code: dto.metadata?.secretCode || null,
+        tender_id: dto.metadata?.tenderId || null,
+        tender_title: dto.metadata?.tenderTitle || null,
+        expires_at: dto.metadata?.expiresAt || null,
+        message: dto.metadata?.message || null,
+        
+        // Métadonnées complètes
+        metadata: {
+          ...(dto.metadata || {}),
+          channel: dto.metadata?.channel || 'email',
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      const { data, error } = await supabase
+        .from('tender_access_logs')
+        .insert([insertData])
+        .select()
+        .single();
+
+      if (error) {
+        console.warn('SupabaseTenderSharingAdapter: createAccessLog failed', error);
+        // Fallback mock
+        return {
+          id: crypto.randomUUID?.() || Date.now().toString(),
+          sharingSecretId: dto.sharingSecretId,
+          accessedAt: dto.accessedAt || new Date().toISOString(),
+          ipAddress: dto.ipAddress,
+          userAgent: dto.userAgent,
+          accessedDocuments: dto.accessedDocuments,
+          actionType: dto.actionType || 'share',
+          metadata: dto.metadata,
+        };
+      }
+
+      return {
+        id: data.id,
+        sharingSecretId: data.sharing_secret_id,
+        accessedAt: data.accessed_at,
+        ipAddress: data.ip_address,
+        userAgent: data.user_agent,
+        accessedDocuments: data.accessed_documents,
+        actionType: data.action_type,
+        metadata: data.metadata,
+      };
+    } catch (error) {
+      console.warn('SupabaseTenderSharingAdapter: createAccessLog exception', error);
       return {
         id: crypto.randomUUID?.() || Date.now().toString(),
         sharingSecretId: dto.sharingSecretId,
@@ -221,19 +272,31 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
         ipAddress: dto.ipAddress,
         userAgent: dto.userAgent,
         accessedDocuments: dto.accessedDocuments,
-        actionType: dto.actionType || 'view',
-        metadata: dto.metadata
+        actionType: dto.actionType || 'share',
+        metadata: dto.metadata,
       };
-    } catch (error) {
-      throw new Error('Failed to create access log');
     }
   }
 
   async getAccessLogsBySecretCode(secretCode: string): Promise<AccessLogDTO[]> {
     try {
-      // Access logs table may not exist
-      console.warn('SupabaseTenderSharingAdapter: access log table may not exist');
-      return [];
+      const { data, error } = await (supabase as any)
+        .from('tender_access_logs')
+        .select('*')
+        .eq('secret_code', secretCode)
+        .order('accessed_at', { ascending: false });
+
+      if (error) return [];
+      return data ? data.map((row: any) => ({
+        id: row.id,
+        sharingSecretId: row.sharing_secret_id,
+        accessedAt: row.accessed_at,
+        ipAddress: row.ip_address,
+        userAgent: row.user_agent,
+        accessedDocuments: row.accessed_documents,
+        actionType: row.action_type,
+        metadata: row.metadata,
+      })) : [];
     } catch (error) {
       return [];
     }
