@@ -196,10 +196,11 @@ export class CommunicationService {
       const repo = RepositoryFactory.getNotificationRepository();
       if (repo && typeof repo.scheduleCall === 'function') {
         await repo.scheduleCall({
-          phoneNumber: payload.recipientPhone,
-          scheduledFor: payload.scheduledFor,
+          to: payload.recipientPhone,
+          scheduled_at: payload.scheduledFor,
           message: payload.message,
         });
+
       } else {
         console.warn('[CommunicationService] scheduleCall not implemented by repository');
       }
