@@ -5,6 +5,7 @@
  */
 
 import { NotificationService } from './NotificationService';
+import { createEmailService } from './email/EmailServiceFactory';
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -92,30 +93,22 @@ export class CommunicationService {
       },
     });
 
-    // 2. Envoyer l'email via l'Edge Function (les secrets du provider restent côté serveur)
+    // 2. Envoyer l'email via le service multi‑provider
     try {
-      const { notificationGatewayAdapter } = await import(
-        '@/infrastructure/adapters/supabase/NotificationGatewayAdapter'
-      );
-      const { data, error } = await notificationGatewayAdapter.invokeFunction<{
-        success?: boolean;
-        messageId?: string;
-      }>('send-email-notification', {
+      const emailService = createEmailService();
+      const result = await emailService.sendEmail({
         to: payload.to,
         subject: payload.subject,
-        message: payload.message,
-        priority: payload.priority,
-        actionType: payload.actionType,
-        metadata: payload.metadata ?? {},
+        html: payload.message.replace(/\n/g, '<br>'),
+        text: payload.message,
       });
-      if (error) throw new Error(error.message);
-      return { success: true, channel: 'email', reference: data?.messageId };
+      console.log(`Email sent via ${process.env.EMAIL_PROVIDER || 'smtp'} to ${payload.to}`);
+      return { success: true, channel: 'email', reference: result.messageId };
     } catch (error) {
       console.error('CommunicationService.sendEmail: error', error);
       // On ne throw pas pour ne pas bloquer le workflow
       return { success: false, channel: 'email' };
     }
-
   }
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {
