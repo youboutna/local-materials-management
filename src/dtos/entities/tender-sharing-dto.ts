@@ -50,7 +50,7 @@ export interface CreateAccessLogDTO {
   ipAddress?: string;
   userAgent?: string;
   accessedDocuments?: string[];
-  actionType: 'view' | 'download' | 'upload';
+  actionType: 'view' | 'download' | 'upload' | 'share';
   metadata?: Record<string, unknown>;
 }
 
