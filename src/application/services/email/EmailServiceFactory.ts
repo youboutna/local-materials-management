@@ -5,9 +5,9 @@
  * Application Layer – Point d’entrée pour l’injection
  */
 
-import { ResendAdapter } from '@/infrastructure/email/ResendAdapter';
-import { SendGridAdapter } from '@/infrastructure/email/SendGridAdapter';
-import { SmtpAdapter } from '@/infrastructure/email/SmtpAdapter';
+import { ResendAdapter } from '@/infrastructure/adapters/email/ResendAdapter';
+import { SendGridAdapter } from '@/infrastructure/adapters/email/SendGridAdapter';
+import { SmtpAdapter } from '@/infrastructure/adapters/email/SmtpAdapter';
 import { EmailProvider } from './EmailProvider';
 import { EmailService } from './EmailService';
 
