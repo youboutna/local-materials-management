@@ -107,22 +107,35 @@ export class CommunicationService {
       console.log(`[CommunicationService] Notification ignorée pour l'email externe: ${payload.to}`);
     }
 
-    // 2. Toujours envoyer l'email via le service multi‑provider
+    // 2. Envoi côté serveur (Edge Function) : jamais d'appel direct au provider
+    //    depuis le navigateur (CORS + clé API exposée).
     try {
-      const emailService = createEmailService();
-      const result = await emailService.sendEmail({
+      const { data, error } = await notificationGatewayAdapter.invokeFunction<{
+        success?: boolean;
+        messageId?: string;
+        error?: string;
+      }>('send-email-notification', {
         to: payload.to,
         subject: payload.subject,
-        html: payload.message.replace(/\n/g, '<br>'),
-        text: payload.message,
+        message: payload.message,
+        priority: payload.priority,
+        actionType: payload.actionType,
+        metadata: payload.metadata,
       });
-      const provider = getEmailProvider();
-      console.log(`[CommunicationService] Email sent via ${provider} to ${payload.to}`);
-      return { success: true, channel: 'email', reference: result.messageId };
+
+      if (error || !data?.success) {
+        const details = error?.message || data?.error || 'Unknown edge function error';
+        console.error('[CommunicationService] sendEmail failed:', details);
+        return { success: false, channel: 'email' };
+      }
+
+      console.log(`[CommunicationService] Email sent via edge function to ${payload.to}`);
+      return { success: true, channel: 'email', reference: data.messageId };
     } catch (error) {
       console.error('[CommunicationService] sendEmail error:', error);
       return { success: false, channel: 'email' };
     }
+
   }
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {
