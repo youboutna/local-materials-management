@@ -5,9 +5,9 @@
  */
 
 import { NotificationService } from './NotificationService';
-import { createEmailService } from './email/EmailServiceFactory';
+import { notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { getEmailProvider } from '@/config/app';
+
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
