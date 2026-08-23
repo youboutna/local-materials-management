@@ -13,6 +13,8 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import {
   getInvoiceDocumentType,
+  getNextBusinessStatus,
+  isSourceStatusSatisfied,
   type InvoiceActor,
   type InvoiceDocumentType,
   type InvoiceDocumentTypeDef,
@@ -192,6 +194,19 @@ export const InvoiceWorkflowService = {
           projectId: input.projectId,
         });
     if (!source.length) throw new Error('Aucune ligne à transformer');
+
+    // P1 — un devis ne peut naître que d'un DQE validé, un contrat que d'un
+    // devis accepté : le statut du document source est contrôlé ici.
+    const nextTypeCode = this.nextType(input.fromType);
+    const sourceStatus =
+      source[0]?.businessStatus ?? getInvoiceDocumentType(input.fromType).initialStatus;
+    if (nextTypeCode && !isSourceStatusSatisfied(nextTypeCode, sourceStatus)) {
+      const fromDef = getInvoiceDocumentType(input.fromType);
+      const required = getInvoiceDocumentType(nextTypeCode).requiredSourceStatus;
+      throw new Error(
+        `« ${getInvoiceDocumentType(nextTypeCode).label} » impossible : le document « ${fromDef.label} » doit être au statut « ${required} » (statut actuel : « ${sourceStatus} »).`,
+      );
+    }
 
     const { lines, documentId, def } = this.build(input, source);
 
