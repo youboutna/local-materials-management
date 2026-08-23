@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿import { EnumSelect } from '@/components/i18n/EnumSelect';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -327,33 +328,19 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               </div>
               <div>
                 <Label htmlFor="probability"><T k="auto.enhancedriskmanager.probabilite_1_5" fallback="Probabilité (1-5)" /></Label>
-                <Select value={String(formData.probability)} onValueChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 - Très faible</SelectItem>
-                    <SelectItem value="2">2 - Faible</SelectItem>
-                    <SelectItem value="3">3 - Moyenne</SelectItem>
-                    <SelectItem value="4">4 - Élevée</SelectItem>
-                    <SelectItem value="5">5 - Très élevée</SelectItem>
-                  </SelectContent>
-                </Select>
+                <EnumSelect
+                  enumName="RiskScale"
+                  value={String(formData.probability)}
+                  onChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}
+                />
               </div>
               <div>
                 <Label htmlFor="impact"><T k="auto.enhancedriskmanager.impact_1_5" fallback="Impact (1-5)" /></Label>
-                <Select value={String(formData.impact)} onValueChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 - Très faible</SelectItem>
-                    <SelectItem value="2">2 - Faible</SelectItem>
-                    <SelectItem value="3">3 - Moyen</SelectItem>
-                    <SelectItem value="4">4 - Élevé</SelectItem>
-                    <SelectItem value="5">5 - Très élevé</SelectItem>
-                  </SelectContent>
-                </Select>
+                <EnumSelect
+                  enumName="RiskScale"
+                  value={String(formData.impact)}
+                  onChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}
+                />
               </div>
               <div>
                 <Label htmlFor="ownerId"><T k="auto.enhancedriskmanager.responsable" fallback="Responsable" /></Label>
@@ -396,17 +383,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
               </div>
               <div>
                 <Label htmlFor="status"><T k="auto.enhancedriskmanager.statut" fallback="Statut" /></Label>
-                <Select value={String(formData.status)} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="identified"><T k="auto.enhancedriskmanager.identifie" fallback="Identifié" /></SelectItem>
-                    <SelectItem value="mitigated"><T k="auto.enhancedriskmanager.mitige" fallback="Mitigé" /></SelectItem>
-                    <SelectItem value="accepted"><TranslatedStatus code="accepted" /></SelectItem>
-                    <SelectItem value="closed"><TranslatedStatus code="closed" /></SelectItem>
-                  </SelectContent>
-                </Select>
+                <EnumSelect
+                  enumName="RiskStatus"
+                  value={String(formData.status)}
+                  onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                />
               </div>
               <div className="col-span-2">
                 <Label htmlFor="mitigationPlan"><T k="auto.enhancedriskmanager.plan_de_mitigation" fallback="Plan de mitigation" /></Label>

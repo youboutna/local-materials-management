@@ -16,6 +16,8 @@ export interface EnumLabel {
 
 export type EnumLabelMap = Readonly<Record<string, EnumLabel>>;
 
+import { MANUAL_ENUM_LABELS } from './enum-labels-manual.referential';
+
 /** AuthProvider — src/domain/entities/AuthUser.ts */
 export const AUTH_PROVIDER_LABELS: EnumLabelMap = {
     'supabase': { fr: 'Supabase', ar: 'سوبابيز', en: 'Supabase' },
@@ -455,7 +457,9 @@ export const WORKFLOW_MODE_LABELS: EnumLabelMap = {
 
 /** Registre global : nom d'ENUM -> libellés. */
 export const ENUM_LABELS: Readonly<Record<string, EnumLabelMap>> = {
+    ...MANUAL_ENUM_LABELS,
     AuthProvider: AUTH_PROVIDER_LABELS,
+
     AuthUserStatus: AUTH_USER_STATUS_LABELS,
     CommonStatus: COMMON_STATUS_LABELS,
     DocumentPriority: DOCUMENT_PRIORITY_LABELS,

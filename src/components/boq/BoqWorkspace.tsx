@@ -46,6 +46,7 @@ import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import type { StakeholderOption } from './BoqLineTable';
+import { getEnumOptions } from '@/config/referentials/i18n/enum-labels.referential';
 import { useI18n } from '@/hooks/useI18n';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
@@ -87,7 +88,7 @@ export function BoqWorkspace({
   referentialCode, estimateId,
   emptyLabel, importLabel, documentId,
 }: Props) {
-  const { translateTerm, t } = useI18n();
+  const { translateTerm, t, language: lang } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
@@ -536,10 +537,9 @@ export function BoqWorkspace({
                   <Select value={category} onValueChange={(v) => setCategory(v as ManualCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="material"><T k="auto.boqworkspace.materiau" fallback="Matériau" /></SelectItem>
-                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
-                      <SelectItem value="equipment"><T k="auto.boqworkspace.equipement" fallback="Équipement" /></SelectItem>
-                      <SelectItem value="overhead"><T k="auto.boqworkspace.frais_generaux" fallback="Frais généraux" /></SelectItem>
+                      {getEnumOptions('ResourceType', lang).map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
