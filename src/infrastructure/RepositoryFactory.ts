@@ -32,58 +32,54 @@ import { SupabasePhaseMaterialAdapter } from '@/infrastructure/adapters/supabase
 import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
 import { SupabasePhaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseEmployeeAdapter';
 import type { IPhaseEmployeeRepository } from '@/domain/repositories/IPhaseEmployeeRepository';
-import {
-  SupabaseAlertAdapter,
-  SupabaseAuthAdapter,
-  SupabaseComplianceAdapter,
-  SupabaseContactMessageAdapter,
-  SupabaseDocumentAdapter,
-  SupabaseEmployeeAdapter,
-  SupabaseHierarchyAdapter,
-  SupabaseInspectionAdapter,
-  SupabaseInspectionExecutionAdapter,
-  SupabaseInspectionPaymentValidationAdapter,
-  SupabaseInspectionPermissionAdapter,
-  SupabaseInsuranceAdapter,
-  SupabaseLoadDataAdapter,
-  SupabaseMaterialAdapter,
-  SupabaseMilestoneAdapter,
-  SupabaseMonitoringAdapter,
-  SupabaseNotificationAdapter,
-  SupabaseParsedInvoiceAdapter,
-  SupabasePaymentAdapter,
-  SupabasePaymentBlockAdapter,
-  SupabasePaymentControlActionAdapter,
-  SupabasePhaseAdapter,
-  SupabaseProjectAdapter,
-  SupabaseProjectBudgetLinkAdapter,
-  SupabaseProjectFormAdapter,
-  SupabaseProjectStakeholderAdapter,
-  SupabaseProjectStrategyLinkAdapter,
-  SupabaseQuantityTakeoffAdapter,
-  SupabaseReportDataTransformerAdapter,
-  SupabaseReportingAdapter,
-  SupabaseRiskAdapter,
-  SupabaseRiskTaskRelationAdapter,
-  SupabaseStakeholderAdapter,
-  SupabaseSupplierAdapter,
-  SupabaseTenderAdapter,
-  SupabaseTenderDocumentAdapter,
-  SupabaseTenderSharingAdapter,
-  SupabaseUserAdapter,
-  SupabaseWorkspaceAdapter,
-} from '@/infrastructure/adapters/supabase';
+import { SupabaseAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseAlertAdapter';
+import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
+import { SupabaseComplianceAdapter } from '@/infrastructure/adapters/supabase/SupabaseComplianceAdapter';
+import { SupabaseContactMessageAdapter } from '@/infrastructure/adapters/supabase/SupabaseContactMessageAdapter';
+import { SupabaseDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentAdapter';
+import { SupabaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabaseEmployeeAdapter';
+import { SupabaseHierarchyAdapter } from '@/infrastructure/adapters/supabase/SupabaseHierarchyAdapter';
+import { SupabaseInspectionAdapter } from '@/infrastructure/adapters/supabase/SupabaseInspectionAdapter';
+import { SupabaseInspectionExecutionAdapter } from '@/infrastructure/adapters/supabase/SupabaseInspectionExecutionAdapter';
+import { SupabaseInspectionPaymentValidationAdapter } from '@/infrastructure/adapters/supabase/SupabaseInspectionPaymentValidationAdapter';
+import { SupabaseInspectionPermissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseInspectionPermissionAdapter';
+import { SupabaseInsuranceAdapter } from '@/infrastructure/adapters/supabase/SupabaseInsuranceAdapter';
+import { SupabaseLoadDataAdapter } from '@/infrastructure/adapters/supabase/SupabaseLoadDataAdapter';
+import { SupabaseMaterialAdapter } from '@/infrastructure/adapters/supabase/SupabaseMaterialAdapter';
+import { SupabaseMilestoneAdapter } from '@/infrastructure/adapters/supabase/SupabaseMilestoneAdapter';
+import { SupabaseMonitoringAdapter } from '@/infrastructure/adapters/supabase/SupabaseMonitoringAdapter';
+import { SupabaseNotificationAdapter } from '@/infrastructure/adapters/supabase/SupabaseNotificationAdapter';
+import { SupabaseParsedInvoiceAdapter } from '@/infrastructure/adapters/supabase/SupabaseParsedInvoiceAdapter';
+import { SupabasePaymentAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentAdapter';
+import { SupabasePaymentBlockAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentBlockAdapter';
+import { SupabasePaymentControlActionAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentControlActionAdapter';
+import { SupabasePhaseAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseAdapter';
+import { SupabaseProjectAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectAdapter';
+import { SupabaseProjectBudgetLinkAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectBudgetLinkAdapter';
+import { SupabaseProjectFormAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectFormAdapter';
+import { SupabaseProjectStakeholderAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectStakeholderAdapter';
+import { SupabaseProjectStrategyLinkAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectStrategyLinkAdapter';
+import { SupabaseQuantityTakeoffAdapter } from '@/infrastructure/adapters/supabase/SupabaseQuantityTakeoffAdapter';
+import { SupabaseReportDataTransformerAdapter } from '@/infrastructure/adapters/supabase/SupabaseReportDataTransformerAdapter';
+import { SupabaseReportingAdapter } from '@/infrastructure/adapters/supabase/SupabaseReportingAdapter';
+import { SupabaseRiskAdapter } from '@/infrastructure/adapters/supabase/SupabaseRiskAdapter';
+import { SupabaseRiskTaskRelationAdapter } from '@/infrastructure/adapters/supabase/SupabaseRiskTaskRelationAdapter';
+import { SupabaseStakeholderAdapter } from '@/infrastructure/adapters/supabase/SupabaseStakeholderAdapter';
+import { SupabaseSupplierAdapter } from '@/infrastructure/adapters/supabase/SupabaseSupplierAdapter';
+import { SupabaseTenderAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderAdapter';
+import { SupabaseTenderDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderDocumentAdapter';
+import { SupabaseTenderSharingAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSharingAdapter';
+import { SupabaseUserAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserAdapter';
+import { SupabaseWorkspaceAdapter } from '@/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter';
 import { SupabaseUserRepositoryAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserRepositoryAdapter';
 
-import {
-  BankGuaranteeAdapter,
-  InspectionSchedulingAdapter,
-  LocationRepository,
-  PaymentBlockingAdapter,
-  PVGeneratorAdapter,
-  TaskAssignmentAdapter,
-  TenderEstimateAdapter
-} from '@/infrastructure/adapters/supabase';
+import { BankGuaranteeAdapter } from '@/infrastructure/adapters/supabase/BankGuaranteeAdapter';
+import { InspectionSchedulingAdapter } from '@/infrastructure/adapters/supabase/InspectionSchedulingAdapter';
+import { LocationRepository } from '@/infrastructure/adapters/supabase/LocationRepository';
+import { PaymentBlockingAdapter } from '@/infrastructure/adapters/supabase/PaymentBlockingAdapter';
+import { PVGeneratorAdapter } from '@/infrastructure/adapters/supabase/PVGeneratorAdapter';
+import { TaskAssignmentAdapter } from '@/infrastructure/adapters/supabase/TaskAssignmentAdapter';
+import { TenderEstimateAdapter } from '@/infrastructure/adapters/supabase/TenderEstimateAdapter';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/adapters/supabase/SupabaseOAuthProviderAdapter';
 import { SupabaseRealtimeAdapter } from '@/infrastructure/adapters/supabase/SupabaseRealtimeAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/adapters/supabase/SupabaseStorageAdapter';
