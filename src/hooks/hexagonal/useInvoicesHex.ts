@@ -8,6 +8,7 @@ import { CreateInvoiceDTO, InvoiceStatisticsDTO, ParsedInvoiceDTO, UpdateInvoice
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 export interface UseInvoicesResult {
   invoices: ParsedInvoiceDTO[];
@@ -51,18 +52,19 @@ export function useInvoicesHex(): UseInvoicesResult {
 
   const result = useQuery({
     queryKey: ['invoices'],
-    queryFn: () => service.getParsedInvoicesByStatus('' as any),
+    queryFn: () => service.getAllParsedInvoices(),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de chargement',
       description: 'Impossible de charger les factures',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     invoices: result.data || [],
@@ -86,13 +88,14 @@ export function useParsedInvoicesHex(supplierId: string): UseParsedInvoicesResul
     staleTime: 5 * 60 * 1000,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de chargement',
       description: 'Impossible de charger les factures analysées',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     invoices: result.data || [],
@@ -118,13 +121,14 @@ export function useInvoiceStatisticsHex(supplierId?: string): UseInvoiceStatisti
     staleTime: 10 * 60 * 1000,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de statistiques',
       description: 'Impossible de calculer les statistiques de factures',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     statistics: result.data || null,
@@ -235,13 +239,14 @@ export function useInvoicesByStatusHex(status: string): UseInvoicesResult {
     staleTime: 5 * 60 * 1000,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de chargement',
       description: `Impossible de charger les factures avec le statut ${status}`,
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     invoices: result.data || [],
@@ -265,13 +270,14 @@ export function useInvoicesByDateRangeHex(startDate: string, endDate: string): U
     staleTime: 5 * 60 * 1000,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de chargement',
       description: 'Impossible de charger les factures pour la période spécifiée',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     invoices: result.data || [],
