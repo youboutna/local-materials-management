@@ -77,7 +77,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
       const { data, error } = await supabase
         .from('parsed_invoices')
         .select('*')
-        .eq('supplier_info', { supplier_id: supplierId })
+        .eq('supplier_info->>supplier_id', supplierId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

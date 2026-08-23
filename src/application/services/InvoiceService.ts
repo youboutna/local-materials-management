@@ -24,7 +24,9 @@ export class InvoiceService {
       }
 
       // Delegate to repository
-      const invoices = await this.repository.findBySupplierId(supplierId);
+      const invoices = supplierId === 'all'
+        ? await this.repository.findAll()
+        : await this.repository.findBySupplierId(supplierId);
       
       // Transform entities to DTOs
       return invoices.map(invoice => this.entityToDTO(invoice));
@@ -110,6 +112,19 @@ export class InvoiceService {
         throw error;
       }
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to delete parsed invoice');
+    }
+  }
+
+  /**
+   * Get every parsed invoice (no filter)
+   */
+  async getAllParsedInvoices(): Promise<ParsedInvoiceDTO[]> {
+    try {
+      const invoices = await this.repository.findAll();
+      return invoices.map(invoice => this.entityToDTO(invoice));
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Failed to fetch parsed invoices');
     }
   }
 
