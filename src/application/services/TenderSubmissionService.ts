@@ -388,21 +388,6 @@ export class TenderSubmissionService {
     }
   }
 
-  static async getTenderSubmissions(tenderId: string): Promise<unknown[]> {
-    try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('submission_date', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error getting tender submissions:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des soumissions');
-    }
-  }
-
   static async getSubmissionStats(tenderId: string) {
     try {
       const { data, error } = await supabase

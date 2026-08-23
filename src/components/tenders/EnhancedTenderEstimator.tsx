@@ -250,9 +250,10 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                step.status === 'completed' ? 'bg-success text-white' :
-                                step.status === 'in_progress' ? 'bg-primary text-white' :
-                                'bg-gray-200 text-muted-foreground'
+                                step.status === 'completed' ? 'bg-success text-success-foreground' :
+                                step.status === 'in_progress' ? 'bg-primary text-primary-foreground' :
+                                'bg-muted text-muted-foreground'
+
                               }`}>
                                 {step.status === 'completed' ? (
                                   <CheckCircle className="w-4 h-4" />
