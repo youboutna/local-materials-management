@@ -5601,7 +5601,8 @@ const PHASE_STRUCTURE_KEYS = {
     );
 });
 
-
+/**
+ * Phase 6 — alias canoniques exigés par la spécification d'intégration.
  * Un seul code source de vérité (PHASE_STRUCTURE_KEYS) ; ces alias exposent
  * les clés contractuelles `wbs.*`, `referential.*`, `phase.*`, `step.*`, `progress.*`.
  */
