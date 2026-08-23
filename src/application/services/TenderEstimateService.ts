@@ -590,6 +590,87 @@ export class TenderEstimateService {
   }
 
   /**
+   * Find the most recent draft estimate for a tender, or create one with
+   * default financial parameters. Used by the DQE auto-import flow.
+   */
+  async findOrCreateDraftEstimateForTender(tenderId: string, projectId?: string | null): Promise<TenderEstimateDTO> {
+    try {
+      TenderEstimateValidation.validateTenderId(tenderId);
+
+      const existingEstimates = await this.tenderEstimateRepository.findByTenderId(tenderId);
+      if (existingEstimates.length > 0) {
+        return this.transformEntityToDTO(existingEstimates[0]);
+      }
+
+      const estimateData = {
+        tenderId,
+        status: 'draft' as TenderEstimateStatus,
+        currency: 'MRU' as CurrencyCode,
+        estimateType: 'Métré quantitatif',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        options: {
+          projectId: projectId || undefined,
+          subtotal: 0,
+          taxAmount: 0,
+          taxRate: 14,
+          totalWithTax: 0,
+          finalTotal: 0,
+          totalMaterialsCost: 0,
+          totalLaborCost: 0,
+          totalEquipmentCost: 0,
+          overheadPercentage: 15,
+          overheadAmount: 0,
+          profitMarginPercentage: 10,
+          profitMarginAmount: 0,
+          items: []
+        }
+      } as any;
+
+      const createdEstimate = await this.tenderEstimateRepository.create(estimateData);
+      return this.transformEntityToDTO(createdEstimate);
+    } catch (error) {
+      console.error('TenderEstimateService.findOrCreateDraftEstimateForTender failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to find or create draft estimate');
+    }
+  }
+
+  /**
+   * Bulk-insert estimate items without the strict positive-price validation
+   * applied by createTenderEstimateItem (used when importing raw DQE lines
+   * that may legitimately carry a zero unit price pending manual pricing).
+   */
+  async addRawEstimateItems(items: Array<{
+    estimate_id: string;
+    material_id?: string | null;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    description: string;
+    item_type?: string;
+  }>): Promise<TenderEstimateItemDTO[]> {
+    try {
+      const created: TenderEstimateItemDTO[] = [];
+      for (const item of items) {
+        const savedItem = await this.tenderEstimateRepository.createItem({
+          estimateId: item.estimate_id,
+          materialId: item.material_id ?? undefined,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+          description: item.description,
+          itemType: item.item_type,
+        } as unknown as Parameters<typeof this.tenderEstimateRepository.createItem>[0]);
+        created.push(this.mapItemEntityToDTO(savedItem));
+      }
+      return created;
+    } catch (error) {
+      console.error('TenderEstimateService.addRawEstimateItems failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to add raw estimate items');
+    }
+  }
+
+  /**
    * Map repository TenderEstimateItem entity (from TenderEstimate.ts) to DTO
    */
   private mapItemEntityToDTO(entity: unknown): TenderEstimateItemDTO {

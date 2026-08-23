@@ -288,7 +288,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
     const [documentsData, tasksData, inspectionsData, paymentsData] = await Promise.all([
       supabase.from('documents').select('phase_id').in('phase_id', phaseIds),
-      supabase.from('tasks').select('phase_id').in('phase_id', phaseIds),
+      supabase.from('task_assignments').select('phase_id').in('phase_id', phaseIds),
       supabase.from('inspections').select('phase_id').in('phase_id', phaseIds),
       supabase.from('payments').select('phase_id').in('phase_id', phaseIds),
     ]);
