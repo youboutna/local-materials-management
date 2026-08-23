@@ -1,0 +1,7358 @@
+{
+  "src/components/admin/AlertsProcessorSettings.tsx": [
+    {
+      "line": 55,
+      "text": "n.type === 'system' && n.metadata && (n.metadata as Record",
+      "type": "JSX Text"
+    },
+    {
+      "line": 65,
+      "text": "Error loading config:",
+      "type": "Message"
+    },
+    {
+      "line": 73,
+      "text": "n.type === 'system' && n.metadata && (n.metadata as Record",
+      "type": "JSX Text"
+    },
+    {
+      "line": 89,
+      "text": "Error loading logs:",
+      "type": "Message"
+    },
+    {
+      "line": 103,
+      "text": "Configuration processeur mise à jour",
+      "type": "Object Prop"
+    },
+    {
+      "line": 110,
+      "text": "Configuration sauvegardée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 111,
+      "text": "Les paramètres du processeur d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 114,
+      "text": "Error saving config:",
+      "type": "Message"
+    },
+    {
+      "line": 130,
+      "text": "Exécution du processeur d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 159,
+      "text": "Résultat du processeur d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 166,
+      "text": "Traitement terminé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 172,
+      "text": "Error running processor:",
+      "type": "Message"
+    },
+    {
+      "line": 175,
+      "text": "Impossible d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 216,
+      "text": "Taille du lot",
+      "type": "JSX Text"
+    },
+    {
+      "line": 231,
+      "text": "Intervalle (minutes)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 246,
+      "text": "Tentatives max",
+      "type": "JSX Text"
+    },
+    {
+      "line": 270,
+      "text": "Sauvegarder la configuration",
+      "type": "Object Prop"
+    },
+    {
+      "line": 284,
+      "text": "Exécuter maintenant",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/admin/DatabaseSettings.tsx": [
+    {
+      "line": 89,
+      "text": "Error connecting to database:",
+      "type": "Message"
+    },
+    {
+      "line": 128,
+      "text": "Error saving database settings:",
+      "type": "Message"
+    },
+    {
+      "line": 163,
+      "text": "Supabase",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "PostgreSQL",
+      "type": "JSX Text"
+    },
+    {
+      "line": 171,
+      "text": "MySQL",
+      "type": "JSX Text"
+    },
+    {
+      "line": 207,
+      "text": "localhost",
+      "type": "Prop"
+    },
+    {
+      "line": 229,
+      "text": "postgres",
+      "type": "Prop"
+    },
+    {
+      "line": 239,
+      "text": "••••••••",
+      "type": "Prop"
+    },
+    {
+      "line": 250,
+      "text": "ma_base_de_donnees",
+      "type": "Prop"
+    }
+  ],
+  "src/components/admin/DeploymentSettings.tsx": [
+    {
+      "line": 88,
+      "text": "Configuration errors:",
+      "type": "Message"
+    },
+    {
+      "line": 127,
+      "text": "Recommended",
+      "type": "JSX Text"
+    },
+    {
+      "line": 137,
+      "text": "Cost:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 142,
+      "text": "Real-time",
+      "type": "JSX Text"
+    },
+    {
+      "line": 145,
+      "text": "Edge Functions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 148,
+      "text": "Monitoring",
+      "type": "JSX Text"
+    },
+    {
+      "line": 151,
+      "text": "Caching",
+      "type": "JSX Text"
+    },
+    {
+      "line": 174,
+      "text": "Environment",
+      "type": "JSX Text"
+    },
+    {
+      "line": 175,
+      "text": "Docker",
+      "type": "JSX Text"
+    },
+    {
+      "line": 176,
+      "text": "Setup Steps",
+      "type": "JSX Text"
+    },
+    {
+      "line": 181,
+      "text": "Environment Variables (.env)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 210,
+      "text": "Docker Compose Configuration",
+      "type": "JSX Text"
+    },
+    {
+      "line": 246,
+      "text": "Setup Instructions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 266,
+      "text": "Additional Resources",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/admin/EscalationThresholdsSettings.tsx": [
+    {
+      "line": 80,
+      "text": "Seuils d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 83,
+      "text": "Error saving thresholds:",
+      "type": "Message"
+    },
+    {
+      "line": 86,
+      "text": "Impossible de sauvegarder les seuils",
+      "type": "Object Prop"
+    },
+    {
+      "line": 118,
+      "text": "Chargement des seuils d'escalade...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 142,
+      "text": "Total des seuils configurés:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 147,
+      "text": "Sauvegarder les Modifications",
+      "type": "Object Prop"
+    },
+    {
+      "line": 181,
+      "text": "Nom du Seuil",
+      "type": "JSX Text"
+    },
+    {
+      "line": 182,
+      "text": "Valeur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 183,
+      "text": "Unité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 184,
+      "text": "Sévérité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 185,
+      "text": "Niveau",
+      "type": "JSX Text"
+    },
+    {
+      "line": 186,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 187,
+      "text": "Actif",
+      "type": "JSX Text"
+    },
+    {
+      "line": 218,
+      "text": "Sévérité du seuil",
+      "type": "Prop"
+    },
+    {
+      "line": 264,
+      "text": "Aucun seuil configuré pour cette catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 278,
+      "text": "Résumé des Seuils d'Escalade",
+      "type": "JSX Text"
+    },
+    {
+      "line": 298,
+      "text": "Total:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 299,
+      "text": "Actifs:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 300,
+      "text": "Critiques:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/admin/KeycloakConfigurationTab.tsx": [
+    {
+      "line": 26,
+      "text": "Déploiement réussi",
+      "type": "Object Prop"
+    },
+    {
+      "line": 166,
+      "text": "Téléchargement réussi",
+      "type": "Object Prop"
+    },
+    {
+      "line": 202,
+      "text": "docker-compose.yml",
+      "type": "JSX Text"
+    },
+    {
+      "line": 241,
+      "text": "Dockerfile",
+      "type": "JSX Text"
+    },
+    {
+      "line": 281,
+      "text": "setup_keycloak_prod.sh",
+      "type": "JSX Text"
+    },
+    {
+      "line": 312,
+      "text": "deploy_keycloak.py",
+      "type": "JSX Text"
+    },
+    {
+      "line": 343,
+      "text": "github-actions.yml",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/admin/KeycloakSettings.tsx": [
+    {
+      "line": 44,
+      "text": "Connection successful",
+      "type": "Object Prop"
+    },
+    {
+      "line": 48,
+      "text": "All fields are required",
+      "type": "Message"
+    },
+    {
+      "line": 51,
+      "text": "Error connecting to Keycloak:",
+      "type": "Message"
+    },
+    {
+      "line": 53,
+      "text": "Connection failed",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Could not connect to Keycloak with these settings",
+      "type": "Object Prop"
+    },
+    {
+      "line": 77,
+      "text": "Settings saved",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "Keycloak configuration has been updated",
+      "type": "Object Prop"
+    },
+    {
+      "line": 81,
+      "text": "Error saving Keycloak settings:",
+      "type": "Message"
+    },
+    {
+      "line": 84,
+      "text": "Failed to save Keycloak settings",
+      "type": "Object Prop"
+    },
+    {
+      "line": 107,
+      "text": "Keycloak URL",
+      "type": "JSX Text"
+    },
+    {
+      "line": 117,
+      "text": "Realm",
+      "type": "JSX Text"
+    },
+    {
+      "line": 122,
+      "text": "etr-ml",
+      "type": "Prop"
+    },
+    {
+      "line": 127,
+      "text": "Client ID",
+      "type": "JSX Text"
+    },
+    {
+      "line": 132,
+      "text": "etr-ml-frontend",
+      "type": "Prop"
+    }
+  ],
+  "src/components/admin/LocalUserManagementPanel.tsx": [
+    {
+      "line": 49,
+      "text": "Utilisateur actif changé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 56,
+      "text": "Utilisateur supprimé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 64,
+      "text": "Clé et email requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 72,
+      "text": "Utilisateur ajouté",
+      "type": "Object Prop"
+    },
+    {
+      "line": 90,
+      "text": "Utilisateurs importés",
+      "type": "Object Prop"
+    },
+    {
+      "line": 92,
+      "text": "Import échoué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 101,
+      "text": "Utilisateurs locaux (DEV_USERS)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 104,
+      "text": "localStorage.dev_users_overrides",
+      "type": "JSX Text"
+    },
+    {
+      "line": 123,
+      "text": "Importer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 128,
+      "text": "Ajouter",
+      "type": "JSX Text"
+    },
+    {
+      "line": 131,
+      "text": "Nouveau profil DEV",
+      "type": "JSX Text"
+    },
+    {
+      "line": 133,
+      "text": "Clé (identifiant interne)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 133,
+      "text": "ex: agent",
+      "type": "Prop"
+    },
+    {
+      "line": 134,
+      "text": "Email",
+      "type": "JSX Text"
+    },
+    {
+      "line": 135,
+      "text": "Mot de passe",
+      "type": "JSX Text"
+    },
+    {
+      "line": 136,
+      "text": "Nom complet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 137,
+      "text": "Rôle",
+      "type": "JSX Text"
+    },
+    {
+      "line": 138,
+      "text": "Permissions (séparées par virgules)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 144,
+      "text": "Équipes (séparées par virgules)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 151,
+      "text": "Enregistrer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 161,
+      "text": "Clé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 162,
+      "text": "Email",
+      "type": "JSX Text"
+    },
+    {
+      "line": 163,
+      "text": "Rôle",
+      "type": "JSX Text"
+    },
+    {
+      "line": 164,
+      "text": "Permissions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 165,
+      "text": "Équipes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 166,
+      "text": "Actions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 174,
+      "text": "actif",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/admin/OrganizationalHierarchyManager.tsx": [
+    {
+      "line": 37,
+      "text": "Organisation Standard BTP",
+      "type": "Object Prop"
+    },
+    {
+      "line": 40,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 41,
+      "text": "Direction Générale",
+      "type": "Object Prop"
+    },
+    {
+      "line": 47,
+      "text": "Conseiller chargé du Suivi des Activités et Performance",
+      "type": "Object Prop"
+    },
+    {
+      "line": 51,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 55,
+      "text": "Conseiller chargé de la Communication et Coopération",
+      "type": "Object Prop"
+    },
+    {
+      "line": 59,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 63,
+      "text": "Conseiller Juridique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 67,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 71,
+      "text": "Directeur de la Production et de la Commercialisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 72,
+      "text": "Production et Commercialisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 75,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Directeur des Études et des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Études et Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 83,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 87,
+      "text": "Directeur Financier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 91,
+      "text": "Directeur Général",
+      "type": "Object Prop"
+    },
+    {
+      "line": 95,
+      "text": "Chef de projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 96,
+      "text": "Études et Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 99,
+      "text": "Directeur des Études et des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 103,
+      "text": "Chef chantier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 104,
+      "text": "Études et Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 107,
+      "text": "Directeur des Études et des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 115,
+      "text": "Directeur Financier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 119,
+      "text": "Ingénieur Études",
+      "type": "Object Prop"
+    },
+    {
+      "line": 120,
+      "text": "Études et Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 123,
+      "text": "Directeur des Études et des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 153,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 174,
+      "text": "Position ajoutée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 186,
+      "text": "Position supprimée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 187,
+      "text": "La position a été supprimée de l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 207,
+      "text": "Ajoutez au moins une position avant d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 215,
+      "text": "Chaque position doit avoir un titre",
+      "type": "Object Prop"
+    },
+    {
+      "line": 244,
+      "text": "Organisation propriétaire par défaut des projets",
+      "type": "Object Prop"
+    },
+    {
+      "line": 296,
+      "text": "Organigramme sauvegardé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 302,
+      "text": "Erreur lors de la sauvegarde de l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 314,
+      "text": "Gestion de l'Organigramme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 321,
+      "text": "Sauvegarder l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 340,
+      "text": "Titre du poste *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 345,
+      "text": "Ex: Chef de projet",
+      "type": "Prop"
+    },
+    {
+      "line": 349,
+      "text": "Département *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 354,
+      "text": "Ex: Études et Travaux",
+      "type": "Prop"
+    },
+    {
+      "line": 361,
+      "text": "Catégorie *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 367,
+      "text": "Sélectionner une catégorie",
+      "type": "Prop"
+    },
+    {
+      "line": 377,
+      "text": "Niveau hiérarchique",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "1 - Direction",
+      "type": "JSX Text"
+    },
+    {
+      "line": 387,
+      "text": "2 - Management",
+      "type": "JSX Text"
+    },
+    {
+      "line": 388,
+      "text": "3 - Opérationnel",
+      "type": "JSX Text"
+    },
+    {
+      "line": 389,
+      "text": "4 - Support",
+      "type": "JSX Text"
+    },
+    {
+      "line": 396,
+      "text": "Supérieur hiérarchique",
+      "type": "JSX Text"
+    },
+    {
+      "line": 402,
+      "text": "Sélectionner un supérieur",
+      "type": "Prop"
+    },
+    {
+      "line": 413,
+      "text": "Autorisations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 424,
+      "text": "Approuver projets",
+      "type": "JSX Text"
+    },
+    {
+      "line": 435,
+      "text": "Approuver paiements",
+      "type": "JSX Text"
+    },
+    {
+      "line": 446,
+      "text": "Escalader au directeur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 486,
+      "text": "Projets",
+      "type": "JSX Text"
+    },
+    {
+      "line": 489,
+      "text": "Paiements",
+      "type": "JSX Text"
+    },
+    {
+      "line": 492,
+      "text": "Escalade",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/admin/OrganizationsManager.tsx": [
+    {
+      "line": 30,
+      "text": "Maître d’ouvrage (propriétaire)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 31,
+      "text": "Maître d’ouvrage délégué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 32,
+      "text": "Entreprise / Contractant",
+      "type": "Object Prop"
+    },
+    {
+      "line": 33,
+      "text": "Bureau d’études / Consultant",
+      "type": "Object Prop"
+    },
+    {
+      "line": 34,
+      "text": "Bailleur / Financeur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 70,
+      "text": "Nom requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 70,
+      "text": "Renseignez le nom de l’organisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 76,
+      "text": "Organisation mise à jour",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Organisation créée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 85,
+      "text": "Enregistrement impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 112,
+      "text": "Organisation supprimée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 116,
+      "text": "Suppression impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 126,
+      "text": "Organisation par défaut",
+      "type": "Object Prop"
+    },
+    {
+      "line": 132,
+      "text": "Mise à jour impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 144,
+      "text": "Nouvelle organisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 155,
+      "text": "Nom *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 160,
+      "text": "Ex : SOMELEC",
+      "type": "Prop"
+    },
+    {
+      "line": 164,
+      "text": "Code",
+      "type": "JSX Text"
+    },
+    {
+      "line": 169,
+      "text": "Ex : SOMELEC_DG",
+      "type": "Prop"
+    },
+    {
+      "line": 176,
+      "text": "Type",
+      "type": "JSX Text"
+    },
+    {
+      "line": 182,
+      "text": "Type d’organisation",
+      "type": "Prop"
+    },
+    {
+      "line": 194,
+      "text": "Organisation parente",
+      "type": "JSX Text"
+    },
+    {
+      "line": 202,
+      "text": "Aucune (racine)",
+      "type": "Prop"
+    },
+    {
+      "line": 205,
+      "text": "Aucune (racine)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 218,
+      "text": "Email",
+      "type": "JSX Text"
+    },
+    {
+      "line": 227,
+      "text": "Téléphone",
+      "type": "JSX Text"
+    },
+    {
+      "line": 237,
+      "text": "Adresse",
+      "type": "JSX Text"
+    },
+    {
+      "line": 246,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 285,
+      "text": "Ajouter l’organisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 310,
+      "text": "Aucune organisation enregistrée.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 320,
+      "text": "Par défaut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 322,
+      "text": "Inactive",
+      "type": "JSX Text"
+    },
+    {
+      "line": 335,
+      "text": "Définir par défaut",
+      "type": "Prop"
+    },
+    {
+      "line": 342,
+      "text": "Modifier",
+      "type": "Prop"
+    },
+    {
+      "line": 348,
+      "text": "Supprimer",
+      "type": "Prop"
+    }
+  ],
+  "src/components/admin/ProviderSettings.tsx": [
+    {
+      "line": 30,
+      "text": "Mode A · Supabase Cloud",
+      "type": "Object Prop"
+    },
+    {
+      "line": 34,
+      "text": "Managed Supabase SaaS (full)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 38,
+      "text": "Mode A · Self-Hosted (SDK)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 42,
+      "text": "Stack Supabase self-hostée (Kong + GoTrue + PostgREST)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 46,
+      "text": "Mode B · Local Users + Self-Hosted Data",
+      "type": "Object Prop"
+    },
+    {
+      "line": 50,
+      "text": "DEV_USERS locaux + JWT HS256 accepté par la RLS self-hostée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "OSS Légère (GoTrue + PostgREST)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 58,
+      "text": "GoTrue + PostgREST + MinIO",
+      "type": "Object Prop"
+    },
+    {
+      "line": 62,
+      "text": "SSO Entreprise (Keycloak)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 66,
+      "text": "Keycloak + PostgREST + MinIO",
+      "type": "Object Prop"
+    },
+    {
+      "line": 70,
+      "text": "Mode C · Local Dev (offline)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 74,
+      "text": "Tout local, aucun réseau",
+      "type": "Object Prop"
+    },
+    {
+      "line": 89,
+      "text": "Supabase Auth",
+      "type": "Object Prop"
+    },
+    {
+      "line": 89,
+      "text": "Managed authentication with social providers",
+      "type": "Object Prop"
+    },
+    {
+      "line": 90,
+      "text": "Enterprise SSO and identity management",
+      "type": "Object Prop"
+    },
+    {
+      "line": 91,
+      "text": "Universal authentication & authorization platform",
+      "type": "Object Prop"
+    },
+    {
+      "line": 92,
+      "text": "Custom authentication implementation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 96,
+      "text": "Managed PostgreSQL with real-time features",
+      "type": "Object Prop"
+    },
+    {
+      "line": 97,
+      "text": "Direct PostgreSQL connection",
+      "type": "Object Prop"
+    },
+    {
+      "line": 98,
+      "text": "MySQL database connection",
+      "type": "Object Prop"
+    },
+    {
+      "line": 102,
+      "text": "Supabase Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 102,
+      "text": "Managed object storage with CDN",
+      "type": "Object Prop"
+    },
+    {
+      "line": 103,
+      "text": "Self-hosted S3-compatible storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 104,
+      "text": "Amazon S3",
+      "type": "Object Prop"
+    },
+    {
+      "line": 104,
+      "text": "AWS Simple Storage Service",
+      "type": "Object Prop"
+    },
+    {
+      "line": 105,
+      "text": "Azure Blob",
+      "type": "Object Prop"
+    },
+    {
+      "line": 105,
+      "text": "Microsoft Azure Blob Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 106,
+      "text": "Google Cloud",
+      "type": "Object Prop"
+    },
+    {
+      "line": 106,
+      "text": "Google Cloud Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 107,
+      "text": "File Transfer Protocol storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 108,
+      "text": "Local Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 108,
+      "text": "Local file system storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 175,
+      "text": "Configuration Saved",
+      "type": "Object Prop"
+    },
+    {
+      "line": 179,
+      "text": "Error switching auth provider:",
+      "type": "Message"
+    },
+    {
+      "line": 194,
+      "text": "Reset to Defaults",
+      "type": "Object Prop"
+    },
+    {
+      "line": 238,
+      "text": "Configuration invalide",
+      "type": "Object Prop"
+    },
+    {
+      "line": 249,
+      "text": "Auth Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 253,
+      "text": "Data Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 257,
+      "text": "Storage Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 266,
+      "text": "Scénarios de déploiement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 307,
+      "text": "Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 313,
+      "text": "Select auth provider",
+      "type": "Prop"
+    },
+    {
+      "line": 329,
+      "text": "URL/Endpoint",
+      "type": "JSX Text"
+    },
+    {
+      "line": 342,
+      "text": "Client ID",
+      "type": "JSX Text"
+    },
+    {
+      "line": 347,
+      "text": "your-client-id",
+      "type": "Prop"
+    },
+    {
+      "line": 351,
+      "text": "Realm",
+      "type": "JSX Text"
+    },
+    {
+      "line": 356,
+      "text": "your-realm",
+      "type": "Prop"
+    },
+    {
+      "line": 392,
+      "text": "Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 398,
+      "text": "Select database provider",
+      "type": "Prop"
+    },
+    {
+      "line": 414,
+      "text": "Connection URL",
+      "type": "JSX Text"
+    },
+    {
+      "line": 455,
+      "text": "Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 461,
+      "text": "Select storage provider",
+      "type": "Prop"
+    },
+    {
+      "line": 477,
+      "text": "Endpoint",
+      "type": "JSX Text"
+    },
+    {
+      "line": 489,
+      "text": "Bucket/Container",
+      "type": "JSX Text"
+    },
+    {
+      "line": 494,
+      "text": "your-bucket-name",
+      "type": "Prop"
+    },
+    {
+      "line": 499,
+      "text": "Region",
+      "type": "JSX Text"
+    },
+    {
+      "line": 504,
+      "text": "us-east-1",
+      "type": "Prop"
+    }
+  ],
+  "src/components/admin/StorageSettings.tsx": [
+    {
+      "line": 21,
+      "text": "Supabase Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 22,
+      "text": "Local Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 23,
+      "text": "FTP Server",
+      "type": "Object Prop"
+    },
+    {
+      "line": 24,
+      "text": "Amazon S3",
+      "type": "Object Prop"
+    },
+    {
+      "line": 25,
+      "text": "Azure Blob Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 26,
+      "text": "Google Cloud Storage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 36,
+      "text": "Configuration sauvegardée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 50,
+      "text": "Échec de la connexion",
+      "type": "Object Prop"
+    },
+    {
+      "line": 59,
+      "text": "Erreur de test",
+      "type": "Object Prop"
+    },
+    {
+      "line": 60,
+      "text": "Une erreur s",
+      "type": "Object Prop"
+    },
+    {
+      "line": 74,
+      "text": "Nom du bucket",
+      "type": "JSX Text"
+    },
+    {
+      "line": 79,
+      "text": "documents",
+      "type": "Prop"
+    },
+    {
+      "line": 90,
+      "text": "Hôte FTP",
+      "type": "JSX Text"
+    },
+    {
+      "line": 99,
+      "text": "Port",
+      "type": "JSX Text"
+    },
+    {
+      "line": 105,
+      "text": "21",
+      "type": "Prop"
+    },
+    {
+      "line": 111,
+      "text": "Nom d'utilisateur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 119,
+      "text": "Mot de passe",
+      "type": "JSX Text"
+    },
+    {
+      "line": 129,
+      "text": "Chemin de base",
+      "type": "JSX Text"
+    },
+    {
+      "line": 144,
+      "text": "Chemin de base",
+      "type": "JSX Text"
+    },
+    {
+      "line": 184,
+      "text": "Fournisseur de stockage",
+      "type": "JSX Text"
+    },
+    {
+      "line": 187,
+      "text": "Sélectionner un fournisseur",
+      "type": "Prop"
+    },
+    {
+      "line": 217,
+      "text": "Tester la connexion",
+      "type": "Object Prop"
+    },
+    {
+      "line": 232,
+      "text": "Configuration actuelle",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/alerts/BankGuaranteeCrud.tsx": [
+    {
+      "line": 46,
+      "text": "Garantie de bonne exécution",
+      "type": "Object Prop"
+    },
+    {
+      "line": 47,
+      "text": "Garantie d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 48,
+      "text": "Garantie de soumission",
+      "type": "Object Prop"
+    },
+    {
+      "line": 49,
+      "text": "Garantie de retenue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 56,
+      "text": "En attente",
+      "type": "Object Prop"
+    },
+    {
+      "line": 124,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 140,
+      "text": "Garantie bancaire mise à jour avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 148,
+      "text": "Garantie bancaire créée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 157,
+      "text": "Une erreur est survenue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 170,
+      "text": "Garantie bancaire supprimée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 198,
+      "text": "🏦 Gestion des Garanties Bancaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 209,
+      "text": "Nouvelle Garantie Bancaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 218,
+      "text": "Projet",
+      "type": "Prop"
+    },
+    {
+      "line": 240,
+      "text": "Banque émettrice *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 251,
+      "text": "Montant (MRU) *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 267,
+      "text": "Type de garantie *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 287,
+      "text": "Date d'émission *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 299,
+      "text": "Date d'expiration *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 312,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 348,
+      "text": "Liste des Garanties Bancaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 355,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 356,
+      "text": "Banque",
+      "type": "JSX Text"
+    },
+    {
+      "line": 357,
+      "text": "Type",
+      "type": "JSX Text"
+    },
+    {
+      "line": 358,
+      "text": "Montant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 359,
+      "text": "Expiration",
+      "type": "JSX Text"
+    },
+    {
+      "line": 360,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 361,
+      "text": "Actions",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/alerts/BankGuaranteeMonitor.tsx": [
+    {
+      "line": 159,
+      "text": "Erreur lors de l\\",
+      "type": "Message"
+    },
+    {
+      "line": 177,
+      "text": "Erreur lors de la résolution:",
+      "type": "Message"
+    },
+    {
+      "line": 204,
+      "text": "Error loading delays:",
+      "type": "Message"
+    },
+    {
+      "line": 226,
+      "text": "Bank guarantee not found for project",
+      "type": "Message"
+    },
+    {
+      "line": 263,
+      "text": "Error triggering bank notification:",
+      "type": "Message"
+    },
+    {
+      "line": 350,
+      "text": "Error creating bank guarantee action:",
+      "type": "Message"
+    }
+  ],
+  "src/components/alerts/EnhancedBankGuaranteeCrud.tsx": [
+    {
+      "line": 70,
+      "text": "Garantie de Bonne Exécution",
+      "type": "Object Prop"
+    },
+    {
+      "line": 71,
+      "text": "Garantie d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 72,
+      "text": "Garantie de Retenue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 73,
+      "text": "Garantie de Maintenance",
+      "type": "Object Prop"
+    },
+    {
+      "line": 74,
+      "text": "Garantie de Soumission",
+      "type": "Object Prop"
+    },
+    {
+      "line": 154,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 163,
+      "text": "Garantie bancaire mise à jour avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 166,
+      "text": "Garantie bancaire créée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 172,
+      "text": "Error saving guarantee:",
+      "type": "Message"
+    },
+    {
+      "line": 175,
+      "text": "Une erreur est survenue lors de la sauvegarde",
+      "type": "Object Prop"
+    },
+    {
+      "line": 185,
+      "text": "Garantie bancaire supprimée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 187,
+      "text": "Error deleting guarantee:",
+      "type": "Message"
+    },
+    {
+      "line": 190,
+      "text": "Erreur lors de la suppression",
+      "type": "Object Prop"
+    },
+    {
+      "line": 262,
+      "text": "Nouvelle Garantie Bancaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 269,
+      "text": "Projet *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 278,
+      "text": "Contracteur *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 298,
+      "text": "Banque *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 309,
+      "text": "Type de Garantie *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 316,
+      "text": "Sélectionner le type",
+      "type": "Prop"
+    },
+    {
+      "line": 329,
+      "text": "Montant (MRU) *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 341,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 361,
+      "text": "Date d'Émission *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 373,
+      "text": "Date d'Expiration *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "Documents Justificatifs",
+      "type": "JSX Text"
+    },
+    {
+      "line": 403,
+      "text": "Notes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 439,
+      "text": "Type de garantie",
+      "type": "Prop"
+    },
+    {
+      "line": 442,
+      "text": "Tous les types",
+      "type": "JSX Text"
+    },
+    {
+      "line": 453,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 454,
+      "text": "Banque",
+      "type": "JSX Text"
+    },
+    {
+      "line": 455,
+      "text": "Type",
+      "type": "JSX Text"
+    },
+    {
+      "line": 456,
+      "text": "Montant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 457,
+      "text": "Expiration",
+      "type": "JSX Text"
+    },
+    {
+      "line": 458,
+      "text": "Jours restants",
+      "type": "JSX Text"
+    },
+    {
+      "line": 459,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 460,
+      "text": "Actions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 503,
+      "text": "Consulter",
+      "type": "Prop"
+    },
+    {
+      "line": 507,
+      "text": "Consulter la garantie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 511,
+      "text": "Modifier",
+      "type": "Prop"
+    },
+    {
+      "line": 515,
+      "text": "Modifier la garantie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 525,
+      "text": "Supprimer",
+      "type": "Prop"
+    },
+    {
+      "line": 530,
+      "text": "Supprimer la garantie",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/alerts/RoleBasedNotificationCenter.tsx": [
+    {
+      "line": 145,
+      "text": "Garanties Bancaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 149,
+      "text": "Inspections",
+      "type": "JSX Text"
+    },
+    {
+      "line": 153,
+      "text": "Conformité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "Vue Directeur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 168,
+      "text": "Chef de Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 169,
+      "text": "Consultant",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/analytics/LocationAnalytics.tsx": [
+    {
+      "line": 294,
+      "text": "Total Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 306,
+      "text": "Total Budget",
+      "type": "JSX Text"
+    },
+    {
+      "line": 320,
+      "text": "Avg Progress",
+      "type": "JSX Text"
+    },
+    {
+      "line": 332,
+      "text": "Active Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 346,
+      "text": "Regional Distribution",
+      "type": "JSX Text"
+    },
+    {
+      "line": 347,
+      "text": "Location Comparison",
+      "type": "JSX Text"
+    },
+    {
+      "line": 348,
+      "text": "Detailed Stats",
+      "type": "JSX Text"
+    },
+    {
+      "line": 355,
+      "text": "Projects by Region",
+      "type": "JSX Text"
+    },
+    {
+      "line": 382,
+      "text": "Budget Distribution",
+      "type": "JSX Text"
+    },
+    {
+      "line": 402,
+      "text": "Location Performance Comparison",
+      "type": "JSX Text"
+    },
+    {
+      "line": 424,
+      "text": "Detailed Location Statistics",
+      "type": "JSX Text"
+    },
+    {
+      "line": 436,
+      "text": "Total Budget",
+      "type": "JSX Text"
+    },
+    {
+      "line": 440,
+      "text": "Avg Progress",
+      "type": "JSX Text"
+    },
+    {
+      "line": 447,
+      "text": "Active Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 451,
+      "text": "Completion Rate",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/auth/AuthStatus.tsx": [
+    {
+      "line": 52,
+      "text": "Loading...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 55,
+      "text": "Authenticated",
+      "type": "JSX Text"
+    },
+    {
+      "line": 57,
+      "text": "Not Authenticated",
+      "type": "JSX Text"
+    },
+    {
+      "line": 105,
+      "text": "User:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 116,
+      "text": "No user",
+      "type": "JSX Text"
+    },
+    {
+      "line": 123,
+      "text": "Provider:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 139,
+      "text": "Roles:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 157,
+      "text": "No roles assigned",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "Session:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 171,
+      "text": "Provider:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 175,
+      "text": "Expires:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 180,
+      "text": "User ID:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/auth/OAuthConfigGuide.tsx": [
+    {
+      "line": 55,
+      "text": "Étapes de configuration :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 64,
+      "text": "Sélectionner votre OAuth 2.0 Client ID",
+      "type": "JSX Text"
+    },
+    {
+      "line": 65,
+      "text": "Ajouter les URLs ci-dessus dans les champs appropriés",
+      "type": "JSX Text"
+    },
+    {
+      "line": 66,
+      "text": "Configurer l'écran de consentement avec votre domaine autorisé",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/auth/OAuthLogin.tsx": [
+    {
+      "line": 60,
+      "text": "Failed to load OAuth providers:",
+      "type": "Message"
+    }
+  ],
+  "src/components/auth/PasswordResetForm.tsx": [
+    {
+      "line": 68,
+      "text": "Mot de passe oublié",
+      "type": "JSX Text"
+    },
+    {
+      "line": 79,
+      "text": "Adresse email",
+      "type": "JSX Text"
+    },
+    {
+      "line": 86,
+      "text": "Entrez votre adresse email",
+      "type": "Prop"
+    },
+    {
+      "line": 96,
+      "text": "Envoyer le lien de réinitialisation",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/auth/PasswordResetHandler.tsx": [
+    {
+      "line": 47,
+      "text": "Error setting session:",
+      "type": "Message"
+    },
+    {
+      "line": 67,
+      "text": "Error in password recovery check:",
+      "type": "Message"
+    },
+    {
+      "line": 112,
+      "text": "Lien invalide",
+      "type": "JSX Text"
+    },
+    {
+      "line": 150,
+      "text": "Nouveau mot de passe",
+      "type": "JSX Text"
+    },
+    {
+      "line": 159,
+      "text": "Entrez votre nouveau mot de passe",
+      "type": "Prop"
+    },
+    {
+      "line": 178,
+      "text": "Confirmer le mot de passe",
+      "type": "JSX Text"
+    },
+    {
+      "line": 187,
+      "text": "Confirmez votre nouveau mot de passe",
+      "type": "Prop"
+    },
+    {
+      "line": 210,
+      "text": "Mettre à jour le mot de passe",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/auth/ProviderSwitcher.tsx": [
+    {
+      "line": 64,
+      "text": "❌ Provider switch failed:",
+      "type": "Message"
+    },
+    {
+      "line": 115,
+      "text": "Available",
+      "type": "JSX Text"
+    },
+    {
+      "line": 117,
+      "text": "Unavailable",
+      "type": "JSX Text"
+    },
+    {
+      "line": 119,
+      "text": "Error",
+      "type": "JSX Text"
+    },
+    {
+      "line": 121,
+      "text": "Testing...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 123,
+      "text": "Unknown",
+      "type": "JSX Text"
+    },
+    {
+      "line": 132,
+      "text": "Provider:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 135,
+      "text": "Select provider",
+      "type": "Prop"
+    },
+    {
+      "line": 164,
+      "text": "Authentication Provider",
+      "type": "JSX Text"
+    },
+    {
+      "line": 181,
+      "text": "Select authentication provider",
+      "type": "Prop"
+    },
+    {
+      "line": 194,
+      "text": "Current",
+      "type": "JSX Text"
+    },
+    {
+      "line": 243,
+      "text": "Current",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqActionsBar.tsx": [
+    {
+      "line": 42,
+      "text": "Soumettre pour validation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 43,
+      "text": "Publier vers fournisseurs",
+      "type": "Object Prop"
+    },
+    {
+      "line": 44,
+      "text": "Joindre à ma soumission",
+      "type": "Object Prop"
+    },
+    {
+      "line": 45,
+      "text": "Soumettre pour paiement",
+      "type": "Object Prop"
+    },
+    {
+      "line": 51,
+      "text": "Générer PDF de l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 51,
+      "text": "Envoyer l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 51,
+      "text": "Télécharger l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 51,
+      "text": "Signer l",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Générer PDF du DQE AO",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Envoyer le DQE",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Télécharger le DQE",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Signer le DQE",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Générer PDF du devis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Envoyer le devis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Télécharger le devis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Signer le devis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Générer PDF de la facture",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Envoyer la facture",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Télécharger la facture",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Signer la facture",
+      "type": "Object Prop"
+    },
+    {
+      "line": 94,
+      "text": "Validation enregistrée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 104,
+      "text": "Validation refusée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 111,
+      "text": "Promise",
+      "type": "JSX Text"
+    },
+    {
+      "line": 113,
+      "text": "Aucune ligne",
+      "type": "Object Prop"
+    },
+    {
+      "line": 180,
+      "text": "PDF généré",
+      "type": "Object Prop"
+    },
+    {
+      "line": 190,
+      "text": "Email envoyé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 191,
+      "text": "Envoi échoué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 195,
+      "text": "Signataire requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 201,
+      "text": "Document signé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 203,
+      "text": "Signature échouée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 219,
+      "text": "Décompte créé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 223,
+      "text": "Création impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 261,
+      "text": "Transfert impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 278,
+      "text": "(busy === k ?",
+      "type": "JSX Text"
+    },
+    {
+      "line": 381,
+      "text": "Créer un décompte depuis le devis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 382,
+      "text": "Les quantités du devis seront proratisées selon l'avancement facturé.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "Avancement facturé (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 395,
+      "text": "Annuler",
+      "type": "JSX Text"
+    },
+    {
+      "line": 396,
+      "text": "Créer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 404,
+      "text": "Signer le document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 405,
+      "text": "La signature est horodatée et figée sur toutes les lignes du document.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 409,
+      "text": "Nom du signataire",
+      "type": "JSX Text"
+    },
+    {
+      "line": 417,
+      "text": "Annuler",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqBudgetDashboard.tsx": [
+    {
+      "line": 140,
+      "text": "Suivi budgétaire par jalon (HT / TTC)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 144,
+      "text": "Aucune donnée budgétaire disponible.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 149,
+      "text": "Phase",
+      "type": "JSX Text"
+    },
+    {
+      "line": 150,
+      "text": "Jalon",
+      "type": "JSX Text"
+    },
+    {
+      "line": 151,
+      "text": "Prévu HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 152,
+      "text": "Réel HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 153,
+      "text": "Prévu TTC",
+      "type": "JSX Text"
+    },
+    {
+      "line": 154,
+      "text": "Réel TTC",
+      "type": "JSX Text"
+    },
+    {
+      "line": 155,
+      "text": "Écart HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 162,
+      "text": "0 ? 'destructive' : variance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 181,
+      "text": "Total",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqComparisonTable.tsx": [
+    {
+      "line": 36,
+      "text": "Désignation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 39,
+      "text": "Écart",
+      "type": "JSX Text"
+    },
+    {
+      "line": 54,
+      "text": "0 ? 'destructive' : delta",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqDevisDialog.tsx": [
+    {
+      "line": 187,
+      "text": "Erreur PDF",
+      "type": "Object Prop"
+    },
+    {
+      "line": 192,
+      "text": "Email destinataire requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 202,
+      "text": "Bonjour,",
+      "type": "JSX Text"
+    },
+    {
+      "line": 220,
+      "text": "Email envoyé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 223,
+      "text": "Envoi échoué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 239,
+      "text": "Renseignez les informations du document avant génération du PDF.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 246,
+      "text": "Titre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 250,
+      "text": "Validité (jours)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 254,
+      "text": "Email destinataire (optionnel)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 259,
+      "text": "Sections",
+      "type": "JSX Text"
+    },
+    {
+      "line": 277,
+      "text": "Conditions générales",
+      "type": "JSX Text"
+    },
+    {
+      "line": 283,
+      "text": "Notes complémentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 292,
+      "text": "Nom signataire",
+      "type": "JSX Text"
+    },
+    {
+      "line": 296,
+      "text": "Fonction",
+      "type": "JSX Text"
+    },
+    {
+      "line": 303,
+      "text": "Signature électronique",
+      "type": "JSX Text"
+    },
+    {
+      "line": 304,
+      "text": "Signée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 315,
+      "text": "Effacer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 318,
+      "text": "Importer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 328,
+      "text": "Annuler",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqDocumentList.tsx": [
+    {
+      "line": 32,
+      "text": "En cours",
+      "type": "Object Prop"
+    },
+    {
+      "line": 69,
+      "text": "Document supprimé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 71,
+      "text": "Suppression échouée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 96,
+      "text": "Rechercher référence ou titre…",
+      "type": "Prop"
+    },
+    {
+      "line": 99,
+      "text": "Statut",
+      "type": "Prop"
+    },
+    {
+      "line": 101,
+      "text": "Tous les statuts",
+      "type": "JSX Text"
+    },
+    {
+      "line": 113,
+      "text": "Référence",
+      "type": "JSX Text"
+    },
+    {
+      "line": 114,
+      "text": "Intitulé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 115,
+      "text": "Lignes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 116,
+      "text": "Montant HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 117,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 118,
+      "text": "Actions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 123,
+      "text": "Chargement…",
+      "type": "JSX Text"
+    },
+    {
+      "line": 137,
+      "text": "Sans titre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 143,
+      "text": "Ouvrir",
+      "type": "Prop"
+    },
+    {
+      "line": 146,
+      "text": "Supprimer",
+      "type": "Prop"
+    }
+  ],
+  "src/components/boq/BoqImportDialog.tsx": [
+    {
+      "line": 228,
+      "text": "Mapping incomplet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 249,
+      "text": "Import terminé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 255,
+      "text": "Décision budgétaire appliquée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 259,
+      "text": "Lignes ajoutées au document",
+      "type": "Object Prop"
+    },
+    {
+      "line": 265,
+      "text": "Import échoué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 279,
+      "text": "Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 285,
+      "text": "Format des montants du fichier",
+      "type": "JSX Text"
+    },
+    {
+      "line": 308,
+      "text": "Fournisseur (expéditeur)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 309,
+      "text": "Organisation (destinataire)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 328,
+      "text": "(lecture seule)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 343,
+      "text": "Aucun référentiel défini sur le projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 355,
+      "text": "(optionnel)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 362,
+      "text": "Utiliser le référentiel projet",
+      "type": "Prop"
+    },
+    {
+      "line": 364,
+      "text": "Aucun (heuristiques FR par défaut)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 381,
+      "text": "Mapping phases : référentiel choisi → phases du projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 392,
+      "text": "Choisir phase projet",
+      "type": "Prop"
+    },
+    {
+      "line": 394,
+      "text": "— non mappée —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 467,
+      "text": "Annuler",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqLineTable.tsx": [
+    {
+      "line": 43,
+      "text": "Métré / matériau",
+      "type": "Object Prop"
+    },
+    {
+      "line": 44,
+      "text": "RH / prestation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 107,
+      "text": "Désignation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 108,
+      "text": "Phase",
+      "type": "JSX Text"
+    },
+    {
+      "line": 109,
+      "text": "Jalon",
+      "type": "JSX Text"
+    },
+    {
+      "line": 110,
+      "text": "Tâche",
+      "type": "JSX Text"
+    },
+    {
+      "line": 111,
+      "text": "Nature",
+      "type": "JSX Text"
+    },
+    {
+      "line": 112,
+      "text": "Type ouvrage",
+      "type": "JSX Text"
+    },
+    {
+      "line": 113,
+      "text": "Intervenant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 114,
+      "text": "Unité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 118,
+      "text": "Qté",
+      "type": "JSX Text"
+    },
+    {
+      "line": 119,
+      "text": "PU",
+      "type": "JSX Text"
+    },
+    {
+      "line": 120,
+      "text": "TVA %",
+      "type": "JSX Text"
+    },
+    {
+      "line": 121,
+      "text": "RAS %",
+      "type": "JSX Text"
+    },
+    {
+      "line": 122,
+      "text": "Frais",
+      "type": "JSX Text"
+    },
+    {
+      "line": 123,
+      "text": "Total HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 143,
+      "text": ": phase ?",
+      "type": "JSX Text"
+    },
+    {
+      "line": 144,
+      "text": ": milestone ?",
+      "type": "JSX Text"
+    },
+    {
+      "line": 145,
+      "text": ": task ?",
+      "type": "JSX Text"
+    },
+    {
+      "line": 147,
+      "text": "— saisie —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 148,
+      "text": "s.type === type); if (!opts.length) return null; return [",
+      "type": "JSX Text"
+    },
+    {
+      "line": 148,
+      "text": ", ...opts.map((s) =>",
+      "type": "JSX Text"
+    },
+    {
+      "line": 159,
+      "text": "Supprimer la ligne",
+      "type": "Prop"
+    },
+    {
+      "line": 163,
+      "text": "Total HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "Précédent",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "Suivant",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/BoqWorkspace.tsx": [
+    {
+      "line": 79,
+      "text": "Importer un DQE",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Importer un chiffrage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 81,
+      "text": "Analyser une facture",
+      "type": "Object Prop"
+    },
+    {
+      "line": 232,
+      "text": "Désignation requise",
+      "type": "Object Prop"
+    },
+    {
+      "line": 287,
+      "text": "Ligne ajoutée au brouillon",
+      "type": "Object Prop"
+    },
+    {
+      "line": 306,
+      "text": "Lignes incomplètes",
+      "type": "Object Prop"
+    },
+    {
+      "line": 321,
+      "text": "Enregistrement échoué",
+      "type": "Object Prop"
+    },
+    {
+      "line": 349,
+      "text": "Finalisation échouée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 372,
+      "text": "Échec mise à jour",
+      "type": "Object Prop"
+    },
+    {
+      "line": 383,
+      "text": "Échec suppression",
+      "type": "Object Prop"
+    },
+    {
+      "line": 394,
+      "text": "Contexte incomplet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 400,
+      "text": "Aligné à la planification",
+      "type": "Object Prop"
+    },
+    {
+      "line": 403,
+      "text": "Échec alignement",
+      "type": "Object Prop"
+    },
+    {
+      "line": 444,
+      "text": "Nouveau document",
+      "type": "Object Prop"
+    },
+    {
+      "line": 461,
+      "text": "Document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 479,
+      "text": "Référentiel du projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 483,
+      "text": "Référentiel du projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 496,
+      "text": "Classification par défaut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 500,
+      "text": "Profil fiscal",
+      "type": "JSX Text"
+    },
+    {
+      "line": 520,
+      "text": "Ajouter une ligne",
+      "type": "JSX Text"
+    },
+    {
+      "line": 525,
+      "text": "Calcul métré",
+      "type": "JSX Text"
+    },
+    {
+      "line": 529,
+      "text": "Calcul métré — ajouter au document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 530,
+      "text": "Calculez les quantités puis ajoutez les lignes obtenues au document courant.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 534,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 538,
+      "text": "Matériau",
+      "type": "JSX Text"
+    },
+    {
+      "line": 539,
+      "text": "Main-d'œuvre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 540,
+      "text": "Équipement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 541,
+      "text": "Frais généraux",
+      "type": "JSX Text"
+    },
+    {
+      "line": 546,
+      "text": "Profil fiscal",
+      "type": "JSX Text"
+    },
+    {
+      "line": 563,
+      "text": "Dépôt",
+      "type": "JSX Text"
+    },
+    {
+      "line": 567,
+      "text": "— Tous les dépôts —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 576,
+      "text": "Sélectionner un article — auto-remplit désignation, unité, PU",
+      "type": "Prop"
+    },
+    {
+      "line": 578,
+      "text": "— Saisie libre —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 591,
+      "text": "Désignation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 612,
+      "text": "Type d'ouvrage (métré)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 616,
+      "text": "— Saisie directe —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 631,
+      "text": "Unité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 655,
+      "text": "Longueur (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 661,
+      "text": "Largeur (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 667,
+      "text": "Hauteur (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 678,
+      "text": "Ouvertures (nb)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 682,
+      "text": "Ouverture larg. (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 686,
+      "text": "Ouverture haut. (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 695,
+      "text": "PU (MRU)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 699,
+      "text": "Frais généraux (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 733,
+      "text": "Qté :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 734,
+      "text": "HT :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 735,
+      "text": "TVA :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 736,
+      "text": "RAS :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 737,
+      "text": "TTC :",
+      "type": "JSX Text"
+    },
+    {
+      "line": 741,
+      "text": "Annuler",
+      "type": "JSX Text"
+    },
+    {
+      "line": 780,
+      "text": "Total HT",
+      "type": "JSX Text"
+    },
+    {
+      "line": 781,
+      "text": "TVA",
+      "type": "JSX Text"
+    },
+    {
+      "line": 783,
+      "text": "RAS",
+      "type": "JSX Text"
+    },
+    {
+      "line": 785,
+      "text": "Net à payer",
+      "type": "JSX Text"
+    },
+    {
+      "line": 790,
+      "text": "Chargement…",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/DqeWorkspace.tsx": [
+    {
+      "line": 115,
+      "text": "DQE transféré vers le découpage des travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 120,
+      "text": "Transfert impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 121,
+      "text": "Erreur inconnue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 138,
+      "text": "Demande de validation créée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 141,
+      "text": "Aucun écart budgétaire significatif",
+      "type": "Object Prop"
+    },
+    {
+      "line": 145,
+      "text": "Demande de validation impossible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 146,
+      "text": "Erreur inconnue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 281,
+      "text": "Comparaison besoin ↔ DQE",
+      "type": "JSX Text"
+    },
+    {
+      "line": 282,
+      "text": "Suivi budget",
+      "type": "JSX Text"
+    },
+    {
+      "line": 286,
+      "text": "Chargement…",
+      "type": "JSX Text"
+    },
+    {
+      "line": 291,
+      "text": "Expression de besoin",
+      "type": "Object Prop"
+    },
+    {
+      "line": 297,
+      "text": "Chargement…",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/EdbValidationPanel.tsx": [
+    {
+      "line": 78,
+      "text": "Budget projet restant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 82,
+      "text": "Total DQE",
+      "type": "JSX Text"
+    },
+    {
+      "line": 86,
+      "text": "Écart",
+      "type": "JSX Text"
+    },
+    {
+      "line": 94,
+      "text": "Décision du validateur",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/ImportDropzone.tsx": [
+    {
+      "line": 36,
+      "text": "Déposez PDF / Excel / CSV ou",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/ImportMappingWizard.tsx": [
+    {
+      "line": 22,
+      "text": "Prix unitaire (PU)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 25,
+      "text": "Hauteur / épaisseur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 27,
+      "text": "Type / ouvrage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 28,
+      "text": "Catégorie / poste",
+      "type": "Object Prop"
+    },
+    {
+      "line": 29,
+      "text": "Phase / lot",
+      "type": "Object Prop"
+    },
+    {
+      "line": 46,
+      "text": "— colonne source —",
+      "type": "Prop"
+    },
+    {
+      "line": 48,
+      "text": "— non mappé —",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/MappingModal.tsx": [
+    {
+      "line": 19,
+      "text": "Prix unitaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 39,
+      "text": "Correspondance colonnes → champs",
+      "type": "JSX Text"
+    },
+    {
+      "line": 40,
+      "text": "Associez chaque colonne du fichier au champ métier correspondant.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 53,
+      "text": "— Ignorer —",
+      "type": "JSX Text"
+    },
+    {
+      "line": 62,
+      "text": "Annuler",
+      "type": "JSX Text"
+    },
+    {
+      "line": 63,
+      "text": "Valider",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/PriceSummary.tsx": [
+    {
+      "line": 19,
+      "text": "Quantité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 20,
+      "text": "PU",
+      "type": "JSX Text"
+    },
+    {
+      "line": 21,
+      "text": "HT",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/boq/ResourceSelector.tsx": [
+    {
+      "line": 30,
+      "text": "Main d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 45,
+      "text": "Type",
+      "type": "Prop"
+    },
+    {
+      "line": 60,
+      "text": "Aucune ressource",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/boq/WbsSelector.tsx": [
+    {
+      "line": 51,
+      "text": "Phase",
+      "type": "JSX Text"
+    },
+    {
+      "line": 59,
+      "text": "Non assignée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 65,
+      "text": "Jalon",
+      "type": "JSX Text"
+    },
+    {
+      "line": 71,
+      "text": "Sélectionner phase",
+      "type": "Object Prop"
+    },
+    {
+      "line": 73,
+      "text": "Non assigné",
+      "type": "JSX Text"
+    },
+    {
+      "line": 79,
+      "text": "Tâche",
+      "type": "JSX Text"
+    },
+    {
+      "line": 85,
+      "text": "Sélectionner jalon",
+      "type": "Object Prop"
+    },
+    {
+      "line": 87,
+      "text": "Non assignée",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/common/AssociatedPaymentsPanel.tsx": [
+    {
+      "line": 56,
+      "text": "Erreur lors du chargement des paiements.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 72,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 73,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 74,
+      "text": "Contractant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 75,
+      "text": "Montant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 76,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 77,
+      "text": "Origine",
+      "type": "JSX Text"
+    },
+    {
+      "line": 78,
+      "text": "Actions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 98,
+      "text": "Voir",
+      "type": "JSX Text"
+    },
+    {
+      "line": 106,
+      "text": "Aucun paiement associé.",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/common/DocumentSection.tsx": [
+    {
+      "line": 95,
+      "text": "Error loading documents:",
+      "type": "Message"
+    },
+    {
+      "line": 98,
+      "text": "Impossible de charger les documents",
+      "type": "Object Prop"
+    },
+    {
+      "line": 126,
+      "text": "Ce document n\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 169,
+      "text": "Aucun document associé à ce projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 186,
+      "text": "Date inconnue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 214,
+      "text": "Ouvrir dans un nouvel onglet",
+      "type": "Prop"
+    },
+    {
+      "line": 224,
+      "text": "Télécharger",
+      "type": "Prop"
+    }
+  ],
+  "src/components/common/ExpiryCountdown.tsx": [
+    {
+      "line": 35,
+      "text": "30 j, orange",
+      "type": "JSX Text"
+    },
+    {
+      "line": 36,
+      "text": "Aucune date d",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/common/ListToolbar.tsx": [
+    {
+      "line": 18,
+      "text": "Expire bientôt",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/common/ResponsiveFilters.tsx": [
+    {
+      "line": 107,
+      "text": "Filtres",
+      "type": "JSX Text"
+    },
+    {
+      "line": 183,
+      "text": "Réinitialiser",
+      "type": "Prop"
+    }
+  ],
+  "src/components/common/UniversalActionsInterface.tsx": [
+    {
+      "line": 75,
+      "text": "Assignation de tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 75,
+      "text": "Assigner une tâche spécifique à un employé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 76,
+      "text": "Notification hiérarchique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 76,
+      "text": "Notifier la hiérarchie selon l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 77,
+      "text": "Envoyer un message SMS urgent",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "Appel téléphonique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "Programmer un appel téléphonique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Envoyer un email détaillé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Courrier postal",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Générer un courrier postal officiel",
+      "type": "Object Prop"
+    },
+    {
+      "line": 91,
+      "text": "Équipe (Collègues)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 91,
+      "text": "Notifier les membres de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 92,
+      "text": "Escalader au superviseur direct",
+      "type": "Object Prop"
+    },
+    {
+      "line": 93,
+      "text": "Escalader au niveau management",
+      "type": "Object Prop"
+    },
+    {
+      "line": 94,
+      "text": "Escalader au niveau direction",
+      "type": "Object Prop"
+    },
+    {
+      "line": 99,
+      "text": "Garantie Bancaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 136,
+      "text": "Action exécutée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 148,
+      "text": "Error executing action:",
+      "type": "Message"
+    },
+    {
+      "line": 171,
+      "text": "Assigné à",
+      "type": "JSX Text"
+    },
+    {
+      "line": 176,
+      "text": "Sélectionner la personne responsable",
+      "type": "Prop"
+    },
+    {
+      "line": 188,
+      "text": "Date d'échéance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 206,
+      "text": "Niveau d'escalade",
+      "type": "JSX Text"
+    },
+    {
+      "line": 210,
+      "text": "Sélectionner le niveau d",
+      "type": "Prop"
+    },
+    {
+      "line": 283,
+      "text": "Type d'action",
+      "type": "JSX Text"
+    },
+    {
+      "line": 287,
+      "text": "Sélectionner le type d",
+      "type": "Prop"
+    },
+    {
+      "line": 314,
+      "text": "Priorité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 318,
+      "text": "Sélectionner la priorité",
+      "type": "Prop"
+    },
+    {
+      "line": 344,
+      "text": "Destinataires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 354,
+      "text": "Ajouter des destinataires",
+      "type": "Prop"
+    },
+    {
+      "line": 385,
+      "text": "Titre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 387,
+      "text": "Titre de l",
+      "type": "Prop"
+    },
+    {
+      "line": 399,
+      "text": "Message",
+      "type": "JSX Text"
+    },
+    {
+      "line": 402,
+      "text": "Décrivez l",
+      "type": "Prop"
+    }
+  ],
+  "src/components/dashboard/AlertsDashboard.tsx": [
+    {
+      "line": 211,
+      "text": "Projet:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/dashboard/KPIDashboardWidget.tsx": [
+    {
+      "line": 111,
+      "text": "SPI",
+      "type": "JSX Text"
+    },
+    {
+      "line": 129,
+      "text": "CPI",
+      "type": "JSX Text"
+    },
+    {
+      "line": 147,
+      "text": "État des Projets",
+      "type": "JSX Text"
+    },
+    {
+      "line": 166,
+      "text": "Jalons",
+      "type": "JSX Text"
+    },
+    {
+      "line": 223,
+      "text": "Budget Global",
+      "type": "JSX Text"
+    },
+    {
+      "line": 234,
+      "text": "Dépensé:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 238,
+      "text": "Budget:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/dashboard/ManagementActions.tsx": [
+    {
+      "line": 145,
+      "text": "Aucune action en attente",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/dashboard/ProjectDashboard.tsx": [
+    {
+      "line": 263,
+      "text": "Project Management Dashboard",
+      "type": "JSX Text"
+    },
+    {
+      "line": 287,
+      "text": "Total Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 299,
+      "text": "Active Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 311,
+      "text": "Completed",
+      "type": "JSX Text"
+    },
+    {
+      "line": 323,
+      "text": "Avg Progress",
+      "type": "JSX Text"
+    },
+    {
+      "line": 337,
+      "text": "Overview",
+      "type": "JSX Text"
+    },
+    {
+      "line": 338,
+      "text": "Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 339,
+      "text": "Analytics",
+      "type": "JSX Text"
+    },
+    {
+      "line": 340,
+      "text": "Phases",
+      "type": "JSX Text"
+    },
+    {
+      "line": 341,
+      "text": "Resources",
+      "type": "JSX Text"
+    },
+    {
+      "line": 342,
+      "text": "Reports",
+      "type": "JSX Text"
+    },
+    {
+      "line": 351,
+      "text": "Project Status Distribution",
+      "type": "JSX Text"
+    },
+    {
+      "line": 400,
+      "text": "Recherchez des projets par région, ville ou adresse spécifique.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 412,
+      "text": "Project Categories",
+      "type": "JSX Text"
+    },
+    {
+      "line": 431,
+      "text": "Recent Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 468,
+      "text": "All Projects",
+      "type": "JSX Text"
+    },
+    {
+      "line": 504,
+      "text": "Progress",
+      "type": "JSX Text"
+    },
+    {
+      "line": 522,
+      "text": "Project Progress",
+      "type": "JSX Text"
+    },
+    {
+      "line": 540,
+      "text": "Budget Analysis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 558,
+      "text": "Select a project to view analytics",
+      "type": "JSX Text"
+    },
+    {
+      "line": 569,
+      "text": "Project Phases",
+      "type": "JSX Text"
+    },
+    {
+      "line": 595,
+      "text": "Select a project to view phases",
+      "type": "JSX Text"
+    },
+    {
+      "line": 606,
+      "text": "Project Materials",
+      "type": "JSX Text"
+    },
+    {
+      "line": 633,
+      "text": "Select a project to view resources",
+      "type": "JSX Text"
+    },
+    {
+      "line": 643,
+      "text": "Project Reports",
+      "type": "JSX Text"
+    },
+    {
+      "line": 649,
+      "text": "Progress Report",
+      "type": "JSX Text"
+    },
+    {
+      "line": 653,
+      "text": "Financial Report",
+      "type": "JSX Text"
+    },
+    {
+      "line": 657,
+      "text": "Resource Report",
+      "type": "JSX Text"
+    },
+    {
+      "line": 661,
+      "text": "Milestone Report",
+      "type": "JSX Text"
+    },
+    {
+      "line": 665,
+      "text": "Risk Report",
+      "type": "JSX Text"
+    },
+    {
+      "line": 669,
+      "text": "Quality Report",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/BusinessDocuments.tsx": [
+    {
+      "line": 72,
+      "text": "Analyse réussie",
+      "type": "Object Prop"
+    },
+    {
+      "line": 76,
+      "text": "PDF analysis failed:",
+      "type": "Message"
+    },
+    {
+      "line": 78,
+      "text": "Erreur d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Impossible d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 92,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 108,
+      "text": "Document uploadé avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 125,
+      "text": "Error uploading document:",
+      "type": "Message"
+    },
+    {
+      "line": 128,
+      "text": "Impossible d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 185,
+      "text": "Titre du bon de commande *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 190,
+      "text": "Ex: BC-2024-001",
+      "type": "Prop"
+    },
+    {
+      "line": 195,
+      "text": "Référence",
+      "type": "JSX Text"
+    },
+    {
+      "line": 200,
+      "text": "Numéro de référence",
+      "type": "Prop"
+    },
+    {
+      "line": 209,
+      "text": "Titre du devis *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 214,
+      "text": "Ex: Devis construction phase 1",
+      "type": "Prop"
+    },
+    {
+      "line": 219,
+      "text": "Montant (MRU)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 234,
+      "text": "Titre de la facture *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 239,
+      "text": "Ex: Facture matériaux janvier",
+      "type": "Prop"
+    },
+    {
+      "line": 244,
+      "text": "Fournisseur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 249,
+      "text": "Nom du fournisseur",
+      "type": "Prop"
+    },
+    {
+      "line": 255,
+      "text": "Montant (MRU)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 265,
+      "text": "Date d'échéance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 301,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 312,
+      "text": "Fichier du document *",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/DocumentDetails.tsx": [
+    {
+      "line": 64,
+      "text": "Rapport d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 65,
+      "text": "Photo de localisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 66,
+      "text": "Rapport de projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 68,
+      "text": "Informations fournisseur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 69,
+      "text": "Affectation de tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 70,
+      "text": "Dossier employé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 89,
+      "text": "En attente de révision",
+      "type": "Object Prop"
+    },
+    {
+      "line": 112,
+      "text": "No file URL available",
+      "type": "Message"
+    },
+    {
+      "line": 126,
+      "text": "Download error:",
+      "type": "Message"
+    },
+    {
+      "line": 206,
+      "text": "Aucun fichier disponible pour la prévisualisation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 230,
+      "text": "Impossible de charger l'image",
+      "type": "JSX Text"
+    },
+    {
+      "line": 245,
+      "text": "Erreur de prévisualisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 259,
+      "text": "Prévisualisation non disponible pour ce type de fichier",
+      "type": "JSX Text"
+    },
+    {
+      "line": 293,
+      "text": "Détails",
+      "type": "JSX Text"
+    },
+    {
+      "line": 316,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 324,
+      "text": "Informations du fichier",
+      "type": "JSX Text"
+    },
+    {
+      "line": 328,
+      "text": "Nom:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 334,
+      "text": "Taille:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 341,
+      "text": "Type:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 349,
+      "text": "Métadonnées",
+      "type": "JSX Text"
+    },
+    {
+      "line": 353,
+      "text": "Créé le:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 361,
+      "text": "Non disponible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 366,
+      "text": "Téléchargé par:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 372,
+      "text": "Projet ID:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/DocumentFilters.tsx": [
+    {
+      "line": 39,
+      "text": "Tous les types",
+      "type": "Object Prop"
+    },
+    {
+      "line": 57,
+      "text": "Tous les statuts",
+      "type": "Object Prop"
+    },
+    {
+      "line": 75,
+      "text": "Plus récent",
+      "type": "Object Prop"
+    },
+    {
+      "line": 76,
+      "text": "Plus ancien",
+      "type": "Object Prop"
+    },
+    {
+      "line": 77,
+      "text": "Nom (A-Z)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "Nom (Z-A)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Taille (grande)",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/DocumentUpload.tsx": [
+    {
+      "line": 183,
+      "text": "Vous devez être authentifié",
+      "type": "Object Prop"
+    },
+    {
+      "line": 192,
+      "text": "Veuillez sélectionner un fichier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 201,
+      "text": "Le titre est requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 210,
+      "text": "Le type de document est requis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 257,
+      "text": "Document uploadé avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 264,
+      "text": "Upload error:",
+      "type": "Message"
+    },
+    {
+      "line": 267,
+      "text": "Une erreur est survenue lors de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 294,
+      "text": "Projet (optionnel)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 301,
+      "text": "Sélectionnez un projet",
+      "type": "Prop"
+    },
+    {
+      "line": 322,
+      "text": "Entrez le titre du document",
+      "type": "Prop"
+    },
+    {
+      "line": 336,
+      "text": "Sélectionnez le type",
+      "type": "Prop"
+    },
+    {
+      "line": 339,
+      "text": "Contrat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 340,
+      "text": "Facture",
+      "type": "JSX Text"
+    },
+    {
+      "line": 341,
+      "text": "Rapport",
+      "type": "JSX Text"
+    },
+    {
+      "line": 342,
+      "text": "Certificat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 343,
+      "text": "Permis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 344,
+      "text": "Assurance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 345,
+      "text": "Photo",
+      "type": "JSX Text"
+    },
+    {
+      "line": 346,
+      "text": "Manuel",
+      "type": "JSX Text"
+    },
+    {
+      "line": 347,
+      "text": "Garantie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 348,
+      "text": "Autre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 354,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 359,
+      "text": "Entrez une description du document",
+      "type": "Prop"
+    },
+    {
+      "line": 365,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 371,
+      "text": "Sélectionnez le statut",
+      "type": "Prop"
+    },
+    {
+      "line": 374,
+      "text": "Brouillon",
+      "type": "JSX Text"
+    },
+    {
+      "line": 375,
+      "text": "En attente",
+      "type": "JSX Text"
+    },
+    {
+      "line": 376,
+      "text": "Approuvé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 463,
+      "text": "Erreur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 465,
+      "text": "Une erreur est survenue",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/DocumentViewer.tsx": [
+    {
+      "line": 53,
+      "text": "Rapport d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Photo de localisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 55,
+      "text": "Rapport de projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 57,
+      "text": "Informations fournisseur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 58,
+      "text": "Affectation de tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 59,
+      "text": "Dossier employé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "En attente de révision",
+      "type": "Object Prop"
+    },
+    {
+      "line": 107,
+      "text": "Download error:",
+      "type": "Message"
+    },
+    {
+      "line": 166,
+      "text": "Aucun fichier disponible",
+      "type": "JSX Text"
+    },
+    {
+      "line": 199,
+      "text": "Impossible de charger l'image",
+      "type": "JSX Text"
+    },
+    {
+      "line": 249,
+      "text": "Prévisualisation non disponible pour ce type de fichier",
+      "type": "JSX Text"
+    },
+    {
+      "line": 287,
+      "text": "Contenu du document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 296,
+      "text": "Informations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 300,
+      "text": "Type:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 306,
+      "text": "Taille:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 313,
+      "text": "Format:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 321,
+      "text": "Métadonnées",
+      "type": "JSX Text"
+    },
+    {
+      "line": 325,
+      "text": "Créé le:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 336,
+      "text": "Par:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 348,
+      "text": "Description",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/DocumentsList.tsx": [
+    {
+      "line": 51,
+      "text": "Rapport d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Photo de localisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Rapport de projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 55,
+      "text": "Information fournisseur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 56,
+      "text": "Affectation de tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 57,
+      "text": "Dossier employé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 77,
+      "text": "En attente de revue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 78,
+      "text": "En attente",
+      "type": "Object Prop"
+    },
+    {
+      "line": 174,
+      "text": "Recherche",
+      "type": "JSX Text"
+    },
+    {
+      "line": 183,
+      "text": "Type de document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 189,
+      "text": "Tous les types",
+      "type": "JSX Text"
+    },
+    {
+      "line": 190,
+      "text": "Rapport d'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 191,
+      "text": "Photo de localisation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 192,
+      "text": "Rapport de projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 193,
+      "text": "Contrat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 194,
+      "text": "Information fournisseur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 195,
+      "text": "Affectation de tâche",
+      "type": "JSX Text"
+    },
+    {
+      "line": 196,
+      "text": "Dossier employé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 202,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 208,
+      "text": "Tous les statuts",
+      "type": "JSX Text"
+    },
+    {
+      "line": 253,
+      "text": "Télécharger",
+      "type": "Prop"
+    }
+  ],
+  "src/components/documents/DocumentsListPaginated.tsx": [
+    {
+      "line": 121,
+      "text": "En attente",
+      "type": "Object Prop"
+    },
+    {
+      "line": 122,
+      "text": "En attente de revue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 326,
+      "text": "currentPage",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/EmployeeManagement.tsx": [
+    {
+      "line": 302,
+      "text": "Organisation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 311,
+      "text": "Aucune organisation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 319,
+      "text": "Niveau organigramme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 328,
+      "text": "1 — Direction",
+      "type": "JSX Text"
+    },
+    {
+      "line": 329,
+      "text": "2 — Encadrement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 330,
+      "text": "3 — Opérationnel",
+      "type": "JSX Text"
+    },
+    {
+      "line": 331,
+      "text": "4 — Terrain",
+      "type": "JSX Text"
+    },
+    {
+      "line": 356,
+      "text": "Ingénierie / Études",
+      "type": "JSX Text"
+    },
+    {
+      "line": 357,
+      "text": "Travaux / Opérations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 361,
+      "text": "Administration / Direction",
+      "type": "JSX Text"
+    },
+    {
+      "line": 369,
+      "text": "Type de contrat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 376,
+      "text": "Temps plein",
+      "type": "JSX Text"
+    },
+    {
+      "line": 377,
+      "text": "Temps partiel",
+      "type": "JSX Text"
+    },
+    {
+      "line": 378,
+      "text": "Contractuel",
+      "type": "JSX Text"
+    },
+    {
+      "line": 379,
+      "text": "Consultant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 380,
+      "text": "Stagiaire",
+      "type": "JSX Text"
+    },
+    {
+      "line": 385,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 394,
+      "text": "En congé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 395,
+      "text": "Sorti",
+      "type": "JSX Text"
+    },
+    {
+      "line": 400,
+      "text": "Disponibilité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 407,
+      "text": "Disponible",
+      "type": "JSX Text"
+    },
+    {
+      "line": 408,
+      "text": "Affecté",
+      "type": "JSX Text"
+    },
+    {
+      "line": 409,
+      "text": "Indisponible",
+      "type": "JSX Text"
+    },
+    {
+      "line": 437,
+      "text": "NNI / Pièce d'identité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 441,
+      "text": "Numéro national d",
+      "type": "Prop"
+    },
+    {
+      "line": 445,
+      "text": "Responsable hiérarchique",
+      "type": "JSX Text"
+    },
+    {
+      "line": 454,
+      "text": "Aucun",
+      "type": "JSX Text"
+    },
+    {
+      "line": 477,
+      "text": "Date de fin de contrat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 497,
+      "text": "Coût horaire",
+      "type": "JSX Text"
+    },
+    {
+      "line": 503,
+      "text": "Ex: 250",
+      "type": "Prop"
+    },
+    {
+      "line": 507,
+      "text": "Devise",
+      "type": "JSX Text"
+    },
+    {
+      "line": 514,
+      "text": "MRU",
+      "type": "JSX Text"
+    },
+    {
+      "line": 515,
+      "text": "EUR",
+      "type": "JSX Text"
+    },
+    {
+      "line": 516,
+      "text": "USD",
+      "type": "JSX Text"
+    },
+    {
+      "line": 524,
+      "text": "Adresse",
+      "type": "JSX Text"
+    },
+    {
+      "line": 531,
+      "text": "Ville",
+      "type": "JSX Text"
+    },
+    {
+      "line": 540,
+      "text": "Notes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 569,
+      "text": "Gestion de la Hiérarchie Organisationnelle",
+      "type": "JSX Text"
+    },
+    {
+      "line": 593,
+      "text": "Filtrer par organisation",
+      "type": "Prop"
+    },
+    {
+      "line": 596,
+      "text": "Toutes les organisations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 597,
+      "text": "Non rattachés",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/SuppliersManagement.tsx": [
+    {
+      "line": 72,
+      "text": "Une erreur est survenue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 108,
+      "text": "Une erreur est survenue",
+      "type": "Object Prop"
+    },
+    {
+      "line": 134,
+      "text": "Gestion des Fournisseurs",
+      "type": "JSX Text"
+    },
+    {
+      "line": 145,
+      "text": "Nouveau Fournisseur",
+      "type": "Object Prop"
+    },
+    {
+      "line": 152,
+      "text": "Nom *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 160,
+      "text": "Personne de contact",
+      "type": "JSX Text"
+    },
+    {
+      "line": 167,
+      "text": "Email",
+      "type": "JSX Text"
+    },
+    {
+      "line": 175,
+      "text": "Téléphone",
+      "type": "JSX Text"
+    },
+    {
+      "line": 182,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 188,
+      "text": "Sélectionner une catégorie",
+      "type": "Prop"
+    },
+    {
+      "line": 191,
+      "text": "Construction",
+      "type": "JSX Text"
+    },
+    {
+      "line": 192,
+      "text": "Équipement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 193,
+      "text": "Matériaux",
+      "type": "JSX Text"
+    },
+    {
+      "line": 194,
+      "text": "Services",
+      "type": "JSX Text"
+    },
+    {
+      "line": 195,
+      "text": "Transport",
+      "type": "JSX Text"
+    },
+    {
+      "line": 200,
+      "text": "Note (1-5)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 206,
+      "text": "Sélectionner une note",
+      "type": "Prop"
+    },
+    {
+      "line": 220,
+      "text": "Adresse",
+      "type": "JSX Text"
+    },
+    {
+      "line": 275,
+      "text": "Note:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 310,
+      "text": "Aucun fournisseur trouvé",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/TaskAssignments.tsx": [
+    {
+      "line": 440,
+      "text": "Rechercher une tâche",
+      "type": "Prop"
+    },
+    {
+      "line": 444,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 453,
+      "text": "Tous",
+      "type": "JSX Text"
+    },
+    {
+      "line": 462,
+      "text": "Priorité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 471,
+      "text": "Toutes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 480,
+      "text": "Assigné à",
+      "type": "JSX Text"
+    },
+    {
+      "line": 489,
+      "text": "Tous",
+      "type": "JSX Text"
+    },
+    {
+      "line": 506,
+      "text": "Nouvelle Tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 510,
+      "text": "Formulaire de création de tâche",
+      "type": "Object Prop"
+    },
+    {
+      "line": 513,
+      "text": "Titre *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 523,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 529,
+      "text": "Sélectionner un projet",
+      "type": "Prop"
+    },
+    {
+      "line": 543,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 555,
+      "text": "Assigné à",
+      "type": "Prop"
+    },
+    {
+      "line": 566,
+      "text": "Sélectionner",
+      "type": "Prop"
+    },
+    {
+      "line": 571,
+      "text": "Date d'échéance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 580,
+      "text": "Priorité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 601,
+      "text": "Quantité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 611,
+      "text": "Unité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 615,
+      "text": "m³, m², jour…",
+      "type": "Prop"
+    },
+    {
+      "line": 620,
+      "text": "Délai (jours)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 654,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 671,
+      "text": "Notes",
+      "type": "JSX Text"
+    },
+    {
+      "line": 758,
+      "text": "Aucune tâche",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/TenderDocumentSelector.tsx": [
+    {
+      "line": 67,
+      "text": "Error fetching tender documents:",
+      "type": "Message"
+    },
+    {
+      "line": 108,
+      "text": "Sélectionnez un document à partage",
+      "type": "Object Prop"
+    },
+    {
+      "line": 170,
+      "text": "Aucun document trouvé pour cet appel d'offres",
+      "type": "JSX Text"
+    },
+    {
+      "line": 171,
+      "text": "Ajoutez des documents dans l'onglet \"Documents\" pour les partager.",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/TenderDocumentUploadForm.tsx": [
+    {
+      "line": 141,
+      "text": "Upload error:",
+      "type": "Message"
+    }
+  ],
+  "src/components/documents/TenderDocuments.tsx": [
+    {
+      "line": 90,
+      "text": "Document non disponible",
+      "type": "Object Prop"
+    },
+    {
+      "line": 91,
+      "text": "Aucun fichier n",
+      "type": "Object Prop"
+    },
+    {
+      "line": 117,
+      "text": "Administratifs",
+      "type": "JSX Text"
+    },
+    {
+      "line": 118,
+      "text": "Techniques",
+      "type": "JSX Text"
+    },
+    {
+      "line": 119,
+      "text": "Financières",
+      "type": "JSX Text"
+    },
+    {
+      "line": 164,
+      "text": "Notes:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/adapters/documentsTableAdapter.tsx": [
+    {
+      "line": 43,
+      "text": "Record",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/adapters/inspectionDocumentAdapter.tsx": [
+    {
+      "line": 14,
+      "text": "Documents de l",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/adapters/materialDocumentAdapter.tsx": [
+    {
+      "line": 5,
+      "text": "Fiche technique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 9,
+      "text": "Bon de livraison",
+      "type": "Object Prop"
+    },
+    {
+      "line": 29,
+      "text": "Documents du matériau",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/adapters/monitoringDocumentAdapter.tsx": [
+    {
+      "line": 13,
+      "text": "Contrat de caution",
+      "type": "Object Prop"
+    },
+    {
+      "line": 14,
+      "text": "Attestation bancaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 15,
+      "text": "Autre document",
+      "type": "Object Prop"
+    },
+    {
+      "line": 18,
+      "text": "Police / Certificat d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 20,
+      "text": "Autre document",
+      "type": "Object Prop"
+    },
+    {
+      "line": 24,
+      "text": "Bon de commande",
+      "type": "Object Prop"
+    },
+    {
+      "line": 25,
+      "text": "Attestation / Autre document",
+      "type": "Object Prop"
+    },
+    {
+      "line": 30,
+      "text": "Garanties bancaires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 31,
+      "text": "Polices d",
+      "type": "Object Prop"
+    },
+    {
+      "line": 50,
+      "text": "Type de document",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/adapters/projectDocumentAdapter.tsx": [
+    {
+      "line": 17,
+      "text": "Documents du projet",
+      "type": "Object Prop"
+    },
+    {
+      "line": 43,
+      "text": "Projet global",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/adapters/supplierDocumentAdapter.tsx": [
+    {
+      "line": 8,
+      "text": "Pièce justificative",
+      "type": "Object Prop"
+    },
+    {
+      "line": 14,
+      "text": "Documents du fournisseur",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/adapters/tenderDocumentAdapter.tsx": [
+    {
+      "line": 91,
+      "text": "Communs à tous les lots",
+      "type": "Object Prop"
+    },
+    {
+      "line": 126,
+      "text": "Global appel d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 143,
+      "text": "Communs aux lots",
+      "type": "Object Prop"
+    },
+    {
+      "line": 144,
+      "text": "Par lot",
+      "type": "Object Prop"
+    },
+    {
+      "line": 151,
+      "text": "Global appel d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 152,
+      "text": "Communs à tous les lots",
+      "type": "Object Prop"
+    },
+    {
+      "line": 240,
+      "text": "Documents de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 258,
+      "text": "Portée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 265,
+      "text": "Commun à tous les lots",
+      "type": "JSX Text"
+    },
+    {
+      "line": 274,
+      "text": "Lot",
+      "type": "JSX Text"
+    },
+    {
+      "line": 277,
+      "text": "Choisir un lot",
+      "type": "Prop"
+    }
+  ],
+  "src/components/documents/hub/DocumentHub.tsx": [
+    {
+      "line": 112,
+      "text": "Document supprimé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 153,
+      "text": "Aucun résultat",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/hub/DocumentHubGrid.tsx": [
+    {
+      "line": 78,
+      "text": "Aperçu",
+      "type": "Prop"
+    },
+    {
+      "line": 88,
+      "text": "Télécharger",
+      "type": "Prop"
+    },
+    {
+      "line": 98,
+      "text": "Plus",
+      "type": "Prop"
+    }
+  ],
+  "src/components/documents/hub/DocumentHubPreview.tsx": [
+    {
+      "line": 110,
+      "text": "Accès sécurisé via passerelle — l",
+      "type": "Prop"
+    },
+    {
+      "line": 179,
+      "text": "Taille",
+      "type": "JSX Text"
+    },
+    {
+      "line": 183,
+      "text": "Type",
+      "type": "JSX Text"
+    },
+    {
+      "line": 187,
+      "text": "Ajouté le",
+      "type": "JSX Text"
+    },
+    {
+      "line": 193,
+      "text": "Mis à jour",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/hub/DocumentHubTable.tsx": [
+    {
+      "line": 23,
+      "text": "Nom",
+      "type": "JSX Text"
+    },
+    {
+      "line": 24,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 30,
+      "text": "Taille",
+      "type": "JSX Text"
+    },
+    {
+      "line": 31,
+      "text": "Ajouté le",
+      "type": "JSX Text"
+    },
+    {
+      "line": 32,
+      "text": "Actions",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/documents/hub/DocumentHubToolbar.tsx": [
+    {
+      "line": 43,
+      "text": "Rechercher un document…",
+      "type": "Prop"
+    },
+    {
+      "line": 59,
+      "text": "Plus récent",
+      "type": "JSX Text"
+    },
+    {
+      "line": 60,
+      "text": "Plus ancien",
+      "type": "JSX Text"
+    },
+    {
+      "line": 61,
+      "text": "Nom (A→Z)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 62,
+      "text": "Nom (Z→A)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 63,
+      "text": "Taille ↓",
+      "type": "JSX Text"
+    },
+    {
+      "line": 64,
+      "text": "Taille ↑",
+      "type": "JSX Text"
+    },
+    {
+      "line": 74,
+      "text": "Vue grille",
+      "type": "Prop"
+    },
+    {
+      "line": 77,
+      "text": "Vue tableau",
+      "type": "Prop"
+    }
+  ],
+  "src/components/documents/hub/DocumentHubUpload.tsx": [
+    {
+      "line": 76,
+      "text": "Document ajouté",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Échec ajout",
+      "type": "Object Prop"
+    },
+    {
+      "line": 93,
+      "text": "Ajouter un document",
+      "type": "JSX Text"
+    },
+    {
+      "line": 114,
+      "text": "parcourir",
+      "type": "JSX Text"
+    },
+    {
+      "line": 141,
+      "text": "Titre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 146,
+      "text": "Titre du document",
+      "type": "Prop"
+    },
+    {
+      "line": 153,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 156,
+      "text": "Catégorie",
+      "type": "Prop"
+    },
+    {
+      "line": 175,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 180,
+      "text": "Description (optionnel)",
+      "type": "Prop"
+    }
+  ],
+  "src/components/documents/panels/MonitoringDocumentsPanel.tsx": [
+    {
+      "line": 30,
+      "text": "Documents associés aux paiements",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/documents/viewer/UniversalDocumentViewer.tsx": [
+    {
+      "line": 194,
+      "text": "Accès sécurisé via passerelle — l",
+      "type": "Prop"
+    },
+    {
+      "line": 267,
+      "text": "Taille",
+      "type": "JSX Text"
+    },
+    {
+      "line": 271,
+      "text": "Type MIME",
+      "type": "JSX Text"
+    },
+    {
+      "line": 275,
+      "text": "Créé le",
+      "type": "JSX Text"
+    },
+    {
+      "line": 281,
+      "text": "Mis à jour",
+      "type": "JSX Text"
+    },
+    {
+      "line": 297,
+      "text": "Statut",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/employees/EmployeeFilters.tsx": [
+    {
+      "line": 45,
+      "text": "Tous les départements",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Tous les postes",
+      "type": "Object Prop"
+    },
+    {
+      "line": 61,
+      "text": "Tous les statuts",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Nom (A-Z)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Nom (Z-A)",
+      "type": "Object Prop"
+    },
+    {
+      "line": 81,
+      "text": "Date d\\",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/gis/AddressSearchBox.tsx": [
+    {
+      "line": 89,
+      "text": "= -90 && lat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 90,
+      "text": "= -180 && lng",
+      "type": "JSX Text"
+    },
+    {
+      "line": 270,
+      "text": "Rechercher une adresse",
+      "type": "Prop"
+    },
+    {
+      "line": 281,
+      "text": "Effacer la recherche",
+      "type": "Prop"
+    },
+    {
+      "line": 294,
+      "text": "Suggestions d",
+      "type": "Prop"
+    },
+    {
+      "line": 377,
+      "text": "Fermer la saisie manuelle",
+      "type": "Prop"
+    },
+    {
+      "line": 435,
+      "text": "Utiliser cette position",
+      "type": "Prop"
+    }
+  ],
+  "src/components/gis/GeoZoneEditor.tsx": [
+    {
+      "line": 527,
+      "text": "[GeoZoneEditor] geojson import failed",
+      "type": "Message"
+    },
+    {
+      "line": 583,
+      "text": "Ville, wilaya, rue, adresse…",
+      "type": "Prop"
+    },
+    {
+      "line": 683,
+      "text": "Libellé (optionnel)",
+      "type": "Prop"
+    },
+    {
+      "line": 705,
+      "text": "Coins définis",
+      "type": "Object Prop"
+    },
+    {
+      "line": 720,
+      "text": "Rayon (m)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 769,
+      "text": "OpenStreetMap",
+      "type": "JSX Text"
+    },
+    {
+      "line": 943,
+      "text": "Éditer la localisation",
+      "type": "Prop"
+    },
+    {
+      "line": 952,
+      "text": "Supprimer la zone",
+      "type": "Prop"
+    }
+  ],
+  "src/components/gis/ZoneLocationEditor.tsx": [
+    {
+      "line": 169,
+      "text": "Libellé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 173,
+      "text": "Nom de la zone",
+      "type": "Prop"
+    },
+    {
+      "line": 185,
+      "text": "Chercher une nouvelle adresse ou saisir manuellement…",
+      "type": "Prop"
+    },
+    {
+      "line": 198,
+      "text": "Latitude",
+      "type": "JSX Text"
+    },
+    {
+      "line": 208,
+      "text": "Longitude",
+      "type": "JSX Text"
+    },
+    {
+      "line": 223,
+      "text": "Centre — Lat",
+      "type": "JSX Text"
+    },
+    {
+      "line": 233,
+      "text": "Centre — Lng",
+      "type": "JSX Text"
+    },
+    {
+      "line": 243,
+      "text": "Rayon (m)",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/guarantees/BankGuaranteeFormWithProjectSelector.tsx": [
+    {
+      "line": 68,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 94,
+      "text": "Projet",
+      "type": "Prop"
+    },
+    {
+      "line": 95,
+      "text": "Sélectionner un projet",
+      "type": "Prop"
+    },
+    {
+      "line": 104,
+      "text": "Numéro de garantie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 114,
+      "text": "Devise",
+      "type": "JSX Text"
+    },
+    {
+      "line": 117,
+      "text": "Devise",
+      "type": "Prop"
+    },
+    {
+      "line": 120,
+      "text": "MRU",
+      "type": "JSX Text"
+    },
+    {
+      "line": 121,
+      "text": "EUR",
+      "type": "JSX Text"
+    },
+    {
+      "line": 122,
+      "text": "USD",
+      "type": "JSX Text"
+    },
+    {
+      "line": 128,
+      "text": "Taux de change",
+      "type": "JSX Text"
+    },
+    {
+      "line": 141,
+      "text": "ID Entrepreneur *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 146,
+      "text": "Identifiant de l",
+      "type": "Prop"
+    },
+    {
+      "line": 152,
+      "text": "Banque émettrice *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 157,
+      "text": "Nom de la banque",
+      "type": "Prop"
+    },
+    {
+      "line": 165,
+      "text": "Type de garantie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 168,
+      "text": "Sélectionner le type",
+      "type": "Prop"
+    },
+    {
+      "line": 171,
+      "text": "Garantie de soumission",
+      "type": "JSX Text"
+    },
+    {
+      "line": 172,
+      "text": "Garantie de bonne exécution",
+      "type": "JSX Text"
+    },
+    {
+      "line": 173,
+      "text": "Garantie de remboursement d'avance",
+      "type": "JSX Text"
+    },
+    {
+      "line": 174,
+      "text": "Garantie de retenue",
+      "type": "JSX Text"
+    },
+    {
+      "line": 175,
+      "text": "Autre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 181,
+      "text": "Montant de la garantie (MRU) *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 195,
+      "text": "Date d'émission *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 206,
+      "text": "Sélectionner une date",
+      "type": "Object Prop"
+    },
+    {
+      "line": 221,
+      "text": "Date d'expiration *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 232,
+      "text": "Sélectionner une date",
+      "type": "Object Prop"
+    },
+    {
+      "line": 248,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 251,
+      "text": "Sélectionner le statut",
+      "type": "Prop"
+    },
+    {
+      "line": 254,
+      "text": "Active",
+      "type": "JSX Text"
+    },
+    {
+      "line": 255,
+      "text": "Expirée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 256,
+      "text": "Utilisée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 263,
+      "text": "Conditions particulières",
+      "type": "JSX Text"
+    },
+    {
+      "line": 269,
+      "text": "Une condition par ligne",
+      "type": "Prop"
+    },
+    {
+      "line": 276,
+      "text": "Enregistrer la garantie",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/AdvancedInspectionScheduler.tsx": [
+    {
+      "line": 43,
+      "text": "Promise",
+      "type": "JSX Text"
+    },
+    {
+      "line": 50,
+      "text": "Contrôle Qualité",
+      "type": "Object Prop"
+    },
+    {
+      "line": 52,
+      "text": "Avancement des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Conformité Réglementaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Contrôle Matériaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 55,
+      "text": "Contrôle Structurel",
+      "type": "Object Prop"
+    },
+    {
+      "line": 56,
+      "text": "Réception Définitive",
+      "type": "Object Prop"
+    },
+    {
+      "line": 266,
+      "text": "Inspection Programmée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 291,
+      "text": "Error scheduling inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 309,
+      "text": "Rechercher",
+      "type": "JSX Text"
+    },
+    {
+      "line": 317,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 320,
+      "text": "Tous les statuts",
+      "type": "Prop"
+    },
+    {
+      "line": 323,
+      "text": "Tous les statuts",
+      "type": "JSX Text"
+    },
+    {
+      "line": 324,
+      "text": "En cours",
+      "type": "JSX Text"
+    },
+    {
+      "line": 325,
+      "text": "En attente",
+      "type": "JSX Text"
+    },
+    {
+      "line": 326,
+      "text": "En inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 337,
+      "text": "Sélection du Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 399,
+      "text": "Type d'Inspection *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 415,
+      "text": "Inspecteur *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 496,
+      "text": "Date d'Inspection *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 506,
+      "text": "Progression Cible (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 513,
+      "text": "Ex: 50",
+      "type": "Prop"
+    },
+    {
+      "line": 521,
+      "text": "Phases / Étapes concernées",
+      "type": "JSX Text"
+    },
+    {
+      "line": 557,
+      "text": "Exigences Spéciales",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/DigitalInspectionForm.tsx": [
+    {
+      "line": 47,
+      "text": "Localisation capturée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 48,
+      "text": "Position GPS enregistrée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 53,
+      "text": "Erreur de géolocalisation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 54,
+      "text": "Impossible de capturer la position GPS",
+      "type": "Object Prop"
+    },
+    {
+      "line": 96,
+      "text": "Type d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 97,
+      "text": "Veuillez sélectionner un type d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 105,
+      "text": "Localisation requise",
+      "type": "Object Prop"
+    },
+    {
+      "line": 106,
+      "text": "Veuillez capturer la localisation GPS",
+      "type": "Object Prop"
+    },
+    {
+      "line": 119,
+      "text": "Contrôles obligatoires manquants",
+      "type": "Object Prop"
+    },
+    {
+      "line": 145,
+      "text": "Inspection soumise",
+      "type": "Object Prop"
+    },
+    {
+      "line": 146,
+      "text": "Inspection numérique créée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 153,
+      "text": "Error submitting inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 156,
+      "text": "Échec de la soumission de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 176,
+      "text": "Type d'inspection *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 179,
+      "text": "Sélectionner le type",
+      "type": "Prop"
+    },
+    {
+      "line": 182,
+      "text": "Inspection quotidienne",
+      "type": "JSX Text"
+    },
+    {
+      "line": 183,
+      "text": "Inspection hebdomadaire",
+      "type": "JSX Text"
+    },
+    {
+      "line": 184,
+      "text": "Inspection jalon",
+      "type": "JSX Text"
+    },
+    {
+      "line": 185,
+      "text": "Inspection sécurité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 186,
+      "text": "Inspection qualité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 193,
+      "text": "Localisation GPS *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 247,
+      "text": "Contrôles de Conformité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 260,
+      "text": "Conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 277,
+      "text": "Défauts détectés",
+      "type": "JSX Text"
+    },
+    {
+      "line": 287,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 295,
+      "text": "Sévérité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 312,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 327,
+      "text": "Correction requise",
+      "type": "JSX Text"
+    },
+    {
+      "line": 337,
+      "text": "Notes générales",
+      "type": "JSX Text"
+    },
+    {
+      "line": 349,
+      "text": "Photos d'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 368,
+      "text": "Soumettre Inspection",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/EnhancedInspectionCrud.tsx": [
+    {
+      "line": 56,
+      "text": "En cours",
+      "type": "Object Prop"
+    },
+    {
+      "line": 159,
+      "text": "Error saving inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 168,
+      "text": "Error deleting inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 200,
+      "text": "Nouvelle inspection",
+      "type": "Object Prop"
+    },
+    {
+      "line": 206,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 215,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 226,
+      "text": "Date d'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 236,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 257,
+      "text": "Progression (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 270,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 297,
+      "text": "Chargement des inspections...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 302,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 303,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 304,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 305,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 306,
+      "text": "Progression",
+      "type": "JSX Text"
+    },
+    {
+      "line": 307,
+      "text": "Actions",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/EnhancedScheduleInspectionModal.tsx": [
+    {
+      "line": 165,
+      "text": "Error submitting inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 189,
+      "text": "Programmer une Inspection",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/FieldInspectionExecutor.tsx": [
+    {
+      "line": 141,
+      "text": "Failed to load execution data:",
+      "type": "Message"
+    },
+    {
+      "line": 151,
+      "text": "Vérification des plans",
+      "type": "Object Prop"
+    },
+    {
+      "line": 151,
+      "text": "Vérification des plans",
+      "type": "Object Prop"
+    },
+    {
+      "line": 152,
+      "text": "Contrôle des matériaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 152,
+      "text": "Contrôle des matériaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 153,
+      "text": "Sécurité du chantier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 153,
+      "text": "Sécurité du chantier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 154,
+      "text": "Conformité structurelle",
+      "type": "Object Prop"
+    },
+    {
+      "line": 154,
+      "text": "Conformité structurelle",
+      "type": "Object Prop"
+    },
+    {
+      "line": 155,
+      "text": "Installations électriques",
+      "type": "Object Prop"
+    },
+    {
+      "line": 155,
+      "text": "Installations électriques",
+      "type": "Object Prop"
+    },
+    {
+      "line": 179,
+      "text": "Geolocation error:",
+      "type": "Message"
+    },
+    {
+      "line": 195,
+      "text": "Start inspection error:",
+      "type": "Message"
+    },
+    {
+      "line": 219,
+      "text": "Save error:",
+      "type": "Message"
+    },
+    {
+      "line": 348,
+      "text": "Non démarrée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 359,
+      "text": "Capturer Position GPS",
+      "type": "Object Prop"
+    },
+    {
+      "line": 374,
+      "text": "Progression de la saisie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "Checklist",
+      "type": "JSX Text"
+    },
+    {
+      "line": 389,
+      "text": "Observations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 392,
+      "text": "Photos",
+      "type": "JSX Text"
+    },
+    {
+      "line": 395,
+      "text": "Mesures",
+      "type": "JSX Text"
+    },
+    {
+      "line": 398,
+      "text": "Participants",
+      "type": "JSX Text"
+    },
+    {
+      "line": 405,
+      "text": "Points de Contrôle",
+      "type": "JSX Text"
+    },
+    {
+      "line": 443,
+      "text": "Observations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 450,
+      "text": "Type",
+      "type": "JSX Text"
+    },
+    {
+      "line": 455,
+      "text": "Sécurité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 456,
+      "text": "Qualité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 457,
+      "text": "Non-conformité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 462,
+      "text": "Catégorie",
+      "type": "JSX Text"
+    },
+    {
+      "line": 472,
+      "text": "Description",
+      "type": "JSX Text"
+    },
+    {
+      "line": 473,
+      "text": "Décrivez l",
+      "type": "Prop"
+    },
+    {
+      "line": 477,
+      "text": "Conformité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 481,
+      "text": "Conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 482,
+      "text": "Partiellement conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 483,
+      "text": "Non conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 489,
+      "text": "Gravité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 504,
+      "text": "Action corrective proposée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 508,
+      "text": "Ajouter observation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 540,
+      "text": "Photos & Documents",
+      "type": "JSX Text"
+    },
+    {
+      "line": 554,
+      "text": "Mesures & Relevés",
+      "type": "JSX Text"
+    },
+    {
+      "line": 560,
+      "text": "Paramètre",
+      "type": "JSX Text"
+    },
+    {
+      "line": 560,
+      "text": "ex: Épaisseur dalle",
+      "type": "Prop"
+    },
+    {
+      "line": 561,
+      "text": "Valeur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 562,
+      "text": "Unité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 564,
+      "text": "Ajouter mesure",
+      "type": "JSX Text"
+    },
+    {
+      "line": 571,
+      "text": "Hors norme",
+      "type": "Object Prop"
+    },
+    {
+      "line": 583,
+      "text": "Participants",
+      "type": "JSX Text"
+    },
+    {
+      "line": 589,
+      "text": "Nom",
+      "type": "JSX Text"
+    },
+    {
+      "line": 589,
+      "text": "Nom complet",
+      "type": "Prop"
+    },
+    {
+      "line": 590,
+      "text": "Rôle",
+      "type": "JSX Text"
+    },
+    {
+      "line": 590,
+      "text": "ex: Ingénieur",
+      "type": "Prop"
+    },
+    {
+      "line": 591,
+      "text": "Organisation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 591,
+      "text": "Entreprise",
+      "type": "Prop"
+    },
+    {
+      "line": 593,
+      "text": "Ajouter participant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 616,
+      "text": "Résumé & Conclusions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 620,
+      "text": "Progression observée (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 624,
+      "text": "Conformité globale",
+      "type": "JSX Text"
+    },
+    {
+      "line": 628,
+      "text": "Conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 629,
+      "text": "Partiellement conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 630,
+      "text": "Non conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 636,
+      "text": "Résumé des observations",
+      "type": "JSX Text"
+    },
+    {
+      "line": 637,
+      "text": "Résumé général de l",
+      "type": "Prop"
+    },
+    {
+      "line": 640,
+      "text": "Recommandations",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/InspectionCrud.tsx": [
+    {
+      "line": 55,
+      "text": "En cours",
+      "type": "Object Prop"
+    },
+    {
+      "line": 155,
+      "text": "Error saving inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 164,
+      "text": "Error deleting inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 172,
+      "text": "Gestion des Inspections",
+      "type": "JSX Text"
+    },
+    {
+      "line": 186,
+      "text": "Nouvelle Inspection",
+      "type": "Object Prop"
+    },
+    {
+      "line": 192,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 204,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 215,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 225,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 246,
+      "text": "Progression (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 263,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 289,
+      "text": "Chargement...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 294,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 295,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 296,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 297,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 298,
+      "text": "Progression",
+      "type": "JSX Text"
+    },
+    {
+      "line": 299,
+      "text": "Actions",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/InspectionExecutionForm.tsx": [
+    {
+      "line": 95,
+      "text": "Error in handleSubmit:",
+      "type": "Message"
+    },
+    {
+      "line": 109,
+      "text": "Projet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 113,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 120,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 135,
+      "text": "Progression (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 148,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 158,
+      "text": "Documents",
+      "type": "JSX Text"
+    },
+    {
+      "line": 191,
+      "text": "Erreurs lors de la synchronisation:",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/InspectionFilters.tsx": [
+    {
+      "line": 45,
+      "text": "Tous les statuts",
+      "type": "Object Prop"
+    },
+    {
+      "line": 59,
+      "text": "Tous les inspecteurs",
+      "type": "Object Prop"
+    },
+    {
+      "line": 67,
+      "text": "Tous les projets",
+      "type": "Object Prop"
+    },
+    {
+      "line": 79,
+      "text": "Plus récent",
+      "type": "Object Prop"
+    },
+    {
+      "line": 80,
+      "text": "Plus ancien",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/InspectionFormWithProjectSelector.tsx": [
+    {
+      "line": 58,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 74,
+      "text": "Nouvelle Inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 81,
+      "text": "Projet",
+      "type": "Prop"
+    },
+    {
+      "line": 82,
+      "text": "Sélectionner un projet",
+      "type": "Prop"
+    },
+    {
+      "line": 98,
+      "text": "Inspecteur *",
+      "type": "Prop"
+    },
+    {
+      "line": 103,
+      "text": "Date d'inspection *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 114,
+      "text": "Sélectionner une date",
+      "type": "Object Prop"
+    },
+    {
+      "line": 131,
+      "text": "Progrès observé (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 144,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 147,
+      "text": "Sélectionner le statut",
+      "type": "Prop"
+    },
+    {
+      "line": 150,
+      "text": "Planifiée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 152,
+      "text": "Validée",
+      "type": "JSX Text"
+    },
+    {
+      "line": 153,
+      "text": "Non conforme",
+      "type": "JSX Text"
+    },
+    {
+      "line": 160,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 165,
+      "text": "Observations et commentaires de l",
+      "type": "Prop"
+    },
+    {
+      "line": 173,
+      "text": "Enregistrer l\\",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/InspectionPVGenerator.tsx": [
+    {
+      "line": 77,
+      "text": "Error generating PV:",
+      "type": "Message"
+    },
+    {
+      "line": 94,
+      "text": "Error downloading PDF:",
+      "type": "Message"
+    },
+    {
+      "line": 115,
+      "text": "Error saving PV:",
+      "type": "Message"
+    },
+    {
+      "line": 123,
+      "text": "Inspection Technique",
+      "type": "Object Prop"
+    },
+    {
+      "line": 124,
+      "text": "Inspection Sécurité",
+      "type": "Object Prop"
+    },
+    {
+      "line": 144,
+      "text": "Vérification préalable requise:",
+      "type": "JSX Text"
+    },
+    {
+      "line": 155,
+      "text": "Type de PV",
+      "type": "JSX Text"
+    },
+    {
+      "line": 172,
+      "text": "Date d'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 176,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 180,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 184,
+      "text": "Progression",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/InspectionPaymentValidation.tsx": [
+    {
+      "line": 65,
+      "text": "En attente",
+      "type": "Object Prop"
+    },
+    {
+      "line": 66,
+      "text": "Paiement accepté",
+      "type": "Object Prop"
+    },
+    {
+      "line": 67,
+      "text": "Informations manquantes",
+      "type": "Object Prop"
+    },
+    {
+      "line": 68,
+      "text": "Somme non cohérente avec le taux d\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 160,
+      "text": "Inspection ID missing",
+      "type": "Message"
+    },
+    {
+      "line": 201,
+      "text": "Validation de paiement",
+      "type": "Object Prop"
+    },
+    {
+      "line": 214,
+      "text": "Inspection mise à jour",
+      "type": "Object Prop"
+    },
+    {
+      "line": 221,
+      "text": "Impossible de mettre à jour l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 230,
+      "text": "Accès refusé",
+      "type": "Object Prop"
+    },
+    {
+      "line": 231,
+      "text": "Seul le chef de projet ou l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 239,
+      "text": "Notes requises",
+      "type": "Object Prop"
+    },
+    {
+      "line": 262,
+      "text": "En cours",
+      "type": "Object Prop"
+    },
+    {
+      "line": 265,
+      "text": "Modifications requises",
+      "type": "Object Prop"
+    },
+    {
+      "line": 277,
+      "text": "Chargement...",
+      "type": "JSX Text"
+    },
+    {
+      "line": 289,
+      "text": "Inspection non éligible",
+      "type": "JSX Text"
+    },
+    {
+      "line": 309,
+      "text": "Accès refusé",
+      "type": "JSX Text"
+    },
+    {
+      "line": 340,
+      "text": "Validation de paiement - Inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 360,
+      "text": "Date d'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 374,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 381,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "Progression à l'inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 396,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 414,
+      "text": "Type de paiement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 420,
+      "text": "Entreprise contractante",
+      "type": "JSX Text"
+    },
+    {
+      "line": 421,
+      "text": "Frais de mission",
+      "type": "JSX Text"
+    },
+    {
+      "line": 422,
+      "text": "Honoraires ingénieur conseil",
+      "type": "JSX Text"
+    },
+    {
+      "line": 428,
+      "text": "Décision de paiement",
+      "type": "JSX Text"
+    },
+    {
+      "line": 449,
+      "text": "Notes de rejet",
+      "type": "JSX Text"
+    },
+    {
+      "line": 462,
+      "text": "Valider la décision",
+      "type": "Object Prop"
+    },
+    {
+      "line": 491,
+      "text": "Aucun intervenant",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/RoleBasedInspectionMonitoring.tsx": [
+    {
+      "line": 96,
+      "text": "Inspection en retard",
+      "type": "Object Prop"
+    },
+    {
+      "line": 102,
+      "text": "Alerte envoyée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 103,
+      "text": "La hiérarchie a été notifiée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 183,
+      "text": "Inspection mise à jour",
+      "type": "Object Prop"
+    },
+    {
+      "line": 189,
+      "text": "Error updating inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 201,
+      "text": "Inspection supprimée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 204,
+      "text": "Error deleting inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 247,
+      "text": "Suivi des Inspections",
+      "type": "JSX Text"
+    },
+    {
+      "line": 267,
+      "text": "Effacer le filtre",
+      "type": "Prop"
+    },
+    {
+      "line": 282,
+      "text": "Inspections en retard",
+      "type": "JSX Text"
+    },
+    {
+      "line": 332,
+      "text": "Recherche",
+      "type": "JSX Text"
+    },
+    {
+      "line": 342,
+      "text": "Rechercher des inspections",
+      "type": "Prop"
+    },
+    {
+      "line": 347,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 349,
+      "text": "Filtrer par statut",
+      "type": "Prop"
+    },
+    {
+      "line": 353,
+      "text": "Tous les statuts",
+      "type": "JSX Text"
+    },
+    {
+      "line": 369,
+      "text": "Liste des Inspections",
+      "type": "JSX Text"
+    },
+    {
+      "line": 381,
+      "text": "ID",
+      "type": "JSX Text"
+    },
+    {
+      "line": 382,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 383,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 384,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 385,
+      "text": "Progression",
+      "type": "JSX Text"
+    },
+    {
+      "line": 386,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 387,
+      "text": "Actions",
+      "type": "JSX Text"
+    },
+    {
+      "line": 397,
+      "text": "Voir l",
+      "type": "Prop"
+    },
+    {
+      "line": 434,
+      "text": "Actions sur l",
+      "type": "Prop"
+    },
+    {
+      "line": 489,
+      "text": "Modifier l'Inspection",
+      "type": "JSX Text"
+    },
+    {
+      "line": 494,
+      "text": "Inspecteur",
+      "type": "JSX Text"
+    },
+    {
+      "line": 503,
+      "text": "Date",
+      "type": "JSX Text"
+    },
+    {
+      "line": 515,
+      "text": "Statut",
+      "type": "JSX Text"
+    },
+    {
+      "line": 530,
+      "text": "Progression (%)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 542,
+      "text": "Commentaires",
+      "type": "JSX Text"
+    },
+    {
+      "line": 548,
+      "text": "Ajouter des commentaires sur l",
+      "type": "Prop"
+    }
+  ],
+  "src/components/inspections/ScheduleInspectionModal.tsx": [
+    {
+      "line": 107,
+      "text": "Permission refusée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 110,
+      "text": "Permission accordée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 210,
+      "text": "Veuillez remplir tous les champs obligatoires",
+      "type": "Object Prop"
+    },
+    {
+      "line": 218,
+      "text": "Permission refusée",
+      "type": "Object Prop"
+    },
+    {
+      "line": 253,
+      "text": "Inspection programmée avec succès",
+      "type": "Object Prop"
+    },
+    {
+      "line": 260,
+      "text": "Erreur lors de la programmation",
+      "type": "Object Prop"
+    },
+    {
+      "line": 265,
+      "text": "Error scheduling inspection:",
+      "type": "Message"
+    },
+    {
+      "line": 268,
+      "text": "Erreur lors de la programmation de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 320,
+      "text": "Type d'inspection *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 339,
+      "text": "Priorité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 361,
+      "text": "Date *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 371,
+      "text": "Heure",
+      "type": "JSX Text"
+    },
+    {
+      "line": 380,
+      "text": "Durée (heures)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 403,
+      "text": "Inspecteur principal *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 429,
+      "text": "Inspecteur suppléant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 435,
+      "text": "Aucun",
+      "type": "JSX Text"
+    },
+    {
+      "line": 459,
+      "text": "Documents requis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 476,
+      "text": "Aucun document requis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 482,
+      "text": "Critères de validation",
+      "type": "JSX Text"
+    },
+    {
+      "line": 484,
+      "text": "Décrivez les critères de réussite de l",
+      "type": "Prop"
+    },
+    {
+      "line": 513,
+      "text": "Rappels automatiques",
+      "type": "JSX Text"
+    },
+    {
+      "line": 521,
+      "text": "7 jours avant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 529,
+      "text": "1 jour avant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 537,
+      "text": "2 heures avant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 547,
+      "text": "Commentaires additionnels",
+      "type": "JSX Text"
+    },
+    {
+      "line": 565,
+      "text": "Programmer l\\",
+      "type": "Object Prop"
+    }
+  ],
+  "src/components/inspections/workflow/InspectionDetailsStep.tsx": [
+    {
+      "line": 135,
+      "text": "Planifiez l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 140,
+      "text": "Définissez la date, l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 156,
+      "text": "Date principale *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 168,
+      "text": "Heure",
+      "type": "JSX Text"
+    },
+    {
+      "line": 177,
+      "text": "Durée (heures)",
+      "type": "JSX Text"
+    },
+    {
+      "line": 199,
+      "text": "Date alternative 1",
+      "type": "JSX Text"
+    },
+    {
+      "line": 208,
+      "text": "Date alternative 2",
+      "type": "JSX Text"
+    },
+    {
+      "line": 233,
+      "text": "Inspecteur principal *",
+      "type": "JSX Text"
+    },
+    {
+      "line": 244,
+      "text": "Ing. Conseil",
+      "type": "JSX Text"
+    },
+    {
+      "line": 247,
+      "text": "Resp. Tech.",
+      "type": "JSX Text"
+    },
+    {
+      "line": 266,
+      "text": "Inspecteur suppléant",
+      "type": "JSX Text"
+    },
+    {
+      "line": 275,
+      "text": "Aucun",
+      "type": "JSX Text"
+    },
+    {
+      "line": 294,
+      "text": "Priorité et Exigences",
+      "type": "JSX Text"
+    },
+    {
+      "line": 298,
+      "text": "Priorité",
+      "type": "JSX Text"
+    },
+    {
+      "line": 315,
+      "text": "Exigences particulières",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/workflow/InspectionDocumentsStep.tsx": [
+    {
+      "line": 75,
+      "text": "Documents requis",
+      "type": "JSX Text"
+    },
+    {
+      "line": 79,
+      "text": "Confirmez les documents obligatoires pour cette inspection",
+      "type": "Object Prop"
+    },
+    {
+      "line": 125,
+      "text": "Obligatoire",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/workflow/InspectionReviewStep.tsx": [
+    {
+      "line": 41,
+      "text": "Avancement des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 42,
+      "text": "Contrôle Qualité",
+      "type": "Object Prop"
+    },
+    {
+      "line": 44,
+      "text": "Conformité Réglementaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 45,
+      "text": "Contrôle Matériaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 46,
+      "text": "Contrôle Structurel",
+      "type": "Object Prop"
+    },
+    {
+      "line": 47,
+      "text": "Réception Définitive",
+      "type": "Object Prop"
+    },
+    {
+      "line": 82,
+      "text": "Récapitulatif",
+      "type": "JSX Text"
+    },
+    {
+      "line": 163,
+      "text": "Suppléant assigné",
+      "type": "JSX Text"
+    },
+    {
+      "line": 194,
+      "text": "Exigences particulières",
+      "type": "JSX Text"
+    },
+    {
+      "line": 208,
+      "text": "Notifications",
+      "type": "JSX Text"
+    },
+    {
+      "line": 229,
+      "text": "Traitement en cours...",
+      "type": "JSX Text"
+    }
+  ],
+  "src/components/inspections/workflow/InspectionTypeStep.tsx": [
+    {
+      "line": 32,
+      "text": "Avancement des Travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 33,
+      "text": "Contrôle périodique de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 40,
+      "text": "Contrôle Qualité",
+      "type": "Object Prop"
+    },
+    {
+      "line": 41,
+      "text": "Vérification de la qualité des matériaux et de l\\",
+      "type": "Object Prop"
+    },
+    {
+      "line": 50,
+      "text": "Contrôle des mesures de sécurité sur le chantier",
+      "type": "Object Prop"
+    },
+    {
+      "line": 57,
+      "text": "Conformité Réglementaire",
+      "type": "Object Prop"
+    },
+    {
+      "line": 58,
+      "text": "Vérification de la conformité aux normes et réglementations",
+      "type": "Object Prop"
+    },
+    {
+      "line": 66,
+      "text": "Contrôle Matériaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 67,
+      "text": "Inspection des matériaux livrés et stockés",
+      "type": "Object Prop"
+    },
+    {
+      "line": 74,
+      "text": "Contrôle Structurel",
+      "type": "Object Prop"
+    },
+    {
+      "line": 75,
+      "text": "Vérification des éléments structurels et fondations",
+      "type": "Object Prop"
+    },
+    {
+      "line": 83,
+      "text": "Réception Définitive",
+      "type": "Object Prop"
+    },
+    {
+      "line": 84,
+      "text": "Inspection finale avant réception des travaux",
+      "type": "Object Prop"
+    },
+    {
+      "line": 131,
+      "text": "Sélectionnez le type d\\",
+      "type": "Object Prop"
+    }
+  ]
+}
