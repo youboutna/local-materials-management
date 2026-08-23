@@ -65,8 +65,8 @@ describe('Phase 6 — branchement des traductions', () => {
   it('T-V-29 — KPI et alertes du dashboard traduits (sévérités et types)', () => {
     renderWithLanguage(
       <>
-        <TranslatedSeverity code="critical" />
-        <TranslatedDocumentType code="budget" />
+        <span><TranslatedSeverity code="critical" /></span>
+        <span><TranslatedDocumentType code="budget" /></span>
       </>
     );
     expect(screen.getByText('Critique')).toBeTruthy();
@@ -76,11 +76,11 @@ describe('Phase 6 — branchement des traductions', () => {
   it('T-V-30 — labels de phases, tâches et ressources traduits', () => {
     renderWithLanguage(
       <>
-        <TranslatedStatus code="not_started" />
-        <TranslatedPriority code="high" />
-        <TranslatedCategory code="technical" />
-        <TranslatedUnit code="m³" />
-        <TranslatedRole code="manager" />
+        <span><TranslatedStatus code="not_started" /></span>
+        <span><TranslatedPriority code="high" /></span>
+        <span><TranslatedCategory code="technical" /></span>
+        <span><TranslatedUnit code="m³" /></span>
+        <span><TranslatedRole code="manager" /></span>
       </>
     );
     expect(screen.getByText('Non commencé')).toBeTruthy();
