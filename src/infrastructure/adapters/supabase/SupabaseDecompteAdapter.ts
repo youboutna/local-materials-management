@@ -7,8 +7,8 @@
 
 import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
+import { AutomaticDecompteDTO } from '@/dtos/entities/AutomaticDecompteDTO';
 import {
-    AutomaticDecompteDTO,
     DecompteLineDTO,
     DecompteStatus
 } from '@/dtos/types/checkpoint-dto';
