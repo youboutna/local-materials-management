@@ -232,7 +232,7 @@ describe('Groupe D — dispatch et barre d’actions (T‑V‑08 → T‑V‑09)
   });
 
   it('T‑V‑09 — la barre d’actions se déduit du référentiel (libellé + étape suivante)', () => {
-    expect(getInvoiceDocumentType('dqe').nextActionLabel).toBe('Transformer en devis');
+    expect(getInvoiceDocumentType('dqe').nextActionLabel).toBe('Lancer la consultation (devis)');
     expect(getInvoiceDocumentType('contrat').nextActionLabel).toBe('Émettre un décompte');
     expect(getInvoiceDocumentType('decompte').requiresPercentage).toBe(true);
     expect(getInvoiceDocumentType('facture').nextActionLabel).toBeUndefined();
