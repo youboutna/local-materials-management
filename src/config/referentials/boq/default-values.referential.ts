@@ -33,6 +33,8 @@ export const BOQ_FISCAL_PROFILES: Record<string, BoqFiscalProfile> = {
   MR_STANDARD: {
     code: 'MR_STANDARD',
     label: 'Mauritanie – Standard',
+    labelAr: 'موريتانيا – قياسي',
+    labelEn: 'Mauritania – Standard',
     currency: 'MRU',
     vatRate: 0.16,
     withholdingRate: 0.03,
@@ -42,6 +44,8 @@ export const BOQ_FISCAL_PROFILES: Record<string, BoqFiscalProfile> = {
   MR_REDUCED_5: {
     code: 'MR_REDUCED_5',
     label: 'Mauritanie – Taux réduit',
+    labelAr: 'موريتانيا – معدل مخفض',
+    labelEn: 'Mauritania – Reduced rate',
     currency: 'MRU',
     vatRate: 0.05,
     withholdingRate: 0.02,
@@ -51,6 +55,8 @@ export const BOQ_FISCAL_PROFILES: Record<string, BoqFiscalProfile> = {
   MR_HIGH_20: {
     code: 'MR_HIGH_20',
     label: 'Mauritanie – Taux majoré',
+    labelAr: 'موريتانيا – معدل مرتفع',
+    labelEn: 'Mauritania – Higher rate',
     currency: 'MRU',
     vatRate: 0.20,
     withholdingRate: 0.03,
@@ -60,6 +66,8 @@ export const BOQ_FISCAL_PROFILES: Record<string, BoqFiscalProfile> = {
   MR_EXEMPT: {
     code: 'MR_EXEMPT',
     label: 'Mauritanie – Exonéré',
+    labelAr: 'موريتانيا – معفى',
+    labelEn: 'Mauritania – Exempt',
     currency: 'MRU',
     vatRate: 0,
     withholdingRate: 0,
@@ -73,4 +81,12 @@ export const DEFAULT_FISCAL_PROFILE: BoqFiscalProfile = BOQ_FISCAL_PROFILES.MR_S
 export function getFiscalProfile(code?: string | null): BoqFiscalProfile {
   if (!code) return DEFAULT_FISCAL_PROFILE;
   return BOQ_FISCAL_PROFILES[code] ?? DEFAULT_FISCAL_PROFILE;
+}
+
+/** Libellé d'un profil fiscal dans la langue active (fallback fr puis code). */
+export function getFiscalProfileLabel(code: string | null | undefined, lang: 'fr' | 'ar' | 'en' = 'fr'): string {
+  const p = getFiscalProfile(code);
+  if (lang === 'ar') return p.labelAr ?? p.label ?? p.code;
+  if (lang === 'en') return p.labelEn ?? p.label ?? p.code;
+  return p.label ?? p.code;
 }
