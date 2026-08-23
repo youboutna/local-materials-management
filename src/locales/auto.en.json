@@ -2072,6 +2072,7 @@
   "auto.milestonepositioneditor.priorite": "Priority",
   "auto.monitoringdocumentadapter.garanties_bancaires": "Bank guarantees",
   "auto.monitoringdocumentadapter.paiements": "Payments",
+  "auto.monitoringdocumentadapter.polices_d_assurance": "Insurance policies",
   "auto.monitoringdocumentadapter.type_de_document": "Document type",
   "auto.monitoringdocumentspanel.documents_associes_aux_garanties_bancaires": "Documents associated with bank guarantees",
   "auto.monitoringdocumentspanel.documents_associes_aux_paiements": "Documents associated with payments",
@@ -4674,6 +4675,7 @@
   "dashboard.management_tabs.alerts.medium": "Medium",
   "dashboard.management_tabs.alerts.none": "No alerts",
   "dashboard.management_tabs.alerts.tabs.all": "All",
+  "dashboard.management_tabs.alerts.tabs.compliance": "Compliance",
   "dashboard.management_tabs.alerts.tabs.delay": "Delays",
   "dashboard.management_tabs.alerts.tabs.guarantee": "Guarantees",
   "dashboard.management_tabs.alerts.tabs.inspection": "Inspections",
@@ -4784,6 +4786,8 @@
   "notifications_center.title": "Notifications Center",
   "payment_control.subtitle": "Payment management and validation with real-time notifications",
   "payment_control.title": "Payment Control",
+  "phase_structure.takeoff_analysis": "Takeoff analysis",
+  "phase_structure.takeoff_count": "{{count}} takeoff(s)",
   "project_create.form.add_materials": "Select the materials required for this project",
   "project_import.desc": "Import 2025 projects",
   "project_import.title": "Project import",
@@ -4825,8 +4829,5 @@
   "users.table.national_id": "National ID",
   "users.table.role": "Role",
   "users.updated": "User updated",
-  "users.updated_success": "User updated successfully",
-  "dashboard.management_tabs.alerts.tabs.compliance": "Compliance",
-  "phase_structure.takeoff_analysis": "Takeoff analysis",
-  "phase_structure.takeoff_count": "{{count}} takeoff(s)"
+  "users.updated_success": "User updated successfully"
 }

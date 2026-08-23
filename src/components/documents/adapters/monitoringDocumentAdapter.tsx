@@ -30,7 +30,7 @@ const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: string; label: 
 
 const SCOPE_LABEL_KEYS: Record<string, string> = {
   bank_guarantee: 'auto.monitoringdocumentadapter.garanties_bancaires',
-  insurance: "Polices d'assurance",
+  insurance: 'auto.monitoringdocumentadapter.polices_d_assurance',
   payment: 'auto.monitoringdocumentadapter.paiements',
 };
 

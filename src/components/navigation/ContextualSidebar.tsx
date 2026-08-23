@@ -112,7 +112,7 @@ const navigationItems: NavItem[] = [
     icon: Building2,
     children: [
       { label: 'auto.contextualsidebar.liste', href: "/suppliers" },
-      { label: "Appels d'offres", href: "/tender-management" },
+      { label: 'nav.tender_management', href: "/tender-management" },
       { label: 'auto.contextualsidebar.partage_codes', action: 'secretManager', icon: KeyRound },
     ],
   },

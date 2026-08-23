@@ -2071,6 +2071,7 @@
   "auto.milestonepositioneditor.priorite": "Priorité",
   "auto.monitoringdocumentadapter.garanties_bancaires": "Garanties bancaires",
   "auto.monitoringdocumentadapter.paiements": "Paiements",
+  "auto.monitoringdocumentadapter.polices_d_assurance": "Polices d'assurance",
   "auto.monitoringdocumentadapter.type_de_document": "Type de document",
   "auto.monitoringdocumentspanel.documents_associes_aux_garanties_bancaires": "Documents associés aux garanties bancaires",
   "auto.monitoringdocumentspanel.documents_associes_aux_paiements": "Documents associés aux paiements",
@@ -4671,6 +4672,7 @@
   "dashboard.management_tabs.alerts.medium": "Moyennes",
   "dashboard.management_tabs.alerts.none": "Aucune alerte",
   "dashboard.management_tabs.alerts.tabs.all": "Toutes",
+  "dashboard.management_tabs.alerts.tabs.compliance": "Conformité",
   "dashboard.management_tabs.alerts.tabs.delay": "Retards",
   "dashboard.management_tabs.alerts.tabs.guarantee": "Garanties",
   "dashboard.management_tabs.alerts.tabs.inspection": "Inspections",
@@ -4781,6 +4783,8 @@
   "notifications_center.title": "Centre de notifications",
   "payment_control.subtitle": "Gestion et validation des paiements avec notifications en temps réel",
   "payment_control.title": "Contrôle des paiements",
+  "phase_structure.takeoff_analysis": "Analyse des métrés",
+  "phase_structure.takeoff_count": "{{count}} métré(s)",
   "project_create.form.add_materials": "Sélectionnez les matériaux nécessaires pour ce projet",
   "project_import.desc": "Importer les projets 2025",
   "project_import.title": "Import projets",
@@ -4822,8 +4826,5 @@
   "users.table.national_id": "ID national",
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
-  "users.updated_success": "L'utilisateur a été mis à jour avec succès",
-  "dashboard.management_tabs.alerts.tabs.compliance": "Conformité",
-  "phase_structure.takeoff_analysis": "Analyse des métrés",
-  "phase_structure.takeoff_count": "{{count}} métré(s)"
+  "users.updated_success": "L'utilisateur a été mis à jour avec succès"
 }
