@@ -100,6 +100,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   isSubmitting,
   onWorkflowDataChange,
 }) => {
+  const { t } = useLanguage();
 
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
   const {
