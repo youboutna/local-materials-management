@@ -256,7 +256,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
       const emailResult = await CommunicationService.sendEmail({
         to: reportConfig.recipientEmail!,
         subject: `Rapport de paiements: ${reportConfig.title}`,
-        body: `Veuillez trouver ci-joint le rapport de paiements "${reportConfig.title}" pour le fournisseur ${supplier.name}. Le rapport couvre la période du ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}.`,
+        message: `Veuillez trouver ci-joint le rapport de paiements "${reportConfig.title}" pour le fournisseur ${supplier.name}. Le rapport couvre la période du ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}.`,
         html: `
           <h2>Rapport de paiements: ${reportConfig.title}</h2>
           <p>Bonjour,</p>
@@ -270,7 +270,15 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           <p>Cordialement,</p>
           <p>L'équipe de gestion des paiements</p>
         `,
+        actionType: 'supplier-payment-report',
+        attachments: [
+          { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },
+        ],
       });
+
+      if (!emailResult.success) {
+        throw new Error("L'envoi de l'email a échoué");
+      }
 
       toast({
         title: "Rapport envoyé",

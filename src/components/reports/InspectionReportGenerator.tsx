@@ -340,7 +340,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       const emailResult = await CommunicationService.sendEmail({
         to: reportConfig.recipientEmail!,
         subject: `Rapport d'inspection: ${reportConfig.title}`,
-        body: `Veuillez trouver ci-joint le rapport d'inspection "${reportConfig.title}" pour l'inspection ${inspection.id}. Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
+        message: `Veuillez trouver ci-joint le rapport d'inspection "${reportConfig.title}" pour l'inspection ${inspection.id}. Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
         html: `
           <h2>Rapport d'inspection: ${reportConfig.title}</h2>
           <p>Bonjour,</p>
@@ -353,7 +353,15 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           <p>Cordialement,</p>
           <p>L'équipe d'inspection qualité</p>
         `
+        actionType: 'inspection-report',
+        attachments: [
+          { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },
+        ],
       });
+
+      if (!emailResult.success) {
+        throw new Error("L'envoi de l'email a échoué");
+      }
 
       toast({
         title: "Rapport envoyé",

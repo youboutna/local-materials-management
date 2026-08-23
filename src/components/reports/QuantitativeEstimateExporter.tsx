@@ -454,7 +454,7 @@ export function QuantitativeEstimateExporter({
       const emailResult = await CommunicationService.sendEmail({
         to: exportConfig.recipientEmail!,
         subject: `Devis Quantitatif: ${exportConfig.title}`,
-        body: `Veuillez trouver ci-joint le devis quantitatif estimatif "${exportConfig.title}" pour l'appel d'offres "${tender?.projectReference || tender?.title}". Le devis a été généré le ${format(new Date(), 'dd/MM/yyyy')} et est valide jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}.`,
+        message: `Veuillez trouver ci-joint le devis quantitatif estimatif "${exportConfig.title}" pour l'appel d'offres "${tender?.projectReference || tender?.title}". Le devis a été généré le ${format(new Date(), 'dd/MM/yyyy')} et est valide jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}.`,
         html: `
           <h2>Devis Quantitatif: ${exportConfig.title}</h2>
           <p>Bonjour,</p>
@@ -468,7 +468,15 @@ export function QuantitativeEstimateExporter({
           <p>Cordialement,</p>
           <p>L'équipe de gestion des appels d'offres</p>
         `
+        actionType: 'quantitative-estimate',
+        attachments: [
+          { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },
+        ],
       });
+
+      if (!emailResult.success) {
+        throw new Error("L'envoi de l'email a échoué");
+      }
 
       toast({
         title: "Devis envoyé",
