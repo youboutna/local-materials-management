@@ -23,13 +23,14 @@ interface Props {
 export function LocalFilePreviewButton({
   file,
   title,
-  label = t('auto.localfilepreviewbutton.apercu'),
+  label,
   documentType,
   className,
   size = 'sm',
   variant = 'outline',
 }: Props) {
   const { t } = useLanguage();
+  const buttonLabel = label ?? t('auto.localfilepreviewbutton.apercu');
   const { openDocument } = useDocumentViewer();
   if (!file) return null;
 
@@ -46,7 +47,7 @@ export function LocalFilePreviewButton({
       }}
     >
       <Eye className="mr-1 h-4 w-4" />
-      {label}
+      {buttonLabel}
     </Button>
   );
 }

@@ -35,7 +35,7 @@ interface ListToolbarProps {
 export function ListToolbar({
   search,
   onSearchChange,
-  searchPlaceholder = t('auto.listtoolbar.rechercher'),
+  searchPlaceholder,
   expiryFilter,
   onExpiryFilterChange,
   children,
@@ -43,6 +43,7 @@ export function ListToolbar({
   className,
 }: ListToolbarProps) {
   const { t } = useLanguage();
+  const placeholder = searchPlaceholder ?? t('auto.listtoolbar.rechercher');
   return (
     <div className={cn('mb-4 flex flex-wrap items-center gap-2', className)}>
       <div className="relative min-w-[16rem] flex-1">
@@ -50,7 +51,7 @@ export function ListToolbar({
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={searchPlaceholder}
+          placeholder={placeholder}
           className="pl-8"
           aria-label={searchPlaceholder}
         />
