@@ -34,6 +34,7 @@ import { tenderToPlanningService } from '@/application/services/TenderToPlanning
 import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
+import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
 import { formatCurrency } from '@/utils/phaseDisplayHelpers';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
