@@ -135,6 +135,7 @@ export interface UpdatePhaseData {
   estimated_cost?: number;
   status?: string;
   progress?: number;
+  custom_phase_data?: Record<string, unknown>;
 }
 
 export interface UsePhasesHexResult {
@@ -226,6 +227,7 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
       if (data.estimated_cost !== undefined) updates.estimatedCost = data.estimated_cost;
       if (data.status !== undefined) updates.status = data.status;
       if (data.progress !== undefined) updates.progress = data.progress;
+      if (data.custom_phase_data !== undefined) updates.customPhaseData = data.custom_phase_data;
       await phaseRepository.update(phaseId, updates as unknown as Partial<Phase>);
       await fetchPhases();
       return true;

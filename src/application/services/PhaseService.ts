@@ -87,6 +87,27 @@ export class PhaseService {
   }
 
   /**
+   * Get batch resource counts (documents/tasks/inspections/payments) for all
+   * phases of a project.
+   */
+  async getPhaseCountsByProjectId(projectId: string): Promise<Record<string, {
+    documents: number;
+    tasks: number;
+    inspections: number;
+    payments: number;
+  }>> {
+    try {
+      if (!projectId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
+      }
+      return await this.repository.getPhaseCountsByProjectId(projectId);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.INTERNAL_ERROR, `Failed to get phase counts: ${formatUnknownError(error)}`);
+    }
+  }
+
+  /**
    * Get phases by project
    */
   async getPhasesByProject(projectId: string): Promise<Phase[]> {
