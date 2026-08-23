@@ -261,6 +261,52 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
     }
   }
 
+  /**
+   * Batch resource counts (documents/tasks/inspections/payments) for all
+   * phases of a project, avoiding N+1 queries in list views.
+   */
+  async getPhaseCountsByProjectId(projectId: string): Promise<Record<string, {
+    documents: number;
+    tasks: number;
+    inspections: number;
+    payments: number;
+  }>> {
+    const { data: phaseRows, error: phasesError } = await supabase
+      .from('project_phases')
+      .select('id')
+      .eq('project_id', projectId);
+
+    if (phasesError) throw phasesError;
+
+    const phaseIds = (phaseRows || []).map((p) => p.id).filter(Boolean) as string[];
+    const counts: Record<string, { documents: number; tasks: number; inspections: number; payments: number }> = {};
+    phaseIds.forEach((id) => {
+      counts[id] = { documents: 0, tasks: 0, inspections: 0, payments: 0 };
+    });
+
+    if (phaseIds.length === 0) return counts;
+
+    const [documentsData, tasksData, inspectionsData, paymentsData] = await Promise.all([
+      supabase.from('documents').select('phase_id').in('phase_id', phaseIds),
+      supabase.from('tasks').select('phase_id').in('phase_id', phaseIds),
+      supabase.from('inspections').select('phase_id').in('phase_id', phaseIds),
+      supabase.from('payments').select('phase_id').in('phase_id', phaseIds),
+    ]);
+
+    const tally = (rows: { phase_id: string | null }[] | null | undefined, key: 'documents' | 'tasks' | 'inspections' | 'payments') => {
+      (rows || []).forEach((row) => {
+        if (row.phase_id && counts[row.phase_id]) counts[row.phase_id][key] += 1;
+      });
+    };
+
+    tally(documentsData.data as any, 'documents');
+    tally(tasksData.data as any, 'tasks');
+    tally(inspectionsData.data as any, 'inspections');
+    tally(paymentsData.data as any, 'payments');
+
+    return counts;
+  }
+
   // ============= Step Operations =============
   // Steps/tasks are stored inside `custom_phase_data.steps` (no dedicated table).
 

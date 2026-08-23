@@ -78,6 +78,17 @@ export interface IPhaseRepository {
    */
   getMetrics(id: string): Promise<PhaseMetrics>;
 
+  /**
+   * Get resource counts (documents, tasks, inspections, payments) for all
+   * phases of a project in a single batch (used by list/overview UIs).
+   */
+  getPhaseCountsByProjectId(projectId: string): Promise<Record<string, {
+    documents: number;
+    tasks: number;
+    inspections: number;
+    payments: number;
+  }>>;
+
   // ============= Step Operations =============
 
   /**
