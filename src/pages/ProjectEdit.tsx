@@ -316,10 +316,10 @@ const ProjectEdit = () => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-sm">
               <Workflow className="h-3 w-3 mr-1" />
-              Étape {currentStep}/{WORKFLOW_STEPS.length}
+              {t('workflow.step_counter', { current: currentStep, total: WORKFLOW_STEPS.length })}
             </Badge>
             <Badge variant={isComplete ? "default" : "secondary"} className="text-sm">
-              {progress}%
+              {t('workflow.progress_percent', { value: progress })}
             </Badge>
             {isComplete && (
               <Badge variant="default" className="bg-success">

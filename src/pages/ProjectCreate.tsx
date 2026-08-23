@@ -65,14 +65,14 @@ const ProjectCreate = () => {
   // Workflow Steps Definition
   // ============================================================
   const workflowSteps = [
-    { number: 1, title: 'Informations', required: true },
-    { number: 2, title: 'Parties prenantes', required: false },
-    { number: 3, title: 'Localisation', required: true },
-    { number: 4, title: 'Phases & découpage', required: true },
-    { number: 5, title: 'Risques', required: false },
-    { number: 6, title: 'Conformité', required: false },
-    { number: 7, title: 'Stratégie', required: false },
-    { number: 8, title: 'Validation', required: true }
+    { number: 1, code: 'project_info', required: true },
+    { number: 2, code: 'stakeholders', required: false },
+    { number: 3, code: 'location', required: true },
+    { number: 4, code: 'wbs', required: true },
+    { number: 5, code: 'risks', required: false },
+    { number: 6, code: 'compliance', required: false },
+    { number: 7, code: 'strategic_linkage', required: false },
+    { number: 8, code: 'validation', required: true }
   ];
 
   // ============================================================
@@ -180,10 +180,10 @@ const ProjectCreate = () => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-sm">
               <Workflow className="h-3 w-3 mr-1" />
-              Étape {currentStep}/{workflowSteps.length}
+              {t('workflow.step_counter', { current: currentStep, total: workflowSteps.length })}
             </Badge>
             <Badge variant="secondary" className="text-sm">
-              {progress}%
+              {t('workflow.progress_percent', { value: progress })}
             </Badge>
           </div>
           
@@ -248,7 +248,7 @@ const ProjectCreate = () => {
         <div className="mt-4 text-sm text-muted-foreground text-center">
           <p>
             {currentStep < workflowSteps.length ? (
-              `Étape ${currentStep} sur ${workflowSteps.length} - ${workflowSteps.find(s => s.number === currentStep)?.title}`
+              `${t('workflow.step_counter', { current: currentStep, total: workflowSteps.length })} — ${t(`project_workflow.steps.${workflowSteps.find(s => s.number === currentStep)?.code}.title`)}`
             ) : (
               `Toutes les étapes sont complètes - Prêt à créer le projet`
             )}
