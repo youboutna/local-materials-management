@@ -157,6 +157,7 @@ function NavItemComponent({
   collapsed?: boolean;
   depth?: number;
 }) {
+  const { t } = useLanguage();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(() => {
     // Auto-open if current path is within this section
