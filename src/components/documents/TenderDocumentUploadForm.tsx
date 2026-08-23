@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
 import { useStorageHex } from '@/hooks/hexagonal';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { createTenderDocumentUpload } from '@/application/services/TenderDocumentService';
 
 export type TenderCategory = "administrative" | "technical" | "financial";
 export type TenderSubcategory =
@@ -91,42 +91,22 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
         return;
       }
 
-    // Fix: Use correct document_type that exists in the database schema
-    const documentInsertObj = {
-      project_id: projectId,
+    const result = await createTenderDocumentUpload({
+      projectId,
       title,
       description,
-      file_url: uploadData.path,
-      document_type: "contract" as const, // Using "contract" as it's a valid type for tender documents
-    };
+      fileUrl: uploadData.path,
+      category,
+      subcategory,
+    });
 
-    const { data: docData, error: docError } = await supabase
-      .from("documents")
-      .insert(documentInsertObj)
-      .select()
-      .single();
-
-    if (docError || !docData) {
+    if (result.error && result.stage === 'document') {
       toast({ title: t("tender.alert.document_error"), variant: "destructive" });
       setLoading(false);
       return;
     }
 
-    const tenderDocumentInsertObj = {
-      project_id: projectId,
-      category,
-      subcategory: subcategory as TenderSubcategory,
-      is_required: true,
-      is_submitted: true,
-      status: "draft" as DocumentStatus,
-      document_id: docData.id,
-    };
-
-    const { error: tenderDocError } = await supabase
-      .from("tender_documents")
-      .insert([tenderDocumentInsertObj]);
-
-    if (tenderDocError) {
+    if (result.error) {
       toast({ title: t("tender.alert.tenderdoc_error"), variant: "destructive" });
     } else {
       toast({ title: t("tender.alert.success") });

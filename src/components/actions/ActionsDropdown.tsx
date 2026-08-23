@@ -5,8 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useActionRecipients } from '@/hooks/hexagonal/useActionRecipientsHex';
 import { T } from '@/components/i18n/T';
 
 interface ActionsDropdownProps {
@@ -53,53 +52,14 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   const { t } = useLanguage();
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [selectedActionType, setSelectedActionType] = useState<ActionFormData['actionType']>('task_assignment');
-  const [availableEmployees, setAvailableEmployees] = useState<Array<{ id: string; full_name: string; email?: string; position?: string; }>>([]);
-  const [availableRecipients, setAvailableRecipients] = useState<Array<{ id: string; name: string; email?: string; phone?: string; }>>([]);
+  const { employees: availableEmployees, recipients: availableRecipients, load: loadAvailableUsers } = useActionRecipients();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadAvailableUsers();
-  }, []);
-
-  const loadAvailableUsers = async () => {
-    try {
-      const [employeesData, suppliersData] = await Promise.all([
-        btpClient.from('employees')
-          .select('id, full_name, email, phone, position, department')
-          .eq('is_active', true),
-        btpClient.from('suppliers')
-          .select('id, name, email, phone, contact_person')
-          .eq('is_active', true)
-      ]);
-
-      setAvailableEmployees((employeesData.data || []).filter(emp => emp.id && emp.full_name).map(emp => ({
-        id: emp.id!,
-        full_name: emp.full_name!,
-        email: emp.email || undefined,
-        position: emp.position || undefined,
-      })));
-      
-      // Combine employees and suppliers as potential recipients
-      const recipients = [
-        ...(employeesData.data || []).filter(emp => emp.id && emp.full_name).map(emp => ({
-          id: emp.id!,
-          name: emp.full_name!,
-          email: emp.email || undefined,
-          phone: emp.phone || undefined,
-        })),
-        ...(suppliersData.data || []).filter(s => s.id && s.name).map(supplier => ({
-          id: supplier.id!,
-          name: supplier.name!,
-          email: supplier.email || undefined,
-          phone: supplier.phone || undefined,
-        }))
-      ];
-      
-      setAvailableRecipients(recipients);
-    } catch (error) {
+    loadAvailableUsers().catch((error) => {
       console.error('Error loading users:', error);
-    }
-  };
+    });
+  }, [loadAvailableUsers]);
 
   const handleActionClick = (actionType: ActionFormData['actionType']) => {
     setSelectedActionType(actionType);

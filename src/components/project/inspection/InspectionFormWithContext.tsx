@@ -30,8 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NotificationService } from '@/application/services/NotificationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { createInspectionWithContextHex } from '@/hooks/hexagonal/useInspectionFormWithContextHex';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
@@ -135,20 +134,15 @@ export function InspectionFormWithContext({
         fullComments = `${fullComments}\n\n--- Points de contrôle validés ---\n${checklistSummary}`;
       }
 
-      const { data: inspection, error } = await btpClient.from('inspections')
-        .insert({
-          project_id: projectId,
-          date: format(date, 'yyyy-MM-dd'),
-          status,
-          inspector: inspectorName,
-          progress_at_inspection: progress,
-          comments: fullComments || null,
-          phase_id: context?.linkedPhase?.id || milestoneContext?.phaseId || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const inspection = await createInspectionWithContextHex({
+        projectId,
+        date: format(date, 'yyyy-MM-dd'),
+        status,
+        inspectorName,
+        progress,
+        comments: fullComments || null,
+        phaseId: context?.linkedPhase?.id || milestoneContext?.phaseId || null,
+      });
 
       // Update milestone if linked
       if (milestoneContext?.milestoneId && status === 'approved') {

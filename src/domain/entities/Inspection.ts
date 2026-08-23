@@ -1,7 +1,7 @@
 // Domain Entity: Inspection
 // Pure business logic without infrastructure concerns
 
-import { InspectionObservation } from '../repositories/IInspectionRepository';
+import type { InspectionObservation } from '../repositories/IInspectionRepository';
 import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Local definition for InspectionParticipant

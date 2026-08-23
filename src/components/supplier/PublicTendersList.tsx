@@ -8,49 +8,23 @@
  */
 
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { usePublicOpenTenders } from '@/hooks/hexagonal/usePublicTendersHex';
 import { T } from '@/components/i18n/T';
 
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;
 }
 
-interface PublicTender {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  deadline_date?: string;
-  publication_date?: string;
-  market_type?: string;
-  budget_max?: number;
-  project_reference?: string;
-}
-
 export function PublicTendersList({ onSelect }: PublicTendersListProps) {
   const [search, setSearch] = useState('');
 
-  const { data: tenders = [], isLoading, isError } = useQuery({
-    queryKey: ['public-tenders-open'],
-    queryFn: async (): Promise<PublicTender[]> => {
-      // Accès anonyme autorisé par policy RLS (statut public + deadline valide).
-      const { data, error } = await btpClient.from('tenders')
-        .select('id, title, description, status, deadline_date, publication_date, market_type, budget_max, project_reference')
-        .in('status', ['published', 'open'])
-        .order('deadline_date', { ascending: true, nullsFirst: false });
-      if (error) throw error;
-      console.debug('[PublicTendersList] loaded tenders', { count: data?.length ?? 0 });
-      return (data as PublicTender[]) ?? [];
-    },
-    staleTime: 60_000,
-  });
+  // Accès anonyme autorisé par policy RLS (statut public + deadline valide).
+  const { data: tenders = [], isLoading, isError } = usePublicOpenTenders();
 
   const filtered = useMemo(() => {
     if (!search) return tenders;
@@ -58,7 +32,7 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
     return tenders.filter((t) =>
       t.title?.toLowerCase().includes(q) ||
       t.description?.toLowerCase().includes(q) ||
-      t.project_reference?.toLowerCase().includes(q)
+      t.projectReference?.toLowerCase().includes(q)
     );
   }, [tenders, search]);
 
@@ -85,8 +59,8 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((t) => {
-          const daysLeft = t.deadline_date
-            ? Math.ceil((new Date(t.deadline_date).getTime() - Date.now()) / 86400000)
+          const daysLeft = t.deadlineDate
+            ? Math.ceil((new Date(t.deadlineDate).getTime() - Date.now()) / 86400000)
             : null;
           const isUrgent = daysLeft !== null && daysLeft <= 7;
           return (
@@ -102,20 +76,20 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
                   <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
                 )}
                 <div className="flex flex-wrap gap-2 text-[11px] mt-auto pt-2">
-                  {t.market_type && (
+                  {t.marketType && (
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
-                      <FileText className="h-3 w-3" /> {t.market_type}
+                      <FileText className="h-3 w-3" /> {t.marketType}
                     </span>
                   )}
-                  {t.deadline_date && (
+                  {t.deadlineDate && (
                     <span className={`inline-flex items-center gap-1 ${isUrgent ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                       <Calendar className="h-3 w-3" />
                       {daysLeft !== null && daysLeft > 0 ? `${daysLeft} j restants` : 'Deadline dépassée'}
                     </span>
                   )}
-                  {t.project_reference && (
+                  {t.projectReference && (
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="h-3 w-3" /> {t.project_reference}
+                      <MapPin className="h-3 w-3" /> {t.projectReference}
                     </span>
                   )}
                 </div>

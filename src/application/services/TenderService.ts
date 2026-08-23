@@ -272,3 +272,39 @@ export function getTenderService(): TenderService {
   }
   return tenderServiceInstance;
 }
+
+export interface TenderBulkImportRow {
+  title: string;
+  description: string;
+  launch_date: string | null;
+  attribution_date: string | null;
+  selection_mode: string | null;
+  market_type: string | null;
+  financing_source: string | null;
+  project_reference?: string | null;
+  status: string;
+}
+
+/**
+ * Insère en masse des appels d'offres (import Excel).
+ * Retourne le nombre de lignes effectivement insérées.
+ */
+export async function bulkInsertTenders(rows: TenderBulkImportRow[]): Promise<{ count: number; error?: string }> {
+  if (rows.length === 0) return { count: 0 };
+  const { btpClient } = await import('@/integrations/supabase/schema-clients');
+  const { data, error } = await btpClient.from('tenders').insert(rows).select();
+  if (error) {
+    return { count: 0, error: error.message };
+  }
+  return { count: data?.length || 0 };
+}
+
+/**
+ * Insère un appel d'offres unique (import ligne par ligne) et retourne l'erreur éventuelle.
+ */
+export async function insertTender(row: TenderBulkImportRow): Promise<{ error?: string }> {
+  const { btpClient } = await import('@/integrations/supabase/schema-clients');
+  const { error } = await btpClient.from('tenders').insert([row]);
+  if (error) return { error: error.message };
+  return {};
+}

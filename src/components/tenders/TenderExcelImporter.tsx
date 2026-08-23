@@ -7,9 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal';
+import { useTenderImport } from '@/hooks/hexagonal/useTenderImportHex';
 import * as XLSX from 'xlsx';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
 import { T } from '@/components/i18n/T';
 
 interface ImportedTender {
@@ -36,6 +35,7 @@ interface ProcessedTender {
 const TenderExcelImporter: React.FC = () => {
   const { toast } = useToast();
   const { getUser } = useAuth();
+  const { insertTender } = useTenderImport();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [preview, setPreview] = useState<ImportedTender[]>([]);
@@ -198,12 +198,11 @@ const TenderExcelImporter: React.FC = () => {
 
           console.log(`Importing tender ${index + 1}:`, processedTender);
 
-          const { error } = await btpClient.from('tenders')
-            .insert([processedTender]);
+          const { error } = await insertTender(processedTender);
 
           if (error) {
             console.error(`Error importing tender ${item.ordre}:`, error);
-            errorMessages.push(`Ligne ${index + 1} (${item.objet.substring(0, 50)}...): ${error.message}`);
+            errorMessages.push(`Ligne ${index + 1} (${item.objet.substring(0, 50)}...): ${error}`);
             errorCount++;
           } else {
             successCount++;

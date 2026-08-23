@@ -3,7 +3,6 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,18 +27,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { usePaymentRequestDocumentsHex, submitPaymentRequestHex, type PaymentDocument as PaymentDocumentHex } from '@/hooks/hexagonal/usePaymentRequestModalHex';
 import { T } from '@/components/i18n/T';
 
-interface PaymentDocument {
-  id: string;
-  type: string;
-  title: string;
-  file_url?: string;
-  created_at: string;
-  status?: string;
-}
+type PaymentDocument = PaymentDocumentHex;
 
 interface PaymentRequestModalProps {
   open: boolean;
@@ -86,64 +77,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch available documents from inspections
-  const { data: availableDocuments = [], isLoading: loadingDocs } = useQuery({
-    queryKey: ['payment-documents', projectId, phaseId],
-    queryFn: async () => {
-      // Fetch documents from recent inspections
-      const { data: inspections, error } = await btpClient.from('inspections')
-        .select('id, date, status, documents, progress_at_inspection')
-        .eq('project_id', projectId)
-        .eq('status', 'approved')
-        .order('date', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      const docs: PaymentDocument[] = [];
-      
-      for (const inspection of inspections || []) {
-        if (inspection.documents) {
-          const inspDocs = inspection.documents as any;
-          
-          if (inspDocs.files && Array.isArray(inspDocs.files)) {
-            for (const file of inspDocs.files) {
-              docs.push({
-                id: `${inspection.id}-${file.type}`,
-                type: file.type,
-                title: file.file_name || file.type,
-                file_url: file.file_url,
-                created_at: file.uploaded_at || inspection.date,
-                status: 'approved',
-              });
-            }
-          }
-        }
-      }
-
-      // Also fetch from documents table
-      const { data: projectDocs } = await btpClient.from('documents')
-        .select('id, title, document_type, file_url, created_at, status')
-        .eq('project_id', projectId)
-        .in('document_type', ['inspection_report', 'project_report'])
-        .order('created_at', { ascending: false });
-
-      if (projectDocs) {
-        for (const doc of projectDocs) {
-          docs.push({
-            id: doc.id || '',
-            type: doc.document_type || '',
-            title: doc.title || '',
-            file_url: doc.file_url || undefined,
-            created_at: doc.created_at || '',
-            status: doc.status || undefined,
-          });
-        }
-      }
-
-      return docs;
-    },
-    enabled: open,
-  });
+  const { data: availableDocuments = [], isLoading: loadingDocs } = usePaymentRequestDocumentsHex(projectId, phaseId, open);
 
   // Check if all required documents are available
   const documentStatus = useMemo(() => {
@@ -194,20 +128,12 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
 
     try {
       // Create payment request
-      const { error } = await btpClient.from('payments')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          amount,
-          progress_at_payment: progressAtPayment,
-          payment_date: new Date().toISOString(),
-          payment_method: 'pending', // Will be set upon approval
-          transaction_id: `REQ-${Date.now()}`,
-          contractor_name: 'Pending',
-          contractor_contact: 'Pending',
-        });
-
-      if (error) throw error;
+      await submitPaymentRequestHex({
+        projectId,
+        phaseId,
+        amount,
+        progressAtPayment,
+      });
 
       toast.success('Demande de paiement soumise avec succès');
       onOpenChange(false);

@@ -1,7 +1,7 @@
 // Domain Entity: UserRole
 // Dynamic role instance with configurable permissions
 
-import { Permission } from './Employee';
+import type { Permission } from './Employee';
 
 export class UserRole {
   constructor(

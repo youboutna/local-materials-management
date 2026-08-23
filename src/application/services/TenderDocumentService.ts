@@ -301,3 +301,56 @@ export function getTenderDocumentService(): TenderDocumentService {
   }
   return tenderDocumentServiceInstance;
 }
+
+export interface CreateTenderDocumentUploadInput {
+  projectId: string;
+  title: string;
+  description: string;
+  fileUrl: string;
+  category: string;
+  subcategory: string;
+}
+
+/**
+ * Crée le document GED puis la ligne tender_documents associée (upload formulaire AO).
+ * Accès DB encapsulé ici : aucun appel Supabase côté UI.
+ */
+export async function createTenderDocumentUpload(
+  input: CreateTenderDocumentUploadInput
+): Promise<{ documentId?: string; error?: string; stage?: 'document' | 'tender_document' }> {
+  const { btpClient } = await import('@/integrations/supabase/schema-clients');
+
+  const { data: docData, error: docError } = await btpClient
+    .from('documents')
+    .insert({
+      project_id: input.projectId,
+      title: input.title,
+      description: input.description,
+      file_url: input.fileUrl,
+      document_type: 'contract',
+    })
+    .select()
+    .single();
+
+  if (docError || !docData) {
+    return { error: docError?.message || 'document insert failed', stage: 'document' };
+  }
+
+  const { error: tenderDocError } = await btpClient
+    .from('tender_documents')
+    .insert([{
+      project_id: input.projectId,
+      category: input.category,
+      subcategory: input.subcategory,
+      is_required: true,
+      is_submitted: true,
+      status: 'draft',
+      document_id: (docData as { id: string }).id,
+    }]);
+
+  if (tenderDocError) {
+    return { documentId: (docData as { id: string }).id, error: tenderDocError.message, stage: 'tender_document' };
+  }
+
+  return { documentId: (docData as { id: string }).id };
+}
