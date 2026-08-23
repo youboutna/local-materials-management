@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useI18n } from '@/hooks/useI18n';
 import { toast } from "@/hooks/use-toast";
 import { useAlertsHex } from "@/hooks/hexagonal";
 import { AlertData } from "@/dtos/entities";
@@ -25,6 +26,7 @@ import {
 import { T } from '@/components/i18n/T';
 const AlertsDashboard: React.FC = () => {
   const { t } = useLanguage();
+  const { formatDateTime } = useI18n();
   const { 
     alerts, 
     isLoading, 
@@ -65,13 +67,10 @@ const AlertsDashboard: React.FC = () => {
     });
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      return new Date(timestamp).toLocaleTimeString();
-    } catch {
-      return '';
-    }
-  };
+  const formatTimestamp = (timestamp: string) => formatDateTime(timestamp, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 
   if (isLoading) {
     return (

@@ -18,12 +18,34 @@ export const useI18n = () => {
     const service = getI18nService();
     service.setLanguage(lang);
 
+    /** Locale BCP-47 dérivée de la langue UI courante (jamais figée sur fr-FR). */
+    const locale = lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR';
+    const toDate = (value: Date | string | number | null | undefined): Date | null => {
+      if (value === null || value === undefined || value === '') return null;
+      const date = value instanceof Date ? value : new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+
     return {
       language: lang,
+      locale,
       setLanguage,
       t,
       direction: service.getDirection(lang),
+      formatDate: (value: Date | string | number | null | undefined, options?: Intl.DateTimeFormatOptions) => {
+        const date = toDate(value);
+        return date ? date.toLocaleDateString(locale, options) : '—';
+      },
+      formatDateTime: (value: Date | string | number | null | undefined, options?: Intl.DateTimeFormatOptions) => {
+        const date = toDate(value);
+        return date ? date.toLocaleString(locale, options) : '—';
+      },
+      formatTime: (value: Date | string | number | null | undefined, options?: Intl.DateTimeFormatOptions) => {
+        const date = toDate(value);
+        return date ? date.toLocaleTimeString(locale, options) : '—';
+      },
       translateStatus: (code?: string | null) => service.translateStatus(code, lang),
+
       translateProjectType: (code?: string | null) => service.translateProjectType(code, lang),
       translateUnit: (code?: string | null) => service.translateUnit(code, lang),
       translateTenderStep: (code?: string | null) => service.translateTenderStep(code, lang),

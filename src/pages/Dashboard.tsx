@@ -17,6 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useI18n } from "@/hooks/useI18n";
+
 import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex } from "@/hooks/hexagonal";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
 import { useAuth } from '@/hooks/hexagonal/useAuth';
@@ -43,16 +45,21 @@ import { formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 import { T } from '@/components/i18n/T';
 
 
+/** Rôles autorisés sur le tableau de bord de gestion (codes techniques). */
+const REQUIRED_DASHBOARD_ROLES = ['admin', 'director', 'project_manager'] as const;
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { translateRole } = useI18n();
   
   // Use the original AuthContext
   const { user, session } = useAuth();
   const { userRoles, hasAnyRole, hasRole } = useCurrentUserRoles();
   
   // Check if user has access to dashboard (admin, director, or project_manager)
-  const hasAccess = hasAnyRole(['admin', 'director', 'project_manager']);
+  const hasAccess = hasAnyRole([...REQUIRED_DASHBOARD_ROLES]);
+
   
   // Use hexagonal architecture hooks for data
   const { projects: hexProjects } = useProjectsHex();
@@ -131,14 +138,15 @@ const Dashboard: React.FC = () => {
               <p className="text-sm text-destructive">
                 <strong>{t("dashboard.your_roles")}:</strong>{" "}
                 {userRoles.length > 0
-                  ? userRoles.join(", ")
+                  ? userRoles.map((role) => translateRole(role)).join(", ")
                   : t("dashboard.no_role_assigned")}
               </p>
               <p className="text-sm text-destructive">
                 <strong>{t("dashboard.required_roles_label")}:</strong>{" "}
-                admin, director, project_manager
+                {REQUIRED_DASHBOARD_ROLES.map((role) => translateRole(role)).join(", ")}
               </p>
             </div>
+
             <Button
               className="mt-4"
               onClick={() => navigate("/projects")}
@@ -184,7 +192,7 @@ const Dashboard: React.FC = () => {
         {/* Role Badges */}
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            {t("dashboard.badges.roles_label")}: {userRoles.join(", ")}
+            {t("dashboard.badges.roles_label")}: {userRoles.map((role) => translateRole(role)).join(", ")}
           </Badge>
           {userRoles.includes("admin") && (
             <Badge className="bg-destructive text-destructive-foreground text-xs">

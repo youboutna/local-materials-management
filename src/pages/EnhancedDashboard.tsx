@@ -15,13 +15,18 @@ import { useProjectManager } from '@/hooks/useProjectManager';
 import { AlertTriangle, Bell, CheckCircle, ExternalLink, Eye } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
-import { TranslatedDocumentType, TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
+import { alertTypeLabel } from '@/config/referentials/notifications/alerts.referential';
+
 // ============================================================
 // Composant Dashboard
 // ============================================================
 const EnhancedDashboardContent = () => {
   const { state, alerts, acknowledgeAlert, getSummaryStats, loading, runChecks } = useProjectManager();
+  const { t, language, translateStatus, translateTerm } = useI18n();
+
 
   // Utiliser alerts depuis state
   const allAlerts = state?.alerts || alerts || [];
@@ -73,7 +78,7 @@ const EnhancedDashboardContent = () => {
               <div className="flex items-center gap-4">
                 {criticalAlerts.length > 0 && (
                   <Badge variant="destructive" className="text-lg px-4 py-2">
-                    {criticalAlerts.length} Alertes critiques
+                    {criticalAlerts.length} {t('auto.enhanceddashboard.alertes_critiques')}
                   </Badge>
                 )}
                 <Button variant="outline" onClick={runChecks}>
@@ -140,11 +145,12 @@ const EnhancedDashboardContent = () => {
                             </p>
                           </div>
                           <p className="text-sm text-destructive mt-1">
-                            <T k="auto.enhanceddashboard.severite" fallback="Sévérité:" /> <TranslatedSeverity code={alert.severity} /> | Type: <TranslatedDocumentType code={alert.type} />
+                            <T k="auto.enhanceddashboard.severite" fallback="Sévérité:" /> <TranslatedSeverity code={alert.severity} /> | {t('alerts.type_label')}: {alertTypeLabel(alert.type, language)}
                           </p>
                           <p className="text-xs text-destructive mt-1">
-                            Détecté le: {alert.formattedDate}
+                            {t('alerts.detected_at')}: {alert.formattedDate}
                           </p>
+
                         </div>
                         <Button
                           size="sm"
@@ -193,8 +199,9 @@ const EnhancedDashboardContent = () => {
                             <span className="text-xl">{alert.icon}</span>
                             <h4 className="font-medium">{alert.displayName}</h4>
                             <Badge variant="outline" className="text-xs">
-                              <TranslatedDocumentType code={alert.type} />
+                              {alertTypeLabel(alert.type, language)}
                             </Badge>
+
                             <Badge 
                               variant="secondary"
                               className={
@@ -212,10 +219,11 @@ const EnhancedDashboardContent = () => {
                             </p>
                           )}
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Source: {alert.source || 'inconnue'}</span>
-                            <span>Statut: {alert.status || 'open'}</span>
-                            <span>Détecté: {alert.formattedDate}</span>
+                            <span>{t('alerts.source_label')}: {translateTerm(alert.source) || t('common.unknown')}</span>
+                            <span>{t('alerts.status_label')}: {translateStatus(alert.status || 'open')}</span>
+                            <span>{t('alerts.detected_at')}: {alert.formattedDate}</span>
                           </div>
+
                         </div>
                         <div className="flex items-center gap-2">
                           {!alert.acknowledged && (

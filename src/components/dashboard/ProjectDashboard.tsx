@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/hooks/useI18n';
 import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
 import { 
   BarChart, 
@@ -77,6 +78,8 @@ interface ProjectDashboardProps {
 }
 
 const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
+  const { t } = useI18n();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProject, setSelectedProject] = useState<string | null>(projectId || null);
 
@@ -250,7 +253,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load project data: {String(projectsError)}
+          {t('dashboard.project.load_error')}: {String(projectsError)}
         </AlertDescription>
       </Alert>
     );
@@ -389,7 +392,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                     onChange={(loc) => {
                       console.info('[ProjectDashboard] location search', loc);
                     }}
-                    placeholder="Rechercher des projets par localisation..."
+                    placeholder={t('dashboard.project.search_by_location')}
                     filter="all"
                     className="w-full"
                     showCoordinates={false}

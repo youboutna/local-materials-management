@@ -5,11 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useI18n } from '@/hooks/useI18n';
+import { alertSeverityLabel } from '@/config/referentials/notifications/alerts.referential';
 import { useManagementActionsHex, ActionItem } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 
 const ManagementActions: React.FC = () => {
   const { t } = useLanguage();
+  const { language, formatDate } = useI18n();
+  const urgencyLabel = (code: string, lang: string) => alertSeverityLabel(code, lang as 'fr' | 'ar' | 'en');
   const { actions: actionItems, loading } = useManagementActionsHex();
 
   const getUrgencyColor = (urgency: string) => {
@@ -156,7 +160,7 @@ const ManagementActions: React.FC = () => {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-medium">{item.title}</h3>
                           <Badge className={`${getUrgencyColor(item.urgency)} text-xs`}>
-                            {item.urgency}
+                            {urgencyLabel(item.urgency, language)}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             {getCategoryLabel(item.category)}
@@ -170,7 +174,7 @@ const ManagementActions: React.FC = () => {
                         )}
                         {item.dueDate && (
                           <p className="text-xs text-muted-foreground">
-                            <strong>{t('management_actions.deadline') || 'Échéance'}:</strong> {item.dueDate.toLocaleDateString('fr-FR')}
+                            <strong>{t('management_actions.deadline') || 'Échéance'}:</strong> {formatDate(item.dueDate)}
                           </p>
                         )}
                       </div>
