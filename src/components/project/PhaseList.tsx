@@ -1,5 +1,6 @@
 // components/project/PhaseList.tsx
 import React, { useState } from "react";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
   projectId,
   onPhaseUpdate,
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { createPhase, deletePhase, isCreating, isDeleting, refetch } =
     usePhasesHex(projectId);
@@ -145,9 +147,9 @@ const PhaseList: React.FC<PhaseListProps> = ({
       <CardContent>
         {phaseDtos.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>Aucune phase définie pour ce projet</p>
+            <p>{t('phase_structure.no_phase_for_project')}</p>
             <p className="text-sm mt-2">
-              Utilisez le générateur ci-dessus pour créer des phases
+              {t('phase_structure.use_generator_hint')}
             </p>
           </div>
         ) : (

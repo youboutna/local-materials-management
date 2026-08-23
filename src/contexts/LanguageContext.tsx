@@ -5120,6 +5120,57 @@ deepMergeMissing(
     expandFlatKeys(EN_ADDITIONS_FLAT)
 );
 
+/**
+ * Phase 6 — libellés UI des générateurs de structure (phases / jalons / métré).
+ * Codes techniques et données restent bruts en base : seuls ces libellés sont traduits.
+ */
+const PHASE_STRUCTURE_KEYS = {
+    fr: {
+        'phase_structure.referential': 'Référentiel',
+        'phase_structure.select_referential': 'Sélectionner un référentiel',
+        'phase_structure.generate_milestones': 'Générer les jalons',
+        'phase_structure.generate_structure': 'Générer la structure',
+        'phase_structure.generating': 'Génération…',
+        'phase_structure.generate_milestones_from_referential': 'Générer les jalons du référentiel',
+        'phase_structure.no_phase_defined': 'Aucune phase définie. Commencez par ajouter une phase.',
+        'phase_structure.no_phase_for_project': 'Aucune phase définie pour ce projet',
+        'phase_structure.use_generator_hint': 'Utilisez le générateur ci-dessus pour créer des phases',
+        'phase_structure.takeoff_after_step1': 'Le métré (simple et avancé) sera disponible après la sauvegarde de l’étape 1.',
+    },
+    ar: {
+        'phase_structure.referential': 'المرجعية',
+        'phase_structure.select_referential': 'اختر مرجعية',
+        'phase_structure.generate_milestones': 'إنشاء المراحل الرئيسية',
+        'phase_structure.generate_structure': 'إنشاء الهيكل',
+        'phase_structure.generating': 'جارٍ الإنشاء…',
+        'phase_structure.generate_milestones_from_referential': 'إنشاء المراحل الرئيسية من المرجعية',
+        'phase_structure.no_phase_defined': 'لا توجد مرحلة محددة. ابدأ بإضافة مرحلة.',
+        'phase_structure.no_phase_for_project': 'لا توجد مرحلة محددة لهذا المشروع',
+        'phase_structure.use_generator_hint': 'استخدم المُنشئ أعلاه لإنشاء المراحل',
+        'phase_structure.takeoff_after_step1': 'سيتوفر حصر الكميات (البسيط والمتقدم) بعد حفظ الخطوة 1.',
+    },
+    en: {
+        'phase_structure.referential': 'Referential',
+        'phase_structure.select_referential': 'Select a referential',
+        'phase_structure.generate_milestones': 'Generate milestones',
+        'phase_structure.generate_structure': 'Generate structure',
+        'phase_structure.generating': 'Generating…',
+        'phase_structure.generate_milestones_from_referential': 'Generate milestones from referential',
+        'phase_structure.no_phase_defined': 'No phase defined. Start by adding a phase.',
+        'phase_structure.no_phase_for_project': 'No phase defined for this project',
+        'phase_structure.use_generator_hint': 'Use the generator above to create phases',
+        'phase_structure.takeoff_after_step1': 'Quantity takeoff (simple and advanced) will be available after saving step 1.',
+    },
+} as const;
+
+(['fr', 'ar', 'en'] as const).forEach((lang) => {
+    deepMergeMissing(
+        (translations as unknown as Record<string, Record<string, unknown>>)[lang],
+        expandFlatKeys(PHASE_STRUCTURE_KEYS[lang])
+    );
+});
+
+
 
 interface LanguageProviderProps {
     children: ReactNode;

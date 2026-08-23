@@ -234,8 +234,12 @@ export const CATEGORY_LABELS: Record<string, ReferentialLabel> = {
   delivery: label('delivery', 'Livraisons', 'التسليمات', 'Deliveries'),
   media: label('media', 'Photos & Médias', 'الصور والوسائط', 'Photos & Media'),
   hr: label('hr', 'Ressources humaines', 'الموارد البشرية', 'Human resources'),
+  // Codes ENUM public.applicant_type
+  company: label('company', 'Personne morale (entreprise)', 'شخص اعتباري (شركة)', 'Company'),
+  individual: label('individual', 'Personne physique', 'شخص طبيعي', 'Individual'),
   other: label('other', 'Autres', 'أخرى', 'Other'),
 };
+
 
 /** Priorités (tâches, jalons, conformité, risques). */
 export const PRIORITY_LABELS: Record<string, ReferentialLabel> = {
@@ -278,6 +282,15 @@ export const DOCUMENT_TYPE_LABELS: Record<string, ReferentialLabel> = {
   employee_record: label('employee_record', 'Dossier employé', 'ملف الموظف', 'Employee record'),
   supplier_catalog: label('supplier_catalog', 'Catalogue fournisseur', 'كتالوج المورد', 'Supplier catalog'),
   tender: label('tender', 'Appel d’offres', 'عطاء', 'Tender'),
+
+  // Codes ENUM public.document_category
+  construction_permit: label('construction_permit', 'Permis de construire', 'رخصة البناء', 'Construction permit'),
+  property_cadastre: label('property_cadastre', 'Titre foncier / cadastre', 'الرسم العقاري / المسح', 'Property title / cadastre'),
+  distribution_license: label('distribution_license', 'Licence de distribution', 'رخصة التوزيع', 'Distribution license'),
+  environmental_study: label('environmental_study', 'Étude environnementale', 'الدراسة البيئية', 'Environmental study'),
+  safety_assessment: label('safety_assessment', 'Évaluation de sécurité', 'تقييم السلامة', 'Safety assessment'),
+
+
 
   contract: label('contract', 'Contrat', 'عقد', 'Contract'),
   contrat: label('contrat', 'Contrat', 'عقد', 'Contract'),

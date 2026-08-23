@@ -1115,13 +1115,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <Label>Référentiel</Label>
+                        <Label>{t('phase_structure.referential')}</Label>
                         <Select
                           value={selectedReferential || ""}
                           onValueChange={(value) => setSelectedReferential(value as ReferentialType)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un référentiel" />
+                            <SelectValue placeholder={t('phase_structure.select_referential')} />
                           </SelectTrigger>
                           <SelectContent>
                             {referentialOptions.map((option) => (

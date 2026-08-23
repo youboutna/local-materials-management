@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -98,6 +99,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   projectId,
   referentialType,
 }) => {
+  const { t } = useLanguage();
   const existingPhases = workflowData?.relatedData?.phases || [];
   const navigate = useNavigate();
 
@@ -1132,13 +1134,13 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
               <div className="flex items-center gap-2">
 
-                <Label className="whitespace-nowrap">Référentiel:</Label>
+                <Label className="whitespace-nowrap">{t('phase_structure.referential')}&nbsp;:</Label>
 
                 <Select value={selectedReferential || ''} onValueChange={(value) => setSelectedReferential(value as ReferentialType)}>
 
                   <SelectTrigger className="w-[280px]">
 
-                    <SelectValue placeholder="Sélectionner un référentiel" />
+                    <SelectValue placeholder={t('phase_structure.select_referential')} />
 
                   </SelectTrigger>
 
@@ -1178,7 +1180,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   <Flag className="h-4 w-4 text-primary" />
 
-                  Générer jalons
+                  {t('phase_structure.generate_milestones')}
 
                 </Label>
 
@@ -1200,7 +1202,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 <Zap className="h-4 w-4" />
 
-                {isGenerating ? 'Génération...' : 'Générer structure'}
+                {isGenerating ? t('phase_structure.generating') : t('phase_structure.generate_structure')}
 
               </Button>
 
@@ -1304,7 +1306,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
 
-            <p>Aucune phase définie. Commencez par ajouter une phase.</p>
+            <p>{t('phase_structure.no_phase_defined')}</p>
 
           </div>
 
