@@ -106,3 +106,13 @@ export function getInvoiceDocumentType(code?: string | null): InvoiceDocumentTyp
 export function invoiceTypesForActor(actor: InvoiceActor): InvoiceDocumentTypeDef[] {
   return INVOICE_DOCUMENT_TYPES.filter((d) => d.actors.includes(actor));
 }
+
+/** Résout l'étape documentaire depuis le `dqe_type` stocké sur les lignes BOQ. */
+export function getInvoiceTypeByDqeType(dqeType?: string | null): InvoiceDocumentTypeDef {
+  if (!dqeType) return INVOICE_DOCUMENT_TYPE_BY_CODE.dqe;
+  return (
+    INVOICE_DOCUMENT_TYPES.find((d) => d.dqeType === dqeType) ??
+    INVOICE_DOCUMENT_TYPE_BY_CODE.dqe
+  );
+}
+
