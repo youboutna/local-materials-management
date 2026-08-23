@@ -650,7 +650,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
+            <DialogDescription>
+              Sélectionnez la catégorie, la sous-catégorie et le fichier à joindre à cet appel d'offres.
+            </DialogDescription>
           </DialogHeader>
+
           
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
