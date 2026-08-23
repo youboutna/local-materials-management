@@ -67,7 +67,7 @@ function extractEnums() {
 const loadJson = (f) => (fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {});
 
 async function translateBatch(entries, lang) {
-    const langName = lang === 'ar' ? 'arabe' : 'anglais';
+    const langName = lang === 'ar' ? 'arabe' : lang === 'en' ? 'anglais' : 'français';
     const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
@@ -77,7 +77,9 @@ async function translateBatch(entries, lang) {
                 {
                     role: 'system',
                     content:
-                        `Tu traduis des libellés de statuts/types métier d'une application de gestion de projets BTP (Mauritanie) du français vers l'${langName}. ` +
+                        `Tu produis les libellés d'interface en ${langName} pour des statuts/types métier d'une application de gestion de projets BTP (Mauritanie). ` +
+                        'Les clés ont la forme enum.<NomEnum>.<code>; la valeur fournie est une humanisation brute du code (souvent en anglais). ' +
+                        `Rends un libellé métier NATUREL en ${langName}, adapté au contexte indiqué par le nom de l'ENUM. ` +
                         "Réponds STRICTEMENT en JSON: un objet {clé: traduction}. Conserve les clés à l'identique. Libellés courts, sans ponctuation finale.",
                 },
                 { role: 'user', content: JSON.stringify(Object.fromEntries(entries)) },
@@ -166,6 +168,27 @@ function emitTs(enums, labels) {
     }
     fs.mkdirSync(LOCALES, { recursive: true });
     fs.writeFileSync(files.fr, `${JSON.stringify(labels.fr, null, 2)}\n`);
+
+    // Passe fr : les codes ENUM sont anglais -> produire de vrais libellés métier français.
+    const frRaw = Object.entries(labels.fr).filter(([, v]) => !labels.frDone || !labels.frDone[v]);
+    if (KEY && process.env.FR_PASS !== 'skip') {
+        const done = loadJson(path.join(LOCALES, 'enums.fr.done.json'));
+        const todo = frRaw.filter(([k]) => !done[k]);
+        console.log(`fr: ${todo.length} libellés à naturaliser`);
+        for (let i = 0; i < todo.length; i += 60) {
+            const batch = todo.slice(i, i + 60);
+            try {
+                const out = await translateBatch(batch, 'fr');
+                for (const [k, v] of Object.entries(out)) {
+                    if (typeof v === 'string' && v.trim()) { labels.fr[k] = v.trim(); done[k] = v.trim(); }
+                }
+            } catch (e) {
+                console.error(`  échec lot fr ${i}: ${e.message}`);
+            }
+            fs.writeFileSync(files.fr, `${JSON.stringify(labels.fr, null, 2)}\n`);
+            fs.writeFileSync(path.join(LOCALES, 'enums.fr.done.json'), `${JSON.stringify(done, null, 2)}\n`);
+        }
+    }
     console.log(`${enums.size} ENUM, ${Object.keys(labels.fr).length} libellés fr (${added} nouveaux)`);
 
     if (KEY) {

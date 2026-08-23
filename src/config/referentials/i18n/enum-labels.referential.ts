@@ -18,440 +18,440 @@ export type EnumLabelMap = Readonly<Record<string, EnumLabel>>;
 
 /** AuthProvider — src/domain/entities/AuthUser.ts */
 export const AUTH_PROVIDER_LABELS: EnumLabelMap = {
-    'supabase': { fr: 'Supabase', ar: 'سوبابيس', en: 'Supabase' },
-    'keycloak': { fr: 'Keycloak', ar: 'كي كلوك', en: 'Keycloak' },
-    'auth0': { fr: 'Auth0', ar: 'أوث 0', en: 'Auth0' },
-    'database': { fr: 'Database', ar: 'قاعدة بيانات', en: 'Database' },
+    'supabase': { fr: 'Supabase', ar: 'سوبابيز', en: 'Supabase' },
+    'keycloak': { fr: 'Keycloak', ar: 'كيكلوك', en: 'Keycloak' },
+    'auth0': { fr: 'Auth0', ar: 'أوث0', en: 'Auth0' },
+    'database': { fr: 'Base de données', ar: 'قاعدة بيانات', en: 'Database' },
 };
 
 /** AuthUserStatus — src/domain/entities/AuthUser.ts */
 export const AUTH_USER_STATUS_LABELS: EnumLabelMap = {
-    'active': { fr: 'Active', ar: 'نشط', en: 'Active' },
-    'inactive': { fr: 'Inactive', ar: 'غير نشط', en: 'Inactive' },
-    'suspended': { fr: 'Suspended', ar: 'معلق', en: 'Suspended' },
-    'pending': { fr: 'Pending', ar: 'قيد الانتظار', en: 'Pending' },
+    'active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'suspended': { fr: 'Suspendu', ar: 'معلق', en: 'Suspended' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
 };
 
 /** CommonStatus — src/dtos/shared.ts */
 export const COMMON_STATUS_LABELS: EnumLabelMap = {
-    'active': { fr: 'Active', ar: 'نشط', en: 'Active' },
-    'inactive': { fr: 'Inactive', ar: 'غير نشط', en: 'Inactive' },
-    'pending': { fr: 'Pending', ar: 'معلق', en: 'Pending' },
-    'completed': { fr: 'Completed', ar: 'مكتمل', en: 'Completed' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغى', en: 'Cancelled' },
-    'draft': { fr: 'Draft', ar: 'مسودة', en: 'Draft' },
+    'active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'completed': { fr: 'Terminé', ar: 'مكتمل', en: 'Completed' },
+    'cancelled': { fr: 'Annulé', ar: 'ملغى', en: 'Cancelled' },
+    'draft': { fr: 'Brouillon', ar: 'مسودة', en: 'Draft' },
 };
 
 /** DocumentPriority — src/domain/entities/Document.ts */
 export const DOCUMENT_PRIORITY_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفض', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسط', en: 'Medium' },
-    'high': { fr: 'High', ar: 'عالي', en: 'High' },
-    'urgent': { fr: 'Urgent', ar: 'عاجل', en: 'Urgent' },
+    'low': { fr: 'Basse', ar: 'منخفضة', en: 'Low' },
+    'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
+    'high': { fr: 'Haute', ar: 'عالية', en: 'High' },
+    'urgent': { fr: 'Urgent', ar: 'عاجلة', en: 'Urgent' },
 };
 
 /** DocumentStatus — src/domain/entities/Document.ts */
 export const DOCUMENT_STATUS_LABELS: EnumLabelMap = {
-    'draft': { fr: 'Draft', ar: 'مسودة', en: 'Draft' },
-    'pending_approval': { fr: 'Pending approval', ar: 'بانتظار الموافقة', en: 'Pending approval' },
-    'pending_review': { fr: 'Pending review', ar: 'قيد المراجعة', en: 'Pending review' },
-    'approved': { fr: 'Approved', ar: 'معتمد', en: 'Approved' },
-    'rejected': { fr: 'Rejected', ar: 'مرفوض', en: 'Rejected' },
-    'archived': { fr: 'Archived', ar: 'مؤرشف', en: 'Archived' },
-    'expired': { fr: 'Expired', ar: 'منتهي الصلاحية', en: 'Expired' },
-    'deprecated': { fr: 'Deprecated', ar: 'مهمل', en: 'Deprecated' },
+    'draft': { fr: 'Brouillon', ar: 'مسودة', en: 'Draft' },
+    'pending_approval': { fr: 'En attente d\'approbation', ar: 'بانتظار الموافقة', en: 'Pending Approval' },
+    'pending_review': { fr: 'En attente de révision', ar: 'قيد المراجعة', en: 'Pending Review' },
+    'approved': { fr: 'Approuvé', ar: 'معتمد', en: 'Approved' },
+    'rejected': { fr: 'Rejeté', ar: 'مرفوض', en: 'Rejected' },
+    'archived': { fr: 'Archivé', ar: 'مؤرشف', en: 'Archived' },
+    'expired': { fr: 'Expiré', ar: 'منتهي الصلاحية', en: 'Expired' },
+    'deprecated': { fr: 'Obsolète', ar: 'مُلغى', en: 'Deprecated' },
 };
 
 /** DocumentType — src/domain/entities/Document.ts */
 export const DOCUMENT_TYPE_LABELS: EnumLabelMap = {
-    'contract': { fr: 'Contract', ar: 'عقد', en: 'Contract' },
+    'contract': { fr: 'Contrat', ar: 'عقد', en: 'Contract' },
     'plan': { fr: 'Plan', ar: 'خطة', en: 'Plan' },
-    'specification': { fr: 'Specification', ar: 'مواصفات', en: 'Specification' },
-    'report': { fr: 'Report', ar: 'تقرير', en: 'Report' },
-    'certificate': { fr: 'Certificate', ar: 'شهادة', en: 'Certificate' },
-    'permit': { fr: 'Permit', ar: 'تصريح', en: 'Permit' },
-    'invoice': { fr: 'Invoice', ar: 'فاتورة', en: 'Invoice' },
-    'receipt': { fr: 'Receipt', ar: 'إيصال', en: 'Receipt' },
-    'manual': { fr: 'Manual', ar: 'دليل', en: 'Manual' },
-    'policy': { fr: 'Policy', ar: 'سياسة', en: 'Policy' },
-    'procedure': { fr: 'Procedure', ar: 'إجراء', en: 'Procedure' },
-    'drawing': { fr: 'Drawing', ar: 'رسم', en: 'Drawing' },
+    'specification': { fr: 'Spécification', ar: 'مواصفات', en: 'Specification' },
+    'report': { fr: 'Rapport', ar: 'تقرير', en: 'Report' },
+    'certificate': { fr: 'Certificat', ar: 'شهادة', en: 'Certificate' },
+    'permit': { fr: 'Permis', ar: 'تصريح', en: 'Permit' },
+    'invoice': { fr: 'Facture', ar: 'فاتورة', en: 'Invoice' },
+    'receipt': { fr: 'Reçu', ar: 'إيصال', en: 'Receipt' },
+    'manual': { fr: 'Manuel', ar: 'دليل', en: 'Manual' },
+    'policy': { fr: 'Politique', ar: 'سياسة', en: 'Policy' },
+    'procedure': { fr: 'Procédure', ar: 'إجراء', en: 'Procedure' },
+    'drawing': { fr: 'Dessin', ar: 'رسم', en: 'Drawing' },
     'photo': { fr: 'Photo', ar: 'صورة', en: 'Photo' },
-    'video': { fr: 'Video', ar: 'فيديو', en: 'Video' },
-    'blueprint': { fr: 'Blueprint', ar: 'تصميم', en: 'Blueprint' },
-    'schema': { fr: 'Schema', ar: 'مخطط', en: 'Schema' },
-    'checklist': { fr: 'Checklist', ar: 'قائمة تحقق', en: 'Checklist' },
-    'form': { fr: 'Form', ar: 'نموذج', en: 'Form' },
-    'template': { fr: 'Template', ar: 'قالب', en: 'Template' },
-    'pv': { fr: 'PV', ar: 'محضر', en: 'Meeting Minutes' },
-    'service_report': { fr: 'Service report', ar: 'تقرير خدمة', en: 'Service report' },
-    'tender_document': { fr: 'Tender document', ar: 'وثيقة مناقصة', en: 'Tender document' },
-    'supporting_document': { fr: 'Supporting document', ar: 'مستند داعم', en: 'Supporting document' },
-    'correspondence': { fr: 'Correspondence', ar: 'مراسلة', en: 'Correspondence' },
-    'insurance': { fr: 'Insurance', ar: 'تأمين', en: 'Insurance' },
-    'warranty': { fr: 'Warranty', ar: 'ضمان', en: 'Warranty' },
-    'bank_guarantee': { fr: 'Bank guarantee', ar: 'ضمان بنكي', en: 'Bank guarantee' },
-    'other': { fr: 'Other', ar: 'أخرى', en: 'Other' },
+    'video': { fr: 'Vidéo', ar: 'فيديو', en: 'Video' },
+    'blueprint': { fr: 'Plan d\'exécution', ar: 'مخطط تنفيذي', en: 'Blueprint' },
+    'schema': { fr: 'Schéma', ar: 'مخطط بياني', en: 'Diagram' },
+    'checklist': { fr: 'Liste de contrôle', ar: 'قائمة تدقيق', en: 'Checklist' },
+    'form': { fr: 'Formulaire', ar: 'نموذج', en: 'Form' },
+    'template': { fr: 'Modèle', ar: 'قالب', en: 'Template' },
+    'pv': { fr: 'PV', ar: 'محضر', en: 'Minutes' },
+    'service_report': { fr: 'Rapport de service', ar: 'تقرير خدمة', en: 'Service Report' },
+    'tender_document': { fr: 'Document d\'appel d\'offres', ar: 'وثيقة مناقصة', en: 'Tender Document' },
+    'supporting_document': { fr: 'Pièce justificative', ar: 'وثيقة داعمة', en: 'Supporting Document' },
+    'correspondence': { fr: 'Correspondance', ar: 'مراسلات', en: 'Correspondence' },
+    'insurance': { fr: 'Assurance', ar: 'تأمين', en: 'Insurance' },
+    'warranty': { fr: 'Garantie', ar: 'ضمان', en: 'Warranty' },
+    'bank_guarantee': { fr: 'Garantie bancaire', ar: 'ضمان بنكي', en: 'Bank Guarantee' },
+    'other': { fr: 'Autre', ar: 'أخرى', en: 'Other' },
 };
 
 /** EmployeeDepartment — src/dtos/entities/EmployeeDTO.ts */
 export const EMPLOYEE_DEPARTMENT_LABELS: EnumLabelMap = {
-    'engineering': { fr: 'Engineering', ar: 'هندسة', en: 'Engineering' },
-    'design': { fr: 'Design', ar: 'تصميم', en: 'Design' },
-    'project_management': { fr: 'Project management', ar: 'إدارة مشاريع', en: 'Project management' },
-    'quality_assurance': { fr: 'Quality assurance', ar: 'ضمان الجودة', en: 'Quality assurance' },
-    'operations': { fr: 'Operations', ar: 'عمليات', en: 'Operations' },
+    'engineering': { fr: 'Ingénierie', ar: 'هندسة', en: 'Engineering' },
+    'design': { fr: 'Conception', ar: 'تصميم', en: 'Design' },
+    'project_management': { fr: 'Gestion de projet', ar: 'إدارة المشاريع', en: 'Project Management' },
+    'quality_assurance': { fr: 'Assurance qualité', ar: 'ضمان الجودة', en: 'Quality Assurance' },
+    'operations': { fr: 'Opérations', ar: 'عمليات', en: 'Operations' },
     'finance': { fr: 'Finance', ar: 'مالية', en: 'Finance' },
-    'human_resources': { fr: 'Human resources', ar: 'موارد بشرية', en: 'Human resources' },
+    'human_resources': { fr: 'Ressources humaines', ar: 'موارد بشرية', en: 'Human Resources' },
     'marketing': { fr: 'Marketing', ar: 'تسويق', en: 'Marketing' },
-    'sales': { fr: 'Sales', ar: 'مبيعات', en: 'Sales' },
+    'sales': { fr: 'Ventes', ar: 'مبيعات', en: 'Sales' },
     'administration': { fr: 'Administration', ar: 'إدارة', en: 'Administration' },
-    'legal': { fr: 'Legal', ar: 'قانونية', en: 'Legal' },
-    'procurement': { fr: 'Procurement', ar: 'مشتريات', en: 'Procurement' },
+    'legal': { fr: 'Juridique', ar: 'شؤون قانونية', en: 'Legal' },
+    'procurement': { fr: 'Achats', ar: 'مشتريات', en: 'Procurement' },
     'maintenance': { fr: 'Maintenance', ar: 'صيانة', en: 'Maintenance' },
-    'security': { fr: 'Security', ar: 'أمن', en: 'Security' },
+    'security': { fr: 'Sécurité', ar: 'أمن', en: 'Security' },
 };
 
 /** EmployeeRole — src/dtos/entities/EmployeeDTO.ts */
 export const EMPLOYEE_ROLE_LABELS: EnumLabelMap = {
-    'project_manager': { fr: 'Project manager', ar: 'مدير مشروع', en: 'Project manager' },
-    'team_lead': { fr: 'Team lead', ar: 'قائد فريق', en: 'Team lead' },
-    'developer': { fr: 'Developer', ar: 'مطور', en: 'Developer' },
+    'project_manager': { fr: 'Chef de projet', ar: 'مدير مشروع', en: 'Project Manager' },
+    'team_lead': { fr: 'Chef d\'équipe', ar: 'رئيس فريق', en: 'Team Lead' },
+    'developer': { fr: 'Développeur', ar: 'مطور', en: 'Developer' },
     'designer': { fr: 'Designer', ar: 'مصمم', en: 'Designer' },
-    'analyst': { fr: 'Analyst', ar: 'محلل', en: 'Analyst' },
-    'tester': { fr: 'Tester', ar: 'مختبر', en: 'Tester' },
-    'architect': { fr: 'Architect', ar: 'مهندس معماري', en: 'Architect' },
-    'consultant': { fr: 'Consultant', ar: 'استشاري', en: 'Consultant' },
-    'specialist': { fr: 'Specialist', ar: 'أخصائي', en: 'Specialist' },
-    'coordinator': { fr: 'Coordinator', ar: 'منسق', en: 'Coordinator' },
-    'supervisor': { fr: 'Supervisor', ar: 'مشرف', en: 'Supervisor' },
+    'analyst': { fr: 'Analyste', ar: 'محلل', en: 'Analyst' },
+    'tester': { fr: 'Testeur', ar: 'فاحص', en: 'Tester' },
+    'architect': { fr: 'Architecte', ar: 'مهندس معماري', en: 'Architect' },
+    'consultant': { fr: 'Consultant', ar: 'مستشار', en: 'Consultant' },
+    'specialist': { fr: 'Spécialiste', ar: 'أخصائي', en: 'Specialist' },
+    'coordinator': { fr: 'Coordinateur', ar: 'منسق', en: 'Coordinator' },
+    'supervisor': { fr: 'Superviseur', ar: 'مشرف', en: 'Supervisor' },
     'manager': { fr: 'Manager', ar: 'مدير', en: 'Manager' },
 };
 
 /** EmployeeStatus — src/dtos/entities/EmployeeDTO.ts */
 export const EMPLOYEE_STATUS_LABELS: EnumLabelMap = {
-    'active': { fr: 'Active', ar: 'نشط', en: 'Active' },
-    'inactive': { fr: 'Inactive', ar: 'غير نشط', en: 'Inactive' },
-    'on_leave': { fr: 'On leave', ar: 'في إجازة', en: 'On leave' },
-    'terminated': { fr: 'Terminated', ar: 'منهي الخدمة', en: 'Terminated' },
-    'suspended': { fr: 'Suspended', ar: 'معلق', en: 'Suspended' },
+    'active': { fr: 'Actif', ar: 'فعّال', en: 'Active' },
+    'inactive': { fr: 'Inactif', ar: 'غير فعّال', en: 'Inactive' },
+    'on_leave': { fr: 'En congé', ar: 'في إجازة', en: 'On Leave' },
+    'terminated': { fr: 'Licencié', ar: 'مُنهى خدماته', en: 'Terminated' },
+    'suspended': { fr: 'Suspendu', ar: 'موقوف', en: 'Suspended' },
 };
 
 /** EmployeeType — src/dtos/entities/EmployeeDTO.ts */
 export const EMPLOYEE_TYPE_LABELS: EnumLabelMap = {
-    'full_time': { fr: 'Full time', ar: 'دوام كامل', en: 'Full time' },
-    'part_time': { fr: 'Part time', ar: 'دوام جزئي', en: 'Part time' },
-    'contract': { fr: 'Contract', ar: 'عقد', en: 'Contract' },
-    'intern': { fr: 'Intern', ar: 'متدرب', en: 'Intern' },
-    'consultant': { fr: 'Consultant', ar: 'استشاري', en: 'Consultant' },
+    'full_time': { fr: 'Temps plein', ar: 'دوام كامل', en: 'Full-Time' },
+    'part_time': { fr: 'Temps partiel', ar: 'دوام جزئي', en: 'Part-Time' },
+    'contract': { fr: 'Contractuel', ar: 'عقد', en: 'Contract' },
+    'intern': { fr: 'Stagiaire', ar: 'متدرب', en: 'Intern' },
+    'consultant': { fr: 'Consultant', ar: 'مستشار', en: 'Consultant' },
 };
 
 /** InspectionPriority — src/dtos/entities/InspectionDTO.ts */
 export const INSPECTION_PRIORITY_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفض', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسط', en: 'Medium' },
-    'high': { fr: 'High', ar: 'عال', en: 'High' },
-    'urgent': { fr: 'Urgent', ar: 'عاجل', en: 'Urgent' },
+    'low': { fr: 'Faible', ar: 'منخفضة', en: 'Low' },
+    'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
+    'high': { fr: 'Élevée', ar: 'عالية', en: 'High' },
+    'urgent': { fr: 'Urgente', ar: 'عاجلة', en: 'Urgent' },
 };
 
 /** InspectionStatus — src/dtos/entities/InspectionDTO.ts */
 export const INSPECTION_STATUS_LABELS: EnumLabelMap = {
-    'scheduled': { fr: 'Scheduled', ar: 'مجدولة', en: 'Scheduled' },
-    'pending': { fr: 'Pending', ar: 'معلقة', en: 'Pending' },
-    'planned': { fr: 'Planned', ar: 'مخطط لها', en: 'Planned' },
-    'in_progress': { fr: 'In progress', ar: 'قيد التقدم', en: 'In progress' },
-    'completed': { fr: 'Completed', ar: 'مكتملة', en: 'Completed' },
-    'requires_review': { fr: 'Requires review', ar: 'تتطلب مراجعة', en: 'Requires review' },
-    'requires_changes': { fr: 'Requires changes', ar: 'يتطلب تعديلات', en: 'Requires changes' },
-    'approved': { fr: 'Approved', ar: 'معتمد', en: 'Approved' },
-    'rejected': { fr: 'Rejected', ar: 'مرفوض', en: 'Rejected' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغى', en: 'Cancelled' },
+    'scheduled': { fr: 'Programmé', ar: 'مجدولة', en: 'Scheduled' },
+    'pending': { fr: 'En attente', ar: 'معلقة', en: 'Pending' },
+    'planned': { fr: 'Planifié', ar: 'مخطط لها', en: 'Planned' },
+    'in_progress': { fr: 'En cours', ar: 'قيد التنفيذ', en: 'In Progress' },
+    'completed': { fr: 'Terminé', ar: 'مكتملة', en: 'Completed' },
+    'requires_review': { fr: 'Requiert révision', ar: 'تتطلب مراجعة', en: 'Requires Review' },
+    'requires_changes': { fr: 'À modifier', ar: 'يتطلب تعديلات', en: 'Requires Changes' },
+    'approved': { fr: 'Approuvée', ar: 'معتمدة', en: 'Approved' },
+    'rejected': { fr: 'Rejetée', ar: 'مرفوضة', en: 'Rejected' },
+    'cancelled': { fr: 'Annulée', ar: 'ملغاة', en: 'Cancelled' },
 };
 
 /** InspectionType — src/dtos/entities/InspectionDTO.ts */
 export const INSPECTION_TYPE_LABELS: EnumLabelMap = {
-    'routine': { fr: 'Routine', ar: 'روتيني', en: 'Routine' },
-    'special': { fr: 'Special', ar: 'خاص', en: 'Special' },
-    'safety': { fr: 'Safety', ar: 'سلامة', en: 'Safety' },
-    'quality': { fr: 'Quality', ar: 'جودة', en: 'Quality' },
-    'compliance': { fr: 'Compliance', ar: 'امتثال', en: 'Compliance' },
+    'routine': { fr: 'Régulière', ar: 'روتينية', en: 'Routine' },
+    'special': { fr: 'Spéciale', ar: 'خاصة', en: 'Special' },
+    'safety': { fr: 'Sécurité', ar: 'سلامة', en: 'Safety' },
+    'quality': { fr: 'Qualité', ar: 'جودة', en: 'Quality' },
+    'compliance': { fr: 'Conformité', ar: 'امتثال', en: 'Compliance' },
 };
 
 /** MaterialStatus — src/dtos/entities/MaterialDTO.ts */
 export const MATERIAL_STATUS_LABELS: EnumLabelMap = {
-    'available': { fr: 'Available', ar: 'متوفر', en: 'Available' },
-    'out_of_stock': { fr: 'Out of stock', ar: 'نفد المخزون', en: 'Out of stock' },
-    'discontinued': { fr: 'Discontinued', ar: 'متوقف عن الإنتاج', en: 'Discontinued' },
-    'on_order': { fr: 'On order', ar: 'قيد الطلب', en: 'On order' },
-    'reserved': { fr: 'Reserved', ar: 'محجوز', en: 'Reserved' },
-    'damaged': { fr: 'Damaged', ar: 'تالف', en: 'Damaged' },
+    'available': { fr: 'Disponible', ar: 'متوفر', en: 'Available' },
+    'out_of_stock': { fr: 'En rupture de stock', ar: 'نفد المخزون', en: 'Out of Stock' },
+    'discontinued': { fr: 'Arrêté', ar: 'متوقف', en: 'Discontinued' },
+    'on_order': { fr: 'En commande', ar: 'قيد الطلب', en: 'On Order' },
+    'reserved': { fr: 'Réservé', ar: 'محجوز', en: 'Reserved' },
+    'damaged': { fr: 'Endommagé', ar: 'تالف', en: 'Damaged' },
 };
 
 /** MaterialUnit — src/dtos/entities/MaterialDTO.ts */
 export const MATERIAL_UNIT_LABELS: EnumLabelMap = {
-    'pieces': { fr: 'Pieces', ar: 'قطعة', en: 'Pieces' },
-    'kilograms': { fr: 'Kilograms', ar: 'كيلوغرام', en: 'Kilograms' },
-    'meters': { fr: 'Meters', ar: 'متر', en: 'Meters' },
-    'liters': { fr: 'Liters', ar: 'لتر', en: 'Liters' },
-    'square_meters': { fr: 'Square meters', ar: 'متر مربع', en: 'Square meters' },
-    'cubic_meters': { fr: 'Cubic meters', ar: 'متر مكعب', en: 'Cubic meters' },
-    'tons': { fr: 'Tons', ar: 'طن', en: 'Tons' },
-    'bags': { fr: 'Bags', ar: 'كيس', en: 'Bags' },
-    'boxes': { fr: 'Boxes', ar: 'صندوق', en: 'Boxes' },
-    'rolls': { fr: 'Rolls', ar: 'لفة', en: 'Rolls' },
-    'sets': { fr: 'Sets', ar: 'مجموعة', en: 'Sets' },
+    'pieces': { fr: 'Pièces', ar: 'قطعة', en: 'Pieces' },
+    'kilograms': { fr: 'Kilogrammes', ar: 'كيلوغرام', en: 'Kilograms' },
+    'meters': { fr: 'Mètres', ar: 'متر', en: 'Meters' },
+    'liters': { fr: 'Litres', ar: 'لتر', en: 'Liters' },
+    'square_meters': { fr: 'Mètres carrés', ar: 'متر مربع', en: 'Square Meters' },
+    'cubic_meters': { fr: 'Mètres cubes', ar: 'متر مكعب', en: 'Cubic Meters' },
+    'tons': { fr: 'Tonnes', ar: 'طن', en: 'Tons' },
+    'bags': { fr: 'Sacs', ar: 'كيس', en: 'Bags' },
+    'boxes': { fr: 'Boîtes', ar: 'صندوق', en: 'Boxes' },
+    'rolls': { fr: 'Rouleaux', ar: 'لفة', en: 'Rolls' },
+    'sets': { fr: 'Lots', ar: 'طقم', en: 'Sets' },
 };
 
 /** PaymentStatusEnum — src/application/services/PaymentService.ts */
 export const PAYMENT_STATUS_ENUM_LABELS: EnumLabelMap = {
-    'pending': { fr: 'Pending', ar: 'قيد الانتظار', en: 'Pending' },
-    'approved': { fr: 'Approved', ar: 'معتمد', en: 'Approved' },
-    'processed': { fr: 'Processed', ar: 'معالج', en: 'Processed' },
-    'completed': { fr: 'Completed', ar: 'مكتمل', en: 'Completed' },
-    'failed': { fr: 'Failed', ar: 'فشل', en: 'Failed' },
-    'blocked': { fr: 'Blocked', ar: 'محظور', en: 'Blocked' },
-    'rejected': { fr: 'Rejected', ar: 'مرفوض', en: 'Rejected' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغى', en: 'Cancelled' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'approved': { fr: 'Approuvé', ar: 'معتمد', en: 'Approved' },
+    'processed': { fr: 'Traité', ar: 'معالج', en: 'Processed' },
+    'completed': { fr: 'Terminé', ar: 'مكتمل', en: 'Completed' },
+    'failed': { fr: 'Échoué', ar: 'فاشل', en: 'Failed' },
+    'blocked': { fr: 'Bloqué', ar: 'محظور', en: 'Blocked' },
+    'rejected': { fr: 'Rejeté', ar: 'مرفوض', en: 'Rejected' },
+    'cancelled': { fr: 'Annulé', ar: 'ملغى', en: 'Canceled' },
 };
 
 /** PhasePriority — src/dtos/entities/PhaseDTO.ts */
 export const PHASE_PRIORITY_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفضة', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسطة', en: 'Medium' },
-    'high': { fr: 'High', ar: 'عالية', en: 'High' },
-    'urgent': { fr: 'Urgent', ar: 'عاجلة', en: 'Urgent' },
+    'low': { fr: 'Faible', ar: 'منخفضة', en: 'Low' },
+    'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
+    'high': { fr: 'Élevée', ar: 'عالية', en: 'High' },
+    'urgent': { fr: 'Urgente', ar: 'عاجلة', en: 'Urgent' },
 };
 
 /** PhaseStatus — src/dtos/entities/PhaseDTO.ts */
 export const PHASE_STATUS_LABELS: EnumLabelMap = {
-    'pending': { fr: 'Pending', ar: 'معلق', en: 'Pending' },
-    'in_progress': { fr: 'In progress', ar: 'قيد التنفيذ', en: 'In progress' },
-    'completed': { fr: 'Completed', ar: 'مكتمل', en: 'Completed' },
-    'delayed': { fr: 'Delayed', ar: 'متأخر', en: 'Delayed' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغاة', en: 'Cancelled' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'in_progress': { fr: 'En cours', ar: 'قيد الإنجاز', en: 'In Progress' },
+    'completed': { fr: 'Terminée', ar: 'مكتملة', en: 'Completed' },
+    'delayed': { fr: 'Retardée', ar: 'متأخرة', en: 'Delayed' },
+    'cancelled': { fr: 'Annulée', ar: 'ملغاة', en: 'Cancelled' },
 };
 
 /** PhaseType — src/dtos/entities/PhaseDTO.ts */
 export const PHASE_TYPE_LABELS: EnumLabelMap = {
-    'foundation': { fr: 'Foundation', ar: 'أساسات', en: 'Foundation' },
-    'structural': { fr: 'Structural', ar: 'إنشائي', en: 'Structural' },
+    'foundation': { fr: 'Fondations', ar: 'أساسات', en: 'Foundation' },
+    'structural': { fr: 'Structurel', ar: 'إنشاء الهيكل', en: 'Structural' },
     'excavation': { fr: 'Excavation', ar: 'حفريات', en: 'Excavation' },
-    'demolition': { fr: 'Demolition', ar: 'هدم', en: 'Demolition' },
-    'finishing': { fr: 'Finishing', ar: 'تشطيبات', en: 'Finishing' },
-    'electrical': { fr: 'Electrical', ar: 'كهرباء', en: 'Electrical' },
-    'plumbing': { fr: 'Plumbing', ar: 'سباكة', en: 'Plumbing' },
-    'hvac': { fr: 'Hvac', ar: 'تكييف وتدفئة وتهوية', en: 'Hvac' },
-    'roofing': { fr: 'Roofing', ar: 'تسقيف', en: 'Roofing' },
-    'exterior': { fr: 'Exterior', ar: 'خارجي', en: 'Exterior' },
-    'interior': { fr: 'Interior', ar: 'داخلي', en: 'Interior' },
-    'landscaping': { fr: 'Landscaping', ar: 'تنسيق حدائق', en: 'Landscaping' },
+    'demolition': { fr: 'Démolition', ar: 'هدم', en: 'Demolition' },
+    'finishing': { fr: 'Finition', ar: 'تشطيبات', en: 'Finishing' },
+    'electrical': { fr: 'Électricité', ar: 'كهرباء', en: 'Electrical' },
+    'plumbing': { fr: 'Plomberie', ar: 'سباكة', en: 'Plumbing' },
+    'hvac': { fr: 'Climatisation', ar: 'تكييف وتهوية', en: 'HVAC' },
+    'roofing': { fr: 'Toiture', ar: 'تسقيف', en: 'Roofing' },
+    'exterior': { fr: 'Extérieur', ar: 'أعمال خارجية', en: 'Exterior' },
+    'interior': { fr: 'Intérieur', ar: 'أعمال داخلية', en: 'Interior' },
+    'landscaping': { fr: 'Aménagement paysager', ar: 'تنسيق مواقع', en: 'Landscaping' },
 };
 
 /** PhaseWorkflowStep — src/dtos/workflows/PhaseWorkflowDTO.ts */
 export const PHASE_WORKFLOW_STEP_LABELS: EnumLabelMap = {
-    'planning': { fr: 'Planning', ar: 'تخطيط', en: 'Planning' },
-    'execution': { fr: 'Execution', ar: 'تنفيذ', en: 'Execution' },
-    'review': { fr: 'Review', ar: 'مراجعة', en: 'Review' },
-    'completion': { fr: 'Completion', ar: 'إنجاز', en: 'Completion' },
+    'planning': { fr: 'Planification', ar: 'تخطيط', en: 'Planning' },
+    'execution': { fr: 'Exécution', ar: 'تنفيذ', en: 'Execution' },
+    'review': { fr: 'Revue', ar: 'مراجعة', en: 'Review' },
+    'completion': { fr: 'Achèvement', ar: 'إتمام', en: 'Completion' },
 };
 
 /** Priority — src/dtos/shared.ts */
 export const PRIORITY_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفضة', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسطة', en: 'Medium' },
-    'high': { fr: 'High', ar: 'عالية', en: 'High' },
-    'urgent': { fr: 'Urgent', ar: 'عاجلة', en: 'Urgent' },
+    'low': { fr: 'Basse', ar: 'منخفضة', en: 'Low' },
+    'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
+    'high': { fr: 'Haute', ar: 'عالية', en: 'High' },
+    'urgent': { fr: 'Urgente', ar: 'مستعجلة', en: 'Urgent' },
 };
 
 /** ProfileStatus — src/domain/entities/UserProfile.ts */
 export const PROFILE_STATUS_LABELS: EnumLabelMap = {
-    'active': { fr: 'Active', ar: 'نشط', en: 'Active' },
-    'inactive': { fr: 'Inactive', ar: 'غير نشط', en: 'Inactive' },
-    'suspended': { fr: 'Suspended', ar: 'معلق', en: 'Suspended' },
-    'pending_verification': { fr: 'Pending verification', ar: 'بانتظار التحقق', en: 'Pending verification' },
+    'active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'suspended': { fr: 'Suspendu', ar: 'معلق', en: 'Suspended' },
+    'pending_verification': { fr: 'Vérification en attente', ar: 'بانتظار التحقق', en: 'Pending Verification' },
 };
 
 /** ProjectStatus — src/dtos/entities/ProjectDTO.ts */
 export const PROJECT_STATUS_LABELS: EnumLabelMap = {
-    'draft': { fr: 'Draft', ar: 'مسودة', en: 'Draft' },
-    'planned': { fr: 'Planned', ar: 'مخطط', en: 'Planned' },
-    'pre_qualification': { fr: 'Pre qualification', ar: 'تأهيل مسبق', en: 'Pre qualification' },
-    'en_attente': { fr: 'En attente', ar: 'في انتظار', en: 'On hold' },
-    'en_conception': { fr: 'En conception', ar: 'قيد التصميم', en: 'In design' },
-    'planifie_v2': { fr: 'Planifie', ar: 'مخطط', en: 'Planned' },
-    'attribue_v2': { fr: 'Attribue', ar: 'مخصص', en: 'Assigned' },
-    'en_cours_v2': { fr: 'En cours', ar: 'قيد التنفيذ', en: 'In progress' },
-    'en_construction_v2': { fr: 'En construction', ar: 'قيد الإنشاء', en: 'Under construction' },
-    'en_inspection_v2': { fr: 'En inspection', ar: 'قيد الفحص', en: 'In inspection' },
-    'en_review': { fr: 'En review', ar: 'قيد المراجعة', en: 'In review' },
-    'termine_v2': { fr: 'Termine', ar: 'مكتمل', en: 'Completed' },
-    'en_cloture_v2': { fr: 'En cloture', ar: 'قيد الإغلاق', en: 'In closing' },
-    'completed': { fr: 'Completed', ar: 'مكتمل', en: 'Completed' },
+    'draft': { fr: 'Brouillon', ar: 'مسودة', en: 'Draft' },
+    'planned': { fr: 'Planifié', ar: 'مخطط', en: 'Planned' },
+    'pre_qualification': { fr: 'Pré-qualification', ar: 'تأهيل مبدئي', en: 'Pre-Qualification' },
+    'en_attente': { fr: 'En attente', ar: 'قيد الانتظار', en: 'On Hold' },
+    'en_conception': { fr: 'En conception', ar: 'قيد التصميم', en: 'In Design' },
+    'planifie_v2': { fr: 'Planifié', ar: 'مخطط', en: 'Planned' },
+    'attribue_v2': { fr: 'Attribué', ar: 'مُسند', en: 'Assigned' },
+    'en_cours_v2': { fr: 'En cours', ar: 'قيد التنفيذ', en: 'In Progress' },
+    'en_construction_v2': { fr: 'En construction', ar: 'قيد الإنشاء', en: 'Under Construction' },
+    'en_inspection_v2': { fr: 'En inspection', ar: 'تحت الفحص', en: 'Under Inspection' },
+    'en_review': { fr: 'En révision', ar: 'قيد المراجعة', en: 'Under Review' },
+    'termine_v2': { fr: 'Terminé', ar: 'منتهٍ', en: 'Completed' },
+    'en_cloture_v2': { fr: 'En clôture', ar: 'قيد الإغلاق', en: 'Closing' },
+    'completed': { fr: 'Terminé', ar: 'مكتمل', en: 'Completed' },
     'suspendu_v2': { fr: 'Suspendu', ar: 'معلق', en: 'Suspended' },
     'en_retard_v2': { fr: 'En retard', ar: 'متأخر', en: 'Delayed' },
-    'annule_v2': { fr: 'Annule', ar: 'ملغى', en: 'Cancelled' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغى', en: 'Cancelled' },
-    'enCours': { fr: 'En cours legacy', ar: 'قيد التنفيذ (قديم)', en: 'In progress legacy' },
-    'termine': { fr: 'Termine legacy', ar: 'مكتمل (قديم)', en: 'Completed legacy' },
-    'enAttente': { fr: 'En attente legacy', ar: 'قيد الانتظار (قديم)', en: 'Pending legacy' },
-    'enInspection': { fr: 'En inspection legacy', ar: 'قيد الفحص (قديم)', en: 'In inspection legacy' },
-    'suspendu': { fr: 'Suspendu legacy', ar: 'معلق (قديم)', en: 'Suspended legacy' },
-    'annule': { fr: 'Annule legacy', ar: 'ملغى (قديم)', en: 'Cancelled legacy' },
-    'attribue': { fr: 'Attribue legacy', ar: 'مخصص (قديم)', en: 'Assigned legacy' },
-    'planifie': { fr: 'Planifie legacy', ar: 'مخطط له (قديم)', en: 'Planned legacy' },
-    'preQualification': { fr: 'Pre qualification legacy', ar: 'تأهيل مسبق (قديم)', en: 'Pre-qualification legacy' },
-    'enConception': { fr: 'En conception legacy', ar: 'قيد التصميم (قديم)', en: 'In design legacy' },
-    'enConstruction': { fr: 'En construction legacy', ar: 'قيد الإنشاء (قديم)', en: 'In construction legacy' },
-    'enCloture': { fr: 'En cloture legacy', ar: 'قيد الإغلاق (قديم)', en: 'In closing legacy' },
-    'enRetard': { fr: 'En retard legacy', ar: 'متأخر (قديم)', en: 'Delayed legacy' },
+    'annule_v2': { fr: 'Annulé', ar: 'ملغى', en: 'Canceled' },
+    'cancelled': { fr: 'Annulé', ar: 'ملغى', en: 'Canceled' },
+    'enCours': { fr: 'En cours', ar: 'قيد التنفيذ', en: 'In Progress' },
+    'termine': { fr: 'Terminé', ar: 'منتهٍ', en: 'Completed' },
+    'enAttente': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'enInspection': { fr: 'En inspection', ar: 'تحت الفحص', en: 'Under Inspection' },
+    'suspendu': { fr: 'Suspendu', ar: 'معلق', en: 'Suspended' },
+    'annule': { fr: 'Annulé', ar: 'ملغى', en: 'Canceled' },
+    'attribue': { fr: 'Attribué', ar: 'مُسنَد', en: 'Awarded' },
+    'planifie': { fr: 'Planifié', ar: 'مخطط له', en: 'Planned' },
+    'preQualification': { fr: 'Pré-qualification', ar: 'تأهيل مبدئي', en: 'Prequalification' },
+    'enConception': { fr: 'En conception', ar: 'قيد التصميم', en: 'In Design' },
+    'enConstruction': { fr: 'En construction', ar: 'قيد الإنشاء', en: 'Under Construction' },
+    'enCloture': { fr: 'En clôture', ar: 'قيد الإغلاق', en: 'Closing' },
+    'enRetard': { fr: 'En retard', ar: 'متأخر', en: 'Delayed' },
 };
 
 /** ProjectType — src/dtos/entities/ProjectDTO.ts */
 export const PROJECT_TYPE_LABELS: EnumLabelMap = {
-    'residential': { fr: 'Residential', ar: 'سكني', en: 'Residential' },
+    'residential': { fr: 'Résidentiel', ar: 'سكني', en: 'Residential' },
     'commercial': { fr: 'Commercial', ar: 'تجاري', en: 'Commercial' },
-    'industrial': { fr: 'Industrial', ar: 'صناعي', en: 'Industrial' },
+    'industrial': { fr: 'Industriel', ar: 'صناعي', en: 'Industrial' },
     'infrastructure': { fr: 'Infrastructure', ar: 'بنية تحتية', en: 'Infrastructure' },
-    'renovation': { fr: 'Renovation', ar: 'تجديد', en: 'Renovation' },
+    'renovation': { fr: 'Rénovation', ar: 'تجديد', en: 'Renovation' },
     'maintenance': { fr: 'Maintenance', ar: 'صيانة', en: 'Maintenance' },
 };
 
 /** ReceptionStatus — src/dtos/entities/ReceptionDTO.ts */
 export const RECEPTION_STATUS_LABELS: EnumLabelMap = {
-    'pending': { fr: 'Pending', ar: 'معلق', en: 'Pending' },
-    'in_progress': { fr: 'In progress', ar: 'قيد التقدم', en: 'In progress' },
-    'approved': { fr: 'Approved', ar: 'موافق عليه', en: 'Approved' },
-    'rejected': { fr: 'Rejected', ar: 'مرفوض', en: 'Rejected' },
-    'require_resubmission': { fr: 'Require resubmission', ar: 'يتطلب إعادة تقديم', en: 'Require resubmission' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'in_progress': { fr: 'En cours', ar: 'قيد التقدم', en: 'In Progress' },
+    'approved': { fr: 'Approuvé', ar: 'معتمد', en: 'Approved' },
+    'rejected': { fr: 'Rejeté', ar: 'مرفوض', en: 'Rejected' },
+    'require_resubmission': { fr: 'À soumettre à nouveau', ar: 'يتطلب إعادة تقديم', en: 'Resubmission Required' },
 };
 
 /** ReceptionType — src/dtos/entities/ReceptionDTO.ts */
 export const RECEPTION_TYPE_LABELS: EnumLabelMap = {
-    'provisional': { fr: 'Provisional', ar: 'مؤقت', en: 'Provisional' },
-    'definitive': { fr: 'Definitive', ar: 'نهائي', en: 'Definitive' },
+    'provisional': { fr: 'Provisoire', ar: 'مؤقت', en: 'Provisional' },
+    'definitive': { fr: 'Définitive', ar: 'نهائي', en: 'Definitive' },
 };
 
 /** RiskCategory — src/dtos/entities/RiskDTO.ts */
 export const RISK_CATEGORY_LABELS: EnumLabelMap = {
-    'technical': { fr: 'Technical', ar: 'تقني', en: 'Technical' },
-    'financial': { fr: 'Financial', ar: 'مالي', en: 'Financial' },
-    'operational': { fr: 'Operational', ar: 'تشغيلي', en: 'Operational' },
-    'strategic': { fr: 'Strategic', ar: 'استراتيجي', en: 'Strategic' },
-    'compliance': { fr: 'Compliance', ar: 'امتثال', en: 'Compliance' },
-    'safety': { fr: 'Safety', ar: 'سلامة', en: 'Safety' },
+    'technical': { fr: 'Technique', ar: 'فني', en: 'Technical' },
+    'financial': { fr: 'Financier', ar: 'مالي', en: 'Financial' },
+    'operational': { fr: 'Opérationnel', ar: 'تشغيلي', en: 'Operational' },
+    'strategic': { fr: 'Stratégique', ar: 'استراتيجي', en: 'Strategic' },
+    'compliance': { fr: 'Conformité', ar: 'امتثال', en: 'Compliance' },
+    'safety': { fr: 'Sécurité', ar: 'سلامة', en: 'Safety' },
 };
 
 /** RiskLevel — src/dtos/entities/RiskDTO.ts */
 export const RISK_LEVEL_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفض', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسط', en: 'Medium' },
-    'high': { fr: 'High', ar: 'مرتفع', en: 'High' },
-    'critical': { fr: 'Critical', ar: 'حرج', en: 'Critical' },
+    'low': { fr: 'Faible', ar: 'منخفض', en: 'Low' },
+    'medium': { fr: 'Moyen', ar: 'متوسط', en: 'Medium' },
+    'high': { fr: 'Élevé', ar: 'مرتفع', en: 'High' },
+    'critical': { fr: 'Critique', ar: 'حرج', en: 'Critical' },
 };
 
 /** RiskStatus — src/dtos/entities/RiskDTO.ts */
 export const RISK_STATUS_LABELS: EnumLabelMap = {
-    'identified': { fr: 'Identified', ar: 'محدد', en: 'Identified' },
-    'monitored': { fr: 'Monitored', ar: 'مراقب', en: 'Monitored' },
-    'mitigated': { fr: 'Mitigated', ar: 'مخفف', en: 'Mitigated' },
-    'resolved': { fr: 'Resolved', ar: 'تم حله', en: 'Resolved' },
-    'accepted': { fr: 'Accepted', ar: 'مقبول', en: 'Accepted' },
+    'identified': { fr: 'Identifié', ar: 'محدد', en: 'Identified' },
+    'monitored': { fr: 'Suivi', ar: 'مراقب', en: 'Monitored' },
+    'mitigated': { fr: 'Maîtrisé', ar: 'مسيطر عليه', en: 'Mitigated' },
+    'resolved': { fr: 'Résolu', ar: 'تم حله', en: 'Resolved' },
+    'accepted': { fr: 'Accepté', ar: 'مقبول', en: 'Accepted' },
 };
 
 /** StakeholderEntityType — src/dtos/entities/StakeholderDTO.ts */
 export const STAKEHOLDER_ENTITY_TYPE_LABELS: EnumLabelMap = {
-    'person': { fr: 'Person', ar: 'شخص', en: 'Person' },
-    'organization': { fr: 'Organization', ar: 'مؤسسة', en: 'Organization' },
-    'department': { fr: 'Department', ar: 'إدارة', en: 'Department' },
-    'team': { fr: 'Team', ar: 'فريق', en: 'Team' },
+    'person': { fr: 'Personne', ar: 'شخص', en: 'Person' },
+    'organization': { fr: 'Organisation', ar: 'مؤسسة', en: 'Organization' },
+    'department': { fr: 'Département', ar: 'إدارة', en: 'Department' },
+    'team': { fr: 'Équipe', ar: 'فريق', en: 'Team' },
 };
 
 /** StakeholderRole — src/dtos/entities/StakeholderDTO.ts */
 export const STAKEHOLDER_ROLE_LABELS: EnumLabelMap = {
-    'project_manager': { fr: 'Project manager', ar: 'مدير مشروع', en: 'Project manager' },
-    'team_lead': { fr: 'Team lead', ar: 'قائد فريق', en: 'Team lead' },
-    'developer': { fr: 'Developer', ar: 'مطور', en: 'Developer' },
-    'designer': { fr: 'Designer', ar: 'مصمم', en: 'Designer' },
-    'analyst': { fr: 'Analyst', ar: 'محلل', en: 'Analyst' },
-    'tester': { fr: 'Tester', ar: 'مختبر', en: 'Tester' },
-    'architect': { fr: 'Architect', ar: 'مهندس معماري', en: 'Architect' },
-    'consultant': { fr: 'Consultant', ar: 'مستشار', en: 'Consultant' },
+    'project_manager': { fr: 'Chef de projet', ar: 'مدير المشروع', en: 'Project Manager' },
+    'team_lead': { fr: 'Chef d\'équipe', ar: 'قائد الفريق', en: 'Team Lead' },
+    'developer': { fr: 'Développeur', ar: 'مطور', en: 'Developer' },
+    'designer': { fr: 'Concepteur', ar: 'مصمم', en: 'Designer' },
+    'analyst': { fr: 'Analyste', ar: 'محلل', en: 'Analyst' },
+    'tester': { fr: 'Testeur', ar: 'مختبر', en: 'Tester' },
+    'architect': { fr: 'Architecte', ar: 'مهندس معماري', en: 'Architect' },
+    'consultant': { fr: 'Consultant', ar: 'استشاري', en: 'Consultant' },
     'sponsor': { fr: 'Sponsor', ar: 'راعي', en: 'Sponsor' },
     'client': { fr: 'Client', ar: 'عميل', en: 'Client' },
-    'vendor': { fr: 'Vendor', ar: 'مورد', en: 'Vendor' },
-    'contractor': { fr: 'Contractor', ar: 'مقاول', en: 'Contractor' },
-    'stakeholder': { fr: 'Stakeholder', ar: 'صاحب مصلحة', en: 'Stakeholder' },
+    'vendor': { fr: 'Fournisseur', ar: 'مورد', en: 'Vendor' },
+    'contractor': { fr: 'Entrepreneur', ar: 'مقاول', en: 'Contractor' },
+    'stakeholder': { fr: 'Partie prenante', ar: 'صاحب مصلحة', en: 'Stakeholder' },
 };
 
 /** StakeholderType — src/dtos/entities/StakeholderDTO.ts */
 export const STAKEHOLDER_TYPE_LABELS: EnumLabelMap = {
-    'employee': { fr: 'Employee', ar: 'موظف', en: 'Employee' },
-    'external': { fr: 'External', ar: 'خارجي', en: 'External' },
-    'principal_contractor': { fr: 'Principal contractor', ar: 'مقاول رئيسي', en: 'Principal contractor' },
+    'employee': { fr: 'Employé', ar: 'موظف', en: 'Employee' },
+    'external': { fr: 'Externe', ar: 'خارجي', en: 'External' },
+    'principal_contractor': { fr: 'Entreprise principale', ar: 'مقاول رئيسي', en: 'Principal Contractor' },
     'client': { fr: 'Client', ar: 'عميل', en: 'Client' },
-    'vendor': { fr: 'Vendor', ar: 'بائع', en: 'Vendor' },
-    'partner': { fr: 'Partner', ar: 'شريك', en: 'Partner' },
-    'regulator': { fr: 'Regulator', ar: 'منظم', en: 'Regulator' },
-    'investor': { fr: 'Investor', ar: 'مستثمر', en: 'Investor' },
+    'vendor': { fr: 'Fournisseur', ar: 'مورد', en: 'Vendor' },
+    'partner': { fr: 'Partenaire', ar: 'شريك', en: 'Partner' },
+    'regulator': { fr: 'Régulateur', ar: 'جهة تنظيمية', en: 'Regulator' },
+    'investor': { fr: 'Investisseur', ar: 'مستثمر', en: 'Investor' },
 };
 
 /** TaskPriority — src/dtos/entities/TaskAssignmentDTO.ts */
 export const TASK_PRIORITY_LABELS: EnumLabelMap = {
-    'low': { fr: 'Low', ar: 'منخفضة', en: 'Low' },
-    'medium': { fr: 'Medium', ar: 'متوسطة', en: 'Medium' },
-    'high': { fr: 'High', ar: 'عالية', en: 'High' },
-    'urgent': { fr: 'Urgent', ar: 'عاجلة', en: 'Urgent' },
-    'urgent': { fr: 'Urgent', ar: 'عاجلة', en: 'Urgent' },
+    'low': { fr: 'Basse', ar: 'منخفضة', en: 'Low' },
+    'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
+    'high': { fr: 'Haute', ar: 'عالية', en: 'High' },
+    'urgent': { fr: 'Urgente', ar: 'مستعجلة', en: 'Urgent' },
+    'urgent': { fr: 'Urgente', ar: 'مستعجلة', en: 'Urgent' },
 };
 
 /** TaskStatus — src/dtos/entities/TaskAssignmentDTO.ts */
 export const TASK_STATUS_LABELS: EnumLabelMap = {
-    'pending': { fr: 'Pending', ar: 'قيد الانتظار', en: 'Pending' },
-    'in_progress': { fr: 'In progress', ar: 'قيد التنفيذ', en: 'In progress' },
-    'blocked': { fr: 'Blocked', ar: 'معلقة', en: 'Blocked' },
-    'completed': { fr: 'Completed', ar: 'مكتملة', en: 'Completed' },
-    'cancelled': { fr: 'Cancelled', ar: 'ملغاة', en: 'Cancelled' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    'in_progress': { fr: 'En cours', ar: 'قيد التقدم', en: 'In Progress' },
+    'blocked': { fr: 'Bloquée', ar: 'متوقفة', en: 'Blocked' },
+    'completed': { fr: 'Terminée', ar: 'مكتملة', en: 'Completed' },
+    'cancelled': { fr: 'Annulée', ar: 'ملغاة', en: 'Cancelled' },
 };
 
 /** TaskType — src/dtos/entities/TaskAssignmentDTO.ts */
 export const TASK_TYPE_LABELS: EnumLabelMap = {
-    'general': { fr: 'General', ar: 'عامة', en: 'General' },
-    'inspection': { fr: 'Inspection', ar: 'فحص', en: 'Inspection' },
+    'general': { fr: 'Générale', ar: 'عامة', en: 'General' },
+    'inspection': { fr: 'Inspection', ar: 'معاينة', en: 'Inspection' },
     'document': { fr: 'Document', ar: 'وثيقة', en: 'Document' },
-    'payment': { fr: 'Payment', ar: 'دفعة', en: 'Payment' },
-    'material': { fr: 'Material', ar: 'مواد', en: 'Material' },
-    'study': { fr: 'Study', ar: 'دراسة', en: 'Study' },
-    'execution': { fr: 'Execution', ar: 'تنفيذ', en: 'Execution' },
+    'payment': { fr: 'Paiement', ar: 'دفعة', en: 'Payment' },
+    'material': { fr: 'Matériel', ar: 'مواد', en: 'Material' },
+    'study': { fr: 'Étude', ar: 'دراسة', en: 'Study' },
+    'execution': { fr: 'Exécution', ar: 'تنفيذ', en: 'Execution' },
 };
 
 /** UserRoleStatus — src/domain/entities/User.ts */
 export const USER_ROLE_STATUS_LABELS: EnumLabelMap = {
-    'active': { fr: 'Active', ar: 'نشط', en: 'Active' },
-    'inactive': { fr: 'Inactive', ar: 'غير نشط', en: 'Inactive' },
-    'revoked': { fr: 'Revoked', ar: 'ملغى', en: 'Revoked' },
-    'pending': { fr: 'Pending', ar: 'معلق', en: 'Pending' },
+    'active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'revoked': { fr: 'Révoqué', ar: 'ملغاة', en: 'Revoked' },
+    'pending': { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
 };
 
 /** ValidationCategory — src/application/services/EnhancedValidationService.ts */
 export const VALIDATION_CATEGORY_LABELS: EnumLabelMap = {
-    'technical': { fr: 'Technical', ar: 'فني', en: 'Technical' },
-    'financial': { fr: 'Financial', ar: 'مالي', en: 'Financial' },
-    'regulatory': { fr: 'Regulatory', ar: 'تنظيمي', en: 'Regulatory' },
-    'safety': { fr: 'Safety', ar: 'سلامة', en: 'Safety' },
-    'quality': { fr: 'Quality', ar: 'جودة', en: 'Quality' },
-    'environmental': { fr: 'Environmental', ar: 'بيئي', en: 'Environmental' },
+    'technical': { fr: 'Technique', ar: 'فني', en: 'Technical' },
+    'financial': { fr: 'Financière', ar: 'مالي', en: 'Financial' },
+    'regulatory': { fr: 'Réglementaire', ar: 'تنظيمي', en: 'Regulatory' },
+    'safety': { fr: 'Sécurité', ar: 'سلامة', en: 'Safety' },
+    'quality': { fr: 'Qualité', ar: 'جودة', en: 'Quality' },
+    'environmental': { fr: 'Environnementale', ar: 'بيئي', en: 'Environmental' },
     'documentation': { fr: 'Documentation', ar: 'وثائقي', en: 'Documentation' },
-    'reception': { fr: 'Reception', ar: 'استلام', en: 'Reception' },
-    'risk': { fr: 'Risk', ar: 'مخاطر', en: 'Risk' },
-    'compliance': { fr: 'Compliance', ar: 'امتثال', en: 'Compliance' },
+    'reception': { fr: 'Réception', ar: 'استلام', en: 'Acceptance' },
+    'risk': { fr: 'Risque', ar: 'مخاطر', en: 'Risk' },
+    'compliance': { fr: 'Conformité', ar: 'امتثال', en: 'Compliance' },
 };
 
 /** WorkflowMode — src/application/services/ProjectWorkflowService.ts */
 export const WORKFLOW_MODE_LABELS: EnumLabelMap = {
-    'create': { fr: 'Create', ar: 'إنشاء', en: 'Create' },
-    'edit': { fr: 'Edit', ar: 'تعديل', en: 'Edit' },
-    'complete': { fr: 'Complete', ar: 'إتمام', en: 'Complete' },
-    'cancel': { fr: 'Cancel', ar: 'إلغاء', en: 'Cancel' },
+    'create': { fr: 'Création', ar: 'إنشاء', en: 'Create' },
+    'edit': { fr: 'Modification', ar: 'تعديل', en: 'Edit' },
+    'complete': { fr: 'Finalisation', ar: 'إنجاز', en: 'Complete' },
+    'cancel': { fr: 'Annulation', ar: 'إلغاء', en: 'Cancel' },
 };
 
 /** Registre global : nom d'ENUM -> libellés. */
