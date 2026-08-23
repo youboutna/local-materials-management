@@ -31,6 +31,7 @@ import { NotificationService } from '@/application/services/NotificationService'
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [
@@ -351,11 +352,11 @@ export function InspectionFormWithContext({
                     <SelectValue placeholder="Sélectionner un statut" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="scheduled">Programmée</SelectItem>
-                    <SelectItem value="approved">Approuvé</SelectItem>
+                    <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                    <SelectItem value="scheduled"><TranslatedStatus code="scheduled" /></SelectItem>
+                    <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
                     <SelectItem value="requires_changes">Modifications requises</SelectItem>
-                    <SelectItem value="rejected">Rejeté</SelectItem>
+                    <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>

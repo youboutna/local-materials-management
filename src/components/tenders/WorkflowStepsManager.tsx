@@ -11,6 +11,7 @@ import { Plus, Settings, Calendar, FileText } from 'lucide-react';
 import { getWorkflowStepService } from '@/application/services/WorkflowStepService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface WorkflowStepsManagerProps {
   tenderId: string;
@@ -164,10 +165,10 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">Terminée</SelectItem>
-                    <SelectItem value="approved">Approuvée</SelectItem>
+                    <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                    <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                    <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                    <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>

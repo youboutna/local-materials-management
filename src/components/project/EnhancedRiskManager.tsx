@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building, AlertCircle } from 'lucide-react';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
   useEnhancedRiskManagerHex,
   ProjectRisk,
@@ -401,8 +402,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                   <SelectContent>
                     <SelectItem value="identified">Identifié</SelectItem>
                     <SelectItem value="mitigated">Mitigé</SelectItem>
-                    <SelectItem value="accepted">Accepté</SelectItem>
-                    <SelectItem value="closed">Clôturé</SelectItem>
+                    <SelectItem value="accepted"><TranslatedStatus code="accepted" /></SelectItem>
+                    <SelectItem value="closed"><TranslatedStatus code="closed" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>

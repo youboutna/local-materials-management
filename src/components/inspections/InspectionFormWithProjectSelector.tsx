@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface InspectionFormData {
   projectId: string;
@@ -147,7 +148,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="planifiée">Planifiée</SelectItem>
-                  <SelectItem value="en_cours">En cours</SelectItem>
+                  <SelectItem value="en_cours"><TranslatedStatus code="en_cours" /></SelectItem>
                   <SelectItem value="validé">Validée</SelectItem>
                   <SelectItem value="non_conforme">Non conforme</SelectItem>
                 </SelectContent>

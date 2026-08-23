@@ -73,6 +73,7 @@ import { toDateInput } from '@/lib/utils';
 import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCountsHex';
 
 import { i18nService } from '@/application/services/I18nService';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
 
@@ -2270,13 +2271,13 @@ const PhaseEditDialog: React.FC<{
 
               <SelectContent>
 
-                <SelectItem value="not_started">Non commencé</SelectItem>
+                <SelectItem value="not_started"><TranslatedStatus code="not_started" /></SelectItem>
 
-                <SelectItem value="in_progress">En cours</SelectItem>
+                <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
 
-                <SelectItem value="completed">Terminé</SelectItem>
+                <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
 
-                <SelectItem value="delayed">Retardé</SelectItem>
+                <SelectItem value="delayed"><TranslatedStatus code="delayed" /></SelectItem>
 
               </SelectContent>
 

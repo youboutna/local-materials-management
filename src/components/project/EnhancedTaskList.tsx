@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter } from 'lucide-react';
+import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
   useProjectPhasesForTasks,
   useProjectTasks,
@@ -167,10 +168,10 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="completed">Terminée</SelectItem>
-                <SelectItem value="cancelled">Annulée</SelectItem>
+                <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
               </SelectContent>
             </Select>
             
@@ -249,10 +250,10 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Faible</SelectItem>
-                          <SelectItem value="medium">Moyenne</SelectItem>
-                          <SelectItem value="high">Élevée</SelectItem>
-                          <SelectItem value="urgent">Urgente</SelectItem>
+                          <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                          <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                          <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
+                          <SelectItem value="urgent"><TranslatedPriority code="urgent" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -266,10 +267,10 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">En attente</SelectItem>
-                          <SelectItem value="in_progress">En cours</SelectItem>
-                          <SelectItem value="completed">Terminée</SelectItem>
-                          <SelectItem value="cancelled">Annulée</SelectItem>
+                          <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                          <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                          <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                          <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

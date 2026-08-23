@@ -15,6 +15,7 @@ import {
   SYNC_THRESHOLDS, getInspectionApprovalSyncService} from '@/application/services/InspectionApprovalSyncService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInspectionExecutionHex } from '@/hooks/hexagonal';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -122,11 +123,11 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="scheduled">Programmée</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Terminée</SelectItem>
-                  <SelectItem value="approved">Approuvée</SelectItem>
-                  <SelectItem value="rejected">Rejetée</SelectItem>
+                  <SelectItem value="scheduled"><TranslatedStatus code="scheduled" /></SelectItem>
+                  <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                  <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                  <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
+                  <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>

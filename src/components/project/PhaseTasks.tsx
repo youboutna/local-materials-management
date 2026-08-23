@@ -13,6 +13,7 @@ import { usePhaseTasksHex } from '@/hooks/hexagonal/usePhaseTasksHex';
 import type { TaskAssignmentDTO as PhaseTask, CreateTaskAssignmentDTO as TaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface PhaseTasksProps {
   phaseId: string;
@@ -260,9 +261,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Faible</SelectItem>
-                        <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Élevée</SelectItem>
+                        <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                        <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                        <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -276,9 +277,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="completed">Terminée</SelectItem>
+                        <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                        <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                        <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

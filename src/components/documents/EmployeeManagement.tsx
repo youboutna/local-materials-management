@@ -28,6 +28,7 @@ import {
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { getOrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
+import { TranslatedDepartment, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 const NONE = '__none__';
 
@@ -354,9 +355,9 @@ const EmployeeManagement = () => {
                           <SelectContent>
                             <SelectItem value="engineering">Ingénierie / Études</SelectItem>
                             <SelectItem value="construction">Travaux / Opérations</SelectItem>
-                            <SelectItem value="quality">Qualité / HSE</SelectItem>
-                            <SelectItem value="procurement">Approvisionnement</SelectItem>
-                            <SelectItem value="finance">Direction Financière</SelectItem>
+                            <SelectItem value="quality"><TranslatedDepartment code="quality" /></SelectItem>
+                            <SelectItem value="procurement"><TranslatedDepartment code="procurement" /></SelectItem>
+                            <SelectItem value="finance"><TranslatedDepartment code="finance" /></SelectItem>
                             <SelectItem value="administration">Administration / Direction</SelectItem>
                           </SelectContent>
                         </Select>
@@ -388,8 +389,8 @@ const EmployeeManagement = () => {
                         >
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="active">Actif</SelectItem>
-                            <SelectItem value="inactive">Inactif</SelectItem>
+                            <SelectItem value="active"><TranslatedStatus code="active" /></SelectItem>
+                            <SelectItem value="inactive"><TranslatedStatus code="inactive" /></SelectItem>
                             <SelectItem value="on_leave">En congé</SelectItem>
                             <SelectItem value="terminated">Sorti</SelectItem>
                           </SelectContent>
@@ -615,7 +616,7 @@ const EmployeeManagement = () => {
                       </div>
                       <div>
                         <p className="text-sm">{employee.position}</p>
-                        <p className="text-sm text-muted-foreground">{employee.department}</p>
+                        <p className="text-sm text-muted-foreground"><TranslatedDepartment code={employee.department} /></p>
                       </div>
                       {employee.organizationId && (
                         <Badge variant="outline" className="gap-1">

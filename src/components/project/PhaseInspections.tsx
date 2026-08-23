@@ -18,6 +18,7 @@ import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
 import { i18nService } from '@/application/services/I18nService';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface PhaseInspectionsProps {
   phaseId: string;
   projectId: string;
@@ -269,10 +270,10 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="completed">Terminée</SelectItem>
-                        <SelectItem value="approved">Approuvée</SelectItem>
-                        <SelectItem value="rejected">Rejetée</SelectItem>
+                        <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                        <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                        <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
+                        <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

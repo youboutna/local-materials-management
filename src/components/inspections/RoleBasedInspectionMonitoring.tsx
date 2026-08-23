@@ -40,6 +40,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles'; // Import the correct role hook
 import { useAuth } from '@/hooks/hexagonal/useAuth'; // Import auth context
 import { 
@@ -350,11 +351,11 @@ const RoleBasedInspectionMonitoring = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Complété</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
-                  <SelectItem value="rejected">Rejeté</SelectItem>
+                  <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                  <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                  <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                  <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
+                  <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -517,11 +518,11 @@ const RoleBasedInspectionMonitoring = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">Complété</SelectItem>
-                    <SelectItem value="approved">Approuvé</SelectItem>
-                    <SelectItem value="rejected">Rejeté</SelectItem>
+                    <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                    <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                    <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                    <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
+                    <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>

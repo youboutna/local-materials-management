@@ -11,6 +11,7 @@ import {
   PlannedActualInput,
 } from '@/application/services/DeviationEngine';
 import { DeviationSeverity } from '@/config/referentials/deviation-rules.referential';
+import { i18nService } from '@/application/services/I18nService';
 
 interface DeviationBadgesProps {
   input: PlannedActualInput;
@@ -67,7 +68,7 @@ const DeviationBadges: React.FC<DeviationBadgesProps> = ({ input, scope = 'proje
             key={d.ruleCode}
             variant="outline"
             className={`gap-1 text-[11px] font-medium ${SEVERITY_STYLE[d.severity]}`}
-            title={`${d.label} — sévérité ${d.severity}`}
+            title={`${d.label} — sévérité ${i18nService.translateSeverity(d.severity)}`}
           >
             <Icon className="h-3 w-3" />
             <span>{d.label}</span>

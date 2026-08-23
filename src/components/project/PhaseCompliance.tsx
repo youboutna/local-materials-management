@@ -212,8 +212,8 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="regulatory">Réglementaire</SelectItem>
-                      <SelectItem value="financial">Financière</SelectItem>
-                      <SelectItem value="technical">Technique</SelectItem>
+                      <SelectItem value="financial"><TranslatedCategory code="financial" /></SelectItem>
+                      <SelectItem value="technical"><TranslatedCategory code="technical" /></SelectItem>
                       <SelectItem value="environmental">
                         Environnementale
                       </SelectItem>
@@ -232,10 +232,10 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Faible</SelectItem>
-                      <SelectItem value="medium">Moyenne</SelectItem>
-                      <SelectItem value="high">Élevée</SelectItem>
-                      <SelectItem value="critical">Critique</SelectItem>
+                      <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                      <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                      <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
+                      <SelectItem value="critical"><TranslatedPriority code="critical" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -275,8 +275,8 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">En attente</SelectItem>
-                      <SelectItem value="in_review">En révision</SelectItem>
+                      <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                      <SelectItem value="in_review"><TranslatedStatus code="in_review" /></SelectItem>
                       <SelectItem value="compliant">Conforme</SelectItem>
                       <SelectItem value="non_compliant">
                         Non conforme

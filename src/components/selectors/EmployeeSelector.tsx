@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Search, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
+import { i18nService } from '@/application/services/I18nService';
 import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal'
 
 interface EmployeeSelectorProps {
@@ -94,7 +96,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                     <span>{selectedEmployee.full_name}</span>
                     {selectedEmployee.department && (
                       <Badge className={getDepartmentBadgeColor(selectedEmployee.department)} variant="outline">
-                        {selectedEmployee.department}
+                        <TranslatedDepartment code={selectedEmployee.department} />
                       </Badge>
                     )}
                   </div>
@@ -120,7 +122,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                     </div>
                     {employee.department && (
                       <Badge className={getDepartmentBadgeColor(employee.department)} variant="outline">
-                        {employee.department}
+                        <TranslatedDepartment code={employee.department} />
                       </Badge>
                     )}
                   </div>
@@ -141,7 +143,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
         {selectedEmployee && (
           <div className="text-xs text-muted-foreground">
             {selectedEmployee.position && `${selectedEmployee.position} • `}
-            {selectedEmployee.department && `${selectedEmployee.department} • `}
+            {selectedEmployee.department && `${i18nService.translateDepartment(selectedEmployee.department)} • `}
             ID: {selectedEmployee.employee_id}
           </div>
         )}

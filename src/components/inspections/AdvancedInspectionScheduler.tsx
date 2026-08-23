@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 interface Project {
   id: string;
   title: string;
@@ -475,7 +476,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                     <div>📞 {inspector.phone}</div>
                                   )}
                                   {inspector.department && (
-                                    <div>🏢 {inspector.department}</div>
+                                    <div>🏢 <TranslatedDepartment code={inspector.department} /></div>
                                   )}
                                   {inspector.nif && (
                                     <div>🆔 NIF: {inspector.nif}</div>

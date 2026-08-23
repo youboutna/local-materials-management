@@ -31,6 +31,7 @@ import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
+import { i18nService } from '@/application/services/I18nService';
 
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
@@ -431,7 +432,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                               {(employee.position || employee.department) && (
                                 <span className="text-sm text-muted-foreground">
                                   {employee.position && employee.department 
-                                    ? `${employee.position} - ${employee.department}`
+                                    ? `${employee.position} - ${i18nService.translateDepartment(employee.department)}`
                                     : employee.position || employee.department
                                   }
                                 </span>

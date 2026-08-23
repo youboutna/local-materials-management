@@ -13,6 +13,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface BankGuaranteeFormData {
   projectId: string;
@@ -253,7 +254,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="expired">Expirée</SelectItem>
                 <SelectItem value="used">Utilisée</SelectItem>
-                <SelectItem value="cancelled">Annulée</SelectItem>
+                <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
               </SelectContent>
             </Select>
           </div>

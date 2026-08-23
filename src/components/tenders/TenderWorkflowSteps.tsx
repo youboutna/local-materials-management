@@ -30,6 +30,7 @@ import ProcurementStepSelector from './ProcurementStepSelector';
 import { useQueryClient } from '@tanstack/react-query';
 import { StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import StepDocumentsSection from './StepDocumentsSection';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface TenderWorkflowStepsProps {
   tenderId: string;
@@ -297,10 +298,10 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">En attente</SelectItem>
-                          <SelectItem value="in_progress">En cours</SelectItem>
-                          <SelectItem value="completed">Terminée</SelectItem>
-                          <SelectItem value="approved">Approuvée</SelectItem>
+                          <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                          <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                          <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                          <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
                         </SelectContent>
                       </Select>
                       
