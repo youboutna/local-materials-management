@@ -80,7 +80,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
       options: [
         { value: 'name-asc', label: t('auto.employeefilters.nom_a_z') },
         { value: 'name-desc', label: t('auto.employeefilters.nom_z_a') },
-        { value: 'hire-date', label: t('auto.employeefilters.date_d')embauche' },
+        { value: 'hire-date', label: t('auto.employeefilters.date_d_embauche') },
         { value: 'department', label: t('auto.employeefilters.departement') },
         { value: 'position', label: t('auto.employeefilters.poste') }
       ]

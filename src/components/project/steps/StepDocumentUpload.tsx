@@ -24,7 +24,7 @@ const StepDocumentUpload = ({
       phaseId={phaseId}
       stepId={stepId}
       context="step"
-      contextLabel={stepTitle ? `Étape: ${stepTitle}` : t('auto.stepdocumentupload.documents_d')étape'}
+      contextLabel={stepTitle ? `Étape: ${stepTitle}` : t('auto.stepdocumentupload.documents_d_tape')}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

@@ -4631,5 +4631,12 @@
   "auto.supplierfilters.actif": "Actif",
   "auto.supplierfilters.inactif": "Inactif",
   "auto.supplierfilters.en_attente": "En attente",
-  "auto.supplierfilters.bloque": "Bloqué"
+  "auto.supplierfilters.bloque": "Bloqué",
+  "auto.documentfilters.rapport_d_inspection": "Rapport d\\'inspection",
+  "auto.employeefilters.date_d_embauche": "Date d\\'embauche",
+  "auto.enhancedscheduleinspectionmodal.demande_d_inspection_soumise_avec_succ_s": "Demande d\\'inspection soumise avec succès",
+  "auto.phaseworkflowcontainer.impossible_de_programmer_l_inspection": "Impossible de programmer l\\'inspection",
+  "auto.inspectiondocumentupload.documents_d_inspection": "Documents d\\'inspection",
+  "auto.stepdocumentupload.documents_d_tape": "Documents d\\'étape",
+  "auto.reportmanager.generer_rapport_d_inspection": "Générer Rapport d\\'Inspection"
 }

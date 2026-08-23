@@ -21,7 +21,7 @@ const InspectionDocumentUpload = ({
       projectId={projectId}
       inspectionId={inspectionId}
       context="inspection"
-      contextLabel={inspectionTitle ? `Inspection: ${inspectionTitle}` : t('auto.inspectiondocumentupload.documents_d')inspection'}
+      contextLabel={inspectionTitle ? `Inspection: ${inspectionTitle}` : t('auto.inspectiondocumentupload.documents_d_inspection')}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

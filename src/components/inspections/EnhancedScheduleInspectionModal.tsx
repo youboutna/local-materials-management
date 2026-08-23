@@ -139,7 +139,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
             notes: details.requirements,
           });
 
-          toast.success(t('auto.enhancedscheduleinspectionmodal.demande_d')inspection soumise avec succès');
+          toast.success(t('auto.enhancedscheduleinspectionmodal.demande_d_inspection_soumise_avec_succ_s'));
           handleOpenChange(false);
           onSuccess?.();
         } catch (err) {

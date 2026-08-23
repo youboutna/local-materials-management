@@ -46,7 +46,7 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
       case 'tender':
         return t('auto.reportmanager.generer_rapport_d')Appel d\t('auto.reportmanager.offres');
       case 'inspection':
-        return t('auto.reportmanager.generer_rapport_d')Inspection';
+        return t('auto.reportmanager.generer_rapport_d_inspection');
       case 'payment':
         return t('auto.reportmanager.generer_rapport_de_paiements');
       default:

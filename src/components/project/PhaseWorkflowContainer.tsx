@@ -73,7 +73,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
       }
     } catch (err) {
       console.error('Erreur scheduleInspection', err);
-      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_programmer_l')inspection', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_programmer_l_inspection'), variant: 'destructive' });
     }
   };
 

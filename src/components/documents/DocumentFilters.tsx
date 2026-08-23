@@ -43,7 +43,7 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
       onChange: onTypeChange,
       options: availableTypes.map(type => ({ 
         value: type, 
-        label: type === 'inspection_report' ? t('auto.documentfilters.rapport_d')inspection' :
+        label: type === 'inspection_report' ? t('auto.documentfilters.rapport_d_inspection') :
                type === 'location_photo' ? t('auto.documentfilters.photo_de_lieu') :
                type === 'project_report' ? t('auto.documentfilters.rapport_de_projet') :
                type === 'contract' ? t('auto.documentfilters.contrat') :

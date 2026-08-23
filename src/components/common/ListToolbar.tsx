@@ -33,7 +33,6 @@ interface ListToolbarProps {
 }
 
 export function ListToolbar({
-  const { t } = useLanguage();
   search,
   onSearchChange,
   searchPlaceholder = t('auto.listtoolbar.rechercher'),
@@ -43,6 +42,7 @@ export function ListToolbar({
   resultCount,
   className,
 }: ListToolbarProps) {
+  const { t } = useLanguage();
   return (
     <div className={cn('mb-4 flex flex-wrap items-center gap-2', className)}>
       <div className="relative min-w-[16rem] flex-1">

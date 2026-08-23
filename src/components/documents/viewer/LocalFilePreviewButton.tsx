@@ -21,7 +21,6 @@ interface Props {
 }
 
 export function LocalFilePreviewButton({
-  const { t } = useLanguage();
   file,
   title,
   label = t('auto.localfilepreviewbutton.apercu'),
@@ -30,6 +29,7 @@ export function LocalFilePreviewButton({
   size = 'sm',
   variant = 'outline',
 }: Props) {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   if (!file) return null;
 
