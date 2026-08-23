@@ -107,7 +107,9 @@ const ProjectCreate = () => {
     try {
       // Vérifier que toutes les étapes requises sont complétées
       const requiredSteps = workflowSteps.filter(s => s.required).map(s => s.number);
-      const missingSteps = requiredSteps.filter(step => !completedSteps.includes(step));
+      // L'étape finale est validée et persistée par `handleSubmit` lui-même :
+      // elle ne peut donc pas être exigée comme déjà complétée avant ce clic.
+      const missingSteps = requiredSteps.filter(step => step !== workflowSteps.length && !completedSteps.includes(step));
       
       if (missingSteps.length > 0) {
         toast({
