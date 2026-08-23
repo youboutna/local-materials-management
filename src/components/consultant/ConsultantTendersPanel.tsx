@@ -24,14 +24,14 @@ export const ConsultantTendersPanel: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Gavel className="h-4 w-4" aria-hidden="true" />
-          {t('consultant.tenders.title', "Appels d'offres publiés")}
+          {t('consultant.tenders.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading && <Skeleton className="h-24 w-full" />}
         {!isLoading && tenders.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            {t('consultant.tenders.empty', "Aucun appel d'offres publié pour le moment.")}
+            {t('consultant.tenders.empty')}
           </p>
         )}
         {tenders.map((tender) => (
@@ -43,7 +43,7 @@ export const ConsultantTendersPanel: React.FC = () => {
               <p className="truncate font-medium">{tender.title}</p>
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarClock className="h-3 w-3" aria-hidden="true" />
-                {t('consultant.tenders.deadline', 'Date limite')} :{' '}
+                {t('consultant.tenders.deadline')} :{' '}
                 {formatDate(tender.deadlineDate ?? null)}
               </p>
             </div>

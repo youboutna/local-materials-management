@@ -309,7 +309,7 @@ export const BoqActionsBar: React.FC<Props> = ({
       tenderTitle: projectName ?? null,
     });
     toast({
-      title: t('dqe.action.procurement_chain', "Chaîne appel d'offres"),
+      title: t('dqe.action.procurement_chain'),
       description: [
         `${res.planning.phasesCreated + res.planning.phasesReused} phases`,
         `budget ${res.forecast.dqeTotal}`,
