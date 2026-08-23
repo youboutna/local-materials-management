@@ -248,7 +248,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   // 🎨 UI Layer - Use unified workflow validation (Rule #5 compliant)
   const validateStepData = useCallback(async (): Promise<{ isValid: boolean; errors: string[] }> => {
-    if (!formData) return { isValid: false, errors: ['No form data available'] };
+    if (!formData) return { isValid: false, errors: [t('workflow.no_form_data')] };
     const validation = await validateCurrentStep(currentStep + 1);
     onStepValidation?.(currentStep + 1, validation.isValid);
     return { isValid: validation.isValid, errors: validation.errors };
@@ -328,7 +328,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const handleSubmit = async () => {
     try {
       if (!formData) {
-        throw new Error('No form data available');
+        throw new Error(t('workflow.no_form_data'));
       }
 
       // Use the unified workflow hook for final submission (Rule #5: UI Layer Separation)
@@ -355,12 +355,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       );
       
       if (!result || !result.success) {
-        throw new Error((result as any)?.errors?.join(', ') || 'Failed to complete project creation');
+        throw new Error((result as any)?.errors?.join(', ') || t('workflow.completion_error'));
       }
       
       toast({
-        title: "Projet créé avec succès",
-        description: "Le projet a été créé et toutes les étapes sont complétées",
+        title: t('project_create.toast.created'),
+        description: t('workflow.project_created_complete'),
       });
       
       // Call the onSubmit prop with the complete workflow data — parent (ProjectCreate/Edit)
@@ -369,8 +369,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     } catch (error) {
       console.error('Submission error:', error);
       toast({
-        title: "Erreur de création",
-        description: error instanceof Error ? error.message : "Impossible de créer le projet",
+        title: t('project_create.create_error'),
+        description: error instanceof Error ? error.message : t('workflow.completion_error'),
         variant: "destructive"
       });
     }
