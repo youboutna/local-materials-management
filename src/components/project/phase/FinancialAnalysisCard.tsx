@@ -13,6 +13,7 @@ import {
   getFinancialHealthLabel,
   getFinancialHealthIcon,
 } from '@/utils/phaseHelpers';
+import { T } from '@/components/i18n/T';
 
 interface FinancialAnalysisCardProps {
   phaseId: string;
@@ -37,7 +38,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
+          <CardTitle className="text-sm font-medium"><T k="auto.financialanalysiscard.analyse_financiere" fallback="Analyse financière" /></CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <Skeleton className="h-4 w-full" />
@@ -52,11 +53,11 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
+          <CardTitle className="text-sm font-medium"><T k="auto.financialanalysiscard.analyse_financiere" fallback="Analyse financière" /></CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            Aucune donnée financière disponible
+            <T k="auto.financialanalysiscard.aucune_donnee_financiere_disponible" fallback="Aucune donnée financière disponible" />
           </p>
         </CardContent>
       </Card>
@@ -74,7 +75,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center justify-between">
-            <span>Budget</span>
+            <span><T k="auto.financialanalysiscard.budget" fallback="Budget" /></span>
             <Badge variant="outline" className={getFinancialHealthColor(financialHealth)}>
               {getFinancialHealthLabel(financialHealth)}
             </Badge>
@@ -82,7 +83,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Utilisé:</span>
+            <span className="text-muted-foreground"><T k="auto.financialanalysiscard.utilise" fallback="Utilisé:" /></span>
             <span className="font-medium">{phaseCosts.budgetUtilization.toFixed(1)}%</span>
           </div>
           <Progress 
@@ -105,7 +106,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
-          <span>Analyse financière</span>
+          <span><T k="auto.financialanalysiscard.analyse_financiere" fallback="Analyse financière" /></span>
           <Badge variant="outline" className={getFinancialHealthColor(financialHealth)}>
             {getFinancialHealthIcon(financialHealth)}
             <span className="ml-1">{getFinancialHealthLabel(financialHealth)}</span>
@@ -116,16 +117,16 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
         {/* Budget Overview */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Budget estimé:</span>
+            <span className="text-muted-foreground"><T k="auto.financialanalysiscard.budget_estime" fallback="Budget estimé:" /></span>
             <span className="font-medium">{formatCurrency(estimatedCost)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Dépensé:</span>
+            <span className="text-muted-foreground"><T k="auto.financialanalysiscard.depense" fallback="Dépensé:" /></span>
             <span className="font-medium text-warning">{formatCurrency(totalSpent)}</span>
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between font-medium">
-            <span>Écart:</span>
+            <span><T k="auto.financialanalysiscard.ecart" fallback="Écart:" /></span>
             <span className={cn(
               (phaseCosts.costVariance ?? 0) > 0 
                 ? "text-destructive" 
@@ -139,7 +140,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
         {/* Budget Utilization */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Utilisation budget:</span>
+            <span className="text-muted-foreground"><T k="auto.financialanalysiscard.utilisation_budget" fallback="Utilisation budget:" /></span>
             <span className={cn(
               "font-medium",
               phaseCosts.budgetUtilization > 90 
@@ -166,12 +167,12 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
 
         {/* Cost Breakdown */}
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase">Répartition</h4>
+          <h4 className="text-xs font-medium text-muted-foreground uppercase"><T k="auto.financialanalysiscard.repartition" fallback="Répartition" /></h4>
           {phaseCosts.totalPayments > 0 && (
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span>Paiements</span>
+                <span><T k="auto.financialanalysiscard.paiements" fallback="Paiements" /></span>
               </div>
               <span className="font-medium">{formatCurrency(phaseCosts.totalPayments)}</span>
             </div>
@@ -180,7 +181,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
-                <span>Dépenses</span>
+                <span><T k="auto.financialanalysiscard.depenses" fallback="Dépenses" /></span>
               </div>
               <span className="font-medium">{formatCurrency(phaseCosts.totalExpenses)}</span>
             </div>
@@ -191,7 +192,7 @@ const FinancialAnalysisCard: React.FC<FinancialAnalysisCardProps> = ({
         {remainingBudget > 0 && (
           <div className="pt-2 border-t">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Budget restant:</span>
+              <span className="text-muted-foreground"><T k="auto.financialanalysiscard.budget_restant" fallback="Budget restant:" /></span>
               <span className="font-medium text-success">
                 {formatCurrency(remainingBudget)}
               </span>

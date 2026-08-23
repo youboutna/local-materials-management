@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
 import { InspectionStatus } from '@/dtos/entities/InspectionDTO';
+import { T } from '@/components/i18n/T';
 
 interface InspectionReportCardProps {
   project: ProjectWithPayments;
@@ -20,9 +21,9 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Rapports d'inspection</CardTitle>
+          <CardTitle className="text-lg"><T k="auto.inspectionreportcard.rapports_d_inspection" fallback="Rapports d'inspection" /></CardTitle>
           <CardDescription>
-            Aucune inspection n'a été réalisée pour ce projet.
+            <T k="auto.inspectionreportcard.aucune_inspection_n_a_ete_realisee_pour_ce_proje" fallback="Aucune inspection n'a été réalisée pour ce projet." />
           </CardDescription>
         </CardHeader>
       </Card>
@@ -62,7 +63,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
         <CardTitle className="text-lg flex justify-between items-center">
           <div className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-adrar-600" />
-            Rapports d'inspection
+            <T k="auto.inspectionreportcard.rapports_d_inspection" fallback="Rapports d'inspection" />
           </div>
           <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -77,7 +78,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           <div className="flex justify-between items-center">
             <div>
               <div className="text-sm text-muted-foreground">
-                Dernière inspection
+                <T k="auto.inspectionreportcard.derniere_inspection" fallback="Dernière inspection" />
               </div>
               <div className="font-medium">
                 {format(new Date(latestInspection.date), 'dd/MM/yyyy')}
@@ -97,7 +98,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           
           {latestInspection.comments && (
             <div className="mt-2 bg-muted p-3 rounded-md border text-sm">
-              <div className="font-medium mb-1">Commentaires:</div>
+              <div className="font-medium mb-1"><T k="auto.inspectionreportcard.commentaires" fallback="Commentaires:" /></div>
               <p>{latestInspection.comments}</p>
             </div>
           )}
@@ -106,7 +107,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
             <>
               <div className="border-t my-4"></div>
               <div className="space-y-4">
-                <div className="font-medium">Historique des inspections</div>
+                <div className="font-medium"><T k="auto.inspectionreportcard.historique_des_inspections" fallback="Historique des inspections" /></div>
                 {sortedInspections.slice(1).map((inspection, index) => (
                   <div key={index} className="bg-muted p-3 rounded-md border">
                     <div className="flex justify-between items-center">
@@ -121,7 +122,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
                     </div>
                     {inspection.comments && (
                       <div className="mt-2 text-sm">
-                        <div>Commentaires:</div>
+                        <div><T k="auto.inspectionreportcard.commentaires" fallback="Commentaires:" /></div>
                         <p className="text-foreground">{inspection.comments}</p>
                       </div>
                     )}
@@ -133,7 +134,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           
           {latestInspection.status === 'requires_changes' && (
             <div className="bg-warning/10 border border-warning/30 p-3 rounded-md mt-3">
-              <div className="font-medium text-warning">Actions requises</div>
+              <div className="font-medium text-warning"><T k="auto.inspectionreportcard.actions_requises" fallback="Actions requises" /></div>
               <p className="text-sm text-warning mt-1">
                 Des modifications ont été demandées suite à l'inspection. 
                 Veuillez apporter les corrections nécessaires avant de demander une nouvelle inspection.

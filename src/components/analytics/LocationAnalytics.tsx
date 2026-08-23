@@ -36,6 +36,7 @@ import {
 import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDTO } from '@/dtos/shared';
+import { T } from '@/components/i18n/T';
 
 interface LocationAnalyticsProps {
   projects: Array<{
@@ -220,20 +221,20 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <MapPin className="h-6 w-6" />
-            Location Analytics
+            <T k="auto.locationanalytics.location_analytics" fallback="Location Analytics" />
           </h2>
           <p className="text-muted-foreground">
-            Comprehensive analysis of project distribution by location
+            <T k="auto.locationanalytics.comprehensive_analysis_of_project_distribution_b" fallback="Comprehensive analysis of project distribution by location" />
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            <T k="auto.locationanalytics.refresh" fallback="Refresh" />
           </Button>
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <T k="auto.locationanalytics.export" fallback="Export" />
           </Button>
         </div>
       </div>
@@ -243,7 +244,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Location Filter
+            <T k="auto.locationanalytics.location_filter" fallback="Location Filter" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -277,7 +278,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                   {selectedRegion || selectedCity}
                 </Badge>
                 <Button variant="ghost" size="sm" onClick={() => handleLocationSearch('', undefined)}>
-                  Clear
+                  <T k="auto.locationanalytics.clear" fallback="Clear" />
                 </Button>
               </div>
             )}
@@ -291,7 +292,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.locationanalytics.total_projects" fallback="Total Projects" /></p>
                 <p className="text-2xl font-bold">{filteredProjects.length}</p>
               </div>
               <Building className="h-8 w-8 text-primary" />
@@ -303,7 +304,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Budget</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.locationanalytics.total_budget" fallback="Total Budget" /></p>
                 <p className="text-2xl font-bold">
                   ${totalBudget.toLocaleString()}
                 </p>
@@ -317,7 +318,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Progress</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.locationanalytics.avg_progress" fallback="Avg Progress" /></p>
                 <p className="text-2xl font-bold">{avgProgress.toFixed(1)}%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-500" />
@@ -329,7 +330,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.locationanalytics.active_projects" fallback="Active Projects" /></p>
                 <p className="text-2xl font-bold">
                   {filteredProjects.filter(p => p.status === 'en_cours').length}
                 </p>
@@ -343,16 +344,16 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
       {/* Charts */}
       <Tabs defaultValue="distribution" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="distribution">Regional Distribution</TabsTrigger>
-          <TabsTrigger value="comparison">Location Comparison</TabsTrigger>
-          <TabsTrigger value="details">Detailed Stats</TabsTrigger>
+          <TabsTrigger value="distribution"><T k="auto.locationanalytics.regional_distribution" fallback="Regional Distribution" /></TabsTrigger>
+          <TabsTrigger value="comparison"><T k="auto.locationanalytics.location_comparison" fallback="Location Comparison" /></TabsTrigger>
+          <TabsTrigger value="details"><T k="auto.locationanalytics.detailed_stats" fallback="Detailed Stats" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="distribution">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Projects by Region</CardTitle>
+                <CardTitle><T k="auto.locationanalytics.projects_by_region" fallback="Projects by Region" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -379,7 +380,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
 
             <Card>
               <CardHeader>
-                <CardTitle>Budget Distribution</CardTitle>
+                <CardTitle><T k="auto.locationanalytics.budget_distribution" fallback="Budget Distribution" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -399,7 +400,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
         <TabsContent value="comparison">
           <Card>
             <CardHeader>
-              <CardTitle>Location Performance Comparison</CardTitle>
+              <CardTitle><T k="auto.locationanalytics.location_performance_comparison" fallback="Location Performance Comparison" /></CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -421,7 +422,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Detailed Location Statistics</CardTitle>
+              <CardTitle><T k="auto.locationanalytics.detailed_location_statistics" fallback="Detailed Location Statistics" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -433,22 +434,22 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-muted-foreground">Total Budget</p>
+                        <p className="text-muted-foreground"><T k="auto.locationanalytics.total_budget" fallback="Total Budget" /></p>
                         <p className="font-medium">${stat.totalBudget.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Avg Progress</p>
+                        <p className="text-muted-foreground"><T k="auto.locationanalytics.avg_progress" fallback="Avg Progress" /></p>
                         <div className="flex items-center gap-2">
                           <Progress value={stat.avgProgress} className="flex-1 h-2" />
                           <span className="font-medium">{stat.avgProgress.toFixed(1)}%</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Active Projects</p>
+                        <p className="text-muted-foreground"><T k="auto.locationanalytics.active_projects" fallback="Active Projects" /></p>
                         <p className="font-medium">{stat.activeProjects}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Completion Rate</p>
+                        <p className="text-muted-foreground"><T k="auto.locationanalytics.completion_rate" fallback="Completion Rate" /></p>
                         <p className="font-medium">
                           {stat.projectCount > 0 
                             ? ((stat.projectCount - stat.activeProjects) / stat.projectCount * 100).toFixed(1)

@@ -26,6 +26,7 @@ import {
   type TenderEstimationStepCode,
 } from '@/config/referentials/tender/estimation-workflow.referential';
 import { BOQ_FISCAL_PROFILES } from '@/config/referentials/boq/default-values.referential';
+import { T } from '@/components/i18n/T';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;
@@ -194,16 +195,16 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Estimateur de Tender Avancé
+              <T k="auto.enhancedtenderestimator.estimateur_de_tender_avance" fallback="Estimateur de Tender Avancé" />
             </CardTitle>
             <div className="flex gap-2">
               <Button variant="outline" onClick={exportEstimate}>
                 <FileText className="h-4 w-4 mr-2" />
-                Exporter
+                <T k="auto.enhancedtenderestimator.exporter" fallback="Exporter" />
               </Button>
               <Button onClick={generateReport}>
                 <Save className="h-4 w-4 mr-2" />
-                Générer Rapport
+                <T k="auto.enhancedtenderestimator.generer_rapport" fallback="Générer Rapport" />
               </Button>
             </div>
           </div>
@@ -211,11 +212,11 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
-              <TabsTrigger value="workflow">Workflow</TabsTrigger>
-              <TabsTrigger value="calculator">Calculateur</TabsTrigger>
-              <TabsTrigger value="devis">Devis</TabsTrigger>
-              <TabsTrigger value="templates">Templates</TabsTrigger>
-              <TabsTrigger value="analysis">Analyse</TabsTrigger>
+              <TabsTrigger value="workflow"><T k="auto.enhancedtenderestimator.workflow" fallback="Workflow" /></TabsTrigger>
+              <TabsTrigger value="calculator"><T k="auto.enhancedtenderestimator.calculateur" fallback="Calculateur" /></TabsTrigger>
+              <TabsTrigger value="devis"><T k="auto.enhancedtenderestimator.devis" fallback="Devis" /></TabsTrigger>
+              <TabsTrigger value="templates"><T k="auto.enhancedtenderestimator.templates" fallback="Templates" /></TabsTrigger>
+              <TabsTrigger value="analysis"><T k="auto.enhancedtenderestimator.analyse" fallback="Analyse" /></TabsTrigger>
             </TabsList>
 
             <TabsContent value="devis" className="space-y-4">
@@ -231,7 +232,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg">Workflow d'Estimation</CardTitle>
+                    <CardTitle className="text-lg"><T k="auto.enhancedtenderestimator.workflow_d_estimation" fallback="Workflow d'Estimation" /></CardTitle>
                     <Badge variant="secondary">
                       {Math.round(getWorkflowProgress())}% Complété
                     </Badge>
@@ -292,7 +293,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
             <TabsContent value="calculator" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Calculateur Quantitatif Intégré</CardTitle>
+                  <CardTitle><T k="auto.enhancedtenderestimator.calculateur_quantitatif_integre" fallback="Calculateur Quantitatif Intégré" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <AdvancedQuantityCalculator />
@@ -303,7 +304,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
             <TabsContent value="templates" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Templates d'Estimation</CardTitle>
+                  <CardTitle><T k="auto.enhancedtenderestimator.templates_d_estimation" fallback="Templates d'Estimation" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +335,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                             onClick={() => applyTemplate(template)}
                             className="w-full"
                           >
-                            Appliquer ce Template
+                            <T k="auto.enhancedtenderestimator.appliquer_ce_template" fallback="Appliquer ce Template" />
                           </Button>
                         </CardContent>
                       </Card>
@@ -351,7 +352,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center gap-3">
                       <DollarSign className="h-8 w-8 text-success" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Estimation Totale</p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.enhancedtenderestimator.estimation_totale" fallback="Estimation Totale" /></p>
                         <p className="text-2xl font-bold">{isLoading ? '…' : fmt(analysis.total)}</p>
                       </div>
                     </div>
@@ -375,7 +376,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center gap-3">
                       <Calculator className="h-8 w-8 text-accent" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Éléments Calculés</p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.enhancedtenderestimator.elements_calcules" fallback="Éléments Calculés" /></p>
                         <p className="text-2xl font-bold">{analysis.lineCount}</p>
                       </div>
                     </div>
@@ -385,12 +386,12 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Répartition des Coûts</CardTitle>
+                  <CardTitle><T k="auto.enhancedtenderestimator.repartition_des_couts" fallback="Répartition des Coûts" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span>Matériaux</span>
+                      <span><T k="auto.enhancedtenderestimator.materiaux" fallback="Matériaux" /></span>
                       <div className="flex items-center gap-2">
                         <Progress value={analysis.pct(analysis.byType.material)} className="w-32" />
                         <span className="font-medium">{fmt(analysis.byType.material)}</span>
@@ -404,7 +405,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Équipement</span>
+                      <span><T k="auto.enhancedtenderestimator.equipement" fallback="Équipement" /></span>
                       <div className="flex items-center gap-2">
                         <Progress value={analysis.pct(analysis.byType.equipment)} className="w-32" />
                         <span className="font-medium">{fmt(analysis.byType.equipment)}</span>
@@ -416,30 +417,30 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Analyse de Risques</CardTitle>
+                  <CardTitle><T k="auto.enhancedtenderestimator.analyse_de_risques" fallback="Analyse de Risques" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
-                        <p className="font-medium">Fluctuation des prix des matériaux</p>
-                        <p className="text-sm text-muted-foreground">Impact potentiel sur le budget</p>
+                        <p className="font-medium"><T k="auto.enhancedtenderestimator.fluctuation_des_prix_des_materiaux" fallback="Fluctuation des prix des matériaux" /></p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.enhancedtenderestimator.impact_potentiel_sur_le_budget" fallback="Impact potentiel sur le budget" /></p>
                       </div>
-                      <Badge variant="destructive">Élevé</Badge>
+                      <Badge variant="destructive"><T k="auto.enhancedtenderestimator.eleve" fallback="Élevé" /></Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">Disponibilité de la main-d'œuvre</p>
-                        <p className="text-sm text-muted-foreground">Risque de retard</p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.enhancedtenderestimator.risque_de_retard" fallback="Risque de retard" /></p>
                       </div>
-                      <Badge variant="outline">Moyen</Badge>
+                      <Badge variant="outline"><T k="auto.enhancedtenderestimator.moyen" fallback="Moyen" /></Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
-                        <p className="font-medium">Conditions météorologiques</p>
-                        <p className="text-sm text-muted-foreground">Impact sur le planning</p>
+                        <p className="font-medium"><T k="auto.enhancedtenderestimator.conditions_meteorologiques" fallback="Conditions météorologiques" /></p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.enhancedtenderestimator.impact_sur_le_planning" fallback="Impact sur le planning" /></p>
                       </div>
-                      <Badge variant="secondary">Faible</Badge>
+                      <Badge variant="secondary"><T k="auto.enhancedtenderestimator.faible" fallback="Faible" /></Badge>
                     </div>
                   </div>
                 </CardContent>

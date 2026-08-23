@@ -17,6 +17,7 @@ import { BrandBandsBackground, BrandIdentity } from '@/components/branding/Brand
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/LanguageSelector';
+import { T } from '@/components/i18n/T';
 
 
 export const AppearanceSettings: React.FC = () => {
@@ -41,7 +42,7 @@ export const AppearanceSettings: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Langue de l'interface</CardTitle>
+          <CardTitle><T k="auto.appearancesettings.langue_de_l_interface" fallback="Langue de l'interface" /></CardTitle>
           <CardDescription>
             Français par défaut. Les statuts et libellés métier sont traduits depuis les référentiels
             (français, arabe, anglais).
@@ -55,9 +56,9 @@ export const AppearanceSettings: React.FC = () => {
       <Card>
 
         <CardHeader>
-          <CardTitle>Thème de l'application</CardTitle>
+          <CardTitle><T k="auto.appearancesettings.theme_de_l_application" fallback="Thème de l'application" /></CardTitle>
           <CardDescription>
-            Palettes définies dans le référentiel des thèmes UI. Aucun impact fonctionnel.
+            <T k="auto.appearancesettings.palettes_definies_dans_le_referentiel_des_themes" fallback="Palettes définies dans le référentiel des thèmes UI. Aucun impact fonctionnel." />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -95,7 +96,7 @@ export const AppearanceSettings: React.FC = () => {
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="flex items-center gap-2 text-sm">
               {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              <span>Mode sombre</span>
+              <span><T k="auto.appearancesettings.mode_sombre" fallback="Mode sombre" /></span>
             </div>
             <Switch checked={darkMode} onCheckedChange={toggleDarkMode} aria-label="Mode sombre" />
           </div>
@@ -104,7 +105,7 @@ export const AppearanceSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Identité du client</CardTitle>
+          <CardTitle><T k="auto.appearancesettings.identite_du_client" fallback="Identité du client" /></CardTitle>
           <CardDescription>
             Profil d'identité (sceau, organisation propriétaire, bandeaux). Multi-clients : chaque profil
             provient du référentiel, les champs ci-dessous permettent de le personnaliser.
@@ -112,7 +113,7 @@ export const AppearanceSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="branding-profile">Profil d'identité</Label>
+            <Label htmlFor="branding-profile"><T k="auto.appearancesettings.profil_d_identite" fallback="Profil d'identité" /></Label>
             <Select value={brandingId} onValueChange={setBrandingId}>
               <SelectTrigger id="branding-profile">
                 <SelectValue placeholder="Choisir un profil" />
@@ -129,7 +130,7 @@ export const AppearanceSettings: React.FC = () => {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="owner-name">Organisation propriétaire</Label>
+              <Label htmlFor="owner-name"><T k="auto.appearancesettings.organisation_proprietaire" fallback="Organisation propriétaire" /></Label>
               <Input
                 id="owner-name"
                 value={brandingOverrides.ownerName ?? ''}
@@ -138,7 +139,7 @@ export const AppearanceSettings: React.FC = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="owner-subtitle">Sous-titre</Label>
+              <Label htmlFor="owner-subtitle"><T k="auto.appearancesettings.sous_titre" fallback="Sous-titre" /></Label>
               <Input
                 id="owner-subtitle"
                 value={brandingOverrides.ownerSubtitle ?? ''}
@@ -159,7 +160,7 @@ export const AppearanceSettings: React.FC = () => {
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="flex items-center justify-between rounded-lg border p-3">
-              <span className="text-sm">Afficher le sceau</span>
+              <span className="text-sm"><T k="auto.appearancesettings.afficher_le_sceau" fallback="Afficher le sceau" /></span>
               <Switch
                 checked={branding.showSeal}
                 onCheckedChange={(v) => setBrandingOverrides({ showSeal: v })}
@@ -167,7 +168,7 @@ export const AppearanceSettings: React.FC = () => {
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
-              <span className="text-sm">Afficher les bandeaux</span>
+              <span className="text-sm"><T k="auto.appearancesettings.afficher_les_bandeaux" fallback="Afficher les bandeaux" /></span>
               <Switch
                 checked={branding.showBands}
                 onCheckedChange={(v) => setBrandingOverrides({ showBands: v })}
@@ -178,7 +179,7 @@ export const AppearanceSettings: React.FC = () => {
 
           <div className="rounded-lg border p-3">
             <div className="mb-2 flex items-center gap-2">
-              <Badge variant="secondary">Aperçu</Badge>
+              <Badge variant="secondary"><T k="auto.appearancesettings.apercu" fallback="Aperçu" /></Badge>
             </div>
             <div className="relative isolate overflow-hidden rounded-md p-3">
               <BrandBandsBackground />
@@ -188,7 +189,7 @@ export const AppearanceSettings: React.FC = () => {
 
           <Button variant="outline" size="sm" onClick={resetBrandingOverrides} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Réinitialiser les personnalisations
+            <T k="auto.appearancesettings.reinitialiser_les_personnalisations" fallback="Réinitialiser les personnalisations" />
           </Button>
         </CardContent>
       </Card>

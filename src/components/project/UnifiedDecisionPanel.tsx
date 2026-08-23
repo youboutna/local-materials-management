@@ -8,6 +8,7 @@ import type { DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface UnifiedDecisionPanelProps {
   decisionNode: DecisionNode | null;
   projectId?: string;
@@ -127,7 +128,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
             <p className="text-sm text-muted-foreground">{node.description}</p>
 
             <div>
-              <h5 className="text-sm font-medium">Documents</h5>
+              <h5 className="text-sm font-medium"><T k="auto.unifieddecisionpanel.documents" fallback="Documents" /></h5>
               <div className="mt-2 space-y-2">
                 {Array.isArray(node.documents) && node.documents.length > 0 ? (
                   node.documents.map((d) => (
@@ -135,22 +136,22 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
                       <div className="truncate text-sm">{d.title}</div>
                       <div className="flex items-center gap-2">
                           <Button size="sm" variant="ghost" onClick={() => openDocument(d.file_url)} aria-label={`Ouvrir ${d.title}`}>
-                            Ouvrir
+                            <T k="auto.unifieddecisionpanel.ouvrir" fallback="Ouvrir" />
                           </Button>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-xs text-muted-foreground">Aucun document</div>
+                  <div className="text-xs text-muted-foreground"><T k="auto.unifieddecisionpanel.aucun_document" fallback="Aucun document" /></div>
                 )}
                 <div>
-                    <Button size="sm" onClick={handleCreateDocument} aria-label={`Créer un document pour ${node.name}`}>Créer document</Button>
+                    <Button size="sm" onClick={handleCreateDocument} aria-label={`Créer un document pour ${node.name}`}><T k="auto.unifieddecisionpanel.creer_document" fallback="Créer document" /></Button>
                 </div>
               </div>
             </div>
 
             <div>
-              <h5 className="text-sm font-medium">Actions suggérées</h5>
+              <h5 className="text-sm font-medium"><T k="auto.unifieddecisionpanel.actions_suggerees" fallback="Actions suggérées" /></h5>
               <div className="mt-2 space-y-2">
                 {Array.isArray(node.suggestedActions) && node.suggestedActions.length > 0 ? (
                   node.suggestedActions.map((a) => (
@@ -162,18 +163,18 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
                     </div>
                   ))
                 ) : (
-                  <div className="text-xs text-muted-foreground">Aucune action</div>
+                  <div className="text-xs text-muted-foreground"><T k="auto.unifieddecisionpanel.aucune_action" fallback="Aucune action" /></div>
                 )}
               </div>
             </div>
 
             <div>
-              <h5 className="text-sm font-medium">Métadonnées</h5>
+              <h5 className="text-sm font-medium"><T k="auto.unifieddecisionpanel.metadonnees" fallback="Métadonnées" /></h5>
               <pre className="mt-2 text-xs bg-muted p-2 rounded max-h-40 overflow-auto">{JSON.stringify(node.metadata || {}, null, 2)}</pre>
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onClose && onClose()}>Fermer</Button>
+              <Button variant="outline" onClick={() => onClose && onClose()}><T k="auto.unifieddecisionpanel.fermer" fallback="Fermer" /></Button>
             </div>
           </div>
         </CardContent>

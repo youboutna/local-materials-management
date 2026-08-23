@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { BoqTransferService } from '@/application/services/boq/BoqTransferService';
 import { BoqPartyResolverService, partyHintsFromLines } from '@/application/services/boq/BoqPartyResolverService';
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   ctx: BoqContext;
@@ -108,7 +109,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     }
   });
 
-  const withGuard = async (label: string, fn: () => Promise<void>) => {
+  const withGuard = async (label: string, fn: () => <T k="auto.boqactionsbar.promise" fallback="Promise" /><void>) => {
     if (!lines.length) {
       toast({ title: 'Aucune ligne', description: 'Ajoutez ou importez des lignes.', variant: 'destructive' });
       return;
@@ -309,7 +310,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         {can('distribute') && onDistribute && (
           <Button size="sm" variant="outline" onClick={onDistribute} disabled={disabled || busy !== null}>
             <Send className="h-4 w-4 mr-2" />
-            Diffuser
+            <T k="auto.boqactionsbar.diffuser" fallback="Diffuser" />
           </Button>
         )}
         {isProjectDqe && (
@@ -358,19 +359,19 @@ export const BoqActionsBar: React.FC<Props> = ({
         {can('attachToSubmission') && onAttachToSubmission && (
           <Button size="sm" variant="outline" onClick={onAttachToSubmission} disabled={disabled || busy !== null}>
             <Paperclip className="h-4 w-4 mr-2" />
-            Joindre à ma soumission
+            <T k="auto.boqactionsbar.joindre_a_ma_soumission" fallback="Joindre à ma soumission" />
           </Button>
         )}
         {can('submitInvoice') && onSubmitInvoice && (
           <Button size="sm" variant="outline" onClick={onSubmitInvoice} disabled={disabled || busy !== null}>
             <FileCheck2 className="h-4 w-4 mr-2" />
-            Soumettre pour paiement
+            <T k="auto.boqactionsbar.soumettre_pour_paiement" fallback="Soumettre pour paiement" />
           </Button>
         )}
         {can('publish') && onPublish && (
           <Button size="sm" variant="outline" onClick={onPublish} disabled={disabled || busy !== null}>
             <Send className="h-4 w-4 mr-2" />
-            Publier
+            <T k="auto.boqactionsbar.publier" fallback="Publier" />
           </Button>
         )}
       </div>
@@ -378,12 +379,12 @@ export const BoqActionsBar: React.FC<Props> = ({
       <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un décompte depuis le devis</DialogTitle>
-            <DialogDescription>Les quantités du devis seront proratisées selon l'avancement facturé.</DialogDescription>
+            <DialogTitle><T k="auto.boqactionsbar.creer_un_decompte_depuis_le_devis" fallback="Créer un décompte depuis le devis" /></DialogTitle>
+            <DialogDescription><T k="auto.boqactionsbar.les_quantites_du_devis_seront_proratisees_selon_" fallback="Les quantités du devis seront proratisées selon l'avancement facturé." /></DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>Avancement facturé (%)</Label>
+              <Label><T k="auto.boqactionsbar.avancement_facture" fallback="Avancement facturé (%)" /></Label>
               <Input type="number" min={1} max={100} value={decomptePct}
                 onChange={(e) => setDecomptePct(Number(e.target.value) || 0)} />
             </div>
@@ -392,8 +393,8 @@ export const BoqActionsBar: React.FC<Props> = ({
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDecompteOpen(false)}>Annuler</Button>
-            <Button onClick={confirmDecompte} disabled={busy !== null}>Créer</Button>
+            <Button variant="outline" onClick={() => setDecompteOpen(false)}><T k="auto.boqactionsbar.annuler" fallback="Annuler" /></Button>
+            <Button onClick={confirmDecompte} disabled={busy !== null}><T k="auto.boqactionsbar.creer" fallback="Créer" /></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -401,12 +402,12 @@ export const BoqActionsBar: React.FC<Props> = ({
       <Dialog open={signOpen} onOpenChange={setSignOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Signer le document</DialogTitle>
-            <DialogDescription>La signature est horodatée et figée sur toutes les lignes du document.</DialogDescription>
+            <DialogTitle><T k="auto.boqactionsbar.signer_le_document" fallback="Signer le document" /></DialogTitle>
+            <DialogDescription><T k="auto.boqactionsbar.la_signature_est_horodatee_et_figee_sur_toutes_l" fallback="La signature est horodatée et figée sur toutes les lignes du document." /></DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>Nom du signataire</Label>
+              <Label><T k="auto.boqactionsbar.nom_du_signataire" fallback="Nom du signataire" /></Label>
               <Input value={signer} onChange={(e) => setSigner(e.target.value)} placeholder="Ex. Directeur Technique" />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -414,7 +415,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSignOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setSignOpen(false)}><T k="auto.boqactionsbar.annuler" fallback="Annuler" /></Button>
             <Button onClick={confirmSign} disabled={busy === 'sign'}>
               {busy === 'sign' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PenTool className="h-4 w-4 mr-2" />}
               Confirmer la signature

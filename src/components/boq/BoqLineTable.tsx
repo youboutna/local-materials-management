@@ -14,6 +14,7 @@ import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.re
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { T } from '@/components/i18n/T';
 
 export interface StakeholderOption {
   id: string;
@@ -104,23 +105,23 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[240px]">Désignation</TableHead>
-              <TableHead className="min-w-[150px]">Phase</TableHead>
-              <TableHead className="min-w-[150px]">Jalon</TableHead>
-              <TableHead className="min-w-[150px]">Tâche</TableHead>
-              <TableHead className="min-w-[140px]">Nature</TableHead>
-              <TableHead className="min-w-[140px]">Type ouvrage</TableHead>
-              <TableHead className="min-w-[160px]">Intervenant</TableHead>
-              <TableHead>Unité</TableHead>
+              <TableHead className="min-w-[240px]"><T k="auto.boqlinetable.designation" fallback="Désignation" /></TableHead>
+              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.phase" fallback="Phase" /></TableHead>
+              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.jalon" fallback="Jalon" /></TableHead>
+              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.tache" fallback="Tâche" /></TableHead>
+              <TableHead className="min-w-[140px]"><T k="auto.boqlinetable.nature" fallback="Nature" /></TableHead>
+              <TableHead className="min-w-[140px]"><T k="auto.boqlinetable.type_ouvrage" fallback="Type ouvrage" /></TableHead>
+              <TableHead className="min-w-[160px]"><T k="auto.boqlinetable.intervenant" fallback="Intervenant" /></TableHead>
+              <TableHead><T k="auto.boqlinetable.unite" fallback="Unité" /></TableHead>
               <TableHead className="text-right">L</TableHead>
               <TableHead className="text-right">l</TableHead>
               <TableHead className="text-right">h</TableHead>
-              <TableHead className="text-right">Qté</TableHead>
+              <TableHead className="text-right"><T k="auto.boqlinetable.qte" fallback="Qté" /></TableHead>
               <TableHead className="text-right">PU</TableHead>
-              <TableHead className="text-right">TVA %</TableHead>
-              <TableHead className="text-right">RAS %</TableHead>
-              <TableHead className="text-right">Frais</TableHead>
-              <TableHead className="text-right">Total HT</TableHead>
+              <TableHead className="text-right"><T k="auto.boqlinetable.tva" fallback="TVA %" /></TableHead>
+              <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
+              <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
+              <TableHead className="text-right"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableHead>
               {hasActions && <TableHead className="w-8" />}
             </TableRow>
           </TableHeader>
@@ -160,11 +161,11 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                 </TableRow>
               );
             })}
-            {lines.length > 0 && <TableRow><TableCell colSpan={DATA_COLS - 1} className="text-right font-semibold">Total HT</TableCell><TableCell className="text-right font-bold">{fmt(total)}</TableCell>{hasActions && <TableCell />}</TableRow>}
+            {lines.length > 0 && <TableRow><TableCell colSpan={DATA_COLS - 1} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell><TableCell className="text-right font-bold">{fmt(total)}</TableCell>{hasActions && <TableCell />}</TableRow>}
           </TableBody>
         </Table>
       </div>
-      {usePaging && <div className="flex items-center justify-between text-xs text-muted-foreground"><span>Lignes {start + 1} à {Math.min(end, lines.length)} sur {lines.length}</span><div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><ChevronLeft className="h-4 w-4" /> Précédent</Button><span>Page {safePage + 1} / {totalPages}</span><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>Suivant <ChevronRight className="h-4 w-4" /></Button></div></div>}
+      {usePaging && <div className="flex items-center justify-between text-xs text-muted-foreground"><span>Lignes {start + 1} à {Math.min(end, lines.length)} sur {lines.length}</span><div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><ChevronLeft className="h-4 w-4" /> <T k="auto.boqlinetable.precedent" fallback="Précédent" /></Button><span>Page {safePage + 1} / {totalPages}</span><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}><T k="auto.boqlinetable.suivant" fallback="Suivant" /> <ChevronRight className="h-4 w-4" /></Button></div></div>}
     </div>
   );
 }

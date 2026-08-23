@@ -51,6 +51,7 @@ import { usePhaseCountsHex } from '@/hooks/hexagonal/usePhaseCountsHex';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Phase {
   id: string;
   phase_name: string;
@@ -312,7 +313,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       {phase.progress !== undefined && (
                         <div className="space-y-1 mb-3">
                           <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Progression</span>
+                            <span><T k="auto.enhancedworkflowphasemanager.progression" fallback="Progression" /></span>
                             <span>{phase.progress}%</span>
                           </div>
                           <Progress value={phase.progress} className="h-2" />
@@ -375,7 +376,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline">
                         <User className="h-4 w-4 mr-1" />
-                        Équipe
+                        <T k="auto.enhancedworkflowphasemanager.equipe" fallback="Équipe" />
                       </Button>
                     </DialogTrigger>
                   </Dialog>
@@ -384,7 +385,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline">
                         <MapPin className="h-4 w-4 mr-1" />
-                        Localisation
+                        <T k="auto.enhancedworkflowphasemanager.localisation" fallback="Localisation" />
                       </Button>
                     </DialogTrigger>
                   </Dialog>
@@ -396,7 +397,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
             {!selectedPhase ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Sélectionnez une phase pour voir les détails</p>
+                <p><T k="auto.enhancedworkflowphasemanager.selectionnez_une_phase_pour_voir_les_details" fallback="Sélectionnez une phase pour voir les détails" /></p>
               </div>
             ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -404,27 +405,27 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                   <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6 h-auto mb-6">
                     <TabsTrigger value="overview" className="flex flex-col items-center gap-1 p-3">
                       <Settings className="h-4 w-4" />
-                      <span className="text-xs">Vue d'ensemble</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.vue_d_ensemble" fallback="Vue d'ensemble" /></span>
                     </TabsTrigger>
                     <TabsTrigger value="documents" className="flex flex-col items-center gap-1 p-3">
                       <FileText className="h-4 w-4" />
-                      <span className="text-xs">Documents</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.documents" fallback="Documents" /></span>
                     </TabsTrigger>
                     <TabsTrigger value="tasks" className="flex flex-col items-center gap-1 p-3">
                       <ClipboardCheck className="h-4 w-4" />
-                      <span className="text-xs">Tâches</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.taches" fallback="Tâches" /></span>
                     </TabsTrigger>
                     <TabsTrigger value="team" className="flex flex-col items-center gap-1 p-3">
                       <Users className="h-4 w-4" />
-                      <span className="text-xs">Équipe</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.equipe" fallback="Équipe" /></span>
                     </TabsTrigger>
                     <TabsTrigger value="payments" className="flex flex-col items-center gap-1 p-3">
                       <CreditCard className="h-4 w-4" />
-                      <span className="text-xs">Paiements</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.paiements" fallback="Paiements" /></span>
                     </TabsTrigger>
                     <TabsTrigger value="inspections" className="flex flex-col items-center gap-1 p-3">
                       <CheckCircle2 className="h-4 w-4" />
-                      <span className="text-xs">Inspections</span>
+                      <span className="text-xs"><T k="auto.enhancedworkflowphasemanager.inspections" fallback="Inspections" /></span>
                     </TabsTrigger>
                   </TabsList>
                 </ScrollArea>
@@ -437,7 +438,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <FileText className="h-5 w-5 text-primary" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.documents_count}</p>
-                            <p className="text-sm text-muted-foreground">Documents</p>
+                            <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.documents" fallback="Documents" /></p>
                           </div>
                         </div>
                       </CardContent>
@@ -449,7 +450,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <ClipboardCheck className="h-5 w-5 text-success" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.tasks_count}</p>
-                            <p className="text-sm text-muted-foreground">Tâches</p>
+                            <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.taches" fallback="Tâches" /></p>
                           </div>
                         </div>
                       </CardContent>
@@ -461,7 +462,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <Users className="h-5 w-5 text-accent-foreground" />
                           <div>
                             <p className="text-2xl font-bold">{stakeholders.length}</p>
-                            <p className="text-sm text-muted-foreground">Parties prenantes</p>
+                            <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.parties_prenantes" fallback="Parties prenantes" /></p>
                           </div>
                         </div>
                       </CardContent>
@@ -473,7 +474,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <CreditCard className="h-5 w-5 text-warning" />
                           <div>
                             <p className="text-2xl font-bold">{selectedPhase.payments_count}</p>
-                            <p className="text-sm text-muted-foreground">Paiements</p>
+                            <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.paiements" fallback="Paiements" /></p>
                           </div>
                         </div>
                       </CardContent>
@@ -485,7 +486,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <User className="h-5 w-5" />
-                          Délégation d'équipe
+                          <T k="auto.enhancedworkflowphasemanager.delegation_d_equipe" fallback="Délégation d'équipe" />
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -511,7 +512,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                                 )}
                               </div>
                               {!employee && (
-                                <span className="text-sm text-muted-foreground">Non assigné</span>
+                                <span className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.non_assigne" fallback="Non assigné" /></span>
                               )}
                             </div>
                           );
@@ -523,7 +524,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           onClick={() => setIsDelegationDialogOpen(true)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
-                          Modifier l'équipe
+                          <T k="auto.enhancedworkflowphasemanager.modifier_l_equipe" fallback="Modifier l'équipe" />
                         </Button>
                       </CardContent>
                     </Card>
@@ -532,7 +533,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <MapPin className="h-5 w-5" />
-                          Localisation de la phase
+                          <T k="auto.enhancedworkflowphasemanager.localisation_de_la_phase" fallback="Localisation de la phase" />
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -551,7 +552,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         ) : (
                           <div className="text-center py-8">
                             <MapPin className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Aucune localisation définie</p>
+                            <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.aucune_localisation_definie" fallback="Aucune localisation définie" /></p>
                           </div>
                         )}
                         <Button 
@@ -561,7 +562,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           onClick={() => setIsLocationDialogOpen(true)}
                         >
                           <Settings className="h-4 w-4 mr-2" />
-                          Définir la localisation
+                          <T k="auto.enhancedworkflowphasemanager.definir_la_localisation" fallback="Définir la localisation" />
                         </Button>
                       </CardContent>
                     </Card>
@@ -572,7 +573,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Building className="h-5 w-5" />
-                        Parties prenantes du projet
+                        <T k="auto.enhancedworkflowphasemanager.parties_prenantes_du_projet" fallback="Parties prenantes du projet" />
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -597,7 +598,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                                   </div>
                                 </div>
                                 {stakeholder.is_primary && (
-                                  <Badge variant="secondary">Principal</Badge>
+                                  <Badge variant="secondary"><T k="auto.enhancedworkflowphasemanager.principal" fallback="Principal" /></Badge>
                                 )}
                               </div>
                               {stakeholder.employee?.email && (
@@ -618,7 +619,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           <Users className="h-12 w-12 mx-auto mb-2" />
-                          <p>Aucune partie prenante définie</p>
+                          <p><T k="auto.enhancedworkflowphasemanager.aucune_partie_prenante_definie" fallback="Aucune partie prenante définie" /></p>
                         </div>
                       )}
                     </CardContent>
@@ -667,7 +668,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Chef de projet</Label>
+                <Label><T k="auto.enhancedworkflowphasemanager.chef_de_projet" fallback="Chef de projet" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.projectManager}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, projectManager: value }))}
@@ -677,7 +678,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
               </div>
               
               <div>
-                <Label>Manager technique</Label>
+                <Label><T k="auto.enhancedworkflowphasemanager.manager_technique" fallback="Manager technique" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.technicalManager}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, technicalManager: value }))}
@@ -687,7 +688,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
               </div>
               
               <div>
-                <Label>Superviseur</Label>
+                <Label><T k="auto.enhancedworkflowphasemanager.superviseur" fallback="Superviseur" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.supervisor}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, supervisor: value }))}
@@ -697,7 +698,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
               </div>
               
               <div>
-                <Label>Client</Label>
+                <Label><T k="auto.enhancedworkflowphasemanager.client" fallback="Client" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.client}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, client: value }))}
@@ -709,11 +710,11 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDelegationDialogOpen(false)}>
                 <X className="h-4 w-4 mr-2" />
-                Annuler
+                <T k="auto.enhancedworkflowphasemanager.annuler" fallback="Annuler" />
               </Button>
               <Button onClick={handleSaveTeamDelegation}>
                 <Save className="h-4 w-4 mr-2" />
-                Sauvegarder
+                <T k="auto.enhancedworkflowphasemanager.sauvegarder" fallback="Sauvegarder" />
               </Button>
             </div>
           </div>
@@ -730,18 +731,18 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
             <div className="h-96 bg-muted rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <Map className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Carte interactive - En développement</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.carte_interactive_en_developpement" fallback="Carte interactive - En développement" /></p>
               </div>
             </div>
             
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
                 <X className="h-4 w-4 mr-2" />
-                Annuler
+                <T k="auto.enhancedworkflowphasemanager.annuler" fallback="Annuler" />
               </Button>
               <Button onClick={handleSaveLocation}>
                 <Save className="h-4 w-4 mr-2" />
-                Sauvegarder
+                <T k="auto.enhancedworkflowphasemanager.sauvegarder" fallback="Sauvegarder" />
               </Button>
             </div>
           </div>

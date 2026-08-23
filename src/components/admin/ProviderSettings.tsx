@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAppConfig } from '@/hooks/useAppConfig';
 import { AlertTriangle, Check, Cloud, Database, HardDrive, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 const ProviderSettings = () => {
   const { toast } = useToast();
@@ -232,7 +233,7 @@ const ProviderSettings = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Cloud className="h-5 w-5" />
-              Provider Configuration
+              <T k="auto.providersettings.provider_configuration" fallback="Provider Configuration" />
             </div>
             <Badge variant={isValid ? 'default' : 'destructive'}>
               {isValid ? 'Configuration valide' : 'Configuration invalide'}
@@ -246,15 +247,15 @@ const ProviderSettings = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm font-semibold">Auth Provider</p>
+              <p className="text-sm font-semibold"><T k="auto.providersettings.auth_provider" fallback="Auth Provider" /></p>
               <p className="text-sm text-muted-foreground">{envConfig.auth.provider}</p>
             </div>
             <div>
-              <p className="text-sm font-semibold">Data Provider</p>
+              <p className="text-sm font-semibold"><T k="auto.providersettings.data_provider" fallback="Data Provider" /></p>
               <p className="text-sm text-muted-foreground">{envConfig.database.provider}</p>
             </div>
             <div>
-              <p className="text-sm font-semibold">Storage Provider</p>
+              <p className="text-sm font-semibold"><T k="auto.providersettings.storage_provider" fallback="Storage Provider" /></p>
               <p className="text-sm text-muted-foreground">{envConfig.storage.provider}</p>
             </div>
           </div>
@@ -263,9 +264,9 @@ const ProviderSettings = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Scénarios de déploiement</CardTitle>
+          <CardTitle><T k="auto.providersettings.scenarios_de_deploiement" fallback="Scénarios de déploiement" /></CardTitle>
           <CardDescription>
-            Choisissez un scénario pour initialiser les providers recommandés.
+            <T k="auto.providersettings.choisissez_un_scenario_pour_initialiser_les_prov" fallback="Choisissez un scénario pour initialiser les providers recommandés." />
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
@@ -290,7 +291,7 @@ const ProviderSettings = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <Shield className="mr-2 h-5 w-5" />
-              Authentication Provider
+              <T k="auto.providersettings.authentication_provider" fallback="Authentication Provider" />
             </div>
             <div className="flex items-center space-x-2">
               {getStatusIcon(connectionStatus.auth)}
@@ -298,13 +299,13 @@ const ProviderSettings = () => {
             </div>
           </CardTitle>
           <CardDescription>
-            Choose your authentication provider and configure connection settings.
+            <T k="auto.providersettings.choose_your_authentication_provider_and_configur" fallback="Choose your authentication provider and configure connection settings." />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="auth-provider">Provider</Label>
+              <Label htmlFor="auth-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
               <Select 
                 value={config.auth.provider} 
                 onValueChange={(value) => handleProviderChange('auth', value)}
@@ -339,7 +340,7 @@ const ProviderSettings = () => {
           {config.auth.provider === 'keycloak' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="auth-client-id">Client ID</Label>
+                <Label htmlFor="auth-client-id"><T k="auto.providersettings.client_id" fallback="Client ID" /></Label>
                 <Input
                   id="auth-client-id"
                   value={config.auth.clientId || ''}
@@ -348,7 +349,7 @@ const ProviderSettings = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="auth-realm">Realm</Label>
+                <Label htmlFor="auth-realm"><T k="auto.providersettings.realm" fallback="Realm" /></Label>
                 <Input
                   id="auth-realm"
                   value={config.auth.realm || ''}
@@ -364,7 +365,7 @@ const ProviderSettings = () => {
             onClick={() => testConnection(config.auth.provider, 'auth')}
             disabled={connectionStatus.auth === 'testing'}
           >
-            Test Connection
+            <T k="auto.providersettings.test_connection" fallback="Test Connection" />
           </Button>
         </CardContent>
       </Card>
@@ -375,7 +376,7 @@ const ProviderSettings = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <Database className="mr-2 h-5 w-5" />
-              Database Provider
+              <T k="auto.providersettings.database_provider" fallback="Database Provider" />
             </div>
             <div className="flex items-center space-x-2">
               {getStatusIcon(connectionStatus.database)}
@@ -383,13 +384,13 @@ const ProviderSettings = () => {
             </div>
           </CardTitle>
           <CardDescription>
-            Configure your database connection and provider settings.
+            <T k="auto.providersettings.configure_your_database_connection_and_provider_" fallback="Configure your database connection and provider settings." />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="db-provider">Provider</Label>
+              <Label htmlFor="db-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
               <Select 
                 value={config.database.provider} 
                 onValueChange={(value) => handleProviderChange('database', value)}
@@ -411,7 +412,7 @@ const ProviderSettings = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="db-url">Connection URL</Label>
+              <Label htmlFor="db-url"><T k="auto.providersettings.connection_url" fallback="Connection URL" /></Label>
               <Input
                 id="db-url"
                 value={config.database.url || ''}
@@ -427,7 +428,7 @@ const ProviderSettings = () => {
             onClick={() => testConnection(config.database.provider, 'database')}
             disabled={connectionStatus.database === 'testing'}
           >
-            Test Connection
+            <T k="auto.providersettings.test_connection" fallback="Test Connection" />
           </Button>
         </CardContent>
       </Card>
@@ -438,7 +439,7 @@ const ProviderSettings = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <HardDrive className="mr-2 h-5 w-5" />
-              Storage Provider
+              <T k="auto.providersettings.storage_provider" fallback="Storage Provider" />
             </div>
             <div className="flex items-center space-x-2">
               {getStatusIcon(connectionStatus.storage)}
@@ -446,13 +447,13 @@ const ProviderSettings = () => {
             </div>
           </CardTitle>
           <CardDescription>
-            Configure file storage and content delivery settings.
+            <T k="auto.providersettings.configure_file_storage_and_content_delivery_sett" fallback="Configure file storage and content delivery settings." />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="storage-provider">Provider</Label>
+              <Label htmlFor="storage-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
               <Select 
                 value={config.storage.provider} 
                 onValueChange={(value) => handleProviderChange('storage', value)}
@@ -474,7 +475,7 @@ const ProviderSettings = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="storage-endpoint">Endpoint</Label>
+              <Label htmlFor="storage-endpoint"><T k="auto.providersettings.endpoint" fallback="Endpoint" /></Label>
               <Input
                 id="storage-endpoint"
                 value={config.storage.endpoint || ''}
@@ -496,7 +497,7 @@ const ProviderSettings = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="storage-region">Region</Label>
+              <Label htmlFor="storage-region"><T k="auto.providersettings.region" fallback="Region" /></Label>
               <Input
                 id="storage-region"
                 value={config.storage.region || ''}
@@ -511,7 +512,7 @@ const ProviderSettings = () => {
             onClick={() => testConnection(config.storage.provider, 'storage')}
             disabled={connectionStatus.storage === 'testing'}
           >
-            Test Connection
+            <T k="auto.providersettings.test_connection" fallback="Test Connection" />
           </Button>
         </CardContent>
       </Card>
@@ -521,7 +522,7 @@ const ProviderSettings = () => {
         <CardContent className="pt-6">
           <div className="flex justify-between">
             <Button variant="outline" onClick={resetToDefaults}>
-              Reset to Defaults
+              <T k="auto.providersettings.reset_to_defaults" fallback="Reset to Defaults" />
             </Button>
             
             <Button 
@@ -529,7 +530,7 @@ const ProviderSettings = () => {
               disabled={!isModified}
               className="bg-primary hover:bg-primary/90"
             >
-              Save Configuration
+              <T k="auto.providersettings.save_configuration" fallback="Save Configuration" />
             </Button>
           </div>
         </CardContent>

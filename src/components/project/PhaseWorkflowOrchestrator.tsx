@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UnifiedPhaseWorkflow from './UnifiedPhaseWorkflow';
 import normalizeSteps from '@/utils/dataNormalizer';
+import { T } from '@/components/i18n/T';
 
 type StepAction = 'add' | 'update' | 'delete' | 'program_inspection' | 'validate';
 type MilestoneAction = 'add' | 'validate' | 'program_inspection';
@@ -13,8 +14,8 @@ interface PhaseWorkflowOrchestratorProps {
   rawMilestones?: any[];
   projectId: string;
   phaseId: string;
-  onStepAction?: (action: StepAction, data?: any) => Promise<void> | void;
-  onMilestoneAction?: (action: MilestoneAction, data?: any) => Promise<void> | void;
+  onStepAction?: (action: StepAction, data?: any) => <T k="auto.phaseworkfloworchestrator.promise" fallback="Promise" /><void> | void;
+  onMilestoneAction?: (action: MilestoneAction, data?: any) => <T k="auto.phaseworkfloworchestrator.promise" fallback="Promise" /><void> | void;
   onAddStep?: () => void;
   onRetry?: () => void;
   enableNormalization?: boolean;
@@ -73,7 +74,7 @@ const PhaseWorkflowOrchestrator: React.FC<PhaseWorkflowOrchestratorProps> = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Chargement du workflow</CardTitle>
+          <CardTitle><T k="auto.phaseworkfloworchestrator.chargement_du_workflow" fallback="Chargement du workflow" /></CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">Chargement des données de phase…</p>
@@ -86,13 +87,13 @@ const PhaseWorkflowOrchestrator: React.FC<PhaseWorkflowOrchestratorProps> = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Workflow indisponible</CardTitle>
+          <CardTitle><T k="auto.phaseworkfloworchestrator.workflow_indisponible" fallback="Workflow indisponible" /></CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Impossible de charger les étapes pour cette phase.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phaseworkfloworchestrator.impossible_de_charger_les_etapes_pour_cette_phas" fallback="Impossible de charger les étapes pour cette phase." /></p>
           <div className="mt-4 flex gap-2">
-            <Button onClick={() => onRetry && onRetry()}>Réessayer</Button>
-            <Button variant="ghost" onClick={() => onRetry && onRetry()}>Forcer rafraîchissement</Button>
+            <Button onClick={() => onRetry && onRetry()}><T k="auto.phaseworkfloworchestrator.reessayer" fallback="Réessayer" /></Button>
+            <Button variant="ghost" onClick={() => onRetry && onRetry()}><T k="auto.phaseworkfloworchestrator.forcer_rafraichissement" fallback="Forcer rafraîchissement" /></Button>
           </div>
         </CardContent>
       </Card>
@@ -103,12 +104,12 @@ const PhaseWorkflowOrchestrator: React.FC<PhaseWorkflowOrchestratorProps> = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Aucune étape planifiée</CardTitle>
+          <CardTitle><T k="auto.phaseworkfloworchestrator.aucune_etape_planifiee" fallback="Aucune étape planifiée" /></CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Commencez par ajouter des étapes à votre workflow.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phaseworkfloworchestrator.commencez_par_ajouter_des_etapes_a_votre_workflo" fallback="Commencez par ajouter des étapes à votre workflow." /></p>
           <div className="mt-4">
-            <Button onClick={() => onAddStep && onAddStep()}>Ajouter une première étape</Button>
+            <Button onClick={() => onAddStep && onAddStep()}><T k="auto.phaseworkfloworchestrator.ajouter_une_premiere_etape" fallback="Ajouter une première étape" /></Button>
           </div>
         </CardContent>
       </Card>

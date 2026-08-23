@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 // Local interface for stakeholder
 interface Stakeholder {
@@ -274,7 +275,7 @@ const InspectionPaymentValidation: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
+          <p className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.chargement" fallback="Chargement..." /></p>
         </div>
       </div>
     );
@@ -286,13 +287,13 @@ const InspectionPaymentValidation: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Inspection non éligible</h3>
+            <h3 className="text-lg font-semibold mb-2"><T k="auto.inspectionpaymentvalidation.inspection_non_eligible" fallback="Inspection non éligible" /></h3>
             <p className="text-muted-foreground mb-4">
               Cette inspection doit être terminée et avoir une demande de paiement en attente pour être validée.
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour au projet
+              <T k="auto.inspectionpaymentvalidation.retour_au_projet" fallback="Retour au projet" />
             </Button>
           </CardContent>
         </Card>
@@ -306,13 +307,13 @@ const InspectionPaymentValidation: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès refusé</h3>
+            <h3 className="text-lg font-semibold mb-2"><T k="auto.inspectionpaymentvalidation.acces_refuse" fallback="Accès refusé" /></h3>
             <p className="text-muted-foreground mb-4">
-              Seul le chef de projet ou l'ingénieur conseil peut valider les paiements.
+              <T k="auto.inspectionpaymentvalidation.seul_le_chef_de_projet_ou_l_ingenieur_conseil_pe" fallback="Seul le chef de projet ou l'ingénieur conseil peut valider les paiements." />
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour au projet
+              <T k="auto.inspectionpaymentvalidation.retour_au_projet" fallback="Retour au projet" />
             </Button>
           </CardContent>
         </Card>
@@ -335,9 +336,9 @@ const InspectionPaymentValidation: React.FC = () => {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour aux inspections
+            <T k="auto.inspectionpaymentvalidation.retour_aux_inspections" fallback="Retour aux inspections" />
           </Button>
-          <h1 className="text-3xl font-bold">Validation de paiement - Inspection</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.inspectionpaymentvalidation.validation_de_paiement_inspection" fallback="Validation de paiement - Inspection" /></h1>
           <p className="text-muted-foreground mt-2">
             Projet: {project?.title || 'Chargement...'}
           </p>
@@ -351,13 +352,13 @@ const InspectionPaymentValidation: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Détails de l'inspection
+                <T k="auto.inspectionpaymentvalidation.details_de_l_inspection" fallback="Détails de l'inspection" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Date d'inspection</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.date_d_inspection" fallback="Date d'inspection" /></Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4" />
                     <p className="font-medium">
@@ -371,19 +372,19 @@ const InspectionPaymentValidation: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Statut</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.statut" fallback="Statut" /></Label>
                   <div className="mt-1">
                     {getStatusBadge(inspection.status || 'unknown')}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Inspecteur</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.inspecteur" fallback="Inspecteur" /></Label>
                   <p className="font-medium mt-1">{inspection.inspector || 'Non spécifié'}</p>
                 </div>
 
                 <div>
-                  <Label className="text-muted-foreground">Progression à l'inspection</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.progression_a_l_inspection" fallback="Progression à l'inspection" /></Label>
                   <div className="flex items-center gap-2 mt-1">
                     <TrendingUp className="h-4 w-4" />
                     <p className="font-medium">{inspection.progressAtInspection || 0}%</p>
@@ -393,7 +394,7 @@ const InspectionPaymentValidation: React.FC = () => {
 
               {inspection.comments && (
                 <div>
-                  <Label className="text-muted-foreground">Commentaires</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectionpaymentvalidation.commentaires" fallback="Commentaires" /></Label>
                   <p className="mt-1">{inspection.comments}</p>
                 </div>
               )}
@@ -405,27 +406,27 @@ const InspectionPaymentValidation: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Validation du paiement
+                <T k="auto.inspectionpaymentvalidation.validation_du_paiement" fallback="Validation du paiement" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="paymentType">Type de paiement</Label>
+                  <Label htmlFor="paymentType"><T k="auto.inspectionpaymentvalidation.type_de_paiement" fallback="Type de paiement" /></Label>
                   <Select value={paymentType} onValueChange={(v) => setPaymentType(v as PaymentType)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="contractor">Entreprise contractante</SelectItem>
-                      <SelectItem value="mission_fees">Frais de mission</SelectItem>
-                      <SelectItem value="engineer_fees">Honoraires ingénieur conseil</SelectItem>
+                      <SelectItem value="contractor"><T k="auto.inspectionpaymentvalidation.entreprise_contractante" fallback="Entreprise contractante" /></SelectItem>
+                      <SelectItem value="mission_fees"><T k="auto.inspectionpaymentvalidation.frais_de_mission" fallback="Frais de mission" /></SelectItem>
+                      <SelectItem value="engineer_fees"><T k="auto.inspectionpaymentvalidation.honoraires_ingenieur_conseil" fallback="Honoraires ingénieur conseil" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="paymentStatus">Décision de paiement</Label>
+                  <Label htmlFor="paymentStatus"><T k="auto.inspectionpaymentvalidation.decision_de_paiement" fallback="Décision de paiement" /></Label>
                   <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -446,7 +447,7 @@ const InspectionPaymentValidation: React.FC = () => {
 
               {paymentStatus !== 'approved' && (
                 <div>
-                  <Label htmlFor="rejectionNotes">Notes de rejet</Label>
+                  <Label htmlFor="rejectionNotes"><T k="auto.inspectionpaymentvalidation.notes_de_rejet" fallback="Notes de rejet" /></Label>
                   <Textarea
                     id="rejectionNotes"
                     value={rejectionNotes}
@@ -472,7 +473,7 @@ const InspectionPaymentValidation: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Intervenants
+                <T k="auto.inspectionpaymentvalidation.intervenants" fallback="Intervenants" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -488,7 +489,7 @@ const InspectionPaymentValidation: React.FC = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Aucun intervenant</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.inspectionpaymentvalidation.aucun_intervenant" fallback="Aucun intervenant" /></p>
               )}
             </CardContent>
           </Card>

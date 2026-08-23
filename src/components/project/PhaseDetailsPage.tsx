@@ -50,6 +50,7 @@ import PhaseResourcesTab from "./phase/PhaseResourcesTab";
 import PhaseQuantityTakeoffTab from "./phase/PhaseQuantityTakeoffTab";
 import PhaseStakeholdersTab from "./phase/PhaseStakeholdersTab";
 import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
+import { T } from '@/components/i18n/T';
 
 // Phase UI interface for component layer with proper DTO support
 interface PhaseUIData {
@@ -247,10 +248,10 @@ const PhaseDetailsPage: React.FC = () => {
       <div className="container mt-20 mx-auto py-8">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>Impossible de charger les détails de la phase.</AlertDescription>
+          <AlertDescription><T k="auto.phasedetailspage.impossible_de_charger_les_details_de_la_phase" fallback="Impossible de charger les détails de la phase." /></AlertDescription>
         </Alert>
         <Button onClick={() => navigate(`/projects/${projectId}`)} className="mt-4">
-          Retour au projet
+          <T k="auto.phasedetailspage.retour_au_projet" fallback="Retour au projet" />
         </Button>
       </div>
     );
@@ -288,22 +289,22 @@ const PhaseDetailsPage: React.FC = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6 mb-4">
           <TabsTrigger value="hierarchy" className="flex items-center gap-2">
-            <Target className="h-4 w-4" /> Hiérarchie
+            <Target className="h-4 w-4" /> <T k="auto.phasedetailspage.hierarchie" fallback="Hiérarchie" />
           </TabsTrigger>
           <TabsTrigger value="workflow" className="flex items-center gap-2">
-            <Banknote className="h-4 w-4" /> Workflow
+            <Banknote className="h-4 w-4" /> <T k="auto.phasedetailspage.workflow" fallback="Workflow" />
           </TabsTrigger>
           <TabsTrigger value="resources" className="flex items-center gap-2">
-            <Package className="h-4 w-4" /> Ressources
+            <Package className="h-4 w-4" /> <T k="auto.phasedetailspage.ressources" fallback="Ressources" />
           </TabsTrigger>
           <TabsTrigger value="metre" className="flex items-center gap-2">
             <Calculator className="h-4 w-4" /> Métré / DQE
           </TabsTrigger>
           <TabsTrigger value="stakeholders" className="flex items-center gap-2">
-            <Users className="h-4 w-4" /> Parties prenantes
+            <Users className="h-4 w-4" /> <T k="auto.phasedetailspage.parties_prenantes" fallback="Parties prenantes" />
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Documents
+            <FileText className="h-4 w-4" /> <T k="auto.phasedetailspage.documents" fallback="Documents" />
           </TabsTrigger>
         </TabsList>
 
@@ -331,13 +332,13 @@ const PhaseDetailsPage: React.FC = () => {
             <Card>
               <CardContent className="py-12 text-center">
                 <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Phase vide</h3>
+                <h3 className="text-lg font-medium mb-2"><T k="auto.phasedetailspage.phase_vide" fallback="Phase vide" /></h3>
                 <p className="text-muted-foreground mb-4">
-                  Cette phase n'a ni étapes ni jalons configurés.
+                  <T k="auto.phasedetailspage.cette_phase_n_a_ni_etapes_ni_jalons_configures" fallback="Cette phase n'a ni étapes ni jalons configurés." />
                 </p>
                 <div className="flex justify-center gap-3">
-                  <Button variant="outline">Ajouter une étape</Button>
-                  <Button variant="outline">Ajouter un jalon</Button>
+                  <Button variant="outline"><T k="auto.phasedetailspage.ajouter_une_etape" fallback="Ajouter une étape" /></Button>
+                  <Button variant="outline"><T k="auto.phasedetailspage.ajouter_un_jalon" fallback="Ajouter un jalon" /></Button>
                 </div>
               </CardContent>
             </Card>
@@ -346,7 +347,7 @@ const PhaseDetailsPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="py-3">
-                <CardTitle className="text-base">Inspections</CardTitle>
+                <CardTitle className="text-base"><T k="auto.phasedetailspage.inspections" fallback="Inspections" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
@@ -354,7 +355,7 @@ const PhaseDetailsPage: React.FC = () => {
             </Card>
             <Card>
               <CardHeader className="py-3">
-                <CardTitle className="text-base">Paiements</CardTitle>
+                <CardTitle className="text-base"><T k="auto.phasedetailspage.paiements" fallback="Paiements" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <PhasePayments phaseId={phaseId!} projectId={projectId!} />
@@ -417,7 +418,7 @@ const PhaseDetailsPage: React.FC = () => {
             <CardHeader className="py-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Description
+                <T k="auto.phasedetailspage.description" fallback="Description" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -429,7 +430,7 @@ const PhaseDetailsPage: React.FC = () => {
 
           <Card>
             <CardHeader className="py-3">
-              <CardTitle className="text-base">Documents de la phase</CardTitle>
+              <CardTitle className="text-base"><T k="auto.phasedetailspage.documents_de_la_phase" fallback="Documents de la phase" /></CardTitle>
             </CardHeader>
             <CardContent>
               <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />

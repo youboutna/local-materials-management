@@ -23,6 +23,7 @@ import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface PhaseEmployeesProps {
   phaseId: string;
@@ -133,7 +134,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
             <DialogTrigger asChild>
               <Button size="sm" className="w-full sm:w-auto" onClick={resetForm}>
                 <Plus className="mr-2 h-4 w-4" />
-                Ajouter un membre
+                <T k="auto.phaseemployees.ajouter_un_membre" fallback="Ajouter un membre" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
@@ -142,7 +143,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                   {editingId ? 'Modifier le membre' : "Ajouter un membre à l'équipe"}
                 </DialogTitle>
                 <DialogDescription>
-                  Renseignez l'affectation (interne ou externe), le tarif journalier et la période.
+                  <T k="auto.phaseemployees.renseignez_l_affectation_interne_ou_externe_le_t" fallback="Renseignez l'affectation (interne ou externe), le tarif journalier et la période." />
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -156,7 +157,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         setFormData({ ...formData, employeeName: '', employeeRole: '', employeeContact: '' });
                       }}
                     />
-                    Employé interne
+                    <T k="auto.phaseemployees.employe_interne" fallback="Employé interne" />
                   </label>
                   <label className="flex items-center gap-2 text-sm">
                     <input
@@ -236,7 +237,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="employee_contact">Contact</Label>
+                    <Label htmlFor="employee_contact"><T k="auto.phaseemployees.contact" fallback="Contact" /></Label>
                     <Input
                       id="employee_contact"
                       value={formData.employeeContact}
@@ -248,7 +249,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <Label htmlFor="daily_rate">Tarif journalier (MRU)</Label>
+                    <Label htmlFor="daily_rate"><T k="auto.phaseemployees.tarif_journalier_mru" fallback="Tarif journalier (MRU)" /></Label>
                     <Input
                       id="daily_rate"
                       type="number"
@@ -258,7 +259,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="start_date">Date de début</Label>
+                    <Label htmlFor="start_date"><T k="auto.phaseemployees.date_de_debut" fallback="Date de début" /></Label>
                     <Input
                       id="start_date"
                       type="date"
@@ -267,7 +268,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="end_date">Date de fin</Label>
+                    <Label htmlFor="end_date"><T k="auto.phaseemployees.date_de_fin" fallback="Date de fin" /></Label>
                     <Input
                       id="end_date"
                       type="date"
@@ -285,13 +286,13 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                   />
                   <Label htmlFor="is_primary_supplier" className="flex items-center gap-2">
                     <Star className="h-4 w-4" />
-                    Fournisseur principal de la phase
+                    <T k="auto.phaseemployees.fournisseur_principal_de_la_phase" fallback="Fournisseur principal de la phase" />
                   </Label>
                 </div>
 
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Annuler
+                    <T k="auto.phaseemployees.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={isAdding || isUpdating}>
                     {editingId ? 'Mettre à jour' : 'Ajouter'}
@@ -317,7 +318,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
               <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
                 <div className="mb-1 flex items-center gap-2">
                   <Star className="h-4 w-4 text-warning" />
-                  <span className="font-medium text-warning">Fournisseur principal</span>
+                  <span className="font-medium text-warning"><T k="auto.phaseemployees.fournisseur_principal" fallback="Fournisseur principal" /></span>
                 </div>
                 <p className="text-sm text-warning">
                   {primarySupplier.employeeName} — {primarySupplier.employeeRole}
@@ -363,7 +364,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucun membre assigné à cette phase.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phaseemployees.aucun_membre_assigne_a_cette_phase" fallback="Aucun membre assigné à cette phase." /></p>
         )}
       </CardContent>
     </Card>

@@ -14,6 +14,7 @@ import type { TaskAssignmentDTO as PhaseTask, CreateTaskAssignmentDTO as TaskFor
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface PhaseTasksProps {
   phaseId: string;
@@ -186,7 +187,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des tâches...</div>;
+    return <div className="animate-pulse"><T k="auto.phasetasks.chargement_des_taches" fallback="Chargement des tâches..." /></div>;
   }
 
   return (
@@ -201,7 +202,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
             <DialogTrigger asChild>
               <Button onClick={() => { resetForm(); setEditingId(null); }}>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter une tâche
+                <T k="auto.phasetasks.ajouter_une_tache" fallback="Ajouter une tâche" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -242,7 +243,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description"><T k="auto.phasetasks.description" fallback="Description" /></Label>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -252,7 +253,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="priority">Priorité</Label>
+                    <Label htmlFor="priority"><T k="auto.phasetasks.priorite" fallback="Priorité" /></Label>
                     <Select
                       value={formData.priority}
                       onValueChange={(value) => setFormData({ ...formData, priority: value })}
@@ -268,7 +269,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="status">Statut</Label>
+                    <Label htmlFor="status"><T k="auto.phasetasks.statut" fallback="Statut" /></Label>
                     <Select
                       value={formData.status}
                       onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -284,7 +285,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="due_date">Date d'échéance</Label>
+                    <Label htmlFor="due_date"><T k="auto.phasetasks.date_d_echeance" fallback="Date d'échéance" /></Label>
                     <Input
                       id="due_date"
                       type="date"
@@ -295,7 +296,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                 </div>
 
                 <div>
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="notes"><T k="auto.phasetasks.notes" fallback="Notes" /></Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -305,7 +306,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                    Annuler
+                    <T k="auto.phasetasks.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={isCreatingTask || isUpdating}>
                     {(isCreatingTask || isUpdating) 
@@ -377,7 +378,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucune tâche assignée à cette phase.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phasetasks.aucune_tache_assignee_a_cette_phase" fallback="Aucune tâche assignée à cette phase." /></p>
         )}
       </CardContent>
     </Card>

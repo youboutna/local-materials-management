@@ -12,6 +12,7 @@ import { getWorkflowStepService } from '@/application/services/WorkflowStepServi
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface WorkflowStepsManagerProps {
   tenderId: string;
@@ -131,19 +132,19 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
         className="mb-4"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Ajouter une étape
+        <T k="auto.workflowstepsmanager.ajouter_une_etape" fallback="Ajouter une étape" />
       </Button>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Créer une nouvelle étape</DialogTitle>
+            <DialogTitle><T k="auto.workflowstepsmanager.creer_une_nouvelle_etape" fallback="Créer une nouvelle étape" /></DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleCreateStep} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="step-number">Numéro d'étape</Label>
+                <Label htmlFor="step-number"><T k="auto.workflowstepsmanager.numero_d_etape" fallback="Numéro d'étape" /></Label>
                 <Input
                   id="step-number"
                   type="number"
@@ -156,7 +157,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status"><T k="auto.workflowstepsmanager.statut" fallback="Statut" /></Label>
                 <Select 
                   value={stepData.status} 
                   onValueChange={(value) => setStepData(prev => ({ ...prev, status: value }))}
@@ -186,7 +187,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description"><T k="auto.workflowstepsmanager.description" fallback="Description" /></Label>
               <Textarea
                 id="description"
                 value={stepData.description}
@@ -198,7 +199,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="procurement-phase">Phase de marché</Label>
+                <Label htmlFor="procurement-phase"><T k="auto.workflowstepsmanager.phase_de_marche" fallback="Phase de marché" /></Label>
                 <Select 
                   value={stepData.procurement_phase} 
                   onValueChange={(value) => setStepData(prev => ({ ...prev, procurement_phase: value }))}
@@ -216,7 +217,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="procurement-stage">Étape de procédure</Label>
+                <Label htmlFor="procurement-stage"><T k="auto.workflowstepsmanager.etape_de_procedure" fallback="Étape de procédure" /></Label>
                 <Select 
                   value={stepData.procurement_stage} 
                   onValueChange={(value) => setStepData(prev => ({ ...prev, procurement_stage: value }))}
@@ -236,7 +237,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
             </div>
 
             <div>
-              <Label>Documents requis</Label>
+              <Label><T k="auto.workflowstepsmanager.documents_requis" fallback="Documents requis" /></Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -246,7 +247,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequiredDocument())}
                   />
                   <Button type="button" onClick={addRequiredDocument} size="sm">
-                    Ajouter
+                    <T k="auto.workflowstepsmanager.ajouter" fallback="Ajouter" />
                   </Button>
                 </div>
                 
@@ -261,7 +262,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                           size="sm"
                           onClick={() => removeRequiredDocument(doc)}
                         >
-                          Supprimer
+                          <T k="auto.workflowstepsmanager.supprimer" fallback="Supprimer" />
                         </Button>
                       </div>
                     ))}
@@ -277,7 +278,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                 onClick={() => setIsCreateDialogOpen(false)}
                 disabled={isCreating}
               >
-                Annuler
+                <T k="auto.workflowstepsmanager.annuler" fallback="Annuler" />
               </Button>
               <Button type="submit" disabled={isCreating || !stepData.title.trim()}>
                 {isCreating ? 'Création...' : 'Créer l\'étape'}

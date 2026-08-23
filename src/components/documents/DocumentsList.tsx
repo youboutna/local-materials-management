@@ -13,6 +13,7 @@ import { useDocumentChanges } from '@/components/documents/viewer/documentEvents
 
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface DocumentsListProps {
   onDocumentSelect?: (document: DocumentDTO) => void;
@@ -159,11 +160,11 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <Search className="h-5 w-5 mr-2" />
-              Recherche et Filtres
+              <T k="auto.documentslist.recherche_et_filtres" fallback="Recherche et Filtres" />
             </div>
             {filterType !== 'all' && (
               <Button variant="outline" size="sm" onClick={clearFilters}>
-                Effacer les filtres
+                <T k="auto.documentslist.effacer_les_filtres" fallback="Effacer les filtres" />
               </Button>
             )}
           </CardTitle>
@@ -171,7 +172,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Recherche</label>
+              <label className="text-sm font-medium"><T k="auto.documentslist.recherche" fallback="Recherche" /></label>
               <Input
                 placeholder="Rechercher par titre ou description..."
                 value={searchTerm}
@@ -180,32 +181,32 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Type de document</label>
+              <label className="text-sm font-medium"><T k="auto.documentslist.type_de_document" fallback="Type de document" /></label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="inspection_report">Rapport d'inspection</SelectItem>
-                  <SelectItem value="location_photo">Photo de localisation</SelectItem>
-                  <SelectItem value="project_report">Rapport de projet</SelectItem>
-                  <SelectItem value="contract">Contrat</SelectItem>
-                  <SelectItem value="supplier_info">Information fournisseur</SelectItem>
-                  <SelectItem value="task_assignment">Affectation de tâche</SelectItem>
-                  <SelectItem value="employee_record">Dossier employé</SelectItem>
+                  <SelectItem value="all"><T k="auto.documentslist.tous_les_types" fallback="Tous les types" /></SelectItem>
+                  <SelectItem value="inspection_report"><T k="auto.documentslist.rapport_d_inspection" fallback="Rapport d'inspection" /></SelectItem>
+                  <SelectItem value="location_photo"><T k="auto.documentslist.photo_de_localisation" fallback="Photo de localisation" /></SelectItem>
+                  <SelectItem value="project_report"><T k="auto.documentslist.rapport_de_projet" fallback="Rapport de projet" /></SelectItem>
+                  <SelectItem value="contract"><T k="auto.documentslist.contrat" fallback="Contrat" /></SelectItem>
+                  <SelectItem value="supplier_info"><T k="auto.documentslist.information_fournisseur" fallback="Information fournisseur" /></SelectItem>
+                  <SelectItem value="task_assignment"><T k="auto.documentslist.affectation_de_tache" fallback="Affectation de tâche" /></SelectItem>
+                  <SelectItem value="employee_record"><T k="auto.documentslist.dossier_employe" fallback="Dossier employé" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Statut</label>
+              <label className="text-sm font-medium"><T k="auto.documentslist.statut" fallback="Statut" /></label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="all"><T k="auto.documentslist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
                   <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
                   <SelectItem value="pending_review"><TranslatedStatus code="pending_review" /></SelectItem>
                   <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
@@ -248,7 +249,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
               <div className="mt-auto flex items-center gap-2 pt-2">
                 <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDocument(doc)}>
                   <Eye className="mr-1 h-4 w-4" />
-                  Voir
+                  <T k="auto.documentslist.voir" fallback="Voir" />
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title="Télécharger">
                   <Download className="h-4 w-4" />

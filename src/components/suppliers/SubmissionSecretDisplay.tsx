@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 import { SubmissionSecretDTO } from '@/dtos/entities/SubmissionSecretDTO';
+import { T } from '@/components/i18n/T';
 
 interface SubmissionSecretDisplayProps {
   submissionId: string;
@@ -103,7 +104,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Shield className="h-5 w-5 text-primary" />
-          Code Secret pour la Commission d'Évaluation
+          <T k="auto.submissionsecretdisplay.code_secret_pour_la_commission_d_evaluation" fallback="Code Secret pour la Commission d'Évaluation" />
         </CardTitle>
         <CardDescription>
           Partagez ce code avec la commission d'évaluation pour leur permettre d'accéder à votre dossier
@@ -113,16 +114,16 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
         {/* Secret Code Display */}
         <div className="bg-card border-2 border-dashed border-primary/30 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Code Secret</span>
+            <span className="text-sm font-medium text-muted-foreground"><T k="auto.submissionsecretdisplay.code_secret" fallback="Code Secret" /></span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowSecret(!showSecret)}
             >
               {showSecret ? (
-                <><EyeOff className="h-4 w-4 mr-1" /> Masquer</>
+                <><EyeOff className="h-4 w-4 mr-1" /> <T k="auto.submissionsecretdisplay.masquer" fallback="Masquer" /></>
               ) : (
-                <><Eye className="h-4 w-4 mr-1" /> Afficher</>
+                <><Eye className="h-4 w-4 mr-1" /> <T k="auto.submissionsecretdisplay.afficher" fallback="Afficher" /></>
               )}
             </Button>
           </div>
@@ -146,7 +147,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
         <div className="flex flex-wrap gap-2">
           <Badge variant={secretValid.valid ? "default" : "destructive"}>
             {secretValid.valid ? (
-              <><CheckCircle className="h-3 w-3 mr-1" /> Actif</>
+              <><CheckCircle className="h-3 w-3 mr-1" /> <T k="auto.submissionsecretdisplay.actif" fallback="Actif" /></>
             ) : (
               <><AlertCircle className="h-3 w-3 mr-1" /> {secretValid.reason}</>
             )}
@@ -167,11 +168,11 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
         <Alert>
           <Key className="h-4 w-4" />
           <AlertDescription className="text-xs space-y-1">
-            <p className="font-medium">Instructions importantes:</p>
+            <p className="font-medium"><T k="auto.submissionsecretdisplay.instructions_importantes" fallback="Instructions importantes:" /></p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Communiquez ce code uniquement à la commission d'évaluation officielle</li>
-              <li>Le code permet d'accéder à tous vos documents de soumission</li>
-              <li>Vous pouvez régénérer un nouveau code si nécessaire</li>
+              <li><T k="auto.submissionsecretdisplay.communiquez_ce_code_uniquement_a_la_commission_d" fallback="Communiquez ce code uniquement à la commission d'évaluation officielle" /></li>
+              <li><T k="auto.submissionsecretdisplay.le_code_permet_d_acceder_a_tous_vos_documents_de" fallback="Le code permet d'accéder à tous vos documents de soumission" /></li>
+              <li><T k="auto.submissionsecretdisplay.vous_pouvez_regenerer_un_nouveau_code_si_necessa" fallback="Vous pouvez régénérer un nouveau code si nécessaire" /></li>
               <li>Le code expire automatiquement après {submission.maxAccess} accès ou à la date d'expiration</li>
             </ul>
           </AlertDescription>
@@ -188,12 +189,12 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
             {regenerateMutation.isPending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
-                Régénération...
+                <T k="auto.submissionsecretdisplay.regeneration" fallback="Régénération..." />
               </>
             ) : (
               <>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Régénérer le Code
+                <T k="auto.submissionsecretdisplay.regenerer_le_code" fallback="Régénérer le Code" />
               </>
             )}
           </Button>

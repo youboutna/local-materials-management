@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { usePaymentActionContext, useInspectionActionContext, useProjectActionContext } from '@/hooks/useCheckpointActionContext';
 import { Separator } from '@/components/ui/separator';
 import { DEFAULT_COMPLETION_PROGRESS_THRESHOLD } from '@/utils/completionValidation';
+import { T } from '@/components/i18n/T';
 
 // Seuil de progression minimum pour déclencher automatiquement un paiement après inspection approuvée
 const AUTO_PAYMENT_PROGRESS_THRESHOLD = 25;
@@ -395,7 +396,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Actions sur le jalon
+              <T k="auto.milestonecheckpointactions.actions_sur_le_jalon" fallback="Actions sur le jalon" />
             </DialogTitle>
             <DialogDescription>
               {selectedMilestone?.title}
@@ -408,7 +409,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
           {isLoadingContext ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">Chargement du contexte...</span>
+              <span className="ml-2 text-sm text-muted-foreground"><T k="auto.milestonecheckpointactions.chargement_du_contexte" fallback="Chargement du contexte..." /></span>
             </div>
           ) : (
             <div className="space-y-4 py-4">
@@ -417,28 +418,28 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Info className="h-4 w-4 text-primary" />
-                    Contexte du projet
+                    <T k="auto.milestonecheckpointactions.contexte_du_projet" fallback="Contexte du projet" />
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Progression:</span>
+                      <span className="text-muted-foreground"><T k="auto.milestonecheckpointactions.progression" fallback="Progression:" /></span>
                       <span className="ml-1 font-medium">{paymentContext?.project.progress || inspectionContext?.project.progress}%</span>
                     </div>
                     {paymentContext?.linkedPhase && (
                       <div>
-                        <span className="text-muted-foreground">Phase:</span>
+                        <span className="text-muted-foreground"><T k="auto.milestonecheckpointactions.phase" fallback="Phase:" /></span>
                         <span className="ml-1 font-medium">{paymentContext.linkedPhase.name}</span>
                       </div>
                     )}
                     {paymentContext?.mainContractor && (
                       <div className="col-span-2">
-                        <span className="text-muted-foreground">Contractant:</span>
+                        <span className="text-muted-foreground"><T k="auto.milestonecheckpointactions.contractant" fallback="Contractant:" /></span>
                         <span className="ml-1 font-medium">{paymentContext.mainContractor.name}</span>
                       </div>
                     )}
                     {projectContext?.latestInspection && (
                       <div className="col-span-2 flex items-center gap-2">
-                        <span className="text-muted-foreground">Dernière inspection:</span>
+                        <span className="text-muted-foreground"><T k="auto.milestonecheckpointactions.derniere_inspection" fallback="Dernière inspection:" /></span>
                         <Badge 
                           variant={projectContext.latestInspection.status === 'approved' ? 'default' : 'secondary'}
                           className="text-xs"
@@ -458,7 +459,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                     <div className="mt-2 p-2 bg-success/10 rounded-md flex items-center gap-2 text-xs">
                       <Zap className="h-3 w-3 text-success" />
                       <span className="text-success font-medium">
-                        Paiement automatique déclenché suite à l'inspection approuvée
+                        <T k="auto.milestonecheckpointactions.paiement_automatique_declenche_suite_a_l_inspect" fallback="Paiement automatique déclenché suite à l'inspection approuvée" />
                       </span>
                     </div>
                   )}
@@ -481,7 +482,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                   <ClipboardCheck className="h-4 w-4 text-warning" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-medium">Déclencher une inspection</p>
+                  <p className="font-medium"><T k="auto.milestonecheckpointactions.declencher_une_inspection" fallback="Déclencher une inspection" /></p>
                   <p className="text-xs text-muted-foreground">
                     {hasApprovedInspectionWithProgress() 
                       ? 'Inspection déjà approuvée avec seuil atteint'
@@ -510,7 +511,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                   <DollarSign className="h-4 w-4 text-success" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-medium">Effectuer un paiement</p>
+                  <p className="font-medium"><T k="auto.milestonecheckpointactions.effectuer_un_paiement" fallback="Effectuer un paiement" /></p>
                   <p className="text-xs text-muted-foreground">
                     {hasApprovedInspectionWithProgress()
                       ? 'Paiement automatique en cours'
@@ -540,7 +541,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                     <CheckCircle className="h-4 w-4 text-success" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium">Marquer comme terminé</p>
+                    <p className="font-medium"><T k="auto.milestonecheckpointactions.marquer_comme_termine" fallback="Marquer comme terminé" /></p>
                     <p className="text-xs text-muted-foreground">
                       {hasApprovedInspectionWithProgress()
                         ? 'Valider ce point de contrôle'
@@ -555,7 +556,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
-              Annuler
+              <T k="auto.milestonecheckpointactions.annuler" fallback="Annuler" />
             </Button>
           </DialogFooter>
         </DialogContent>

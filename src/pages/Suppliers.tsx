@@ -19,6 +19,7 @@ import { AppLayout } from '@/components/layout';
 import type { Supplier } from '@/domain/entities';
 
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 type SupplierRow = Supplier;
 type SupplierCategory = 'materials' | 'services' | 'equipment' | 'subcontractor' | 'consultant' | 'other';
 
@@ -216,7 +217,7 @@ const Suppliers = () => {
       actions={
         <Button onClick={() => setIsCreating(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau Fournisseur
+          <T k="auto.suppliers.nouveau_fournisseur" fallback="Nouveau Fournisseur" />
         </Button>
       }
     >
@@ -243,7 +244,7 @@ const Suppliers = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium">
-                    Personne de contact
+                    <T k="auto.suppliers.personne_de_contact" fallback="Personne de contact" />
                   </label>
                   <Input
                     value={formData.contact_person}
@@ -256,7 +257,7 @@ const Suppliers = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Email</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliers.email" fallback="Email" /></label>
                   <Input
                     type="email"
                     value={formData.email}
@@ -266,7 +267,7 @@ const Suppliers = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Téléphone</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliers.telephone" fallback="Téléphone" /></label>
                   <Input
                     value={formData.phone}
                     onChange={(e) =>
@@ -275,7 +276,7 @@ const Suppliers = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Catégorie</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliers.categorie" fallback="Catégorie" /></label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) =>
@@ -286,16 +287,16 @@ const Suppliers = () => {
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="construction">Construction</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                      <SelectItem value="materials">Matériaux</SelectItem>
-                      <SelectItem value="services">Services</SelectItem>
-                      <SelectItem value="transport">Transport</SelectItem>
+                      <SelectItem value="construction"><T k="auto.suppliers.construction" fallback="Construction" /></SelectItem>
+                      <SelectItem value="equipment"><T k="auto.suppliers.equipement" fallback="Équipement" /></SelectItem>
+                      <SelectItem value="materials"><T k="auto.suppliers.materiaux" fallback="Matériaux" /></SelectItem>
+                      <SelectItem value="services"><T k="auto.suppliers.services" fallback="Services" /></SelectItem>
+                      <SelectItem value="transport"><T k="auto.suppliers.transport" fallback="Transport" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Note (1-5)</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliers.note_1_5" fallback="Note (1-5)" /></label>
                   <Select
                     value={(formData.rating || 0).toString()}
                     onValueChange={(value) =>
@@ -317,7 +318,7 @@ const Suppliers = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Adresse</label>
+                <label className="text-sm font-medium"><T k="auto.suppliers.adresse" fallback="Adresse" /></label>
                 <Textarea
                   value={formData.address}
                   onChange={(e) =>
@@ -330,7 +331,7 @@ const Suppliers = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">
-                    NIF (Numéro d'Identification Fiscale)
+                    <T k="auto.suppliers.nif_numero_d_identification_fiscale" fallback="NIF (Numéro d'Identification Fiscale)" />
                   </label>
                   <Input
                     value={formData.nif}
@@ -342,7 +343,7 @@ const Suppliers = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium">
-                    Référence Registre de Commerce
+                    <T k="auto.suppliers.reference_registre_de_commerce" fallback="Référence Registre de Commerce" />
                   </label>
                   <Input
                     value={formData.commerce_register_ref}
@@ -365,7 +366,7 @@ const Suppliers = () => {
                   {editingId ? "Mettre à jour" : "Créer"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
+                  <T k="auto.suppliers.annuler" fallback="Annuler" />
                 </Button>
               </div>
             </form>
@@ -403,7 +404,7 @@ const Suppliers = () => {
                 {supplier.phone && <div>Tél: {supplier.phone}</div>}
                 {supplier.rating && (
                   <div className="flex items-center space-x-1">
-                    <span>Note:</span>
+                    <span><T k="auto.suppliers.note" fallback="Note:" /></span>
                     <div className="flex">{renderStars(supplier.getOverallRating())}</div>
                   </div>
                 )}
@@ -451,14 +452,14 @@ const Suppliers = () => {
                     <Tabs defaultValue="notification" className="w-full">
                       <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
                         <TabsTrigger value="notification">
-                          Notification
+                          <T k="auto.suppliers.notification" fallback="Notification" />
                         </TabsTrigger>
-                        <TabsTrigger value="password">Mot de passe</TabsTrigger>
+                        <TabsTrigger value="password"><T k="auto.suppliers.mot_de_passe" fallback="Mot de passe" /></TabsTrigger>
                       </TabsList>
                       <TabsContent value="notification" className="space-y-4">
                         <div>
                           <label className="text-sm font-medium">
-                            Titre de la tâche
+                            <T k="auto.suppliers.titre_de_la_tache" fallback="Titre de la tâche" />
                           </label>
                           <Input placeholder="Entrez le titre de la tâche..." />
                         </div>
@@ -472,7 +473,7 @@ const Suppliers = () => {
                           className="w-full"
                         >
                           <Mail className="h-4 w-4 mr-2" />
-                          Envoyer la notification
+                          <T k="auto.suppliers.envoyer_la_notification" fallback="Envoyer la notification" />
                         </Button>
                       </TabsContent>
                       <TabsContent value="password" className="space-y-4">
@@ -485,7 +486,7 @@ const Suppliers = () => {
                           className="w-full"
                         >
                           <Mail className="h-4 w-4 mr-2" />
-                          Envoyer le lien de réinitialisation
+                          <T k="auto.suppliers.envoyer_le_lien_de_reinitialisation" fallback="Envoyer le lien de réinitialisation" />
                         </Button>
                       </TabsContent>
                     </Tabs>
@@ -539,7 +540,7 @@ const Suppliers = () => {
         <Card>
           <CardContent className="text-center py-8">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Aucun fournisseur trouvé</p>
+            <p className="text-muted-foreground"><T k="auto.suppliers.aucun_fournisseur_trouve" fallback="Aucun fournisseur trouvé" /></p>
           </CardContent>
         </Card>
       )}

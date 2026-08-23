@@ -14,6 +14,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { useAllNotificationsHex } from '@/hooks/hexagonal/useAllNotificationsHex';
+import { T } from '@/components/i18n/T';
 
 interface Notification {
   id: string;
@@ -228,7 +229,7 @@ const NotificationCrud: React.FC = () => {
           <DialogTrigger asChild>
             <Button onClick={openCreateForm} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Nouvelle Notification
+              <T k="auto.notificationcrud.nouvelle_notification" fallback="Nouvelle Notification" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -252,7 +253,7 @@ const NotificationCrud: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="type">Type de notification</Label>
+                  <Label htmlFor="type"><T k="auto.notificationcrud.type_de_notification" fallback="Type de notification" /></Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
@@ -311,7 +312,7 @@ const NotificationCrud: React.FC = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.notificationcrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -325,7 +326,7 @@ const NotificationCrud: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Notifications</CardTitle>
+          <CardTitle><T k="auto.notificationcrud.liste_des_notifications" fallback="Liste des Notifications" /></CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -336,12 +337,12 @@ const NotificationCrud: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Titre</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Destinataire</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead><T k="auto.notificationcrud.titre" fallback="Titre" /></TableHead>
+                  <TableHead><T k="auto.notificationcrud.type" fallback="Type" /></TableHead>
+                  <TableHead><T k="auto.notificationcrud.destinataire" fallback="Destinataire" /></TableHead>
+                  <TableHead><T k="auto.notificationcrud.statut" fallback="Statut" /></TableHead>
+                  <TableHead><T k="auto.notificationcrud.date" fallback="Date" /></TableHead>
+                  <TableHead><T k="auto.notificationcrud.actions" fallback="Actions" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -418,7 +419,7 @@ const NotificationCrud: React.FC = () => {
               {notifications.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Aucune notification trouvée
+                    <T k="auto.notificationcrud.aucune_notification_trouvee" fallback="Aucune notification trouvée" />
                   </TableCell>
                 </TableRow>
               )}

@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getAuthService } from '@/application/services/AuthService';
 import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 interface WorkspaceCreateDialogProps {
   selectedRegion?: string;
@@ -100,16 +101,16 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Ajouter un espace
+          <T k="auto.workspacecreatedialog.ajouter_un_espace" fallback="Ajouter un espace" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Créer un nouvel espace de travail</DialogTitle>
+          <DialogTitle><T k="auto.workspacecreatedialog.creer_un_nouvel_espace_de_travail" fallback="Créer un nouvel espace de travail" /></DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nom de l'espace de travail</Label>
+            <Label htmlFor="name"><T k="auto.workspacecreatedialog.nom_de_l_espace_de_travail" fallback="Nom de l'espace de travail" /></Label>
             <Input
               id="name"
               value={formData.name}
@@ -120,7 +121,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Localisation</Label>
+            <Label htmlFor="location"><T k="auto.workspacecreatedialog.localisation" fallback="Localisation" /></Label>
             <Select
               value={formData.location}
               onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
@@ -139,7 +140,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contactManager">Responsable (optionnel)</Label>
+            <Label htmlFor="contactManager"><T k="auto.workspacecreatedialog.responsable_optionnel" fallback="Responsable (optionnel)" /></Label>
             <Input
               id="contactManager"
               value={formData.contactManager}
@@ -149,7 +150,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contactPhone">Téléphone (optionnel)</Label>
+            <Label htmlFor="contactPhone"><T k="auto.workspacecreatedialog.telephone_optionnel" fallback="Téléphone (optionnel)" /></Label>
             <Input
               id="contactPhone"
               value={formData.contactPhone}
@@ -159,7 +160,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Statut</Label>
+            <Label htmlFor="status"><T k="auto.workspacecreatedialog.statut" fallback="Statut" /></Label>
             <Select
               value={formData.status}
               onValueChange={(value: OperationalStatus) => setFormData(prev => ({ ...prev, status: value }))}
@@ -168,9 +169,9 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={OperationalStatus.active}>Actif</SelectItem>
-                <SelectItem value={OperationalStatus.inactive}>Inactif</SelectItem>
-                <SelectItem value={OperationalStatus.closed}>Fermé</SelectItem>
+                <SelectItem value={OperationalStatus.active}><T k="auto.workspacecreatedialog.actif" fallback="Actif" /></SelectItem>
+                <SelectItem value={OperationalStatus.inactive}><T k="auto.workspacecreatedialog.inactif" fallback="Inactif" /></SelectItem>
+                <SelectItem value={OperationalStatus.closed}><T k="auto.workspacecreatedialog.ferme" fallback="Fermé" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -182,13 +183,13 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Annuler
+              <T k="auto.workspacecreatedialog.annuler" fallback="Annuler" />
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Création...
+                  <T k="auto.workspacecreatedialog.creation" fallback="Création..." />
                 </>
               ) : (
                 'Créer'

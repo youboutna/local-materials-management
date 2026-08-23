@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
+import { T } from '@/components/i18n/T';
 
 // Local type for import form data (subset of CreateProjectDTO)
 interface ProjectFormDTO extends Partial<CreateProjectDTO> {
@@ -494,33 +495,33 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
   <Tasks>
     <Task>
       <UID>00000000-0000-0000-0000-000000000000</UID>
-      <Name>Projet d'Infrastructure Exemple</Name>
+      <Name><T k="auto.advancedprojectimporter.projet_d_infrastructure_exemple" fallback="Projet d'Infrastructure Exemple" /></Name>
       <Summary>1</Summary>
       <OutlineLevel>1</OutlineLevel>
       <Start>2025-01-01T08:00:00</Start>
       <Finish>2025-12-31T17:00:00</Finish>
       <PercentComplete>25</PercentComplete>
       <Cost>50000000</Cost>
-      <Notes>Description détaillée du projet d'infrastructure</Notes>
+      <Notes><T k="auto.advancedprojectimporter.description_detaillee_du_projet_d_infrastructure" fallback="Description détaillée du projet d'infrastructure" /></Notes>
       <WBS>1</WBS>
       <ExtendedAttribute>
-        <FieldName>Reference</FieldName>
-        <Value>PRJ-2025-001</Value>
+        <FieldName><T k="auto.advancedprojectimporter.reference" fallback="Reference" /></FieldName>
+        <Value><T k="auto.advancedprojectimporter.prj_2025_001" fallback="PRJ-2025-001" /></Value>
       </ExtendedAttribute>
       <ExtendedAttribute>
-        <FieldName>Location</FieldName>
-        <Value>Nouakchott</Value>
+        <FieldName><T k="auto.advancedprojectimporter.location" fallback="Location" /></FieldName>
+        <Value><T k="auto.advancedprojectimporter.nouakchott" fallback="Nouakchott" /></Value>
       </ExtendedAttribute>
       <ExtendedAttribute>
-        <FieldName>FinancingSource</FieldName>
-        <Value>État</Value>
+        <FieldName><T k="auto.advancedprojectimporter.financingsource" fallback="FinancingSource" /></FieldName>
+        <Value><T k="auto.advancedprojectimporter.etat" fallback="État" /></Value>
       </ExtendedAttribute>
       <ExtendedAttribute>
-        <FieldName>Inspections</FieldName>
+        <FieldName><T k="auto.advancedprojectimporter.inspections" fallback="Inspections" /></FieldName>
         <Value>[{"inspectionDate":"2025-02-15","inspector":"Mohamed Ould Ahmed","status":"completed","progressAtInspection":15,"comments":"Inspection planification"}]</Value>
       </ExtendedAttribute>
       <ExtendedAttribute>
-        <FieldName>Stakeholders</FieldName>
+        <FieldName><T k="auto.advancedprojectimporter.stakeholders" fallback="Stakeholders" /></FieldName>
         <Value>[{"name":"Ahmed Ould Mohamed","email":"ahmed@example.com","phone":"+22212345678","role":"Chef de projet","isPrimary":true}]</Value>
       </ExtendedAttribute>
     </Task>
@@ -547,27 +548,27 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       <CardContent className="space-y-4">
         <Tabs defaultValue="info">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-            <TabsTrigger value="info">Information</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="info"><T k="auto.advancedprojectimporter.information" fallback="Information" /></TabsTrigger>
+            <TabsTrigger value="templates"><T k="auto.advancedprojectimporter.templates" fallback="Templates" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-3">
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Formats supportés :</strong>
+                <strong><T k="auto.advancedprojectimporter.formats_supportes" fallback="Formats supportés :" /></strong>
                 <ul className="mt-2 space-y-1 text-sm">
                   <li className="flex items-center gap-2">
                     <Map className="h-4 w-4" />
-                    <strong>QField/QGIS:</strong> GeoJSON (.geojson), KML (.kml)
+                    <strong>QField/QGIS:</strong> <T k="auto.advancedprojectimporter.geojson_geojson_kml_kml" fallback="GeoJSON (.geojson), KML (.kml)" />
                   </li>
                   <li className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    <strong>MS Project:</strong> XML (.xml)
+                    <strong><T k="auto.advancedprojectimporter.ms_project" fallback="MS Project:" /></strong> <T k="auto.advancedprojectimporter.xml_xml" fallback="XML (.xml)" />
                   </li>
                   <li className="flex items-center gap-2">
                     <FileSpreadsheet className="h-4 w-4" />
-                    <strong>Standard:</strong> Excel (.xlsx, .xls), JSON (.json)
+                    <strong><T k="auto.advancedprojectimporter.standard" fallback="Standard:" /></strong> <T k="auto.advancedprojectimporter.excel_xlsx_xls_json_json" fallback="Excel (.xlsx, .xls), JSON (.json)" />
                   </li>
                 </ul>
               </AlertDescription>
@@ -584,7 +585,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
 
             <div className="bg-success-soft dark:bg-success/30 border border-success/30 dark:border-success rounded-lg p-4">
               <h3 className="font-medium text-success dark:text-success-foreground mb-2">
-                MS Project - Planification
+                <T k="auto.advancedprojectimporter.ms_project_planification" fallback="MS Project - Planification" />
               </h3>
               <p className="text-sm text-success dark:text-success-foreground">
                 Importez vos projets depuis Microsoft Project (format XML). Les tâches principales deviennent des projets.
@@ -601,8 +602,8 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               >
                 <Map className="h-5 w-5" />
                 <div className="text-left">
-                  <div className="font-medium">Template QField</div>
-                  <div className="text-xs opacity-70">GeoJSON avec coordonnées</div>
+                  <div className="font-medium"><T k="auto.advancedprojectimporter.template_qfield" fallback="Template QField" /></div>
+                  <div className="text-xs opacity-70"><T k="auto.advancedprojectimporter.geojson_avec_coordonnees" fallback="GeoJSON avec coordonnées" /></div>
                 </div>
               </Button>
 
@@ -613,8 +614,8 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               >
                 <Calendar className="h-5 w-5" />
                 <div className="text-left">
-                  <div className="font-medium">Template MS Project</div>
-                  <div className="text-xs opacity-70">XML Microsoft Project</div>
+                  <div className="font-medium"><T k="auto.advancedprojectimporter.template_ms_project" fallback="Template MS Project" /></div>
+                  <div className="text-xs opacity-70"><T k="auto.advancedprojectimporter.xml_microsoft_project" fallback="XML Microsoft Project" /></div>
                 </div>
               </Button>
             </div>
@@ -658,7 +659,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
             <div className="mt-4">
               <label htmlFor="advanced-file-upload" className="cursor-pointer">
                 <span className="mt-2 block text-sm font-medium">
-                  Sélectionnez un fichier (GeoJSON, KML, XML, Excel, JSON)
+                  <T k="auto.advancedprojectimporter.selectionnez_un_fichier_geojson_kml_xml_excel_js" fallback="Sélectionnez un fichier (GeoJSON, KML, XML, Excel, JSON)" />
                 </span>
                 <Input
                   ref={fileInputRef}
@@ -698,7 +699,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         {importing && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Import en cours...</span>
+              <span><T k="auto.advancedprojectimporter.import_en_cours" fallback="Import en cours..." /></span>
               <span>{importProgress}%</span>
             </div>
             <Progress value={importProgress} className="h-2" />
@@ -740,7 +741,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
           </Button>
           {selectedFile && (
             <Button variant="outline" onClick={clearSelection} disabled={importing}>
-              Annuler
+              <T k="auto.advancedprojectimporter.annuler" fallback="Annuler" />
             </Button>
           )}
         </div>

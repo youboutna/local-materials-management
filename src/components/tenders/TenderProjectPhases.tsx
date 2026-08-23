@@ -27,6 +27,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useProjectPhasesForTender } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface TenderProjectPhasesProps {
   tenderId: string;
@@ -63,13 +64,13 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-success text-xs gap-1"><CheckCircle className="h-3 w-3" />Terminé</Badge>;
+        return <Badge className="bg-success text-xs gap-1"><CheckCircle className="h-3 w-3" /><T k="auto.tenderprojectphases.termine" fallback="Terminé" /></Badge>;
       case 'in_progress':
-        return <Badge className="bg-primary text-xs gap-1"><Clock className="h-3 w-3" />En cours</Badge>;
+        return <Badge className="bg-primary text-xs gap-1"><Clock className="h-3 w-3" /><T k="auto.tenderprojectphases.en_cours" fallback="En cours" /></Badge>;
       case 'delayed':
-        return <Badge variant="destructive" className="text-xs gap-1"><AlertTriangle className="h-3 w-3" />En retard</Badge>;
+        return <Badge variant="destructive" className="text-xs gap-1"><AlertTriangle className="h-3 w-3" /><T k="auto.tenderprojectphases.en_retard" fallback="En retard" /></Badge>;
       default:
-        return <Badge variant="secondary" className="text-xs">À venir</Badge>;
+        return <Badge variant="secondary" className="text-xs"><T k="auto.tenderprojectphases.a_venir" fallback="À venir" /></Badge>;
     }
   };
 
@@ -104,9 +105,9 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
       <Card className={cn(compact && "border-0 shadow-none")}>
         <CardContent className="p-8 text-center">
           <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p className="text-muted-foreground">Aucun projet lié à cet appel d'offres</p>
+          <p className="text-muted-foreground"><T k="auto.tenderprojectphases.aucun_projet_lie_a_cet_appel_d_offres" fallback="Aucun projet lié à cet appel d'offres" /></p>
           <p className="text-xs text-muted-foreground mt-1">
-            Liez un projet pour voir ses phases
+            <T k="auto.tenderprojectphases.liez_un_projet_pour_voir_ses_phases" fallback="Liez un projet pour voir ses phases" />
           </p>
         </CardContent>
       </Card>
@@ -119,7 +120,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Layers className="h-5 w-5 text-primary" />
-            Phases du Projet
+            <T k="auto.tenderprojectphases.phases_du_projet" fallback="Phases du Projet" />
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
@@ -129,7 +130,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
               onClick={() => navigate(`/projects/${projectInfo.id}`)}
             >
               <ExternalLink className="h-3 w-3" />
-              Voir projet
+              <T k="auto.tenderprojectphases.voir_projet" fallback="Voir projet" />
             </Button>
           </div>
         </div>
@@ -225,7 +226,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
                     {/* Steps */}
                     {phase.steps.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Étapes</p>
+                        <p className="text-xs font-medium text-muted-foreground"><T k="auto.tenderprojectphases.etapes" fallback="Étapes" /></p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {phase.steps.map(step => (
                             <div
@@ -253,7 +254,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
                         onClick={() => handlePhaseClick(phase.id)}
                         className="gap-1"
                       >
-                        Voir les détails
+                        <T k="auto.tenderprojectphases.voir_les_details" fallback="Voir les détails" />
                         <ExternalLink className="h-3 w-3" />
                       </Button>
                     </div>
@@ -267,13 +268,13 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
         {/* Legend */}
         <div className="flex flex-wrap gap-3 pt-3 border-t text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3 text-success" /> Terminé
+            <CheckCircle className="h-3 w-3 text-success" /> <T k="auto.tenderprojectphases.termine" fallback="Terminé" />
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3 text-primary" /> En cours
+            <Clock className="h-3 w-3 text-primary" /> <T k="auto.tenderprojectphases.en_cours" fallback="En cours" />
           </span>
           <span className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3 text-destructive" /> En retard
+            <AlertTriangle className="h-3 w-3 text-destructive" /> <T k="auto.tenderprojectphases.en_retard" fallback="En retard" />
           </span>
         </div>
       </CardContent>

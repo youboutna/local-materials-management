@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 const SimpleProjectTest = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -23,7 +24,7 @@ const SimpleProjectTest = () => {
         <Card>
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Test de chargement simple...</p>
+            <p><T k="auto.simpleprojecttest.test_de_chargement_simple" fallback="Test de chargement simple..." /></p>
           </CardContent>
         </Card>
       </div>
@@ -47,7 +48,7 @@ const SimpleProjectTest = () => {
       <div className="container mx-auto py-8">
         <Card>
           <CardContent className="p-8 text-center">
-            <p>Aucun projet trouvé</p>
+            <p><T k="auto.simpleprojecttest.aucun_projet_trouve" fallback="Aucun projet trouvé" /></p>
           </CardContent>
         </Card>
       </div>
@@ -58,17 +59,17 @@ const SimpleProjectTest = () => {
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Test Simple - Projet chargé avec succès!</CardTitle>
+          <CardTitle><T k="auto.simpleprojecttest.test_simple_projet_charge_avec_succes" fallback="Test Simple - Projet chargé avec succès!" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <p><strong>ID:</strong> {project.id}</p>
-            <p><strong>Titre:</strong> {project.title}</p>
-            <p><strong>Description:</strong> {project.description}</p>
-            <p><strong>Progression:</strong> {project.progress}%</p>
-            <p><strong>Budget:</strong> {project.budget?.toLocaleString()} MRU</p>
-            <p><strong>Localisation:</strong> {project.location}</p>
-            <p><strong>Équipe:</strong> {project.teamSize} membres</p>
+            <p><strong><T k="auto.simpleprojecttest.titre" fallback="Titre:" /></strong> {project.title}</p>
+            <p><strong><T k="auto.simpleprojecttest.description" fallback="Description:" /></strong> {project.description}</p>
+            <p><strong><T k="auto.simpleprojecttest.progression" fallback="Progression:" /></strong> {project.progress}%</p>
+            <p><strong><T k="auto.simpleprojecttest.budget" fallback="Budget:" /></strong> {project.budget?.toLocaleString()} MRU</p>
+            <p><strong><T k="auto.simpleprojecttest.localisation" fallback="Localisation:" /></strong> {project.location}</p>
+            <p><strong><T k="auto.simpleprojecttest.equipe" fallback="Équipe:" /></strong> {project.teamSize} membres</p>
           </div>
         </CardContent>
       </Card>

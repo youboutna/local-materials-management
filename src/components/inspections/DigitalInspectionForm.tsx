@@ -12,6 +12,7 @@ import { Camera, MapPin, CheckCircle, AlertTriangle, Upload } from 'lucide-react
 import { createDigitalInspection, MANDATORY_INSPECTION_FIELDS } from '@/application/services/InspectionMonitoringService';
 import { toast } from '@/hooks/use-toast';
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface DigitalInspectionFormProps {
   projectId: string;
@@ -167,7 +168,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-primary" />
-            Inspection Numérique
+            <T k="auto.digitalinspectionform.inspection_numerique" fallback="Inspection Numérique" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -179,11 +180,11 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                 <SelectValue placeholder="Sélectionner le type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Inspection quotidienne</SelectItem>
-                <SelectItem value="weekly">Inspection hebdomadaire</SelectItem>
-                <SelectItem value="milestone">Inspection jalon</SelectItem>
-                <SelectItem value="safety">Inspection sécurité</SelectItem>
-                <SelectItem value="quality">Inspection qualité</SelectItem>
+                <SelectItem value="daily"><T k="auto.digitalinspectionform.inspection_quotidienne" fallback="Inspection quotidienne" /></SelectItem>
+                <SelectItem value="weekly"><T k="auto.digitalinspectionform.inspection_hebdomadaire" fallback="Inspection hebdomadaire" /></SelectItem>
+                <SelectItem value="milestone"><T k="auto.digitalinspectionform.inspection_jalon" fallback="Inspection jalon" /></SelectItem>
+                <SelectItem value="safety"><T k="auto.digitalinspectionform.inspection_securite" fallback="Inspection sécurité" /></SelectItem>
+                <SelectItem value="quality"><T k="auto.digitalinspectionform.inspection_qualite" fallback="Inspection qualité" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -199,7 +200,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                 className="flex items-center gap-2"
               >
                 <MapPin className="h-4 w-4" />
-                Capturer Position
+                <T k="auto.digitalinspectionform.capturer_position" fallback="Capturer Position" />
               </Button>
               {location.latitude !== 0 && (
                 <Badge variant="secondary">
@@ -216,7 +217,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  Ces contrôles sont obligatoires pour ce type d'inspection
+                  <T k="auto.digitalinspectionform.ces_controles_sont_obligatoires_pour_ce_type_d_i" fallback="Ces contrôles sont obligatoires pour ce type d'inspection" />
                 </AlertDescription>
               </Alert>
               
@@ -232,7 +233,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                         onClick={() => addComplianceCheck(field)}
                         disabled={complianceChecks.some(check => check.standard === field)}
                       >
-                        Ajouter Contrôle
+                        <T k="auto.digitalinspectionform.ajouter_controle" fallback="Ajouter Contrôle" />
                       </Button>
                     </div>
                   </div>
@@ -244,7 +245,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
           {/* Contrôles de conformité */}
           {complianceChecks.length > 0 && (
             <div className="space-y-3">
-              <Label>Contrôles de Conformité</Label>
+              <Label><T k="auto.digitalinspectionform.controles_de_conformite" fallback="Contrôles de Conformité" /></Label>
               {complianceChecks.map((check, index) => (
                 <Card key={index} className="p-3">
                   <div className="space-y-3">
@@ -257,7 +258,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                             updateComplianceCheck(index, 'passed', checked)
                           }
                         />
-                        <Label>Conforme</Label>
+                        <Label><T k="auto.digitalinspectionform.conforme" fallback="Conforme" /></Label>
                       </div>
                     </div>
                     <Textarea
@@ -274,9 +275,9 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
           {/* Défauts détectés */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Défauts détectés</Label>
+              <Label><T k="auto.digitalinspectionform.defauts_detectes" fallback="Défauts détectés" /></Label>
               <Button type="button" variant="outline" size="sm" onClick={addDefect}>
-                Ajouter Défaut
+                <T k="auto.digitalinspectionform.ajouter_defaut" fallback="Ajouter Défaut" />
               </Button>
             </div>
             
@@ -284,7 +285,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
               <Card key={index} className="p-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Catégorie</Label>
+                    <Label><T k="auto.digitalinspectionform.categorie" fallback="Catégorie" /></Label>
                     <Input
                       value={defect.category}
                       onChange={(e) => updateDefect(index, 'category', e.target.value)}
@@ -292,7 +293,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Sévérité</Label>
+                    <Label><T k="auto.digitalinspectionform.severite" fallback="Sévérité" /></Label>
                     <Select
                       value={defect.severity}
                       onValueChange={(value) => updateDefect(index, 'severity', value)}
@@ -309,7 +310,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                     </Select>
                   </div>
                   <div className="col-span-2 space-y-2">
-                    <Label>Description</Label>
+                    <Label><T k="auto.digitalinspectionform.description" fallback="Description" /></Label>
                     <Textarea
                       value={defect.description}
                       onChange={(e) => updateDefect(index, 'description', e.target.value)}
@@ -324,7 +325,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                           updateDefect(index, 'correctionRequired', checked)
                         }
                       />
-                      <Label>Correction requise</Label>
+                      <Label><T k="auto.digitalinspectionform.correction_requise" fallback="Correction requise" /></Label>
                     </div>
                   </div>
                 </div>
@@ -334,7 +335,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
 
           {/* Notes générales */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes générales</Label>
+            <Label htmlFor="notes"><T k="auto.digitalinspectionform.notes_generales" fallback="Notes générales" /></Label>
             <Textarea
               id="notes"
               value={notes}
@@ -346,15 +347,15 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
 
           {/* Photos */}
           <div className="space-y-2">
-            <Label>Photos d'inspection</Label>
+            <Label><T k="auto.digitalinspectionform.photos_d_inspection" fallback="Photos d'inspection" /></Label>
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
               <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-2">
-                Ajouter des photos d'inspection
+                <T k="auto.digitalinspectionform.ajouter_des_photos_d_inspection" fallback="Ajouter des photos d'inspection" />
               </p>
               <Button type="button" variant="outline" size="sm">
                 <Upload className="h-4 w-4 mr-2" />
-                Télécharger Photos
+                <T k="auto.digitalinspectionform.telecharger_photos" fallback="Télécharger Photos" />
               </Button>
             </div>
           </div>

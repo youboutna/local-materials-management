@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { T } from '@/components/i18n/T';
 
 interface ProjectHeaderProps {
   project: {
@@ -134,7 +135,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           className="h-auto p-0 text-xs hover:bg-transparent hover:text-foreground"
         >
           <Building className="h-3.5 w-3.5 mr-1" />
-          <span>Projets</span>
+          <span><T k="auto.projectheader.projets" fallback="Projets" /></span>
         </Button>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="font-medium text-foreground truncate max-w-[280px]">
@@ -188,16 +189,16 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               onClick={() => navigate("/projects")}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Retour
+              <T k="auto.projectheader.retour" fallback="Retour" />
             </Button>
             {onEdit && (
               <Button variant="outline" size="sm" className="h-8" onClick={onEdit}>
-                Modifier
+                <T k="auto.projectheader.modifier" fallback="Modifier" />
               </Button>
             )}
             {onDelete && (
               <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive" onClick={onDelete}>
-                Supprimer
+                <T k="auto.projectheader.supprimer" fallback="Supprimer" />
               </Button>
             )}
           </div>
@@ -207,17 +208,17 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t px-3 py-2 text-xs">
           <span className="flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-primary" />
-            <span className="text-muted-foreground">Progression</span>
+            <span className="text-muted-foreground"><T k="auto.projectheader.progression" fallback="Progression" /></span>
             <span className="font-semibold">{project.progress}%</span>
           </span>
           <span className="flex items-center gap-1.5">
             <Wallet className="h-3.5 w-3.5 text-primary" />
-            <span className="text-muted-foreground">Budget</span>
+            <span className="text-muted-foreground"><T k="auto.projectheader.budget" fallback="Budget" /></span>
             <span className="font-semibold">{formatCurrency(project.budget, project.currency)}</span>
           </span>
           <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-primary" />
-            <span className="text-muted-foreground">Délai</span>
+            <span className="text-muted-foreground"><T k="auto.projectheader.delai" fallback="Délai" /></span>
             <span className="font-semibold">{getDaysRemaining()}</span>
             {project.endDate && (
               <span className="text-muted-foreground">
@@ -227,7 +228,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </span>
           <span className="flex items-center gap-1.5">
             <Layers className="h-3.5 w-3.5 text-primary" />
-            <span className="text-muted-foreground">Phases</span>
+            <span className="text-muted-foreground"><T k="auto.projectheader.phases" fallback="Phases" /></span>
             <span className="font-semibold">
               {phasesStats.completed}/{phasesStats.total}
             </span>

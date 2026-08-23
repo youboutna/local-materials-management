@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { WorkflowMetrics, PendingAction, WorkflowStage } from '@/hooks/usePhaseWorkflow';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface QuickActionsPanelProps {
   phaseName: string;
@@ -61,15 +62,15 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
     return (
       <Card className="overflow-hidden">
         <CardHeader className="py-3">
-          <CardTitle className="text-sm flex items-center gap-2">Actions</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2"><T k="auto.quickactionspanel.actions" fallback="Actions" /></CardTitle>
         </CardHeader>
         <CardContent className="p-3 space-y-2">
           <div className="flex gap-2">
             <Button size="sm" variant="outline" className="flex-1" onClick={onScheduleInspection} disabled={!workflowMetrics.canScheduleInspection}>
-              Inspection
+              <T k="auto.quickactionspanel.inspection" fallback="Inspection" />
             </Button>
             <Button size="sm" variant={workflowMetrics.canRequestPayment ? 'default' : 'outline'} className="flex-1" onClick={onRequestDecompte} disabled={!workflowMetrics.canRequestPayment}>
-              Paiement
+              <T k="auto.quickactionspanel.paiement" fallback="Paiement" />
             </Button>
           </div>
           <div className="text-xs text-muted-foreground">{workflowMetrics.pendingActions.length} actions requises</div>
@@ -139,7 +140,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
       <CardHeader className="py-4 bg-gradient-to-r from-primary/5 to-transparent">
         <CardTitle className="text-base flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
-          Actions Rapides
+          <T k="auto.quickactionspanel.actions_rapides" fallback="Actions Rapides" />
         </CardTitle>
       </CardHeader>
 
@@ -156,7 +157,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             <ClipboardCheck className="h-4 w-4" />
             Programmer inspection
             {!workflowMetrics.canScheduleInspection && (
-              <Badge variant="outline" className="ml-auto text-xs">En attente</Badge>
+              <Badge variant="outline" className="ml-auto text-xs"><T k="auto.quickactionspanel.en_attente" fallback="En attente" /></Badge>
             )}
           </Button>
           
@@ -167,7 +168,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             onClick={onInputProgress}
           >
             <TrendingUp className="h-4 w-4" />
-            Saisir rapport d'avancement
+            <T k="auto.quickactionspanel.saisir_rapport_d_avancement" fallback="Saisir rapport d'avancement" />
           </Button>
           
           <Button 
@@ -177,7 +178,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             onClick={onGeneratePV}
           >
             <FileText className="h-4 w-4" />
-            Générer PV de réception
+            <T k="auto.quickactionspanel.generer_pv_de_reception" fallback="Générer PV de réception" />
           </Button>
           
           <Button 
@@ -193,7 +194,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             <DollarSign className="h-4 w-4" />
             Demander décompte
             {workflowMetrics.canRequestPayment && (
-              <Badge className="ml-auto bg-white/20 text-xs">Disponible</Badge>
+              <Badge className="ml-auto bg-white/20 text-xs"><T k="auto.quickactionspanel.disponible" fallback="Disponible" /></Badge>
             )}
           </Button>
           
@@ -204,7 +205,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             onClick={onUpdateGuarantee}
           >
             <Shield className="h-4 w-4" />
-            Mettre à jour garantie
+            <T k="auto.quickactionspanel.mettre_a_jour_garantie" fallback="Mettre à jour garantie" />
           </Button>
         </div>
 
@@ -212,13 +213,13 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
 
         {/* Workflow Status */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Statut Workflow</h4>
+          <h4 className="text-sm font-medium text-muted-foreground"><T k="auto.quickactionspanel.statut_workflow" fallback="Statut Workflow" /></h4>
           
           <div className="space-y-2 text-sm">
             {/* Current Phase */}
             <div className="flex items-center gap-2">
               <Play className="h-4 w-4 text-primary" />
-              <span className="text-muted-foreground">Phase:</span>
+              <span className="text-muted-foreground"><T k="auto.quickactionspanel.phase" fallback="Phase:" /></span>
               <span className="font-medium truncate flex-1">{phaseName}</span>
               <Badge variant="outline">{phaseProgress}%</Badge>
             </div>
@@ -227,7 +228,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {workflowMetrics.scheduledInspections > 0 && lastInspectionDate && (
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-warning" />
-                <span className="text-muted-foreground">Inspection prévue:</span>
+                <span className="text-muted-foreground"><T k="auto.quickactionspanel.inspection_prevue" fallback="Inspection prévue:" /></span>
                 <span className="font-medium">
                   {format(new Date(lastInspectionDate), 'd MMM yyyy', { locale: fr })}
                 </span>
@@ -238,7 +239,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {lastValidatedPV && (
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-success" />
-                <span className="text-muted-foreground">Dernier PV validé:</span>
+                <span className="text-muted-foreground"><T k="auto.quickactionspanel.dernier_pv_valide" fallback="Dernier PV validé:" /></span>
                 <span className="font-medium">{lastValidatedPV}</span>
               </div>
             )}
@@ -247,7 +248,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {pendingPaymentAmount > 0 && (
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Paiement en attente:</span>
+                <span className="text-muted-foreground"><T k="auto.quickactionspanel.paiement_en_attente" fallback="Paiement en attente:" /></span>
                 <span className="font-bold text-primary">
                   {formatCurrency(pendingPaymentAmount)}
                 </span>
@@ -257,7 +258,7 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             {/* Workflow Stage */}
             <div className="flex items-center gap-2 pt-1">
               {getStageIcon(workflowMetrics.currentStage)}
-              <span className="text-muted-foreground">État:</span>
+              <span className="text-muted-foreground"><T k="auto.quickactionspanel.etat" fallback="État:" /></span>
               <Badge 
                 variant="outline" 
                 className={cn(
@@ -313,13 +314,13 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
               {workflowMetrics.guaranteeReleaseTriggered && (
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-success-soft text-success text-sm">
                   <Shield className="h-4 w-4" />
-                  <span>Mainlevée garanties déclenchée</span>
+                  <span><T k="auto.quickactionspanel.mainlevee_garanties_declenchee" fallback="Mainlevée garanties déclenchée" /></span>
                 </div>
               )}
               {workflowMetrics.insuranceReleaseTriggered && (
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 text-primary text-sm">
                   <Shield className="h-4 w-4" />
-                  <span>Mainlevée assurances déclenchée</span>
+                  <span><T k="auto.quickactionspanel.mainlevee_assurances_declenchee" fallback="Mainlevée assurances déclenchée" /></span>
                 </div>
               )}
             </div>

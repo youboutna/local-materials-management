@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInspectionExecutionHex } from '@/hooks/hexagonal';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -106,18 +107,18 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Projet</Label>
+              <Label><T k="auto.inspectionexecutionform.projet" fallback="Projet" /></Label>
               <p className="text-sm font-medium">{projectTitle}</p>
             </div>
             <div>
-              <Label>Inspecteur</Label>
+              <Label><T k="auto.inspectionexecutionform.inspecteur" fallback="Inspecteur" /></Label>
               <p className="text-sm font-medium">{inspection.inspector}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="status">Statut</Label>
+              <Label htmlFor="status"><T k="auto.inspectionexecutionform.statut" fallback="Statut" /></Label>
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger>
                   <SelectValue />
@@ -132,7 +133,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               </Select>
             </div>
             <div>
-              <Label htmlFor="progress">Progression (%)</Label>
+              <Label htmlFor="progress"><T k="auto.inspectionexecutionform.progression" fallback="Progression (%)" /></Label>
               <Input
                 id="progress"
                 type="number"
@@ -145,7 +146,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="comments">Commentaires</Label>
+            <Label htmlFor="comments"><T k="auto.inspectionexecutionform.commentaires" fallback="Commentaires" /></Label>
             <Textarea
               id="comments"
               value={comments}
@@ -155,7 +156,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
           </div>
 
           <div>
-            <Label>Documents</Label>
+            <Label><T k="auto.inspectionexecutionform.documents" fallback="Documents" /></Label>
             <Input
               type="file"
               multiple
@@ -180,7 +181,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                   <div className="space-y-1">
                     <p className="font-medium flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-success" />
-                      Synchronisation réussie
+                      <T k="auto.inspectionexecutionform.synchronisation_reussie" fallback="Synchronisation réussie" />
                     </p>
                     {syncResult.actions.map((action, i) => (
                       <p key={i} className="text-sm text-muted-foreground">{action}</p>
@@ -188,7 +189,7 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                   </div>
                 ) : (
                   <div>
-                    <p className="font-medium">Erreurs lors de la synchronisation:</p>
+                    <p className="font-medium"><T k="auto.inspectionexecutionform.erreurs_lors_de_la_synchronisation" fallback="Erreurs lors de la synchronisation:" /></p>
                     {syncResult.errors.map((err, i) => (
                       <p key={i} className="text-sm">{err}</p>
                     ))}
@@ -203,12 +204,12 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
               {isUploading ? (
                 <>
                   <Upload className="h-4 w-4 mr-2 animate-spin" />
-                  Envoi en cours...
+                  <T k="auto.inspectionexecutionform.envoi_en_cours" fallback="Envoi en cours..." />
                 </>
               ) : isSyncing ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Synchronisation...
+                  <T k="auto.inspectionexecutionform.synchronisation" fallback="Synchronisation..." />
                 </>
               ) : (
                 'Mettre à jour'

@@ -29,6 +29,7 @@ import UnifiedPaymentFormDialog, {
 import type { ConsultantProjectRef } from '@/hooks/hexagonal/useConsultantPortalHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Props {
   projects: ConsultantProjectRef[];
 }
@@ -80,8 +81,8 @@ export function ConsultantProgressValidation({ projects }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Validation d'avancement</CardTitle>
-          <CardDescription>Aucun projet ne vous est assigné en tant que consultant.</CardDescription>
+          <CardTitle><T k="auto.consultantprogressvalidation.validation_d_avancement" fallback="Validation d'avancement" /></CardTitle>
+          <CardDescription><T k="auto.consultantprogressvalidation.aucun_projet_ne_vous_est_assigne_en_tant_que_con" fallback="Aucun projet ne vous est assigné en tant que consultant." /></CardDescription>
         </CardHeader>
       </Card>
     );
@@ -91,14 +92,14 @@ export function ConsultantProgressValidation({ projects }: Props) {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Projet suivi</CardTitle>
+          <CardTitle className="text-base"><T k="auto.consultantprogressvalidation.projet_suivi" fallback="Projet suivi" /></CardTitle>
           <CardDescription>
-            Sélectionnez le projet dont vous validez l'avancement des phases et jalons.
+            <T k="auto.consultantprogressvalidation.selectionnez_le_projet_dont_vous_validez_l_avanc" fallback="Sélectionnez le projet dont vous validez l'avancement des phases et jalons." />
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-end gap-3">
           <div className="min-w-[18rem] space-y-1">
-            <Label htmlFor="consultant-project">Projet</Label>
+            <Label htmlFor="consultant-project"><T k="auto.consultantprogressvalidation.projet" fallback="Projet" /></Label>
             <Select value={projectId} onValueChange={setProjectId}>
               <SelectTrigger id="consultant-project" aria-label="Sélectionner un projet suivi">
                 <SelectValue placeholder="Choisir un projet" />
@@ -118,16 +119,16 @@ export function ConsultantProgressValidation({ projects }: Props) {
             disabled={!projectId}
           >
             <Wallet className="mr-2 h-4 w-4" aria-hidden="true" />
-            Demande de paiement (réception)
+            <T k="auto.consultantprogressvalidation.demande_de_paiement_reception" fallback="Demande de paiement (réception)" />
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Phases du projet</CardTitle>
+          <CardTitle className="text-base"><T k="auto.consultantprogressvalidation.phases_du_projet" fallback="Phases du projet" /></CardTitle>
           <CardDescription>
-            Validez la progression constatée en inspection. À 100 %, déclenchez le décompte.
+            <T k="auto.consultantprogressvalidation.validez_la_progression_constatee_en_inspection_a" fallback="Validez la progression constatée en inspection. À 100 %, déclenchez le décompte." />
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,17 +137,17 @@ export function ConsultantProgressValidation({ projects }: Props) {
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Chargement des phases…
             </div>
           ) : phases.length === 0 ? (
-            <p className="py-6 text-sm text-muted-foreground">Aucune phase enregistrée pour ce projet.</p>
+            <p className="py-6 text-sm text-muted-foreground"><T k="auto.consultantprogressvalidation.aucune_phase_enregistree_pour_ce_projet" fallback="Aucune phase enregistrée pour ce projet." /></p>
           ) : (
             <Table>
-              <caption className="sr-only">Phases du projet et validation de progression</caption>
+              <caption className="sr-only"><T k="auto.consultantprogressvalidation.phases_du_projet_et_validation_de_progression" fallback="Phases du projet et validation de progression" /></caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Phase</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Progression</TableHead>
-                  <TableHead>Progression validée (%)</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.phase" fallback="Phase" /></TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.statut" fallback="Statut" /></TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.progression" fallback="Progression" /></TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.progression_validee" fallback="Progression validée (%)" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.consultantprogressvalidation.actions" fallback="Actions" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -187,7 +188,7 @@ export function ConsultantProgressValidation({ projects }: Props) {
                           onClick={() => handleValidate(phase.id, current)}
                         >
                           <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden="true" />
-                          Valider
+                          <T k="auto.consultantprogressvalidation.valider" fallback="Valider" />
                         </Button>
                         <Button
                           size="sm"
@@ -195,7 +196,7 @@ export function ConsultantProgressValidation({ projects }: Props) {
                           onClick={() => openPaymentRequest(phase.id, Number(draft))}
                         >
                           <Wallet className="mr-1 h-4 w-4" aria-hidden="true" />
-                          Décompte
+                          <T k="auto.consultantprogressvalidation.decompte" fallback="Décompte" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -209,21 +210,21 @@ export function ConsultantProgressValidation({ projects }: Props) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Jalons</CardTitle>
-          <CardDescription>Déclenchement des jalons contractuels validés en inspection.</CardDescription>
+          <CardTitle className="text-base"><T k="auto.consultantprogressvalidation.jalons" fallback="Jalons" /></CardTitle>
+          <CardDescription><T k="auto.consultantprogressvalidation.declenchement_des_jalons_contractuels_valides_en" fallback="Déclenchement des jalons contractuels validés en inspection." /></CardDescription>
         </CardHeader>
         <CardContent>
           {milestones.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">Aucun jalon défini.</p>
+            <p className="py-4 text-sm text-muted-foreground"><T k="auto.consultantprogressvalidation.aucun_jalon_defini" fallback="Aucun jalon défini." /></p>
           ) : (
             <Table>
-              <caption className="sr-only">Jalons du projet</caption>
+              <caption className="sr-only"><T k="auto.consultantprogressvalidation.jalons_du_projet" fallback="Jalons du projet" /></caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Jalon</TableHead>
-                  <TableHead>Échéance</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.jalon" fallback="Jalon" /></TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.echeance" fallback="Échéance" /></TableHead>
+                  <TableHead><T k="auto.consultantprogressvalidation.statut" fallback="Statut" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.consultantprogressvalidation.action" fallback="Action" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

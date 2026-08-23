@@ -33,6 +33,7 @@ import { useAuthHex } from '@/hooks/hexagonal/useAuthHex';
 import { useDocumentsHex, useDocumentCreate } from '@/hooks/hexagonal/useDocumentsHex';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
 import { DocumentType, DocumentStatus, CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { T } from '@/components/i18n/T';
 
 interface DocumentUploadProps {
   embedded?: boolean;
@@ -291,7 +292,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* Project selection (only if no projectId prop) */}
       {!propProjectId && (
         <div className="space-y-2">
-          <Label htmlFor="project_id">Projet (optionnel)</Label>
+          <Label htmlFor="project_id"><T k="auto.documentupload.projet_optionnel" fallback="Projet (optionnel)" /></Label>
           <Select 
             value={formData.projectId} 
             onValueChange={(value) => handleInputChange('projectId', value)}
@@ -313,7 +314,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="title">
-          Titre <span className="text-destructive">*</span>
+          <T k="auto.documentupload.titre" fallback="Titre" /> <span className="text-destructive">*</span>
         </Label>
         <Input
           id="title"
@@ -326,7 +327,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="documentType">
-          Type de Document <span className="text-destructive">*</span>
+          <T k="auto.documentupload.type_de_document" fallback="Type de Document" /> <span className="text-destructive">*</span>
         </Label>
         <Select 
           value={formData.documentType} 
@@ -336,22 +337,22 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <SelectValue placeholder="Sélectionnez le type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={DocumentType.CONTRACT}>Contrat</SelectItem>
-            <SelectItem value={DocumentType.INVOICE}>Facture</SelectItem>
-            <SelectItem value={DocumentType.REPORT}>Rapport</SelectItem>
-            <SelectItem value={DocumentType.CERTIFICATE}>Certificat</SelectItem>
-            <SelectItem value={DocumentType.PERMIT}>Permis</SelectItem>
-            <SelectItem value={DocumentType.INSURANCE}>Assurance</SelectItem>
-            <SelectItem value={DocumentType.PHOTO}>Photo</SelectItem>
-            <SelectItem value={DocumentType.MANUAL}>Manuel</SelectItem>
-            <SelectItem value={DocumentType.WARRANTY}>Garantie</SelectItem>
-            <SelectItem value={DocumentType.OTHER}>Autre</SelectItem>
+            <SelectItem value={DocumentType.CONTRACT}><T k="auto.documentupload.contrat" fallback="Contrat" /></SelectItem>
+            <SelectItem value={DocumentType.INVOICE}><T k="auto.documentupload.facture" fallback="Facture" /></SelectItem>
+            <SelectItem value={DocumentType.REPORT}><T k="auto.documentupload.rapport" fallback="Rapport" /></SelectItem>
+            <SelectItem value={DocumentType.CERTIFICATE}><T k="auto.documentupload.certificat" fallback="Certificat" /></SelectItem>
+            <SelectItem value={DocumentType.PERMIT}><T k="auto.documentupload.permis" fallback="Permis" /></SelectItem>
+            <SelectItem value={DocumentType.INSURANCE}><T k="auto.documentupload.assurance" fallback="Assurance" /></SelectItem>
+            <SelectItem value={DocumentType.PHOTO}><T k="auto.documentupload.photo" fallback="Photo" /></SelectItem>
+            <SelectItem value={DocumentType.MANUAL}><T k="auto.documentupload.manuel" fallback="Manuel" /></SelectItem>
+            <SelectItem value={DocumentType.WARRANTY}><T k="auto.documentupload.garantie" fallback="Garantie" /></SelectItem>
+            <SelectItem value={DocumentType.OTHER}><T k="auto.documentupload.autre" fallback="Autre" /></SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description"><T k="auto.documentupload.description" fallback="Description" /></Label>
         <Textarea
           id="description"
           value={formData.description}
@@ -362,7 +363,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="status">Statut</Label>
+        <Label htmlFor="status"><T k="auto.documentupload.statut" fallback="Statut" /></Label>
         <Select 
           value={formData.status} 
           onValueChange={(value) => handleInputChange('status', value)}
@@ -371,9 +372,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <SelectValue placeholder="Sélectionnez le statut" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={DocumentStatus.DRAFT}>Brouillon</SelectItem>
-            <SelectItem value={DocumentStatus.PENDING_APPROVAL}>En attente</SelectItem>
-            <SelectItem value={DocumentStatus.APPROVED}>Approuvé</SelectItem>
+            <SelectItem value={DocumentStatus.DRAFT}><T k="auto.documentupload.brouillon" fallback="Brouillon" /></SelectItem>
+            <SelectItem value={DocumentStatus.PENDING_APPROVAL}><T k="auto.documentupload.en_attente" fallback="En attente" /></SelectItem>
+            <SelectItem value={DocumentStatus.APPROVED}><T k="auto.documentupload.approuve" fallback="Approuvé" /></SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -381,7 +382,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* File upload area */}
       <div className="space-y-2">
         <Label>
-          Fichier <span className="text-destructive">*</span>
+          <T k="auto.documentupload.fichier" fallback="Fichier" /> <span className="text-destructive">*</span>
         </Label>
         <div
           className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
@@ -432,7 +433,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <div className="text-center">
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
-                Glissez-déposez votre fichier ici ou cliquez pour parcourir
+                <T k="auto.documentupload.glissez_deposez_votre_fichier_ici_ou_cliquez_pou" fallback="Glissez-déposez votre fichier ici ou cliquez pour parcourir" />
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Formats acceptés: {acceptedTypes.join(', ')} (max {maxSizeMB}MB)
@@ -448,7 +449,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Téléchargement en cours...
+              <T k="auto.documentupload.telechargement_en_cours" fallback="Téléchargement en cours..." />
             </span>
             <span>{uploadProgress}%</span>
           </div>
@@ -460,7 +461,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {(isError || createError) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erreur</AlertTitle>
+          <AlertTitle><T k="auto.documentupload.erreur" fallback="Erreur" /></AlertTitle>
           <AlertDescription>
             {createError instanceof Error ? createError.message : 'Une erreur est survenue'}
           </AlertDescription>
@@ -477,18 +478,18 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           {isCreating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Upload en cours...
+              <T k="auto.documentupload.upload_en_cours" fallback="Upload en cours..." />
             </>
           ) : (
             <>
               <Upload className="h-4 w-4 mr-2" />
-              Uploader le Document
+              <T k="auto.documentupload.uploader_le_document" fallback="Uploader le Document" />
             </>
           )}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
+            <T k="auto.documentupload.annuler" fallback="Annuler" />
           </Button>
         )}
       </div>
@@ -513,7 +514,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center">
             <Upload className="h-5 w-5 mr-2" />
-            Uploader un Document
+            <T k="auto.documentupload.uploader_un_document" fallback="Uploader un Document" />
           </CardTitle>
           {onCancel && (
             <Button variant="ghost" size="sm" onClick={onCancel}>

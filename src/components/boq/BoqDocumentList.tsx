@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   source: BoqSource;
@@ -98,7 +99,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="all"><T k="auto.boqdocumentlist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
             {Object.entries(STATUS_LABEL).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v.label}</SelectItem>
             ))}
@@ -110,12 +111,12 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="text-left p-3">Référence</th>
-              <th className="text-left p-3">Intitulé</th>
-              <th className="text-right p-3">Lignes</th>
-              <th className="text-right p-3">Montant HT</th>
-              <th className="text-left p-3">Statut</th>
-              <th className="text-right p-3">Actions</th>
+              <th className="text-left p-3"><T k="auto.boqdocumentlist.reference" fallback="Référence" /></th>
+              <th className="text-left p-3"><T k="auto.boqdocumentlist.intitule" fallback="Intitulé" /></th>
+              <th className="text-right p-3"><T k="auto.boqdocumentlist.lignes" fallback="Lignes" /></th>
+              <th className="text-right p-3"><T k="auto.boqdocumentlist.montant_ht" fallback="Montant HT" /></th>
+              <th className="text-left p-3"><T k="auto.boqdocumentlist.statut" fallback="Statut" /></th>
+              <th className="text-right p-3"><T k="auto.boqdocumentlist.actions" fallback="Actions" /></th>
             </tr>
           </thead>
           <tbody>
@@ -134,7 +135,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                   onClick={() => onOpen(d.documentId)}
                 >
                   <td className="p-3 font-mono text-xs">{docPrefix.toUpperCase()}-{d.reference}</td>
-                  <td className="p-3">{d.title || <span className="text-muted-foreground italic">Sans titre</span>}</td>
+                  <td className="p-3">{d.title || <span className="text-muted-foreground italic"><T k="auto.boqdocumentlist.sans_titre" fallback="Sans titre" /></span>}</td>
                   <td className="p-3 text-right">{d.lineCount}</td>
                   <td className="p-3 text-right font-medium">{fmt(d.totalHt)} MRU</td>
                   <td className="p-3"><Badge variant={st.variant}>{st.label}</Badge></td>

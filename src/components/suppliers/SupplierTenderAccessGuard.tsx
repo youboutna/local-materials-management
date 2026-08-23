@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
+import { T } from '@/components/i18n/T';
 
 interface SupplierTenderAccessGuardProps {
   onAccessGranted: (tenderId: string, supplierEmail: string) => void;
@@ -146,14 +147,14 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
               <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Accès Sécurisé</CardTitle>
+          <CardTitle className="text-2xl"><T k="auto.suppliertenderaccessguard.acces_securise" fallback="Accès Sécurisé" /></CardTitle>
           <CardDescription>
             Un code secret est requis pour accéder aux détails de l'appel d'offres et soumettre votre candidature
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="secret-code">Code Secret</Label>
+            <Label htmlFor="secret-code"><T k="auto.suppliertenderaccessguard.code_secret" fallback="Code Secret" /></Label>
             <Input
               id="secret-code"
               type="text"
@@ -174,12 +175,12 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
             {isValidating ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Validation en cours...
+                <T k="auto.suppliertenderaccessguard.validation_en_cours" fallback="Validation en cours..." />
               </>
             ) : (
               <>
                 <Lock className="h-4 w-4 mr-2" />
-                Valider le Code
+                <T k="auto.suppliertenderaccessguard.valider_le_code" fallback="Valider le Code" />
               </>
             )}
           </Button>
@@ -188,11 +189,11 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
             <div className="flex items-start gap-2">
               <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p className="font-medium">Comment obtenir un code secret ?</p>
+                <p className="font-medium"><T k="auto.suppliertenderaccessguard.comment_obtenir_un_code_secret" fallback="Comment obtenir un code secret ?" /></p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Le code vous est fourni par l'administration après votre préqualification</li>
-                  <li>Vérifiez vos emails ou notifications pour le code</li>
-                  <li>Le code peut avoir une date d'expiration et un nombre d'accès limité</li>
+                  <li><T k="auto.suppliertenderaccessguard.le_code_vous_est_fourni_par_l_administration_apr" fallback="Le code vous est fourni par l'administration après votre préqualification" /></li>
+                  <li><T k="auto.suppliertenderaccessguard.verifiez_vos_emails_ou_notifications_pour_le_cod" fallback="Vérifiez vos emails ou notifications pour le code" /></li>
+                  <li><T k="auto.suppliertenderaccessguard.le_code_peut_avoir_une_date_d_expiration_et_un_n" fallback="Le code peut avoir une date d'expiration et un nombre d'accès limité" /></li>
                 </ul>
               </div>
             </div>
@@ -202,11 +203,11 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <CheckCircle className="h-3 w-3" />
-                <span>Connexion sécurisée</span>
+                <span><T k="auto.suppliertenderaccessguard.connexion_securisee" fallback="Connexion sécurisée" /></span>
               </div>
               <Badge variant="outline" className="text-xs">
                 <Shield className="h-3 w-3 mr-1" />
-                Protocole vérifié
+                <T k="auto.suppliertenderaccessguard.protocole_verifie" fallback="Protocole vérifié" />
               </Badge>
             </div>
           </div>

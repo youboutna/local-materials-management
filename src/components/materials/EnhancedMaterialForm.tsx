@@ -40,13 +40,14 @@ import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelect
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { useLocationAutoFill } from '@/hooks/hexagonal/useLocationAutoFill';
+import { T } from '@/components/i18n/T';
 
 // Create type alias
 type MauritaniaLocation = Location ;
 
 interface FormRef {
   submit: () => void;
-  getFormData: () => Partial<MaterialFormDataDTO>;
+  getFormData: () => <T k="auto.enhancedmaterialform.partial" fallback="Partial" /><MaterialFormDataDTO>;
 }
 
 // Component-specific types
@@ -604,13 +605,13 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-7">
-          <TabsTrigger value="basic">Informations</TabsTrigger>
-          <TabsTrigger value="identifiers">Identifiants</TabsTrigger>
-          <TabsTrigger value="location">Localisation</TabsTrigger>
-          <TabsTrigger value="quantities">Quantités</TabsTrigger>
-          <TabsTrigger value="timeline">Planning</TabsTrigger>
-          <TabsTrigger value="supplier">Fournisseur</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="basic"><T k="auto.enhancedmaterialform.informations" fallback="Informations" /></TabsTrigger>
+          <TabsTrigger value="identifiers"><T k="auto.enhancedmaterialform.identifiants" fallback="Identifiants" /></TabsTrigger>
+          <TabsTrigger value="location"><T k="auto.enhancedmaterialform.localisation" fallback="Localisation" /></TabsTrigger>
+          <TabsTrigger value="quantities"><T k="auto.enhancedmaterialform.quantites" fallback="Quantités" /></TabsTrigger>
+          <TabsTrigger value="timeline"><T k="auto.enhancedmaterialform.planning" fallback="Planning" /></TabsTrigger>
+          <TabsTrigger value="supplier"><T k="auto.enhancedmaterialform.fournisseur" fallback="Fournisseur" /></TabsTrigger>
+          <TabsTrigger value="documents"><T k="auto.enhancedmaterialform.documents" fallback="Documents" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
@@ -670,14 +671,14 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
             <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Identifiants du matériau
+                <T k="auto.enhancedmaterialform.identifiants_du_materiau" fallback="Identifiants du matériau" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="gtin" className="text-sm font-medium">
-                    GTIN (Global Trade Item Number)
+                    <T k="auto.enhancedmaterialform.gtin_global_trade_item_number" fallback="GTIN (Global Trade Item Number)" />
                   </Label>
                   <Input
                     id="gtin"
@@ -690,7 +691,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 
                 <div className="space-y-2">
                   <Label htmlFor="sku" className="text-sm font-medium">
-                    SKU (Stock Keeping Unit)
+                    <T k="auto.enhancedmaterialform.sku_stock_keeping_unit" fallback="SKU (Stock Keeping Unit)" />
                   </Label>
                   <Input
                     id="sku"
@@ -703,7 +704,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 
                 <div className="space-y-2">
                   <Label htmlFor="ean" className="text-sm font-medium">
-                    EAN (European Article Number)
+                    <T k="auto.enhancedmaterialform.ean_european_article_number" fallback="EAN (European Article Number)" />
                   </Label>
                   <Input
                     id="ean"
@@ -716,7 +717,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                 
                 <div className="space-y-2">
                   <Label htmlFor="asin" className="text-sm font-medium">
-                    ASIN (Amazon Standard Identification Number)
+                    <T k="auto.enhancedmaterialform.asin_amazon_standard_identification_number" fallback="ASIN (Amazon Standard Identification Number)" />
                   </Label>
                   <Input
                     id="asin"
@@ -731,11 +732,11 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
               {/* Multi-language labels */}
               <div className="space-y-4 mt-6">
                 <Label className="text-sm font-medium">
-                  Libellés multilingues
+                  <T k="auto.enhancedmaterialform.libelles_multilingues" fallback="Libellés multilingues" />
                 </Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="label-fr" className="text-xs">Français</Label>
+                    <Label htmlFor="label-fr" className="text-xs"><T k="auto.enhancedmaterialform.francais" fallback="Français" /></Label>
                     <Input
                       id="label-fr"
                       value={formData.multilangLabels?.fr || ''}
@@ -762,7 +763,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="label-en" className="text-xs">English</Label>
+                    <Label htmlFor="label-en" className="text-xs"><T k="auto.enhancedmaterialform.english" fallback="English" /></Label>
                     <Input
                       id="label-en"
                       value={formData.multilangLabels?.en || ''}
@@ -775,7 +776,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="label-es" className="text-xs">Español</Label>
+                    <Label htmlFor="label-es" className="text-xs"><T k="auto.enhancedmaterialform.espanol" fallback="Español" /></Label>
                     <Input
                       id="label-es"
                       value={formData.multilangLabels?.es || ''}

@@ -18,6 +18,7 @@ import { fr } from 'date-fns/locale';
 import { Download, FileText, Loader2, Mail, PenTool } from 'lucide-react';
 import React, { useState } from 'react';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
+import { T } from '@/components/i18n/T';
 
 interface TenderReportGeneratorProps {
   tender: TenderDTO;
@@ -94,21 +95,21 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.includeSections.overview ? `
         <!-- Tender Overview -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Aperçu de l'Appel d'Offres</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;"><T k="auto.tenderreportgenerator.apercu_de_l_appel_d_offres" fallback="Aperçu de l'Appel d'Offres" /></h2>
           <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
-                <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender.projectReference || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Titre:</strong> ${tender.title || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getStatusColor(tender.status)}">${tender.status || 'Non défini'}</span></p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.reference" fallback="Référence:" /></strong> ${tender.projectReference || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.titre" fallback="Titre:" /></strong> ${tender.title || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.statut" fallback="Statut:" /></strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getStatusColor(tender.status)}">${tender.status || 'Non défini'}</span></p>
               </div>
               <div>
-                <p style="margin: 5px 0;"><strong>Date de lancement:</strong> ${tender.launchDate ? format(new Date(tender.launchDate), 'dd/MM/yyyy') : 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Date d'attribution:</strong> ${tender.attributionDate ? format(new Date(tender.attributionDate), 'dd/MM/yyyy') : 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Mode de sélection:</strong> ${tender.selectionMode || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.date_de_lancement" fallback="Date de lancement:" /></strong> ${tender.launchDate ? format(new Date(tender.launchDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.date_d_attribution" fallback="Date d'attribution:" /></strong> ${tender.attributionDate ? format(new Date(tender.attributionDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.tenderreportgenerator.mode_de_selection" fallback="Mode de sélection:" /></strong> ${tender.selectionMode || 'Non défini'}</p>
               </div>
             </div>
-            ${tender.description ? `<p style="margin: 15px 0 5px 0;"><strong>Description:</strong></p><p style="margin: 5px 0; line-height: 1.5;">${tender.description}</p>` : ''}
+            ${tender.description ? `<p style="margin: 15px 0 5px 0;"><strong><T k="auto.tenderreportgenerator.description" fallback="Description:" /></strong></p><p style="margin: 5px 0; line-height: 1.5;">${tender.description}</p>` : ''}
           </div>
         </section>
         ` : ''}
@@ -116,28 +117,28 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.includeSections.workflow ? `
         <!-- Workflow Status -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Statut du Workflow</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;"><T k="auto.tenderreportgenerator.statut_du_workflow" fallback="Statut du Workflow" /></h2>
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
-                <span style="font-weight: 500;">Publication</span>
+                <span style="font-weight: 500;"><T k="auto.tenderreportgenerator.publication" fallback="Publication" /></span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
-                <span style="font-weight: 500;">Soumission</span>
+                <span style="font-weight: 500;"><T k="auto.tenderreportgenerator.soumission" fallback="Soumission" /></span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;"></div>
-                <span style="font-weight: 500;">Évaluation</span>
+                <span style="font-weight: 500;"><T k="auto.tenderreportgenerator.evaluation" fallback="Évaluation" /></span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 12px; height: 12px; background: #8b5cf6; border-radius: 50%;"></div>
-                <span style="font-weight: 500;">Attribution</span>
+                <span style="font-weight: 500;"><T k="auto.tenderreportgenerator.attribution" fallback="Attribution" /></span>
               </div>
             </div>
             <div style="text-align: center; margin-top: 20px;">
-              <p style="margin: 0; font-size: 16px; color: #374151;">Statut actuel: <strong style="color: #7c3aed;">${tender.status || 'Non défini'}</strong></p>
+              <p style="margin: 0; font-size: 16px; color: #374151;"><T k="auto.tenderreportgenerator.statut_actuel" fallback="Statut actuel:" /> <strong style="color: #7c3aed;">${tender.status || 'Non défini'}</strong></p>
             </div>
           </div>
         </section>
@@ -146,24 +147,24 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.includeSections.timeline ? `
         <!-- Timeline -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Calendrier</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;"><T k="auto.tenderreportgenerator.calendrier" fallback="Calendrier" /></h2>
           <div style="background: #fffbeb; padding: 20px; border-radius: 8px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
               ${tender.launchDate ? `
               <div style="text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">LANCEMENT</p>
+                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;"><T k="auto.tenderreportgenerator.lancement" fallback="LANCEMENT" /></p>
                 <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.launchDate), 'dd MMM yyyy', { locale: fr })}</p>
               </div>
               ` : ''}
               ${tender.attributionDate ? `
               <div style="text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">ATTRIBUTION</p>
+                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;"><T k="auto.tenderreportgenerator.attribution" fallback="ATTRIBUTION" /></p>
                 <p style="margin: 5px 0; font-weight: bold; color: #374151;">${format(new Date(tender.attributionDate), 'dd MMM yyyy', { locale: fr })}</p>
               </div>
               ` : ''}
               ${tender.marketType ? `
               <div style="text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">MARCHÉ</p>
+                <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;"><T k="auto.tenderreportgenerator.marche" fallback="MARCHÉ" /></p>
                 <p style="margin: 5px 0; font-weight: bold; color: #374151;">${tender.marketType}</p>
               </div>
               ` : ''}
@@ -175,13 +176,13 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.includeSections.evaluation ? `
         <!-- Evaluation Criteria -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Informations sur l'appel d'offres</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;"><T k="auto.tenderreportgenerator.informations_sur_l_appel_d_offres" fallback="Informations sur l'appel d'offres" /></h2>
           <div style="background: #eff6ff; padding: 20px; border-radius: 8px;">
             <div style="display: grid; gap: 10px;">
-              <p><strong>Mode de sélection:</strong> ${tender.selectionMode || 'Non défini'}</p>
-              <p><strong>Type de marché:</strong> ${tender.marketType || 'Non défini'}</p>
-              <p><strong>Source de financement:</strong> ${tender.financingSource || 'Non défini'}</p>
-              <p><strong>Référence projet:</strong> ${tender.projectReference || 'Non défini'}</p>
+              <p><strong><T k="auto.tenderreportgenerator.mode_de_selection" fallback="Mode de sélection:" /></strong> ${tender.selectionMode || 'Non défini'}</p>
+              <p><strong><T k="auto.tenderreportgenerator.type_de_marche" fallback="Type de marché:" /></strong> ${tender.marketType || 'Non défini'}</p>
+              <p><strong><T k="auto.tenderreportgenerator.source_de_financement" fallback="Source de financement:" /></strong> ${tender.financingSource || 'Non défini'}</p>
+              <p><strong><T k="auto.tenderreportgenerator.reference_projet" fallback="Référence projet:" /></strong> ${tender.projectReference || 'Non défini'}</p>
             </div>
           </div>
         </section>
@@ -190,7 +191,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.notes ? `
         <!-- Additional Notes -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Notes</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;"><T k="auto.tenderreportgenerator.notes" fallback="Notes" /></h2>
           <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #fca5a5;">
             <p style="margin: 0; line-height: 1.6;">${reportConfig.notes}</p>
           </div>
@@ -200,16 +201,16 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         ${reportConfig.requireSignature && reportConfig.signatoryName ? `
         <!-- Signature Section -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #6b7280; padding-left: 15px;">Signature</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #6b7280; padding-left: 15px;"><T k="auto.tenderreportgenerator.signature" fallback="Signature" /></h2>
           <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #d1d5db;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
               <div>
-                <p style="margin: 0; font-size: 14px; color: #6b7280;">Nom du signataire:</p>
+                <p style="margin: 0; font-size: 14px; color: #6b7280;"><T k="auto.tenderreportgenerator.nom_du_signataire" fallback="Nom du signataire:" /></p>
                 <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${reportConfig.signatoryName}</p>
                 ${reportConfig.signatoryTitle ? `<p style="margin: 5px 0; color: #6b7280;">${reportConfig.signatoryTitle}</p>` : ''}
               </div>
               <div style="border: 1px dashed #d1d5db; padding: 15px; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center;">
-                ${reportConfig.requireSignature && signature ? `<img src="${signature}" style="max-width: 150px; max-height: 60px;" alt="Signature" />` : '<p style="margin: 0; color: #9ca3af;">Signature requis</p>'}
+                ${reportConfig.requireSignature && signature ? `<img src="${signature}" style="max-width: 150px; max-height: 60px;" alt="Signature" />` : '<p style="margin: 0; color: #9ca3af;"><T k="auto.tenderreportgenerator.signature_requis" fallback="Signature requis" /></p>'}
               </div>
             </div>
             <div style="margin-top: 15px; text-align: right;">
@@ -296,14 +297,14 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         message: `Veuillez trouver ci-joint le rapport "${reportConfig.title}" pour l'appel d'offres "${tender.title || tender.projectReference}". Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
         html: `
           <h2>Rapport: ${reportConfig.title}</h2>
-          <p>Bonjour,</p>
+          <p><T k="auto.tenderreportgenerator.bonjour" fallback="Bonjour," /></p>
           <p>Veuillez trouver ci-joint le rapport "${reportConfig.title}" pour l'appel d'offres "${tender.title || tender.projectReference}".</p>
-          <p><strong>Référence:</strong> ${tender.projectReference || 'N/A'}</p>
-          <p><strong>Date de génération:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
-          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <p><strong><T k="auto.tenderreportgenerator.reference" fallback="Référence:" /></strong> ${tender.projectReference || 'N/A'}</p>
+          <p><strong><T k="auto.tenderreportgenerator.date_de_generation" fallback="Date de génération:" /></strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+          <p><T k="auto.tenderreportgenerator.ce_rapport_a_ete_genere_automatiquement_par_le_s" fallback="Ce rapport a été généré automatiquement par le système." /></p>
           <br>
-          <p>Cordialement,</p>
-          <p>L'équipe de gestion des projets</p>
+          <p><T k="auto.tenderreportgenerator.cordialement" fallback="Cordialement," /></p>
+          <p><T k="auto.tenderreportgenerator.l_equipe_de_gestion_des_projets" fallback="L'équipe de gestion des projets" /></p>
         `,
         actionType: 'tender-report',
         attachments: [
@@ -338,7 +339,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Génération de Rapport d'Appel d'Offres
+          <T k="auto.tenderreportgenerator.generation_de_rapport_d_appel_d_offres" fallback="Génération de Rapport d'Appel d'Offres" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -346,7 +347,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reportTitle">Titre du rapport</Label>
+              <Label htmlFor="reportTitle"><T k="auto.tenderreportgenerator.titre_du_rapport" fallback="Titre du rapport" /></Label>
               <Input
                 id="reportTitle"
                 value={reportConfig.title}
@@ -355,7 +356,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
             </div>
 
             <div>
-              <Label htmlFor="reportType">Type de rapport</Label>
+              <Label htmlFor="reportType"><T k="auto.tenderreportgenerator.type_de_rapport" fallback="Type de rapport" /></Label>
               <Select
                 value={reportConfig.reportType}
                 onValueChange={(value: 'workflow' | 'evaluation' | 'final') => 
@@ -366,15 +367,15 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="workflow">Workflow</SelectItem>
-                  <SelectItem value="evaluation">Évaluation</SelectItem>
-                  <SelectItem value="final">Final</SelectItem>
+                  <SelectItem value="workflow"><T k="auto.tenderreportgenerator.workflow" fallback="Workflow" /></SelectItem>
+                  <SelectItem value="evaluation"><T k="auto.tenderreportgenerator.evaluation" fallback="Évaluation" /></SelectItem>
+                  <SelectItem value="final"><T k="auto.tenderreportgenerator.final" fallback="Final" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="recipientEmail">Email destinataire (optionnel)</Label>
+              <Label htmlFor="recipientEmail"><T k="auto.tenderreportgenerator.email_destinataire_optionnel" fallback="Email destinataire (optionnel)" /></Label>
               <Input
                 id="recipientEmail"
                 type="email"
@@ -386,7 +387,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           </div>
 
           <div className="space-y-4">
-            <Label>Sections à inclure</Label>
+            <Label><T k="auto.tenderreportgenerator.sections_a_inclure" fallback="Sections à inclure" /></Label>
             <div className="space-y-2">
               {Object.entries(reportConfig.includeSections).map(([key, value]) => (
                 <div key={key} className="flex items-center space-x-2">
@@ -432,14 +433,14 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
             />
             <Label htmlFor="requireSignature" className="flex items-center gap-2">
               <PenTool className="h-4 w-4" />
-              Signature numérique requise
+              <T k="auto.tenderreportgenerator.signature_numerique_requise" fallback="Signature numérique requise" />
             </Label>
           </div>
 
           {reportConfig.requireSignature && (
             <div className="grid md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
               <div>
-                <Label htmlFor="signatoryName">Nom du signataire</Label>
+                <Label htmlFor="signatoryName"><T k="auto.tenderreportgenerator.nom_du_signataire" fallback="Nom du signataire" /></Label>
                 <Input
                   id="signatoryName"
                   value={reportConfig.signatoryName}
@@ -461,7 +462,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
         </div>
 
         <div>
-          <Label htmlFor="notes">Notes additionnelles</Label>
+          <Label htmlFor="notes"><T k="auto.tenderreportgenerator.notes_additionnelles" fallback="Notes additionnelles" /></Label>
           <Textarea
             id="notes"
             value={reportConfig.notes}
@@ -473,7 +474,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
 
         {/* Tender Status Badge */}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Statut actuel:</span>
+          <span className="text-sm font-medium"><T k="auto.tenderreportgenerator.statut_actuel" fallback="Statut actuel:" /></span>
           <Badge variant="secondary" className={getStatusColor(tender.status)}>
             {tender.status || 'Non défini'}
           </Badge>
@@ -506,7 +507,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           
           {onClose && (
             <Button onClick={onClose} variant="ghost">
-              Fermer
+              <T k="auto.tenderreportgenerator.fermer" fallback="Fermer" />
             </Button>
           )}
         </div>

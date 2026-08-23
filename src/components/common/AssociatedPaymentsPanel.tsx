@@ -12,6 +12,7 @@ import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { getPaymentService } from '@/application/services/PaymentService';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface AssociatedPaymentsPanelProps {
   entityType: 'project' | 'inspection' | 'supplier' | 'validation';
   entityId: string;
@@ -53,7 +54,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
   }
 
   if (error) {
-    return <div className="text-destructive">Erreur lors du chargement des paiements.</div>;
+    return <div className="text-destructive"><T k="auto.associatedpaymentspanel.erreur_lors_du_chargement_des_paiements" fallback="Erreur lors du chargement des paiements." /></div>;
   }
 
   return (
@@ -69,13 +70,13 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Projet</TableHead>
-              <TableHead>Contractant</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Origine</TableHead>
-              {showActions && <TableHead>Actions</TableHead>}
+              <TableHead><T k="auto.associatedpaymentspanel.date" fallback="Date" /></TableHead>
+              <TableHead><T k="auto.associatedpaymentspanel.projet" fallback="Projet" /></TableHead>
+              <TableHead><T k="auto.associatedpaymentspanel.contractant" fallback="Contractant" /></TableHead>
+              <TableHead><T k="auto.associatedpaymentspanel.montant" fallback="Montant" /></TableHead>
+              <TableHead><T k="auto.associatedpaymentspanel.statut" fallback="Statut" /></TableHead>
+              <TableHead><T k="auto.associatedpaymentspanel.origine" fallback="Origine" /></TableHead>
+              {showActions && <TableHead><T k="auto.associatedpaymentspanel.actions" fallback="Actions" /></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,7 +96,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
                 </TableCell>
                 {showActions && (
                   <TableCell>
-                    <Button variant="ghost" size="sm">Voir</Button>
+                    <Button variant="ghost" size="sm"><T k="auto.associatedpaymentspanel.voir" fallback="Voir" /></Button>
                   </TableCell>
                 )}
               </TableRow>
@@ -103,7 +104,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
           </TableBody>
         </Table>
       ) : (
-        <p className="text-muted-foreground">Aucun paiement associé.</p>
+        <p className="text-muted-foreground"><T k="auto.associatedpaymentspanel.aucun_paiement_associe" fallback="Aucun paiement associé." /></p>
       )}
 
       <UnifiedPaymentFormDialog

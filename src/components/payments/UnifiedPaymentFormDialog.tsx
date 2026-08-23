@@ -51,6 +51,7 @@ import { formatAmount2 } from '@/utils/reportNumbers';
 import { toDateInput } from '@/lib/utils';
 import { getDocumentService } from '@/application/services/DocumentService';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
+import { T } from '@/components/i18n/T';
 
 export interface UnifiedPaymentFormDefaults {
   id?: string;
@@ -310,14 +311,14 @@ export function UnifiedPaymentFormDialog({
               Origine : {originDef?.label || 'Manuel'}
             </Badge>
             {defaults?.contextLabel && <span className="text-xs text-muted-foreground">{defaults.contextLabel}</span>}
-            {isEdit && <Badge variant="secondary">Édition</Badge>}
+            {isEdit && <Badge variant="secondary"><T k="auto.unifiedpaymentformdialog.edition" fallback="Édition" /></Badge>}
           </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Type de paiement */}
           <div className="grid gap-2 sm:max-w-xs">
-            <Label>Type de paiement</Label>
+            <Label><T k="auto.unifiedpaymentformdialog.type_de_paiement" fallback="Type de paiement" /></Label>
             <Select
               value={requestType}
               onValueChange={(v) => setRequestType(v as PaymentRequestTypeKey)}
@@ -335,7 +336,7 @@ export function UnifiedPaymentFormDialog({
 
           {/* Section 1 – Informations générales */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Informations générales</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm"><T k="auto.unifiedpaymentformdialog.informations_generales" fallback="Informations générales" /></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {lockProject && projectId ? (
                 <div className="grid gap-2">
@@ -353,21 +354,21 @@ export function UnifiedPaymentFormDialog({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label>Phase liée (optionnel)</Label>
+                  <Label><T k="auto.unifiedpaymentformdialog.phase_liee_optionnel" fallback="Phase liée (optionnel)" /></Label>
                   <Select value={phaseId || 'none'} onValueChange={(v) => setPhaseId(v === 'none' ? '' : v)} disabled={!projectId}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner une phase" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Aucune</SelectItem>
+                      <SelectItem value="none"><T k="auto.unifiedpaymentformdialog.aucune" fallback="Aucune" /></SelectItem>
                       {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Inspection liée (optionnel)</Label>
+                  <Label><T k="auto.unifiedpaymentformdialog.inspection_liee_optionnel" fallback="Inspection liée (optionnel)" /></Label>
                   <Select value={inspectionId || 'none'} onValueChange={(v) => setInspectionId(v === 'none' ? '' : v)} disabled={!projectId}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner une inspection" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Aucune</SelectItem>
+                      <SelectItem value="none"><T k="auto.unifiedpaymentformdialog.aucune" fallback="Aucune" /></SelectItem>
                       {inspections.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -391,7 +392,7 @@ export function UnifiedPaymentFormDialog({
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="grid gap-2"><Label>Contact du contractant *</Label><Input value={contractorContact} onChange={(e) => setContractorContact(e.target.value)} placeholder="Auto-rempli" /></div>
-                <div className="grid gap-2"><Label>Nom de la banque</Label><Input value={bankName} onChange={(e) => setBankName(e.target.value)} /></div>
+                <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.nom_de_la_banque" fallback="Nom de la banque" /></Label><Input value={bankName} onChange={(e) => setBankName(e.target.value)} /></div>
                 <div className="grid gap-2"><Label>Numéro de compte / RIB</Label><Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} /></div>
               </div>
             </CardContent>
@@ -399,17 +400,17 @@ export function UnifiedPaymentFormDialog({
 
           {/* Section 2 – Montants et dates */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Montants et dates</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm"><T k="auto.unifiedpaymentformdialog.montants_et_dates" fallback="Montants et dates" /></CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
               <div className="grid gap-2"><Label>Montant (MRU) *</Label><Input type="number" min={0} value={amount} onChange={(e) => setAmount(Number(e.target.value))} /></div>
               <div className="grid gap-2"><Label>Date de paiement prévue *</Label><Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} /></div>
-              <div className="grid gap-2"><Label>Progression (%)</Label><Input type="number" min={0} max={100} value={progress} onChange={(e) => setProgress(Number(e.target.value))} /></div>
+              <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.progression" fallback="Progression (%)" /></Label><Input type="number" min={0} max={100} value={progress} onChange={(e) => setProgress(Number(e.target.value))} /></div>
             </CardContent>
           </Card>
 
           {/* Section 3 – Détails du paiement */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Détails du paiement</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm"><T k="auto.unifiedpaymentformdialog.details_du_paiement" fallback="Détails du paiement" /></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="grid gap-2"><Label>Méthode de paiement *</Label>
@@ -420,10 +421,10 @@ export function UnifiedPaymentFormDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2"><Label>ID de transaction</Label><Input value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="Référence bancaire (optionnel)" /></div>
-                <div className="grid gap-2"><Label>Délai de livraison (jours)</Label><Input type="number" min={0} value={leadTime} onChange={(e) => setLeadTime(Number(e.target.value))} /></div>
+                <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.id_de_transaction" fallback="ID de transaction" /></Label><Input value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="Référence bancaire (optionnel)" /></div>
+                <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.delai_de_livraison_jours" fallback="Délai de livraison (jours)" /></Label><Input type="number" min={0} value={leadTime} onChange={(e) => setLeadTime(Number(e.target.value))} /></div>
               </div>
-              <div className="grid gap-2"><Label>Notes (optionnel)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></div>
+              <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.notes_optionnel" fallback="Notes (optionnel)" /></Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></div>
             </CardContent>
           </Card>
 
@@ -432,7 +433,7 @@ export function UnifiedPaymentFormDialog({
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Paperclip className="h-4 w-4" />
-                Documents justificatifs
+                <T k="auto.unifiedpaymentformdialog.documents_justificatifs" fallback="Documents justificatifs" />
                 <Badge variant="outline" className="ml-2">{uploadedDocs.length}</Badge>
               </CardTitle>
             </CardHeader>
@@ -454,10 +455,10 @@ export function UnifiedPaymentFormDialog({
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDocumentUploadOpen(true)} disabled={isUploadingDocs}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Gérer documents
+                  <T k="auto.unifiedpaymentformdialog.gerer_documents" fallback="Gérer documents" />
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  Les documents seront associés au paiement via la GED.
+                  <T k="auto.unifiedpaymentformdialog.les_documents_seront_associes_au_paiement_via_la" fallback="Les documents seront associés au paiement via la GED." />
                 </span>
               </div>
             </CardContent>
@@ -466,7 +467,7 @@ export function UnifiedPaymentFormDialog({
 
         <DialogFooter className="px-6 py-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending || isUploadingDocs}>
-            Annuler
+            <T k="auto.unifiedpaymentformdialog.annuler" fallback="Annuler" />
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || isUploadingDocs || !canSubmit}>
             {isPending || isUploadingDocs ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -480,9 +481,9 @@ export function UnifiedPaymentFormDialog({
         <Dialog open={isDocumentUploadOpen} onOpenChange={setIsDocumentUploadOpen}>
           <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Ajouter un document justificatif</DialogTitle>
+              <DialogTitle><T k="auto.unifiedpaymentformdialog.ajouter_un_document_justificatif" fallback="Ajouter un document justificatif" /></DialogTitle>
               <DialogDescription>
-                Téléchargez un document pour ce paiement. Le type sera défini sur <strong>« contract »</strong>.
+                <T k="auto.unifiedpaymentformdialog.telechargez_un_document_pour_ce_paiement_le_type" fallback="Téléchargez un document pour ce paiement. Le type sera défini sur" /> <strong>« contract »</strong>.
               </DialogDescription>
             </DialogHeader>
             <ProjectDocumentUpload

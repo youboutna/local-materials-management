@@ -68,6 +68,7 @@ import {
 import { toast } from 'sonner';
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface StrategicLinkageStepProps {
   projectId: string;
   initialStrategyLinks?: CreateProjectStrategyLinkDTO[];
@@ -230,7 +231,7 @@ function CascadingAutocomplete({
             className="h-6 px-2 text-xs text-muted-foreground"
             aria-label={`Effacer ${label}`}
           >
-            Effacer
+            <T k="auto.strategiclinkagestep.effacer" fallback="Effacer" />
           </Button>
         )}
       </div>
@@ -266,7 +267,7 @@ function CascadingAutocomplete({
               )}
               {selectedSuggestion.metadata && (
                 <div className="mt-1 text-muted-foreground">
-                  {selectedSuggestion.metadata.unit && <span>Unité: <TranslatedUnit code={selectedSuggestion.metadata.unit} /></span>}
+                  {selectedSuggestion.metadata.unit && <span><T k="auto.strategiclinkagestep.unite" fallback="Unité:" /> <TranslatedUnit code={selectedSuggestion.metadata.unit} /></span>}
                   {selectedSuggestion.metadata.target2030 && (
                     <span className="ml-2">Cible 2030: {selectedSuggestion.metadata.target2030}</span>
                   )}
@@ -748,7 +749,7 @@ export default function StrategicLinkageStep({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Liaisons Stratégiques et Budgétaires
+              <T k="auto.strategiclinkagestep.liaisons_strategiques_et_budgetaires" fallback="Liaisons Stratégiques et Budgétaires" />
             </CardTitle>
             <CardDescription>
               Liez ce projet aux objectifs stratégiques (SCAPP) et aux lignes budgétaires (Loi de Finances 2026)
@@ -759,7 +760,7 @@ export default function StrategicLinkageStep({
               <div className="mb-4 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                 <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div>
-                  <strong>Étape 1 requise :</strong> complétez « Informations du projet » et cliquez sur <em>Suivant</em>. Vos liens sont conservés en mémoire et seront sauvegardés automatiquement dès qu'un identifiant projet sera disponible.
+                  <strong><T k="auto.strategiclinkagestep.etape_1_requise" fallback="Étape 1 requise :" /></strong> complétez « Informations du projet » et cliquez sur <em><T k="auto.strategiclinkagestep.suivant" fallback="Suivant" /></em>. Vos liens sont conservés en mémoire et seront sauvegardés automatiquement dès qu'un identifiant projet sera disponible.
                 </div>
               </div>
             )}
@@ -792,10 +793,10 @@ export default function StrategicLinkageStep({
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <FolderTree className="h-4 w-4" />
-                        Ajouter un lien stratégique
+                        <T k="auto.strategiclinkagestep.ajouter_un_lien_strategique" fallback="Ajouter un lien stratégique" />
                       </CardTitle>
                       <CardDescription>
-                        Sélection en cascade: chaque niveau filtre automatiquement les options suivantes
+                        <T k="auto.strategiclinkagestep.selection_en_cascade_chaque_niveau_filtre_automa" fallback="Sélection en cascade: chaque niveau filtre automatiquement les options suivantes" />
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -879,7 +880,7 @@ export default function StrategicLinkageStep({
                       </div>
                       <div className="flex items-end gap-4">
                         <div className="flex-1">
-                          <Label htmlFor="contribution">Contribution (%)</Label>
+                          <Label htmlFor="contribution"><T k="auto.strategiclinkagestep.contribution" fallback="Contribution (%)" /></Label>
                           <Input
                             id="contribution"
                             type="number"
@@ -897,13 +898,13 @@ export default function StrategicLinkageStep({
                           className="flex items-center gap-2"
                         >
                           <Plus className="h-4 w-4" />
-                          Ajouter
+                          <T k="auto.strategiclinkagestep.ajouter" fallback="Ajouter" />
                         </Button>
                       </div>
                       {totalContribution > 100 && (
                         <div className="flex items-center gap-2 text-sm text-destructive">
                           <AlertCircle className="h-4 w-4" />
-                          La contribution totale dépasse 100%
+                          <T k="auto.strategiclinkagestep.la_contribution_totale_depasse_100" fallback="La contribution totale dépasse 100%" />
                         </div>
                       )}
                     </CardContent>
@@ -956,7 +957,7 @@ export default function StrategicLinkageStep({
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Supprimer</TooltipContent>
+                                  <TooltipContent><T k="auto.strategiclinkagestep.supprimer" fallback="Supprimer" /></TooltipContent>
                                 </Tooltip>
                               )}
                             </div>
@@ -975,10 +976,10 @@ export default function StrategicLinkageStep({
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Layers className="h-4 w-4" />
-                        Ajouter un lien budgétaire
+                        <T k="auto.strategiclinkagestep.ajouter_un_lien_budgetaire" fallback="Ajouter un lien budgétaire" />
                       </CardTitle>
                       <CardDescription>
-                        Sélection en cascade: chaque niveau filtre automatiquement les options suivantes
+                        <T k="auto.strategiclinkagestep.selection_en_cascade_chaque_niveau_filtre_automa" fallback="Sélection en cascade: chaque niveau filtre automatiquement les options suivantes" />
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -1058,7 +1059,7 @@ export default function StrategicLinkageStep({
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="allocatedCe">Crédits d'Engagement (CE)</Label>
+                          <Label htmlFor="allocatedCe"><T k="auto.strategiclinkagestep.credits_d_engagement_ce" fallback="Crédits d'Engagement (CE)" /></Label>
                           <Input
                             id="allocatedCe"
                             type="number"
@@ -1070,7 +1071,7 @@ export default function StrategicLinkageStep({
                           />
                         </div>
                         <div>
-                          <Label htmlFor="allocatedCp">Crédits de Paiement (CP)</Label>
+                          <Label htmlFor="allocatedCp"><T k="auto.strategiclinkagestep.credits_de_paiement_cp" fallback="Crédits de Paiement (CP)" /></Label>
                           <Input
                             id="allocatedCp"
                             type="number"
@@ -1088,7 +1089,7 @@ export default function StrategicLinkageStep({
                         className="flex items-center gap-2"
                       >
                         <Plus className="h-4 w-4" />
-                        Ajouter
+                        <T k="auto.strategiclinkagestep.ajouter" fallback="Ajouter" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -1162,7 +1163,7 @@ export default function StrategicLinkageStep({
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Supprimer</TooltipContent>
+                                  <TooltipContent><T k="auto.strategiclinkagestep.supprimer" fallback="Supprimer" /></TooltipContent>
                                 </Tooltip>
                               )}
                             </div>

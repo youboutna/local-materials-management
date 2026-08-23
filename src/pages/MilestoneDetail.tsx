@@ -33,6 +33,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const milestoneToasts = entityToasts('jalon');
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
@@ -123,7 +124,7 @@ const MilestoneDetail: React.FC = () => {
     <AppLayout pageTitle="🚩 Détail du jalon">
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)} aria-label="Revenir à la page précédente">
-          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> Retour
+          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> <T k="auto.milestonedetail.retour" fallback="Retour" />
         </Button>
 
         {loading && <Skeleton className="h-64 w-full" />}
@@ -137,7 +138,7 @@ const MilestoneDetail: React.FC = () => {
         {!loading && !milestone && !error && (
           <Card>
             <CardContent className="p-6">
-              Aucun jalon trouvé pour l'identifiant <code>{milestoneId}</code>.
+              <T k="auto.milestonedetail.aucun_jalon_trouve_pour_l_identifiant" fallback="Aucun jalon trouvé pour l'identifiant" /> <code>{milestoneId}</code>.
             </CardContent>
           </Card>
         )}
@@ -171,14 +172,14 @@ const MilestoneDetail: React.FC = () => {
                 {milestone.projectId && (
                   <Button variant="outline" asChild>
                     <Link to={`/projects/${milestone.projectId}`}>
-                      Projet <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.milestonedetail.projet" fallback="Projet" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}
                 {milestone.phaseId && milestone.projectId && (
                   <Button variant="outline" asChild>
                     <Link to={`/projects/${milestone.projectId}/phases/${milestone.phaseId}`}>
-                      Phase <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.milestonedetail.phase" fallback="Phase" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}
@@ -204,16 +205,16 @@ const MilestoneDetail: React.FC = () => {
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" onClick={openEditDialog} aria-label="Modifier le jalon">
-                      <Pencil className="h-4 w-4 mr-1" /> Modifier
+                      <Pencil className="h-4 w-4 mr-1" /> <T k="auto.milestonedetail.modifier" fallback="Modifier" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Modifier le jalon</DialogTitle>
+                      <DialogTitle><T k="auto.milestonedetail.modifier_le_jalon" fallback="Modifier le jalon" /></DialogTitle>
                     </DialogHeader>
                     <div className="space-y-3">
                       <div>
-                        <Label htmlFor="milestone-title">Titre</Label>
+                        <Label htmlFor="milestone-title"><T k="auto.milestonedetail.titre" fallback="Titre" /></Label>
                         <Input
                           id="milestone-title"
                           value={form.title}
@@ -221,7 +222,7 @@ const MilestoneDetail: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="milestone-description">Description</Label>
+                        <Label htmlFor="milestone-description"><T k="auto.milestonedetail.description" fallback="Description" /></Label>
                         <Textarea
                           id="milestone-description"
                           value={form.description}
@@ -229,7 +230,7 @@ const MilestoneDetail: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="milestone-target-date">Date cible</Label>
+                        <Label htmlFor="milestone-target-date"><T k="auto.milestonedetail.date_cible" fallback="Date cible" /></Label>
                         <Input
                           id="milestone-target-date"
                           type="date"
@@ -238,7 +239,7 @@ const MilestoneDetail: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="milestone-weight">Poids (0 à 1)</Label>
+                        <Label htmlFor="milestone-weight"><T k="auto.milestonedetail.poids_0_a_1" fallback="Poids (0 à 1)" /></Label>
                         <Input
                           id="milestone-weight"
                           type="number"
@@ -250,7 +251,7 @@ const MilestoneDetail: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="milestone-notes">Notes</Label>
+                        <Label htmlFor="milestone-notes"><T k="auto.milestonedetail.notes" fallback="Notes" /></Label>
                         <Textarea
                           id="milestone-notes"
                           value={form.notes}
@@ -260,7 +261,7 @@ const MilestoneDetail: React.FC = () => {
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={isSaving}>
-                        Annuler
+                        <T k="auto.milestonedetail.annuler" fallback="Annuler" />
                       </Button>
                       <Button onClick={handleSave} disabled={isSaving}>
                         {isSaving ? 'Enregistrement…' : 'Enregistrer'}
@@ -272,18 +273,18 @@ const MilestoneDetail: React.FC = () => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" disabled={isDeleting} aria-label="Supprimer le jalon">
-                      <Trash2 className="h-4 w-4 mr-1" /> Supprimer
+                      <Trash2 className="h-4 w-4 mr-1" /> <T k="auto.milestonedetail.supprimer" fallback="Supprimer" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Supprimer ce jalon ?</AlertDialogTitle>
+                      <AlertDialogTitle><T k="auto.milestonedetail.supprimer_ce_jalon" fallback="Supprimer ce jalon ?" /></AlertDialogTitle>
                       <AlertDialogDescription>
                         Cette action est irréversible. Le jalon « {milestone.title} » sera définitivement supprimé.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+                      <AlertDialogCancel disabled={isDeleting}><T k="auto.milestonedetail.annuler" fallback="Annuler" /></AlertDialogCancel>
                       <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
                         {isDeleting ? 'Suppression…' : 'Supprimer'}
                       </AlertDialogAction>

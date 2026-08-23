@@ -42,6 +42,7 @@ import { InsuranceCertificateStatus } from '@/dtos/entities/InsuranceDTO';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================
 // Types
 // ============================================================
@@ -193,7 +194,7 @@ const InsuranceContent = () => {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="ml-3 text-muted-foreground">
-              Chargement des données...
+              <T k="auto.insurancemanagement.chargement_des_donnees" fallback="Chargement des données..." />
             </span>
           </div>
         </div>
@@ -214,10 +215,10 @@ const InsuranceContent = () => {
               <div>
                 <h1 className="text-3xl font-bold flex items-center gap-2">
                   <Shield className="h-8 w-8 text-primary" />
-                  Gestion des Assurances
+                  <T k="auto.insurancemanagement.gestion_des_assurances" fallback="Gestion des Assurances" />
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  Surveillance automatisée des certificats d'assurance et alertes d'expiration
+                  <T k="auto.insurancemanagement.surveillance_automatisee_des_certificats_d_assur" fallback="Surveillance automatisée des certificats d'assurance et alertes d'expiration" />
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -232,7 +233,7 @@ const InsuranceContent = () => {
                   className="flex items-center gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  Actualiser
+                  <T k="auto.insurancemanagement.actualiser" fallback="Actualiser" />
                 </Button>
               </div>
             </div>
@@ -248,16 +249,16 @@ const InsuranceContent = () => {
               <TabsTrigger value="surveillance" className="flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
-                <span className="sm:hidden">Alertes</span>
+                <span className="sm:hidden"><T k="auto.insurancemanagement.alertes" fallback="Alertes" /></span>
               </TabsTrigger>
               <TabsTrigger value="gestion" className="flex items-center gap-2">
                 <ListChecks className="h-4 w-4" />
-                <span className="hidden sm:inline">Gestion des Polices</span>
-                <span className="sm:hidden">Gestion</span>
+                <span className="hidden sm:inline"><T k="auto.insurancemanagement.gestion_des_polices" fallback="Gestion des Polices" /></span>
+                <span className="sm:hidden"><T k="auto.insurancemanagement.gestion" fallback="Gestion" /></span>
               </TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2">
                 <FolderOpen className="h-4 w-4" />
-                <span>Documents</span>
+                <span><T k="auto.insurancemanagement.documents" fallback="Documents" /></span>
               </TabsTrigger>
             </TabsList>
 
@@ -267,25 +268,25 @@ const InsuranceContent = () => {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-primary">{insuranceStats.total}</div>
-                <p className="text-sm text-muted-foreground">Total polices</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.total_polices" fallback="Total polices" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-success">{insuranceStats.active}</div>
-                <p className="text-sm text-muted-foreground">Actives</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.actives" fallback="Actives" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-warning">{insuranceStats.expiring}</div>
-                <p className="text-sm text-muted-foreground">Expiration proche</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.expiration_proche" fallback="Expiration proche" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-destructive">{insuranceStats.expired}</div>
-                <p className="text-sm text-muted-foreground">Expirées</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.expirees" fallback="Expirées" /></p>
               </CardContent>
             </Card>
             <Card>
@@ -293,32 +294,32 @@ const InsuranceContent = () => {
                 <div className="text-2xl font-bold text-primary">
                   {formatAmount2(insuranceStats.coverageTotal)}
                 </div>
-                <p className="text-sm text-muted-foreground">Couverture totale</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.couverture_totale" fallback="Couverture totale" /></p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-destructive">{stats.criticalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Alertes critiques</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.alertes_critiques" fallback="Alertes critiques" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-warning">{stats.highAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes élevées</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.alertes_elevees" fallback="Alertes élevées" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-primary">{stats.openAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.alertes_ouvertes" fallback="Alertes ouvertes" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-3xl font-bold text-success">{stats.totalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Total alertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.total_alertes" fallback="Total alertes" /></p>
               </CardContent>
             </Card>
             <Card>
@@ -326,7 +327,7 @@ const InsuranceContent = () => {
                 <div className="text-3xl font-bold text-muted-foreground">
                   {insuranceStats.total - insuranceStats.active - insuranceStats.expired}
                 </div>
-                <p className="text-sm text-muted-foreground">Autres statuts</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancemanagement.autres_statuts" fallback="Autres statuts" /></p>
               </CardContent>
             </Card>
           </div>
@@ -338,7 +339,7 @@ const InsuranceContent = () => {
               <CardHeader>
                 <CardTitle className="text-warning flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
-                  Alertes d'Assurance
+                  <T k="auto.insurancemanagement.alertes_d_assurance" fallback="Alertes d'Assurance" />
                   <Badge variant="destructive" className="ml-2">
                     {insuranceAlerts.length}
                   </Badge>
@@ -397,11 +398,11 @@ const InsuranceContent = () => {
                               onClick={() => handleAcknowledge(alert.id)}
                               className="bg-orange-600 hover:bg-orange-700"
                             >
-                              Traiter
+                              <T k="auto.insurancemanagement.traiter" fallback="Traiter" />
                             </Button>
                           )}
                           {alert.status === 'acknowledged' && (
-                            <Badge variant="secondary">En cours</Badge>
+                            <Badge variant="secondary"><T k="auto.insurancemanagement.en_cours" fallback="En cours" /></Badge>
                           )}
                         </div>
                       </div>
@@ -531,7 +532,7 @@ const InsuranceManagementPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement du projet...</p>
+          <p className="text-muted-foreground"><T k="auto.insurancemanagement.chargement_du_projet" fallback="Chargement du projet..." /></p>
         </div>
       </div>
     );
@@ -542,7 +543,7 @@ const InsuranceManagementPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Erreur de chargement</h2>
+          <h2 className="text-xl font-semibold mb-2"><T k="auto.insurancemanagement.erreur_de_chargement" fallback="Erreur de chargement" /></h2>
           <p className="text-muted-foreground">
             {error || 'Aucun projet trouvé. Veuillez créer un projet d\'abord.'}
           </p>

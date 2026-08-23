@@ -12,6 +12,7 @@ import { Download, Plus, Trash2, Upload, UserCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const emptyDraft = (): DevUserProfile => ({
   id: crypto.randomUUID(),
   email: '',
@@ -106,7 +107,7 @@ export default function LocalUserManagementPanel() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" /> Exporter
+              <Download className="mr-2 h-4 w-4" /> <T k="auto.localusermanagementpanel.exporter" fallback="Exporter" />
             </Button>
             <label>
               <input
@@ -120,35 +121,35 @@ export default function LocalUserManagementPanel() {
                 }}
               />
               <Button variant="outline" size="sm" asChild>
-                <span><Upload className="mr-2 h-4 w-4" /> Importer</span>
+                <span><Upload className="mr-2 h-4 w-4" /> <T k="auto.localusermanagementpanel.importer" fallback="Importer" /></span>
               </Button>
             </label>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Ajouter</Button>
+                <Button size="sm"><Plus className="mr-2 h-4 w-4" /> <T k="auto.localusermanagementpanel.ajouter" fallback="Ajouter" /></Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Nouveau profil DEV</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle><T k="auto.localusermanagementpanel.nouveau_profil_dev" fallback="Nouveau profil DEV" /></DialogTitle></DialogHeader>
                 <div className="grid gap-3">
-                  <div><Label>Clé (identifiant interne)</Label><Input value={draftKey} onChange={(e) => setDraftKey(e.target.value)} placeholder="ex: agent" /></div>
-                  <div><Label>Email</Label><Input value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
-                  <div><Label>Mot de passe</Label><Input value={draft.password ?? ''} onChange={(e) => setDraft({ ...draft, password: e.target.value })} /></div>
-                  <div><Label>Nom complet</Label><Input value={draft.user_metadata.full_name} onChange={(e) => setDraft({ ...draft, user_metadata: { ...draft.user_metadata, full_name: e.target.value } })} /></div>
-                  <div><Label>Rôle</Label><Input value={draft.user_metadata.role} onChange={(e) => setDraft({ ...draft, user_metadata: { ...draft.user_metadata, role: e.target.value } })} /></div>
-                  <div><Label>Permissions (séparées par virgules)</Label>
+                  <div><Label><T k="auto.localusermanagementpanel.cle_identifiant_interne" fallback="Clé (identifiant interne)" /></Label><Input value={draftKey} onChange={(e) => setDraftKey(e.target.value)} placeholder="ex: agent" /></div>
+                  <div><Label><T k="auto.localusermanagementpanel.email" fallback="Email" /></Label><Input value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
+                  <div><Label><T k="auto.localusermanagementpanel.mot_de_passe" fallback="Mot de passe" /></Label><Input value={draft.password ?? ''} onChange={(e) => setDraft({ ...draft, password: e.target.value })} /></div>
+                  <div><Label><T k="auto.localusermanagementpanel.nom_complet" fallback="Nom complet" /></Label><Input value={draft.user_metadata.full_name} onChange={(e) => setDraft({ ...draft, user_metadata: { ...draft.user_metadata, full_name: e.target.value } })} /></div>
+                  <div><Label><T k="auto.localusermanagementpanel.role" fallback="Rôle" /></Label><Input value={draft.user_metadata.role} onChange={(e) => setDraft({ ...draft, user_metadata: { ...draft.user_metadata, role: e.target.value } })} /></div>
+                  <div><Label><T k="auto.localusermanagementpanel.permissions_separees_par_virgules" fallback="Permissions (séparées par virgules)" /></Label>
                     <Input
                       value={(draft.permissions ?? []).join(',')}
                       onChange={(e) => setDraft({ ...draft, permissions: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
                     />
                   </div>
-                  <div><Label>Équipes (séparées par virgules)</Label>
+                  <div><Label><T k="auto.localusermanagementpanel.equipes_separees_par_virgules" fallback="Équipes (séparées par virgules)" /></Label>
                     <Input
                       value={(draft.teams ?? []).join(',')}
                       onChange={(e) => setDraft({ ...draft, teams: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
                     />
                   </div>
                 </div>
-                <DialogFooter><Button onClick={handleSaveDraft}>Enregistrer</Button></DialogFooter>
+                <DialogFooter><Button onClick={handleSaveDraft}><T k="auto.localusermanagementpanel.enregistrer" fallback="Enregistrer" /></Button></DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -158,12 +159,12 @@ export default function LocalUserManagementPanel() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Clé</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead>Équipes</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.cle" fallback="Clé" /></TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.email" fallback="Email" /></TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.role" fallback="Rôle" /></TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.permissions" fallback="Permissions" /></TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.equipes" fallback="Équipes" /></TableHead>
+              <TableHead><T k="auto.localusermanagementpanel.actions" fallback="Actions" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

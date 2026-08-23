@@ -29,6 +29,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { getOrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { TranslatedDepartment, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 const NONE = '__none__';
 
@@ -299,7 +300,7 @@ const EmployeeManagement = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Organisation</Label>
+                        <Label><T k="auto.employeemanagement.organisation" fallback="Organisation" /></Label>
                         <Select
                           value={formData.organization_id || NONE}
                           onValueChange={(value) => setFormData(prev => ({...prev, organization_id: value === NONE ? '' : value}))}
@@ -308,7 +309,7 @@ const EmployeeManagement = () => {
                             <SelectValue placeholder="Rattacher à une organisation..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={NONE}>Aucune organisation</SelectItem>
+                            <SelectItem value={NONE}><T k="auto.employeemanagement.aucune_organisation" fallback="Aucune organisation" /></SelectItem>
                             {organizations.map((org) => (
                               <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
                             ))}
@@ -316,7 +317,7 @@ const EmployeeManagement = () => {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Niveau organigramme</Label>
+                        <Label><T k="auto.employeemanagement.niveau_organigramme" fallback="Niveau organigramme" /></Label>
                         <Select
                           value={String(formData.hierarchy_level)}
                           onValueChange={(value) => setFormData(prev => ({...prev, hierarchy_level: Number(value)}))}
@@ -366,23 +367,23 @@ const EmployeeManagement = () => {
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Type de contrat</Label>
+                        <Label><T k="auto.employeemanagement.type_de_contrat" fallback="Type de contrat" /></Label>
                         <Select
                           value={formData.employee_type}
                           onValueChange={(value) => setFormData(prev => ({...prev, employee_type: value}))}
                         >
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="full_time">Temps plein</SelectItem>
-                            <SelectItem value="part_time">Temps partiel</SelectItem>
-                            <SelectItem value="contract">Contractuel</SelectItem>
-                            <SelectItem value="consultant">Consultant</SelectItem>
-                            <SelectItem value="intern">Stagiaire</SelectItem>
+                            <SelectItem value="full_time"><T k="auto.employeemanagement.temps_plein" fallback="Temps plein" /></SelectItem>
+                            <SelectItem value="part_time"><T k="auto.employeemanagement.temps_partiel" fallback="Temps partiel" /></SelectItem>
+                            <SelectItem value="contract"><T k="auto.employeemanagement.contractuel" fallback="Contractuel" /></SelectItem>
+                            <SelectItem value="consultant"><T k="auto.employeemanagement.consultant" fallback="Consultant" /></SelectItem>
+                            <SelectItem value="intern"><T k="auto.employeemanagement.stagiaire" fallback="Stagiaire" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Statut</Label>
+                        <Label><T k="auto.employeemanagement.statut" fallback="Statut" /></Label>
                         <Select
                           value={formData.status}
                           onValueChange={(value) => setFormData(prev => ({...prev, status: value, is_active: value === 'active'}))}
@@ -391,22 +392,22 @@ const EmployeeManagement = () => {
                           <SelectContent>
                             <SelectItem value="active"><TranslatedStatus code="active" /></SelectItem>
                             <SelectItem value="inactive"><TranslatedStatus code="inactive" /></SelectItem>
-                            <SelectItem value="on_leave">En congé</SelectItem>
-                            <SelectItem value="terminated">Sorti</SelectItem>
+                            <SelectItem value="on_leave"><T k="auto.employeemanagement.en_conge" fallback="En congé" /></SelectItem>
+                            <SelectItem value="terminated"><T k="auto.employeemanagement.sorti" fallback="Sorti" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Disponibilité</Label>
+                        <Label><T k="auto.employeemanagement.disponibilite" fallback="Disponibilité" /></Label>
                         <Select
                           value={formData.availability}
                           onValueChange={(value) => setFormData(prev => ({...prev, availability: value}))}
                         >
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="available">Disponible</SelectItem>
-                            <SelectItem value="busy">Affecté</SelectItem>
-                            <SelectItem value="unavailable">Indisponible</SelectItem>
+                            <SelectItem value="available"><T k="auto.employeemanagement.disponible" fallback="Disponible" /></SelectItem>
+                            <SelectItem value="busy"><T k="auto.employeemanagement.affecte" fallback="Affecté" /></SelectItem>
+                            <SelectItem value="unavailable"><T k="auto.employeemanagement.indisponible" fallback="Indisponible" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -442,7 +443,7 @@ const EmployeeManagement = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Responsable hiérarchique</Label>
+                        <Label><T k="auto.employeemanagement.responsable_hierarchique" fallback="Responsable hiérarchique" /></Label>
                         <Select
                           value={formData.manager_id || NONE}
                           onValueChange={(value) => setFormData(prev => ({...prev, manager_id: value === NONE ? '' : value}))}
@@ -451,7 +452,7 @@ const EmployeeManagement = () => {
                             <SelectValue placeholder="Sélectionner un responsable..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={NONE}>Aucun</SelectItem>
+                            <SelectItem value={NONE}><T k="auto.employeemanagement.aucun" fallback="Aucun" /></SelectItem>
                             {employees
                               .filter((emp: EmployeeDTO) => emp.id !== editingEmployee?.id)
                               .map((emp: EmployeeDTO) => (
@@ -474,7 +475,7 @@ const EmployeeManagement = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Date de fin de contrat</Label>
+                        <Label><T k="auto.employeemanagement.date_de_fin_de_contrat" fallback="Date de fin de contrat" /></Label>
                         <Input
                           type="date"
                           value={formData.end_date}
@@ -494,7 +495,7 @@ const EmployeeManagement = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Coût horaire</Label>
+                        <Label><T k="auto.employeemanagement.cout_horaire" fallback="Coût horaire" /></Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -504,16 +505,16 @@ const EmployeeManagement = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Devise</Label>
+                        <Label><T k="auto.employeemanagement.devise" fallback="Devise" /></Label>
                         <Select
                           value={formData.currency}
                           onValueChange={(value) => setFormData(prev => ({...prev, currency: value}))}
                         >
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="MRU">MRU</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
-                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="MRU"><T k="auto.employeemanagement.mru" fallback="MRU" /></SelectItem>
+                            <SelectItem value="EUR"><T k="auto.employeemanagement.eur" fallback="EUR" /></SelectItem>
+                            <SelectItem value="USD"><T k="auto.employeemanagement.usd" fallback="USD" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -521,14 +522,14 @@ const EmployeeManagement = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Adresse</Label>
+                        <Label><T k="auto.employeemanagement.adresse" fallback="Adresse" /></Label>
                         <Input
                           value={formData.address}
                           onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Ville</Label>
+                        <Label><T k="auto.employeemanagement.ville" fallback="Ville" /></Label>
                         <Input
                           value={formData.city}
                           onChange={(e) => setFormData(prev => ({...prev, city: e.target.value}))}
@@ -537,7 +538,7 @@ const EmployeeManagement = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Notes</Label>
+                      <Label><T k="auto.employeemanagement.notes" fallback="Notes" /></Label>
                       <Textarea
                         value={formData.notes}
                         onChange={(e) => setFormData(prev => ({...prev, notes: e.target.value}))}
@@ -561,12 +562,12 @@ const EmployeeManagement = () => {
                 <DialogTrigger asChild>
                   <Button variant="outline">
                     <Settings className="h-4 w-4 mr-2" />
-                    Hiérarchie
+                    <T k="auto.employeemanagement.hierarchie" fallback="Hiérarchie" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Gestion de la Hiérarchie Organisationnelle</DialogTitle>
+                    <DialogTitle><T k="auto.employeemanagement.gestion_de_la_hierarchie_organisationnelle" fallback="Gestion de la Hiérarchie Organisationnelle" /></DialogTitle>
                   </DialogHeader>
                   <div className="space-y-6">
                     <OrganizationsManager />
@@ -593,8 +594,8 @@ const EmployeeManagement = () => {
                 <SelectValue placeholder="Filtrer par organisation" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les organisations</SelectItem>
-                <SelectItem value={NONE}>Non rattachés</SelectItem>
+                <SelectItem value="all"><T k="auto.employeemanagement.toutes_les_organisations" fallback="Toutes les organisations" /></SelectItem>
+                <SelectItem value={NONE}><T k="auto.employeemanagement.non_rattaches" fallback="Non rattachés" /></SelectItem>
                 {organizations.map((org) => (
                   <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
                 ))}

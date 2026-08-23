@@ -14,6 +14,7 @@ import {
 import { Loader2, Key, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { keycloakConfig } from '@/integrations/keycloak/config';
+import { T } from '@/components/i18n/T';
 
 const KeycloakSettings = () => {
   const [url, setUrl] = useState<string>('');
@@ -94,17 +95,17 @@ const KeycloakSettings = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Key className="mr-2 h-5 w-5" />
-          Keycloak Configuration
+          <T k="auto.keycloaksettings.keycloak_configuration" fallback="Keycloak Configuration" />
         </CardTitle>
         <CardDescription>
-          Configure your Keycloak authentication settings for the application.
+          <T k="auto.keycloaksettings.configure_your_keycloak_authentication_settings_" fallback="Configure your Keycloak authentication settings for the application." />
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="keycloak-url">Keycloak URL</Label>
+            <Label htmlFor="keycloak-url"><T k="auto.keycloaksettings.keycloak_url" fallback="Keycloak URL" /></Label>
             <Input
               id="keycloak-url"
               value={url}
@@ -114,7 +115,7 @@ const KeycloakSettings = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="keycloak-realm">Realm</Label>
+            <Label htmlFor="keycloak-realm"><T k="auto.keycloaksettings.realm" fallback="Realm" /></Label>
             <Input
               id="keycloak-realm"
               value={realm}
@@ -124,7 +125,7 @@ const KeycloakSettings = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="keycloak-client">Client ID</Label>
+            <Label htmlFor="keycloak-client"><T k="auto.keycloaksettings.client_id" fallback="Client ID" /></Label>
             <Input
               id="keycloak-client"
               value={clientId}
@@ -144,12 +145,12 @@ const KeycloakSettings = () => {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Testing...
+              <T k="auto.keycloaksettings.testing" fallback="Testing..." />
             </>
           ) : isConnected ? (
             <>
               <Check className="mr-2 h-4 w-4 text-success" />
-              Connected
+              <T k="auto.keycloaksettings.connected" fallback="Connected" />
             </>
           ) : (
             "Test Connection"
@@ -160,7 +161,7 @@ const KeycloakSettings = () => {
           onClick={handleSaveSettings}
           disabled={isLoading}
         >
-          Save Settings
+          <T k="auto.keycloaksettings.save_settings" fallback="Save Settings" />
         </Button>
       </CardFooter>
     </Card>

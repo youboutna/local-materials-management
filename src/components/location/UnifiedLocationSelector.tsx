@@ -25,6 +25,7 @@ import { MapPin, Target, Globe, Navigation, Loader2, Crosshair, CheckCircle, X, 
 
 // Import Mauritania location data
 import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
+import { T } from '@/components/i18n/T';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
@@ -457,7 +458,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5" />
-          Sélecteur de localisation
+          <T k="auto.unifiedlocationselector.selecteur_de_localisation" fallback="Sélecteur de localisation" />
         </CardTitle>
         <CardDescription>
           Recherchez, saisissez des coordonnées ou utilisez le GPS pour définir une localisation
@@ -469,24 +470,24 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
           <TabsList className={showMap ? "grid w-full grid-cols-4" : "grid w-full grid-cols-3"}>
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Crosshair className="h-4 w-4" />
-              Recherche
+              <T k="auto.unifiedlocationselector.recherche" fallback="Recherche" />
             </TabsTrigger>
             {showCoordinates && (
               <TabsTrigger value="coordinates" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Coordonnées
+                <T k="auto.unifiedlocationselector.coordonnees" fallback="Coordonnées" />
               </TabsTrigger>
             )}
             {showGPS && (
               <TabsTrigger value="gps" className="flex items-center gap-2">
                 <Navigation className="h-4 w-4" />
-                GPS
+                <T k="auto.unifiedlocationselector.gps" fallback="GPS" />
               </TabsTrigger>
             )}
             {showMap && (
               <TabsTrigger value="map" className="flex items-center gap-2">
                 <Map className="h-4 w-4" />
-                Carte
+                <T k="auto.unifiedlocationselector.carte" fallback="Carte" />
               </TabsTrigger>
             )}
           </TabsList>
@@ -503,7 +504,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
 
               {allowManualEntry && (
                 <div className="space-y-2">
-                  <Label htmlFor="manual-address">Adresse complète ou recherche globale</Label>
+                  <Label htmlFor="manual-address"><T k="auto.unifiedlocationselector.adresse_complete_ou_recherche_globale" fallback="Adresse complète ou recherche globale" /></Label>
                   <Input
                     id="manual-address"
                     placeholder="Saisir une adresse, ville, ou lieu (recherche mondiale)"
@@ -515,7 +516,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   {isGeocoding && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      Recherche en cours...
+                      <T k="auto.unifiedlocationselector.recherche_en_cours" fallback="Recherche en cours..." />
                     </div>
                   )}
 
@@ -533,7 +534,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="flex items-start gap-2">
                   <Crosshair className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-primary mb-1">Conseils de recherche</p>
+                    <p className="font-medium text-primary mb-1"><T k="auto.unifiedlocationselector.conseils_de_recherche" fallback="Conseils de recherche" /></p>
                     <ul className="text-primary space-y-1 text-xs">
                       <li>• Utilisez l'autocomplete pour les régions et villes de Mauritanie</li>
                       <li>• Tapez une adresse complète pour une recherche mondiale</li>
@@ -550,7 +551,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
             <TabsContent value="coordinates" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="latitude">Latitude</Label>
+                  <Label htmlFor="latitude"><T k="auto.unifiedlocationselector.latitude" fallback="Latitude" /></Label>
                   <Input
                     id="latitude"
                     type="number"
@@ -568,7 +569,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="longitude">Longitude</Label>
+                  <Label htmlFor="longitude"><T k="auto.unifiedlocationselector.longitude" fallback="Longitude" /></Label>
                   <Input
                     id="longitude"
                     type="number"
@@ -593,12 +594,12 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   {areCoordinatesValid() ? (
                     <div className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-4 w-4" />
-                      <span>Coordonnées valides</span>
+                      <span><T k="auto.unifiedlocationselector.coordonnees_valides" fallback="Coordonnées valides" /></span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-destructive">
                       <X className="h-4 w-4" />
-                      <span>Coordonnées invalides</span>
+                      <span><T k="auto.unifiedlocationselector.coordonnees_invalides" fallback="Coordonnées invalides" /></span>
                     </div>
                   )}
                 </div>
@@ -609,7 +610,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="flex items-start gap-2">
                   <Globe className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-primary mb-1">Format des coordonnées</p>
+                    <p className="font-medium text-primary mb-1"><T k="auto.unifiedlocationselector.format_des_coordonnees" fallback="Format des coordonnées" /></p>
                     <ul className="text-primary space-y-1 text-xs">
                       <li>• Latitude: -90° à +90° (Nord positif, Sud négatif)</li>
                       <li>• Longitude: -180° à +180° (Est positif, Ouest négatif)</li>
@@ -624,7 +625,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="bg-primary/10 p-3 rounded-md border border-primary/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Globe className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">Coordonnées validées</span>
+                    <span className="text-sm font-medium text-primary"><T k="auto.unifiedlocationselector.coordonnees_validees" fallback="Coordonnées validées" /></span>
                   </div>
                   <p className="text-sm font-mono text-primary">
                     {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
@@ -639,7 +640,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                     }}
                   >
                     <Map className="h-4 w-4 mr-2" />
-                    Voir sur la carte
+                    <T k="auto.unifiedlocationselector.voir_sur_la_carte" fallback="Voir sur la carte" />
                   </Button>
                 </div>
               )}
@@ -647,7 +648,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               {isGeocoding && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Géocodage des coordonnées...
+                  <T k="auto.unifiedlocationselector.geocodage_des_coordonnees" fallback="Géocodage des coordonnées..." />
                 </div>
               )}
             </TabsContent>
@@ -661,9 +662,9 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   <Navigation className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">Géolocalisation GPS</h3>
+                  <h3 className="text-lg font-medium"><T k="auto.unifiedlocationselector.geolocalisation_gps" fallback="Géolocalisation GPS" /></h3>
                   <p className="text-sm text-muted-foreground">
-                    Utilisez la position actuelle de votre appareil
+                    <T k="auto.unifiedlocationselector.utilisez_la_position_actuelle_de_votre_appareil" fallback="Utilisez la position actuelle de votre appareil" />
                   </p>
                 </div>
                 <Button
@@ -683,7 +684,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   <div className="bg-success-soft p-3 rounded-md border border-success/30">
                     <div className="flex items-center gap-2 mb-2">
                       <Navigation className="h-4 w-4 text-success" />
-                      <span className="text-sm font-medium text-success">Position GPS capturée</span>
+                      <span className="text-sm font-medium text-success"><T k="auto.unifiedlocationselector.position_gps_capturee" fallback="Position GPS capturée" /></span>
                     </div>
                     <p className="text-sm font-mono text-success">
                       {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
@@ -703,7 +704,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
               {/* Map Controls */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">Type de carte:</Label>
+                  <Label className="text-sm font-medium"><T k="auto.unifiedlocationselector.type_de_carte" fallback="Type de carte:" /></Label>
                   <div className="flex bg-muted rounded-md p-1">
                     <Button
                       variant={mapType === 'standard' ? 'default' : 'ghost'}
@@ -711,7 +712,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                       onClick={() => setMapType('standard')}
                       className="text-xs px-3 py-1"
                     >
-                      Standard
+                      <T k="auto.unifiedlocationselector.standard" fallback="Standard" />
                     </Button>
                     <Button
                       variant={mapType === 'satellite' ? 'default' : 'ghost'}
@@ -719,14 +720,14 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                       onClick={() => setMapType('satellite')}
                       className="text-xs px-3 py-1"
                     >
-                      Satellite
+                      <T k="auto.unifiedlocationselector.satellite" fallback="Satellite" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Crosshair className="h-3 w-3" />
-                  <span>Cliquez pour sélectionner une position</span>
+                  <span><T k="auto.unifiedlocationselector.cliquez_pour_selectionner_une_position" fallback="Cliquez pour sélectionner une position" /></span>
                 </div>
               </div>
 
@@ -751,8 +752,8 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   <TileLayer
                     attribution={
                       mapType === 'satellite'
-                        ? '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        ? '&copy; <a href="https://www.esri.com/"><T k="auto.unifiedlocationselector.esri" fallback="Esri" /></a> &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                        : '&copy; <a href="https://www.openstreetmap.org/copyright"><T k="auto.unifiedlocationselector.openstreetmap" fallback="OpenStreetMap" /></a> contributors'
                     }
                     url={
                       mapType === 'satellite'
@@ -773,7 +774,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                       <Popup>
                         <div className="text-center">
                           <strong className="text-success">
-                            Position sélectionnée
+                            <T k="auto.unifiedlocationselector.position_selectionnee" fallback="Position sélectionnée" />
                           </strong>
                           <div className="text-xs text-muted-foreground mt-1">
                             {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
@@ -794,10 +795,10 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                     <div className="bg-gradient-to-br from-background/95 to-muted/95 border border-border/50 px-6 py-4 rounded-xl shadow-lg text-center backdrop-blur-sm">
                       <Crosshair className="h-10 w-10 mx-auto text-primary mb-3" />
                       <p className="text-sm text-foreground font-medium mb-1">
-                        Cliquez sur la carte pour sélectionner une position
+                        <T k="auto.unifiedlocationselector.cliquez_sur_la_carte_pour_selectionner_une_posit" fallback="Cliquez sur la carte pour sélectionner une position" />
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        La localisation sera automatiquement géocodée en adresse
+                        <T k="auto.unifiedlocationselector.la_localisation_sera_automatiquement_geocodee_en" fallback="La localisation sera automatiquement géocodée en adresse" />
                       </p>
                     </div>
                   </div>
@@ -809,7 +810,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="flex items-start gap-2">
                   <Map className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-medium text-warning mb-1">Contrôles de la carte</p>
+                    <p className="font-medium text-warning mb-1"><T k="auto.unifiedlocationselector.controles_de_la_carte" fallback="Contrôles de la carte" /></p>
                     <ul className="text-warning space-y-1 text-xs">
                       <li>• Utilisez les boutons +/- pour zoomer</li>
                       <li>• Cliquez et faites glisser pour vous déplacer</li>
@@ -824,7 +825,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="bg-gradient-to-r from-success/10 to-success/10 border border-success/30 p-4 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="h-4 w-4 text-success" />
-                    <span className="text-sm font-medium text-success">Localisation sélectionnée</span>
+                    <span className="text-sm font-medium text-success"><T k="auto.unifiedlocationselector.localisation_selectionnee" fallback="Localisation sélectionnée" /></span>
                   </div>
                   <div className="text-sm text-success bg-success-soft/50 px-3 py-2 rounded-lg">
                     {address}
@@ -843,14 +844,14 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
           <div className="mt-4 pt-4 border-t">
             <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
               <Crosshair className="h-4 w-4" />
-              Résumé de la localisation
+              <T k="auto.unifiedlocationselector.resume_de_la_localisation" fallback="Résumé de la localisation" />
             </h4>
             <div className="bg-muted p-3 rounded-md space-y-2">
               {address && (
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">Adresse</p>
+                    <p className="text-sm font-medium"><T k="auto.unifiedlocationselector.adresse" fallback="Adresse" /></p>
                     <p className="text-sm text-muted-foreground break-words">{address}</p>
                   </div>
                 </div>
@@ -859,7 +860,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                 <div className="flex items-start gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">Coordonnées</p>
+                    <p className="text-sm font-medium"><T k="auto.unifiedlocationselector.coordonnees" fallback="Coordonnées" /></p>
                     <p className="text-sm font-mono text-muted-foreground">
                       {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
                     </p>

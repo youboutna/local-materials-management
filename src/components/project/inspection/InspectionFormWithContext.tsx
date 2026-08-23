@@ -32,6 +32,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [
@@ -219,13 +220,13 @@ export function InspectionFormWithContext({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clipboard className="h-5 w-5" />
-            Nouvelle inspection
+            <T k="auto.inspectionformwithcontext.nouvelle_inspection" fallback="Nouvelle inspection" />
           </DialogTitle>
           <DialogDescription>
             {milestoneContext ? (
-              <>Inspection liée au jalon: <strong>{milestoneContext.milestoneTitle}</strong></>
+              <><T k="auto.inspectionformwithcontext.inspection_liee_au_jalon" fallback="Inspection liée au jalon:" /> <strong>{milestoneContext.milestoneTitle}</strong></>
             ) : (
-              <>Créer une inspection pour le projet</>
+              <><T k="auto.inspectionformwithcontext.creer_une_inspection_pour_le_projet" fallback="Créer une inspection pour le projet" /></>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -233,7 +234,7 @@ export function InspectionFormWithContext({
         {contextLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Chargement du contexte...</span>
+            <span className="ml-2 text-muted-foreground"><T k="auto.inspectionformwithcontext.chargement_du_contexte" fallback="Chargement du contexte..." /></span>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -243,28 +244,28 @@ export function InspectionFormWithContext({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Info className="h-4 w-4" />
-                    Contexte du projet
+                    <T k="auto.inspectionformwithcontext.contexte_du_projet" fallback="Contexte du projet" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Projet:</span>
+                      <span className="text-muted-foreground"><T k="auto.inspectionformwithcontext.projet" fallback="Projet:" /></span>
                       <span className="ml-1 font-medium">{context.project.title}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Progression:</span>
+                      <span className="text-muted-foreground"><T k="auto.inspectionformwithcontext.progression" fallback="Progression:" /></span>
                       <span className="ml-1 font-medium">{context.project.progress}%</span>
                     </div>
                     {context.linkedPhase && (
                       <div>
-                        <span className="text-muted-foreground">Phase:</span>
+                        <span className="text-muted-foreground"><T k="auto.inspectionformwithcontext.phase" fallback="Phase:" /></span>
                         <span className="ml-1 font-medium">{context.linkedPhase.name}</span>
                       </div>
                     )}
                     {context.inspectionType && (
                       <div>
-                        <span className="text-muted-foreground">Type:</span>
+                        <span className="text-muted-foreground"><T k="auto.inspectionformwithcontext.type" fallback="Type:" /></span>
                         <Badge variant="outline" className="ml-1">
                           {inspectionTypeLabelsMap[context.inspectionType] || context.inspectionType}
                         </Badge>
@@ -290,7 +291,7 @@ export function InspectionFormWithContext({
             <div className="grid gap-4">
               {/* Date */}
               <div>
-                <Label htmlFor="date">Date d'inspection</Label>
+                <Label htmlFor="date"><T k="auto.inspectionformwithcontext.date_d_inspection" fallback="Date d'inspection" /></Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -329,7 +330,7 @@ export function InspectionFormWithContext({
 
               {/* Inspection Type */}
               <div>
-                <Label htmlFor="inspectionType">Type d'inspection</Label>
+                <Label htmlFor="inspectionType"><T k="auto.inspectionformwithcontext.type_d_inspection" fallback="Type d'inspection" /></Label>
                 <Select value={inspectionType} onValueChange={setInspectionType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un type" />
@@ -346,7 +347,7 @@ export function InspectionFormWithContext({
 
               {/* Status */}
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status"><T k="auto.inspectionformwithcontext.statut" fallback="Statut" /></Label>
                 <Select value={status} onValueChange={(v: InspectionStatusLocal) => setStatus(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un statut" />
@@ -355,7 +356,7 @@ export function InspectionFormWithContext({
                     <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
                     <SelectItem value="scheduled"><TranslatedStatus code="scheduled" /></SelectItem>
                     <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
-                    <SelectItem value="requires_changes">Modifications requises</SelectItem>
+                    <SelectItem value="requires_changes"><T k="auto.inspectionformwithcontext.modifications_requises" fallback="Modifications requises" /></SelectItem>
                     <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
                   </SelectContent>
                 </Select>
@@ -384,7 +385,7 @@ export function InspectionFormWithContext({
               {/* Checklist Items */}
               {context?.checklistItems && context.checklistItems.length > 0 && (
                 <div>
-                  <Label className="mb-2 block">Points de contrôle</Label>
+                  <Label className="mb-2 block"><T k="auto.inspectionformwithcontext.points_de_controle" fallback="Points de contrôle" /></Label>
                   <Card className="p-3 space-y-2">
                     {context.checklistItems.map((item, index) => (
                       <div key={index} className="flex items-center space-x-2">
@@ -432,7 +433,7 @@ export function InspectionFormWithContext({
 
               {/* Comments */}
               <div>
-                <Label htmlFor="comments">Commentaires</Label>
+                <Label htmlFor="comments"><T k="auto.inspectionformwithcontext.commentaires" fallback="Commentaires" /></Label>
                 <Textarea
                   id="comments"
                   value={comments}
@@ -454,20 +455,20 @@ export function InspectionFormWithContext({
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
                 >
                   <Bell className="h-4 w-4 text-muted-foreground" />
-                  Envoyer une notification à l'inspecteur
+                  <T k="auto.inspectionformwithcontext.envoyer_une_notification_a_l_inspecteur" fallback="Envoyer une notification à l'inspecteur" />
                 </label>
               </div>
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
-                Annuler
+                <T k="auto.inspectionformwithcontext.annuler" fallback="Annuler" />
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Création...
+                    <T k="auto.inspectionformwithcontext.creation" fallback="Création..." />
                   </>
                 ) : (
                   'Créer l\'inspection'

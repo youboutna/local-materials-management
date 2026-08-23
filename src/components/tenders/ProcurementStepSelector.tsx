@@ -14,6 +14,7 @@ import {
   getSuggestedDocuments,
   PROCUREMENT_PHASES
 } from './PublicProcurementWorkflow';
+import { T } from '@/components/i18n/T';
 
 interface ProcurementStepSelectorProps {
   isOpen: boolean;
@@ -107,31 +108,31 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Sélectionner une Étape de Marché Public</DialogTitle>
+          <DialogTitle><T k="auto.procurementstepselector.selectionner_une_etape_de_marche_public" fallback="Sélectionner une Étape de Marché Public" /></DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Choisissez une étape du processus de marché public :
+            <T k="auto.procurementstepselector.choisissez_une_etape_du_processus_de_marche_publ" fallback="Choisissez une étape du processus de marché public :" />
           </p>
 
           {/* Selection Mode Toggle */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">Mode de sélection</label>
+            <label className="text-sm font-medium"><T k="auto.procurementstepselector.mode_de_selection" fallback="Mode de sélection" /></label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className={`px-3 py-1 rounded text-sm ${selectionMode === 'single' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('single')}
               >
-                Étape unique
+                <T k="auto.procurementstepselector.etape_unique" fallback="Étape unique" />
               </button>
               <button
                 type="button"
                 className={`px-3 py-1 rounded text-sm ${selectionMode === 'phase' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('phase')}
               >
-                Phase entière
+                <T k="auto.procurementstepselector.phase_entiere" fallback="Phase entière" />
               </button>
               <button
                 type="button"
@@ -139,7 +140,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                 onClick={() => setSelectionMode('suggested')}
                 title="Ajouter les 5 phases standards de la commande publique"
               >
-                Workflow standard complet
+                <T k="auto.procurementstepselector.workflow_standard_complet" fallback="Workflow standard complet" />
               </button>
             </div>
             {selectionMode === 'suggested' && (
@@ -193,7 +194,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                               {isAlreadyAdded && (
                                 <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
                                   <CheckCircle className="h-3 w-3" />
-                                  Ajoutée
+                                  <T k="auto.procurementstepselector.ajoutee" fallback="Ajoutée" />
                                 </Badge>
                               )}
                             </div>
@@ -214,7 +215,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                 Documents suggérés pour: {selectedStage.label}
               </h4>
               <p className="text-sm text-muted-foreground mb-3">
-                Cochez les documents à inclure avec cette étape (optionnel)
+                <T k="auto.procurementstepselector.cochez_les_documents_a_inclure_avec_cette_etape_" fallback="Cochez les documents à inclure avec cette étape (optionnel)" />
               </p>
 
               <div className="space-y-2">
@@ -237,9 +238,9 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                   ))
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
-                    <p className="text-sm">Aucune suggestion de document pour cette étape.</p>
+                    <p className="text-sm"><T k="auto.procurementstepselector.aucune_suggestion_de_document_pour_cette_etape" fallback="Aucune suggestion de document pour cette étape." /></p>
                     <p className="text-xs mt-1">
-                      Vous pourrez ajouter des documents manuellement après avoir créé l'étape.
+                      <T k="auto.procurementstepselector.vous_pourrez_ajouter_des_documents_manuellement_" fallback="Vous pourrez ajouter des documents manuellement après avoir créé l'étape." />
                     </p>
                   </div>
                 )}
@@ -250,7 +251,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>
-              Annuler
+              <T k="auto.procurementstepselector.annuler" fallback="Annuler" />
             </Button>
             <Button
               onClick={handleConfirmSelection}

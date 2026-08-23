@@ -51,6 +51,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { T } from '@/components/i18n/T';
 
 interface StrategicLinkageStepProps {
   projectId: string;
@@ -324,7 +325,7 @@ export function StrategicLinkageStep({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Liaisons Stratégiques et Budgétaires
+              <T k="auto.strategiclinkagestep.liaisons_strategiques_et_budgetaires" fallback="Liaisons Stratégiques et Budgétaires" />
             </CardTitle>
             <CardDescription>
               Liez ce projet aux objectifs stratégiques (SCAPP) et aux lignes budgétaires (Loi de Finances 2026)
@@ -358,7 +359,7 @@ export function StrategicLinkageStep({
                 {!readOnly && (
                   <Card className="border-dashed">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Ajouter un lien stratégique</CardTitle>
+                      <CardTitle className="text-sm"><T k="auto.strategiclinkagestep.ajouter_un_lien_strategique" fallback="Ajouter un lien stratégique" /></CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -425,7 +426,7 @@ export function StrategicLinkageStep({
                       </div>
                       <div className="flex items-end gap-4">
                         <div className="flex-1">
-                          <Label htmlFor="contribution">Contribution (%)</Label>
+                          <Label htmlFor="contribution"><T k="auto.strategiclinkagestep.contribution" fallback="Contribution (%)" /></Label>
                           <Input
                             id="contribution"
                             type="number"
@@ -443,13 +444,13 @@ export function StrategicLinkageStep({
                           className="flex items-center gap-2"
                         >
                           <Plus className="h-4 w-4" />
-                          Ajouter
+                          <T k="auto.strategiclinkagestep.ajouter" fallback="Ajouter" />
                         </Button>
                       </div>
                       {totalContribution > 100 && (
                         <div className="flex items-center gap-2 text-sm text-destructive">
                           <AlertCircle className="h-4 w-4" />
-                          La contribution totale dépasse 100%
+                          <T k="auto.strategiclinkagestep.la_contribution_totale_depasse_100" fallback="La contribution totale dépasse 100%" />
                         </div>
                       )}
                     </CardContent>
@@ -502,7 +503,7 @@ export function StrategicLinkageStep({
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Supprimer</TooltipContent>
+                                  <TooltipContent><T k="auto.strategiclinkagestep.supprimer" fallback="Supprimer" /></TooltipContent>
                                 </Tooltip>
                               )}
                             </div>
@@ -519,7 +520,7 @@ export function StrategicLinkageStep({
                 {!readOnly && (
                   <Card className="border-dashed">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Ajouter un lien budgétaire</CardTitle>
+                      <CardTitle className="text-sm"><T k="auto.strategiclinkagestep.ajouter_un_lien_budgetaire" fallback="Ajouter un lien budgétaire" /></CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -586,7 +587,7 @@ export function StrategicLinkageStep({
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="allocatedCe">Crédits d'Engagement (CE)</Label>
+                          <Label htmlFor="allocatedCe"><T k="auto.strategiclinkagestep.credits_d_engagement_ce" fallback="Crédits d'Engagement (CE)" /></Label>
                           <Input
                             id="allocatedCe"
                             type="number"
@@ -598,7 +599,7 @@ export function StrategicLinkageStep({
                           />
                         </div>
                         <div>
-                          <Label htmlFor="allocatedCp">Crédits de Paiement (CP)</Label>
+                          <Label htmlFor="allocatedCp"><T k="auto.strategiclinkagestep.credits_de_paiement_cp" fallback="Crédits de Paiement (CP)" /></Label>
                           <Input
                             id="allocatedCp"
                             type="number"
@@ -616,7 +617,7 @@ export function StrategicLinkageStep({
                         className="flex items-center gap-2"
                       >
                         <Plus className="h-4 w-4" />
-                        Ajouter
+                        <T k="auto.strategiclinkagestep.ajouter" fallback="Ajouter" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -670,7 +671,7 @@ export function StrategicLinkageStep({
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Supprimer</TooltipContent>
+                                  <TooltipContent><T k="auto.strategiclinkagestep.supprimer" fallback="Supprimer" /></TooltipContent>
                                 </Tooltip>
                               )}
                             </div>

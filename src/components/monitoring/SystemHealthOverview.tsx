@@ -24,6 +24,7 @@ import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/mon
 import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const SystemHealthOverview: React.FC = () => {
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -114,7 +115,7 @@ const SystemHealthOverview: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            État Général du Système
+            <T k="auto.systemhealthoverview.etat_general_du_systeme" fallback="État Général du Système" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -139,7 +140,7 @@ const SystemHealthOverview: React.FC = () => {
                 refetchMonitoringStats();
               }}
             >
-              Actualiser
+              <T k="auto.systemhealthoverview.actualiser" fallback="Actualiser" />
             </Button>
 
           </div>
@@ -151,21 +152,21 @@ const SystemHealthOverview: React.FC = () => {
         {/* HTTP Performance */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Performance HTTP</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.systemhealthoverview.performance_http" fallback="Performance HTTP" /></CardTitle>
             <Activity className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Temps de réponse</span>
+                <span><T k="auto.systemhealthoverview.temps_de_reponse" fallback="Temps de réponse" /></span>
                 <span>{stats.responseTime ? formatMetric(stats.responseTime, 'time') : '-'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Taux d'erreur</span>
+                <span><T k="auto.systemhealthoverview.taux_d_erreur" fallback="Taux d'erreur" /></span>
                 <span>{stats.errorRate ? formatMetric(stats.errorRate, 'percentage') : '0%'}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Disponibilité</span>
+                <span><T k="auto.systemhealthoverview.disponibilite" fallback="Disponibilité" /></span>
                 <span>{formatMetric(availability, 'percentage')}</span>
               </div>
               <Progress value={availability} className="mt-2" />
@@ -177,7 +178,7 @@ const SystemHealthOverview: React.FC = () => {
         {/* Bank Guarantees */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Garanties Bancaires</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.systemhealthoverview.garanties_bancaires" fallback="Garanties Bancaires" /></CardTitle>
             <Shield className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -199,7 +200,7 @@ const SystemHealthOverview: React.FC = () => {
         {/* Payments */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paiements</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.systemhealthoverview.paiements" fallback="Paiements" /></CardTitle>
             <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -221,7 +222,7 @@ const SystemHealthOverview: React.FC = () => {
         {/* Inspections */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inspections</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.systemhealthoverview.inspections" fallback="Inspections" /></CardTitle>
             <TrendingUp className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
@@ -273,7 +274,7 @@ const SystemHealthOverview: React.FC = () => {
                     size="sm"
                     onClick={() => handleAcknowledgeAlert(alert.id)}
                   >
-                    Acquitter
+                    <T k="auto.systemhealthoverview.acquitter" fallback="Acquitter" />
                   </Button>
                 </div>
               </Alert>

@@ -6,6 +6,7 @@ import { CheckCircle, ExternalLink, Calendar, User, FileText, Edit } from 'lucid
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
 import { useNavigate } from 'react-router-dom';
 import { SupplierInspectionExecutionDialog } from './SupplierInspectionExecutionDialog';
+import { T } from '@/components/i18n/T';
 
 interface SupplierInspectionsListProps {
   inspections: InspectionDTO[];
@@ -69,7 +70,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
-            Inspections
+            <T k="auto.supplierinspectionslist.inspections" fallback="Inspections" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -96,7 +97,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
             className="flex items-center gap-2"
           >
             <ExternalLink className="h-4 w-4" />
-            Suivi complet
+            <T k="auto.supplierinspectionslist.suivi_complet" fallback="Suivi complet" />
           </Button>
         </div>
       </CardHeader>
@@ -125,13 +126,13 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <User className="h-4 w-4" />
-                          <span className="font-medium">Inspecteur:</span>
+                          <span className="font-medium"><T k="auto.supplierinspectionslist.inspecteur" fallback="Inspecteur:" /></span>
                           <span>{inspection.inspector}</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          <span className="font-medium">Date:</span>
+                          <span className="font-medium"><T k="auto.supplierinspectionslist.date" fallback="Date:" /></span>
                           <span>
                             {inspection.date 
                               ? new Date(inspection.date).toLocaleDateString('fr-FR', {
@@ -145,7 +146,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
 
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <CheckCircle className="h-4 w-4" />
-                          <span className="font-medium">Progrès:</span>
+                          <span className="font-medium"><T k="auto.supplierinspectionslist.progres" fallback="Progrès:" /></span>
                           <span className="font-semibold text-primary">
                             {inspection.progress_at_inspection}%
                           </span>
@@ -153,7 +154,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
 
                         {(inspection as any).projects?.status && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground">Projet:</span>
+                            <span className="text-sm font-medium text-muted-foreground"><T k="auto.supplierinspectionslist.projet" fallback="Projet:" /></span>
                             <Badge variant="outline" className="text-xs">
                               {(inspection as any).projects.status}
                             </Badge>
@@ -164,7 +165,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                       {/* Comments */}
                       {inspection.comments && (
                         <div className="p-3 bg-muted/50 rounded-md">
-                          <p className="text-sm font-medium mb-1">Commentaires:</p>
+                          <p className="text-sm font-medium mb-1"><T k="auto.supplierinspectionslist.commentaires" fallback="Commentaires:" /></p>
                           <p className="text-sm text-muted-foreground">
                             {inspection.comments}
                           </p>
@@ -190,7 +191,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                           className="flex items-center gap-2"
                         >
                           <Edit className="h-4 w-4" />
-                          Compléter
+                          <T k="auto.supplierinspectionslist.completer" fallback="Compléter" />
                         </Button>
                       )}
                     </div>
@@ -202,10 +203,10 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
             <div className="text-center py-12">
               <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
               <p className="text-muted-foreground font-medium">
-                Aucune inspection programmée
+                <T k="auto.supplierinspectionslist.aucune_inspection_programmee" fallback="Aucune inspection programmée" />
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Les inspections liées à vos projets apparaîtront ici
+                <T k="auto.supplierinspectionslist.les_inspections_liees_a_vos_projets_apparaitront" fallback="Les inspections liées à vos projets apparaîtront ici" />
               </p>
             </div>
           )}

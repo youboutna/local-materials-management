@@ -14,6 +14,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { format } from 'date-fns';
 import { useEnhancedInspectionCrudHex } from '@/hooks/hexagonal';
 import type { InspectionDTO, InspectionStatus, CreateInspectionDTO } from '@/dtos/entities/InspectionDTO';
+import { T } from '@/components/i18n/T';
 
 interface LocalInspectionFormData {
   projectId: string;
@@ -182,7 +183,7 @@ const EnhancedInspectionCrud = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Gestion des Inspections
+          <T k="auto.enhancedinspectioncrud.gestion_des_inspections" fallback="Gestion des Inspections" />
         </CardTitle>
         <Dialog open={isFormOpen} onOpenChange={(open) => {
           setIsFormOpen(open);
@@ -191,7 +192,7 @@ const EnhancedInspectionCrud = () => {
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Nouvelle Inspection
+              <T k="auto.enhancedinspectioncrud.nouvelle_inspection" fallback="Nouvelle Inspection" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -203,7 +204,7 @@ const EnhancedInspectionCrud = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label>Projet</Label>
+                <Label><T k="auto.enhancedinspectioncrud.projet" fallback="Projet" /></Label>
                 <ProjectSelector
                   value={formData.projectId}
                   onChange={(value) => setFormData(prev => ({ ...prev, projectId: value || '' }))}
@@ -212,7 +213,7 @@ const EnhancedInspectionCrud = () => {
               </div>
 
               <div>
-                <Label htmlFor="inspector">Inspecteur</Label>
+                <Label htmlFor="inspector"><T k="auto.enhancedinspectioncrud.inspecteur" fallback="Inspecteur" /></Label>
                 <Input
                   id="inspector"
                   value={formData.inspector}
@@ -223,7 +224,7 @@ const EnhancedInspectionCrud = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="date">Date d'inspection</Label>
+                  <Label htmlFor="date"><T k="auto.enhancedinspectioncrud.date_d_inspection" fallback="Date d'inspection" /></Label>
                   <Input
                     id="date"
                     type="date"
@@ -233,7 +234,7 @@ const EnhancedInspectionCrud = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.enhancedinspectioncrud.statut" fallback="Statut" /></Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
@@ -254,7 +255,7 @@ const EnhancedInspectionCrud = () => {
               </div>
 
               <div>
-                <Label htmlFor="progress">Progression (%)</Label>
+                <Label htmlFor="progress"><T k="auto.enhancedinspectioncrud.progression" fallback="Progression (%)" /></Label>
                 <Input
                   id="progress"
                   type="number"
@@ -267,7 +268,7 @@ const EnhancedInspectionCrud = () => {
               </div>
 
               <div>
-                <Label htmlFor="comments">Commentaires</Label>
+                <Label htmlFor="comments"><T k="auto.enhancedinspectioncrud.commentaires" fallback="Commentaires" /></Label>
                 <Textarea
                   id="comments"
                   value={formData.comments}
@@ -280,7 +281,7 @@ const EnhancedInspectionCrud = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.enhancedinspectioncrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -294,17 +295,17 @@ const EnhancedInspectionCrud = () => {
 
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">Chargement des inspections...</div>
+          <div className="text-center py-8"><T k="auto.enhancedinspectioncrud.chargement_des_inspections" fallback="Chargement des inspections..." /></div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Inspecteur</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Progression</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.projet" fallback="Projet" /></TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.inspecteur" fallback="Inspecteur" /></TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.date" fallback="Date" /></TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.statut" fallback="Statut" /></TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.progression" fallback="Progression" /></TableHead>
+                <TableHead><T k="auto.enhancedinspectioncrud.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

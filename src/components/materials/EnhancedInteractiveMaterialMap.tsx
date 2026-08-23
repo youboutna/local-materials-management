@@ -10,6 +10,7 @@ import { MaterialUIDTO } from '@/dtos/transforms';
 import { getMajorCities } from '@/utils/mauritania';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Fix default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -116,7 +117,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
       <CardHeader className="bg-gradient-to-r from-success/10 to-blue-50 dark:from-success dark:to-blue-950">
         <CardTitle className="flex items-center gap-2 text-lg">
           <MapPin className="h-5 w-5 text-success" />
-          Carte Interactive des Matériaux
+          <T k="auto.enhancedinteractivematerialmap.carte_interactive_des_materiaux" fallback="Carte Interactive des Matériaux" />
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Cliquez sur les marqueurs pour voir les détails des matériaux • Couleurs par niveau de stock
@@ -124,19 +125,19 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
         <div className="flex flex-wrap gap-2 mt-2">
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-success"></div>
-            Stock Élevé
+            <T k="auto.enhancedinteractivematerialmap.stock_eleve" fallback="Stock Élevé" />
           </Badge>
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-            Stock Moyen
+            <T k="auto.enhancedinteractivematerialmap.stock_moyen" fallback="Stock Moyen" />
           </Badge>
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-            Stock Faible
+            <T k="auto.enhancedinteractivematerialmap.stock_faible" fallback="Stock Faible" />
           </Badge>
           <Badge variant="secondary" className="text-xs flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-red-500"></div>
-            Rupture
+            <T k="auto.enhancedinteractivematerialmap.rupture" fallback="Rupture" />
           </Badge>
         </div>
       </CardHeader>
@@ -149,7 +150,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
             className="rounded-lg"
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright"><T k="auto.enhancedinteractivematerialmap.openstreetmap" fallback="OpenStreetMap" /></a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
@@ -165,7 +166,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                 <Popup>
                   <div className="text-center">
                     <h4 className="font-medium">{city.name}</h4>
-                    <p className="text-sm text-muted-foreground">Ville de Mauritanie</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.enhancedinteractivematerialmap.ville_de_mauritanie" fallback="Ville de Mauritanie" /></p>
                   </div>
                 </Popup>
               </Marker>
@@ -243,7 +244,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                           onClick={() => onMaterialSelect(material)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
-                          Voir détails
+                          <T k="auto.enhancedinteractivematerialmap.voir_details" fallback="Voir détails" />
                         </Button>
                       )}
                     </div>
@@ -257,7 +258,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
               <Marker position={selectedCoords} icon={DefaultIcon}>
                 <Popup>
                   <div className="text-center">
-                    <h4 className="font-medium">Position sélectionnée</h4>
+                    <h4 className="font-medium"><T k="auto.enhancedinteractivematerialmap.position_selectionnee" fallback="Position sélectionnée" /></h4>
                     <p className="text-sm text-muted-foreground">
                       {selectedCoords[0].toFixed(6)}, {selectedCoords[1].toFixed(6)}
                     </p>

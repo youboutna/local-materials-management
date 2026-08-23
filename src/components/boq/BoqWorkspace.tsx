@@ -48,6 +48,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import type { StakeholderOption } from './BoqLineTable';
 import { useI18n } from '@/hooks/useI18n';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -458,7 +459,7 @@ export function BoqWorkspace({
       <section className="space-y-0">
         <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(200px,0.7fr)_minmax(180px,0.8fr)_minmax(300px,1.1fr)_minmax(200px,0.8fr)_auto] lg:items-end">
           <div className="space-y-2">
-            <div className="text-xs font-medium uppercase text-muted-foreground">Document</div>
+            <div className="text-xs font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
               <Badge variant={pendingCount > 0 ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
@@ -493,11 +494,11 @@ export function BoqWorkspace({
             </p>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Classification par défaut</Label>
+            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
             <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Profil fiscal</Label>
+            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
             <Select value={fiscalCode} onValueChange={setFiscalCode}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -517,33 +518,33 @@ export function BoqWorkspace({
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" />Ajouter une ligne</Button>
+            <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.ajouter_une_ligne" fallback="Ajouter une ligne" /></Button>
 
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={locked}><Calculator className="h-4 w-4 mr-1" />Calcul métré</Button>
+              <Button size="sm" variant="outline" disabled={locked}><Calculator className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.calcul_metre" fallback="Calcul métré" /></Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Calcul métré — ajouter au document</DialogTitle>
-                <DialogDescription>Calculez les quantités puis ajoutez les lignes obtenues au document courant.</DialogDescription>
+                <DialogDescription><T k="auto.boqworkspace.calculez_les_quantites_puis_ajoutez_les_lignes_o" fallback="Calculez les quantités puis ajoutez les lignes obtenues au document courant." /></DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
-                  <Label>Catégorie</Label>
+                  <Label><T k="auto.boqworkspace.categorie" fallback="Catégorie" /></Label>
                   <Select value={category} onValueChange={(v) => setCategory(v as ManualCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="material">Matériau</SelectItem>
+                      <SelectItem value="material"><T k="auto.boqworkspace.materiau" fallback="Matériau" /></SelectItem>
                       <SelectItem value="labour">Main-d'œuvre</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                      <SelectItem value="overhead">Frais généraux</SelectItem>
+                      <SelectItem value="equipment"><T k="auto.boqworkspace.equipement" fallback="Équipement" /></SelectItem>
+                      <SelectItem value="overhead"><T k="auto.boqworkspace.frais_generaux" fallback="Frais généraux" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="col-span-3">
-                  <Label>Profil fiscal</Label>
+                  <Label><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
                   <Select value={fiscalCode} onValueChange={setFiscalCode}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -560,7 +561,7 @@ export function BoqWorkspace({
                   <>
                     {depots.length > 1 && (
                       <div className="col-span-3">
-                        <Label>Dépôt</Label>
+                        <Label><T k="auto.boqworkspace.depot" fallback="Dépôt" /></Label>
                         <Select value={depotId || '__all__'} onValueChange={(v) => { setDepotId(v === '__all__' ? '' : v); setMaterialId(''); }}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent className="max-h-64">
@@ -588,7 +589,7 @@ export function BoqWorkspace({
                 )}
 
                 <div className="col-span-6">
-                  <Label>Désignation</Label>
+                  <Label><T k="auto.boqworkspace.designation" fallback="Désignation" /></Label>
                   <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
                 </div>
 
@@ -609,7 +610,7 @@ export function BoqWorkspace({
                 {/* Type d'élément — pilote le moteur de métré dynamique (inline, pas de modal) */}
                 {!isLabourTime && (
                   <div className="col-span-3">
-                    <Label>Type d'ouvrage (métré)</Label>
+                    <Label><T k="auto.boqworkspace.type_d_ouvrage_metre" fallback="Type d'ouvrage (métré)" /></Label>
                     <Select value={elementType} onValueChange={(v) => setElementType(v as ElementTypeCode)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -628,7 +629,7 @@ export function BoqWorkspace({
                 )}
 
                 <div className="col-span-1">
-                  <Label>Unité</Label>
+                  <Label><T k="auto.boqworkspace.unite" fallback="Unité" /></Label>
                   <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -652,19 +653,19 @@ export function BoqWorkspace({
                   <>
                     {elDef.dimensions.length && (
                       <div className="col-span-2">
-                        <Label>Longueur (m)</Label>
+                        <Label><T k="auto.boqworkspace.longueur_m" fallback="Longueur (m)" /></Label>
                         <Input type="number" value={form.length ?? ''} onChange={(e) => setForm({ ...form, length: Number(e.target.value) })} />
                       </div>
                     )}
                     {elDef.dimensions.width && (
                       <div className="col-span-2">
-                        <Label>Largeur (m)</Label>
+                        <Label><T k="auto.boqworkspace.largeur_m" fallback="Largeur (m)" /></Label>
                         <Input type="number" value={form.width ?? ''} onChange={(e) => setForm({ ...form, width: Number(e.target.value) })} />
                       </div>
                     )}
                     {elDef.dimensions.height && (
                       <div className="col-span-2">
-                        <Label>Hauteur (m)</Label>
+                        <Label><T k="auto.boqworkspace.hauteur_m" fallback="Hauteur (m)" /></Label>
                         <Input type="number" value={form.height ?? ''} onChange={(e) => setForm({ ...form, height: Number(e.target.value) })} />
                       </div>
                     )}
@@ -675,15 +676,15 @@ export function BoqWorkspace({
                 {useAdvanced && elDef?.deductOpenings && (
                   <>
                     <div className="col-span-2">
-                      <Label>Ouvertures (nb)</Label>
+                      <Label><T k="auto.boqworkspace.ouvertures_nb" fallback="Ouvertures (nb)" /></Label>
                       <Input type="number" min={0} value={openings.count || ''} onChange={(e) => setOpenings({ ...openings, count: Number(e.target.value) || 0 })} />
                     </div>
                     <div className="col-span-2">
-                      <Label>Ouverture larg. (m)</Label>
+                      <Label><T k="auto.boqworkspace.ouverture_larg_m" fallback="Ouverture larg. (m)" /></Label>
                       <Input type="number" min={0} step={0.01} value={openings.width || ''} onChange={(e) => setOpenings({ ...openings, width: Number(e.target.value) || 0 })} />
                     </div>
                     <div className="col-span-2">
-                      <Label>Ouverture haut. (m)</Label>
+                      <Label><T k="auto.boqworkspace.ouverture_haut_m" fallback="Ouverture haut. (m)" /></Label>
                       <Input type="number" min={0} step={0.01} value={openings.height || ''} onChange={(e) => setOpenings({ ...openings, height: Number(e.target.value) || 0 })} />
                     </div>
                   </>
@@ -692,11 +693,11 @@ export function BoqWorkspace({
 
 
                 <div className="col-span-1">
-                  <Label>PU (MRU)</Label>
+                  <Label><T k="auto.boqworkspace.pu_mru" fallback="PU (MRU)" /></Label>
                   <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
                 </div>
                 <div className="col-span-2">
-                  <Label>Frais généraux (%)</Label>
+                  <Label><T k="auto.boqworkspace.frais_generaux" fallback="Frais généraux (%)" /></Label>
                   <Input
                     type="number"
                     min={0}
@@ -730,15 +731,15 @@ export function BoqWorkspace({
 
 
               <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
-                <div>Qté : <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
+                <div><T k="auto.boqworkspace.qte" fallback="Qté :" /> <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
                 <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
-                <div>TVA : <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
-                <div>RAS : <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
-                <div>TTC : <span className="font-bold text-primary">{manualPreview.ttc.toLocaleString('fr-FR')}</span></div>
+                <div><T k="auto.boqworkspace.tva" fallback="TVA :" /> <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
+                <div><T k="auto.boqworkspace.ras" fallback="RAS :" /> <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
+                <div><T k="auto.boqworkspace.ttc" fallback="TTC :" /> <span className="font-bold text-primary">{manualPreview.ttc.toLocaleString('fr-FR')}</span></div>
               </div>
 
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpenManual(false)}>Annuler</Button>
+                <Button variant="ghost" onClick={() => setOpenManual(false)}><T k="auto.boqworkspace.annuler" fallback="Annuler" /></Button>
                 <Button onClick={handleCreate} disabled={doc.isPending}>
                   {doc.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Ajouter
                 </Button>
@@ -764,7 +765,7 @@ export function BoqWorkspace({
           <div className="flex flex-wrap items-center gap-2">
             {isDocumentEmpty ? null : (
               <Button size="sm" variant="ghost" onClick={() => setPendingLines([])} disabled={pendingLines.length === 0}>
-                <Trash2 className="h-4 w-4 mr-1" />Vider brouillon
+                <Trash2 className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.vider_brouillon" fallback="Vider brouillon" />
               </Button>
             )}
           {mode === 'bid' && projectId && estimateId && (
@@ -777,12 +778,12 @@ export function BoqWorkspace({
       </div>
 
       <div className="grid grid-cols-2 gap-3 border-b bg-muted/20 p-4 text-sm md:grid-cols-4">
-        <div><div className="text-muted-foreground">Total HT</div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
-        <div><div className="text-muted-foreground">TVA</div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.total_ht" fallback="Total HT" /></div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.tva" fallback="TVA" /></div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
         {(totals.withholding ?? 0) > 0 ? (
-          <div><div className="text-muted-foreground">RAS</div><div className="font-medium">{(totals.withholding ?? 0).toLocaleString('fr-FR')} MRU</div></div>
+          <div><div className="text-muted-foreground"><T k="auto.boqworkspace.ras" fallback="RAS" /></div><div className="font-medium">{(totals.withholding ?? 0).toLocaleString('fr-FR')} MRU</div></div>
         ) : <div />}
-        <div><div className="text-muted-foreground">Net à payer</div><div className="font-semibold">{(totals.netToPay ?? totals.totalTtc).toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.net_a_payer" fallback="Net à payer" /></div><div className="font-semibold">{(totals.netToPay ?? totals.totalTtc).toLocaleString('fr-FR')} MRU</div></div>
       </div>
 
       <div className="p-4">

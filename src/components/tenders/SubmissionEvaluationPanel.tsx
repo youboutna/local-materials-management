@@ -32,6 +32,7 @@ import {
   useSubmissionDocuments, 
   useSaveSubmissionEvaluation 
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface SubmissionEvaluationPanelProps {
   submissionId: string;
@@ -153,11 +154,11 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-2xl">Évaluation de la Soumission</CardTitle>
+              <CardTitle className="text-2xl"><T k="auto.submissionevaluationpanel.evaluation_de_la_soumission" fallback="Évaluation de la Soumission" /></CardTitle>
               <CardDescription className="mt-2">
-                Soumissionnaire: <span className="font-medium">{(submission as any)?.supplierName || (submission as any)?.supplier_name}</span>
+                <T k="auto.submissionevaluationpanel.soumissionnaire" fallback="Soumissionnaire:" /> <span className="font-medium">{(submission as any)?.supplierName || (submission as any)?.supplier_name}</span>
                 <br />
-                Email: <span className="font-medium">{(submission as any)?.supplierEmail || (submission as any)?.supplier_email}</span>
+                <T k="auto.submissionevaluationpanel.email" fallback="Email:" /> <span className="font-medium">{(submission as any)?.supplierEmail || (submission as any)?.supplier_email}</span>
                 <br />
                 Date de soumission: {new Date((submission as any)?.submissionDate || (submission as any)?.submission_date || '').toLocaleDateString()}
               </CardDescription>
@@ -172,9 +173,9 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
       {/* Documents and Evaluation */}
       <Tabs defaultValue="documents" className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="evaluation">Évaluation</TabsTrigger>
-          <TabsTrigger value="summary">Résumé</TabsTrigger>
+          <TabsTrigger value="documents"><T k="auto.submissionevaluationpanel.documents" fallback="Documents" /></TabsTrigger>
+          <TabsTrigger value="evaluation"><T k="auto.submissionevaluationpanel.evaluation" fallback="Évaluation" /></TabsTrigger>
+          <TabsTrigger value="summary"><T k="auto.submissionevaluationpanel.resume" fallback="Résumé" /></TabsTrigger>
         </TabsList>
 
         {/* Documents Tab */}
@@ -208,7 +209,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                           onClick={() => window.open(doc.document?.file_url, '_blank')}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Voir
+                          <T k="auto.submissionevaluationpanel.voir" fallback="Voir" />
                         </Button>
                         <Button
                           variant="outline"
@@ -234,7 +235,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Aucun document disponible pour cette soumission.
+                <T k="auto.submissionevaluationpanel.aucun_document_disponible_pour_cette_soumission" fallback="Aucun document disponible pour cette soumission." />
               </AlertDescription>
             </Alert>
           )}
@@ -258,9 +259,9 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
           <Card>
 
             <CardHeader>
-              <CardTitle>Grille d'Évaluation</CardTitle>
+              <CardTitle><T k="auto.submissionevaluationpanel.grille_d_evaluation" fallback="Grille d'Évaluation" /></CardTitle>
               <CardDescription>
-                Attribuez des scores pour chaque catégorie (0-100 points)
+                <T k="auto.submissionevaluationpanel.attribuez_des_scores_pour_chaque_categorie_0_100" fallback="Attribuez des scores pour chaque catégorie (0-100 points)" />
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -268,7 +269,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="admin-score" className="text-base font-medium">
-                    Score Administratif (30%)
+                    <T k="auto.submissionevaluationpanel.score_administratif_30" fallback="Score Administratif (30%)" />
                   </Label>
                   <Badge variant="outline">{scores.administrative_score}/100</Badge>
                 </div>
@@ -285,7 +286,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   className="text-lg"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Évaluation de la conformité administrative et des documents requis
+                  <T k="auto.submissionevaluationpanel.evaluation_de_la_conformite_administrative_et_de" fallback="Évaluation de la conformité administrative et des documents requis" />
                 </p>
               </div>
 
@@ -293,7 +294,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="tech-score" className="text-base font-medium">
-                    Score Technique (40%)
+                    <T k="auto.submissionevaluationpanel.score_technique_40" fallback="Score Technique (40%)" />
                   </Label>
                   <Badge variant="outline">{scores.technical_score}/100</Badge>
                 </div>
@@ -310,7 +311,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   className="text-lg"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Évaluation des compétences techniques et de la méthodologie proposée
+                  <T k="auto.submissionevaluationpanel.evaluation_des_competences_techniques_et_de_la_m" fallback="Évaluation des compétences techniques et de la méthodologie proposée" />
                 </p>
               </div>
 
@@ -318,7 +319,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="fin-score" className="text-base font-medium">
-                    Score Financier (30%)
+                    <T k="auto.submissionevaluationpanel.score_financier_30" fallback="Score Financier (30%)" />
                   </Label>
                   <Badge variant="outline">{scores.financial_score}/100</Badge>
                 </div>
@@ -335,13 +336,13 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   className="text-lg"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Évaluation de l'offre financière et du rapport qualité-prix
+                  <T k="auto.submissionevaluationpanel.evaluation_de_l_offre_financiere_et_du_rapport_q" fallback="Évaluation de l'offre financière et du rapport qualité-prix" />
                 </p>
               </div>
 
               {/* Notes */}
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes d'Évaluation</Label>
+                <Label htmlFor="notes"><T k="auto.submissionevaluationpanel.notes_d_evaluation" fallback="Notes d'Évaluation" /></Label>
                 <Textarea
                   id="notes"
                   value={scores.notes}
@@ -353,7 +354,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
               {/* Recommendations */}
               <div className="space-y-2">
-                <Label htmlFor="recommendations">Recommandations</Label>
+                <Label htmlFor="recommendations"><T k="auto.submissionevaluationpanel.recommandations" fallback="Recommandations" /></Label>
                 <Textarea
                   id="recommendations"
                   value={scores.recommendations}
@@ -371,14 +372,14 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   disabled={saveEvaluationMutation.isPending}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Sauvegarder
+                  <T k="auto.submissionevaluationpanel.sauvegarder" fallback="Sauvegarder" />
                 </Button>
                 <Button
                   onClick={() => handleSaveEvaluation(true)}
                   disabled={saveEvaluationMutation.isPending}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Soumettre l'Évaluation
+                  <T k="auto.submissionevaluationpanel.soumettre_l_evaluation" fallback="Soumettre l'Évaluation" />
                 </Button>
               </div>
             </CardContent>
@@ -389,13 +390,13 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
         <TabsContent value="summary" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Résumé de l'Évaluation</CardTitle>
+              <CardTitle><T k="auto.submissionevaluationpanel.resume_de_l_evaluation" fallback="Résumé de l'Évaluation" /></CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Score Breakdown */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-                  <span className="font-medium">Score Administratif (30%)</span>
+                  <span className="font-medium"><T k="auto.submissionevaluationpanel.score_administratif_30" fallback="Score Administratif (30%)" /></span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.administrative_score}</span>
                     <Star className="h-5 w-5 text-warning" />
@@ -403,7 +404,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-                  <span className="font-medium">Score Technique (40%)</span>
+                  <span className="font-medium"><T k="auto.submissionevaluationpanel.score_technique_40" fallback="Score Technique (40%)" /></span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.technical_score}</span>
                     <Star className="h-5 w-5 text-warning" />
@@ -411,7 +412,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-                  <span className="font-medium">Score Financier (30%)</span>
+                  <span className="font-medium"><T k="auto.submissionevaluationpanel.score_financier_30" fallback="Score Financier (30%)" /></span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold">{scores.financial_score}</span>
                     <Star className="h-5 w-5 text-warning" />
@@ -419,7 +420,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-primary/10 border-2 border-primary/20 rounded-lg">
-                  <span className="text-lg font-bold">Score Total</span>
+                  <span className="text-lg font-bold"><T k="auto.submissionevaluationpanel.score_total" fallback="Score Total" /></span>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-primary">{calculateTotalScore()}</span>
                     <span className="text-muted-foreground">/100</span>
@@ -432,17 +433,17 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                 {parseFloat(calculateTotalScore()) >= 70 ? (
                   <div className="flex items-center gap-2 text-success">
                     <CheckCircle className="h-6 w-6" />
-                    <span className="font-medium text-lg">Recommandé pour attribution</span>
+                    <span className="font-medium text-lg"><T k="auto.submissionevaluationpanel.recommande_pour_attribution" fallback="Recommandé pour attribution" /></span>
                   </div>
                 ) : parseFloat(calculateTotalScore()) >= 50 ? (
                   <div className="flex items-center gap-2 text-warning">
                     <AlertCircle className="h-6 w-6" />
-                    <span className="font-medium text-lg">Évaluation supplémentaire requise</span>
+                    <span className="font-medium text-lg"><T k="auto.submissionevaluationpanel.evaluation_supplementaire_requise" fallback="Évaluation supplémentaire requise" /></span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-destructive">
                     <AlertCircle className="h-6 w-6" />
-                    <span className="font-medium text-lg">Non recommandé</span>
+                    <span className="font-medium text-lg"><T k="auto.submissionevaluationpanel.non_recommande" fallback="Non recommandé" /></span>
                   </div>
                 )}
               </div>

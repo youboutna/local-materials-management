@@ -41,6 +41,7 @@ import {
     TrendingUp
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 // View modes for the component
 type ViewMode = 'timeline' | 'list' | 'gantt';
@@ -223,7 +224,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       <Card className="border-dashed">
         <CardContent className="p-8 text-center">
           <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <h3 className="text-lg font-medium mb-2">Aucun jalon défini</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.unifiedmilestonemanager.aucun_jalon_defini" fallback="Aucun jalon défini" /></h3>
           <p className="text-sm text-muted-foreground mb-4">
             {phaseId 
               ? "Créez des jalons par défaut (démarrage, point d'avancement, achèvement) pour cette phase."
@@ -232,7 +233,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           </p>
           <Button onClick={generateDefaultMilestones} className="gap-2">
             <Plus className="h-4 w-4" />
-            Créer les jalons par défaut
+            <T k="auto.unifiedmilestonemanager.creer_les_jalons_par_defaut" fallback="Créer les jalons par défaut" />
           </Button>
         </CardContent>
       </Card>
@@ -334,7 +335,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           {/* Progress Bar */}
           <div className="mt-4 space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Progression pondérée</span>
+              <span className="text-muted-foreground"><T k="auto.unifiedmilestonemanager.progression_ponderee" fallback="Progression pondérée" /></span>
               <span className="font-medium">{progress?.weighted_progress || 0}%</span>
             </div>
             <Progress value={progress?.weighted_progress || 0} className="h-2" />
@@ -411,7 +412,7 @@ interface TimelineViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
+  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
   showPhaseHeaders: boolean;
 }
@@ -476,7 +477,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                             <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
                             {milestone.is_critical && (
                               <Badge variant="destructive" className="text-xs h-5">
-                                Critique
+                                <T k="auto.unifiedmilestonemanager.critique" fallback="Critique" />
                               </Badge>
                             )}
                           </div>
@@ -524,7 +525,7 @@ interface ListViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
+  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
 }
 
@@ -540,12 +541,12 @@ const ListView: React.FC<ListViewProps> = ({
         <table className="w-full">
           <thead>
             <tr className="border-b text-left">
-              <th className="p-3 font-medium text-muted-foreground">Jalon</th>
-              <th className="p-3 font-medium text-muted-foreground">Type</th>
-              <th className="p-3 font-medium text-muted-foreground">Phase</th>
-              <th className="p-3 font-medium text-muted-foreground">Date cible</th>
-              <th className="p-3 font-medium text-muted-foreground">Poids</th>
-              <th className="p-3 font-medium text-muted-foreground">Statut</th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.jalon" fallback="Jalon" /></th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.type" fallback="Type" /></th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.phase" fallback="Phase" /></th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.date_cible" fallback="Date cible" /></th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.poids" fallback="Poids" /></th>
+              <th className="p-3 font-medium text-muted-foreground"><T k="auto.unifiedmilestonemanager.statut" fallback="Statut" /></th>
             </tr>
           </thead>
           <tbody>
@@ -649,7 +650,7 @@ const GanttView: React.FC<GanttViewProps> = ({
         <div className="flex justify-between items-center">
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Vue Gantt des Jalons
+            <T k="auto.unifiedmilestonemanager.vue_gantt_des_jalons" fallback="Vue Gantt des Jalons" />
           </CardTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{format(minDate, 'd MMM', { locale: fr })}</span>
@@ -692,19 +693,19 @@ const GanttView: React.FC<GanttViewProps> = ({
         <div className="flex justify-center gap-6 mt-4 pt-4 border-t text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-success rounded-full" />
-            <span>Terminé</span>
+            <span><T k="auto.unifiedmilestonemanager.termine" fallback="Terminé" /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-primary rounded-full" />
-            <span>À venir</span>
+            <span><T k="auto.unifiedmilestonemanager.a_venir" fallback="À venir" /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-destructive rounded-full" />
-            <span>En retard</span>
+            <span><T k="auto.unifiedmilestonemanager.en_retard" fallback="En retard" /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-primary rounded-full ring-2 ring-destructive ring-offset-1" />
-            <span>Critique</span>
+            <span><T k="auto.unifiedmilestonemanager.critique" fallback="Critique" /></span>
           </div>
         </div>
       </CardContent>

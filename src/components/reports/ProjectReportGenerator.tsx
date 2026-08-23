@@ -26,6 +26,7 @@ import {
   defaultSectionsFor,
   getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
+import { T } from '@/components/i18n/T';
 
 interface ProjectReportGeneratorProps {
   project: any; // ProjectData or ProjectDTO
@@ -396,7 +397,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Chargement des données...</span>
+        <span className="ml-2"><T k="auto.projectreportgenerator.chargement_des_donnees" fallback="Chargement des données..." /></span>
       </div>
     );
   }
@@ -407,14 +408,14 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Générateur de Rapport de Projet
+            <T k="auto.projectreportgenerator.generateur_de_rapport_de_projet" fallback="Générateur de Rapport de Projet" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Configuration du rapport */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Titre du rapport</Label>
+              <Label htmlFor="title"><T k="auto.projectreportgenerator.titre_du_rapport" fallback="Titre du rapport" /></Label>
               <Input
                 id="title"
                 value={reportConfig.title}
@@ -422,7 +423,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="type" className="text-sm font-medium">Type de rapport</Label>
+              <Label htmlFor="type" className="text-sm font-medium"><T k="auto.projectreportgenerator.type_de_rapport" fallback="Type de rapport" /></Label>
               <Select
                 value={reportConfig.reportType}
                 onValueChange={handleReportTypeChange}
@@ -452,7 +453,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           {/* Sections à inclure */}
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Label className="text-base font-medium">Sections à inclure</Label>
+              <Label className="text-base font-medium"><T k="auto.projectreportgenerator.sections_a_inclure" fallback="Sections à inclure" /></Label>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -466,7 +467,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                   className="h-8 px-3 text-xs"
                   title="Restaurer les sections par défaut du profil sélectionné"
                 >
-                  Réinitialiser au profil
+                  <T k="auto.projectreportgenerator.reinitialiser_au_profil" fallback="Réinitialiser au profil" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -477,12 +478,12 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                   {Object.values(reportConfig.includeSections).every(Boolean) ? (
                     <>
                       <Square className="h-3 w-3 mr-1" />
-                      Désélectionner tout
+                      <T k="auto.projectreportgenerator.deselectionner_tout" fallback="Désélectionner tout" />
                     </>
                   ) : (
                     <>
                       <CheckSquare className="h-3 w-3 mr-1" />
-                      Sélectionner tout
+                      <T k="auto.projectreportgenerator.selectionner_tout" fallback="Sélectionner tout" />
                     </>
                   )}
                 </Button>
@@ -511,7 +512,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                       <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1 flex items-center gap-2">
                         <span className="flex-1">{REPORT_SECTION_LABELS[key as ReportSectionKey] ?? key}</span>
                         {inProfile && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Profil</Badge>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0"><T k="auto.projectreportgenerator.profil" fallback="Profil" /></Badge>
                         )}
                       </Label>
                     </div>
@@ -532,7 +533,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           {reportConfig.includeSections.monitoringEvaluation && availablePhases.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <Label className="text-base font-medium">Phases incluses dans le tableau d'écarts</Label>
+                <Label className="text-base font-medium"><T k="auto.projectreportgenerator.phases_incluses_dans_le_tableau_d_ecarts" fallback="Phases incluses dans le tableau d'écarts" /></Label>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -545,7 +546,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     }
                     className="h-8 px-3 text-xs"
                   >
-                    <CheckSquare className="h-3 w-3 mr-1" /> Tout sélectionner
+                    <CheckSquare className="h-3 w-3 mr-1" /> <T k="auto.projectreportgenerator.tout_selectionner" fallback="Tout sélectionner" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -553,7 +554,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     onClick={() => setReportConfig((prev) => ({ ...prev, selectedPhaseIds: [] }))}
                     className="h-8 px-3 text-xs"
                   >
-                    <Square className="h-3 w-3 mr-1" /> Aucune
+                    <Square className="h-3 w-3 mr-1" /> <T k="auto.projectreportgenerator.aucune" fallback="Aucune" />
                   </Button>
                 </div>
               </div>
@@ -592,7 +593,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">Email de destinataire (optionnel)</Label>
+            <Label htmlFor="email"><T k="auto.projectreportgenerator.email_de_destinataire_optionnel" fallback="Email de destinataire (optionnel)" /></Label>
             <Input
               id="email"
               type="email"
@@ -604,7 +605,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes additionnelles (optionnel)</Label>
+            <Label htmlFor="notes"><T k="auto.projectreportgenerator.notes_additionnelles_optionnel" fallback="Notes additionnelles (optionnel)" /></Label>
             <Textarea
               id="notes"
               placeholder="Ajoutez des commentaires ou observations..."

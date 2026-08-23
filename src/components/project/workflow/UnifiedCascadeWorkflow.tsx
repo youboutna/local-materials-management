@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import StepDetailPanel from './StepDetailPanel';
 import IntegratedWorkflowTimeline from './IntegratedWorkflowTimeline';
+import { T } from '@/components/i18n/T';
 
 interface UnifiedCascadeWorkflowProps {
   phase: PhaseDTO;
@@ -164,7 +165,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Building className="h-4 w-4" />
-              Décompte Mauritanie
+              <T k="auto.unifiedcascadeworkflow.decompte_mauritanie" fallback="Décompte Mauritanie" />
             </CardTitle>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="bg-primary/5">
@@ -179,19 +180,19 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
             <div className="p-3 rounded-lg bg-muted/30 border text-center">
-              <p className="text-xs text-muted-foreground">Progression validée</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.unifiedcascadeworkflow.progression_validee" fallback="Progression validée" /></p>
               <p className="text-xl font-bold text-primary">{decompteInfo.validatedPercent}%</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border text-center">
-              <p className="text-xs text-muted-foreground">Brut calculé</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.unifiedcascadeworkflow.brut_calcule" fallback="Brut calculé" /></p>
               <p className="text-lg font-bold">{formatCurrency(decompteInfo.grossAmount)}</p>
             </div>
             <div className="p-3 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30 text-center">
-              <p className="text-xs text-muted-foreground">Garantie (10%)</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.unifiedcascadeworkflow.garantie_10" fallback="Garantie (10%)" /></p>
               <p className="text-lg font-bold text-warning">{formatCurrency(decompteInfo.guaranteeRetention)}</p>
             </div>
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-center">
-              <p className="text-xs text-muted-foreground">Net à payer</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.unifiedcascadeworkflow.net_a_payer" fallback="Net à payer" /></p>
               <p className="text-xl font-bold text-primary">{formatCurrency(decompteInfo.netPayable)}</p>
             </div>
           </div>
@@ -210,7 +211,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
             )}
             {onGenerateDecompte && (
               <Button size="sm" variant="outline" onClick={onGenerateDecompte}>
-                <FileText className="h-3 w-3 mr-1" /> Décompte
+                <FileText className="h-3 w-3 mr-1" /> <T k="auto.unifiedcascadeworkflow.decompte" fallback="Décompte" />
               </Button>
             )}
           </div>
@@ -218,13 +219,13 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
           <div className="mt-3 p-2 rounded-lg bg-muted/20 border">
             <div className="flex items-center gap-4 text-xs text-muted-foreground overflow-x-auto">
               <span className="flex items-center gap-1 whitespace-nowrap">
-                <DollarSign className="h-3 w-3" /> Seuils: 25%, 50%, 75%, 100%
+                <DollarSign className="h-3 w-3" /> <T k="auto.unifiedcascadeworkflow.seuils_25_50_75_100" fallback="Seuils: 25%, 50%, 75%, 100%" />
               </span>
               <span className="flex items-center gap-1 whitespace-nowrap">
-                <Shield className="h-3 w-3" /> Garantie: 10% retenu
+                <Shield className="h-3 w-3" /> <T k="auto.unifiedcascadeworkflow.garantie_10_retenu" fallback="Garantie: 10% retenu" />
               </span>
               <span className="flex items-center gap-1 whitespace-nowrap">
-                <ClipboardCheck className="h-3 w-3" /> Inspection requise
+                <ClipboardCheck className="h-3 w-3" /> <T k="auto.unifiedcascadeworkflow.inspection_requise" fallback="Inspection requise" />
               </span>
             </div>
           </div>
@@ -247,7 +248,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
       {phaseSteps.length === 0 && (
         <div className="flex justify-center">
           <Button onClick={() => onStepAction?.('add')}>
-            <Plus className="h-4 w-4 mr-2" /> Ajouter la première étape
+            <Plus className="h-4 w-4 mr-2" /> <T k="auto.unifiedcascadeworkflow.ajouter_la_premiere_etape" fallback="Ajouter la première étape" />
           </Button>
         </div>
       )}

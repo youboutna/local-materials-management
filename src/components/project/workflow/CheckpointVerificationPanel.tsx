@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useCheckpointVerification } from '@/hooks/useCheckpointVerification';
 import { formatCurrency } from '../phase';
+import { T } from '@/components/i18n/T';
 
 interface CheckpointVerificationPanelProps {
   projectId: string;
@@ -75,7 +76,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
       <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 border">
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Vérification</span>
+          <span className="text-sm font-medium"><T k="auto.checkpointverificationpanel.verification" fallback="Vérification" /></span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="flex items-center gap-1">
@@ -95,7 +96,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         {canTriggerPayment && (
           <Button size="sm" onClick={triggerPayment} disabled={isPaying}>
             <DollarSign className="h-3 w-3 mr-1" />
-            Payer
+            <T k="auto.checkpointverificationpanel.payer" fallback="Payer" />
           </Button>
         )}
       </div>
@@ -108,7 +109,7 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Vérification des Jalons
+            <T k="auto.checkpointverificationpanel.verification_des_jalons" fallback="Vérification des Jalons" />
           </CardTitle>
           <Badge variant="outline">
             Score: {verificationStatus.score}%
@@ -120,19 +121,19 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-muted/30 border">
             <p className="text-lg font-bold">{verificationStatus.total}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.total" fallback="Total" /></p>
           </div>
           <div className="p-2 rounded-lg bg-success-soft border border-success/30">
             <p className="text-lg font-bold text-success">{verificationStatus.verified}</p>
-            <p className="text-xs text-muted-foreground">Vérifiés</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.verifies" fallback="Vérifiés" /></p>
           </div>
           <div className="p-2 rounded-lg bg-muted/30 border">
             <p className="text-lg font-bold">{verificationStatus.pending}</p>
-            <p className="text-xs text-muted-foreground">En attente</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.en_attente" fallback="En attente" /></p>
           </div>
           <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/30">
             <p className="text-lg font-bold text-destructive">{verificationStatus.failed}</p>
-            <p className="text-xs text-muted-foreground">Échoués</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.echoues" fallback="Échoués" /></p>
           </div>
         </div>
 
@@ -140,22 +141,22 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         {decompteData && (
           <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Décompte automatique</span>
+              <span className="text-sm font-medium"><T k="auto.checkpointverificationpanel.decompte_automatique" fallback="Décompte automatique" /></span>
               <Badge variant={canTriggerPayment ? 'default' : 'secondary'}>
                 {canTriggerPayment ? 'Prêt' : 'En attente'}
               </Badge>
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Brut</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.brut" fallback="Brut" /></p>
                 <p className="font-medium">{formatCurrency(decompteData.current_period_amount)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Retenue</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.retenue" fallback="Retenue" /></p>
                 <p className="font-medium text-warning">{formatCurrency(decompteData.retention_amount)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Net</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.net" fallback="Net" /></p>
                 <p className="font-bold text-primary">{formatCurrency(decompteData.net_payable)}</p>
               </div>
             </div>
@@ -197,13 +198,13 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
         {/* Legend */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
           <span className="flex items-center gap-1">
-            <ClipboardCheck className="h-3 w-3" /> Inspection
+            <ClipboardCheck className="h-3 w-3" /> <T k="auto.checkpointverificationpanel.inspection" fallback="Inspection" />
           </span>
           <span className="flex items-center gap-1">
-            <FileCheck className="h-3 w-3" /> Documents
+            <FileCheck className="h-3 w-3" /> <T k="auto.checkpointverificationpanel.documents" fallback="Documents" />
           </span>
           <span className="flex items-center gap-1">
-            <Shield className="h-3 w-3" /> Approbation
+            <Shield className="h-3 w-3" /> <T k="auto.checkpointverificationpanel.approbation" fallback="Approbation" />
           </span>
         </div>
       </CardContent>

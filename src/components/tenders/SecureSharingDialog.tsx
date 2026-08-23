@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Check, Clock, Copy, Eye, Lock, Shield, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface SecureSharingDialogProps {
   isOpen: boolean;
@@ -115,7 +116,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-xl">Partage Sécurisé</DialogTitle>
+              <DialogTitle className="text-xl"><T k="auto.securesharingdialog.partage_securise" fallback="Partage Sécurisé" /></DialogTitle>
               <DialogDescription className="text-sm">
                 {tenderTitle}
               </DialogDescription>
@@ -129,7 +130,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
             <CardContent className="p-6 space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                Créer un nouveau code de partage
+                <T k="auto.securesharingdialog.creer_un_nouveau_code_de_partage" fallback="Créer un nouveau code de partage" />
               </h3>
 
               {/* Message si tender inactif */}
@@ -141,7 +142,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email du fournisseur (optionnel)</Label>
+                  <Label htmlFor="email"><T k="auto.securesharingdialog.email_du_fournisseur_optionnel" fallback="Email du fournisseur (optionnel)" /></Label>
                   <Input
                     id="email"
                     type="email"
@@ -152,7 +153,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="expiration">Expiration (jours)</Label>
+                  <Label htmlFor="expiration"><T k="auto.securesharingdialog.expiration_jours" fallback="Expiration (jours)" /></Label>
                   <Input
                     id="expiration"
                     type="number"
@@ -164,7 +165,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="maxAccess">Accès maximum</Label>
+                  <Label htmlFor="maxAccess"><T k="auto.securesharingdialog.acces_maximum" fallback="Accès maximum" /></Label>
                   <Input
                     id="maxAccess"
                     type="number"
@@ -188,7 +189,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               {workflowStage && (
                 <div className="bg-white/50 rounded-lg p-3">
                   <p className="text-sm text-muted-foreground">
-                    Étape: <span className="font-medium">{workflowStage}</span>
+                    <T k="auto.securesharingdialog.etape" fallback="Étape:" /> <span className="font-medium">{workflowStage}</span>
                   </p>
                 </div>
               )}
@@ -259,9 +260,9 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               </Badge>
                             )}
                             {secret.isActive ? (
-                              <Badge variant="default">Actif</Badge>
+                              <Badge variant="default"><T k="auto.securesharingdialog.actif" fallback="Actif" /></Badge>
                             ) : (
-                              <Badge variant="destructive">Inactif</Badge>
+                              <Badge variant="destructive"><T k="auto.securesharingdialog.inactif" fallback="Inactif" /></Badge>
                             )}
                           </div>
                         </div>
@@ -273,7 +274,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                             onClick={() => deactivateSecret.mutate(secret.id)}
                             disabled={deactivateSecret.isPending}
                           >
-                            Désactiver
+                            <T k="auto.securesharingdialog.desactiver" fallback="Désactiver" />
                           </Button>
                         )}
                       </div>
@@ -285,7 +286,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               <Card>
                 <CardContent className="p-8 text-center text-muted-foreground">
                   <Shield className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Aucun code de partage créé</p>
+                  <p><T k="auto.securesharingdialog.aucun_code_de_partage_cree" fallback="Aucun code de partage créé" /></p>
                 </CardContent>
               </Card>
             )}
@@ -296,7 +297,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
             <CardContent className="p-4 space-y-2">
               <h4 className="font-medium text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                Informations de sécurité
+                <T k="auto.securesharingdialog.informations_de_securite" fallback="Informations de sécurité" />
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Les codes sont uniques et à usage limité</li>

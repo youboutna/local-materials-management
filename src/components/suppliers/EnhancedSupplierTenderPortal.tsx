@@ -32,6 +32,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { getUserService } from '@/application/services/UserService';
+import { T } from '@/components/i18n/T';
 
 
 interface PublicTender {
@@ -134,7 +135,7 @@ const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
           title="Importer votre chiffrage"
           trigger={
             <Button variant="outline" size="sm" className="gap-2">
-              <Upload className="h-4 w-4" /> Importer chiffrage
+              <Upload className="h-4 w-4" /> <T k="auto.enhancedsuppliertenderportal.importer_chiffrage" fallback="Importer chiffrage" />
             </Button>
           }
           onImported={() => bid.refetch()}
@@ -489,7 +490,7 @@ const EnhancedSupplierTenderPortal = () => {
                             }}
                           >
                             <Calculator className="h-3.5 w-3.5 mr-1" />
-                            Créer un devis
+                            <T k="auto.enhancedsuppliertenderportal.creer_un_devis" fallback="Créer un devis" />
                           </Button>
                           <Button
                             onClick={() => {
@@ -568,7 +569,7 @@ const EnhancedSupplierTenderPortal = () => {
                                 onClick={() => openDocument(doc, { proxy: true, allowStatusChange: false })}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
-                                Voir
+                                <T k="auto.enhancedsuppliertenderportal.voir" fallback="Voir" />
                               </Button>
                               <Button
                                 variant="outline"
@@ -585,7 +586,7 @@ const EnhancedSupplierTenderPortal = () => {
                     </div>
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
-                      Aucun document partagé pour le moment
+                      <T k="auto.enhancedsuppliertenderportal.aucun_document_partage_pour_le_moment" fallback="Aucun document partagé pour le moment" />
                     </p>
                   )}
                 </CardContent>
@@ -595,7 +596,7 @@ const EnhancedSupplierTenderPortal = () => {
             <Card>
               <CardContent className="p-6 text-center">
                 <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
+                <h3 className="text-lg font-medium mb-2"><T k="auto.enhancedsuppliertenderportal.selectionnez_un_appel_d_offres" fallback="Sélectionnez un appel d'offres" /></h3>
                   <p className="text-muted-foreground mb-4">{t('supplier_tender.empty.select_tender')}</p>
                 <Button onClick={() => setActiveTab('browse')}>
                   {t('supplier_tender.tabs.browse')}
@@ -621,12 +622,12 @@ const EnhancedSupplierTenderPortal = () => {
                       {canSubmitBid() ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-success" />
-                          <span className="text-sm">Phase de soumission active</span>
+                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
                         </>
                       ) : (
                         <>
                           <XCircle className="h-5 w-5 text-destructive" />
-                          <span className="text-sm">Phase de soumission fermée</span>
+                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_fermee" fallback="Phase de soumission fermée" /></span>
                         </>
                       )}
                       {selectedTender.deadline_date && (
@@ -640,7 +641,7 @@ const EnhancedSupplierTenderPortal = () => {
                       <>
                         <div className="bg-success-soft border border-success/30 p-4 rounded-lg space-y-3">
                           <div>
-                            <h4 className="font-medium text-success mb-1">Soumission envoyée avec succès</h4>
+                            <h4 className="font-medium text-success mb-1"><T k="auto.enhancedsuppliertenderportal.soumission_envoyee_avec_succes" fallback="Soumission envoyée avec succès" /></h4>
                             <p className="text-sm text-success">
                               Votre dossier de candidature a été soumis le{' '}
                               {new Date(userSubmission.submission_date).toLocaleDateString()}
@@ -684,7 +685,7 @@ const EnhancedSupplierTenderPortal = () => {
                                               size="sm"
                                               onClick={() => removeFile(key)}
                                             >
-                                              Remplacer
+                                              <T k="auto.enhancedsuppliertenderportal.remplacer" fallback="Remplacer" />
                                             </Button>
                                           </>
                                         ) : (
@@ -694,7 +695,7 @@ const EnhancedSupplierTenderPortal = () => {
                                             onClick={() => handleFileSelect(categoryKey as keyof typeof DOCUMENT_CATEGORIES, docType)}
                                           >
                                             <Upload className="h-4 w-4 mr-1" />
-                                            Choisir
+                                            <T k="auto.enhancedsuppliertenderportal.choisir" fallback="Choisir" />
                                           </Button>
                                         )}
                                       </div>
@@ -708,7 +709,7 @@ const EnhancedSupplierTenderPortal = () => {
 
                         <Card>
                           <CardContent className="p-6">
-                            <Label htmlFor="notes">Notes supplémentaires (optionnel)</Label>
+                            <Label htmlFor="notes"><T k="auto.enhancedsuppliertenderportal.notes_supplementaires_optionnel" fallback="Notes supplémentaires (optionnel)" /></Label>
                             <Textarea
                               id="notes"
                               value={submissionData.notes}
@@ -747,7 +748,7 @@ const EnhancedSupplierTenderPortal = () => {
                             ) : (
                               <>
                                 <Send className="h-4 w-4 mr-2" />
-                                Soumettre le dossier
+                                <T k="auto.enhancedsuppliertenderportal.soumettre_le_dossier" fallback="Soumettre le dossier" />
                               </>
                             )}
                           </Button>
@@ -762,12 +763,12 @@ const EnhancedSupplierTenderPortal = () => {
             <Card>
               <CardContent className="p-6 text-center">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
+                <h3 className="text-lg font-medium mb-2"><T k="auto.enhancedsuppliertenderportal.selectionnez_un_appel_d_offres" fallback="Sélectionnez un appel d'offres" /></h3>
                 <p className="text-muted-foreground mb-4">
-                  Choisissez un appel d'offres pour préparer votre dossier de candidature.
+                  <T k="auto.enhancedsuppliertenderportal.choisissez_un_appel_d_offres_pour_preparer_votre" fallback="Choisissez un appel d'offres pour préparer votre dossier de candidature." />
                 </p>
                 <Button onClick={() => setActiveTab('browse')}>
-                  Parcourir les appels d'offres
+                  <T k="auto.enhancedsuppliertenderportal.parcourir_les_appels_d_offres" fallback="Parcourir les appels d'offres" />
                 </Button>
               </CardContent>
             </Card>

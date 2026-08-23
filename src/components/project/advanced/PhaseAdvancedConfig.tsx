@@ -26,6 +26,7 @@ import { MilestoneProgressDTO, MilestoneSummaryDTO } from '@/dtos/types/mileston
 import { cn } from '@/lib/utils';
 import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface PhaseAdvancedConfigProps {
   phase: any;
@@ -57,7 +58,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Performance planning</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.performance_planning" fallback="Performance planning" /></p>
                 <p className={cn(
                   "text-2xl font-bold",
                   (milestoneProgress?.schedule_performance_index ?? 1) >= 1 
@@ -66,7 +67,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                 )}>
                   {milestoneProgress?.schedule_performance_index?.toFixed(2) ?? 'N/A'}
                 </p>
-                <p className="text-xs text-muted-foreground">SPI</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.spi" fallback="SPI" /></p>
               </div>
               <TrendingUp className={cn(
                 "h-8 w-8",
@@ -86,7 +87,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Variance budget</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.variance_budget" fallback="Variance budget" /></p>
                 <p className={cn(
                   "text-2xl font-bold",
                   !isBudgetOverrun ? "text-success" : "text-destructive"
@@ -110,7 +111,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Jalons terminés</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.jalons_termines" fallback="Jalons terminés" /></p>
                 <p className="text-2xl font-bold text-primary">
                   {milestoneProgress?.completed_milestones ?? 0} / {milestoneProgress?.total_milestones ?? 0}
                 </p>
@@ -133,7 +134,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Chemin critique</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.chemin_critique" fallback="Chemin critique" /></p>
                 <p className={cn(
                   "text-lg font-bold",
                   milestoneProgress?.critical_path_status === 'on_track' ? "text-success" :
@@ -169,7 +170,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                Configuration
+                <T k="auto.phaseadvancedconfig.configuration" fallback="Configuration" />
               </CardTitle>
               {onRefresh && (
                 <Button size="sm" variant="ghost" onClick={onRefresh}>
@@ -183,14 +184,14 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
               <div className="p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Durée</span>
+                  <span className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.duree" fallback="Durée" /></span>
                 </div>
                 <p className="font-medium">{phase.estimatedDuration || 'N/A'} jours</p>
               </div>
               <div className="p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <DollarSign className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Budget</span>
+                  <span className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.budget" fallback="Budget" /></span>
                 </div>
                 <p className="font-medium">{phase.budget?.toLocaleString() || 'N/A'} MRU</p>
               </div>
@@ -199,7 +200,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
             <div className="p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Période</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.periode" fallback="Période" /></span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{phase.startDate || 'N/A'}</span>
@@ -212,7 +213,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
               <div className="p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Localisation</span>
+                  <span className="text-xs text-muted-foreground"><T k="auto.phaseadvancedconfig.localisation" fallback="Localisation" /></span>
                 </div>
                 <p className="font-medium">{phase.location}</p>
               </div>
@@ -220,14 +221,14 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
 
             {/* Cost Breakdown */}
             <div className="pt-3 border-t">
-              <p className="text-xs text-muted-foreground mb-2">Répartition des coûts</p>
+              <p className="text-xs text-muted-foreground mb-2"><T k="auto.phaseadvancedconfig.repartition_des_couts" fallback="Répartition des coûts" /></p>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Budget alloué</span>
+                  <span><T k="auto.phaseadvancedconfig.budget_alloue" fallback="Budget alloué" /></span>
                   <span className="font-medium">{phase.budget?.toLocaleString() || 0} MRU</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Coût réel</span>
+                  <span><T k="auto.phaseadvancedconfig.cout_reel" fallback="Coût réel" /></span>
                   <span className={cn(
                     "font-medium",
                     isBudgetOverrun ? "text-destructive" : "text-success"
@@ -249,7 +250,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Statistiques des jalons
+              <T k="auto.phaseadvancedconfig.statistiques_des_jalons" fallback="Statistiques des jalons" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -286,14 +287,14 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
                         <CheckCircle className="h-3 w-3 text-success" />
-                        Terminés
+                        <T k="auto.phaseadvancedconfig.termines" fallback="Terminés" />
                       </span>
                       <span className="font-medium">{milestoneProgress.completed_milestones}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
                         <Clock className="h-3 w-3 text-primary" />
-                        En cours
+                        <T k="auto.phaseadvancedconfig.en_cours" fallback="En cours" />
                       </span>
                       <span className="font-medium">
                         {milestoneProgress.total_milestones - milestoneProgress.completed_milestones - milestoneProgress.delayed_milestones}
@@ -302,7 +303,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
                         <AlertTriangle className="h-3 w-3 text-destructive" />
-                        En retard
+                        <T k="auto.phaseadvancedconfig.en_retard" fallback="En retard" />
                       </span>
                       <span className="font-medium text-destructive">{milestoneProgress.delayed_milestones}</span>
                     </div>
@@ -312,7 +313,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                 {/* Upcoming Milestones */}
                 {milestoneProgress.upcoming_milestones && milestoneProgress.upcoming_milestones.length > 0 && (
                   <div className="pt-3 border-t">
-                    <p className="text-xs text-muted-foreground mb-2">Prochains jalons (14j)</p>
+                    <p className="text-xs text-muted-foreground mb-2"><T k="auto.phaseadvancedconfig.prochains_jalons_14j" fallback="Prochains jalons (14j)" /></p>
                     <div className="space-y-2">
                       {milestoneProgress.upcoming_milestones.slice(0, 3).map((m) => (
                         <div key={m.id} className="flex items-center justify-between p-2 bg-warning/10 rounded-lg border border-warning/20">
@@ -334,7 +335,7 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
                   <div className="pt-3 border-t">
                     <p className="text-xs text-destructive mb-2 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" />
-                      Jalons en retard
+                      <T k="auto.phaseadvancedconfig.jalons_en_retard" fallback="Jalons en retard" />
                     </p>
                     <div className="space-y-2">
                       {milestoneProgress.overdue_milestones.slice(0, 3).map((m) => (
@@ -355,9 +356,9 @@ const PhaseAdvancedConfig: React.FC<PhaseAdvancedConfigProps> = ({
             ) : (
               <div className="text-center py-8">
                 <Target className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-muted-foreground mb-1">Aucun jalon configuré</p>
+                <p className="text-muted-foreground mb-1"><T k="auto.phaseadvancedconfig.aucun_jalon_configure" fallback="Aucun jalon configuré" /></p>
                 <p className="text-xs text-muted-foreground">
-                  Créez des jalons pour suivre l'avancement de la phase
+                  <T k="auto.phaseadvancedconfig.creez_des_jalons_pour_suivre_l_avancement_de_la_" fallback="Créez des jalons pour suivre l'avancement de la phase" />
                 </p>
               </div>
             )}

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { PhaseDTO } from "@/dtos/types/phase-dto";
 import { formatCurrency } from "@/utils/phaseDisplayHelpers";
+import { T } from '@/components/i18n/T';
 // PaymentCalculator component requires different props - using simpler display
 
 interface PhaseCosts {
@@ -74,7 +75,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
         {/* Budget vs Actual */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Budget vs Réel</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.budget_vs_reel" fallback="Budget vs Réel" /></CardTitle>
           </CardHeader>
           <CardContent>
             {loadingCosts ? (
@@ -86,18 +87,18 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
             ) : phaseCosts ? (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Estimé:</span>
+                  <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.estime" fallback="Estimé:" /></span>
                   <span className="font-medium">{formatCurrency(phase.estimated_cost)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Engagé:</span>
+                  <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.engage" fallback="Engagé:" /></span>
                   <span className="font-medium text-warning">
                     {formatCurrency(phaseCosts.totalSpent)}
                   </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold">
-                  <span>Écart:</span>
+                  <span><T k="auto.phasefinancestab.ecart" fallback="Écart:" /></span>
                   <span className={cn(
                     phaseCosts.costVariance > 0 
                       ? "text-destructive" 
@@ -107,14 +108,14 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Budget restant:</span>
+                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.budget_restant" fallback="Budget restant:" /></span>
                   <span className="font-medium text-success">
                     {formatCurrency(phaseCosts.remainingBudget)}
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée financière</p>
+              <p className="text-sm text-muted-foreground text-center py-4"><T k="auto.phasefinancestab.aucune_donnee_financiere" fallback="Aucune donnée financière" /></p>
             )}
           </CardContent>
         </Card>
@@ -122,7 +123,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
         {/* Cost Breakdown */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Répartition coûts</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.repartition_couts" fallback="Répartition coûts" /></CardTitle>
           </CardHeader>
           <CardContent>
             {loadingCosts ? (
@@ -137,7 +138,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-blue-500" />
-                        <span className="text-sm">Contractants</span>
+                        <span className="text-sm"><T k="auto.phasefinancestab.contractants" fallback="Contractants" /></span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{formatCurrency(phaseCosts.totalPayments)}</span>
@@ -160,7 +161,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-orange-500" />
-                        <span className="text-sm">Dépenses</span>
+                        <span className="text-sm"><T k="auto.phasefinancestab.depenses" fallback="Dépenses" /></span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{formatCurrency(phaseCosts.totalExpenses)}</span>
@@ -179,7 +180,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée</p>
+              <p className="text-sm text-muted-foreground text-center py-4"><T k="auto.phasefinancestab.aucune_donnee" fallback="Aucune donnée" /></p>
             )}
           </CardContent>
         </Card>
@@ -187,7 +188,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
         {/* Budget Utilization */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Utilisation budget</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.utilisation_budget" fallback="Utilisation budget" /></CardTitle>
           </CardHeader>
           <CardContent>
             {loadingCosts ? (
@@ -195,12 +196,12 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
             ) : phaseCosts ? (
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Progression:</span>
+                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.progression" fallback="Progression:" /></span>
                   <span className="font-medium">{phase.progress}%</span>
                 </div>
                 <Progress value={phaseCosts.budgetUtilization} className="h-2" />
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Utilisation:</span>
+                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.utilisation" fallback="Utilisation:" /></span>
                   <span className={cn(
                     "font-medium",
                     phaseCosts.budgetUtilization > 100 ? "text-destructive" : "text-success"
@@ -210,7 +211,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée</p>
+              <p className="text-sm text-muted-foreground text-center py-4"><T k="auto.phasefinancestab.aucune_donnee" fallback="Aucune donnée" /></p>
             )}
           </CardContent>
         </Card>
@@ -225,7 +226,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
               <CardHeader>
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-primary" />
-                  Distribution par contractant
+                  <T k="auto.phasefinancestab.distribution_par_contractant" fallback="Distribution par contractant" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -258,7 +259,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
               <CardHeader>
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <PieChart className="h-4 w-4 text-warning" />
-                  Dépenses par catégorie
+                  <T k="auto.phasefinancestab.depenses_par_categorie" fallback="Dépenses par catégorie" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -291,7 +292,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
       {phaseResources && (phaseResources.totalEmployees > 0 || (phaseResources.materialMetrics?.estimatedCost ?? 0) > 0) && (
         <Card>
           <CardHeader>
-            <CardTitle>Coûts des ressources</CardTitle>
+            <CardTitle><T k="auto.phasefinancestab.couts_des_ressources" fallback="Coûts des ressources" /></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -330,7 +331,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Coût total matériaux</span>
+                      <span className="text-sm"><T k="auto.phasefinancestab.cout_total_materiaux" fallback="Coût total matériaux" /></span>
                       <span className="font-medium text-warning">
                         {formatCurrency(phaseResources.materialMetrics?.estimatedCost ?? 0)}
                       </span>

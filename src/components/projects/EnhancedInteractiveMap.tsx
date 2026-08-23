@@ -9,6 +9,7 @@ import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Local type alias for project with coordinates
 type ProjectData = ProjectDTO;
 
@@ -157,9 +158,9 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
               <Layers className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Carte Interactive des Projets</h3>
+              <h3 className="text-lg font-semibold text-foreground"><T k="auto.enhancedinteractivemap.carte_interactive_des_projets" fallback="Carte Interactive des Projets" /></h3>
               <p className="text-sm text-muted-foreground">
-                Explorez tous les projets sur une carte interactive de la Mauritanie
+                <T k="auto.enhancedinteractivemap.explorez_tous_les_projets_sur_une_carte_interact" fallback="Explorez tous les projets sur une carte interactive de la Mauritanie" />
               </p>
             </div>
           </div>
@@ -192,7 +193,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                     <strong className={city.isCapital ? "text-destructive" : "text-primary"}>
                       {city.name}
                     </strong>
-                    {city.isCapital && <div className="text-xs text-destructive">Capitale</div>}
+                    {city.isCapital && <div className="text-xs text-destructive"><T k="auto.enhancedinteractivemap.capitale" fallback="Capitale" /></div>}
                   </div>
                 </Popup>
               </Marker>
@@ -243,24 +244,24 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                         
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <span className="text-muted-foreground">Budget:</span>
+                            <span className="text-muted-foreground"><T k="auto.enhancedinteractivemap.budget" fallback="Budget:" /></span>
                             <div className="font-medium text-success">
                               {formatBudget(project.budget)}
                             </div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Équipe:</span>
+                            <span className="text-muted-foreground"><T k="auto.enhancedinteractivemap.equipe" fallback="Équipe:" /></span>
                             <div className="font-medium">{project.teamSize} membres</div>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <span className="text-muted-foreground">Progrès:</span>
+                            <span className="text-muted-foreground"><T k="auto.enhancedinteractivemap.progres" fallback="Progrès:" /></span>
                             <div className="font-medium">{project.progress}%</div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Début:</span>
+                            <span className="text-muted-foreground"><T k="auto.enhancedinteractivemap.debut" fallback="Début:" /></span>
                             <div className="font-medium text-xs">{formatDate(project.startDate)}</div>
                           </div>
                         </div>
@@ -283,7 +284,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                           onClick={() => onProjectSelect?.(project)}
                           className="w-full mt-3 px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                         >
-                          Voir les détails
+                          <T k="auto.enhancedinteractivemap.voir_les_details" fallback="Voir les détails" />
                         </button>
                       </div>
                     </div>
@@ -297,7 +298,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
               <Marker position={[selectedCoords.lat, selectedCoords.lng]}>
                 <Popup>
                   <div className="text-center">
-                    <strong className="text-success">Position sélectionnée</strong>
+                    <strong className="text-success"><T k="auto.enhancedinteractivemap.position_selectionnee" fallback="Position sélectionnée" /></strong>
                     <div className="text-xs text-muted-foreground mt-1">
                       {selectedCoords.lat.toFixed(6)}, {selectedCoords.lng.toFixed(6)}
                     </div>

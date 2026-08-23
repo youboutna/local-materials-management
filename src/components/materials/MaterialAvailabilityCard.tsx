@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, AlertTriangle, CheckCircle } from 'lucide-react';
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface MaterialAvailabilityCardProps {
   material: {
     available_quantity: number;
@@ -29,12 +30,12 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
 
   const getStatusBadge = () => {
     if (!isAvailable) {
-      return <Badge className="bg-destructive text-destructive-foreground">Rupture de stock</Badge>;
+      return <Badge className="bg-destructive text-destructive-foreground"><T k="auto.materialavailabilitycard.rupture_de_stock" fallback="Rupture de stock" /></Badge>;
     }
     if (isLowStock) {
-      return <Badge className="bg-warning text-warning-foreground">Stock faible</Badge>;
+      return <Badge className="bg-warning text-warning-foreground"><T k="auto.materialavailabilitycard.stock_faible" fallback="Stock faible" /></Badge>;
     }
-    return <Badge className="bg-success text-success-foreground">Disponible</Badge>;
+    return <Badge className="bg-success text-success-foreground"><T k="auto.materialavailabilitycard.disponible" fallback="Disponible" /></Badge>;
   };
 
   const getTotalValue = () => {
@@ -46,7 +47,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5" />
-          Disponibilité et stock
+          <T k="auto.materialavailabilitycard.disponibilite_et_stock" fallback="Disponibilité et stock" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,13 +66,13 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
 
         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
           <div>
-            <p className="text-sm text-muted-foreground">Prix unitaire</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.materialavailabilitycard.prix_unitaire" fallback="Prix unitaire" /></p>
             <p className="font-medium">
               {(material.price_per_unit || 0).toLocaleString('fr-FR')} MRU
             </p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Valeur totale</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.materialavailabilitycard.valeur_totale" fallback="Valeur totale" /></p>
             <p className="font-medium text-accent-foreground">
               {getTotalValue().toLocaleString('fr-FR')} MRU
             </p>
@@ -83,7 +84,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-warning" />
               <p className="text-sm text-warning">
-                Stock faible - Pensez à réapprovisionner bientôt
+                <T k="auto.materialavailabilitycard.stock_faible_pensez_a_reapprovisionner_bientot" fallback="Stock faible - Pensez à réapprovisionner bientôt" />
               </p>
             </div>
           </div>
@@ -94,7 +95,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
               <p className="text-sm text-destructive">
-                Matériau en rupture de stock - Réapprovisionnement nécessaire
+                <T k="auto.materialavailabilitycard.materiau_en_rupture_de_stock_reapprovisionnement" fallback="Matériau en rupture de stock - Réapprovisionnement nécessaire" />
               </p>
             </div>
           </div>

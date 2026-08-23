@@ -70,6 +70,7 @@ import {
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface ProjectDashboardProps {
   projectId?: string;
@@ -260,19 +261,19 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Project Management Dashboard</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.projectdashboard.project_management_dashboard" fallback="Project Management Dashboard" /></h1>
           <p className="text-muted-foreground">
-            Comprehensive overview of all projects and their performance
+            <T k="auto.projectdashboard.comprehensive_overview_of_all_projects_and_their" fallback="Comprehensive overview of all projects and their performance" />
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <FileText className="h-4 w-4 mr-2" />
-            Export Report
+            <T k="auto.projectdashboard.export_report" fallback="Export Report" />
           </Button>
           <Button size="sm">
             <Settings className="h-4 w-4 mr-2" />
-            Settings
+            <T k="auto.projectdashboard.settings" fallback="Settings" />
           </Button>
         </div>
       </div>
@@ -284,7 +285,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectdashboard.total_projects" fallback="Total Projects" /></p>
                   <p className="text-2xl font-bold">{projectStats.total}</p>
                 </div>
                 <Building className="h-8 w-8 text-primary" />
@@ -296,7 +297,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectdashboard.active_projects" fallback="Active Projects" /></p>
                   <p className="text-2xl font-bold text-primary">{projectStats.activeProjects}</p>
                 </div>
                 <Activity className="h-8 w-8 text-primary" />
@@ -308,7 +309,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectdashboard.completed" fallback="Completed" /></p>
                   <p className="text-2xl font-bold text-success">{projectStats.completedProjects}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-success" />
@@ -320,7 +321,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Avg Progress</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectdashboard.avg_progress" fallback="Avg Progress" /></p>
                   <p className="text-2xl font-bold">{projectStats.avgProgress}%</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-500" />
@@ -334,12 +335,12 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="projects">Projects</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="phases">Phases</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="overview"><T k="auto.projectdashboard.overview" fallback="Overview" /></TabsTrigger>
+          <TabsTrigger value="projects"><T k="auto.projectdashboard.projects" fallback="Projects" /></TabsTrigger>
+          <TabsTrigger value="analytics"><T k="auto.projectdashboard.analytics" fallback="Analytics" /></TabsTrigger>
+          <TabsTrigger value="phases"><T k="auto.projectdashboard.phases" fallback="Phases" /></TabsTrigger>
+          <TabsTrigger value="resources"><T k="auto.projectdashboard.resources" fallback="Resources" /></TabsTrigger>
+          <TabsTrigger value="reports"><T k="auto.projectdashboard.reports" fallback="Reports" /></TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -348,7 +349,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             {/* Status Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Status Distribution</CardTitle>
+                <CardTitle><T k="auto.projectdashboard.project_status_distribution" fallback="Project Status Distribution" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -378,7 +379,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Location Search
+                  <T k="auto.projectdashboard.location_search" fallback="Location Search" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -397,9 +398,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                     allowManualEntry={false}
                   />
                   <div className="text-sm text-muted-foreground">
-                    <p>Recherchez des projets par région, ville ou adresse spécifique.</p>
+                    <p><T k="auto.projectdashboard.recherchez_des_projets_par_region_ville_ou_adres" fallback="Recherchez des projets par région, ville ou adresse spécifique." /></p>
                     <p className="text-xs mt-1">
-                      Supporte la recherche en français et en arabe.
+                      <T k="auto.projectdashboard.supporte_la_recherche_en_francais_et_en_arabe" fallback="Supporte la recherche en français et en arabe." />
                     </p>
                   </div>
                 </div>
@@ -409,7 +410,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             {/* Category Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Categories</CardTitle>
+                <CardTitle><T k="auto.projectdashboard.project_categories" fallback="Project Categories" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -428,7 +429,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           {/* Recent Projects */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
+              <CardTitle><T k="auto.projectdashboard.recent_projects" fallback="Recent Projects" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -465,7 +466,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
         <TabsContent value="projects" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>All Projects</CardTitle>
+              <CardTitle><T k="auto.projectdashboard.all_projects" fallback="All Projects" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -501,7 +502,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                           {PROJECT_STATUS_LABELS[project.status as ProjectStatus] || project.status}
                         </Badge>
                         <div className="mt-2">
-                          <div className="text-sm text-muted-foreground">Progress</div>
+                          <div className="text-sm text-muted-foreground"><T k="auto.projectdashboard.progress" fallback="Progress" /></div>
                           <Progress value={project.progress || 0} className="w-32 h-2 mt-1" />
                         </div>
                       </div>
@@ -519,7 +520,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Project Progress</CardTitle>
+                  <CardTitle><T k="auto.projectdashboard.project_progress" fallback="Project Progress" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -537,7 +538,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Budget Analysis</CardTitle>
+                  <CardTitle><T k="auto.projectdashboard.budget_analysis" fallback="Budget Analysis" /></CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -555,7 +556,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Select a project to view analytics</p>
+                <p className="text-muted-foreground"><T k="auto.projectdashboard.select_a_project_to_view_analytics" fallback="Select a project to view analytics" /></p>
               </CardContent>
             </Card>
           )}
@@ -566,7 +567,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           {selectedProject && phases ? (
             <Card>
               <CardHeader>
-                <CardTitle>Project Phases</CardTitle>
+                <CardTitle><T k="auto.projectdashboard.project_phases" fallback="Project Phases" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -592,7 +593,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Select a project to view phases</p>
+                <p className="text-muted-foreground"><T k="auto.projectdashboard.select_a_project_to_view_phases" fallback="Select a project to view phases" /></p>
               </CardContent>
             </Card>
           )}
@@ -603,7 +604,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           {selectedProject && materials ? (
             <Card>
               <CardHeader>
-                <CardTitle>Project Materials</CardTitle>
+                <CardTitle><T k="auto.projectdashboard.project_materials" fallback="Project Materials" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -630,7 +631,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Select a project to view resources</p>
+                <p className="text-muted-foreground"><T k="auto.projectdashboard.select_a_project_to_view_resources" fallback="Select a project to view resources" /></p>
               </CardContent>
             </Card>
           )}
@@ -640,33 +641,33 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
         <TabsContent value="reports" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Project Reports</CardTitle>
+              <CardTitle><T k="auto.projectdashboard.project_reports" fallback="Project Reports" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button variant="outline" className="h-20 flex-col">
                   <FileText className="h-6 w-6 mb-2" />
-                  <span>Progress Report</span>
+                  <span><T k="auto.projectdashboard.progress_report" fallback="Progress Report" /></span>
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <DollarSign className="h-6 w-6 mb-2" />
-                  <span>Financial Report</span>
+                  <span><T k="auto.projectdashboard.financial_report" fallback="Financial Report" /></span>
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Users className="h-6 w-6 mb-2" />
-                  <span>Resource Report</span>
+                  <span><T k="auto.projectdashboard.resource_report" fallback="Resource Report" /></span>
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Target className="h-6 w-6 mb-2" />
-                  <span>Milestone Report</span>
+                  <span><T k="auto.projectdashboard.milestone_report" fallback="Milestone Report" /></span>
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <AlertTriangle className="h-6 w-6 mb-2" />
-                  <span>Risk Report</span>
+                  <span><T k="auto.projectdashboard.risk_report" fallback="Risk Report" /></span>
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Shield className="h-6 w-6 mb-2" />
-                  <span>Quality Report</span>
+                  <span><T k="auto.projectdashboard.quality_report" fallback="Quality Report" /></span>
                 </Button>
               </div>
             </CardContent>

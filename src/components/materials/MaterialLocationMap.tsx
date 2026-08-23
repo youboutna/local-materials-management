@@ -4,6 +4,7 @@ import { MapPin, Map } from 'lucide-react';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/domain/entities/Location';
 import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
+import { T } from '@/components/i18n/T';
 
 interface MaterialLocationMapProps {
   material: {
@@ -51,7 +52,7 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5" />
-          Localisation du Matériau
+          <T k="auto.materiallocationmap.localisation_du_materiau" fallback="Localisation du Matériau" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -82,7 +83,7 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Map className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Position sur la carte</span>
+              <span className="text-sm font-medium text-foreground"><T k="auto.materiallocationmap.position_sur_la_carte" fallback="Position sur la carte" /></span>
             </div>
             <ProjectMap
               locations={mapLocations}
@@ -96,9 +97,9 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
           <div className="bg-muted rounded-lg flex items-center justify-center" style={{ height }}>
             <div className="text-center">
               <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">Aucune localisation GPS disponible</p>
+              <p className="text-muted-foreground"><T k="auto.materiallocationmap.aucune_localisation_gps_disponible" fallback="Aucune localisation GPS disponible" /></p>
               <p className="text-sm text-muted-foreground mt-1">
-                Utilisez la recherche ci-dessus pour définir une position
+                <T k="auto.materiallocationmap.utilisez_la_recherche_ci_dessus_pour_definir_une" fallback="Utilisez la recherche ci-dessus pour définir une position" />
               </p>
             </div>
           </div>
@@ -107,16 +108,16 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
         {/* Current Location Info */}
         {(material.adresse || material.origin_location) && (
           <div className="bg-primary/10 p-3 rounded-md">
-            <p className="text-sm font-medium text-primary mb-1">Informations actuelles:</p>
+            <p className="text-sm font-medium text-primary mb-1"><T k="auto.materiallocationmap.informations_actuelles" fallback="Informations actuelles:" /></p>
             <div className="text-sm text-primary space-y-1">
               {material.adresse && (
-                <p><strong>Adresse:</strong> {material.adresse}</p>
+                <p><strong><T k="auto.materiallocationmap.adresse" fallback="Adresse:" /></strong> {material.adresse}</p>
               )}
               {material.origin_location && (
-                <p><strong>Région:</strong> {material.origin_location}</p>
+                <p><strong><T k="auto.materiallocationmap.region" fallback="Région:" /></strong> {material.origin_location}</p>
               )}
               {material.coordinates_latitude && material.coordinates_longitude && (
-                <p><strong>Coordonnées:</strong> {material.coordinates_latitude.toFixed(6)}, {material.coordinates_longitude.toFixed(6)}</p>
+                <p><strong><T k="auto.materiallocationmap.coordonnees" fallback="Coordonnées:" /></strong> {material.coordinates_latitude.toFixed(6)}, {material.coordinates_longitude.toFixed(6)}</p>
               )}
             </div>
           </div>

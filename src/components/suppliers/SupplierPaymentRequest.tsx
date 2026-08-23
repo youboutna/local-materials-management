@@ -20,6 +20,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { DollarSign, Eye, FileText, Plus, Send, Upload } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 interface LocalPaymentRequest {
   id: string;
@@ -280,13 +281,13 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Demandes de Paiement</h2>
+        <h2 className="text-2xl font-bold"><T k="auto.supplierpaymentrequest.demandes_de_paiement" fallback="Demandes de Paiement" /></h2>
       </div>
 
       <Tabs defaultValue="simple" className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-          <TabsTrigger value="simple">Demande Simple</TabsTrigger>
-          <TabsTrigger value="progress">Facture d'Avancement</TabsTrigger>
+          <TabsTrigger value="simple"><T k="auto.supplierpaymentrequest.demande_simple" fallback="Demande Simple" /></TabsTrigger>
+          <TabsTrigger value="progress"><T k="auto.supplierpaymentrequest.facture_d_avancement" fallback="Facture d'Avancement" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="simple">
@@ -294,14 +295,14 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Nouvelle Demande
+                <T k="auto.supplierpaymentrequest.nouvelle_demande" fallback="Nouvelle Demande" />
               </Button>
             </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Nouvelle Demande de Paiement</DialogTitle>
+              <DialogTitle><T k="auto.supplierpaymentrequest.nouvelle_demande_de_paiement" fallback="Nouvelle Demande de Paiement" /></DialogTitle>
               <DialogDescription>
-                Renseignez le montant, le motif et les pièces justificatives de la demande.
+                <T k="auto.supplierpaymentrequest.renseignez_le_montant_le_motif_et_les_pieces_jus" fallback="Renseignez le montant, le motif et les pièces justificatives de la demande." />
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -337,12 +338,12 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     <SelectValue placeholder="Sélectionner le motif" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="materials">Fourniture de matériaux</SelectItem>
-                    <SelectItem value="services">Prestation de services</SelectItem>
-                    <SelectItem value="equipment">Location d'équipement</SelectItem>
-                    <SelectItem value="transport">Transport</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
+                    <SelectItem value="materials"><T k="auto.supplierpaymentrequest.fourniture_de_materiaux" fallback="Fourniture de matériaux" /></SelectItem>
+                    <SelectItem value="services"><T k="auto.supplierpaymentrequest.prestation_de_services" fallback="Prestation de services" /></SelectItem>
+                    <SelectItem value="equipment"><T k="auto.supplierpaymentrequest.location_d_equipement" fallback="Location d'équipement" /></SelectItem>
+                    <SelectItem value="transport"><T k="auto.supplierpaymentrequest.transport" fallback="Transport" /></SelectItem>
+                    <SelectItem value="maintenance"><T k="auto.supplierpaymentrequest.maintenance" fallback="Maintenance" /></SelectItem>
+                    <SelectItem value="other"><T k="auto.supplierpaymentrequest.autre" fallback="Autre" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -359,7 +360,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes additionnelles</Label>
+                <Label htmlFor="notes"><T k="auto.supplierpaymentrequest.notes_additionnelles" fallback="Notes additionnelles" /></Label>
                 <Textarea
                   id="notes"
                   value={notes}
@@ -370,7 +371,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
               </div>
 
               <div>
-                <Label>Documents justificatifs</Label>
+                <Label><T k="auto.supplierpaymentrequest.documents_justificatifs" fallback="Documents justificatifs" /></Label>
                 <div className="mt-2">
                   <input
                     type="file"
@@ -384,7 +385,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
                     className="cursor-pointer inline-flex items-center px-4 py-2 bg-muted border border-border rounded-md hover:bg-gray-200"
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Télécharger un document
+                    <T k="auto.supplierpaymentrequest.telecharger_un_document" fallback="Télécharger un document" />
                   </label>
                 </div>
                 {uploadedDocuments.length > 0 && (
@@ -401,7 +402,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Annuler
+                  <T k="auto.supplierpaymentrequest.annuler" fallback="Annuler" />
                 </Button>
                 <Button onClick={submitPaymentRequest} disabled={loading}>
                   <Send className="mr-2 h-4 w-4" />
@@ -416,19 +417,19 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Historique des Demandes de Paiement
+            <T k="auto.supplierpaymentrequest.historique_des_demandes_de_paiement" fallback="Historique des Demandes de Paiement" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Projet</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Motif</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.date" fallback="Date" /></TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.projet" fallback="Projet" /></TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.montant" fallback="Montant" /></TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.motif" fallback="Motif" /></TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.statut" fallback="Statut" /></TableHead>
+                <TableHead><T k="auto.supplierpaymentrequest.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -458,7 +459,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({
               {paymentRequests.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Aucune demande de paiement
+                    <T k="auto.supplierpaymentrequest.aucune_demande_de_paiement" fallback="Aucune demande de paiement" />
                   </TableCell>
                 </TableRow>
               )}

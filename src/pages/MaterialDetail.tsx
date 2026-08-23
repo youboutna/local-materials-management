@@ -34,6 +34,7 @@ import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumb
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 /**
  * Composant de détail d'un matériau
  * Affiche les informations, la localisation et les zones de couverture
@@ -94,15 +95,15 @@ const MaterialDetail = () => {
           <CardContent className="p-8 text-center">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              Matériau non trouvé
+              <T k="auto.materialdetail.materiau_non_trouve" fallback="Matériau non trouvé" />
             </h3>
             <p className="text-muted-foreground mb-4">
-              Le matériau demandé n'existe pas ou a été supprimé.
+              <T k="auto.materialdetail.le_materiau_demande_n_existe_pas_ou_a_ete_suppri" fallback="Le matériau demandé n'existe pas ou a été supprimé." />
             </p>
             <Button asChild>
               <Link to="/materials">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour aux matériaux
+                <T k="auto.materialdetail.retour_aux_materiaux" fallback="Retour aux matériaux" />
               </Link>
             </Button>
           </CardContent>
@@ -180,7 +181,7 @@ const MaterialDetail = () => {
         <Button asChild>
           <Link to={`/materials/${material.id}/edit`} aria-label={`Modifier ${material.name}`}>
             <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
-            Modifier
+            <T k="auto.materialdetail.modifier" fallback="Modifier" />
           </Link>
         </Button>
       }
@@ -188,7 +189,7 @@ const MaterialDetail = () => {
       <Button variant="outline" size="sm" asChild className="mb-6">
         <Link to="/materials" aria-label="Retour à la liste des matériaux">
           <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-          Retour
+          <T k="auto.materialdetail.retour" fallback="Retour" />
         </Link>
       </Button>
 
@@ -200,12 +201,12 @@ const MaterialDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Info className="h-5 w-5" />
-                Informations générales
+                <T k="auto.materialdetail.informations_generales" fallback="Informations générales" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-medium text-foreground mb-2">Description</h3>
+                <h3 className="font-medium text-foreground mb-2"><T k="auto.materialdetail.description" fallback="Description" /></h3>
                 <p className="text-muted-foreground">{material.description}</p>
               </div>
 
@@ -213,21 +214,21 @@ const MaterialDetail = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Prix unitaire</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.prix_unitaire" fallback="Prix unitaire" /></p>
                   <p className="font-medium">
                     {formatAmount2(material.pricePerUnit)}/
                     <TranslatedUnit code={material.unit} />
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Unité de mesure</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.unite_de_mesure" fallback="Unité de mesure" /></p>
                   <p className="font-medium"><TranslatedUnit code={material.unit} /></p>
                 </div>
               </div>
 
               {material.category && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Catégorie</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.categorie" fallback="Catégorie" /></p>
                   <Badge variant="secondary"><TranslatedCategory code={material.category} /></Badge>
                 </div>
               )}
@@ -242,20 +243,20 @@ const MaterialDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Localisation
+                <T k="auto.materialdetail.localisation" fallback="Localisation" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {material.adresse && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Adresse</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.adresse" fallback="Adresse" /></p>
                   <p className="font-medium">{typeof material.adresse === 'string' ? material.adresse : ''}</p>
                 </div>
               )}
 
               {material.originLocation && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Origine</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.origine" fallback="Origine" /></p>
                   <p className="font-medium">{material.originLocation}</p>
                 </div>
               )}
@@ -263,7 +264,7 @@ const MaterialDetail = () => {
               {material.coordinatesLatitude &&
                 material.coordinatesLongitude && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Coordonnées GPS</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.coordonnees_gps" fallback="Coordonnées GPS" /></p>
                     <p className="font-mono text-sm">
                       {material.coordinatesLatitude.toFixed(6)},{" "}
                       {material.coordinatesLongitude.toFixed(6)}
@@ -274,7 +275,7 @@ const MaterialDetail = () => {
               {material.localisation && Array.isArray(material.localisation) && material.localisation.length > 0 && (
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    Coordonnées de localisation
+                    <T k="auto.materialdetail.coordonnees_de_localisation" fallback="Coordonnées de localisation" />
                   </p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {material.localisation.map((zone: any, index: number) => (
@@ -295,7 +296,7 @@ const MaterialDetail = () => {
               {/* Zones d'intervention */}
               {interventionZones.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Zones de couverture</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.materialdetail.zones_de_couverture" fallback="Zones de couverture" /></p>
                   <p className="text-sm text-foreground">
                     {interventionZones.length} zone(s) définie(s)
                   </p>
@@ -318,7 +319,7 @@ const MaterialDetail = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Warehouse className="h-5 w-5" />
-                  Forme de l'entrepôt
+                  <T k="auto.materialdetail.forme_de_l_entrepot" fallback="Forme de l'entrepôt" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -340,7 +341,7 @@ const MaterialDetail = () => {
           {/* Material Image */}
           <Card>
             <CardHeader>
-              <CardTitle>Image du matériau</CardTitle>
+              <CardTitle><T k="auto.materialdetail.image_du_materiau" fallback="Image du matériau" /></CardTitle>
             </CardHeader>
             <CardContent>
               {material?.image && material.image.length > 0 ? (

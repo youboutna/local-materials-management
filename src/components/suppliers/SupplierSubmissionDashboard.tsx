@@ -36,6 +36,7 @@ import {
 
 const SupplierSubmissionDashboard = () => {
   const { toast } = useToast();
+import { T } from '@/components/i18n/T';
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [realtimeSubmissions, setRealtimeSubmissions] = useState<Submission[]>([]);
@@ -167,15 +168,15 @@ const SupplierSubmissionDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
               <Package className="h-8 w-8 text-primary" />
-              Tableau de Bord des Soumissions
+              <T k="auto.suppliersubmissiondashboard.tableau_de_bord_des_soumissions" fallback="Tableau de Bord des Soumissions" />
             </h1>
             <p className="text-muted-foreground mt-1">
-              Suivez l'état de vos soumissions en temps réel
+              <T k="auto.suppliersubmissiondashboard.suivez_l_etat_de_vos_soumissions_en_temps_reel" fallback="Suivez l'état de vos soumissions en temps réel" />
             </p>
           </div>
           <Badge variant="outline" className="px-3 py-1 gap-1">
             <Bell className="h-3 w-3" />
-            Notifications actives
+            <T k="auto.suppliersubmissiondashboard.notifications_actives" fallback="Notifications actives" />
           </Badge>
         </div>
 
@@ -185,7 +186,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.suppliersubmissiondashboard.total" fallback="Total" /></p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
                 <FileText className="h-8 w-8 text-muted-foreground" />
@@ -197,7 +198,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Soumises</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.suppliersubmissiondashboard.soumises" fallback="Soumises" /></p>
                   <p className="text-2xl font-bold">{stats.submitted}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-muted-foreground" />
@@ -209,7 +210,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">En évaluation</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.suppliersubmissiondashboard.en_evaluation" fallback="En évaluation" /></p>
                   <p className="text-2xl font-bold">{stats.under_review}</p>
                 </div>
                 <Clock className="h-8 w-8 text-primary" />
@@ -221,7 +222,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Approuvées</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.suppliersubmissiondashboard.approuvees" fallback="Approuvées" /></p>
                   <p className="text-2xl font-bold">{stats.approved}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-success" />
@@ -233,7 +234,7 @@ const SupplierSubmissionDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Rejetées</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.suppliersubmissiondashboard.rejetees" fallback="Rejetées" /></p>
                   <p className="text-2xl font-bold">{stats.rejected}</p>
                 </div>
                 <XCircle className="h-8 w-8 text-destructive" />
@@ -249,17 +250,17 @@ const SupplierSubmissionDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Mes Soumissions
+                <T k="auto.suppliersubmissiondashboard.mes_soumissions" fallback="Mes Soumissions" />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
-                  <TabsTrigger value="all">Toutes</TabsTrigger>
-                  <TabsTrigger value="submitted">Soumises</TabsTrigger>
-                  <TabsTrigger value="under_review">En cours</TabsTrigger>
-                  <TabsTrigger value="approved">Approuvées</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejetées</TabsTrigger>
+                  <TabsTrigger value="all"><T k="auto.suppliersubmissiondashboard.toutes" fallback="Toutes" /></TabsTrigger>
+                  <TabsTrigger value="submitted"><T k="auto.suppliersubmissiondashboard.soumises" fallback="Soumises" /></TabsTrigger>
+                  <TabsTrigger value="under_review"><T k="auto.suppliersubmissiondashboard.en_cours" fallback="En cours" /></TabsTrigger>
+                  <TabsTrigger value="approved"><T k="auto.suppliersubmissiondashboard.approuvees" fallback="Approuvées" /></TabsTrigger>
+                  <TabsTrigger value="rejected"><T k="auto.suppliersubmissiondashboard.rejetees" fallback="Rejetées" /></TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-4">
@@ -301,7 +302,7 @@ const SupplierSubmissionDashboard = () => {
                       {filterSubmissions(activeTab).length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
                           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Aucune soumission trouvée</p>
+                          <p><T k="auto.suppliersubmissiondashboard.aucune_soumission_trouvee" fallback="Aucune soumission trouvée" /></p>
                         </div>
                       )}
                     </div>
@@ -316,7 +317,7 @@ const SupplierSubmissionDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                Détails
+                <T k="auto.suppliersubmissiondashboard.details" fallback="Détails" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -325,25 +326,25 @@ const SupplierSubmissionDashboard = () => {
                   <div className="space-y-6">
                     {/* Submission Info */}
                     <div>
-                      <h4 className="font-medium mb-3">Informations</h4>
+                      <h4 className="font-medium mb-3"><T k="auto.suppliersubmissiondashboard.informations" fallback="Informations" /></h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Appel d'offres:</span>
+                          <span className="text-muted-foreground"><T k="auto.suppliersubmissiondashboard.appel_d_offres" fallback="Appel d'offres:" /></span>
                           <span className="font-medium">{selectedSubmission.tender?.title}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Statut:</span>
+                          <span className="text-muted-foreground"><T k="auto.suppliersubmissiondashboard.statut" fallback="Statut:" /></span>
                           <Badge className={getStatusColor(selectedSubmission.status)}>
                             {getStatusLabel(selectedSubmission.status)}
                           </Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Date:</span>
+                          <span className="text-muted-foreground"><T k="auto.suppliersubmissiondashboard.date" fallback="Date:" /></span>
                           <span>{selectedSubmission.submissionDate ? new Date(selectedSubmission.submissionDate).toLocaleDateString('fr-FR') : 'N/A'}</span>
                         </div>
                         {selectedSubmission.secretCode && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Code secret:</span>
+                            <span className="text-muted-foreground"><T k="auto.suppliersubmissiondashboard.code_secret" fallback="Code secret:" /></span>
                             <code className="px-2 py-1 bg-muted rounded text-xs font-mono">
                               {selectedSubmission.secretCode}
                             </code>
@@ -381,7 +382,7 @@ const SupplierSubmissionDashboard = () => {
                                   onClick={() => doc.document?.fileUrl && handleDownloadDocument(doc.document.fileUrl, doc.document.fileName || 'document')}
                                 >
                                   <Download className="h-3 w-3 mr-1" />
-                                  Télécharger
+                                  <T k="auto.suppliersubmissiondashboard.telecharger" fallback="Télécharger" />
                                 </Button>
                               </div>
                             </div>
@@ -393,7 +394,7 @@ const SupplierSubmissionDashboard = () => {
                     {/* Activity Log - TODO: Implement when useSubmissionActivityLogsHex is available */}
                     {/* {activityLogs && activityLogs.length > 0 && (
                       <div>
-                        <h4 className="font-medium mb-3">Historique d'activité</h4>
+                        <h4 className="font-medium mb-3"><T k="auto.suppliersubmissiondashboard.historique_d_activite" fallback="Historique d'activité" /></h4>
                         <div className="space-y-2">
                           {activityLogs.map((log) => (
                             <div key={log.id} className="border-l-2 border-primary/20 pl-3 py-2">
@@ -412,7 +413,7 @@ const SupplierSubmissionDashboard = () => {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Sélectionnez une soumission pour voir les détails</p>
+                  <p><T k="auto.suppliersubmissiondashboard.selectionnez_une_soumission_pour_voir_les_detail" fallback="Sélectionnez une soumission pour voir les détails" /></p>
                 </div>
               )}
             </CardContent>

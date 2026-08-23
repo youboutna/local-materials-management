@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Play, Pause, Clock, Settings, Activity } from 'lucide-react';
 import { useNotificationHex } from '@/hooks/hexagonal/useNotificationHex';
+import { T } from '@/components/i18n/T';
 
 interface ProcessorConfig {
   enabled: boolean;
@@ -186,20 +187,20 @@ const AlertsProcessorSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <AlertTriangle className="mr-2 h-5 w-5" />
-            Processeur d'Alertes de Projet
+            <T k="auto.alertsprocessorsettings.processeur_d_alertes_de_projet" fallback="Processeur d'Alertes de Projet" />
           </CardTitle>
           <CardDescription>
-            Configuration du traitement automatique des alertes de projet en arrière-plan
+            <T k="auto.alertsprocessorsettings.configuration_du_traitement_automatique_des_aler" fallback="Configuration du traitement automatique des alertes de projet en arrière-plan" />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="enabled" className="text-base">
-                Processeur activé
+                <T k="auto.alertsprocessorsettings.processeur_active" fallback="Processeur activé" />
               </Label>
               <p className="text-sm text-muted-foreground">
-                Active ou désactive le traitement automatique des alertes
+                <T k="auto.alertsprocessorsettings.active_ou_desactive_le_traitement_automatique_de" fallback="Active ou désactive le traitement automatique des alertes" />
               </p>
             </div>
             <Switch
@@ -213,7 +214,7 @@ const AlertsProcessorSettings: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="batchSize">Taille du lot</Label>
+              <Label htmlFor="batchSize"><T k="auto.alertsprocessorsettings.taille_du_lot" fallback="Taille du lot" /></Label>
               <Input
                 id="batchSize"
                 type="number"
@@ -223,12 +224,12 @@ const AlertsProcessorSettings: React.FC = () => {
                 onChange={(e) => setConfig({...config, batchSize: parseInt(e.target.value) || 10})}
               />
               <p className="text-xs text-muted-foreground">
-                Nombre de projets traités par lot
+                <T k="auto.alertsprocessorsettings.nombre_de_projets_traites_par_lot" fallback="Nombre de projets traités par lot" />
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="intervalMinutes">Intervalle (minutes)</Label>
+              <Label htmlFor="intervalMinutes"><T k="auto.alertsprocessorsettings.intervalle_minutes" fallback="Intervalle (minutes)" /></Label>
               <Input
                 id="intervalMinutes"
                 type="number"
@@ -238,12 +239,12 @@ const AlertsProcessorSettings: React.FC = () => {
                 onChange={(e) => setConfig({...config, intervalMinutes: parseInt(e.target.value) || 60})}
               />
               <p className="text-xs text-muted-foreground">
-                Fréquence d'exécution automatique
+                <T k="auto.alertsprocessorsettings.frequence_d_execution_automatique" fallback="Fréquence d'exécution automatique" />
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxRetries">Tentatives max</Label>
+              <Label htmlFor="maxRetries"><T k="auto.alertsprocessorsettings.tentatives_max" fallback="Tentatives max" /></Label>
               <Input
                 id="maxRetries"
                 type="number"
@@ -253,7 +254,7 @@ const AlertsProcessorSettings: React.FC = () => {
                 onChange={(e) => setConfig({...config, maxRetries: parseInt(e.target.value) || 3})}
               />
               <p className="text-xs text-muted-foreground">
-                Nombre de tentatives en cas d'erreur
+                <T k="auto.alertsprocessorsettings.nombre_de_tentatives_en_cas_d_erreur" fallback="Nombre de tentatives en cas d'erreur" />
               </p>
             </div>
           </div>
@@ -291,16 +292,16 @@ const AlertsProcessorSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Activity className="mr-2 h-5 w-5" />
-            Historique des traitements
+            <T k="auto.alertsprocessorsettings.historique_des_traitements" fallback="Historique des traitements" />
           </CardTitle>
           <CardDescription>
-            Dernières exécutions du processeur d'alertes
+            <T k="auto.alertsprocessorsettings.dernieres_executions_du_processeur_d_alertes" fallback="Dernières exécutions du processeur d'alertes" />
           </CardDescription>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              Aucun traitement enregistré
+              <T k="auto.alertsprocessorsettings.aucun_traitement_enregistre" fallback="Aucun traitement enregistré" />
             </p>
           ) : (
             <div className="space-y-3">

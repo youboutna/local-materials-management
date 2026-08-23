@@ -29,6 +29,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Bell, Calendar, CheckCircle2, FileText, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 // Local type for inspection type selection
 type InspectionTypeId = 'technical' | 'safety' | 'quality';
@@ -291,7 +292,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Programmer une Inspection
+            <T k="auto.scheduleinspectionmodal.programmer_une_inspection" fallback="Programmer une Inspection" />
           </DialogTitle>
           <DialogDescription>
             {projectName && <span className="font-medium">{projectName}</span>}
@@ -312,7 +313,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Paramètres de l'inspection
+              <T k="auto.scheduleinspectionmodal.parametres_de_l_inspection" fallback="Paramètres de l'inspection" />
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
@@ -336,7 +337,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Priorité</Label>
+                <Label><T k="auto.scheduleinspectionmodal.priorite" fallback="Priorité" /></Label>
                 <Select 
                   value={priority} 
                   onValueChange={(v) => setPriority(v as 'high' | 'medium' | 'low')}
@@ -368,7 +369,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Heure</Label>
+                <Label><T k="auto.scheduleinspectionmodal.heure" fallback="Heure" /></Label>
                 <Input
                   type="time"
                   value={scheduledTime}
@@ -377,7 +378,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Durée (heures)</Label>
+                <Label><T k="auto.scheduleinspectionmodal.duree_heures" fallback="Durée (heures)" /></Label>
                 <Input
                   type="number"
                   min={1}
@@ -395,7 +396,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <User className="h-4 w-4" />
-              Assignation
+              <T k="auto.scheduleinspectionmodal.assignation" fallback="Assignation" />
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
@@ -426,13 +427,13 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Inspecteur suppléant</Label>
+                <Label><T k="auto.scheduleinspectionmodal.inspecteur_suppleant" fallback="Inspecteur suppléant" /></Label>
                 <Select value={backupInspectorId || "none"} onValueChange={(v) => setBackupInspectorId(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Optionnel..." />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
-                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="none"><T k="auto.scheduleinspectionmodal.aucun" fallback="Aucun" /></SelectItem>
                     {inspectors
                       .filter(i => i.id && i.id.trim() !== '' && i.id !== selectedInspectorId)
                       .map(inspector => (
@@ -452,11 +453,11 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Exigences
+              <T k="auto.scheduleinspectionmodal.exigences" fallback="Exigences" />
             </h3>
 
             <div className="space-y-2">
-              <Label>Documents requis</Label>
+              <Label><T k="auto.scheduleinspectionmodal.documents_requis" fallback="Documents requis" /></Label>
               <div className="flex flex-wrap gap-2">
                 {currentTypeConfig?.requiresDocuments ? (
                   <div className="flex flex-wrap gap-2">
@@ -473,13 +474,13 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-sm">Aucun document requis</p>
+                  <p className="text-muted-foreground text-sm"><T k="auto.scheduleinspectionmodal.aucun_document_requis" fallback="Aucun document requis" /></p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Critères de validation</Label>
+              <Label><T k="auto.scheduleinspectionmodal.criteres_de_validation" fallback="Critères de validation" /></Label>
               <Textarea
                 placeholder="Décrivez les critères de réussite de l'inspection..."
                 value={validationCriteria}
@@ -495,7 +496,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              Notifications
+              <T k="auto.scheduleinspectionmodal.notifications" fallback="Notifications" />
             </h3>
 
             <div className="flex items-center space-x-2">
@@ -505,12 +506,12 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                 onCheckedChange={(checked) => setNotifyContractor(checked as boolean)}
               />
               <label htmlFor="notifyContractor" className="text-sm">
-                Notifier l'entreprise contractante
+                <T k="auto.scheduleinspectionmodal.notifier_l_entreprise_contractante" fallback="Notifier l'entreprise contractante" />
               </label>
             </div>
 
             <div className="space-y-2">
-              <Label>Rappels automatiques</Label>
+              <Label><T k="auto.scheduleinspectionmodal.rappels_automatiques" fallback="Rappels automatiques" /></Label>
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -544,7 +545,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
           {/* Section 5: Commentaires */}
           <div className="space-y-2">
-            <Label>Commentaires additionnels</Label>
+            <Label><T k="auto.scheduleinspectionmodal.commentaires_additionnels" fallback="Commentaires additionnels" /></Label>
             <Textarea
               placeholder="Informations complémentaires..."
               value={comments}
@@ -556,7 +557,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            <T k="auto.scheduleinspectionmodal.annuler" fallback="Annuler" />
           </Button>
           <Button 
             onClick={handleSubmit} 

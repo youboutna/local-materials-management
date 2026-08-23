@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Building2, Check, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 const NONE = '__none__';
 
@@ -161,7 +162,7 @@ const OrganizationsManager: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="org-code">Code</Label>
+                <Label htmlFor="org-code"><T k="auto.organizationsmanager.code" fallback="Code" /></Label>
                 <Input
                   id="org-code"
                   value={form.code ?? ''}
@@ -173,7 +174,7 @@ const OrganizationsManager: React.FC = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label><T k="auto.organizationsmanager.type" fallback="Type" /></Label>
                 <Select
                   value={form.orgType ?? 'owner'}
                   onValueChange={(value) => setForm((prev) => ({ ...prev, orgType: value }))}
@@ -191,7 +192,7 @@ const OrganizationsManager: React.FC = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Organisation parente</Label>
+                <Label><T k="auto.organizationsmanager.organisation_parente" fallback="Organisation parente" /></Label>
                 <Select
                   value={form.parentId ?? NONE}
                   onValueChange={(value) =>
@@ -202,7 +203,7 @@ const OrganizationsManager: React.FC = () => {
                     <SelectValue placeholder="Aucune (racine)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Aucune (racine)</SelectItem>
+                    <SelectItem value={NONE}><T k="auto.organizationsmanager.aucune_racine" fallback="Aucune (racine)" /></SelectItem>
                     {parentOptions.map((organization) => (
                       <SelectItem key={organization.id} value={organization.id}>
                         {organization.name}
@@ -215,7 +216,7 @@ const OrganizationsManager: React.FC = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="org-email">Email</Label>
+                <Label htmlFor="org-email"><T k="auto.organizationsmanager.email" fallback="Email" /></Label>
                 <Input
                   id="org-email"
                   type="email"
@@ -224,7 +225,7 @@ const OrganizationsManager: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="org-phone">Téléphone</Label>
+                <Label htmlFor="org-phone"><T k="auto.organizationsmanager.telephone" fallback="Téléphone" /></Label>
                 <Input
                   id="org-phone"
                   value={form.phone ?? ''}
@@ -234,7 +235,7 @@ const OrganizationsManager: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="org-address">Adresse</Label>
+              <Label htmlFor="org-address"><T k="auto.organizationsmanager.adresse" fallback="Adresse" /></Label>
               <Input
                 id="org-address"
                 value={form.address ?? ''}
@@ -243,7 +244,7 @@ const OrganizationsManager: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="org-description">Description</Label>
+              <Label htmlFor="org-description"><T k="auto.organizationsmanager.description" fallback="Description" /></Label>
               <Textarea
                 id="org-description"
                 value={form.description ?? ''}
@@ -261,7 +262,7 @@ const OrganizationsManager: React.FC = () => {
                 onChange={(e) => setForm((prev) => ({ ...prev, isDefault: e.target.checked }))}
               />
               <Label htmlFor="org-default" className="font-normal">
-                Organisation propriétaire par défaut des projets
+                <T k="auto.organizationsmanager.organisation_proprietaire_par_defaut_des_projets" fallback="Organisation propriétaire par défaut des projets" />
               </Label>
             </div>
 
@@ -274,7 +275,7 @@ const OrganizationsManager: React.FC = () => {
                 onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
               />
               <Label htmlFor="org-active" className="font-normal">
-                Organisation active
+                <T k="auto.organizationsmanager.organisation_active" fallback="Organisation active" />
               </Label>
             </div>
 
@@ -287,7 +288,7 @@ const OrganizationsManager: React.FC = () => {
               {editingId && (
                 <Button type="button" variant="outline" onClick={resetForm}>
                   <X className="mr-2 h-4 w-4" />
-                  Annuler
+                  <T k="auto.organizationsmanager.annuler" fallback="Annuler" />
                 </Button>
               )}
             </div>
@@ -299,7 +300,7 @@ const OrganizationsManager: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
-            Organisations
+            <T k="auto.organizationsmanager.organisations" fallback="Organisations" />
           </CardTitle>
           <CardDescription>
             {isLoading ? 'Chargement…' : `${organizations.length} organisation(s) enregistrée(s)`}
@@ -307,7 +308,7 @@ const OrganizationsManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3 max-h-[520px] overflow-y-auto">
           {organizations.length === 0 && !isLoading && (
-            <p className="text-sm text-muted-foreground">Aucune organisation enregistrée.</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.organizationsmanager.aucune_organisation_enregistree" fallback="Aucune organisation enregistrée." /></p>
           )}
           {organizations.map((organization) => {
             const parent = organizations.find((o) => o.id === organization.parentId);
@@ -317,9 +318,9 @@ const OrganizationsManager: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{organization.name}</span>
-                      {organization.isDefault && <Badge>Par défaut</Badge>}
+                      {organization.isDefault && <Badge><T k="auto.organizationsmanager.par_defaut" fallback="Par défaut" /></Badge>}
                       {organization.orgType && <Badge variant="secondary">{organization.orgType}</Badge>}
-                      {!organization.isActive && <Badge variant="outline">Inactive</Badge>}
+                      {!organization.isActive && <Badge variant="outline"><T k="auto.organizationsmanager.inactive" fallback="Inactive" /></Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {[organization.code, parent ? `Parent : ${parent.name}` : null, organization.email]

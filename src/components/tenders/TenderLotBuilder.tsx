@@ -38,6 +38,7 @@ import {
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
 import TenderLotDocumentsManager from './TenderLotDocumentsManager';
+import { T } from '@/components/i18n/T';
 
 interface Phase {
   id: string;
@@ -252,12 +253,12 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Package className="h-5 w-5 text-primary" />
-            Lots de l'Appel d'Offres
+            <T k="auto.tenderlotbuilder.lots_de_l_appel_d_offres" fallback="Lots de l'Appel d'Offres" />
           </CardTitle>
           {!readOnly && (
             <Button onClick={addLot} size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Ajouter un lot
+              <T k="auto.tenderlotbuilder.ajouter_un_lot" fallback="Ajouter un lot" />
             </Button>
           )}
         </div>
@@ -271,7 +272,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
             {projectId && (
               <Badge variant="outline" className="gap-1">
                 <Link2 className="h-3 w-3" />
-                Projet lié
+                <T k="auto.tenderlotbuilder.projet_lie" fallback="Projet lié" />
               </Badge>
             )}
           </div>
@@ -339,7 +340,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                     {/* Basic Info */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Titre du lot</Label>
+                        <Label><T k="auto.tenderlotbuilder.titre_du_lot" fallback="Titre du lot" /></Label>
                         <Input
                           value={lot.title}
                           onChange={(e) => updateLot(lot.id, { title: e.target.value })}
@@ -347,7 +348,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Montant estimé (MRU)</Label>
+                        <Label><T k="auto.tenderlotbuilder.montant_estime_mru" fallback="Montant estimé (MRU)" /></Label>
                         <div className="flex gap-2">
                           <Input
                             type="number"
@@ -371,7 +372,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Description</Label>
+                      <Label><T k="auto.tenderlotbuilder.description" fallback="Description" /></Label>
                       <Textarea
                         value={lot.description || ''}
                         onChange={(e) => updateLot(lot.id, { description: e.target.value })}
@@ -385,7 +386,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                       <div className="space-y-3">
                         <Label className="flex items-center gap-2">
                           <Link2 className="h-4 w-4 text-primary" />
-                          Phases du projet liées
+                          <T k="auto.tenderlotbuilder.phases_du_projet_liees" fallback="Phases du projet liées" />
                         </Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {phases.map(phase => (
@@ -468,7 +469,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                           onClick={() => removeLot(lot.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
-                          Supprimer le lot
+                          <T k="auto.tenderlotbuilder.supprimer_le_lot" fallback="Supprimer le lot" />
                         </Button>
                       </div>
                     )}
@@ -480,11 +481,11 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun lot défini</p>
+            <p><T k="auto.tenderlotbuilder.aucun_lot_defini" fallback="Aucun lot défini" /></p>
             {!readOnly && (
               <Button variant="outline" className="mt-4" onClick={addLot}>
                 <Plus className="h-4 w-4 mr-2" />
-                Créer le premier lot
+                <T k="auto.tenderlotbuilder.creer_le_premier_lot" fallback="Créer le premier lot" />
               </Button>
             )}
           </div>
@@ -502,7 +503,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
               {lots.every(l => l.title && l.estimatedAmount) ? (
                 <>
                   <CheckCircle className="h-4 w-4 text-success" />
-                  <span className="text-success font-medium">Tous les lots sont configurés</span>
+                  <span className="text-success font-medium"><T k="auto.tenderlotbuilder.tous_les_lots_sont_configures" fallback="Tous les lots sont configurés" /></span>
                 </>
               ) : (
                 <>

@@ -22,6 +22,7 @@ import {
   type InspectionFormData,
   type InspectionRow
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const InspectionCrud: React.FC = () => {
   const [selectedInspection, setSelectedInspection] = useState<InspectionRow | null>(null);
@@ -169,7 +170,7 @@ const InspectionCrud: React.FC = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Gestion des Inspections</CardTitle>
+        <CardTitle><T k="auto.inspectioncrud.gestion_des_inspections" fallback="Gestion des Inspections" /></CardTitle>
         <Dialog open={isFormOpen} onOpenChange={(open) => {
           setIsFormOpen(open);
           if (!open) resetForm();
@@ -177,7 +178,7 @@ const InspectionCrud: React.FC = () => {
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Nouvelle Inspection
+              <T k="auto.inspectioncrud.nouvelle_inspection" fallback="Nouvelle Inspection" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
@@ -189,7 +190,7 @@ const InspectionCrud: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label>Projet</Label>
+                <Label><T k="auto.inspectioncrud.projet" fallback="Projet" /></Label>
                 <ProjectSelector
                   value={formData.projectId || ''}
                   onChange={(value) => setFormData(prev => ({ 
@@ -201,7 +202,7 @@ const InspectionCrud: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="inspector">Inspecteur</Label>
+                <Label htmlFor="inspector"><T k="auto.inspectioncrud.inspecteur" fallback="Inspecteur" /></Label>
                 <Input
                   id="inspector"
                   value={formData.inspector}
@@ -212,7 +213,7 @@ const InspectionCrud: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date"><T k="auto.inspectioncrud.date" fallback="Date" /></Label>
                   <Input
                     id="date"
                     type="date"
@@ -222,7 +223,7 @@ const InspectionCrud: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.inspectioncrud.statut" fallback="Statut" /></Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
@@ -243,7 +244,7 @@ const InspectionCrud: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="progress">Progression (%)</Label>
+                <Label htmlFor="progress"><T k="auto.inspectioncrud.progression" fallback="Progression (%)" /></Label>
                 <Input
                   id="progress"
                   type="number"
@@ -260,7 +261,7 @@ const InspectionCrud: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="comments">Commentaires</Label>
+                <Label htmlFor="comments"><T k="auto.inspectioncrud.commentaires" fallback="Commentaires" /></Label>
                 <Textarea
                   id="comments"
                   value={formData.comments}
@@ -272,7 +273,7 @@ const InspectionCrud: React.FC = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.inspectioncrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -286,17 +287,17 @@ const InspectionCrud: React.FC = () => {
 
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">Chargement...</div>
+          <div className="text-center py-8"><T k="auto.inspectioncrud.chargement" fallback="Chargement..." /></div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Inspecteur</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Progression</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead><T k="auto.inspectioncrud.projet" fallback="Projet" /></TableHead>
+                <TableHead><T k="auto.inspectioncrud.inspecteur" fallback="Inspecteur" /></TableHead>
+                <TableHead><T k="auto.inspectioncrud.date" fallback="Date" /></TableHead>
+                <TableHead><T k="auto.inspectioncrud.statut" fallback="Statut" /></TableHead>
+                <TableHead><T k="auto.inspectioncrud.progression" fallback="Progression" /></TableHead>
+                <TableHead><T k="auto.inspectioncrud.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

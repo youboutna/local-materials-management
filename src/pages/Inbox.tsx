@@ -32,6 +32,7 @@ import {
 } from "@/hooks/hexagonal/useContactMessagesHex";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
 import type { ContactMessage } from "@/domain/entities/ContactMessage";
+import { T } from '@/components/i18n/T';
 
 type FilterTab = "all" | "unread" | "spam" | "archived";
 
@@ -104,7 +105,7 @@ const Inbox: React.FC = () => {
       <AppLayout pageTitle="Messagerie">
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
-            Accès restreint aux administrateurs.
+            <T k="auto.inbox.acces_restreint_aux_administrateurs" fallback="Accès restreint aux administrateurs." />
           </CardContent>
         </Card>
       </AppLayout>
@@ -128,7 +129,7 @@ const Inbox: React.FC = () => {
           aria-label="Rafraîchir la boîte de réception"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
-          Rafraîchir
+          <T k="auto.inbox.rafraichir" fallback="Rafraîchir" />
         </Button>
       }
     >
@@ -138,7 +139,7 @@ const Inbox: React.FC = () => {
             <TabsTrigger value="unread">
               Non lus {stats?.unreadMessages ? <Badge variant="secondary" className="ml-2">{stats.unreadMessages}</Badge> : null}
             </TabsTrigger>
-            <TabsTrigger value="all">Tous</TabsTrigger>
+            <TabsTrigger value="all"><T k="auto.inbox.tous" fallback="Tous" /></TabsTrigger>
             <TabsTrigger value="archived">
               Archivés {stats?.archivedMessages ? <Badge variant="secondary" className="ml-2">{stats.archivedMessages}</Badge> : null}
             </TabsTrigger>
@@ -176,7 +177,7 @@ const Inbox: React.FC = () => {
                   onClick={() => actions.bulkArchive.mutate(selectedArray, { onSuccess: () => setSelectedIds(new Set()) })}
                   aria-label="Archiver la sélection"
                 >
-                  <Archive className="h-4 w-4 mr-1" aria-hidden="true" /> Archiver
+                  <Archive className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.archiver" fallback="Archiver" />
                 </Button>
                 <Button
                   size="sm"
@@ -188,7 +189,7 @@ const Inbox: React.FC = () => {
                   }}
                   aria-label="Supprimer la sélection"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" /> Supprimer
+                  <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.supprimer" fallback="Supprimer" />
                 </Button>
               </div>
             )}
@@ -197,11 +198,11 @@ const Inbox: React.FC = () => {
             {isLoading ? (
               <Skeleton className="h-48 w-full" />
             ) : isError ? (
-              <p className="text-destructive">Erreur de chargement des messages.</p>
+              <p className="text-destructive"><T k="auto.inbox.erreur_de_chargement_des_messages" fallback="Erreur de chargement des messages." /></p>
             ) : filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <InboxIcon className="h-12 w-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
-                <p>Aucun message dans cette catégorie.</p>
+                <p><T k="auto.inbox.aucun_message_dans_cette_categorie" fallback="Aucun message dans cette catégorie." /></p>
               </div>
             ) : (
               <ul className="divide-y" aria-label="Liste des messages">
@@ -211,7 +212,7 @@ const Inbox: React.FC = () => {
                     onCheckedChange={toggleSelectAll}
                     aria-label="Tout sélectionner"
                   />
-                  <span>Sélectionner tout</span>
+                  <span><T k="auto.inbox.selectionner_tout" fallback="Sélectionner tout" /></span>
                 </li>
                 {filtered.map((msg) => {
                   const selected = selectedIds.has(msg.id);
@@ -239,10 +240,10 @@ const Inbox: React.FC = () => {
                           </span>
                           <span className="text-xs text-muted-foreground">&lt;{msg.senderEmail}&gt;</span>
                           {msg.isSpam && (
-                            <Badge variant="destructive" className="text-[10px]">SPAM</Badge>
+                            <Badge variant="destructive" className="text-[10px]"><T k="auto.inbox.spam" fallback="SPAM" /></Badge>
                           )}
                           {msg.isArchived && (
-                            <Badge variant="outline" className="text-[10px]">Archivé</Badge>
+                            <Badge variant="outline" className="text-[10px]"><T k="auto.inbox.archive" fallback="Archivé" /></Badge>
                           )}
                         </div>
                         <p className={`text-sm mt-1 ${msg.isRead ? "text-muted-foreground" : "font-medium"}`}>
@@ -294,7 +295,7 @@ const Inbox: React.FC = () => {
                   asChild
                 >
                   <a href={`mailto:${openMessage.senderEmail}?subject=Re: ${encodeURIComponent(openMessage.subject)}`}>
-                    <Mail className="h-4 w-4 mr-1" aria-hidden="true" /> Répondre
+                    <Mail className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.repondre" fallback="Répondre" />
                   </a>
                 </Button>
                 {!openMessage.isSpam && (
@@ -306,7 +307,7 @@ const Inbox: React.FC = () => {
                     }}
                     aria-label="Marquer comme spam"
                   >
-                    <ShieldAlert className="h-4 w-4 mr-1" aria-hidden="true" /> Spam
+                    <ShieldAlert className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.spam" fallback="Spam" />
                   </Button>
                 )}
                 {!openMessage.isArchived && (
@@ -318,7 +319,7 @@ const Inbox: React.FC = () => {
                     }}
                     aria-label="Archiver le message"
                   >
-                    <Archive className="h-4 w-4 mr-1" aria-hidden="true" /> Archiver
+                    <Archive className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.archiver" fallback="Archiver" />
                   </Button>
                 )}
                 <Button
@@ -331,7 +332,7 @@ const Inbox: React.FC = () => {
                   }}
                   aria-label="Supprimer le message"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" /> Supprimer
+                  <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.inbox.supprimer" fallback="Supprimer" />
                 </Button>
               </DialogFooter>
             </>

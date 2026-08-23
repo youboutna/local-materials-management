@@ -21,6 +21,7 @@ import {
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
+import { T } from '@/components/i18n/T';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -167,30 +168,30 @@ const Auth = () => {
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-adrar-800">
-                Accès au Portail
+                <T k="auto.auth.acces_au_portail" fallback="Accès au Portail" />
               </CardTitle>
-              <p className="text-muted-foreground">Connectez-vous ou créez un compte</p>
+              <p className="text-muted-foreground"><T k="auto.auth.connectez_vous_ou_creez_un_compte" fallback="Connectez-vous ou créez un compte" /></p>
             </CardHeader>
             <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                 <TabsTrigger value="login" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Connexion
+                  <T k="auto.auth.connexion" fallback="Connexion" />
                 </TabsTrigger>
                 <TabsTrigger
                   value="register"
                   className="flex items-center gap-2"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Inscription
+                  <T k="auto.auth.inscription" fallback="Inscription" />
                 </TabsTrigger>
                 <TabsTrigger
                   value="reset-password"
                   className="flex items-center gap-2"
                 >
                   <KeyRound className="h-4 w-4" />
-                  Mot de passe
+                  <T k="auto.auth.mot_de_passe" fallback="Mot de passe" />
                 </TabsTrigger>
               </TabsList>
 
@@ -198,9 +199,9 @@ const Auth = () => {
                 {/* 🔥 Éditeur d'email / mot de passe (s'affiche si email non confirmé) */}
                 {showEmailEditor && (
                   <div className="mb-6 p-4 border border-warning/30 bg-warning/10 rounded-md">
-                    <h3 className="font-semibold text-warning">Email non confirmé</h3>
+                    <h3 className="font-semibold text-warning"><T k="auto.auth.email_non_confirme" fallback="Email non confirmé" /></h3>
                     <p className="text-sm text-warning">
-                      L'email <strong>{unconfirmedEmail}</strong> n'a pas été confirmé.
+                      <T k="auto.auth.l_email" fallback="L'email" /> <strong>{unconfirmedEmail}</strong> n'a pas été confirmé.
                       Vous pouvez corriger votre email et/ou votre mot de passe ci‑dessous.
                     </p>
                     <div className="mt-3 flex flex-col gap-3">
@@ -222,11 +223,11 @@ const Auth = () => {
                           {loading ? 'Mise à jour...' : 'Mettre à jour et se connecter'}
                         </Button>
                         <Button variant="outline" onClick={cancelEmailEdit}>
-                          Annuler
+                          <T k="auto.auth.annuler" fallback="Annuler" />
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Un nouveau lien de confirmation sera envoyé à la nouvelle adresse.
+                        <T k="auto.auth.un_nouveau_lien_de_confirmation_sera_envoye_a_la" fallback="Un nouveau lien de confirmation sera envoyé à la nouvelle adresse." />
                       </p>
                     </div>
                   </div>
@@ -234,7 +235,7 @@ const Auth = () => {
 
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email"><T k="auto.auth.email" fallback="Email" /></Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -251,7 +252,7 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <Label htmlFor="login-password"><T k="auto.auth.mot_de_passe" fallback="Mot de passe" /></Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -292,7 +293,7 @@ const Auth = () => {
                       onClick={() => setActiveTab("reset-password")}
                       className="text-sm text-muted-foreground hover:text-foreground"
                     >
-                      Mot de passe oublié ?
+                      <T k="auto.auth.mot_de_passe_oublie" fallback="Mot de passe oublié ?" />
                     </Button>
                   </div>
 
@@ -328,7 +329,7 @@ const Auth = () => {
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="register-name">Nom complet</Label>
+                    <Label htmlFor="register-name"><T k="auto.auth.nom_complet" fallback="Nom complet" /></Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -344,7 +345,7 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
+                    <Label htmlFor="register-email"><T k="auto.auth.email" fallback="Email" /></Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -361,7 +362,7 @@ const Auth = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="register-phone">Téléphone</Label>
+                      <Label htmlFor="register-phone"><T k="auto.auth.telephone" fallback="Téléphone" /></Label>
                       <Input
                         id="register-phone"
                         type="tel"
@@ -371,7 +372,7 @@ const Auth = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="register-national-id">CIN</Label>
+                      <Label htmlFor="register-national-id"><T k="auto.auth.cin" fallback="CIN" /></Label>
                       <Input
                         id="register-national-id"
                         type="text"
@@ -383,7 +384,7 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-password">Mot de passe</Label>
+                    <Label htmlFor="register-password"><T k="auto.auth.mot_de_passe" fallback="Mot de passe" /></Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input

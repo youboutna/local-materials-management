@@ -20,6 +20,7 @@ import { CheckCircle, Download, Loader2, Mail } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
 import { formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;
@@ -216,7 +217,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             
             ${(reportData.inspection as any).comments || (reportData.inspection as any).notes ? `
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-              <h4 style="margin: 0 0 10px 0; color: #1e40af;">Notes de l'inspecteur:</h4>
+              <h4 style="margin: 0 0 10px 0; color: #1e40af;"><T k="auto.inspectionreportgenerator.notes_de_l_inspecteur" fallback="Notes de l'inspecteur:" /></h4>
               <p style="margin: 0; line-height: 1.6; color: #374151;">${(reportData.inspection as any).comments || (reportData.inspection as any).notes}</p>
             </div>
             ` : ''}
@@ -263,7 +264,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         <!-- Footer -->
         <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
           <p style="margin: 0;">Ce rapport d'inspection a été généré automatiquement le ${currentDate}</p>
-          <p style="margin: 5px 0 0 0;">Document confidentiel - Usage interne uniquement</p>
+          <p style="margin: 5px 0 0 0;"><T k="auto.inspectionreportgenerator.document_confidentiel_usage_interne_uniquement" fallback="Document confidentiel - Usage interne uniquement" /></p>
         </div>
       </div>
     `;
@@ -343,15 +344,15 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         message: `Veuillez trouver ci-joint le rapport d'inspection "${reportConfig.title}" pour l'inspection ${inspection.id}. Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,
         html: `
           <h2>Rapport d'inspection: ${reportConfig.title}</h2>
-          <p>Bonjour,</p>
-          <p>Veuillez trouver ci-joint le rapport d'inspection pour l'inspection <strong>${inspection.id}</strong>.</p>
-          <p><strong>Date d'inspection:</strong> ${(inspection as any).scheduledDate || (inspection as any).inspection_date ? format(new Date((inspection as any).scheduledDate || (inspection as any).inspection_date), 'dd/MM/yyyy') : 'N/A'}</p>
-          <p><strong>Type d'inspection:</strong> ${(inspection as any).type || (inspection as any).inspection_type || 'Non spécifié'}</p>
-          <p><strong>Statut:</strong> ${inspection.status || 'En attente'}</p>
-          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <p><T k="auto.inspectionreportgenerator.bonjour" fallback="Bonjour," /></p>
+          <p><T k="auto.inspectionreportgenerator.veuillez_trouver_ci_joint_le_rapport_d_inspectio" fallback="Veuillez trouver ci-joint le rapport d'inspection pour l'inspection" /> <strong>${inspection.id}</strong>.</p>
+          <p><strong><T k="auto.inspectionreportgenerator.date_d_inspection" fallback="Date d'inspection:" /></strong> ${(inspection as any).scheduledDate || (inspection as any).inspection_date ? format(new Date((inspection as any).scheduledDate || (inspection as any).inspection_date), 'dd/MM/yyyy') : 'N/A'}</p>
+          <p><strong><T k="auto.inspectionreportgenerator.type_d_inspection" fallback="Type d'inspection:" /></strong> ${(inspection as any).type || (inspection as any).inspection_type || 'Non spécifié'}</p>
+          <p><strong><T k="auto.inspectionreportgenerator.statut" fallback="Statut:" /></strong> ${inspection.status || 'En attente'}</p>
+          <p><T k="auto.inspectionreportgenerator.ce_rapport_a_ete_genere_automatiquement_par_le_s" fallback="Ce rapport a été généré automatiquement par le système." /></p>
           <br>
-          <p>Cordialement,</p>
-          <p>L'équipe d'inspection qualité</p>
+          <p><T k="auto.inspectionreportgenerator.cordialement" fallback="Cordialement," /></p>
+          <p><T k="auto.inspectionreportgenerator.l_equipe_d_inspection_qualite" fallback="L'équipe d'inspection qualité" /></p>
         `,
         actionType: 'inspection-report',
         attachments: [
@@ -386,14 +387,14 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5" />
-          Génération de Rapport d'Inspection
+          <T k="auto.inspectionreportgenerator.generation_de_rapport_d_inspection" fallback="Génération de Rapport d'Inspection" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reportTitle">Titre du rapport</Label>
+              <Label htmlFor="reportTitle"><T k="auto.inspectionreportgenerator.titre_du_rapport" fallback="Titre du rapport" /></Label>
               <Input
                 id="reportTitle"
                 value={reportConfig.title}
@@ -402,7 +403,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="recipientEmail">Email destinataire (optionnel)</Label>
+              <Label htmlFor="recipientEmail"><T k="auto.inspectionreportgenerator.email_destinataire_optionnel" fallback="Email destinataire (optionnel)" /></Label>
               <Input
                 id="recipientEmail"
                 type="email"
@@ -414,11 +415,11 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           </div>
 
           <div className="space-y-4">
-            <Label>Options du rapport</Label>
+            <Label><T k="auto.inspectionreportgenerator.options_du_rapport" fallback="Options du rapport" /></Label>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="includeRecommendations" className="text-sm">
-                  Inclure les recommandations
+                  <T k="auto.inspectionreportgenerator.inclure_les_recommandations" fallback="Inclure les recommandations" />
                 </Label>
                 <Switch
                   id="includeRecommendations"
@@ -428,7 +429,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="includePhotos" className="text-sm">
-                  Inclure les photos
+                  <T k="auto.inspectionreportgenerator.inclure_les_photos" fallback="Inclure les photos" />
                 </Label>
                 <Switch
                   id="includePhotos"
@@ -438,7 +439,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="includeMetrics" className="text-sm">
-                  Inclure les métriques
+                  <T k="auto.inspectionreportgenerator.inclure_les_metriques" fallback="Inclure les métriques" />
                 </Label>
                 <Switch
                   id="includeMetrics"
@@ -448,7 +449,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="includeTimeline" className="text-sm">
-                  Inclure la chronologie
+                  <T k="auto.inspectionreportgenerator.inclure_la_chronologie" fallback="Inclure la chronologie" />
                 </Label>
                 <Switch
                   id="includeTimeline"
@@ -458,7 +459,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="includeQualityScore" className="text-sm">
-                  Inclure le score de qualité
+                  <T k="auto.inspectionreportgenerator.inclure_le_score_de_qualite" fallback="Inclure le score de qualité" />
                 </Label>
                 <Switch
                   id="includeQualityScore"
@@ -471,7 +472,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="notes">Notes additionnelles</Label>
+          <Label htmlFor="notes"><T k="auto.inspectionreportgenerator.notes_additionnelles" fallback="Notes additionnelles" /></Label>
           <Textarea
             id="notes"
             value={reportConfig.notes}
@@ -487,19 +488,19 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         {metrics && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Total Inspections</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.inspectionreportgenerator.total_inspections" fallback="Total Inspections" /></p>
               <p className="font-bold text-lg">{metrics.totalInspections}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Réussies</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.inspectionreportgenerator.reussies" fallback="Réussies" /></p>
               <p className="font-bold text-lg text-success">{metrics.passedInspections}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Taux de Conformité</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.inspectionreportgenerator.taux_de_conformite" fallback="Taux de Conformité" /></p>
               <p className="font-bold text-lg text-primary">{formatPercent2(metrics.complianceRate)}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Score Moyen</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.inspectionreportgenerator.score_moyen" fallback="Score Moyen" /></p>
               <p className="font-bold text-lg text-purple-600">{formatPercent2(metrics.averageScore)}</p>
             </div>
           </div>
@@ -507,7 +508,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
 
         {/* Inspection Status */}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Statut de l'inspection:</span>
+          <span className="text-sm font-medium"><T k="auto.inspectionreportgenerator.statut_de_l_inspection" fallback="Statut de l'inspection:" /></span>
           <Badge variant="secondary" className={getInspectionStatusColor(inspection.status as string)}>
             {inspection.status || 'En attente'}
           </Badge>
@@ -545,7 +546,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           
           {onClose && (
             <Button onClick={onClose} variant="ghost">
-              Fermer
+              <T k="auto.inspectionreportgenerator.fermer" fallback="Fermer" />
             </Button>
           )}
         </div>

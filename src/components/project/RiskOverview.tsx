@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface RiskOverviewProps {
   risks: any[];
   projectId: string;
@@ -27,10 +28,10 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Risques du projet</h3>
+        <h3 className="text-lg font-semibold"><T k="auto.riskoverview.risques_du_projet" fallback="Risques du projet" /></h3>
         <Button onClick={() => navigate(`/projects/${projectId}/risks/new`)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau risque
+          <T k="auto.riskoverview.nouveau_risque" fallback="Nouveau risque" />
         </Button>
       </div>
 
@@ -52,22 +53,22 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
                   
                   <div className="flex justify-between items-center text-sm">
                     <div>
-                      <span className="font-medium">Probabilité: </span>
+                      <span className="font-medium"><T k="auto.riskoverview.probabilite" fallback="Probabilité:" /> </span>
                       {risk.probability}%
                     </div>
                     <div>
-                      <span className="font-medium">Impact: </span>
+                      <span className="font-medium"><T k="auto.riskoverview.impact" fallback="Impact:" /> </span>
                       {risk.impact}%
                     </div>
                     <div>
-                      <span className="font-medium">Score: </span>
+                      <span className="font-medium"><T k="auto.riskoverview.score" fallback="Score:" /> </span>
                       {(risk.probability * risk.impact / 100).toFixed(1)}
                     </div>
                   </div>
 
                   {risk.mitigationPlan && (
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Plan d'atténuation:</h4>
+                      <h4 className="text-sm font-medium mb-1"><T k="auto.riskoverview.plan_d_attenuation" fallback="Plan d'atténuation:" /></h4>
                       <p className="text-sm">{risk.mitigationPlan}</p>
                     </div>
                   )}
@@ -85,7 +86,7 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
 
                   {expandedRisk === risk.id && (
                     <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                      <h4 className="text-sm font-medium mb-2">Détails supplémentaires:</h4>
+                      <h4 className="text-sm font-medium mb-2"><T k="auto.riskoverview.details_supplementaires" fallback="Détails supplémentaires:" /></h4>
                       <p className="text-sm">Identifié le: {new Date(risk.createdAt || risk.created_at).toLocaleDateString()}</p>
                       {risk.relatedTasks && risk.relatedTasks.length > 0 && (
                         <p className="text-sm mt-1">
@@ -105,11 +106,11 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-6">
             <p className="text-muted-foreground text-center mb-4">
-              Aucun risque identifié pour ce projet
+              <T k="auto.riskoverview.aucun_risque_identifie_pour_ce_projet" fallback="Aucun risque identifié pour ce projet" />
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}/risks/new`)}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter un risque
+              <T k="auto.riskoverview.ajouter_un_risque" fallback="Ajouter un risque" />
             </Button>
           </CardContent>
         </Card>

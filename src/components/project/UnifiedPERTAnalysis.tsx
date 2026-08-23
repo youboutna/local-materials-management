@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PertService, type PertActivity, type PertActivityInput, type PertResult } from '@/application/services/PertService';
 import { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 interface UnifiedPERTAnalysisProps {
   projectId?: string;
@@ -96,7 +97,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Durée estimée</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.unifiedpertanalysis.duree_estimee" fallback="Durée estimée" /></p>
                 <p className="text-2xl font-bold">{projectDurationDays} jours</p>
               </div>
               <Clock className="h-8 w-8 text-primary" />
@@ -108,7 +109,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Écart-type</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.unifiedpertanalysis.ecart_type" fallback="Écart-type" /></p>
                 <p className="text-2xl font-bold">±{standardDeviation} j</p>
               </div>
               <BarChart3 className="h-8 w-8 text-warning" />
@@ -120,7 +121,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Confiance 95%</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.unifiedpertanalysis.confiance_95" fallback="Confiance 95%" /></p>
                 <p className="text-2xl font-bold">{confidenceLevel95Days} j</p>
               </div>
               <TrendingUp className="h-8 w-8 text-success" />
@@ -132,7 +133,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Chemin critique</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.unifiedpertanalysis.chemin_critique" fallback="Chemin critique" /></p>
                 <p className="text-2xl font-bold">{criticalPath.length} tâches</p>
               </div>
               <AlertTriangle className={`h-8 w-8 ${riskStatus === 'high' ? 'text-destructive' : riskStatus === 'medium' ? 'text-warning' : 'text-success'}`} />
@@ -146,7 +147,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            Évaluation des Risques de Délai
+            <T k="auto.unifiedpertanalysis.evaluation_des_risques_de_delai" fallback="Évaluation des Risques de Délai" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -163,15 +164,15 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Estimation optimiste</span>
+              <span><T k="auto.unifiedpertanalysis.estimation_optimiste" fallback="Estimation optimiste" /></span>
               <span className="font-medium">{Math.round(projectDurationDays - 1.645 * standardDeviation)} jours</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Estimation probable</span>
+              <span><T k="auto.unifiedpertanalysis.estimation_probable" fallback="Estimation probable" /></span>
               <span className="font-medium">{projectDurationDays} jours</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Estimation pessimiste (95%)</span>
+              <span><T k="auto.unifiedpertanalysis.estimation_pessimiste_95" fallback="Estimation pessimiste (95%)" /></span>
               <span className="font-medium">{confidenceLevel95Days} jours</span>
             </div>
           </div>
@@ -181,17 +182,17 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
       {/* Activities Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Activités PERT - Tâches</CardTitle>
+          <CardTitle><T k="auto.unifiedpertanalysis.activites_pert_taches" fallback="Activités PERT - Tâches" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Activité</th>
-                  <th className="text-right p-2">Optimiste (O)</th>
-                  <th className="text-right p-2">Probable (M)</th>
-                  <th className="text-right p-2">Pessimiste (P)</th>
+                  <th className="text-left p-2"><T k="auto.unifiedpertanalysis.activite" fallback="Activité" /></th>
+                  <th className="text-right p-2"><T k="auto.unifiedpertanalysis.optimiste_o" fallback="Optimiste (O)" /></th>
+                  <th className="text-right p-2"><T k="auto.unifiedpertanalysis.probable_m" fallback="Probable (M)" /></th>
+                  <th className="text-right p-2"><T k="auto.unifiedpertanalysis.pessimiste_p" fallback="Pessimiste (P)" /></th>
                   <th className="text-right p-2">PERT (O+4M+P)/6</th>
                   <th className="text-right p-2">σ (P-O)/6</th>
                 </tr>
@@ -219,7 +220,7 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
-              Activités PERT - Jalons
+              <T k="auto.unifiedpertanalysis.activites_pert_jalons" fallback="Activités PERT - Jalons" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -227,12 +228,12 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-2">Jalon</th>
-                    <th className="text-right p-2">Optimiste</th>
-                    <th className="text-right p-2">Probable</th>
-                    <th className="text-right p-2">Pessimiste</th>
-                    <th className="text-right p-2">Estimation PERT</th>
-                    <th className="text-right p-2">Écart-type</th>
+                    <th className="text-left p-2"><T k="auto.unifiedpertanalysis.jalon" fallback="Jalon" /></th>
+                    <th className="text-right p-2"><T k="auto.unifiedpertanalysis.optimiste" fallback="Optimiste" /></th>
+                    <th className="text-right p-2"><T k="auto.unifiedpertanalysis.probable" fallback="Probable" /></th>
+                    <th className="text-right p-2"><T k="auto.unifiedpertanalysis.pessimiste" fallback="Pessimiste" /></th>
+                    <th className="text-right p-2"><T k="auto.unifiedpertanalysis.estimation_pert" fallback="Estimation PERT" /></th>
+                    <th className="text-right p-2"><T k="auto.unifiedpertanalysis.ecart_type" fallback="Écart-type" /></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,15 +262,15 @@ const UnifiedPERTAnalysis: React.FC<UnifiedPERTAnalysisProps> = ({
       {/* Formula Reference */}
       <Card>
         <CardContent className="pt-4">
-          <h4 className="font-medium mb-2">Formules PERT utilisées</h4>
+          <h4 className="font-medium mb-2"><T k="auto.unifiedpertanalysis.formules_pert_utilisees" fallback="Formules PERT utilisées" /></h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
             <div>
-              <p><strong>Estimation PERT:</strong> (O + 4M + P) / 6</p>
-              <p><strong>Écart-type:</strong> σ = (P - O) / 6</p>
+              <p><strong><T k="auto.unifiedpertanalysis.estimation_pert" fallback="Estimation PERT:" /></strong> (O + 4M + P) / 6</p>
+              <p><strong><T k="auto.unifiedpertanalysis.ecart_type" fallback="Écart-type:" /></strong> σ = (P - O) / 6</p>
             </div>
             <div>
-              <p><strong>Variance:</strong> σ²</p>
-              <p><strong>Intervalle 95%:</strong> μ ± 1.645σ</p>
+              <p><strong><T k="auto.unifiedpertanalysis.variance" fallback="Variance:" /></strong> σ²</p>
+              <p><strong><T k="auto.unifiedpertanalysis.intervalle_95" fallback="Intervalle 95%:" /></strong> μ ± 1.645σ</p>
             </div>
           </div>
         </CardContent>

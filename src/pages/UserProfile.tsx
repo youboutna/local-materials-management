@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Shield } from "lucide-react";
+import { T } from '@/components/i18n/T';
 
 const UserProfile = () => {
   const { user, logout } = useAuth();
@@ -32,7 +33,7 @@ const UserProfile = () => {
   }, [user]);
 
   if (!user) {
-    return <div>Chargement du profil utilisateur...</div>;
+    return <div><T k="auto.userprofile.chargement_du_profil_utilisateur" fallback="Chargement du profil utilisateur..." /></div>;
   }
 
   return (
@@ -41,9 +42,9 @@ const UserProfile = () => {
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-lg border-none">
             <CardHeader className="bg-gradient-to-r from-adrar-700 to-terracotta-500 text-white rounded-t-lg pb-16">
-              <CardTitle className="text-2xl font-serif">Mon Profil</CardTitle>
+              <CardTitle className="text-2xl font-serif"><T k="auto.userprofile.mon_profil" fallback="Mon Profil" /></CardTitle>
               <CardDescription className="text-gray-100">
-                Informations de votre compte utilisateur
+                <T k="auto.userprofile.informations_de_votre_compte_utilisateur" fallback="Informations de votre compte utilisateur" />
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
@@ -82,15 +83,15 @@ const UserProfile = () => {
                 <div className="space-y-4">
                   <h3 className="font-medium text-foreground flex items-center">
                     <User className="h-4 w-4 mr-2" />
-                    Information utilisateur
+                    <T k="auto.userprofile.information_utilisateur" fallback="Information utilisateur" />
                   </h3>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div className="font-medium text-muted-foreground">
-                      Nom d'utilisateur
+                      <T k="auto.userprofile.nom_d_utilisateur" fallback="Nom d'utilisateur" />
                     </div>
                     <div className="col-span-2">{user.username}</div>
 
-                    <div className="font-medium text-muted-foreground">ID Keycloak</div>
+                    <div className="font-medium text-muted-foreground"><T k="auto.userprofile.id_keycloak" fallback="ID Keycloak" /></div>
                     <div className="col-span-2">
                       <code className="bg-muted px-1 py-0.5 rounded text-xs">
                         {(user.keycloakId ?? '').slice(0, 8)}...
@@ -103,17 +104,17 @@ const UserProfile = () => {
                 <div className="space-y-4">
                   <h3 className="font-medium text-foreground flex items-center">
                     <Shield className="h-4 w-4 mr-2" />
-                    Permissions
+                    <T k="auto.userprofile.permissions" fallback="Permissions" />
                   </h3>
                   <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
                     {(user.roles ?? []).includes("admin") && (
-                      <li>Accès complet à la gestion de projets</li>
+                      <li><T k="auto.userprofile.acces_complet_a_la_gestion_de_projets" fallback="Accès complet à la gestion de projets" /></li>
                     )}
                     {(user.roles ?? []).includes("user") && (
-                      <li>Accès à la visualisation des projets</li>
+                      <li><T k="auto.userprofile.acces_a_la_visualisation_des_projets" fallback="Accès à la visualisation des projets" /></li>
                     )}
                     {(user.roles ?? []).includes("material-manager") && (
-                      <li>Gestion des matériaux</li>
+                      <li><T k="auto.userprofile.gestion_des_materiaux" fallback="Gestion des matériaux" /></li>
                     )}
                   </ul>
                 </div>
@@ -126,7 +127,7 @@ const UserProfile = () => {
                   className="flex items-center"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Se déconnecter
+                  <T k="auto.userprofile.se_deconnecter" fallback="Se déconnecter" />
                 </Button>
               </div>
             </CardContent>

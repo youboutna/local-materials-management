@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface BankGuaranteeFormData {
   projectId: string;
@@ -83,7 +84,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Nouvelle Garantie Bancaire
+          <T k="auto.bankguaranteeformwithprojectselector.nouvelle_garantie_bancaire" fallback="Nouvelle Garantie Bancaire" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -101,7 +102,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="guaranteeNumber">Numéro de garantie</Label>
+              <Label htmlFor="guaranteeNumber"><T k="auto.bankguaranteeformwithprojectselector.numero_de_garantie" fallback="Numéro de garantie" /></Label>
               <Input
                 id="guaranteeNumber"
                 value={formData.guaranteeNumber}
@@ -111,21 +112,21 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
             </div>
 
             <div>
-              <Label htmlFor="currency">Devise</Label>
+              <Label htmlFor="currency"><T k="auto.bankguaranteeformwithprojectselector.devise" fallback="Devise" /></Label>
               <Select value={formData.currency} onValueChange={(value) => updateFormData('currency', value)}>
                 <SelectTrigger id="currency">
                   <SelectValue placeholder="Devise" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MRU">MRU</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="MRU"><T k="auto.bankguaranteeformwithprojectselector.mru" fallback="MRU" /></SelectItem>
+                  <SelectItem value="EUR"><T k="auto.bankguaranteeformwithprojectselector.eur" fallback="EUR" /></SelectItem>
+                  <SelectItem value="USD"><T k="auto.bankguaranteeformwithprojectselector.usd" fallback="USD" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="exchangeRate">Taux de change</Label>
+              <Label htmlFor="exchangeRate"><T k="auto.bankguaranteeformwithprojectselector.taux_de_change" fallback="Taux de change" /></Label>
               <Input
                 id="exchangeRate"
                 type="number"
@@ -162,17 +163,17 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="guaranteeType">Type de garantie</Label>
+              <Label htmlFor="guaranteeType"><T k="auto.bankguaranteeformwithprojectselector.type_de_garantie" fallback="Type de garantie" /></Label>
               <Select value={formData.guaranteeType} onValueChange={(value) => updateFormData('guaranteeType', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="soumission">Garantie de soumission</SelectItem>
-                  <SelectItem value="bonne_execution">Garantie de bonne exécution</SelectItem>
-                  <SelectItem value="avance">Garantie de remboursement d'avance</SelectItem>
-                  <SelectItem value="retenue_garantie">Garantie de retenue</SelectItem>
-                  <SelectItem value="autre">Autre</SelectItem>
+                  <SelectItem value="soumission"><T k="auto.bankguaranteeformwithprojectselector.garantie_de_soumission" fallback="Garantie de soumission" /></SelectItem>
+                  <SelectItem value="bonne_execution"><T k="auto.bankguaranteeformwithprojectselector.garantie_de_bonne_execution" fallback="Garantie de bonne exécution" /></SelectItem>
+                  <SelectItem value="avance"><T k="auto.bankguaranteeformwithprojectselector.garantie_de_remboursement_d_avance" fallback="Garantie de remboursement d'avance" /></SelectItem>
+                  <SelectItem value="retenue_garantie"><T k="auto.bankguaranteeformwithprojectselector.garantie_de_retenue" fallback="Garantie de retenue" /></SelectItem>
+                  <SelectItem value="autre"><T k="auto.bankguaranteeformwithprojectselector.autre" fallback="Autre" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -245,22 +246,22 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
           </div>
 
           <div>
-            <Label htmlFor="status">Statut</Label>
+            <Label htmlFor="status"><T k="auto.bankguaranteeformwithprojectselector.statut" fallback="Statut" /></Label>
             <Select value={formData.status} onValueChange={(value) => updateFormData('status', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expired">Expirée</SelectItem>
-                <SelectItem value="used">Utilisée</SelectItem>
+                <SelectItem value="active"><T k="auto.bankguaranteeformwithprojectselector.active" fallback="Active" /></SelectItem>
+                <SelectItem value="expired"><T k="auto.bankguaranteeformwithprojectselector.expiree" fallback="Expirée" /></SelectItem>
+                <SelectItem value="used"><T k="auto.bankguaranteeformwithprojectselector.utilisee" fallback="Utilisée" /></SelectItem>
                 <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label htmlFor="conditions">Conditions particulières</Label>
+            <Label htmlFor="conditions"><T k="auto.bankguaranteeformwithprojectselector.conditions_particulieres" fallback="Conditions particulières" /></Label>
             <Textarea
               id="conditions"
               rows={3}

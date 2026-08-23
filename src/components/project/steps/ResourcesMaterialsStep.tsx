@@ -5,6 +5,7 @@ import { Package, FileText } from 'lucide-react';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 // Extended form data interface for resource step with snake_case fields
 interface ResourcesFormData extends Partial<ProjectDTO> {
@@ -47,14 +48,14 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
             </TabsTrigger>
             <TabsTrigger value="documents" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Documents Associés
+              <T k="auto.resourcesmaterialsstep.documents_associes" fallback="Documents Associés" />
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="materials" className="space-y-6">
             {/* Sélection des matériaux */}
             <div>
-              <label className="block text-sm font-medium mb-2">Matériaux du projet</label>
+              <label className="block text-sm font-medium mb-2"><T k="auto.resourcesmaterialsstep.materiaux_du_projet" fallback="Matériaux du projet" /></label>
               <MaterialFormSection
                 selectedMaterials={selectedMaterials}
                 onChange={onMaterialsChange}
@@ -64,10 +65,10 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
 
           {/* Rattachement aux phases/tâches */}
           <div className="border-t pt-6">
-            <h3 className="text-lg font-medium mb-4">Rattachement des ressources</h3>
+            <h3 className="text-lg font-medium mb-4"><T k="auto.resourcesmaterialsstep.rattachement_des_ressources" fallback="Rattachement des ressources" /></h3>
             <div className="space-y-4">
               <div className="p-4 border rounded-lg bg-primary/10">
-                <h4 className="font-medium mb-2">Organisation par phases</h4>
+                <h4 className="font-medium mb-2"><T k="auto.resourcesmaterialsstep.organisation_par_phases" fallback="Organisation par phases" /></h4>
                 <p className="text-sm text-muted-foreground mb-3">
                   Les matériaux peuvent être rattachés à des phases spécifiques ou à des tâches individuelles
                 </p>
@@ -80,7 +81,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                       className="mr-2"
                       defaultChecked
                     />
-                    Rattacher aux phases du projet
+                    <T k="auto.resourcesmaterialsstep.rattacher_aux_phases_du_projet" fallback="Rattacher aux phases du projet" />
                   </label>
                   <label className="flex items-center">
                     <input 
@@ -89,7 +90,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                       value="task"
                       className="mr-2"
                     />
-                    Rattacher aux tâches spécifiques
+                    <T k="auto.resourcesmaterialsstep.rattacher_aux_taches_specifiques" fallback="Rattacher aux tâches spécifiques" />
                   </label>
                   <label className="flex items-center">
                     <input 
@@ -98,7 +99,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                       value="general"
                       className="mr-2"
                     />
-                    Ressources générales du projet
+                    <T k="auto.resourcesmaterialsstep.ressources_generales_du_projet" fallback="Ressources générales du projet" />
                   </label>
                 </div>
               </div>
@@ -107,10 +108,10 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
 
           {/* Informations sur les ressources */}
           <div className="border-t pt-6">
-            <h3 className="text-lg font-medium mb-4">Informations sur les ressources</h3>
+            <h3 className="text-lg font-medium mb-4"><T k="auto.resourcesmaterialsstep.informations_sur_les_ressources" fallback="Informations sur les ressources" /></h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Budget matériaux estimé</label>
+                <label className="block text-sm font-medium mb-2"><T k="auto.resourcesmaterialsstep.budget_materiaux_estime" fallback="Budget matériaux estimé" /></label>
                 <input 
                   type="number" 
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -120,7 +121,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Délai d'approvisionnement (jours)</label>
+                <label className="block text-sm font-medium mb-2"><T k="auto.resourcesmaterialsstep.delai_d_approvisionnement_jours" fallback="Délai d'approvisionnement (jours)" /></label>
                 <input 
                   type="number" 
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -134,7 +135,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
 
             {/* Résumé des matériaux sélectionnés */}
             <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4">Résumé des matériaux</h3>
+              <h3 className="text-lg font-medium mb-4"><T k="auto.resourcesmaterialsstep.resume_des_materiaux" fallback="Résumé des matériaux" /></h3>
               <div className="bg-muted p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground">
                   <strong>{selectedMaterials.length}</strong> matériau(x) sélectionné(s)

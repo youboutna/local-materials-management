@@ -16,6 +16,7 @@ import {
   Info
 } from 'lucide-react';
 import { useConfiguration } from '@/hooks/hexagonal/useConfigurationHex';
+import { T } from '@/components/i18n/T';
 
 const DeploymentSettings = () => {
   const {
@@ -97,7 +98,7 @@ const DeploymentSettings = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Server className="mr-2 h-5 w-5" />
-            Deployment Configuration
+            <T k="auto.deploymentsettings.deployment_configuration" fallback="Deployment Configuration" />
           </CardTitle>
           <CardDescription>
             Choose your deployment scenario and get configuration files and setup instructions.
@@ -124,7 +125,7 @@ const DeploymentSettings = () => {
                   {template.config.features.realtime ? <Cloud className="h-5 w-5" /> : <Container className="h-5 w-5" />}
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   {template.recommended && (
-                    <Badge variant="default" className="text-xs">Recommended</Badge>
+                    <Badge variant="default" className="text-xs"><T k="auto.deploymentsettings.recommended" fallback="Recommended" /></Badge>
                   )}
                 </div>
                 {getDifficultyBadge(template.difficulty)}
@@ -134,21 +135,21 @@ const DeploymentSettings = () => {
             <CardContent className="pt-0">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Cost:</span>
+                  <span className="text-muted-foreground"><T k="auto.deploymentsettings.cost" fallback="Cost:" /></span>
                   <span>{template.cost}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {template.config.features.realtime && (
-                    <Badge variant="outline" className="text-xs">Real-time</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.deploymentsettings.real_time" fallback="Real-time" /></Badge>
                   )}
                   {template.config.features.edgeFunctions && (
-                    <Badge variant="outline" className="text-xs">Edge Functions</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.deploymentsettings.edge_functions" fallback="Edge Functions" /></Badge>
                   )}
                   {template.config.features.monitoring && (
-                    <Badge variant="outline" className="text-xs">Monitoring</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.deploymentsettings.monitoring" fallback="Monitoring" /></Badge>
                   )}
                   {template.config.features.caching && (
-                    <Badge variant="outline" className="text-xs">Caching</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.deploymentsettings.caching" fallback="Caching" /></Badge>
                   )}
                 </div>
               </div>
@@ -165,20 +166,20 @@ const DeploymentSettings = () => {
               {selectedTemplate.name} Configuration
             </CardTitle>
             <CardDescription>
-              Configuration files and setup instructions for your selected deployment scenario.
+              <T k="auto.deploymentsettings.configuration_files_and_setup_instructions_for_y" fallback="Configuration files and setup instructions for your selected deployment scenario." />
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="environment" className="w-full">
               <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
-                <TabsTrigger value="environment">Environment</TabsTrigger>
-                <TabsTrigger value="docker">Docker</TabsTrigger>
-                <TabsTrigger value="steps">Setup Steps</TabsTrigger>
+                <TabsTrigger value="environment"><T k="auto.deploymentsettings.environment" fallback="Environment" /></TabsTrigger>
+                <TabsTrigger value="docker"><T k="auto.deploymentsettings.docker" fallback="Docker" /></TabsTrigger>
+                <TabsTrigger value="steps"><T k="auto.deploymentsettings.setup_steps" fallback="Setup Steps" /></TabsTrigger>
               </TabsList>
               
               <TabsContent value="environment" className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">Environment Variables (.env)</h4>
+                  <h4 className="text-sm font-medium"><T k="auto.deploymentsettings.environment_variables_env" fallback="Environment Variables (.env)" /></h4>
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -186,7 +187,7 @@ const DeploymentSettings = () => {
                       onClick={handleCopyEnvironment}
                     >
                       <Copy className="h-4 w-4 mr-2" />
-                      Copy
+                      <T k="auto.deploymentsettings.copy" fallback="Copy" />
                     </Button>
                     <Button
                       variant="outline"
@@ -194,7 +195,7 @@ const DeploymentSettings = () => {
                       onClick={handleDownloadEnvironment}
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download
+                      <T k="auto.deploymentsettings.download" fallback="Download" />
                     </Button>
                   </div>
                 </div>
@@ -207,7 +208,7 @@ const DeploymentSettings = () => {
                 {selectedTemplate.id === 'docker' ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">Docker Compose Configuration</h4>
+                      <h4 className="text-sm font-medium"><T k="auto.deploymentsettings.docker_compose_configuration" fallback="Docker Compose Configuration" /></h4>
                       <div className="flex space-x-2">
                         <Button
                           variant="outline"
@@ -215,7 +216,7 @@ const DeploymentSettings = () => {
                           onClick={handleCopyDockerCompose}
                         >
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy
+                          <T k="auto.deploymentsettings.copy" fallback="Copy" />
                         </Button>
                         <Button
                           variant="outline"
@@ -223,7 +224,7 @@ const DeploymentSettings = () => {
                           onClick={handleDownloadDockerCompose}
                         >
                           <Download className="h-4 w-4 mr-2" />
-                          Download
+                          <T k="auto.deploymentsettings.download" fallback="Download" />
                         </Button>
                       </div>
                     </div>
@@ -243,7 +244,7 @@ const DeploymentSettings = () => {
               </TabsContent>
               
               <TabsContent value="steps" className="space-y-4">
-                <h4 className="text-sm font-medium">Setup Instructions</h4>
+                <h4 className="text-sm font-medium"><T k="auto.deploymentsettings.setup_instructions" fallback="Setup Instructions" /></h4>
                 <div className="space-y-3">
                   {selectedTemplate.setupSteps.map((step, index) => (
                     <div key={index} className="flex items-start space-x-3">
@@ -263,24 +264,24 @@ const DeploymentSettings = () => {
       {/* Additional Resources */}
       <Card>
         <CardHeader>
-          <CardTitle>Additional Resources</CardTitle>
+          <CardTitle><T k="auto.deploymentsettings.additional_resources" fallback="Additional Resources" /></CardTitle>
           <CardDescription>
-            Helpful links and documentation for your deployment scenario.
+            <T k="auto.deploymentsettings.helpful_links_and_documentation_for_your_deploym" fallback="Helpful links and documentation for your deployment scenario." />
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button variant="outline" className="justify-start">
               <ExternalLink className="h-4 w-4 mr-2" />
-              Deployment Guide Documentation
+              <T k="auto.deploymentsettings.deployment_guide_documentation" fallback="Deployment Guide Documentation" />
             </Button>
             <Button variant="outline" className="justify-start">
               <ExternalLink className="h-4 w-4 mr-2" />
-              Provider-Specific Setup Guides
+              <T k="auto.deploymentsettings.provider_specific_setup_guides" fallback="Provider-Specific Setup Guides" />
             </Button>
             <Button variant="outline" className="justify-start">
               <ExternalLink className="h-4 w-4 mr-2" />
-              Security Best Practices
+              <T k="auto.deploymentsettings.security_best_practices" fallback="Security Best Practices" />
             </Button>
             <Button variant="outline" className="justify-start">
               <ExternalLink className="h-4 w-4 mr-2" />

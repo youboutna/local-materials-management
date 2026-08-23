@@ -32,6 +32,7 @@ import ConsultantProgressValidation from './components/ConsultantProgressValidat
 import ConsultantAlertsPanel from './components/ConsultantAlertsPanel';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const KpiCard = ({
   label,
   value,
@@ -94,18 +95,18 @@ const ConsultantDashboard = () => {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/">Accueil</BreadcrumbLink>
+              <BreadcrumbLink href="/"><T k="auto.consultantdashboard.accueil" fallback="Accueil" /></BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Portail Consultant</BreadcrumbPage>
+              <BreadcrumbPage><T k="auto.consultantdashboard.portail_consultant" fallback="Portail Consultant" /></BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         <header>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Suivi, validation et déclenchement de paiement
+            <T k="auto.consultantdashboard.suivi_validation_et_declenchement_de_paiement" fallback="Suivi, validation et déclenchement de paiement" />
           </h1>
           <p className="text-sm text-muted-foreground">
             {isLoading
@@ -148,23 +149,23 @@ const ConsultantDashboard = () => {
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="validation" className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-              Avancement
+              <T k="auto.consultantdashboard.avancement" fallback="Avancement" />
             </TabsTrigger>
             <TabsTrigger value="invoices" className="flex items-center gap-2">
               <FileText className="h-4 w-4" aria-hidden="true" />
-              Décomptes
+              <T k="auto.consultantdashboard.decomptes" fallback="Décomptes" />
             </TabsTrigger>
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" aria-hidden="true" />
-              Paiements
+              <T k="auto.consultantdashboard.paiements" fallback="Paiements" />
             </TabsTrigger>
             <TabsTrigger value="alerts" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-              Alertes
+              <T k="auto.consultantdashboard.alertes" fallback="Alertes" />
             </TabsTrigger>
             <TabsTrigger value="documents" className="flex items-center gap-2">
               <FileText className="h-4 w-4" aria-hidden="true" />
-              Documents
+              <T k="auto.consultantdashboard.documents" fallback="Documents" />
             </TabsTrigger>
           </TabsList>
 
@@ -177,7 +178,7 @@ const ConsultantDashboard = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <FileSpreadsheet className="h-5 w-5" aria-hidden="true" />
-                  Analyse des décomptes (module DQE)
+                  <T k="auto.consultantdashboard.analyse_des_decomptes_module_dqe" fallback="Analyse des décomptes (module DQE)" />
                 </CardTitle>
                 <CardDescription>
                   Sélectionnez un projet pour analyser les décomptes / factures ligne par ligne,
@@ -188,7 +189,7 @@ const ConsultantDashboard = () => {
                 {hasScope ? (
                   <>
                     <div className="max-w-md space-y-1">
-                      <Label htmlFor="consultant-invoice-project">Projet</Label>
+                      <Label htmlFor="consultant-invoice-project"><T k="auto.consultantdashboard.projet" fallback="Projet" /></Label>
                       <Select
                         value={invoiceProjectId ?? ''}
                         onValueChange={(v) => setInvoiceProjectId(v)}
@@ -214,13 +215,13 @@ const ConsultantDashboard = () => {
                       />
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        Aucun projet sélectionné.
+                        <T k="auto.consultantdashboard.aucun_projet_selectionne" fallback="Aucun projet sélectionné." />
                       </p>
                     )}
                   </>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Vous n'êtes assigné à aucun projet en tant que consultant.
+                    <T k="auto.consultantdashboard.vous_n_etes_assigne_a_aucun_projet_en_tant_que_c" fallback="Vous n'êtes assigné à aucun projet en tant que consultant." />
                   </p>
                 )}
               </CardContent>
@@ -233,9 +234,9 @@ const ConsultantDashboard = () => {
             {unreadPaymentNotifications.length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Notifications de paiement à traiter</CardTitle>
+                  <CardTitle className="text-base"><T k="auto.consultantdashboard.notifications_de_paiement_a_traiter" fallback="Notifications de paiement à traiter" /></CardTitle>
                   <CardDescription>
-                    Accédez aux demandes de paiement qui vous ont été notifiées.
+                    <T k="auto.consultantdashboard.accedez_aux_demandes_de_paiement_qui_vous_ont_et" fallback="Accédez aux demandes de paiement qui vous ont été notifiées." />
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -252,11 +253,11 @@ const ConsultantDashboard = () => {
                         <Badge variant="outline"><TranslatedDocumentType code={n.type} /></Badge>
                         {n.actionUrl && (
                           <Button size="sm" variant="outline" asChild>
-                            <a href={n.actionUrl}>Ouvrir</a>
+                            <a href={n.actionUrl}><T k="auto.consultantdashboard.ouvrir" fallback="Ouvrir" /></a>
                           </Button>
                         )}
                         <Button size="sm" variant="ghost" onClick={() => markNotificationAsRead(n.id)}>
-                          Marquer lu
+                          <T k="auto.consultantdashboard.marquer_lu" fallback="Marquer lu" />
                         </Button>
                       </div>
                     </div>
@@ -269,7 +270,7 @@ const ConsultantDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <DollarSign className="h-5 w-5" aria-hidden="true" />
-                  Paiements de mes projets
+                  <T k="auto.consultantdashboard.paiements_de_mes_projets" fallback="Paiements de mes projets" />
                 </CardTitle>
                 <CardDescription>
                   {hasScope
@@ -288,8 +289,8 @@ const ConsultantDashboard = () => {
                 ) : (
                   <div className="py-8 text-center text-muted-foreground">
                     <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" aria-hidden="true" />
-                    <p>Vous n'êtes assigné à aucun projet en tant que consultant.</p>
-                    <p className="text-sm">Contactez l'administrateur pour vous affecter à un projet.</p>
+                    <p><T k="auto.consultantdashboard.vous_n_etes_assigne_a_aucun_projet_en_tant_que_c" fallback="Vous n'êtes assigné à aucun projet en tant que consultant." /></p>
+                    <p className="text-sm"><T k="auto.consultantdashboard.contactez_l_administrateur_pour_vous_affecter_a_" fallback="Contactez l'administrateur pour vous affecter à un projet." /></p>
                   </div>
                 )}
               </CardContent>

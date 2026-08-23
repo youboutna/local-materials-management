@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/hexagonal';
 import { useTenderEvaluationHex, TenderSubmission } from '@/hooks/hexagonal/useTenderEvaluationHex';
 import { DEFAULT_EVALUATION_CRITERIA } from '@/config/referentials/tender/evaluation-criteria.referential';
 import { TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS } from '@/config/referentials/tender/document-categories.referential';
+import { T } from '@/components/i18n/T';
 
 interface TenderEvaluationPanelProps {
   tenderId: string;
@@ -79,7 +80,7 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Chargement des soumissions...</p>
+            <p className="text-muted-foreground"><T k="auto.tenderevaluationpanel.chargement_des_soumissions" fallback="Chargement des soumissions..." /></p>
           </div>
         </CardContent>
       </Card>
@@ -91,9 +92,9 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
       <Card>
         <CardContent className="text-center py-12">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Aucune soumission</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.tenderevaluationpanel.aucune_soumission" fallback="Aucune soumission" /></h3>
           <p className="text-muted-foreground">
-            Aucune soumission n'a encore été reçue pour cet appel d'offres.
+            <T k="auto.tenderevaluationpanel.aucune_soumission_n_a_encore_ete_recue_pour_cet_" fallback="Aucune soumission n'a encore été reçue pour cet appel d'offres." />
           </p>
         </CardContent>
       </Card>
@@ -174,9 +175,9 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
             <CardContent className="flex-1 overflow-hidden">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
                 <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 mb-4">
-                  <TabsTrigger value="administrative">Administrative</TabsTrigger>
-                  <TabsTrigger value="technical">Technique</TabsTrigger>
-                  <TabsTrigger value="financial">Financière</TabsTrigger>
+                  <TabsTrigger value="administrative"><T k="auto.tenderevaluationpanel.administrative" fallback="Administrative" /></TabsTrigger>
+                  <TabsTrigger value="technical"><T k="auto.tenderevaluationpanel.technique" fallback="Technique" /></TabsTrigger>
+                  <TabsTrigger value="financial"><T k="auto.tenderevaluationpanel.financiere" fallback="Financière" /></TabsTrigger>
                 </TabsList>
 
                 <div className="flex-1 overflow-y-auto">
@@ -210,9 +211,9 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
                 <Users className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium mb-2">Sélectionnez une soumission</h3>
+              <h3 className="text-lg font-medium mb-2"><T k="auto.tenderevaluationpanel.selectionnez_une_soumission" fallback="Sélectionnez une soumission" /></h3>
               <p className="text-muted-foreground max-w-md">
-                Choisissez une soumission dans la liste de gauche pour commencer l'évaluation.
+                <T k="auto.tenderevaluationpanel.choisissez_une_soumission_dans_la_liste_de_gauch" fallback="Choisissez une soumission dans la liste de gauche pour commencer l'évaluation." />
               </p>
             </CardContent>
           </Card>
@@ -241,7 +242,7 @@ const AdministrativeEvaluation: React.FC<{
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Vérification Administrative</h3>
+        <h3 className="text-lg font-medium"><T k="auto.tenderevaluationpanel.verification_administrative" fallback="Vérification Administrative" /></h3>
         <Badge className={isComplete ? 'bg-success-soft text-success' : 'bg-destructive/10 text-destructive'}>
           {isComplete ? 'Recevable' : 'Non Recevable'}
         </Badge>
@@ -249,7 +250,7 @@ const AdministrativeEvaluation: React.FC<{
 
       <div className="grid gap-4">
         <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-3">Documents Requis</h4>
+          <h4 className="font-medium mb-3"><T k="auto.tenderevaluationpanel.documents_requis" fallback="Documents Requis" /></h4>
           <div className="space-y-2">
             {requiredDocs.map((doc, index) => {
               const hasDoc = index < adminDocuments.length;
@@ -267,7 +268,7 @@ const AdministrativeEvaluation: React.FC<{
             
             {adminDocuments.length > 0 && (
               <div className="mt-4 pt-4 border-t">
-                <h5 className="font-medium mb-2">Documents soumis:</h5>
+                <h5 className="font-medium mb-2"><T k="auto.tenderevaluationpanel.documents_soumis" fallback="Documents soumis:" /></h5>
                 {adminDocuments.map((doc, index) => (
                   <div key={index} className="flex items-center justify-between py-1">
                     <span className="text-sm">{doc.document.title}</span>
@@ -277,7 +278,7 @@ const AdministrativeEvaluation: React.FC<{
                       onClick={() => window.open(doc.document.file_url, '_blank')}
                     >
                       <Download className="h-3 w-3 mr-1" />
-                      Voir
+                      <T k="auto.tenderevaluationpanel.voir" fallback="Voir" />
                     </Button>
                   </div>
                 ))}
@@ -286,14 +287,14 @@ const AdministrativeEvaluation: React.FC<{
           </div>
           <div className="mt-4 pt-4 border-t">
             <div className="flex items-center justify-between">
-              <span className="font-medium">Taux de Complétude</span>
+              <span className="font-medium"><T k="auto.tenderevaluationpanel.taux_de_completude" fallback="Taux de Complétude" /></span>
               <span className="font-bold">{completionRate.toFixed(0)}%</span>
             </div>
           </div>
         </div>
 
         <div className="p-4 border rounded-lg">
-          <Label htmlFor="admin-notes">Notes d'Évaluation</Label>
+          <Label htmlFor="admin-notes"><T k="auto.tenderevaluationpanel.notes_d_evaluation" fallback="Notes d'Évaluation" /></Label>
           <Textarea
             id="admin-notes"
             value={notes}
@@ -307,7 +308,7 @@ const AdministrativeEvaluation: React.FC<{
             className="mt-2"
             size="sm"
           >
-            Sauvegarder les Notes
+            <T k="auto.tenderevaluationpanel.sauvegarder_les_notes" fallback="Sauvegarder les Notes" />
           </Button>
         </div>
 
@@ -318,7 +319,7 @@ const AdministrativeEvaluation: React.FC<{
             variant={submission.status === 'approved' ? 'default' : 'outline'}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Déclarer Recevable
+            <T k="auto.tenderevaluationpanel.declarer_recevable" fallback="Déclarer Recevable" />
           </Button>
           <Button
             onClick={() => onUpdate(submission.id, 'status', 'rejected')}
@@ -326,7 +327,7 @@ const AdministrativeEvaluation: React.FC<{
             variant={submission.status === 'rejected' ? 'destructive' : 'outline'}
           >
             <XCircle className="h-4 w-4 mr-2" />
-            Déclarer Non Recevable
+            <T k="auto.tenderevaluationpanel.declarer_non_recevable" fallback="Déclarer Non Recevable" />
           </Button>
         </div>
       </div>
@@ -349,7 +350,7 @@ const TechnicalEvaluation: React.FC<{
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Évaluation Technique</h3>
+        <h3 className="text-lg font-medium"><T k="auto.tenderevaluationpanel.evaluation_technique" fallback="Évaluation Technique" /></h3>
         <Badge variant="outline">
           Score: {score}/100
         </Badge>
@@ -357,7 +358,7 @@ const TechnicalEvaluation: React.FC<{
 
       <div className="grid gap-4">
         <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-3">Critères d'Évaluation</h4>
+          <h4 className="font-medium mb-3"><T k="auto.tenderevaluationpanel.criteres_d_evaluation" fallback="Critères d'Évaluation" /></h4>
           <div className="space-y-3">
             {criteria.map((criterion, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-muted rounded">
@@ -368,7 +369,7 @@ const TechnicalEvaluation: React.FC<{
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">Score:</span>
+                  <span className="text-sm"><T k="auto.tenderevaluationpanel.score" fallback="Score:" /></span>
                   <input
                     type="number"
                     min="0"
@@ -384,7 +385,7 @@ const TechnicalEvaluation: React.FC<{
         </div>
 
         <div className="p-4 border rounded-lg">
-          <Label htmlFor="tech-score">Score Technique Total</Label>
+          <Label htmlFor="tech-score"><T k="auto.tenderevaluationpanel.score_technique_total" fallback="Score Technique Total" /></Label>
           <div className="flex items-center gap-2 mt-2">
             <input
               id="tech-score"
@@ -400,13 +401,13 @@ const TechnicalEvaluation: React.FC<{
               onClick={() => onUpdate(submission.id, 'technical_score', score)}
               size="sm"
             >
-              Sauvegarder
+              <T k="auto.tenderevaluationpanel.sauvegarder" fallback="Sauvegarder" />
             </Button>
           </div>
         </div>
 
         <div className="p-4 border rounded-lg">
-          <Label htmlFor="tech-notes">Commentaires Techniques</Label>
+          <Label htmlFor="tech-notes"><T k="auto.tenderevaluationpanel.commentaires_techniques" fallback="Commentaires Techniques" /></Label>
           <Textarea
             id="tech-notes"
             value={notes}
@@ -420,7 +421,7 @@ const TechnicalEvaluation: React.FC<{
             className="mt-2"
             size="sm"
           >
-            Sauvegarder les Commentaires
+            <T k="auto.tenderevaluationpanel.sauvegarder_les_commentaires" fallback="Sauvegarder les Commentaires" />
           </Button>
         </div>
       </div>
@@ -439,7 +440,7 @@ const FinancialEvaluation: React.FC<{
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Évaluation Financière</h3>
+        <h3 className="text-lg font-medium"><T k="auto.tenderevaluationpanel.evaluation_financiere" fallback="Évaluation Financière" /></h3>
         <Badge variant="outline">
           <Calculator className="h-4 w-4 mr-1" />
           Score: {score}/100
@@ -448,7 +449,7 @@ const FinancialEvaluation: React.FC<{
 
       <div className="grid gap-4">
         <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-3">Documents Financiers</h4>
+          <h4 className="font-medium mb-3"><T k="auto.tenderevaluationpanel.documents_financiers" fallback="Documents Financiers" /></h4>
           <div className="space-y-2">
             {(submission.submission_documents?.filter(doc => doc.category === 'financial') || []).map((doc, index) => (
               <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
@@ -459,7 +460,7 @@ const FinancialEvaluation: React.FC<{
                   onClick={() => window.open(doc.document.file_url, '_blank')}
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Télécharger
+                  <T k="auto.tenderevaluationpanel.telecharger" fallback="Télécharger" />
                 </Button>
               </div>
             ))}
@@ -467,10 +468,10 @@ const FinancialEvaluation: React.FC<{
         </div>
 
         <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-3">Analyse Financière</h4>
+          <h4 className="font-medium mb-3"><T k="auto.tenderevaluationpanel.analyse_financiere" fallback="Analyse Financière" /></h4>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Montant Total Proposé</Label>
+              <Label><T k="auto.tenderevaluationpanel.montant_total_propose" fallback="Montant Total Proposé" /></Label>
               <input
                 type="number"
                 className="w-full mt-1 px-3 py-2 border rounded"
@@ -478,7 +479,7 @@ const FinancialEvaluation: React.FC<{
               />
             </div>
             <div>
-              <Label>Délai de Paiement</Label>
+              <Label><T k="auto.tenderevaluationpanel.delai_de_paiement" fallback="Délai de Paiement" /></Label>
               <input
                 type="text"
                 className="w-full mt-1 px-3 py-2 border rounded"
@@ -489,7 +490,7 @@ const FinancialEvaluation: React.FC<{
         </div>
 
         <div className="p-4 border rounded-lg">
-          <Label htmlFor="financial-score">Note Financière</Label>
+          <Label htmlFor="financial-score"><T k="auto.tenderevaluationpanel.note_financiere" fallback="Note Financière" /></Label>
           <div className="flex items-center gap-2 mt-2">
             <input
               id="financial-score"
@@ -505,13 +506,13 @@ const FinancialEvaluation: React.FC<{
               onClick={() => onUpdate(submission.id, 'financial_score', score)}
               size="sm"
             >
-              Sauvegarder
+              <T k="auto.tenderevaluationpanel.sauvegarder" fallback="Sauvegarder" />
             </Button>
           </div>
         </div>
 
         <div className="p-4 border rounded-lg">
-          <Label htmlFor="financial-notes">Commentaires Financiers</Label>
+          <Label htmlFor="financial-notes"><T k="auto.tenderevaluationpanel.commentaires_financiers" fallback="Commentaires Financiers" /></Label>
           <Textarea
             id="financial-notes"
             value={notes}
@@ -525,7 +526,7 @@ const FinancialEvaluation: React.FC<{
             className="mt-2"
             size="sm"
           >
-            Sauvegarder les Commentaires
+            <T k="auto.tenderevaluationpanel.sauvegarder_les_commentaires" fallback="Sauvegarder les Commentaires" />
           </Button>
         </div>
       </div>

@@ -25,6 +25,7 @@ import { getRiskService } from '@/application/services/RiskService';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
+import { T } from '@/components/i18n/T';
 
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };
@@ -313,44 +314,44 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-destructive" />
-            Analyse des Risques
+            <T k="auto.enhancedriskanalysisstep.analyse_des_risques" fallback="Analyse des Risques" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="text-center">
               <div className="text-2xl font-bold">{totalRisks}</div>
-              <div className="text-sm text-muted-foreground">Total Risques</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.total_risques" fallback="Total Risques" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-destructive">{criticalRisks}</div>
-              <div className="text-sm text-muted-foreground">Critiques</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.critiques" fallback="Critiques" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{highRisks}</div>
-              <div className="text-sm text-muted-foreground">Élevés</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.eleves" fallback="Élevés" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{averageRiskScore}</div>
-              <div className="text-sm text-muted-foreground">Score Moyen</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.score_moyen" fallback="Score Moyen" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{totalRiskCost.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Coût Total (MRU)</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.cout_total_mru" fallback="Coût Total (MRU)" /></div>
             </div>
           </div>
 
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Liste des Risques</h3>
+            <h3 className="text-lg font-semibold"><T k="auto.enhancedriskanalysisstep.liste_des_risques" fallback="Liste des Risques" /></h3>
             <Button onClick={openCreate} disabled={saving}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter un Risque
+              <T k="auto.enhancedriskanalysisstep.ajouter_un_risque" fallback="Ajouter un Risque" />
             </Button>
           </div>
 
           {!projectId && (
             <p className="text-sm text-muted-foreground mb-4">
-              Enregistrez le projet pour activer la gestion des risques.
+              <T k="auto.enhancedriskanalysisstep.enregistrez_le_projet_pour_activer_la_gestion_de" fallback="Enregistrez le projet pour activer la gestion des risques." />
             </p>
           )}
 
@@ -371,7 +372,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-category">Catégorie</Label>
+                    <Label htmlFor="risk-category"><T k="auto.enhancedriskanalysisstep.categorie" fallback="Catégorie" /></Label>
                     <Select value={form.category} onValueChange={v => setForm({ ...form, category: v as RiskCategoryUI })}>
                       <SelectTrigger id="risk-category">
                         <SelectValue placeholder="Sélectionner une catégorie" />
@@ -386,7 +387,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="risk-description">Description</Label>
+                  <Label htmlFor="risk-description"><T k="auto.enhancedriskanalysisstep.description" fallback="Description" /></Label>
                   <Textarea
                     id="risk-description"
                     value={form.description}
@@ -398,7 +399,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <Label htmlFor="risk-probability">Probabilité (1-10)</Label>
+                    <Label htmlFor="risk-probability"><T k="auto.enhancedriskanalysisstep.probabilite_1_10" fallback="Probabilité (1-10)" /></Label>
                     <Input
                       id="risk-probability"
                       type="number"
@@ -409,7 +410,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-impact">Impact (1-10)</Label>
+                    <Label htmlFor="risk-impact"><T k="auto.enhancedriskanalysisstep.impact_1_10" fallback="Impact (1-10)" /></Label>
                     <Input
                       id="risk-impact"
                       type="number"
@@ -420,7 +421,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-status">Statut</Label>
+                    <Label htmlFor="risk-status"><T k="auto.enhancedriskanalysisstep.statut" fallback="Statut" /></Label>
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v as RiskStatusUI })}>
                       <SelectTrigger id="risk-status">
                         <SelectValue />
@@ -433,7 +434,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="risk-owner">Responsable</Label>
+                    <Label htmlFor="risk-owner"><T k="auto.enhancedriskanalysisstep.responsable" fallback="Responsable" /></Label>
                     <Select value={form.owner} onValueChange={v => setForm({ ...form, owner: v })}>
                       <SelectTrigger id="risk-owner">
                         <SelectValue placeholder="Sélectionner" />
@@ -449,7 +450,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="risk-costs">Coût estimé (MRU)</Label>
+                    <Label htmlFor="risk-costs"><T k="auto.enhancedriskanalysisstep.cout_estime_mru" fallback="Coût estimé (MRU)" /></Label>
                     <Input
                       id="risk-costs"
                       type="number"
@@ -459,7 +460,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-timeline">Impact délai (jours)</Label>
+                    <Label htmlFor="risk-timeline"><T k="auto.enhancedriskanalysisstep.impact_delai_jours" fallback="Impact délai (jours)" /></Label>
                     <Input
                       id="risk-timeline"
                       type="number"
@@ -469,7 +470,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-review">Date de revue</Label>
+                    <Label htmlFor="risk-review"><T k="auto.enhancedriskanalysisstep.date_de_revue" fallback="Date de revue" /></Label>
                     <Input
                       id="risk-review"
                       type="date"
@@ -481,7 +482,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="risk-mitigation">Plan de Mitigation</Label>
+                    <Label htmlFor="risk-mitigation"><T k="auto.enhancedriskanalysisstep.plan_de_mitigation" fallback="Plan de Mitigation" /></Label>
                     <Textarea
                       id="risk-mitigation"
                       value={form.mitigationPlan}
@@ -491,7 +492,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="risk-contingency">Plan de Contingence</Label>
+                    <Label htmlFor="risk-contingency"><T k="auto.enhancedriskanalysisstep.plan_de_contingence" fallback="Plan de Contingence" /></Label>
                     <Textarea
                       id="risk-contingency"
                       value={form.contingencyPlan}
@@ -508,7 +509,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     {form.id ? 'Enregistrer les modifications' : 'Ajouter le risque'}
                   </Button>
                   <Button variant="outline" onClick={() => { setShowForm(false); setForm(emptyForm()); }} disabled={saving}>
-                    Annuler
+                    <T k="auto.enhancedriskanalysisstep.annuler" fallback="Annuler" />
                   </Button>
                 </div>
               </CardContent>
@@ -517,12 +518,12 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
           {loading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Chargement des risques...
+              <Loader2 className="h-4 w-4 animate-spin" /> <T k="auto.enhancedriskanalysisstep.chargement_des_risques" fallback="Chargement des risques..." />
             </div>
           )}
 
           {!loading && risks.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aucun risque enregistré pour ce projet.</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.enhancedriskanalysisstep.aucun_risque_enregistre_pour_ce_projet" fallback="Aucun risque enregistré pour ce projet." /></p>
           )}
 
           <div className="space-y-4">
@@ -568,21 +569,21 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <div className="font-medium">Score de Risque</div>
+                        <div className="font-medium"><T k="auto.enhancedriskanalysisstep.score_de_risque" fallback="Score de Risque" /></div>
                         <div className="flex items-center gap-2">
                           <Progress value={Math.min(100, (score / 170) * 100)} className="h-2 flex-1" />
                           <span className="font-bold">{score}</span>
                         </div>
                       </div>
                       <div>
-                        <div className="font-medium">Probabilité</div>
+                        <div className="font-medium"><T k="auto.enhancedriskanalysisstep.probabilite" fallback="Probabilité" /></div>
                         <div className="flex items-center gap-2">
                           <Progress value={probability * 10} className="h-2 flex-1" />
                           <span>{probability}/10</span>
                         </div>
                       </div>
                       <div>
-                        <div className="font-medium">Impact</div>
+                        <div className="font-medium"><T k="auto.enhancedriskanalysisstep.impact" fallback="Impact" /></div>
                         <div className="flex items-center gap-2">
                           <Progress value={impact * 10} className="h-2 flex-1" />
                           <span>{impact}/10</span>
@@ -596,14 +597,14 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
                     {(risk.mitigationPlan || risk.mitigationStrategy) && (
                       <div className="mt-4">
-                        <div className="font-medium text-sm">Plan de Mitigation</div>
+                        <div className="font-medium text-sm"><T k="auto.enhancedriskanalysisstep.plan_de_mitigation" fallback="Plan de Mitigation" /></div>
                         <p className="text-sm text-muted-foreground">{risk.mitigationPlan || risk.mitigationStrategy}</p>
                       </div>
                     )}
 
                     {risk.contingencyPlan && (
                       <div className="mt-2">
-                        <div className="font-medium text-sm">Plan de Contingence</div>
+                        <div className="font-medium text-sm"><T k="auto.enhancedriskanalysisstep.plan_de_contingence" fallback="Plan de Contingence" /></div>
                         <p className="text-sm text-muted-foreground">{risk.contingencyPlan}</p>
                       </div>
                     )}
@@ -618,14 +619,14 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
       <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce risque ?</AlertDialogTitle>
+            <AlertDialogTitle><T k="auto.enhancedriskanalysisstep.supprimer_ce_risque" fallback="Supprimer ce risque ?" /></AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est définitive et supprime le risque du projet.
+              <T k="auto.enhancedriskanalysisstep.cette_action_est_definitive_et_supprime_le_risqu" fallback="Cette action est définitive et supprime le risque du projet." />
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Supprimer</AlertDialogAction>
+            <AlertDialogCancel><T k="auto.enhancedriskanalysisstep.annuler" fallback="Annuler" /></AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}><T k="auto.enhancedriskanalysisstep.supprimer" fallback="Supprimer" /></AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

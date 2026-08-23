@@ -42,6 +42,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================================
 // PROPS
 // ============================================================================
@@ -335,7 +336,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-primary" />
-            Compléter l'inspection
+            <T k="auto.supplierinspectionexecutiondialog.completer_l_inspection" fallback="Compléter l'inspection" />
           </DialogTitle>
           <DialogDescription>
             Projet: {(inspection as any).projects?.title || inspection.projectId || ''}
@@ -348,13 +349,13 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           {/* Current Status */}
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
             <div>
-              <p className="text-sm font-medium">Statut actuel</p>
+              <p className="text-sm font-medium"><T k="auto.supplierinspectionexecutiondialog.statut_actuel" fallback="Statut actuel" /></p>
               <Badge variant="secondary" className="mt-1">
                 <TranslatedStatus code={inspection.status} />
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium">Progrès actuel</p>
+              <p className="text-sm font-medium"><T k="auto.supplierinspectionexecutiondialog.progres_actuel" fallback="Progrès actuel" /></p>
               <p className="text-2xl font-bold text-primary mt-1">
                 {inspection.progressAtInspection || 0}%
               </p>
@@ -364,7 +365,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           {/* Progress Input */}
           <div className="space-y-2">
             <Label htmlFor="progress">
-              Taux d'avancement (%) <span className="text-destructive">*</span>
+              <T k="auto.supplierinspectionexecutiondialog.taux_d_avancement" fallback="Taux d'avancement (%)" /> <span className="text-destructive">*</span>
             </Label>
             <Input
               id="progress"
@@ -380,7 +381,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           {/* Comments */}
           <div className="space-y-2">
             <Label htmlFor="comments">
-              Commentaires et observations
+              <T k="auto.supplierinspectionexecutiondialog.commentaires_et_observations" fallback="Commentaires et observations" />
             </Label>
             <Textarea
               id="comments"
@@ -407,9 +408,9 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               />
               <label htmlFor="documents" className="cursor-pointer">
                 <Upload className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium">Cliquez pour ajouter des fichiers</p>
+                <p className="text-sm font-medium"><T k="auto.supplierinspectionexecutiondialog.cliquez_pour_ajouter_des_fichiers" fallback="Cliquez pour ajouter des fichiers" /></p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PDF, Images, Documents (Max 10MB par fichier)
+                  <T k="auto.supplierinspectionexecutiondialog.pdf_images_documents_max_10mb_par_fichier" fallback="PDF, Images, Documents (Max 10MB par fichier)" />
                 </p>
               </label>
             </div>
@@ -417,7 +418,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             {/* Selected Documents */}
             {documents.length > 0 && (
               <div className="space-y-2 mt-4">
-                <p className="text-sm font-medium">Fichiers sélectionnés:</p>
+                <p className="text-sm font-medium"><T k="auto.supplierinspectionexecutiondialog.fichiers_selectionnes" fallback="Fichiers sélectionnés:" /></p>
                 {documents.map((doc, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2">
@@ -451,27 +452,27 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
                 className="h-4 w-4 rounded border-input"
               />
               <Label htmlFor="createPaymentRequest" className="font-medium">
-                Créer une demande de paiement
+                <T k="auto.supplierinspectionexecutiondialog.creer_une_demande_de_paiement" fallback="Créer une demande de paiement" />
               </Label>
             </div>
 
             {createPaymentRequest && (
               <div className="space-y-4 pl-6 border-l-2 border-primary/20">
                 <div className="space-y-2">
-                  <Label>Type de demande</Label>
+                  <Label><T k="auto.supplierinspectionexecutiondialog.type_de_demande" fallback="Type de demande" /></Label>
                   <select
                     value={paymentRequestType}
                     onChange={(e) => setPaymentRequestType(e.target.value as 'contractor' | 'inspector')}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="contractor">Paiement du contractant (Entreprise)</option>
+                    <option value="contractor"><T k="auto.supplierinspectionexecutiondialog.paiement_du_contractant_entreprise" fallback="Paiement du contractant (Entreprise)" /></option>
                     <option value="inspector">Frais d'inspection / Honoraires ingénieur</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="paymentAmount">
-                    Montant (MRU) <span className="text-destructive">*</span>
+                    <T k="auto.supplierinspectionexecutiondialog.montant_mru" fallback="Montant (MRU)" /> <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="paymentAmount"
@@ -487,7 +488,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
                 <div className="space-y-2">
                   <Label htmlFor="paymentDescription">
-                    Description du paiement
+                    <T k="auto.supplierinspectionexecutiondialog.description_du_paiement" fallback="Description du paiement" />
                   </Label>
                   <Textarea
                     id="paymentDescription"
@@ -520,7 +521,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Annuler
+              <T k="auto.supplierinspectionexecutiondialog.annuler" fallback="Annuler" />
             </Button>
             <Button
               onClick={handleSubmit}
@@ -529,12 +530,12 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Traitement...
+                  <T k="auto.supplierinspectionexecutiondialog.traitement" fallback="Traitement..." />
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Valider et compléter
+                  <T k="auto.supplierinspectionexecutiondialog.valider_et_completer" fallback="Valider et compléter" />
                 </>
               )}
             </Button>

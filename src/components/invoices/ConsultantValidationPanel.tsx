@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface ProgressInvoice {
   id: string;
@@ -308,20 +309,20 @@ export function ConsultantValidationPanel() {
         {invoices.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune facture en attente de validation</p>
+            <p><T k="auto.consultantvalidationpanel.aucune_facture_en_attente_de_validation" fallback="Aucune facture en attente de validation" /></p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Numéro</TableHead>
-                <TableHead>Projet</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Avancement</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.numero" fallback="Numéro" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.projet" fallback="Projet" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.type" fallback="Type" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.avancement" fallback="Avancement" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.montant" fallback="Montant" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.date" fallback="Date" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.statut" fallback="Statut" /></TableHead>
+                <TableHead><T k="auto.consultantvalidationpanel.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -367,7 +368,7 @@ export function ConsultantValidationPanel() {
                   <TableCell>
                     {invoice.projects?.projectType === 'infrastructure' && !canValidateInfrastructure ? (
                       <Badge variant="outline" className="text-muted-foreground">
-                        Accès limité
+                        <T k="auto.consultantvalidationpanel.acces_limite" fallback="Accès limité" />
                       </Badge>
                     ) : (
                       <Dialog>
@@ -382,7 +383,7 @@ export function ConsultantValidationPanel() {
                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
-                            Valider
+                            <T k="auto.consultantvalidationpanel.valider" fallback="Valider" />
                           </Button>
                         </DialogTrigger>
                       <DialogContent className="max-w-3xl">
@@ -393,7 +394,7 @@ export function ConsultantValidationPanel() {
                           <Alert>
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription>
-                              Type de projet: <strong>{invoice.projects?.projectType}</strong>
+                              <T k="auto.consultantvalidationpanel.type_de_projet" fallback="Type de projet:" /> <strong>{invoice.projects?.projectType}</strong>
                               {invoice.projects?.fundingSource && (
                                 <> • Financement: {invoice.projects.fundingSource}</>
                               )}
@@ -402,14 +403,14 @@ export function ConsultantValidationPanel() {
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <p className="text-sm font-medium">Avancement</p>
+                              <p className="text-sm font-medium"><T k="auto.consultantvalidationpanel.avancement" fallback="Avancement" /></p>
                               <p className="text-2xl font-bold">{invoice.progress_percentage}%</p>
                               <p className="text-xs text-muted-foreground">
                                 Précédent: {invoice.previous_progress}%
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm font-medium">Montant</p>
+                              <p className="text-sm font-medium"><T k="auto.consultantvalidationpanel.montant" fallback="Montant" /></p>
                               <p className="text-2xl font-bold">
                                 {(invoice.invoice_amount ?? 0).toLocaleString('fr-FR')} MRU
                               </p>
@@ -420,7 +421,7 @@ export function ConsultantValidationPanel() {
                           </div>
 
                           <div>
-                            <p className="text-sm font-medium mb-2">Description des travaux</p>
+                            <p className="text-sm font-medium mb-2"><T k="auto.consultantvalidationpanel.description_des_travaux" fallback="Description des travaux" /></p>
                             <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
                               {invoice.work_description}
                             </p>
@@ -428,7 +429,7 @@ export function ConsultantValidationPanel() {
 
                           {(invoice.supporting_documents?.length ?? 0) > 0 && (
                             <div>
-                              <p className="text-sm font-medium mb-2">Documents justificatifs</p>
+                              <p className="text-sm font-medium mb-2"><T k="auto.consultantvalidationpanel.documents_justificatifs" fallback="Documents justificatifs" /></p>
                               <div className="space-y-1">
                                 {(invoice.supporting_documents ?? []).map((doc, index) => (
                                   <a
@@ -447,7 +448,7 @@ export function ConsultantValidationPanel() {
                           )}
 
                            <div>
-                            <p className="text-sm font-medium mb-2">Commentaires</p>
+                            <p className="text-sm font-medium mb-2"><T k="auto.consultantvalidationpanel.commentaires" fallback="Commentaires" /></p>
                             <Textarea
                               value={comments}
                               onChange={(e) => setComments(e.target.value)}
@@ -493,14 +494,14 @@ export function ConsultantValidationPanel() {
                               disabled={actionLoading}
                             >
                               <XCircle className="mr-2 h-4 w-4" />
-                              Rejeter
+                              <T k="auto.consultantvalidationpanel.rejeter" fallback="Rejeter" />
                             </Button>
                             <Button
                               onClick={() => handleValidate(invoice.id, true)}
                               disabled={actionLoading || !serviceFaitFile}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              Approuver
+                              <T k="auto.consultantvalidationpanel.approuver" fallback="Approuver" />
                             </Button>
                           </div>
                         </div>

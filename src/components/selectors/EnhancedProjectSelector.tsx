@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useProjectsSelector, useProjectTenders } from '@/hooks/hexagonal'
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 // Local type for project options from selector
 interface ProjectOption {
@@ -142,7 +143,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               onClick={handleClear}
               className="h-6 px-2 text-xs"
             >
-              Effacer
+              <T k="auto.enhancedprojectselector.effacer" fallback="Effacer" />
             </Button>
           )}
         </div>
@@ -162,7 +163,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         {/* Messages d'erreur/loading */}
         {projectsError && (
           <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-            Erreur lors du chargement des projets
+            <T k="auto.enhancedprojectselector.erreur_lors_du_chargement_des_projets" fallback="Erreur lors du chargement des projets" />
           </div>
         )}
 
@@ -193,11 +194,11 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <span className="text-sm text-muted-foreground">Chargement...</span>
+                <span className="text-sm text-muted-foreground"><T k="auto.enhancedprojectselector.chargement" fallback="Chargement..." /></span>
               </div>
             ) : projects.length === 0 ? (
               <div className="py-4 text-center text-sm text-muted-foreground">
-                Aucun projet trouvé
+                <T k="auto.enhancedprojectselector.aucun_projet_trouve" fallback="Aucun projet trouvé" />
               </div>
             ) : (
               projects.map((project) => {
@@ -253,7 +254,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-medium text-sm">Projet sélectionné</h4>
+                <h4 className="font-medium text-sm"><T k="auto.enhancedprojectselector.projet_selectionne" fallback="Projet sélectionné" /></h4>
                 <p className="font-semibold">{selectedProject.title}</p>
               </div>
               {!secureMode && selectedProject.status && (
@@ -267,7 +268,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {selectedProject.project_reference && (
                 <div className="flex items-center gap-2">
                   <FileText className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Référence:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedprojectselector.reference" fallback="Référence:" /></span>
                   <span className="font-medium">{selectedProject.project_reference}</span>
                 </div>
               )}
@@ -275,7 +276,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {!secureMode && selectedProject.location && (
                 <div className="flex items-center gap-2">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Localisation:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedprojectselector.localisation" fallback="Localisation:" /></span>
                   <span className="font-medium">{selectedProject.location}</span>
                 </div>
               )}
@@ -283,7 +284,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Période:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedprojectselector.periode" fallback="Période:" /></span>
                   <span className="font-medium">
                     {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
                   </span>
@@ -293,7 +294,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               {!secureMode && selectedProject.budget && (
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Budget:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedprojectselector.budget" fallback="Budget:" /></span>
                   <span className="font-medium">{formatCurrency(selectedProject.budget)}</span>
                 </div>
               )}
@@ -306,7 +307,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
       {showTenderReference && (
         <div className="space-y-2 pt-2 border-t">
           <Label className="text-sm font-medium">
-            Référence d'appel d'offres
+            <T k="auto.enhancedprojectselector.reference_d_appel_d_offres" fallback="Référence d'appel d'offres" />
             <span className="text-muted-foreground font-normal ml-1">(optionnel)</span>
           </Label>
           
@@ -324,11 +325,11 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
           {tendersLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Chargement des appels d'offres...
+              <T k="auto.enhancedprojectselector.chargement_des_appels_d_offres" fallback="Chargement des appels d'offres..." />
             </div>
           ) : tenders && tenders.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-2">Appels d'offres associés:</p>
+              <p className="text-xs text-muted-foreground mb-2"><T k="auto.enhancedprojectselector.appels_d_offres_associes" fallback="Appels d'offres associés:" /></p>
               <div className="space-y-1">
                 {tenders.map((tender) => (
                   <button

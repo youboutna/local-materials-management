@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const TaskDetail = () => {
             </p>
             <Button variant="outline" onClick={() => navigate(-1)} aria-label="Revenir à la page précédente">
               <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-              Retour
+              <T k="auto.taskdetail.retour" fallback="Retour" />
             </Button>
           </CardContent>
         </Card>
@@ -121,7 +122,7 @@ const TaskDetail = () => {
     >
       <Button variant="outline" onClick={() => navigate(-1)} className="mb-6" aria-label="Revenir à la page précédente">
         <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-        Retour
+        <T k="auto.taskdetail.retour" fallback="Retour" />
       </Button>
 
       <Card>
@@ -153,7 +154,7 @@ const TaskDetail = () => {
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-medium">Date limite</p>
+                  <p className="text-sm font-medium"><T k="auto.taskdetail.date_limite" fallback="Date limite" /></p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(task.dueDate).toLocaleDateString('fr-FR')}
                   </p>
@@ -164,7 +165,7 @@ const TaskDetail = () => {
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-success" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-medium">Date de completion</p>
+                  <p className="text-sm font-medium"><T k="auto.taskdetail.date_de_completion" fallback="Date de completion" /></p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(task.completedAt).toLocaleDateString('fr-FR')}
                   </p>
@@ -174,14 +175,14 @@ const TaskDetail = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Notes</h3>
+            <h3 className="text-lg font-semibold"><T k="auto.taskdetail.notes" fallback="Notes" /></h3>
             {task.notes && (
               <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap">
                 {task.notes}
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="new-task-note" className="sr-only">Ajouter une note</Label>
+              <Label htmlFor="new-task-note" className="sr-only"><T k="auto.taskdetail.ajouter_une_note" fallback="Ajouter une note" /></Label>
               <Textarea
                 id="new-task-note"
                 placeholder="Ajouter une note..."
@@ -191,7 +192,7 @@ const TaskDetail = () => {
                 aria-label="Nouvelle note pour la tâche"
               />
               <Button onClick={handleAddNote} disabled={!newNote.trim() || updating} aria-busy={updating}>
-                Ajouter une note
+                <T k="auto.taskdetail.ajouter_une_note" fallback="Ajouter une note" />
               </Button>
             </div>
           </div>
@@ -206,7 +207,7 @@ const TaskDetail = () => {
                   variant="outline"
                 >
                   <AlertCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Commencer la tâche
+                  <T k="auto.taskdetail.commencer_la_tache" fallback="Commencer la tâche" />
                 </Button>
               )}
               <Button 
@@ -215,7 +216,7 @@ const TaskDetail = () => {
                 aria-busy={updating}
               >
                 <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                Marquer comme terminée
+                <T k="auto.taskdetail.marquer_comme_terminee" fallback="Marquer comme terminée" />
               </Button>
             </div>
           )}
@@ -224,14 +225,14 @@ const TaskDetail = () => {
             {(task as any).projectId && (
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/projects/${(task as any).projectId}`} aria-label="Ouvrir le projet associé">
-                  Projet <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+                  <T k="auto.taskdetail.projet" fallback="Projet" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
                 </Link>
               </Button>
             )}
             {(task as any).phaseId && (task as any).projectId && (
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/projects/${(task as any).projectId}/phases/${(task as any).phaseId}`} aria-label="Ouvrir la phase associée">
-                  Phase <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+                  <T k="auto.taskdetail.phase" fallback="Phase" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
                 </Link>
               </Button>
             )}

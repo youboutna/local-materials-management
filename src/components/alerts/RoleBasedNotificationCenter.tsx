@@ -9,6 +9,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { getNotificationLink } from '@/utils/notificationUtils';
 import { NotificationType } from '@/dtos/entities/NotificationTypeDTO';
+import { T } from '@/components/i18n/T';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();
@@ -130,7 +131,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                Tableau de Bord Exécutif
+                <T k="auto.rolebasednotificationcenter.tableau_de_bord_executif" fallback="Tableau de Bord Exécutif" />
               </span>
               <div className="flex gap-2">
                 <Badge variant="destructive">{notificationCounts.urgent} Urgent</Badge>
@@ -142,15 +143,15 @@ const RoleBasedNotificationCenter: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-3 bg-destructive/10 rounded-lg">
                 <div className="text-2xl font-bold text-destructive">{notificationCounts.bank_guarantee}</div>
-                <div className="text-sm text-muted-foreground">Garanties Bancaires</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.rolebasednotificationcenter.garanties_bancaires" fallback="Garanties Bancaires" /></div>
               </div>
               <div className="text-center p-3 bg-warning/10 rounded-lg">
                 <div className="text-2xl font-bold text-warning">{notificationCounts.inspections}</div>
-                <div className="text-sm text-muted-foreground">Inspections</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.rolebasednotificationcenter.inspections" fallback="Inspections" /></div>
               </div>
               <div className="text-center p-3 bg-warning/10 rounded-lg">
                 <div className="text-2xl font-bold text-warning">{notificationCounts.compliance}</div>
-                <div className="text-sm text-muted-foreground">Conformité</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.rolebasednotificationcenter.conformite" fallback="Conformité" /></div>
               </div>
             </div>
           </CardContent>
@@ -164,13 +165,13 @@ const RoleBasedNotificationCenter: React.FC = () => {
             <span className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
               Centre de Notifications
-              {hasRole('director') && <Badge variant="outline">Vue Directeur</Badge>}
-              {hasRole('project_manager') && <Badge variant="outline">Chef de Projet</Badge>}
-              {hasRole('engineering_consultant') && <Badge variant="outline">Consultant</Badge>}
+              {hasRole('director') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.vue_directeur" fallback="Vue Directeur" /></Badge>}
+              {hasRole('project_manager') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.chef_de_projet" fallback="Chef de Projet" /></Badge>}
+              {hasRole('engineering_consultant') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.consultant" fallback="Consultant" /></Badge>}
             </span>
             <Button variant="outline" size="sm" onClick={markAllAsRead}>
               <EyeOff className="h-4 w-4 mr-2" />
-              Tout marquer lu
+              <T k="auto.rolebasednotificationcenter.tout_marquer_lu" fallback="Tout marquer lu" />
             </Button>
           </CardTitle>
         </CardHeader>
@@ -188,21 +189,21 @@ const RoleBasedNotificationCenter: React.FC = () => {
               size="sm"
               onClick={() => setSelectedFilter('bank_guarantee_trigger')}
             >
-              Garanties Bancaires
+              <T k="auto.rolebasednotificationcenter.garanties_bancaires" fallback="Garanties Bancaires" />
             </Button>
             <Button
               variant={selectedFilter === 'inspection_required' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedFilter('inspection_required')}
             >
-              Inspections
+              <T k="auto.rolebasednotificationcenter.inspections" fallback="Inspections" />
             </Button>
             <Button
               variant={selectedFilter === 'compliance_alert' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedFilter('compliance_alert')}
             >
-              Conformité
+              <T k="auto.rolebasednotificationcenter.conformite" fallback="Conformité" />
             </Button>
           </div>
 
@@ -210,7 +211,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
             <Alert>
               <Bell className="h-4 w-4" />
               <AlertDescription>
-                Aucune notification pour votre rôle actuellement.
+                <T k="auto.rolebasednotificationcenter.aucune_notification_pour_votre_role_actuellement" fallback="Aucune notification pour votre rôle actuellement." />
               </AlertDescription>
             </Alert>
           ) : (

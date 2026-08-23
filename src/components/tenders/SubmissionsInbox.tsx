@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { AwardedTenderPreviewDialog } from './AwardedTenderPreviewDialog';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 export interface SubmissionsInboxProps {
   tenderId: string;
@@ -66,13 +67,13 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="flex items-center gap-2 text-base">
             <ClipboardCheck className="h-4 w-4" />
-            Boîte de réception des soumissions
+            <T k="auto.submissionsinbox.boite_de_reception_des_soumissions" fallback="Boîte de réception des soumissions" />
             <Badge variant="secondary">{stats.total}</Badge>
           </CardTitle>
           {isDeadlinePassed && (
             <Badge variant="destructive" className="gap-1">
               <AlertTriangle className="h-3 w-3" />
-              Deadline dépassée
+              <T k="auto.submissionsinbox.deadline_depassee" fallback="Deadline dépassée" />
             </Badge>
           )}
         </div>
@@ -97,7 +98,7 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="all"><T k="auto.submissionsinbox.tous_statuts" fallback="Tous statuts" /></SelectItem>
               <SelectItem value="submitted"><TranslatedStatus code="submitted" /></SelectItem>
               <SelectItem value="under_review"><TranslatedStatus code="under_review" /></SelectItem>
               <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
@@ -107,9 +108,9 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
         </div>
 
         {isLoading && <p className="text-sm text-muted-foreground py-6 text-center">Chargement…</p>}
-        {isError && <p className="text-sm text-destructive py-6 text-center">Erreur de chargement.</p>}
+        {isError && <p className="text-sm text-destructive py-6 text-center"><T k="auto.submissionsinbox.erreur_de_chargement" fallback="Erreur de chargement." /></p>}
         {!isLoading && filtered.length === 0 && (
-          <p className="text-sm text-muted-foreground py-6 text-center">Aucune soumission.</p>
+          <p className="text-sm text-muted-foreground py-6 text-center"><T k="auto.submissionsinbox.aucune_soumission" fallback="Aucune soumission." /></p>
         )}
 
         <ul className="divide-y">
@@ -132,10 +133,10 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => onOpenSubmission?.(s.id)}>
-                  <Eye className="h-3.5 w-3.5 mr-1" /> Voir
+                  <Eye className="h-3.5 w-3.5 mr-1" /> <T k="auto.submissionsinbox.voir" fallback="Voir" />
                 </Button>
                 <Button size="sm" variant="secondary" onClick={() => onEvaluate?.(s.id)}>
-                  Évaluer
+                  <T k="auto.submissionsinbox.evaluer" fallback="Évaluer" />
                 </Button>
                 {s.status === 'approved' && projectId && (s.tender_estimate_id || s.estimate_id) && (
                   <Button
@@ -146,7 +147,7 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
                       supplierId: s.supplier_id,
                     })}
                   >
-                    <FileSignature className="h-3.5 w-3.5 mr-1" /> Attribuer
+                    <FileSignature className="h-3.5 w-3.5 mr-1" /> <T k="auto.submissionsinbox.attribuer" fallback="Attribuer" />
                   </Button>
                 )}
               </div>

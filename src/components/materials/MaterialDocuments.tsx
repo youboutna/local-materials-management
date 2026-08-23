@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { Calendar, Download, FileText, Plus, Tag, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { T } from '@/components/i18n/T';
 
 interface MaterialDocumentMetadata {
   materialId: string;
@@ -302,7 +303,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center">Chargement des documents...</div>
+          <div className="text-center"><T k="auto.materialdocuments.chargement_des_documents" fallback="Chargement des documents..." /></div>
         </CardContent>
       </Card>
     );
@@ -321,20 +322,20 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
               <DialogTrigger asChild>
                 <Button size="sm" className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Ajouter un document
+                  <T k="auto.materialdocuments.ajouter_un_document" fallback="Ajouter un document" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Ajouter un document</DialogTitle>
+                  <DialogTitle><T k="auto.materialdocuments.ajouter_un_document" fallback="Ajouter un document" /></DialogTitle>
                   <DialogDescription>
-                    Sélectionnez le fichier et sa catégorie pour l'attacher à ce matériau.
+                    <T k="auto.materialdocuments.selectionnez_le_fichier_et_sa_categorie_pour_l_a" fallback="Sélectionnez le fichier et sa catégorie pour l'attacher à ce matériau." />
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="document_type">Type de document</Label>
+                      <Label htmlFor="document_type"><T k="auto.materialdocuments.type_de_document" fallback="Type de document" /></Label>
                       <Select
                         value={formData.document_type}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value as MaterialDocument['document_type'] }))}
@@ -365,7 +366,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description"><T k="auto.materialdocuments.description" fallback="Description" /></Label>
                     <Textarea
                       id="description"
                       value={formData.description}
@@ -377,7 +378,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="document_number">Numéro de document</Label>
+                      <Label htmlFor="document_number"><T k="auto.materialdocuments.numero_de_document" fallback="Numéro de document" /></Label>
                       <Input
                         id="document_number"
                         value={formData.document_number}
@@ -387,7 +388,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="supplier_name">Fournisseur</Label>
+                      <Label htmlFor="supplier_name"><T k="auto.materialdocuments.fournisseur" fallback="Fournisseur" /></Label>
                       <Input
                         id="supplier_name"
                         value={formData.supplier_name}
@@ -399,7 +400,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="document_date">Date du document</Label>
+                      <Label htmlFor="document_date"><T k="auto.materialdocuments.date_du_document" fallback="Date du document" /></Label>
                       <Input
                         id="document_date"
                         type="date"
@@ -409,7 +410,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="expiry_date">Date d'expiration</Label>
+                      <Label htmlFor="expiry_date"><T k="auto.materialdocuments.date_d_expiration" fallback="Date d'expiration" /></Label>
                       <Input
                         id="expiry_date"
                         type="date"
@@ -420,7 +421,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
+                    <Label htmlFor="tags"><T k="auto.materialdocuments.tags_separes_par_des_virgules" fallback="Tags (séparés par des virgules)" /></Label>
                     <Input
                       id="tags"
                       value={formData.tags}
@@ -430,7 +431,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="file">Fichier</Label>
+                    <Label htmlFor="file"><T k="auto.materialdocuments.fichier" fallback="Fichier" /></Label>
                     <Input
                       id="file"
                       type="file"
@@ -446,7 +447,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Annuler
+                      <T k="auto.materialdocuments.annuler" fallback="Annuler" />
                     </Button>
                     <Button type="submit" disabled={uploading}>
                       {uploading ? 'Téléchargement...' : 'Ajouter'}
@@ -462,18 +463,18 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
         {documents.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Aucun document associé à ce matériau</p>
+            <p><T k="auto.materialdocuments.aucun_document_associe_a_ce_materiau" fallback="Aucun document associé à ce matériau" /></p>
           </div>
         ) : (
           <div className="space-y-4">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Fournisseur</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead><T k="auto.materialdocuments.document" fallback="Document" /></TableHead>
+                  <TableHead><T k="auto.materialdocuments.type" fallback="Type" /></TableHead>
+                  <TableHead><T k="auto.materialdocuments.fournisseur" fallback="Fournisseur" /></TableHead>
+                  <TableHead><T k="auto.materialdocuments.date" fallback="Date" /></TableHead>
+                  <TableHead><T k="auto.materialdocuments.actions" fallback="Actions" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

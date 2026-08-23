@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType, GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
+import { T } from '@/components/i18n/T';
 
 interface MilestonePositionEditorProps {
   milestones: (MilestoneDTO | GeneratedMilestoneDTO)[];
@@ -137,14 +138,14 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Flag className="h-5 w-5" />
-          Positionnement des jalons
+          <T k="auto.milestonepositioneditor.positionnement_des_jalons" fallback="Positionnement des jalons" />
         </CardTitle>
       </CardHeader>
       <CardContent>
         {milestones.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Flag className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun jalon à positionner</p>
+            <p><T k="auto.milestonepositioneditor.aucun_jalon_a_positionner" fallback="Aucun jalon à positionner" /></p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -196,7 +197,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                       {isRequiresInspection && (
                         <Badge variant="outline" className="text-xs gap-1">
                           <AlertTriangle className="h-3 w-3" />
-                          Inspection
+                          <T k="auto.milestonepositioneditor.inspection" fallback="Inspection" />
                         </Badge>
                       )}
                     </div>
@@ -252,12 +253,12 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
           <Dialog open={true} onOpenChange={() => handleEditCancel()}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Modifier la position du jalon</DialogTitle>
+                <DialogTitle><T k="auto.milestonepositioneditor.modifier_la_position_du_jalon" fallback="Modifier la position du jalon" /></DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
                 <div>
-                  <Label>Date cible</Label>
+                  <Label><T k="auto.milestonepositioneditor.date_cible" fallback="Date cible" /></Label>
                   <Input
                     type="date"
                     value={editForm.targetDate}
@@ -266,7 +267,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                 </div>
 
                 <div>
-                  <Label>Phase associée</Label>
+                  <Label><T k="auto.milestonepositioneditor.phase_associee" fallback="Phase associée" /></Label>
                   <Select 
                     value={editForm.phaseId} 
                     onValueChange={(value) => setEditForm({ ...editForm, phaseId: value })}
@@ -285,7 +286,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
                 </div>
 
                 <div>
-                  <Label>Priorité</Label>
+                  <Label><T k="auto.milestonepositioneditor.priorite" fallback="Priorité" /></Label>
                   <Select 
                     value={editForm.priority} 
                     onValueChange={(value) => setEditForm({ ...editForm, priority: value as MilestonePriority })}
@@ -317,10 +318,10 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" onClick={handleEditCancel}>
-                    Annuler
+                    <T k="auto.milestonepositioneditor.annuler" fallback="Annuler" />
                   </Button>
                   <Button onClick={handleEditSave}>
-                    Enregistrer
+                    <T k="auto.milestonepositioneditor.enregistrer" fallback="Enregistrer" />
                   </Button>
                 </div>
               </div>

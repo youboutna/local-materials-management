@@ -18,6 +18,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BudgetConsistencyService } from '@/application/services/BudgetConsistencyService';
 import BudgetConsistencyAlerts from '@/components/project/BudgetConsistencyAlerts';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   planned: BoqLineDTO[];      // quantity_takeoff
@@ -141,18 +142,18 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune donnée budgétaire disponible.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.boqbudgetdashboard.aucune_donnee_budgetaire_disponible" fallback="Aucune donnée budgétaire disponible." /></p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Phase</TableHead>
-                <TableHead>Jalon</TableHead>
-                <TableHead className="text-right">Prévu HT</TableHead>
-                <TableHead className="text-right">Réel HT</TableHead>
-                <TableHead className="text-right">Prévu TTC</TableHead>
-                <TableHead className="text-right">Réel TTC</TableHead>
-                <TableHead className="text-right">Écart HT</TableHead>
+                <TableHead><T k="auto.boqbudgetdashboard.phase" fallback="Phase" /></TableHead>
+                <TableHead><T k="auto.boqbudgetdashboard.jalon" fallback="Jalon" /></TableHead>
+                <TableHead className="text-right"><T k="auto.boqbudgetdashboard.prevu_ht" fallback="Prévu HT" /></TableHead>
+                <TableHead className="text-right"><T k="auto.boqbudgetdashboard.reel_ht" fallback="Réel HT" /></TableHead>
+                <TableHead className="text-right"><T k="auto.boqbudgetdashboard.prevu_ttc" fallback="Prévu TTC" /></TableHead>
+                <TableHead className="text-right"><T k="auto.boqbudgetdashboard.reel_ttc" fallback="Réel TTC" /></TableHead>
+                <TableHead className="text-right"><T k="auto.boqbudgetdashboard.ecart_ht" fallback="Écart HT" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,7 +179,7 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
                 );
               })}
               <TableRow className="font-medium bg-muted/40">
-                <TableCell colSpan={2}>Total</TableCell>
+                <TableCell colSpan={2}><T k="auto.boqbudgetdashboard.total" fallback="Total" /></TableCell>
                 <TableCell className="text-right">{fmt(totalPlanned, currency)}</TableCell>
                 <TableCell className="text-right">{fmt(totalActual, currency)}</TableCell>
                 <TableCell className="text-right text-muted-foreground">{fmt(totalPlannedTtc, currency)}</TableCell>

@@ -11,6 +11,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 import { getDocumentService } from '@/application/services/DocumentService';
+import { T } from '@/components/i18n/T';
 
 interface SupplierDocumentUploadProps {
   supplier: Supplier;
@@ -138,23 +139,23 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="document_type">Type de Document</Label>
+          <Label htmlFor="document_type"><T k="auto.supplierdocumentupload.type_de_document" fallback="Type de Document" /></Label>
           <Select value={formData.document_type} onValueChange={(value) => handleInputChange('document_type', value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="supplier_catalog">Catalogue</SelectItem>
-              <SelectItem value="supplier_info">Information fournisseur</SelectItem>
-              <SelectItem value="contract">Contrat</SelectItem>
-              <SelectItem value="other">Autre</SelectItem>
+              <SelectItem value="supplier_catalog"><T k="auto.supplierdocumentupload.catalogue" fallback="Catalogue" /></SelectItem>
+              <SelectItem value="supplier_info"><T k="auto.supplierdocumentupload.information_fournisseur" fallback="Information fournisseur" /></SelectItem>
+              <SelectItem value="contract"><T k="auto.supplierdocumentupload.contrat" fallback="Contrat" /></SelectItem>
+              <SelectItem value="other"><T k="auto.supplierdocumentupload.autre" fallback="Autre" /></SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description"><T k="auto.supplierdocumentupload.description" fallback="Description" /></Label>
         <Textarea
           id="description"
           value={formData.description}
@@ -188,12 +189,12 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
         {uploading || uploadMutation.isPending ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Téléchargement en cours...
+            <T k="auto.supplierdocumentupload.telechargement_en_cours" fallback="Téléchargement en cours..." />
           </>
         ) : (
           <>
             <Upload className="h-4 w-4 mr-2" />
-            Téléverser le Document
+            <T k="auto.supplierdocumentupload.televerser_le_document" fallback="Téléverser le Document" />
           </>
         )}
       </Button>
