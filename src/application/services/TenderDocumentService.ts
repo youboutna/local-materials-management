@@ -262,6 +262,36 @@ export class TenderDocumentService {
   }
 }
 
+  /**
+   * Get tender documents joined with their linked document metadata.
+   */
+  async getTenderDocumentsWithDocument(tenderId: string) {
+    try {
+      if (!tenderId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+      return await this.tenderDocumentRepository.findByTenderIdWithDocument(tenderId);
+    } catch (error) {
+      console.error('TenderDocumentService.getTenderDocumentsWithDocument failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get tender documents');
+    }
+  }
+
+  /**
+   * Get workflow-step-level documents for a tender.
+   */
+  async getWorkflowStepDocuments(tenderId: string) {
+    try {
+      if (!tenderId) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
+      }
+      return await this.tenderDocumentRepository.findStepDocumentsByTenderId(tenderId);
+    } catch (error) {
+      console.error('TenderDocumentService.getWorkflowStepDocuments failed:', error);
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get workflow step documents');
+    }
+  }
+
 let tenderDocumentServiceInstance: TenderDocumentService | null = null;
 export function getTenderDocumentService(): TenderDocumentService {
   if (!tenderDocumentServiceInstance) {

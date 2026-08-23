@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex';
-import type { Phase, Step, ProjectDetails } from '@/hooks/hexagonal/useProjectStructureHex';
+import type { Phase, Step } from '@/hooks/hexagonal/useProjectStructureHex';
 
 
 interface TenderProjectStructureProps {
@@ -172,7 +172,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
               </div>
             )}
             <div className="flex items-center gap-2 text-sm">
-              <Layers className="h-4 w-4 text-purple-600" />
+              <Layers className="h-4 w-4 text-accent" />
               <span>{project.phases.length} phase(s)</span>
             </div>
           </div>
