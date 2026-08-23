@@ -58,6 +58,8 @@ import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { EnumBadge } from '@/components/i18n/EnumText';
 import { T } from '@/components/i18n/T';
+import { EnumSelect } from '@/components/i18n/EnumSelect';
+import { useI18n } from '@/hooks/useI18n';
 type Segment = "all" | "team" | "external" | "contractors";
 
 interface StakeholdersTeamStepProps {
@@ -71,6 +73,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   workflowData,
   onStepComplete,
 }) => {
+  const { t } = useI18n();
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
   const projectId = projectData.id;
 
@@ -320,7 +323,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     organizationId: undefined,
                   })
                 }
-                placeholder={t('auto.stakeholdersteamstep.selectionner_le_type', 'Sélectionner le type')}
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_type')}
               />
             </div>
 
@@ -336,7 +339,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     role: value as StakeholderRole,
                   })
                 }
-                placeholder={t('auto.stakeholdersteamstep.selectionner_le_role', 'Sélectionner le rôle')}
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_role')}
               />
             </div>
 
