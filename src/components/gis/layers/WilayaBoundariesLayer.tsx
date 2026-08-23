@@ -37,10 +37,11 @@ const WilayaBoundariesLayer: React.FC<WilayaBoundariesLayerProps> = ({
       boundaries.map((boundary) => ({
         boundary,
         data: {
-          type: t('auto.wilayaboundarieslayer.featurecollection'),
+          type: 'FeatureCollection',
           features: [
             {
-              type: t('auto.wilayaboundarieslayer.feature'),
+              type: 'Feature',
+
               properties: { id: boundary.featureId },
               geometry: boundary.geometry,
             },
