@@ -1,6 +1,8 @@
 
 import { cn } from '@/lib/utils';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
+import { useI18n } from '@/hooks/useI18n';
+
 
 export type StatusType = ProjectStatus | 'approuvée' | 'rejetée' | 'modifications requises';
 
