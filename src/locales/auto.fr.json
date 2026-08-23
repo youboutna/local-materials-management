@@ -4712,12 +4712,10 @@
   "auto.zonelocationeditor.rayon_m": "Rayon (m)",
   "bank_guarantee.subtitle": "Système automatisé de détection des retards et de déclenchement des garanties",
   "bank_guarantee.title": "Suivi des garanties bancaires",
-  "common": {
-    "cancel": "Annuler",
-    "confirm": "Confirmer",
-    "delete": "Supprimer"
-  },
+  "common.cancel": "Annuler",
+  "common.confirm": "Confirmer",
   "common.create": "Créer",
+  "common.delete": "Supprimer",
   "common.details": "Détails",
   "common.edit": "Modifier",
   "common.error": "Erreur",
@@ -4749,79 +4747,57 @@
   "dashboard.project.search_by_location": "Rechercher des projets par localisation...",
   "dashboard.title": "Tableau de bord",
   "documents.title": "Documents",
-  "dqe": {
-    "action": {
-      "add": "Ajouter",
-      "add_line": "Ajouter une ligne",
-      "align_planning": "Aligner à la planification",
-      "attach_submission": "Joindre à ma soumission",
-      "clear_draft": "Vider le brouillon",
-      "create_decompte": "Créer un décompte",
-      "dispatch_wbs": "Transférer vers les phases",
-      "distribute": "Diffuser",
-      "download": "Télécharger",
-      "edit": "Modifier",
-      "email": "Envoyer",
-      "facturx": "PDF + Factur-X",
-      "generate_pdf": "Générer le PDF",
-      "import": "Importer un DQE",
-      "publish": "Publier",
-      "save": "Enregistrer le document",
-      "sign": "Signer",
-      "signed": "Signé",
-      "submit_invoice": "Soumettre pour paiement",
-      "takeoff": "Calcul métré",
-      "transfer": "Transférer",
-      "transform_to": "Transformer en",
-      "validate_gate": "Valider pour injection",
-      "view": "Consulter"
-    },
-    "actions": {
-      "document_menu": "Document",
-      "workflow_menu": "Workflow"
-    },
-    "clear_draft": {
-      "confirm": "Les lignes en attente seront supprimées. Cette action est irréversible."
-    },
-    "doc_status": {
-      "new": "Nouveau document",
-      "to_save": "À enregistrer",
-      "validated": "Document validé"
-    },
-    "fiscal": {
-      "ht": "HT :"
-    },
-    "gate": {
-      "validated": "validé",
-      "validation_required": "validation requise"
-    },
-    "lifecycle": {
-      "possible_statuses_label": "Statuts possibles :",
-      "status_label": "Statut :"
-    },
-    "locked_transmitted": "Document transmis — lecture seule",
-    "referential": {
-      "enrich": "Enrichir :",
-      "hint": "Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir la classification Phase / Jalon / Tâche.",
-      "project": "Réf. projet —"
-    },
-    "transfer": {
-      "project_dqe": "Soumettre pour validation",
-      "supplier_bid": "Joindre à ma soumission",
-      "supplier_invoice": "Soumettre pour paiement",
-      "tender_estimate": "Publier vers fournisseurs"
-    },
-    "transform": {
-      "blocked": "Émission bloquée"
-    }
-  },
+  "dqe.action.add": "Ajouter",
+  "dqe.action.add_line": "Ajouter une ligne",
+  "dqe.action.align_planning": "Aligner à la planification",
+  "dqe.action.attach_submission": "Joindre à ma soumission",
+  "dqe.action.clear_draft": "Vider le brouillon",
+  "dqe.action.create_decompte": "Créer un décompte",
+  "dqe.action.dispatch_wbs": "Transférer vers les phases",
+  "dqe.action.distribute": "Diffuser",
+  "dqe.action.download": "Télécharger",
+  "dqe.action.edit": "Modifier",
+  "dqe.action.email": "Envoyer",
+  "dqe.action.facturx": "PDF + Factur-X",
+  "dqe.action.generate_pdf": "Générer le PDF",
+  "dqe.action.import": "Importer un DQE",
+  "dqe.action.publish": "Publier",
+  "dqe.action.save": "Enregistrer le document",
+  "dqe.action.sign": "Signer",
+  "dqe.action.signed": "Signé",
+  "dqe.action.submit_invoice": "Soumettre pour paiement",
+  "dqe.action.takeoff": "Calcul métré",
+  "dqe.action.transfer": "Transférer",
+  "dqe.action.transform_to": "Transformer en",
+  "dqe.action.validate_gate": "Valider pour injection",
+  "dqe.action.view": "Consulter",
+  "dqe.actions.document_menu": "Document",
+  "dqe.actions.workflow_menu": "Workflow",
+  "dqe.clear_draft.confirm": "Les lignes en attente seront supprimées. Cette action est irréversible.",
+  "dqe.doc_status.new": "Nouveau document",
+  "dqe.doc_status.to_save": "À enregistrer",
+  "dqe.doc_status.validated": "Document validé",
+  "dqe.fiscal.ht": "HT :",
+  "dqe.gate.validated": "validé",
+  "dqe.gate.validation_required": "validation requise",
   "dqe.lifecycle.billed_progress": "Avancement facturé",
   "dqe.lifecycle.possible_statuses": "Statuts possibles",
+  "dqe.lifecycle.possible_statuses_label": "Statuts possibles :",
   "dqe.lifecycle.status": "Statut",
+  "dqe.lifecycle.status_label": "Statut :",
   "dqe.locked_signed": "Document signé — lecture seule",
+  "dqe.locked_transmitted": "Document transmis — lecture seule",
   "dqe.noDeviation": "Aucun écart calculable",
+  "dqe.referential.enrich": "Enrichir :",
+  "dqe.referential.hint": "Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir la classification Phase / Jalon / Tâche.",
+  "dqe.referential.project": "Réf. projet —",
   "dqe.referential.project_default": "Référentiel du projet",
   "dqe.save_hint_no_pending": "Aucune ligne en attente : ajoutez ou importez des lignes.",
+  "dqe.transfer.project_dqe": "Soumettre pour validation",
+  "dqe.transfer.supplier_bid": "Joindre à ma soumission",
+  "dqe.transfer.supplier_invoice": "Soumettre pour paiement",
+  "dqe.transfer.tender_estimate": "Publier vers fournisseurs",
+  "dqe.transform.blocked": "Émission bloquée",
   "error.generic": "Une erreur est survenue",
   "error.missing_fields": "Veuillez remplir tous les champs obligatoires",
   "error.title": "Erreur",
@@ -4975,8 +4951,6 @@
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
   "users.updated_success": "L'utilisateur a été mis à jour avec succès",
-  "wbs": {
-    "select_milestone_first": "Sélectionner un jalon",
-    "select_phase_first": "Sélectionner une phase"
-  }
+  "wbs.select_milestone_first": "Sélectionner un jalon",
+  "wbs.select_phase_first": "Sélectionner une phase"
 }

@@ -4715,12 +4715,10 @@
   "auto.zonelocationeditor.rayon_m": "Radius (m)",
   "bank_guarantee.subtitle": "Automated system for detecting delays and triggering guarantees",
   "bank_guarantee.title": "Bank Guarantee Monitoring",
-  "common": {
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "delete": "Delete"
-  },
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
   "common.create": "Create",
+  "common.delete": "Delete",
   "common.details": "Details",
   "common.edit": "Edit",
   "common.error": "Error",
@@ -4752,79 +4750,57 @@
   "dashboard.project.search_by_location": "Search projects by location...",
   "dashboard.title": "Dashboard",
   "documents.title": "Documents",
-  "dqe": {
-    "action": {
-      "add": "Add",
-      "add_line": "Add a line",
-      "align_planning": "Align with planning",
-      "attach_submission": "Attach to my bid",
-      "clear_draft": "Clear draft",
-      "create_decompte": "Create progress statement",
-      "dispatch_wbs": "Transfer to phases",
-      "distribute": "Distribute",
-      "download": "Download",
-      "edit": "Edit",
-      "email": "Send",
-      "facturx": "PDF + Factur-X",
-      "generate_pdf": "Generate PDF",
-      "import": "Import a BoQ",
-      "publish": "Publish",
-      "save": "Save document",
-      "sign": "Sign",
-      "signed": "Signed",
-      "submit_invoice": "Submit for payment",
-      "takeoff": "Quantity take-off",
-      "transfer": "Transfer",
-      "transform_to": "Transform into",
-      "validate_gate": "Approve for injection",
-      "view": "View"
-    },
-    "actions": {
-      "document_menu": "Document",
-      "workflow_menu": "Workflow"
-    },
-    "clear_draft": {
-      "confirm": "Pending lines will be deleted. This action cannot be undone."
-    },
-    "doc_status": {
-      "new": "New document",
-      "to_save": "To save",
-      "validated": "Validated document"
-    },
-    "fiscal": {
-      "ht": "Net:"
-    },
-    "gate": {
-      "validated": "approved",
-      "validation_required": "approval required"
-    },
-    "lifecycle": {
-      "possible_statuses_label": "Possible statuses:",
-      "status_label": "Status:"
-    },
-    "locked_transmitted": "Document transmitted — read only",
-    "referential": {
-      "enrich": "Enrich:",
-      "hint": "The project referential is used by default; pick another one to enrich the Phase / Milestone / Task classification.",
-      "project": "Project ref. —"
-    },
-    "transfer": {
-      "project_dqe": "Submit for approval",
-      "supplier_bid": "Attach to my bid",
-      "supplier_invoice": "Submit for payment",
-      "tender_estimate": "Publish to suppliers"
-    },
-    "transform": {
-      "blocked": "Issuance blocked"
-    }
-  },
+  "dqe.action.add": "Add",
+  "dqe.action.add_line": "Add a line",
+  "dqe.action.align_planning": "Align with planning",
+  "dqe.action.attach_submission": "Attach to my bid",
+  "dqe.action.clear_draft": "Clear draft",
+  "dqe.action.create_decompte": "Create progress statement",
+  "dqe.action.dispatch_wbs": "Transfer to phases",
+  "dqe.action.distribute": "Distribute",
+  "dqe.action.download": "Download",
+  "dqe.action.edit": "Edit",
+  "dqe.action.email": "Send",
+  "dqe.action.facturx": "PDF + Factur-X",
+  "dqe.action.generate_pdf": "Generate PDF",
+  "dqe.action.import": "Import a BoQ",
+  "dqe.action.publish": "Publish",
+  "dqe.action.save": "Save document",
+  "dqe.action.sign": "Sign",
+  "dqe.action.signed": "Signed",
+  "dqe.action.submit_invoice": "Submit for payment",
+  "dqe.action.takeoff": "Quantity take-off",
+  "dqe.action.transfer": "Transfer",
+  "dqe.action.transform_to": "Transform into",
+  "dqe.action.validate_gate": "Approve for injection",
+  "dqe.action.view": "View",
+  "dqe.actions.document_menu": "Document",
+  "dqe.actions.workflow_menu": "Workflow",
+  "dqe.clear_draft.confirm": "Pending lines will be deleted. This action cannot be undone.",
+  "dqe.doc_status.new": "New document",
+  "dqe.doc_status.to_save": "To save",
+  "dqe.doc_status.validated": "Validated document",
+  "dqe.fiscal.ht": "Net:",
+  "dqe.gate.validated": "approved",
+  "dqe.gate.validation_required": "approval required",
   "dqe.lifecycle.billed_progress": "Billed progress",
   "dqe.lifecycle.possible_statuses": "Possible statuses",
+  "dqe.lifecycle.possible_statuses_label": "Possible statuses:",
   "dqe.lifecycle.status": "Status",
+  "dqe.lifecycle.status_label": "Status:",
   "dqe.locked_signed": "Signed document — read only",
+  "dqe.locked_transmitted": "Document transmitted — read only",
   "dqe.noDeviation": "No computable deviation",
+  "dqe.referential.enrich": "Enrich:",
+  "dqe.referential.hint": "The project referential is used by default; pick another one to enrich the Phase / Milestone / Task classification.",
+  "dqe.referential.project": "Project ref. —",
   "dqe.referential.project_default": "Project referential",
   "dqe.save_hint_no_pending": "No pending lines: add or import lines.",
+  "dqe.transfer.project_dqe": "Submit for approval",
+  "dqe.transfer.supplier_bid": "Attach to my bid",
+  "dqe.transfer.supplier_invoice": "Submit for payment",
+  "dqe.transfer.tender_estimate": "Publish to suppliers",
+  "dqe.transform.blocked": "Issuance blocked",
   "error.generic": "An error occurred",
   "error.missing_fields": "Please fill in all required fields",
   "error.title": "Error",
@@ -4978,8 +4954,6 @@
   "users.table.role": "Role",
   "users.updated": "User updated",
   "users.updated_success": "User updated successfully",
-  "wbs": {
-    "select_milestone_first": "Select a milestone",
-    "select_phase_first": "Select a phase"
-  }
+  "wbs.select_milestone_first": "Select a milestone",
+  "wbs.select_phase_first": "Select a phase"
 }

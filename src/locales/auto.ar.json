@@ -4714,12 +4714,10 @@
   "auto.zonelocationeditor.rayon_m": "نصف القطر (متر)",
   "bank_guarantee.subtitle": "نظام آلي لكشف التأخير وتحصيل الضمانات",
   "bank_guarantee.title": "متابعة الضمانات البنكية",
-  "common": {
-    "cancel": "إلغاء",
-    "confirm": "تأكيد",
-    "delete": "حذف"
-  },
+  "common.cancel": "إلغاء",
+  "common.confirm": "تأكيد",
   "common.create": "إنشاء",
+  "common.delete": "حذف",
   "common.details": "التفاصيل",
   "common.edit": "تعديل",
   "common.error": "خطأ",
@@ -4751,79 +4749,57 @@
   "dashboard.project.search_by_location": "البحث عن المشاريع حسب الموقع...",
   "dashboard.title": "لوحة القيادة",
   "documents.title": "الوثائق",
-  "dqe": {
-    "action": {
-      "add": "إضافة",
-      "add_line": "إضافة سطر",
-      "align_planning": "المواءمة مع التخطيط",
-      "attach_submission": "إرفاق بعرضي",
-      "clear_draft": "إفراغ المسودة",
-      "create_decompte": "إنشاء كشف مرحلي",
-      "dispatch_wbs": "التحويل إلى المراحل",
-      "distribute": "توزيع",
-      "download": "تنزيل",
-      "edit": "تعديل",
-      "email": "إرسال",
-      "facturx": "PDF + Factur-X",
-      "generate_pdf": "إنشاء PDF",
-      "import": "استيراد كشف كمي",
-      "publish": "نشر",
-      "save": "حفظ المستند",
-      "sign": "توقيع",
-      "signed": "موقّع",
-      "submit_invoice": "تقديم للدفع",
-      "takeoff": "حساب الكميات",
-      "transfer": "تحويل",
-      "transform_to": "تحويل إلى",
-      "validate_gate": "اعتماد للإدخال",
-      "view": "استعراض"
-    },
-    "actions": {
-      "document_menu": "المستند",
-      "workflow_menu": "سير العمل"
-    },
-    "clear_draft": {
-      "confirm": "سيتم حذف السطور المعلّقة. لا يمكن التراجع عن هذا الإجراء."
-    },
-    "doc_status": {
-      "new": "مستند جديد",
-      "to_save": "في انتظار الحفظ",
-      "validated": "مستند مُعتمد"
-    },
-    "fiscal": {
-      "ht": "قبل الضريبة:"
-    },
-    "gate": {
-      "validated": "مُعتمد",
-      "validation_required": "الاعتماد مطلوب"
-    },
-    "lifecycle": {
-      "possible_statuses_label": "الحالات الممكنة:",
-      "status_label": "الحالة:"
-    },
-    "locked_transmitted": "مستند مُرسَل — للقراءة فقط",
-    "referential": {
-      "enrich": "إثراء:",
-      "hint": "المرجع الافتراضي هو مرجع المشروع؛ اختر مرجعاً آخر لإثراء تصنيف المرحلة / المعلم / المهمة.",
-      "project": "مرجع المشروع —"
-    },
-    "transfer": {
-      "project_dqe": "تقديم للاعتماد",
-      "supplier_bid": "إرفاق بعرضي",
-      "supplier_invoice": "تقديم للدفع",
-      "tender_estimate": "النشر للموردين"
-    },
-    "transform": {
-      "blocked": "الإصدار محجوب"
-    }
-  },
+  "dqe.action.add": "إضافة",
+  "dqe.action.add_line": "إضافة سطر",
+  "dqe.action.align_planning": "المواءمة مع التخطيط",
+  "dqe.action.attach_submission": "إرفاق بعرضي",
+  "dqe.action.clear_draft": "إفراغ المسودة",
+  "dqe.action.create_decompte": "إنشاء كشف مرحلي",
+  "dqe.action.dispatch_wbs": "التحويل إلى المراحل",
+  "dqe.action.distribute": "توزيع",
+  "dqe.action.download": "تنزيل",
+  "dqe.action.edit": "تعديل",
+  "dqe.action.email": "إرسال",
+  "dqe.action.facturx": "PDF + Factur-X",
+  "dqe.action.generate_pdf": "إنشاء PDF",
+  "dqe.action.import": "استيراد كشف كمي",
+  "dqe.action.publish": "نشر",
+  "dqe.action.save": "حفظ المستند",
+  "dqe.action.sign": "توقيع",
+  "dqe.action.signed": "موقّع",
+  "dqe.action.submit_invoice": "تقديم للدفع",
+  "dqe.action.takeoff": "حساب الكميات",
+  "dqe.action.transfer": "تحويل",
+  "dqe.action.transform_to": "تحويل إلى",
+  "dqe.action.validate_gate": "اعتماد للإدخال",
+  "dqe.action.view": "استعراض",
+  "dqe.actions.document_menu": "المستند",
+  "dqe.actions.workflow_menu": "سير العمل",
+  "dqe.clear_draft.confirm": "سيتم حذف السطور المعلّقة. لا يمكن التراجع عن هذا الإجراء.",
+  "dqe.doc_status.new": "مستند جديد",
+  "dqe.doc_status.to_save": "في انتظار الحفظ",
+  "dqe.doc_status.validated": "مستند مُعتمد",
+  "dqe.fiscal.ht": "قبل الضريبة:",
+  "dqe.gate.validated": "مُعتمد",
+  "dqe.gate.validation_required": "الاعتماد مطلوب",
   "dqe.lifecycle.billed_progress": "نسبة التقدم المفوترة",
   "dqe.lifecycle.possible_statuses": "الحالات الممكنة",
+  "dqe.lifecycle.possible_statuses_label": "الحالات الممكنة:",
   "dqe.lifecycle.status": "الحالة",
+  "dqe.lifecycle.status_label": "الحالة:",
   "dqe.locked_signed": "المستند موقّع — للقراءة فقط",
+  "dqe.locked_transmitted": "مستند مُرسَل — للقراءة فقط",
   "dqe.noDeviation": "لا يوجد فارق قابل للحساب",
+  "dqe.referential.enrich": "إثراء:",
+  "dqe.referential.hint": "المرجع الافتراضي هو مرجع المشروع؛ اختر مرجعاً آخر لإثراء تصنيف المرحلة / المعلم / المهمة.",
+  "dqe.referential.project": "مرجع المشروع —",
   "dqe.referential.project_default": "مرجعية المشروع",
   "dqe.save_hint_no_pending": "لا توجد بنود في الانتظار: أضف أو استورد بنودًا.",
+  "dqe.transfer.project_dqe": "تقديم للاعتماد",
+  "dqe.transfer.supplier_bid": "إرفاق بعرضي",
+  "dqe.transfer.supplier_invoice": "تقديم للدفع",
+  "dqe.transfer.tender_estimate": "النشر للموردين",
+  "dqe.transform.blocked": "الإصدار محجوب",
   "error.generic": "حدث خطأ",
   "error.missing_fields": "يرجى ملء جميع الحقول المطلوبة",
   "error.title": "خطأ",
@@ -4977,8 +4953,6 @@
   "users.table.role": "الدور",
   "users.updated": "تم تحديث المستخدم",
   "users.updated_success": "تم تحديث المستخدم بنجاح",
-  "wbs": {
-    "select_milestone_first": "اختر معلماً",
-    "select_phase_first": "اختر مرحلة"
-  }
+  "wbs.select_milestone_first": "اختر معلماً",
+  "wbs.select_phase_first": "اختر مرحلة"
 }
