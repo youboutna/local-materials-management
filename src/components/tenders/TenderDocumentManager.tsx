@@ -423,7 +423,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                               {tenderDoc.subcategory === 'workflow_step' ? (
                                 tenderDoc.document?.title || 'Document workflow'
                               ) : (
-                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]
+                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory ?? '']
                               )}
                             </h4>
                             {tenderDoc.subcategory === 'workflow_step' ? (
@@ -445,9 +445,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                 Requis
                               </Badge>
                             )}
-                            <Badge className={getStatusColor(tenderDoc.status)}>
+                            <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
                               <div className="flex items-center gap-1">
-                                {getStatusIcon(tenderDoc.status)}
+                                {getStatusIcon(tenderDoc.status ?? 'pending')}
                                 {tenderDoc.status === 'approved' ? 'Approuvé' : 
                                  tenderDoc.status === 'rejected' ? 'Rejeté' : 
                                  tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
@@ -533,7 +533,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h4 className="font-medium text-sm mb-1">
-                                {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                                {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory ?? '']}
                               </h4>
                               {tenderDoc.document?.title && (
                                 <p className="text-xs text-muted-foreground mb-2">
@@ -547,9 +547,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                   Requis
                                 </Badge>
                               )}
-                              <Badge className={getStatusColor(tenderDoc.status)}>
+                              <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
                                 <div className="flex items-center gap-1">
-                                  {getStatusIcon(tenderDoc.status)}
+                                  {getStatusIcon(tenderDoc.status ?? 'pending')}
                                   {tenderDoc.status === 'approved' ? 'Approuvé' : 
                                    tenderDoc.status === 'rejected' ? 'Rejeté' : 
                                    tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
