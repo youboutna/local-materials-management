@@ -13,8 +13,7 @@ import { toast } from 'sonner';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import { NotificationService } from '@/application/services/NotificationService';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useProjectPhasesAsStepsHex, useInspectorsHex } from '@/hooks/hexagonal/useAdvancedInspectionSchedulerHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
@@ -78,29 +77,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const [selectedSteps, setSelectedSteps] = useState<string[]>(preselectedStepId ? [preselectedStepId] : []);
 
   // Fetch phases (as steps) for the selected project
-  const { data: projectSteps = [] } = useQuery({
-    queryKey: ['project-phases-as-steps', selectedProject?.id],
-    queryFn: async () => {
-      if (!selectedProject?.id) return [];
-      
-      // Get phases for this project (phases act as steps in the workflow)
-      const { data: phases, error } = await btpClient.from('project_phases')
-        .select('id, phase_name, order_index, status, progress')
-        .eq('project_id', selectedProject.id)
-        .order('order_index');
-      
-      if (error) throw error;
-      
-      return (phases || []).map(p => ({
-        id: p.id,
-        name: p.phase_name,
-        order_index: p.order_index || 0,
-        status: p.status || 'pending',
-        progress: p.progress || 0
-      }));
-    },
-    enabled: !!selectedProject?.id
-  });
+  const { data: projectSteps = [] } = useProjectPhasesAsStepsHex(selectedProject?.id);
 
   // Combine preselected steps with fetched steps
   const availableSteps = preselectedSteps.length > 0 ? preselectedSteps : projectSteps;
@@ -123,82 +100,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   }, [preselectedStepId]);
 
   // Fetch inspectors (employees with inspector position or inspection department)
-  const { data: inspectors } = useQuery({
-    queryKey: ['inspectors'],
-    queryFn: async () => {
-      // Fetch employees
-      const { data: employeesData, error: employeesError } = await btpClient.from('employees')
-        .select('id, full_name, phone, position, department')
-        .eq('is_active', true)
-        .order('full_name');
-
-      if (employeesError) throw employeesError;
-
-      // Fetch suppliers
-      const { data: suppliersData, error: suppliersError } = await btpClient.from('suppliers')
-        .select('id, name, contact_person, email, phone, category, nif')
-        .eq('is_active', true)
-        .order('name');
-
-      if (suppliersError) throw suppliersError;
-      
-      const allEmployees = employeesData || [];
-      const allSuppliers = suppliersData || [];
-      
-      // Convert suppliers to inspector format
-      const supplierInspectors = allSuppliers.map(supplier => ({
-        id: supplier.id,
-        full_name: supplier.contact_person || supplier.name,
-        phone: supplier.phone,
-        position: `Responsable - ${supplier.name}`,
-        department: supplier.category,
-        nif: supplier.nif,
-        type: 'supplier' as const
-      }));
-
-      // Convert employees to inspector format  
-      const employeeInspectors = allEmployees.map(emp => ({
-        ...emp,
-        nif: null as string | null, // Add nif field for consistency
-        type: 'employee' as const
-      }));
-
-      // Combine all potential inspectors
-      const allInspectors = [...employeeInspectors, ...supplierInspectors];
-      
-      // Separate into categories
-      const inspectors = allInspectors.filter(inspector => 
-        inspector.position?.toLowerCase().includes('inspector') ||
-        inspector.position?.toLowerCase().includes('inspection') ||
-        inspector.department?.toLowerCase().includes('inspection') ||
-        inspector.position?.toLowerCase().includes('contrôle') ||
-        inspector.position?.toLowerCase().includes('qualité')
-      );
-      
-      const engineeringConsultants = allInspectors.filter(inspector => 
-        inspector.position?.toLowerCase().includes('consultant') ||
-        inspector.position?.toLowerCase().includes('ingénieur') ||
-        inspector.position?.toLowerCase().includes('engineer') ||
-        inspector.department?.toLowerCase().includes('ingénierie') ||
-        inspector.department?.toLowerCase().includes('engineering') ||
-        inspector.position?.toLowerCase().includes('bureau d\'études')
-      );
-
-      const responsables = allInspectors.filter(inspector =>
-        inspector.position?.toLowerCase().includes('responsable') ||
-        inspector.type === 'supplier'
-      );
-      
-      const otherInspectors = allInspectors.filter(inspector => 
-        !inspectors.includes(inspector) && 
-        !engineeringConsultants.includes(inspector) &&
-        !responsables.includes(inspector)
-      );
-      
-      // Return in order: engineering consultants first, then inspectors, then responsables, then others
-      return [...engineeringConsultants, ...inspectors, ...responsables, ...otherInspectors];
-    }
-  });
+  const { data: inspectors } = useInspectorsHex();
 
   // Set default inspector to engineering consultant when project is selected
   useEffect(() => {

@@ -7,7 +7,7 @@
 
 import { Material } from './Material';
 import { Supplier } from './Supplier';
-import { Employee } from './Employee';
+import type { Employee } from './Employee';
 import { Milestone } from './Milestone';
 import { Inspection } from './Inspection';
 import { Document } from './Document';

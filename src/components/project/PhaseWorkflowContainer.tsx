@@ -11,8 +11,7 @@ import type { CreateDocumentDTO } from '@/dtos/entities/DocumentDTO';
 type CreateDocumentRequestDto = CreateDocumentDTO;
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { getProjectCreatedByHex } from '@/hooks/hexagonal/usePhaseWorkflowContainerHex';
 
 interface PhaseWorkflowContainerProps {
   projectId: string;
@@ -147,14 +146,11 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
                url: publicUrl,
              } as any);
 
-            const { data: projectData } = await btpClient.from('projects')
-              .select('created_by')
-              .eq('id', projectId)
-              .single();
+            const projectCreatedBy = await getProjectCreatedByHex(projectId);
 
-            if (projectData?.created_by) {
+            if (projectCreatedBy) {
               await createNotification(
-                projectData.created_by,
+                projectCreatedBy,
                 'PV généré',
                 `Un procès-verbal pour la phase ${rawPhaseData.phase_name} a été généré.`,
                 'info' as any,

@@ -5,10 +5,13 @@
  * DocumentItem stream for the generic DocumentHub.
  */
 import { useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { btpClient } from '@/integrations/supabase/schema-clients';
-import { supabase as rootSupabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
+import {
+  useTenderLevelDocumentsHex,
+  createTenderLevelDocumentHex,
+  deleteTenderLevelDocumentHex,
+} from '@/hooks/hexagonal/useTenderDocumentsAdapterHex';
 import {
   useTenderLotDocuments,
   useCreateTenderLotDocument,
@@ -63,25 +66,7 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
   );
 
   // Tender-level documents (btp.tender_documents joined w/ documents)
-  const tenderDocsQuery = useQuery({
-    queryKey: ['tender-docs-adapter', tenderId],
-    enabled: !!tenderId,
-    queryFn: async () => {
-      const { data, error } = await btpClient
-        .from('tender_documents' as any)
-        .select(
-          `*, document:documents(id, title, description, file_url, file_name, mime_type, file_size)`
-        )
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
-      if (error) {
-        // eslint-disable-next-line no-console
-        console.warn('[tenderDocumentAdapter] tender_documents fetch failed:', error);
-        return [] as any[];
-      }
-      return (data ?? []) as any[];
-    },
-  });
+  const tenderDocsQuery = useTenderLevelDocumentsHex(tenderId);
 
   const items: DocumentItem[] = useMemo(() => {
     const out: DocumentItem[] = [];
@@ -176,34 +161,15 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
 
     if (scope === 'tender') {
       // Insert into documents + tender_documents
-      const { data: doc, error: docErr } = await btpClient
-        .from('documents' as any)
-        .insert({
-          title: input.title,
-          description: input.description ?? null,
-          file_url: publicUrl,
-          file_name: input.file.name,
-          mime_type: input.file.type,
-          file_size: input.file.size,
-          document_type: 'tender',
-        })
-        .select()
-        .single();
-      if (docErr) throw docErr;
-      const { data: userData } = await rootSupabase.auth.getUser();
-      const { error: tdErr } = await btpClient.from('tender_documents' as any).insert({
-        document_id: (doc as any).id,
-        tender_id: tenderId,
-        project_id: projectId ?? null,
+      await createTenderLevelDocumentHex({
+        tenderId,
+        projectId,
+        title: input.title,
+        description: input.description ?? null,
+        publicUrl,
+        file: input.file,
         category: input.category ?? 'administrative',
-        subcategory: 'other',
-        is_required: false,
-        is_submitted: true,
-        submission_date: new Date().toISOString(),
-        status: 'pending',
-        uploaded_by: userData.user?.id ?? null,
-      } as any);
-      if (tdErr) throw tdErr;
+      });
       qc.invalidateQueries({ queryKey: ['tender-docs-adapter', tenderId] });
     } else {
       // scope === 'common' or 'lot'
@@ -228,11 +194,7 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
     if (raw.source === 'lot') {
       await deleteLotDoc.mutateAsync(raw.record.id);
     } else {
-      const { error } = await btpClient
-        .from('tender_documents' as any)
-        .delete()
-        .eq('id', raw.record.id);
-      if (error) throw error;
+      await deleteTenderLevelDocumentHex(raw.record.id);
       qc.invalidateQueries({ queryKey: ['tender-docs-adapter', tenderId] });
     }
   };

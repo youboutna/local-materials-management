@@ -14,29 +14,15 @@ import { ArrowLeft, Package, HelpCircle } from 'lucide-react';
 import { PublicTendersList } from '@/components/supplier/PublicTendersList';
 import { SupplierBidWizard, type BidWizardStepCode } from '@/components/supplier/SupplierBidWizard';
 import { BoqWorkspace } from '@/components/boq';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { usePublicTenderById } from '@/hooks/hexagonal/usePublicTendersHex';
 import { T } from '@/components/i18n/T';
 
 export default function TendersPublic() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const { data: tender } = useQuery({
-    queryKey: ['public-tender', selectedId],
-    queryFn: async () => {
-      if (!selectedId) return null;
-      const { data, error } = await btpClient.from('tenders')
-        .select('id, title, description, status, deadline_date, market_type, budget_max, project_reference')
-        .eq('id', selectedId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedId,
-  });
+  const { data: tender } = usePublicTenderById(selectedId);
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,7 +65,7 @@ export default function TendersPublic() {
             <SupplierBidWizard
               tenderId={tender.id as string}
               tenderTitle={tender.title ?? undefined}
-              deadlineDate={tender.deadline_date ?? null}
+              deadlineDate={tender.deadlineDate ?? null}
               onSubmit={async () => {
                 toast({
                   title: 'Candidature soumise',

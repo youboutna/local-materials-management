@@ -26,6 +26,7 @@ export interface UseWorkspacesHexResult {
   createWorkspace: (data: CreateWorkspaceDTO) => void;
   updateWorkspace: { mutate: (params: { id: string; data: UpdateWorkspaceDTO }) => void; isPending: boolean };
   deleteWorkspace: (id: string) => void;
+  createWorkspaceAsync: (data: CreateWorkspaceDTO) => Promise<any>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
@@ -156,6 +157,7 @@ export function useWorkspacesHex(): UseWorkspacesHexResult {
     error: error ? String(error) : null,
     refetch,
     createWorkspace: createWorkspaceMutation.mutate,
+    createWorkspaceAsync: createWorkspaceMutation.mutateAsync,
     updateWorkspace: updateWorkspaceMutation,
     deleteWorkspace: deleteWorkspaceMutation.mutate,
     isCreating: createWorkspaceMutation.isPending,

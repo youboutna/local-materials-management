@@ -1,5 +1,3 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTenderImport } from '@/hooks/hexagonal/useTenderImportHex';
 import * as XLSX from 'xlsx';
 import { T } from '@/components/i18n/T';
 
@@ -26,6 +25,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
+  const { bulkInsertTenders } = useTenderImport();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -142,16 +142,12 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
       // Import valid records
       if (valid.length > 0) {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          
-          const { data, error } = await btpClient.from('tenders')
-            .insert(valid)
-            .select();
+          const { count, error } = await bulkInsertTenders(valid);
           
           if (error) {
-            importErrors.push(`Erreur d'insertion en base: ${error.message}`);
+            importErrors.push(`Erreur d'insertion en base: ${error}`);
           } else {
-            successCount = data?.length || 0;
+            successCount = count;
           }
         } catch (dbError: any) {
           importErrors.push(`Erreur de base de données: ${dbError.message}`);

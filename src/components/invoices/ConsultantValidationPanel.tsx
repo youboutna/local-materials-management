@@ -1,4 +1,3 @@
-import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { getNotificationService } from '@/application/services/NotificationService';
 import { getStorageService } from '@/application/services/StorageService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -12,9 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useConsultantInvoiceValidationHex } from '@/hooks/hexagonal/useConsultantInvoiceValidationHex';
 import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { T } from '@/components/i18n/T';
@@ -54,8 +51,7 @@ interface ProgressInvoice {
 }
 
 export function ConsultantValidationPanel() {
-  const [invoices, setInvoices] = useState<ProgressInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { invoices, loading, loadPendingInvoices, validateInvoice } = useConsultantInvoiceValidationHex();
   const [selectedInvoice, setSelectedInvoice] = useState<ProgressInvoice | null>(null);
   const [comments, setComments] = useState('');
   const [serviceFaitFile, setServiceFaitFile] = useState<File | null>(null);
@@ -64,7 +60,6 @@ export function ConsultantValidationPanel() {
   const { hasAnyRole, hasRole } = useCurrentUserRoles();
   
   // Initialize services
-  const authService = getAuthService();
   const storageService = getStorageService();
 
   // Check consultant permissions
@@ -74,67 +69,6 @@ export function ConsultantValidationPanel() {
   useEffect(() => {
     loadPendingInvoices();
   }, []);
-
-  const loadPendingInvoices = async () => {
-    try {
-      setLoading(true);
-      // Load invoices pending consultant validation
-      const { data, error } = await btpClient.from('progress_invoices')
-        .select('*')
-        .eq('status', 'submitted')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Transform data to match ProgressInvoice interface
-      const transformedData = data.map((invoice: any) => ({
-        id: invoice.id,
-        // Use snake_case from database, map to camelCase
-        invoiceNumber: invoice.invoice_number || '',
-        invoice_number: invoice.invoice_number || '',
-        invoiceType: invoice.invoice_type || 'progress',
-        invoice_type: invoice.invoice_type || 'progress',
-        progressPercentage: invoice.progress_percentage || 0,
-        progress_percentage: invoice.progress_percentage || 0,
-        previousProgress: invoice.previous_progress || 0,
-        previous_progress: invoice.previous_progress || 0,
-        totalContractAmount: invoice.total_contract_amount || 0,
-        total_contract_amount: invoice.total_contract_amount || 0,
-        invoiceAmount: invoice.invoice_amount || 0,
-        invoice_amount: invoice.invoice_amount || 0,
-        workDescription: invoice.work_description || '',
-        work_description: invoice.work_description || '',
-        status: invoice.status || 'draft',
-        submittedAt: invoice.submitted_at || '',
-        submitted_at: invoice.submitted_at || '',
-        projectId: invoice.project_id || '',
-        project_id: invoice.project_id || '',
-        inspectionId: invoice.inspection_id || '',
-        inspection_id: invoice.inspection_id || '',
-        supportingDocuments: invoice.supporting_documents || [],
-        supporting_documents: invoice.supporting_documents || [],
-        submitted_by: invoice.submitted_by || '',
-        created_at: invoice.created_at || '',
-        updated_at: invoice.updated_at || '',
-        projects: invoice.projects ? {
-          title: invoice.projects.title || '',
-          projectType: invoice.projects.project_type || '',
-          fundingSource: invoice.projects.funding_source || ''
-        } : undefined
-      } as ProgressInvoice));
-      
-      setInvoices(transformedData);
-    } catch (error) {
-      console.error('Error loading invoices:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les factures',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleValidate = async (invoiceId: string, approved: boolean) => {
     if (approved && !serviceFaitFile) {
@@ -148,16 +82,6 @@ export function ConsultantValidationPanel() {
 
     setActionLoading(true);
     try {
-      const user = await authService.getCurrentUser();
-      if (!user) throw new Error('Non authentifié');
-      
-      // Create employee object from user
-      const employee = {
-        id: user.id,
-        name: user.email || 'Unknown',
-        email: user.email || ''
-      };
-
       let serviceFaitDocumentId: string | null = null;
 
       if (approved && serviceFaitFile) {
@@ -168,58 +92,22 @@ export function ConsultantValidationPanel() {
         const fileName = `service-fait-${invoiceId}-${Date.now()}.${fileExt}`;
         const filePath = `progress-invoices/${fileName}`;
 
-        const uploadResult = await storageService.uploadFile({
+        await storageService.uploadFile({
           bucket: 'documents',
           path: filePath,
           file: serviceFaitFile
         });
-        // StorageService throws exceptions on error, so if we get here it succeeded
 
         serviceFaitDocumentId = `doc-${Date.now()}`;
       }
 
-      // Get current workflow history
-      const { data: currentInvoice } = await (supabase as any)
-        .from('progress_invoices')
-        .select('workflow_history')
-        .eq('id', invoiceId)
-        .single();
-      
-      const workflowHistory = currentInvoice?.workflow_history as any[] || [];
-      const newWorkflowEntry = {
-        action: approved ? 'consultant_approved' : 'consultant_rejected',
-        timestamp: new Date().toISOString(),
-        user_id: user.id,
-        employee_id: employee.id,
-        comments: comments,
-        status: approved ? 'consultant_approved' : 'consultant_rejected',
-      };
-      
-      // Update invoice status and consultant validation
-      const newStatus = approved ? 'consultant_approved' : 'consultant_rejected';
-      
-      const updateData: any = {
-        status: newStatus,
-        consultant_id: employee.id,
-        consultant_validated_at: new Date().toISOString(),
-        consultant_comments: comments,
-        consultant_approval_status: approved ? 'approved' : 'rejected',
-        workflow_history: [...workflowHistory, newWorkflowEntry],
-      };
+      const { employee } = await validateInvoice({
+        invoiceId,
+        approved,
+        comments,
+        serviceFaitDocumentId,
+      });
 
-      // Add service fait document ID if available
-      if (serviceFaitDocumentId) {
-        updateData.service_fait_document_id = serviceFaitDocumentId;
-      }
-
-      const { error: updateError } = await (supabase as any)
-        .from('progress_invoices')
-        .update(updateData)
-        .eq('id', invoiceId);
-
-      if (updateError) throw updateError;
-
-      // Create notification for supplier
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
         const notificationService = getNotificationService();

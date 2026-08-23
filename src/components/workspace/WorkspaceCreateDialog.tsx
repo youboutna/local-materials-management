@@ -9,10 +9,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
-import { useQueryClient } from '@tanstack/react-query';
-import { getAuthService } from '@/application/services/AuthService';
-import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useWorkspacesHex } from '@/hooks/hexagonal/useWorkspacesHex';
 import { T } from '@/components/i18n/T';
 
 interface WorkspaceCreateDialogProps {
@@ -34,42 +31,26 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
     status: OperationalStatus.active
   });
 
-  const queryClient = useQueryClient();
+  const { createWorkspaceAsync } = useWorkspacesHex();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const currentUser = await getAuthService().getCurrentUser();
-      const ownerId = currentUser?.id;
-      if (!ownerId) throw new Error("Utilisateur non authentifié");
-
-      const payload: BtpTablesInsert<'workspaces'> = {
+      const data = await createWorkspaceAsync({
         name: formData.name,
         location: formData.location,
         contact_manager: formData.contactManager,
         contact_phone: formData.contactPhone,
         status: formData.status,
         facilities: [],
-        owner_id: ownerId,
-      };
-
-      const { data, error } = await btpClient.from('workspaces')
-        .insert(payload)
-        .select()
-        .single();
-
-
-      if (error) throw error;
+      });
 
       toast({
         title: "Espace de travail créé",
         description: `L'espace de travail "${formData.name}" a été créé avec succès.`,
       });
-
-      // Refresh workspaces query
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
 
       // Notify parent component
       if (onWorkspaceCreated && data) {

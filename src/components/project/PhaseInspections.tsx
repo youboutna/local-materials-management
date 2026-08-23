@@ -1,6 +1,6 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePhaseInspectionsListHex, useAddPhaseInspectionHex, useDeletePhaseInspectionHex } from '@/hooks/hexagonal/usePhaseInspectionsHex';
 import { useNavigate } from 'react-router-dom';
 import { useStorageHex } from '@/hooks/hexagonal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,33 +54,18 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const { syncProgress } = useProjectProgressSync(projectId);
   const { uploadFile, getPublicUrl } = useStorageHex('inspection-documents');
 
-  const { data: inspections, isLoading } = useQuery({
-    queryKey: ['phase-inspections', phaseId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await btpClient.from('inspections')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('date', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: inspections, isLoading } = usePhaseInspectionsListHex(phaseId);
 
-  const addInspectionMutation = useMutation({
-    mutationFn: async (inspectionData: InspectionFormData) => {
-      // Upload documents if any
+  const addInspectionMutationBase = useAddPhaseInspectionHex(phaseId, projectId, syncProgress);
+  const addInspectionMutation = {
+    ...addInspectionMutationBase,
+    mutate: async (inspectionData: InspectionFormData) => {
       let documentsData = {};
       if (inspectionData.documents && inspectionData.documents.length > 0) {
         const uploadPromises = inspectionData.documents.map(async (file) => {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${crypto.randomUUID()}.${fileExt}`;
           const folder = `inspections/${projectId}`;
-
           const uploadResult = await uploadFile({ file, folder });
           const publicUrl = getPublicUrl(uploadResult.path);
-
           return {
             name: file.name,
             url: publicUrl,
@@ -92,51 +77,30 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
         documentsData = { validation_documents: uploadedDocs };
       }
 
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await btpClient.from('inspections')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          inspector: inspectionData.inspector,
-          date: new Date(inspectionData.date).toISOString(),
-          status: inspectionData.status,
-          progress_at_inspection: parseInt(inspectionData.progressAtInspection) || 0,
-          comments: inspectionData.comments,
-          documents: documentsData,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
+      addInspectionMutationBase.mutate(
+        { ...inspectionData, documentsData },
+        {
+          onSuccess: () => {
+            setIsAdding(false);
+            resetForm();
+            toast({ title: 'Inspection ajoutée avec succès', description: 'La progression du projet a été mise à jour automatiquement' });
+          },
+        }
+      );
+    },
+  };
 
-      // Synchronize project progress
-      await syncProgress();
-      
-      return data;
+  const deleteInspectionMutationBase = useDeletePhaseInspectionHex(phaseId);
+  const deleteInspectionMutation = {
+    ...deleteInspectionMutationBase,
+    mutate: (id: string) => {
+      deleteInspectionMutationBase.mutate(id, {
+        onSuccess: () => {
+          toast({ title: 'Inspection supprimée avec succès' });
+        },
+      });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Inspection ajoutée avec succès', description: 'La progression du projet a été mise à jour automatiquement' });
-    },
-  });
-
-  const deleteInspectionMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await btpClient.from('inspections')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
-      toast({ title: 'Inspection supprimée avec succès' });
-    },
-  });
+  };
 
   const resetForm = () => {
     setInspectorId('');

@@ -15,7 +15,7 @@ import { User } from './User';
 // Les tâches sont maintenant gérées via TaskAssignment
 import type { ReferentialType } from '@/config/referentials';
 import { Document } from './Document';
-import { Employee } from './Employee';
+import type { Employee } from './Employee';
 import { Material } from './Material';
 import { Milestone } from './Milestone';
 import { Phase } from './Phase';

@@ -1,11 +1,10 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
 /**
  * StepDetailPanel - Panneau détaillé pour une étape
  * Utilise les composants existants: PhaseInspections, PhaseTasks, PhaseEmployees, PhaseMaterials, PhasePayments
  */
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useProjectForSchedulerHex, scheduleStepInspectionHex } from '@/hooks/hexagonal/useStepDetailPanelHex';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,30 +68,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const [showInspectionScheduler, setShowInspectionScheduler] = useState(false);
 
   // Fetch project for the scheduler
-  const { data: project } = useQuery({
-    queryKey: ['project-for-scheduler', projectId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await btpClient.from('projects')
-        .select('id, title, location, status, project_reference, budget, progress, main_contractor')
-        .eq('id', projectId)
-        .single();
-      
-      if (error) throw error;
-      return {
-        id: data.id || '',
-        title: data.title || '',
-        location: data.location || undefined,
-        status: data.status || undefined,
-        project_reference: data.project_reference || '',
-        budget: data.budget || undefined,
-        progress: data.progress || undefined,
-        contractor_name: data.main_contractor || undefined,
-        contractor_contact: undefined
-      };
-    },
-    enabled: !!projectId
-  });
+  const { data: project } = useProjectForSchedulerHex(projectId);
 
   const handleSaveProgress = () => {
     onUpdateProgress(step.id, editProgress);
@@ -106,20 +82,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
     additionalData?: any
   ) => {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await btpClient.from('inspections')
-        .insert({
-          project_id: projId,
-          phase_id: additionalData?.phase_id || phaseId,
-          inspector,
-          date: new Date(date).toISOString(),
-          status: 'scheduled',
-          progress_at_inspection: additionalData?.target_progress || 0,
-          comments: additionalData?.requirements || '',
-          payment_type: additionalData?.inspection_type || 'progress'
-        });
-
-      if (error) throw error;
+      await scheduleStepInspectionHex({ projId, phaseId, inspector, date, additionalData });
 
       toast.success('Inspection programmée avec succès');
       setShowInspectionScheduler(false);

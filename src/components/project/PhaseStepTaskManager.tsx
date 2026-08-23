@@ -1,6 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
-import { useQuery } from '@tanstack/react-query';
+import { usePhaseStepTaskHierarchyHex } from '@/hooks/hexagonal/usePhaseStepTaskHierarchyHex';
 import {
     AlertCircle,
     Calendar,
@@ -54,30 +52,7 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
   } | null>(null);
 
   // Fetch phase hierarchy from database
-  const { data: hierarchy = [], isLoading, refetch } = useQuery({
-    queryKey: ['project-phase-hierarchy', projectId],
-    queryFn: async () => {
-      // Use supabase directly for hierarchy query since WorkflowService constructor requires many repos
-      const { data, error } = await btpClient.from('project_phases')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('order_index');
-      
-      if (error) throw error;
-      
-      // Transform to PhaseStepTask format
-      return (data || []).map((row: any) => ({
-        phase_id: row.id,
-        phase_name: row.phase_name || row.name || 'Phase',
-        phase_code: row.construction_phase || '',
-        status: row.status || 'planned',
-        progress: row.progress || 0,
-        start_date: row.start_date,
-        end_date: row.end_date,
-      })) as PhaseStepTask[];
-    },
-    enabled: !!projectId && projectId !== 'new-project',
-  });
+  const { data: hierarchy = [], isLoading, refetch } = usePhaseStepTaskHierarchyHex(projectId);
 
   // Group hierarchy by phase and step
   const groupedData = React.useMemo(() => {

@@ -3,7 +3,7 @@
  * Business logic for monitoring system and database performance
  * 
  * Note: This service should use Repository pattern instead of direct Supabase calls
- * TODO: Replace direct Supabase calls with RepositoryFactory pattern
+ * Accès données via btpClient (imports dynamiques) — schéma btp.
  */
 
 import { NotificationService, getNotificationService} from '@/application/services/NotificationService';
