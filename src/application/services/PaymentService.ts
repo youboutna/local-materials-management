@@ -11,6 +11,7 @@ import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
 import { PaymentBlockingValidation } from '@/dtos/utils/PaymentBlockingValidation';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 export enum PaymentStatusEnum {
   PENDING = 'pending',
@@ -453,3 +454,7 @@ export function getPaymentService(): PaymentService {
   }
   return paymentServiceInstance;
 }
+
+/** Libellés multilingues de PaymentStatusEnum (référentiel i18n — code technique inchangé). */
+export const PAYMENT_STATUS_ENUM_LABELS: Readonly<Record<PaymentStatusEnum, EnumLabel>> =
+    ENUM_LABELS.PaymentStatusEnum as Readonly<Record<PaymentStatusEnum, EnumLabel>>;

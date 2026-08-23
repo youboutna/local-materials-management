@@ -72,6 +72,7 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
 import { PROJECT_WORKFLOW_STEPS } from '@/config/referentials/projects/project-workflow-steps.referential';
 import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // ============================================================
 // Types exportés
@@ -1135,3 +1136,7 @@ export function getProjectWorkflowService(): ProjectWorkflowService {
 export function createProjectWorkflowService(): ProjectWorkflowService {
   return ProjectWorkflowService.default();
 }
+
+/** Libellés multilingues de WorkflowMode (référentiel i18n — code technique inchangé). */
+export const WORKFLOW_MODE_LABELS: Readonly<Record<WorkflowMode, EnumLabel>> =
+    ENUM_LABELS.WorkflowMode as Readonly<Record<WorkflowMode, EnumLabel>>;

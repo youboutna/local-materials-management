@@ -10,6 +10,7 @@
  */
 
 import { Feature, Polygon } from 'geojson';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // =================== ADMINISTRATIVE LEVELS ===================
 
@@ -1478,3 +1479,23 @@ export interface EnhancedProject {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** Libellés multilingues de ProjectStatus (référentiel i18n — code technique inchangé). */
+export const PROJECT_STATUS_LABELS: Readonly<Record<ProjectStatus, EnumLabel>> =
+    ENUM_LABELS.ProjectStatus as Readonly<Record<ProjectStatus, EnumLabel>>;
+
+/** Libellés multilingues de Priority (référentiel i18n — code technique inchangé). */
+export const PRIORITY_LABELS: Readonly<Record<Priority, EnumLabel>> =
+    ENUM_LABELS.Priority as Readonly<Record<Priority, EnumLabel>>;
+
+/** Libellés multilingues de TaskStatus (référentiel i18n — code technique inchangé). */
+export const TASK_STATUS_LABELS: Readonly<Record<TaskStatus, EnumLabel>> =
+    ENUM_LABELS.TaskStatus as Readonly<Record<TaskStatus, EnumLabel>>;
+
+/** Libellés multilingues de InspectionStatus (référentiel i18n — code technique inchangé). */
+export const INSPECTION_STATUS_LABELS: Readonly<Record<InspectionStatus, EnumLabel>> =
+    ENUM_LABELS.InspectionStatus as Readonly<Record<InspectionStatus, EnumLabel>>;
+
+/** Libellés multilingues de DocumentType (référentiel i18n — code technique inchangé). */
+export const DOCUMENT_TYPE_LABELS: Readonly<Record<DocumentType, EnumLabel>> =
+    ENUM_LABELS.DocumentType as Readonly<Record<DocumentType, EnumLabel>>;

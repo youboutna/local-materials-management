@@ -13,6 +13,7 @@ import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Enhanced validation interfaces
 export interface EnhancedValidationResult {
@@ -961,3 +962,7 @@ export function getEnhancedValidationService(): EnhancedValidationService {
   }
   return enhancedValidationServiceInstance;
 }
+
+/** Libellés multilingues de ValidationCategory (référentiel i18n — code technique inchangé). */
+export const VALIDATION_CATEGORY_LABELS: Readonly<Record<ValidationCategory, EnumLabel>> =
+    ENUM_LABELS.ValidationCategory as Readonly<Record<ValidationCategory, EnumLabel>>;

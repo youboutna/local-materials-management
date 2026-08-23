@@ -2,6 +2,7 @@
 // Pure business logic without infrastructure concerns
 
 import { InspectionObservation } from '../repositories/IInspectionRepository';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Local definition for InspectionParticipant
 export interface InspectionParticipant {
@@ -287,3 +288,7 @@ export class Inspection {
     return map[status] || InspectionStatus.Pending;
   }
 }
+
+/** Libellés multilingues de InspectionStatus (référentiel i18n — code technique inchangé). */
+export const INSPECTION_STATUS_LABELS: Readonly<Record<InspectionStatus, EnumLabel>> =
+    ENUM_LABELS.InspectionStatus as Readonly<Record<InspectionStatus, EnumLabel>>;

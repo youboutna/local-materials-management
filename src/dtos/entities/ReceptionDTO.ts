@@ -4,6 +4,7 @@
  */
 
 import { BaseEntityDTO } from './BaseEntityDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 export enum ReceptionType {
   PROVISIONAL = 'provisional',
@@ -176,3 +177,11 @@ export interface ReceptionWorkflowStepDTO {
   assignedTo?: string;
   notes?: string;
 }
+
+/** Libellés multilingues de ReceptionType (référentiel i18n — code technique inchangé). */
+export const RECEPTION_TYPE_LABELS: Readonly<Record<ReceptionType, EnumLabel>> =
+    ENUM_LABELS.ReceptionType as Readonly<Record<ReceptionType, EnumLabel>>;
+
+/** Libellés multilingues de ReceptionStatus (référentiel i18n — code technique inchangé). */
+export const RECEPTION_STATUS_LABELS: Readonly<Record<ReceptionStatus, EnumLabel>> =
+    ENUM_LABELS.ReceptionStatus as Readonly<Record<ReceptionStatus, EnumLabel>>;

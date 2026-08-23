@@ -11,6 +11,7 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // ============================================================================
 // ENUMS (transfert uniquement)
@@ -680,3 +681,15 @@ export function getDocumentTypeIcon(type: DocumentTypeUnion): string {
   };
   return icons[type] || 'File';
 }
+
+/** Libellés multilingues de DocumentType (référentiel i18n — code technique inchangé). */
+export const DOCUMENT_TYPE_LABELS: Readonly<Record<DocumentType, EnumLabel>> =
+    ENUM_LABELS.DocumentType as Readonly<Record<DocumentType, EnumLabel>>;
+
+/** Libellés multilingues de DocumentStatus (référentiel i18n — code technique inchangé). */
+export const DOCUMENT_STATUS_LABELS: Readonly<Record<DocumentStatus, EnumLabel>> =
+    ENUM_LABELS.DocumentStatus as Readonly<Record<DocumentStatus, EnumLabel>>;
+
+/** Libellés multilingues de DocumentPriority (référentiel i18n — code technique inchangé). */
+export const DOCUMENT_PRIORITY_LABELS: Readonly<Record<DocumentPriority, EnumLabel>> =
+    ENUM_LABELS.DocumentPriority as Readonly<Record<DocumentPriority, EnumLabel>>;

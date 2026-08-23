@@ -1,3 +1,4 @@
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 /**
  * TaskAssignment Data Transfer Objects — SOURCE UNIQUE
  * Fusion définitive Task + TaskAssignment sur la table `task_assignments`.
@@ -280,3 +281,15 @@ export interface TaskAssignmentValidationResultDTO {
   isValid: boolean;
   errors: string[];
 }
+
+/** Libellés multilingues de TaskStatus (référentiel i18n — code technique inchangé). */
+export const TASK_STATUS_LABELS: Readonly<Record<TaskStatus, EnumLabel>> =
+    ENUM_LABELS.TaskStatus as Readonly<Record<TaskStatus, EnumLabel>>;
+
+/** Libellés multilingues de TaskPriority (référentiel i18n — code technique inchangé). */
+export const TASK_PRIORITY_LABELS: Readonly<Record<TaskPriority, EnumLabel>> =
+    ENUM_LABELS.TaskPriority as Readonly<Record<TaskPriority, EnumLabel>>;
+
+/** Libellés multilingues de TaskType (référentiel i18n — code technique inchangé). */
+export const TASK_TYPE_LABELS: Readonly<Record<TaskType, EnumLabel>> =
+    ENUM_LABELS.TaskType as Readonly<Record<TaskType, EnumLabel>>;

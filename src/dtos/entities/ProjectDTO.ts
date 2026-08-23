@@ -24,6 +24,7 @@ import { RiskDTO } from './RiskDTO';
 import { StakeholderDTO } from './StakeholderDTO';
 import { TaskAssignmentDTO } from './TaskAssignmentDTO';
 import { TenderDTO } from './TenderDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Project Location Data Interface - Enhanced location handling
 export interface ProjectLocationData {
@@ -943,3 +944,7 @@ export interface ProjectWithPayments extends ProjectDTO {
   }>;
   payments?: PaymentDTO[];
 }
+
+/** Libellés multilingues de ProjectType (référentiel i18n — code technique inchangé). */
+export const PROJECT_TYPE_LABELS: Readonly<Record<ProjectType, EnumLabel>> =
+    ENUM_LABELS.ProjectType as Readonly<Record<ProjectType, EnumLabel>>;

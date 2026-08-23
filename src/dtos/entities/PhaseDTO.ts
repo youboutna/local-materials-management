@@ -6,6 +6,7 @@
  */
 
 import type { BaseEntityDTO } from './BaseEntityDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Task within a workflow step (from referential)
@@ -615,3 +616,15 @@ export interface EnrichedResources {
   materials: EnhancedMaterialResource[];
   suppliers: EnhancedSupplierResource[];
 }
+
+/** Libellés multilingues de PhaseStatus (référentiel i18n — code technique inchangé). */
+export const PHASE_STATUS_LABELS: Readonly<Record<PhaseStatus, EnumLabel>> =
+    ENUM_LABELS.PhaseStatus as Readonly<Record<PhaseStatus, EnumLabel>>;
+
+/** Libellés multilingues de PhasePriority (référentiel i18n — code technique inchangé). */
+export const PHASE_PRIORITY_LABELS: Readonly<Record<PhasePriority, EnumLabel>> =
+    ENUM_LABELS.PhasePriority as Readonly<Record<PhasePriority, EnumLabel>>;
+
+/** Libellés multilingues de PhaseType (référentiel i18n — code technique inchangé). */
+export const PHASE_TYPE_LABELS: Readonly<Record<PhaseType, EnumLabel>> =
+    ENUM_LABELS.PhaseType as Readonly<Record<PhaseType, EnumLabel>>;

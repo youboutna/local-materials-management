@@ -23,6 +23,7 @@ import { Risk } from './Risk';
 import { Supplier } from './Supplier';
 import { TaskAssignment } from './TaskAssignment';
 import { Tender } from './Tender';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Interface for project resources
 export interface ProjectResource {
@@ -770,3 +771,7 @@ export class Project {
     );
   }
 }
+
+/** Libellés multilingues de Priority (référentiel i18n — code technique inchangé). */
+export const PRIORITY_LABELS: Readonly<Record<Priority, EnumLabel>> =
+    ENUM_LABELS.Priority as Readonly<Record<Priority, EnumLabel>>;

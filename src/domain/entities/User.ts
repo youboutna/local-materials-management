@@ -6,6 +6,7 @@
  */
 
 import { UserProfile } from './UserProfile';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 // Alias pour la compatibilité avec l'existant – il s'agit du nom du rôle
 export type SomelecRole = string; // ou enum restreint si souhaité
@@ -248,3 +249,7 @@ export class User {
     return email;
   }
 }
+
+/** Libellés multilingues de UserRoleStatus (référentiel i18n — code technique inchangé). */
+export const USER_ROLE_STATUS_LABELS: Readonly<Record<UserRoleStatus, EnumLabel>> =
+    ENUM_LABELS.UserRoleStatus as Readonly<Record<UserRoleStatus, EnumLabel>>;
