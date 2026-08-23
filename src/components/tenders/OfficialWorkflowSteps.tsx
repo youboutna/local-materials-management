@@ -1,93 +1,57 @@
-
-import React from 'react';
-import { 
-  Calendar, 
-  Megaphone, 
-  FileText, 
-  Award, 
-  Shield 
+import { useMemo } from 'react';
+import {
+  Calendar,
+  Megaphone,
+  FileText,
+  Award,
+  Shield,
 } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
+import {
+  TENDER_WORKFLOW_REFERENTIAL,
+  getTenderWorkflowLabel,
+  type TenderWorkflowCategory,
+  type TenderWorkflowLang,
+} from '@/config/referentials/tender/workflow.referential';
 
+/**
+ * Étape de workflow officiel présentée à l'UI.
+ * `code` reste l'unique valeur technique ; les libellés sont résolus par langue.
+ */
 export interface OfficialWorkflowStep {
   id: number;
+  code: string;
   title: string;
   description: string;
   requiredDocuments: string[];
-  estimatedDuration: number; // in days
-  category: 'planning' | 'publicity' | 'analysis' | 'attribution' | 'control';
+  estimatedDuration: number; // en jours
+  category: TenderWorkflowCategory;
 }
 
-export const OFFICIAL_WORKFLOW_STEPS: OfficialWorkflowStep[] = [
-  {
-    id: 1,
-    title: 'auto.officialworkflowsteps.planification_des_achats',
-    description: "Élaboration du Plan Annuel d'Achats (PAA) et du Plan de Passation des Marchés (PPM)",
-    requiredDocuments: [
-      "Plan Annuel d'Achats (PAA)",
-      'auto.officialworkflowsteps.plan_de_passation_des_marches_ppm',
-      'auto.officialworkflowsteps.estimation_des_ressources_financieres',
-      'auto.officialworkflowsteps.definition_des_modalites_de_planification'
-    ],
-    estimatedDuration: 30,
-    category: 'planning'
-  },
-  {
-    id: 2,
-    title: "Publicité et appel d'offres",
-    description: 'auto.officialworkflowsteps.publication_des_avis_selon_les_procedures_formal',
-    requiredDocuments: [
-      "Avis d'appel d'offres",
-      "Dossier d'appel d'offres",
-      'auto.officialworkflowsteps.cahier_des_charges',
-      'auto.officialworkflowsteps.publication_au_portail_national_des_marches_publ',
-      "Publication dans les journaux d'annonces légales"
-    ],
-    estimatedDuration: 45,
-    category: 'publicity'
-  },
-  {
-    id: 3,
-    title: 'auto.officialworkflowsteps.reception_et_analyse_des_offres',
-    description: 'auto.officialworkflowsteps.analyse_des_offres_par_la_commission_de_passatio',
-    requiredDocuments: [
-      'auto.officialworkflowsteps.dossiers_techniques_des_candidats',
-      "Rapport d'analyse de la CPMP",
-      "Procès-verbal d'ouverture des plis",
-      'auto.officialworkflowsteps.evaluation_de_conformite_des_offres',
-      "Rapport de la sous-commission d'analyse"
-    ],
-    estimatedDuration: 30,
-    category: 'analysis'
-  },
-  {
-    id: 4,
-    title: 'auto.officialworkflowsteps.attribution_du_marche',
-    description: "Attribution au soumissionnaire présentant l'offre économiquement la plus avantageuse",
-    requiredDocuments: [
-      "Rapport d'attribution",
-      "Décision d'attribution",
-      "Avis d'attribution",
-      'auto.officialworkflowsteps.contrat_de_marche',
-      'auto.officialworkflowsteps.garanties_bancaires'
-    ],
-    estimatedDuration: 15,
-    category: 'attribution'
-  },
-  {
-    id: 5,
-    title: 'auto.officialworkflowsteps.controle_et_regulation',
-    description: "Contrôle par la CNCMP et régulation par l'ARMP",
-    requiredDocuments: [
-      'auto.officialworkflowsteps.rapport_de_controle_cncmp',
-      'auto.officialworkflowsteps.certificat_de_regularite',
-      "Rapport d'audit",
-      'auto.officialworkflowsteps.proces_verbal_de_reception',
-      "Rapport final d'exécution"
-    ],
-    estimatedDuration: 20,
-    category: 'control'
-  }
-];
+/** Projette le référentiel niveau 3 dans la langue demandée (doctrine i18n UI-only). */
+export const buildOfficialWorkflowSteps = (
+  lang: TenderWorkflowLang,
+): OfficialWorkflowStep[] =>
+  TENDER_WORKFLOW_REFERENTIAL.map((step) => ({
+    id: step.order,
+    code: step.code,
+    title: getTenderWorkflowLabel(step.title, lang),
+    description: getTenderWorkflowLabel(step.description, lang),
+    requiredDocuments: step.requiredDocuments.map((doc) =>
+      getTenderWorkflowLabel(doc.labels, lang),
+    ),
+    estimatedDuration: step.estimatedDuration,
+    category: step.category,
+  }));
+
+/** Hook de consommation UI : réactif au changement de langue. */
+export const useOfficialWorkflowSteps = (): OfficialWorkflowStep[] => {
+  const { language } = useI18n();
+  return useMemo(
+    () => buildOfficialWorkflowSteps(language as TenderWorkflowLang),
+    [language],
+  );
+};
 
 export const getStepIcon = (category: string) => {
   switch (category) {
