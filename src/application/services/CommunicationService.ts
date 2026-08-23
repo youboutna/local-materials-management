@@ -131,10 +131,14 @@ export class CommunicationService {
         to: payload.to,
         subject: payload.subject,
         message: payload.message,
+        html: payload.html,
+        replyTo: payload.replyTo,
+        attachments: payload.attachments,
         priority: payload.priority,
         actionType: payload.actionType,
         metadata: payload.metadata,
       });
+
 
       if (error || !data?.success) {
         const details = error?.message || data?.error || 'Unknown edge function error';
