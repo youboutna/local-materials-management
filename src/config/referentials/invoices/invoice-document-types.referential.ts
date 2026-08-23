@@ -13,6 +13,9 @@ export type InvoiceActor = 'manager' | 'supplier';
 export interface InvoiceDocumentTypeDef {
   code: InvoiceDocumentType;
   label: string;
+  /** Libellés multilingues — le code technique n'est jamais affiché. */
+  labelAr?: string;
+  labelEn?: string;
   /** TypeCode UNTDID 1001 : 310 = devis/commande, 380 = facture commerciale. */
   facturxTypeCode: '310' | '380';
   /** Valeur persistée dans `btp.boq_lines.dqe_type`. */
@@ -33,6 +36,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'dqe',
     label: 'DQE / Expression de besoin',
+    labelAr: 'الكشف الكمي التقديري / التعبير عن الحاجة',
+    labelEn: 'BoQ / Statement of needs',
     facturxTypeCode: '310',
     dqeType: 'previsionnel',
     statuses: ['brouillon', 'pour_validation', 'valide'],
@@ -45,6 +50,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'devis',
     label: 'Devis',
+    labelAr: 'عرض سعر',
+    labelEn: 'Quotation',
     facturxTypeCode: '310',
     dqeType: 'devis',
     statuses: ['brouillon', 'soumis', 'en_negociation', 'accepte', 'rejete'],
@@ -57,6 +64,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'contrat',
     label: 'Contrat',
+    labelAr: 'عقد',
+    labelEn: 'Contract',
     facturxTypeCode: '310',
     dqeType: 'contrat',
     statuses: ['recu', 'signe', 'en_cours', 'termine'],
@@ -69,6 +78,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'decompte',
     label: 'Décompte',
+    labelAr: 'كشف مرحلي',
+    labelEn: 'Progress statement',
     facturxTypeCode: '310',
     dqeType: 'decompte',
     statuses: ['demande', 'programme', 'valide', 'rejete', 'paye'],
@@ -81,6 +92,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'facture',
     label: 'Facture finale',
+    labelAr: 'الفاتورة النهائية',
+    labelEn: 'Final invoice',
     facturxTypeCode: '380',
     dqeType: 'facture',
     statuses: ['emise', 'approuvee', 'payee'],
@@ -116,3 +129,13 @@ export function getInvoiceTypeByDqeType(dqeType?: string | null): InvoiceDocumen
   );
 }
 
+/** Libellé d'une étape documentaire dans la langue active. */
+export function getInvoiceDocumentTypeLabel(
+  code?: string | null,
+  lang: 'fr' | 'ar' | 'en' = 'fr',
+): string {
+  const def = getInvoiceDocumentType(code);
+  if (lang === 'ar') return def.labelAr ?? def.label;
+  if (lang === 'en') return def.labelEn ?? def.label;
+  return def.label;
+}

@@ -9,9 +9,11 @@ import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/hooks/useI18n';
 import {
   INVOICE_DOCUMENT_TYPES,
   getInvoiceDocumentType,
+  getInvoiceDocumentTypeLabel,
   type InvoiceActor,
   type InvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
@@ -31,11 +33,13 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
   billedPercentage,
   className,
 }) => {
+  const { language, t, translateStatus } = useI18n();
   const currentIndex = useMemo(
     () => INVOICE_DOCUMENT_TYPES.findIndex((d) => d.code === current),
     [current],
   );
   const def = getInvoiceDocumentType(current);
+  const statusLabel = translateStatus(businessStatus || def.initialStatus);
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -44,6 +48,7 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
           const done = index < currentIndex;
           const active = index === currentIndex;
           const allowed = !actor || step.actors.includes(actor);
+          const stepLabel = getInvoiceDocumentTypeLabel(step.code, language);
           return (
             <li key={step.code} className="flex items-center gap-1">
               <span
@@ -54,10 +59,10 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
                   !active && !done && 'border-dashed border-border text-muted-foreground',
                   !allowed && 'opacity-60',
                 )}
-                title={`${step.label} · Factur-X ${step.facturxTypeCode}`}
+                title={stepLabel}
               >
                 {done ? <Check className="h-3 w-3" /> : null}
-                {step.label}
+                {stepLabel}
               </span>
               {index < INVOICE_DOCUMENT_TYPES.length - 1 ? (
                 <ChevronRight className="h-3 w-3 text-muted-foreground" />
@@ -68,12 +73,16 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
       </ol>
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="secondary">Statut : {businessStatus || def.initialStatus}</Badge>
-        <Badge variant="outline">TypeCode {def.facturxTypeCode}</Badge>
+        <Badge variant="secondary">{t('dqe.lifecycle.status')} : {statusLabel}</Badge>
         {def.requiresPercentage && billedPercentage != null ? (
-          <Badge variant="outline">Avancement facturé {Number(billedPercentage).toFixed(2)} %</Badge>
+          <Badge variant="outline">
+            {t('dqe.lifecycle.billed_progress')} {Number(billedPercentage).toFixed(2)} %
+          </Badge>
         ) : null}
-        <span>Statuts possibles : {def.statuses.join(' · ')}</span>
+        <span>
+          {t('dqe.lifecycle.possible_statuses')} :{' '}
+          {def.statuses.map((s) => translateStatus(s)).join(' · ')}
+        </span>
       </div>
     </div>
   );
