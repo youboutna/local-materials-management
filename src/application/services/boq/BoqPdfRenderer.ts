@@ -16,6 +16,7 @@ import autoTable from 'jspdf-autotable';
 import { DocumentIdentityService } from './DocumentIdentityService';
 import { documentUnitLabel } from '@/config/referentials/boq/unit-codes.referential';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { resolveLineTax, buildVatBuckets } from '@/config/referentials/boq/tax-regimes.referential';
 import { formatNumber2, sanitizeNumberSpaces } from '@/utils/reportNumbers';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 
@@ -83,7 +84,7 @@ function section(doc: jsPDF, y: number, title: string, color: [number, number, n
 }
 
 /** Conditions générales contextualisées au document en cours (D4 doctrine §4). */
-function buildTerms(ctx: BoqPdfContext, args: { validity: number; validUntil: string; currency: string; vatRate: number; rasRate: number; reference: string }): string {
+function buildTerms(ctx: BoqPdfContext, args: { validity: number; validUntil: string; currency: string; vatSummary: string; reference: string }): string {
   const scope = ctx.projectTitle ? `projet « ${ctx.projectTitle} »` : 'projet concerné';
   const tender = ctx.tenderTitle ? ` — appel d’offres « ${ctx.tenderTitle} »` : '';
   return [
@@ -91,7 +92,7 @@ function buildTerms(ctx: BoqPdfContext, args: { validity: number; validUntil: st
     `1. Document : ${ctx.title}${ctx.documentStage && !ctx.title.toLowerCase().includes(ctx.documentStage.toLowerCase()) ? ` (${ctx.documentStage})` : ''} — référence ${args.reference}, rattaché au ${scope}${tender}.`,
     `2. Validité de l'offre : ${args.validity} jours, soit jusqu'au ${args.validUntil}.`,
     `3. Devise et prix : montants exprimés en ${args.currency}, fermes et définitifs hors révision exceptionnelle.`,
-    `4. Fiscalité appliquée : TVA ${formatNumber2(args.vatRate * 100)} % — retenue à la source ${formatNumber2(args.rasRate * 100)} % sur le montant hors taxes.`,
+    `4. Fiscalité appliquée : ${args.vatSummary} — retenue à la source calculée selon le régime de chaque poste (travaux, fourniture, prestation intellectuelle, exonération bailleur).`,
     ctx.billedPercentage != null
       ? `5. Avancement facturé : ${formatNumber2(ctx.billedPercentage)} % des quantités contractuelles du ${scope}.`
       : '5. Délais et modalités de paiement : conformes au contrat et au cahier des charges du projet.',
@@ -201,15 +202,35 @@ export const BoqPdfRenderer = {
       const quantity = Number(l.quantity ?? 0);
       const unitPrice = Number(l.unitPrice ?? 0);
       const totalHt = Number(l.totalHt ?? quantity * unitPrice + Number(l.fees ?? 0));
-      const vatRate = l.vatRate ?? profile.vatRate;
-      const rasRate = l.rasRate ?? profile.withholdingRate;
-      return { line: l, quantity, unitPrice, totalHt, vatRate, rasRate, totalTva: totalHt * vatRate };
+      const tax = resolveLineTax(
+        {
+          vatRate: l.vatRate,
+          rasRate: l.rasRate,
+          resourceType: l.resourceType ?? null,
+          category: l.category ?? null,
+          elementType: l.elementType ?? null,
+          designation: l.designation ?? null,
+        },
+        profile,
+      );
+      return {
+        line: l,
+        quantity,
+        unitPrice,
+        totalHt,
+        vatRate: tax.vatRate,
+        rasRate: tax.rasRate,
+        regimeLabel: tax.regimeLabel,
+        vatCategoryCode: tax.vatCategoryCode,
+        exemptionReason: tax.exemptionReason,
+        totalTva: totalHt * tax.vatRate,
+      };
     });
 
     const body = normalized.map((n, i) => [
       String(i + 1),
       sanitizeNumberSpaces(DocumentIdentityService.lineLabel(n.line, i)),
-      DocumentIdentityService.lineCode(n.line) || (n.line.resourceType ?? ''),
+      sanitizeNumberSpaces(n.regimeLabel),
       fmt(n.quantity),
       documentUnitLabel(n.line.unit),
       fmt(n.unitPrice),
@@ -220,15 +241,15 @@ export const BoqPdfRenderer = {
 
     autoTable(doc, {
       startY: y,
-      head: [['#', 'Désignation', 'Réf. / Type', 'Qté', 'Unité', `PU (${currency})`, 'TVA', `TVA (${currency})`, `Total HT (${currency})`]],
+      head: [['#', 'Désignation', 'Régime fiscal', 'Qté', 'Unité', `PU (${currency})`, 'TVA', `TVA (${currency})`, `Total HT (${currency})`]],
       body,
       styles: { fontSize: 8, cellPadding: 4, overflow: 'linebreak', valign: 'top' },
       headStyles: { fillColor: COLOR.accent, textColor: 255 },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       columnStyles: {
         0: { cellWidth: 18 },
-        1: { cellWidth: 128 },
-        2: { cellWidth: 46 },
+        1: { cellWidth: 100 },
+        2: { cellWidth: 74 },
         3: { cellWidth: 40, halign: 'right' },
         4: { cellWidth: 30 },
         5: { cellWidth: 62, halign: 'right' },
@@ -249,17 +270,39 @@ export const BoqPdfRenderer = {
     const ras = normalized.reduce((s, n) => s + n.totalHt * n.rasRate, 0);
     const totalTtc = totalHt + totalTva;
 
+    const buckets = buildVatBuckets(
+      normalized.map((n) => ({
+        totalHt: n.totalHt,
+        vatRate: n.vatRate,
+        vatCategoryCode: n.vatCategoryCode,
+        exemptionReason: n.exemptionReason,
+      })),
+    );
+
     doc.setDrawColor(226, 232, 240);
-    const boxH = ras > 0 ? 106 : 90;
+    const boxH = 76 + buckets.length * 15 + (ras > 0 ? 32 : 0);
     doc.roundedRect(300, y, 255, boxH, 4, 4, 'S');
     doc.setFontSize(10);
     let ty = y + 16;
     doc.setFont('helvetica', 'normal');
     doc.text('Total HT', 315, ty); doc.text(amount(totalHt), 545, ty, { align: 'right' }); ty += 16;
-    doc.text(`TVA (${formatNumber2(profile.vatRate * 100)} %)`, 315, ty);
-    doc.text(amount(totalTva), 545, ty, { align: 'right' }); ty += 16;
+    // D4 — TVA ventilée par taux : la fiscalité dépend de la nature des postes.
+    buckets.forEach((b) => {
+      const label = b.vatRate > 0 ? `TVA ${formatNumber2(b.vatRate * 100)} %` : 'TVA exonérée';
+      doc.setFontSize(9);
+      doc.text(sanitizeNumberSpaces(label), 315, ty);
+      doc.setTextColor(COLOR.muted[0], COLOR.muted[1], COLOR.muted[2]);
+      doc.setFontSize(7.5);
+      doc.text(sanitizeNumberSpaces(`base ${formatNumber2(b.basisAmount)}`), 380, ty);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(9);
+      doc.text(amount(b.taxAmount), 545, ty, { align: 'right' });
+      doc.setFontSize(10);
+      ty += 15;
+    });
+    doc.text('Total TVA', 315, ty); doc.text(amount(totalTva), 545, ty, { align: 'right' }); ty += 16;
     if (ras > 0) {
-      doc.text(`RAS (${formatNumber2(profile.withholdingRate * 100)} %)`, 315, ty);
+      doc.text('Retenue à la source (RAS)', 315, ty);
       doc.text(`- ${amount(ras)}`, 545, ty, { align: 'right' });
       ty += 16;
     }
@@ -282,9 +325,11 @@ export const BoqPdfRenderer = {
     if (y > 640) { doc.addPage(); y = 60; }
     y = section(doc, y, 'Conditions générales', COLOR.warn);
     doc.setFillColor(255, 251, 235);
+    const vatSummary = buckets.length
+      ? `TVA ${buckets.map((b) => (b.vatRate > 0 ? `${formatNumber2(b.vatRate * 100)} %` : 'exonérée')).join(' / ')}`
+      : `TVA ${formatNumber2(profile.vatRate * 100)} %`;
     const termsText = ctx.termsConditions ?? buildTerms(ctx, {
-      validity, validUntil, currency,
-      vatRate: profile.vatRate, rasRate: profile.withholdingRate,
+      validity, validUntil, currency, vatSummary,
       reference: docNumber,
     });
     const wrapped = doc.splitTextToSize(sanitizeNumberSpaces(termsText), 495) as string[];

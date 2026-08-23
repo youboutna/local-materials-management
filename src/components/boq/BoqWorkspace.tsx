@@ -240,9 +240,11 @@ export function BoqWorkspace({
     const htBase = computedQuantity * pu;
     const ht = htBase * (1 + (Number(overheadPct) || 0) / 100);
     const profile = getFiscalProfile(fiscalCode);
-    const tva = ht * profile.vatRate;
-    return { ht, tva, ttc: ht + tva, ras: ht * profile.withholdingRate, qty: computedQuantity };
-  }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct]);
+    // La TVA/RAS dépendent de la nature du poste (travaux, fourniture, consulting…).
+    const tax = resolveLineTax({ category, designation: form.designation, elementType }, profile);
+    const tva = ht * tax.vatRate;
+    return { ht, tva, ttc: ht + tva, ras: ht * tax.rasRate, qty: computedQuantity, regimeLabel: tax.regimeLabel };
+  }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct, category, form.designation, elementType]);
 
   // ---- Tampon local (batch) : « Ajouter » n'écrit PAS en DB.
   //      La persistance atomique se fait via « Enregistrer le DQE » (bulkCreate).
@@ -287,14 +289,14 @@ export function BoqWorkspace({
       quantity: computedQuantity,
       unitPrice: effectivePu,
       totalHt: computedQuantity * effectivePu,
-      rasRate: profile.withholdingRate,
+      rasRate: resolveLineTax({ category, designation: form.designation, elementType }, profile).rasRate,
       fees: 0,
       resourceType: catToResource(category),
       materialId: materialId || null,
       phaseId: effectiveWbs.phaseId,
       milestoneId: effectiveWbs.milestoneId,
       taskId: effectiveWbs.taskId,
-      vatRate: profile.vatRate,
+      vatRate: resolveLineTax({ category, designation: form.designation, elementType }, profile).vatRate,
       note: [
         category === 'overhead' ? 'Frais généraux' : null,
         overheadNote,
