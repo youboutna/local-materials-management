@@ -66,7 +66,7 @@ export function ListToolbar({
               variant={expiryFilter === f.value ? 'default' : 'outline'}
               onClick={() => onExpiryFilterChange(f.value)}
             >
-              {f.label}
+              {t(f.label)}
             </Button>
           ))}
         </div>

@@ -38,7 +38,7 @@ export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {FIELDS.map((f) => (
           <div key={f.key}>
-            <Label>{f.label}</Label>
+            <Label>{t(f.label)}</Label>
             <Select
               value={mapping[f.key] ?? NONE}
               onValueChange={(v) => onChange({ ...mapping, [f.key]: v === NONE ? undefined : v })}

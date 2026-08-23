@@ -28,7 +28,7 @@ interface Props {
 
 const TYPE_LABEL: Record<BoqResourceType, string> = {
   material: 'auto.resourceselector.materiau',
-  labor: "Main d'œuvre",
+  labor: 'auto.resourceselector.main_d_oeuvre',
   equipment: 'auto.resourceselector.equipement',
 };
 
@@ -47,7 +47,7 @@ export const ResourceSelector: React.FC<Props> = ({
         <SelectTrigger><SelectValue placeholder={t('auto.resourceselector.type')} /></SelectTrigger>
         <SelectContent>
           {(Object.keys(TYPE_LABEL) as BoqResourceType[]).map((k) => (
-            <SelectItem key={k} value={k}>{TYPE_LABEL[k]}</SelectItem>
+            <SelectItem key={k} value={k}>{t(TYPE_LABEL[k])}</SelectItem>
           ))}
         </SelectContent>
       </Select>
