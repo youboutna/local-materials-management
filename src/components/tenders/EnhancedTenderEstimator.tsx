@@ -223,12 +223,23 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         description: 'Le rapport d\'estimation est en cours de génération...',
       });
 
+      if (!lines.length) {
+        toast({ title: 'Aucune ligne', description: 'Le devis ne contient aucune ligne.', variant: 'destructive' });
+        return;
+      }
       const { BoqPdfRenderer } = await import('@/application/services/boq/BoqPdfRenderer');
-      await BoqPdfRenderer.render({
-        lines,
+      const blob = BoqPdfRenderer.render(lines, {
         title: 'Devis estimatif',
-        contextId: tenderId,
-      } as never);
+        docPrefix: 'devis',
+        tenderId,
+        projectId,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `devis-${tenderId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
       toast({
         title: 'Rapport généré',
         description: 'Le rapport d\'estimation a été généré avec succès.',
