@@ -39,6 +39,20 @@ export const AppearanceSettings: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
+          <CardTitle>Langue de l'interface</CardTitle>
+          <CardDescription>
+            Français par défaut. Les statuts et libellés métier sont traduits depuis les référentiels
+            (français, arabe, anglais).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LanguageSelector className="w-full sm:w-[220px]" />
+        </CardContent>
+      </Card>
+
+      <Card>
+
+        <CardHeader>
           <CardTitle>Thème de l'application</CardTitle>
           <CardDescription>
             Palettes définies dans le référentiel des thèmes UI. Aucun impact fonctionnel.
