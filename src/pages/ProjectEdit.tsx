@@ -120,7 +120,7 @@ const ProjectEdit = () => {
     if (workflowError) {
       setLoadError(workflowError);
       toast({
-        title: "Erreur de chargement",
+          title: t("project_edit.loading_error"),
         description: workflowError,
         variant: "destructive"
       });
@@ -165,8 +165,8 @@ const ProjectEdit = () => {
       
       if (missingSteps.length > 0) {
         toast({
-          title: t("common.warning") || "Attention",
-          description: `Les étapes ${missingSteps.join(', ')} sont requises`,
+          title: t("common.warning"),
+          description: t('workflow.required_steps', { steps: missingSteps.join(', ') }),
           variant: "destructive",
         });
         setCurrentStep(missingSteps[0]);
@@ -181,8 +181,8 @@ const ProjectEdit = () => {
       
       if (invalidSteps.length > 0) {
         toast({
-          title: t("common.warning") || "Attention",
-          description: `Les étapes ${invalidSteps.join(', ')} ont des erreurs`,
+          title: t("common.warning"),
+          description: t('workflow.invalid_steps', { steps: invalidSteps.join(', ') }),
           variant: "destructive",
         });
         setCurrentStep(invalidSteps[0]);
@@ -193,21 +193,21 @@ const ProjectEdit = () => {
       // Sauvegarder la dernière étape avant soumission
       const saveResult = await saveCurrentStep(8);
       if (!saveResult?.success) {
-        throw new Error(saveResult?.errors?.join(', ') || 'Erreur lors de la sauvegarde');
+        throw new Error(saveResult?.errors?.join(', ') || t('common.save_error'));
       }
 
       // Soumettre le projet
       toast({
-        title: t("projects.edit.success") || "Projet mis à jour",
+        title: t("project_edit.updated"),
         description: data.projectData?.title || "",
       });
 
       navigate(`/projects/${id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la mise à jour");
+      setError(err instanceof Error ? err.message : t('project_edit.update_error'));
       toast({
-        title: t("common.error") || "Erreur",
-        description: err instanceof Error ? err.message : "Erreur lors de la mise à jour",
+        title: t("common.error"),
+        description: err instanceof Error ? err.message : t('project_edit.update_error'),
         variant: "destructive",
       });
     } finally {
@@ -222,8 +222,8 @@ const ProjectEdit = () => {
     if (id) {
       await loadProjectData();
       toast({
-        title: "Rafraîchi",
-        description: "Les données du projet ont été mises à jour",
+        title: t('project_edit.refreshed'),
+        description: t('project_edit.refreshed_description'),
       });
     }
   }, [id, loadProjectData]);
@@ -235,12 +235,12 @@ const ProjectEdit = () => {
   if (isLoading) {
     return (
       <AppLayout
-        pageTitle={t("projects.edit.title") || "Édition projet"}
+        pageTitle={t("projects.edit.title")}
         actions={
           <Button variant="ghost" asChild disabled>
             <Link to={`/projects/${id}`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("project_create.back_to_projects") || "Retour"}
+              {t("project_create.back_to_projects")}
             </Link>
           </Button>
         }
@@ -248,7 +248,7 @@ const ProjectEdit = () => {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Chargement du projet...</p>
+            <p className="text-muted-foreground">{t('project_edit.loading')}</p>
           </div>
         </div>
       </AppLayout>
@@ -257,11 +257,11 @@ const ProjectEdit = () => {
 
   if (!id) {
     return (
-      <AppLayout pageTitle={t("projects.edit.title") || "Édition projet"}>
+      <AppLayout pageTitle={t("projects.edit.title")}>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erreur</AlertTitle>
-          <AlertDescription>Identifiant projet manquant.</AlertDescription>
+          <AlertTitle>{t('common.error')}</AlertTitle>
+          <AlertDescription>{t('project_edit.missing_id')}</AlertDescription>
         </Alert>
       </AppLayout>
     );
@@ -270,12 +270,12 @@ const ProjectEdit = () => {
   if (loadError || !formData) {
     return (
       <AppLayout
-        pageTitle={t("projects.edit.title") || "Édition projet"}
+        pageTitle={t("projects.edit.title")}
         actions={
           <Button variant="ghost" asChild>
             <Link to={`/projects/${id}`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("project_create.back_to_projects") || "Retour"}
+              {t("project_create.back_to_projects")}
             </Link>
           </Button>
         }
@@ -283,14 +283,14 @@ const ProjectEdit = () => {
         <div className="max-w-7xl mx-auto">
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erreur de chargement</AlertTitle>
+            <AlertTitle>{t('project_edit.loading_error')}</AlertTitle>
             <AlertDescription>
-              {loadError || "Impossible de charger les données du projet."}
+              {loadError || t('project_edit.load_failed')}
             </AlertDescription>
           </Alert>
           <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
-            Réessayer
+            {t('project_edit.retry')}
           </Button>
         </div>
       </AppLayout>
@@ -308,8 +308,8 @@ const ProjectEdit = () => {
   // ============================================================
   return (
     <AppLayout
-      pageTitle={t("projects.edit.title") || "Édition projet"}
-      pageDescription={`Modification du projet "${formData?.projectData?.title || ''}"`}
+      pageTitle={t("projects.edit.title")}
+      pageDescription={t('project_edit.description', { title: formData?.projectData?.title || '' })}
       actions={
         <div className="flex items-center gap-3">
           {/* Progression */}
@@ -324,7 +324,7 @@ const ProjectEdit = () => {
             {isComplete && (
               <Badge variant="default" className="bg-success">
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Complet
+                {t('workflow.complete')}
               </Badge>
             )}
           </div>
@@ -332,7 +332,7 @@ const ProjectEdit = () => {
           <Button variant="ghost" asChild>
             <Link to={`/projects/${id}`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("project_create.back_to_projects") || "Retour"}
+              {t("project_create.back_to_projects")}
             </Link>
           </Button>
         </div>
@@ -351,7 +351,7 @@ const ProjectEdit = () => {
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erreur</AlertTitle>
+            <AlertTitle>{t('common.error')}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -360,12 +360,12 @@ const ProjectEdit = () => {
         {currentStep === WORKFLOW_STEPS.length && !isSubmitting && !isComplete && (
           <Alert className="mb-4 border-warning/30 bg-warning/10">
             <AlertCircle className="h-4 w-4 text-warning" />
-            <AlertTitle className="text-warning">Validation finale</AlertTitle>
+            <AlertTitle className="text-warning">{t('workflow.final_validation')}</AlertTitle>
             <AlertDescription className="text-warning">
               {completedSteps.length < WORKFLOW_STEPS.filter(s => s.required).length ? (
-                `Veuillez compléter toutes les étapes requises avant de valider le projet.`
+                t('workflow.complete_required_before_validation')
               ) : (
-                `Toutes les étapes sont complètes. Vous pouvez maintenant mettre à jour le projet.`
+                t('workflow.ready_to_update')
               )}
             </AlertDescription>
           </Alert>
@@ -375,9 +375,9 @@ const ProjectEdit = () => {
         {isComplete && (
           <Alert className="mb-4 border-success/30 bg-success-soft">
             <CheckCircle className="h-4 w-4 text-success" />
-            <AlertTitle className="text-success">Projet complet</AlertTitle>
+            <AlertTitle className="text-success">{t('project_edit.complete')}</AlertTitle>
             <AlertDescription className="text-success">
-              Toutes les étapes sont complétées. Vous pouvez maintenant mettre à jour le projet.
+              {t('workflow.ready_to_update')}
             </AlertDescription>
           </Alert>
         )}
@@ -402,15 +402,15 @@ const ProjectEdit = () => {
         <div className="mt-4 text-sm text-muted-foreground text-center">
           <p>
             {currentStep < WORKFLOW_STEPS.length ? (
-              `Étape ${currentStep} sur ${WORKFLOW_STEPS.length} - ${WORKFLOW_STEPS.find(s => s.number === currentStep)?.title}`
+              `${t('workflow.step_counter', { current: currentStep, total: WORKFLOW_STEPS.length })} — ${t(`project_workflow.steps.${WORKFLOW_STEPS[currentStep - 1]?.number === 1 ? 'project_info' : WORKFLOW_STEPS[currentStep - 1]?.number === 2 ? 'stakeholders' : WORKFLOW_STEPS[currentStep - 1]?.number === 3 ? 'location' : WORKFLOW_STEPS[currentStep - 1]?.number === 4 ? 'wbs' : WORKFLOW_STEPS[currentStep - 1]?.number === 5 ? 'risks' : WORKFLOW_STEPS[currentStep - 1]?.number === 6 ? 'compliance' : WORKFLOW_STEPS[currentStep - 1]?.number === 7 ? 'strategic_linkage' : 'validation'}.title`)}`
             ) : (
-              isComplete ? 'Toutes les étapes sont complètes - Prêt à mettre à jour le projet' :
-              'Étape de validation - Veuillez compléter toutes les étapes requises'
+              isComplete ? t('workflow.all_complete_ready_update') :
+              t('workflow.validation_step_required')
             )}
           </p>
           {formData?.projectData?.updatedAt && (
             <p className="text-xs text-muted-foreground mt-1">
-              Dernière mise à jour: {new Date(formData.projectData.updatedAt).toLocaleString('fr-FR')}
+              {t('project_edit.last_updated', { date: new Date(formData.projectData.updatedAt).toLocaleString() })}
             </p>
           )}
         </div>
