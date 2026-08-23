@@ -96,85 +96,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
 
-  // Fetch tender documents
-  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useQuery({
-    queryKey: ['tender-documents', tenderId],
-    queryFn: async () => {
-      // Query tender_documents with tender_id
-      const { data, error } = await supabase
-        .from('tender_documents')
-        .select(`
-          *,
-          document:documents(
-            id,
-            title,
-            description,
-            file_url,
-            file_name,
-            mime_type,
-            file_size
-          )
-        `)
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('Query error:', error);
-        return [] as TenderDocumentWithDetails[];
-      }
-      
-      return (data || []) as TenderDocumentWithDetails[];
-    },
-    enabled: !!tenderId
-  });
+  // Fetch tender documents (joined with document metadata via hexagonal hook)
+  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useTenderDocumentsList(tenderId);
 
-  // Fetch workflow step documents
-  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useQuery({
-    queryKey: ['workflow-step-documents', tenderId],
-    queryFn: async () => {
-      // First get all steps for this tender
-      const { data: steps, error: stepsError } = await supabase
-        .from('tender_steps')
-        .select('id, title, step_number')
-        .eq('tender_id', tenderId);
-      
-      if (stepsError) throw stepsError;
-      if (!steps?.length) return [];
-
-      // Get all documents for these steps
-      const stepIds = steps.map(s => s.id);
-      const { data: stepDocs, error: docsError } = await supabase
-        .from('tender_step_documents')
-        .select(`
-          *,
-          document:documents(*),
-          step:tender_steps(title, step_number)
-        `)
-        .in('step_id', stepIds);
-
-      if (docsError) throw docsError;
-
-      // Transform to match TenderDocumentWithDetails format
-      return (stepDocs || []).map(doc => ({
-        id: doc.id,
-        tender_id: tenderId,
-        document_id: doc.document_id,
-        category: doc.document_type as TenderDocumentCategory || 'administrative',
-        subcategory: 'workflow_step' as any,
-        is_required: doc.is_required,
-        reviewer_notes: doc.reviewer_notes,
-        status: doc.status as any,
-        created_at: doc.created_at,
-        updated_at: doc.created_at,
-        document: doc.document,
-        step_info: {
-          step_title: (doc.step as any)?.title,
-          step_number: (doc.step as any)?.step_number
-        }
-      }));
-    },
-    enabled: !!tenderId,
-  });
+  // Fetch workflow step documents (via hexagonal hook)
+  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useWorkflowStepDocumentsList(tenderId);
 
   const { data: lotDocsRaw = [] } = useTenderLotDocuments(tenderId);
 
