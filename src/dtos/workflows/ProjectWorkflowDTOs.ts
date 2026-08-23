@@ -176,8 +176,8 @@ export interface WorkflowMetricsDTO {
 }
 
 export interface ProjectValidationDTO {
-  reception_status: 'pending' | 'provisional' | 'definitive';
-  closure_notes: string;
+  receptionStatus: 'pending' | 'provisional' | 'definitive';
+  closureNotes: string;
   finalInspection: {
     date: string;
     inspector: string;
