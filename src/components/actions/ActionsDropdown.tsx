@@ -29,15 +29,16 @@ const actionIcons = {
   blockchain_verification: Shield,
 };
 
-const actionLabels = {
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-  sms: 'Envoyer SMS',
-  call: 'Programmer appel',
-  email: 'Envoyer email',
-  mail: 'Courrier postal',
-  export_receipt: 'Exporter reçu',
-  blockchain_verification: 'Vérification blockchain',
+/** Doctrine i18n : le code technique reste la clé, le libellé est résolu via le registre. */
+const actionLabelKeys = {
+  task_assignment: 'auto.actions.task_assignment',
+  hierarchy_notification: 'auto.actions.hierarchy_notification',
+  sms: 'auto.actions.sms',
+  call: 'auto.actions.call',
+  email: 'auto.actions.email',
+  mail: 'auto.actions.mail',
+  export_receipt: 'auto.actions.export_receipt',
+  blockchain_verification: 'auto.actions.blockchain_verification',
 };
 
 export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
@@ -180,7 +181,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
       toast({
         title: t('common.success'),
-        description: `Action "${actionLabels[formData.actionType]}" exécutée avec succès`,
+        description: `${t(actionLabelKeys[formData.actionType])}`,
       });
 
       onActionComplete?.();
@@ -249,11 +250,11 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   };
 
   const getDefaultTitle = (actionType: ActionFormData['actionType']): string => {
-    return `${actionLabels[actionType]} - ${entityType.replace('_', ' ')}`;
+    return `${t(actionLabelKeys[actionType])} - ${t(`auto.actions.entity.${entityType}`)}`;
   };
 
   const getDefaultMessage = (actionType: ActionFormData['actionType']): string => {
-    return `Action ${actionLabels[actionType]} pour ${entityType.replace('_', ' ')} ${entityId}`;
+    return `${t(actionLabelKeys[actionType])} — ${t(`auto.actions.entity.${entityType}`)} ${entityId}`;
   };
 
   return (
@@ -266,7 +267,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {Object.entries(actionLabels).map(([actionType, label]) => {
+          {Object.entries(actionLabelKeys).map(([actionType, labelKey]) => {
             const Icon = actionIcons[actionType as keyof typeof actionIcons];
             return (
               <DropdownMenuItem
@@ -275,7 +276,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
                 className="cursor-pointer"
               >
                 <Icon className="h-4 w-4 mr-2" />
-                {label}
+                {t(labelKey)}
               </DropdownMenuItem>
             );
           })}

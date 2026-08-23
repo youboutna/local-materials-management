@@ -6,6 +6,7 @@ import { mapMilestoneToDecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO'
 import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 type StepWorkflowStatus = {
   inspectionStatus?: string;
   paymentStatus?: string;
@@ -38,6 +39,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
   onSelectNode,
   formatCurrency,
 }) => {
+  const { t } = useI18n();
   const [localSteps, setLocalSteps] = React.useState<(StepItem | PhaseStepDTO)[]>(() => steps || []);
 
   React.useEffect(() => {
@@ -92,7 +94,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
     <div className="space-y-4">
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-base">Board Intégré — Jalons & Étapes</CardTitle>
+          <CardTitle className="text-base">{t('auto.integratedworkflowboard.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

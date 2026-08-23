@@ -8,6 +8,7 @@ import { UnifiedPaymentFormDialog } from '@/components/payments/UnifiedPaymentFo
 import { PaymentOriginKey } from '@/config/referentials/payment-origin.referential';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/utils/phaseDisplayHelpers';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { getPaymentService } from '@/application/services/PaymentService';
 
@@ -85,7 +86,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
                 <TableCell>{formatDate(payment.createdAt || payment.date)}</TableCell>
                 <TableCell>{payment.projectName || payment.projectId}</TableCell>
                 <TableCell>{payment.contractor}</TableCell>
-                <TableCell>{payment.amount} MRU</TableCell>
+                <TableCell>{formatCurrency(payment.amount)}</TableCell>
                 <TableCell>
                   <Badge variant={payment.status === 'approved' ? 'default' : 'secondary'}>
                     <TranslatedStatus code={payment.status} />

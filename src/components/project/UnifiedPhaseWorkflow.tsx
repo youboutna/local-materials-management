@@ -11,6 +11,7 @@ import { DecisionNode, mapMilestoneToDecisionNode, StepItem, mapStepToStepItem }
 import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
 import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 interface UnifiedPhaseWorkflowProps {
   projectId: string;
   phaseId: string;
@@ -53,6 +54,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   onActionComplete,
   formatCurrency = (n: number) => (typeof n === 'number' ? `${n.toLocaleString('fr-FR')} MRU` : ''),
 }) => {
+  const { t } = useI18n();
   const nodes: DecisionNode[] = (milestones || []).map(mapMilestoneToDecisionNode);
 
   const steps: StepItem[] = (phase?.steps || []).map(mapStepToStepItem);
@@ -68,7 +70,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
     <div className="space-y-6">
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-base">Workflow Unifié — Nodes décisionnels</CardTitle>
+          <CardTitle className="text-base">{t('auto.unifiedphaseworkflow.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

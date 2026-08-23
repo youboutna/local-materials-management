@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import UserSelector from '@/components/selectors/UserSelector';
 import { EnhancedActionService, UnifiedActionRequest, EnhancedActionServiceStatic } from '@/application/services/enhancedActionService';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -63,6 +64,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const form = useForm<z.infer<typeof actionFormSchema>>({
     resolver: zodResolver(actionFormSchema),
@@ -73,37 +75,31 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   });
 
   const actionTypes = [
-    { value: 'task_assignment', label: 'Assignation de tâche', icon: Briefcase, description: 'Assigner une tâche spécifique à un employé' },
-    { value: 'hierarchy_notification', label: 'Notification hiérarchique', icon: Users, description: 'Notifier la hiérarchie selon l\'escalade définie' },
-    { value: 'sms', label: 'SMS', icon: MessageSquare, description: 'Envoyer un message SMS urgent' },
-    { value: 'call', label: 'Appel téléphonique', icon: Phone, description: 'Programmer un appel téléphonique' },
-    { value: 'email', label: 'Email', icon: Mail, description: 'Envoyer un email détaillé' },
-    { value: 'mail', label: 'Courrier postal', icon: Send, description: 'Générer un courrier postal officiel' }
+    { value: 'task_assignment', label: t('auto.actions.task_assignment'), icon: Briefcase, description: t('auto.actions.desc.task_assignment') },
+    { value: 'hierarchy_notification', label: t('auto.actions.hierarchy_notification'), icon: Users, description: t('auto.actions.desc.hierarchy_notification') },
+    { value: 'sms', label: t('auto.actions.sms'), icon: MessageSquare, description: t('auto.actions.desc.sms') },
+    { value: 'call', label: t('auto.actions.call'), icon: Phone, description: t('auto.actions.desc.call') },
+    { value: 'email', label: t('auto.actions.email'), icon: Mail, description: t('auto.actions.desc.email') },
+    { value: 'mail', label: t('auto.actions.mail'), icon: Send, description: t('auto.actions.desc.mail') }
   ];
 
   const priorityLevels = [
-    { value: 'low', label: 'Faible', color: 'bg-success-soft text-success', icon: Target },
-    { value: 'medium', label: 'Moyen', color: 'bg-primary/10 text-primary', icon: Target },
-    { value: 'high', label: 'Élevé', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
-    { value: 'urgent', label: 'Urgent', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle }
+    { value: 'low', label: t('auto.actions.priority.low'), color: 'bg-success-soft text-success', icon: Target },
+    { value: 'medium', label: t('auto.actions.priority.medium'), color: 'bg-primary/10 text-primary', icon: Target },
+    { value: 'high', label: t('auto.actions.priority.high'), color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    { value: 'urgent', label: t('auto.actions.priority.urgent'), color: 'bg-destructive/10 text-destructive', icon: AlertTriangle }
   ];
 
   const escalationLevels = [
-    { value: 'team', label: 'Équipe (Collègues)', description: 'Notifier les membres de l\'équipe' },
-    { value: 'supervisor', label: 'Superviseur', description: 'Escalader au superviseur direct' },
-    { value: 'manager', label: 'Manager', description: 'Escalader au niveau management' },
-    { value: 'director', label: 'Directeur', description: 'Escalader au niveau direction' }
+    { value: 'team', label: t('auto.actions.escalation.team'), description: t('auto.actions.escalation.desc.team') },
+    { value: 'supervisor', label: t('auto.actions.escalation.supervisor'), description: t('auto.actions.escalation.desc.supervisor') },
+    { value: 'manager', label: t('auto.actions.escalation.manager'), description: t('auto.actions.escalation.desc.manager') },
+    { value: 'director', label: t('auto.actions.escalation.director'), description: t('auto.actions.escalation.desc.director') }
   ];
 
   const getEntityTypeLabel = (type: string): string => {
-    const labels = {
-      bank_guarantee: 'Garantie Bancaire',
-      inspection: 'Inspection',
-      insurance: 'Assurance',
-      payment: 'Paiement',
-      project: 'Projet'
-    };
-    return labels[type as keyof typeof labels] || type;
+    const label = t(`auto.actions.entity.${type}`);
+    return label && label !== `auto.actions.entity.${type}` ? label : type;
   };
 
   const onSubmitAction = async (values: z.infer<typeof actionFormSchema>) => {

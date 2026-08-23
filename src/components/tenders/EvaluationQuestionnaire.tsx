@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import { ClipboardCheck, AlertCircle } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 import {
   DEFAULT_CATEGORY_WEIGHTS,
   DEFAULT_EVALUATION_CRITERIA,
@@ -48,6 +49,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
   readOnly = false,
   title = "Questionnaire d'évaluation",
 }) => {
+  const { t } = useI18n();
   const result = useMemo(() => computeGlobalScore(value, weights, criteria), [value, weights, criteria]);
 
   const handleScoreChange = (code: string, score: number) => {
@@ -64,7 +66,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
             <ClipboardCheck className="h-5 w-5" />
             {title}
           </span>
-          <Badge variant="secondary">Score global : {result.global}/100</Badge>
+          <Badge variant="secondary">{t('auto.evaluationquestionnaire.global_score')} : {result.global}/100</Badge>
         </CardTitle>
         <CardDescription>
           Notation par critère (0-100). Les pondérations proviennent du référentiel et sont appliquées automatiquement.
