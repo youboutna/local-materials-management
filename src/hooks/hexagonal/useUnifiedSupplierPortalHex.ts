@@ -32,30 +32,39 @@ export interface Supplier {
 }
 
 export const useSupplierPortalAuthHex = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const authService = getAuthService();
+
+    const unsubscribe = authService.onAuthStateChange((nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    authService
+      .getCurrentSession()
+      .then(({ session: currentSession, user: currentUser }) => {
+        setSession(currentSession);
+        setUser(currentUser);
+      })
+      .catch(() => {
+        setSession(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   return { user, session, loading };
 };
 
-export const useFetchSupplierProfileHex = (user: SupabaseUser | null) => {
+export const useFetchSupplierProfileHex = (user: AuthUser | null) => {
+
   const supplierService = getSupplierService();
   
   return useQuery({
