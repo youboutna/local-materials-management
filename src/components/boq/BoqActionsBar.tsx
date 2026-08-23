@@ -213,7 +213,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
   const handleEmail = () => withGuard('email', async () => {
-    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail });
+    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
     if (res.ok) toast({ title: 'Email envoyé' });
     else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
   });
