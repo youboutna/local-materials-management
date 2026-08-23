@@ -233,9 +233,9 @@ export const BoqPdfRenderer = {
         3: { cellWidth: 40, halign: 'right' },
         4: { cellWidth: 30 },
         5: { cellWidth: 62, halign: 'right' },
-        6: { cellWidth: 32, halign: 'right' },
+        6: { cellWidth: 42, halign: 'right' },
         7: { cellWidth: 68, halign: 'right' },
-        8: { cellWidth: 91, halign: 'right' },
+        8: { cellWidth: 80, halign: 'right' },
       },
       margin: { left: 40, right: 40 },
     });
