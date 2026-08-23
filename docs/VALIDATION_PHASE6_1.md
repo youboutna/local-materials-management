@@ -37,3 +37,16 @@ _HadraTech-GPI — 23/08/2026_
 Exceptions documentées dans la garde statique : `HttpMonitor.tsx` et `PerformanceMetrics.tsx` affichent des **codes HTTP numériques** (donnée technique, non traduisible).
 
 Résultat global : **242/242 tests verts**, typecheck OK, build OK.
+
+## 4. Doctrine verrouillée — UI traduite, base intacte
+
+| Principe | Mise en œuvre | Garde automatique |
+|----------|---------------|-------------------|
+| Les données de la base ne sont **jamais** traduites (titres, noms, descriptions, commentaires, adresses) | Affichage brut depuis les DTO | T-V-42 : aucun champ texte libre passé à `translate*` / `<Translated* code={…} />` |
+| Seule l'UI est traduite | Libellés d'interface via `LanguageContext`, codes métier via `I18nService` / `useI18n` / `TranslatedBadges` | T-V-36 → T-V-38 |
+| Référentiel = **code unique** + libellés `fr` / `ar` / `en` | `REFERENTIAL_LABEL_REGISTRY`, codes snake_case minuscules, `code` = clé du dictionnaire | T-V-44 |
+| Les **ENUM PostgreSQL** suivent la même approche | Le code reste en base, le libellé vit dans le référentiel | T-V-45 |
+| Aucun libellé traduit persisté en base | Adaptateurs d'écriture n'appellent aucun traducteur | T-V-46 |
+| Code inconnu → rendu tel quel | `resolveReferentialLabel` retombe sur le code brut | T-V-43 |
+
+Garde permanente : `src/application/services/__tests__/I18nUiOnlyTranslation.test.ts`.
