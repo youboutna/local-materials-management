@@ -461,6 +461,7 @@ export const translations = {
                 overview: "Vue d'ensemble",
                 monitoring: "Monitoring",
                     alerts: {
+                        label: "Alertes",
                         total: "Total Alertes",
                         critical: "Critiques",
                         high: "Élevées",
@@ -2118,6 +2119,7 @@ export const translations = {
                     overview: "نظرة عامة",
                     monitoring: "المراقبة",
                     alerts: {
+                        label: "التنبيهات",
                         total: "إجمالي التنبيهات",
                         critical: "حرج",
                         high: "عالي",
@@ -3636,7 +3638,9 @@ procurement_features: {
                 actions: "Actions Management",
                 overview: "Overview",
                 monitoring: "Monitoring",
-                alerts: "Alerts"
+                alerts: {
+                    label: "Alerts"
+                }
             },
             cards: {
                 active_projects: "Active Projects",
