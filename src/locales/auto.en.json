@@ -4825,5 +4825,9 @@
   "users.table.national_id": "National ID",
   "users.table.role": "Role",
   "users.updated": "User updated",
-  "users.updated_success": "User updated successfully"
+  "users.updated_success": "User updated successfully",
+  "phase_structure": {
+    "takeoff_analysis": "Takeoff analysis",
+    "takeoff_count": "{{count}} takeoff(s)"
+  }
 }
