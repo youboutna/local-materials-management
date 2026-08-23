@@ -100,7 +100,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   isSubmitting,
   onWorkflowDataChange,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // ⚡ Application Layer - Use unified workflow hook for all state management (Rule #5)
   const {
@@ -260,13 +260,13 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     () =>
       PROJECT_WORKFLOW_STEPS.map((cfg) => ({
         id: cfg.id,
-        title: cfg.title,
-        description: cfg.description,
+        title: t(`project_workflow.steps.${cfg.code}.title`),
+        description: t(`project_workflow.steps.${cfg.code}.description`),
         color: cfg.color,
         icon: STEP_ICON_MAP[cfg.icon],
         isCompleted: () => cfg.validate(formData ?? null),
       })),
-    [formData]
+    [formData, t]
   );
 
 
@@ -276,8 +276,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const saveAndNextStep = async () => {
     if (!canProceedNext()) {
       toast({
-        title: "Étape incomplète",
-        description: "Veuillez compléter les champs requis avant de continuer.",
+        title: t('workflow.incomplete_title'),
+        description: t('workflow.incomplete_description'),
         variant: "destructive",
       });
       return;
@@ -319,9 +319,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     if (!ts) return null;
     try {
       const d = new Date(ts);
-      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString(language === 'ar' ? 'ar-MR' : language === 'en' ? 'en-GB' : 'fr-FR', { hour: '2-digit', minute: '2-digit' });
     } catch { return null; }
-  }, [workflowState]);
+  }, [workflowState, language]);
 
   const validationErrors: string[] = (workflowState as any)?.lastValidationErrors || [];
 
@@ -388,7 +388,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           ))}
         </div>
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
-        <p className="text-xs text-muted-foreground">Chargement du projet…</p>
+        <p className="text-xs text-muted-foreground">{t('common.loading')}</p>
       </div>
     );
   }
@@ -400,26 +400,26 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <div className="flex items-center gap-3 px-1">
         <Progress value={getStepProgress()} className="h-1.5 flex-1" />
         <Badge variant="secondary" className="whitespace-nowrap text-[11px]">
-          {Math.round(getStepProgress())}%
+          {t('workflow.progress_percent', { value: new Intl.NumberFormat(language).format(Math.round(getStepProgress())) })}
         </Badge>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
-          Étape {currentStep + 1} / {steps.length}
+          {t('workflow.step_counter', { current: currentStep + 1, total: steps.length })}
         </span>
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground whitespace-nowrap" aria-live="polite">
           {isLoading ? (
             <>
               <Clock className="h-3 w-3 animate-pulse" />
-              Sauvegarde…
+              {t('workflow.saving')}
             </>
           ) : workflowState?.isDirty ? (
             <>
               <CircleDashed className="h-3 w-3 text-warning" />
-              Modifications non sauvegardées
+              {t('workflow.unsaved_changes')}
             </>
           ) : lastSavedLabel ? (
             <>
               <CheckCircle className="h-3 w-3 text-success" />
-              Sauvegardé · {lastSavedLabel}
+              {t('workflow.saved_at', { time: lastSavedLabel })}
             </>
           ) : null}
         </span>
@@ -428,7 +428,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       {/* Steps Navigation — barre d'onglets horizontale (libellés visibles, sans scroll vertical) */}
       <div
         role="tablist"
-        aria-label="Étapes du workflow projet"
+        aria-label={t('workflow.steps_aria')}
         className="flex items-center gap-1 overflow-x-auto border-b pb-1 -mx-1 px-1"
       >
         {steps.map((step, idx) => {
@@ -468,7 +468,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
           <div className="flex items-center gap-1.5 font-medium">
             <AlertTriangle className="h-3.5 w-3.5" />
-            Corrections requises
+            {t('workflow.corrections_required')}
           </div>
           <ul className="mt-1 list-disc pl-5 space-y-0.5">
             {validationErrors.slice(0, 4).map((e, i) => (<li key={i}>{e}</li>))}
@@ -487,7 +487,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               </p>
             </div>
             <Badge variant={canProceedNext() ? 'default' : 'secondary'} className="shrink-0">
-              {canProceedNext() ? 'Complète' : 'À compléter'}
+              {canProceedNext() ? t('workflow.complete') : t('workflow.to_complete')}
             </Badge>
           </div>
         </CardHeader>
@@ -671,7 +671,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           disabled={currentStep === 0}
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
-          Précédent
+          {t('common.previous')}
         </Button>
 
         <div className="flex gap-2">
@@ -679,10 +679,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             variant="secondary"
             onClick={() => saveCurrentStep(currentStep + 1)}
             disabled={isLoading || !workflowState?.isDirty}
-            title={!workflowState?.isDirty ? 'Aucune modification à sauvegarder' : 'Sauvegarder l\'étape'}
+            title={!workflowState?.isDirty ? t('workflow.no_changes') : t('workflow.save_step')}
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Sauvegarde…' : 'Sauvegarder'}
+            {isLoading ? t('common.saving') : t('common.save')}
           </Button>
           {currentStep === steps.length - 1 ? (
             <Button onClick={handleSubmit} disabled={isLoading}>
@@ -695,9 +695,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <Button
               onClick={saveAndNextStep}
               disabled={isLoading || !canProceedNext()}
-              title={!canProceedNext() ? 'Complétez les champs requis pour continuer' : 'Sauvegarder et passer à l\'étape suivante'}
+              title={!canProceedNext() ? t('workflow.complete_required') : t('workflow.save_and_next')}
             >
-              {isLoading ? 'Sauvegarde…' : 'Suivant'}
+              {isLoading ? t('common.saving') : t('common.next')}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           )}
