@@ -32,6 +32,9 @@ import { ChevronDown } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
 import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
+import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
+import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
+import { Rocket } from 'lucide-react';
 import { Pencil } from 'lucide-react';
 
 interface Props {
@@ -294,6 +297,28 @@ export const BoqActionsBar: React.FC<Props> = ({
     }
   });
 
+  // Chaîne complète : DQE validé -> planification -> prévisions -> AO -> portails.
+  const { runChain, isPending: chainPending } = useProcurementChain();
+  const dqeValidated = ProcurementChainService.isValidatedDqe(lines);
+  const handleProcurementChain = () => withGuard('procurementChain', async () => {
+    if (!ctx.projectId) throw new Error('Projet requis');
+    const res = await runChain({
+      projectId: ctx.projectId,
+      documentId: lines.find((l) => l.documentId)?.documentId ?? null,
+      lines,
+      tenderTitle: projectName ?? null,
+    });
+    toast({
+      title: t('dqe.action.procurement_chain', "Chaîne appel d'offres"),
+      description: [
+        `${res.planning.phases ?? 0} phases`,
+        `budget ${res.forecast.dqeTotal}`,
+        res.tender.tenderId ? 'AO publié' : 'AO non créé',
+        ...res.warnings,
+      ].join(' · '),
+    });
+  });
+
   // Étape explicite « DQE -> WBS » : phases, jalons, tâches et ressources.
   const handleDispatch = () => withGuard('dispatch', async () => {
     window.dispatchEvent(new CustomEvent('boq-dispatch-wbs', {
@@ -315,6 +340,12 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const workflowActions = [
     can('distribute') && onDistribute && { key: 'distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    isProjectDqe && {
+      key: 'procurementChain',
+      icon: chainPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Rocket className="h-4 w-4 mr-2" />,
+      onSelect: handleProcurementChain,
+      disabled: !dqeValidated || chainPending || !ctx.projectId,
+    },
     isProjectDqe && {
       key: 'dispatchWbs',
       icon: <Layers className="h-4 w-4 mr-2" />,
