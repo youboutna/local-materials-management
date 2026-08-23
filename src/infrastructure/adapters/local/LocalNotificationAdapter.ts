@@ -20,14 +20,14 @@ function load(): NotificationData[] {
   } catch {}
   const seed: NotificationData[] = Object.values(DEV_USERS ?? {}).map((u: any, i) => ({
     id: `dev-notif-${i + 1}`,
-    recipient_id: u.id ?? `dev-user-${i}`,
+    recipientId: u.id ?? `dev-user-${i}`,
     title: 'Bienvenue',
     message: `Session locale de démonstration pour ${u.email ?? u.full_name ?? 'utilisateur'}.`,
     type: 'info',
     read: false,
     priority: 'low',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     metadata: { source: 'LocalNotificationAdapter' },
   }));
   try {
@@ -44,15 +44,15 @@ function save(list: NotificationData[]) {
 
 export class LocalNotificationAdapter implements INotificationRepository {
   async createNotification(
-    notification: Omit<NotificationData, 'id' | 'created_at' | 'updated_at'>
+    notification: Omit<NotificationData, 'id' | 'createdAt' | 'updatedAt'>
   ) {
     const list = load();
     const now = new Date().toISOString();
     const created: NotificationData = {
       ...notification,
       id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      created_at: now,
-      updated_at: now,
+      createdAt: now,
+      updatedAt: now,
     };
     list.unshift(created);
     save(list);
@@ -60,7 +60,7 @@ export class LocalNotificationAdapter implements INotificationRepository {
   }
 
   async getUserNotifications(userId: string, limit = 50) {
-    const list = load().filter((n) => n.recipient_id === userId).slice(0, limit);
+    const list = load().filter((n) => n.recipientId === userId).slice(0, limit);
     return { notifications: list, error: null };
   }
 
@@ -71,12 +71,12 @@ export class LocalNotificationAdapter implements INotificationRepository {
 
   async updateNotification(
     notificationId: string,
-    patch: Partial<Omit<NotificationData, 'id' | 'created_at'>>
+    patch: Partial<Omit<NotificationData, 'id' | 'createdAt'>>
   ) {
     const list = load();
     const idx = list.findIndex((n) => n.id === notificationId);
     if (idx < 0) return { notification: null, error: new Error('Notification not found') };
-    list[idx] = { ...list[idx], ...patch, updated_at: new Date().toISOString() };
+    list[idx] = { ...list[idx], ...patch, updatedAt: new Date().toISOString() };
     save(list);
     return { notification: list[idx], error: null };
   }
@@ -97,7 +97,7 @@ export class LocalNotificationAdapter implements INotificationRepository {
     const now = new Date().toISOString();
     save(
       load().map((n) =>
-        n.recipient_id === userId && !n.read ? { ...n, read: true, updated_at: now } : n
+        n.recipientId === userId && !n.read ? { ...n, read: true, updatedAt: now } : n
       )
     );
     return { error: null };
@@ -121,7 +121,7 @@ export class LocalNotificationAdapter implements INotificationRepository {
     return { error: null };
   }
   async getUnreadCount(userId: string) {
-    const count = load().filter((n) => n.recipient_id === userId && !n.read).length;
+    const count = load().filter((n) => n.recipientId === userId && !n.read).length;
     return { count, error: null };
   }
 

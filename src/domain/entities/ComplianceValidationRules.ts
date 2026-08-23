@@ -241,7 +241,7 @@ export class ComplianceValidationEngine {
     // Status impact
     const statusScores = {
       pending: -10,
-      in_progress: 0,
+      inProgress: 0,
       approved: 15,
       rejected: -25
     };
@@ -310,7 +310,7 @@ export class ComplianceValidationEngine {
         'Renewal date tracked',
         'Claims history reviewed'
       ],
-      bank_guarantee: [
+      bankGuarantee: [
         'Guarantee amount confirmed',
         'Bank approval obtained',
         'Guarantee terms documented',

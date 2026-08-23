@@ -96,9 +96,9 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   <T k="auto.phaseeditdialog.nom_de_la_phase" fallback="Nom de la phase" /> <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  value={editForm.phase_name || ""}
+                  value={editForm.phaseName || ""}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, phase_name: e.target.value })
+                    setEditForm({ ...editForm, phaseName: e.target.value })
                   }
                   placeholder="Ex: Fondations et terrassement"
                   className="h-10"
@@ -134,9 +134,9 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.date_de_debut" fallback="Date de début" /></Label>
                 <Input
                   type="date"
-                  value={editForm.start_date || ""}
+                  value={editForm.startDate || ""}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, start_date: e.target.value })
+                    setEditForm({ ...editForm, startDate: e.target.value })
                   }
                   className="h-10"
                 />
@@ -145,9 +145,9 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.date_de_fin" fallback="Date de fin" /></Label>
                 <Input
                   type="date"
-                  value={editForm.end_date || ""}
+                  value={editForm.endDate || ""}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, end_date: e.target.value })
+                    setEditForm({ ...editForm, endDate: e.target.value })
                   }
                   className="h-10"
                 />
@@ -158,11 +158,11 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   <Input
                     type="number"
                     min="1"
-                    value={editForm.estimated_duration_days || ""}
+                    value={editForm.estimatedDurationDays || ""}
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        estimated_duration_days: parseInt(e.target.value) || undefined,
+                        estimatedDurationDays: parseInt(e.target.value) || undefined,
                       })
                     }
                     className="h-10 pr-14"
@@ -192,11 +192,11 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   <Input
                     type="number"
                     min="0"
-                    value={editForm.estimated_cost || ""}
+                    value={editForm.estimatedCost || ""}
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        estimated_cost: parseFloat(e.target.value) || undefined,
+                        estimatedCost: parseFloat(e.target.value) || undefined,
                       })
                     }
                     className="h-10 pr-14"

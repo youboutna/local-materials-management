@@ -285,11 +285,11 @@ export class Supplier {
       status: this._status,
       rating: this._rating,
       contacts: this._contacts,
-      is_verified: this._isVerified,
-      verified_at: this._verifiedAt,
-      workspace_id: this._workspaceId,
-      created_at: this._createdAt,
-      updated_at: this._updatedAt
+      isVerified: this._isVerified,
+      verifiedAt: this._verifiedAt,
+      workspaceId: this._workspaceId,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
     };
   }
 

@@ -90,17 +90,6 @@ export class ComplianceTransformer {
       mitigationRequired: entity.mitigationRequired,
       mitigationPlan: entity.mitigationPlan,
       // Legacy snake_case aliases
-      project_id: entity.projectId,
-      bank_guarantee_id: entity.bankGuaranteeId,
-      created_by: entity.createdBy,
-      updated_by: entity.updatedBy,
-      compliance_level: entity.complianceLevel,
-      last_reviewed: entity.lastReviewed,
-      next_review: entity.nextReview,
-      external_references: entity.externalReferences,
-      risk_level: entity.riskLevel,
-      mitigation_required: entity.mitigationRequired,
-      mitigation_plan: entity.mitigationPlan
     };
   }
 
@@ -251,12 +240,6 @@ export class ComplianceTransformer {
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
       // Legacy snake_case aliases
-      compliance_item_id: entity.complianceItemId,
-      document_id: entity.documentId,
-      is_required: entity.isRequired,
-      uploaded_by: entity.uploadedBy,
-      file_url: entity.fileUrl,
-      uploaded_at: entity.uploadedAt.toISOString()
     };
   }
 
@@ -320,9 +303,6 @@ export class ComplianceTransformer {
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
       // Legacy snake_case aliases
-      compliance_item_id: entity.complianceItemId,
-      created_by: entity.createdBy,
-      created_at: entity.createdAt.toISOString()
     };
   }
 
@@ -374,12 +354,6 @@ export class ComplianceTransformer {
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
       // Legacy snake_case aliases
-      compliance_item_id: entity.complianceItemId,
-      field_name: entity.fieldName,
-      old_value: entity.oldValue,
-      new_value: entity.newValue,
-      changed_by: entity.changedBy,
-      changed_at: entity.changedAt.toISOString()
     };
   }
 

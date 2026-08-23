@@ -103,12 +103,12 @@ const PaymentBlockingInterface = () => {
         const activeBlocks = await paymentBlockingService.getActivePaymentBlocks();
         const recentBlocks: PaymentBlockHistoryItem[] = activeBlocks.map(block => ({
           id: block.id,
-          projectId: block.payment_request_id,
-          contractorId: block.resolved_by || '',
-          amount: block.blocked_amount,
-          blockedAt: block.created_at,
-          resolvedAt: block.resolved_at,
-          reason: block.block_reason,
+          projectId: block.paymentRequestId,
+          contractorId: block.resolvedBy || '',
+          amount: block.blockedAmount,
+          blockedAt: block.createdAt,
+          resolvedAt: block.resolvedAt,
+          reason: block.blockReason,
         }));
         setBlockHistory(recentBlocks);
       } catch (error) {

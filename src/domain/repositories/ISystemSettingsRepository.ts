@@ -8,8 +8,8 @@ export interface SystemSettingRow {
   key: string;
   category?: string;
   configuration?: Record<string, unknown> | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface ISystemSettingsRepository {

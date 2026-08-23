@@ -108,9 +108,9 @@ const Auth = () => {
       await register({
         email,
         password,
-        full_name: fullName,
+        fullName: fullName,
         phone,
-        national_id: nationalId,
+        nationalId: nationalId,
       });
     } catch (error) {
       // Géré par le contexte

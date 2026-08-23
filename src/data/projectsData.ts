@@ -112,11 +112,10 @@ export const allProjectsData: ProjectData[] = [
                             "Respecter le planning initial"
                         ],
                         id: "",
-                        project_id: "",
+                        projectId: "",
                         date: "",
-                        progress_at_inspection: 0,
-                        created_at: "",
-                        updated_at: ""
+                        createdAt: "",
+                        updatedAt: ""
                     }
                 ],
                 "stakeholders": [
@@ -177,14 +176,13 @@ export const allProjectsData: ProjectData[] = [
                 "inspections": [
                     {
                         id: "c3d4e5f6-g7t8-8012-cdef-345678901234",
-                        project_id: "c3d4e5f6-g7h8-9012-cdef-345678901234",
+                        projectId: "c3d4e5f6-g7h8-9012-cdef-345678901234",
                         date: "2025-04-10",
-                        progress_at_inspection: 0,
-                        created_at: "2025-04-10",
-                        updated_at: "2025-10-10",
+                        progressAtInspection: 0,
+                        createdAt: "2025-04-10",
+                        updatedAt: "2025-10-10",
                         "inspector": "Fatimetou Mint Ahmed",
                         "status": "completed",
-                        "progressAtInspection": 15,
                         "comments": "Respect des normes techniques",
                         "issues": [
                             "Retard léger sur le planning"
@@ -364,13 +362,13 @@ export const allProjectsData: ProjectData[] = [
                 ],
                 "inspections": [
                     {"id": "f6g7h8i9-j0k1-2345-fghi-678901234547",
-                        project_id:"f6g7h8i9-j0k1-2345-fghi-678901234567",
+                        projectId:"f6g7h8i9-j0k1-2345-fghi-678901234567",
                         "date": "2025-04-05",
-                        "created_at": "2025-04-05",
-                        "updated_at": "2025-04-05",
+                        createdAt: "2025-04-05",
+                        updatedAt: "2025-04-05",
                         "inspector": "Mariem Mint Sidi",
                         "status": "completed",
-                        "progress_at_inspection": 25,
+                        progressAtInspection: 25,
                         "comments": "Mission de supervision efficace",
                         "issues": [],
                         "recommendations": [
@@ -436,13 +434,13 @@ export const allProjectsData: ProjectData[] = [
                 "inspections": [
                     {
                         "id": "a6g7h8i9-j0k1-2345-fghi-678901234547",
-                        project_id:"g7h8i9j0-k1l2-3456-ghij-789012345678",
+                        projectId:"g7h8i9j0-k1l2-3456-ghij-789012345678",
                         "date": "2025-03-20",
-                        "created_at": "2025-03-05",
-                        "updated_at": "2025-04-05",
+                        createdAt: "2025-03-05",
+                        updatedAt: "2025-04-05",
                         "inspector": "Ahmed Ould Mohamed Mahmoud",
                         "status": "completed",
-                        "progress_at_inspection": 35,
+                        progressAtInspection: 35,
                         "comments": "Bon suivi des différents chantiers",
                         "issues": [
                             "Retards sur le site d'El Bassra"
@@ -510,13 +508,13 @@ export const allProjectsData: ProjectData[] = [
                 "inspections": [
                     {
                         "id": "h8i9j0k1-l2m3-4567-hijk-890123456789",
-                        project_id:"g7h8i9j0-k1l2-3456-ghij-789012345678",
+                        projectId:"g7h8i9j0-k1l2-3456-ghij-789012345678",
                         "date": "2025-05-05",
-                        "created_at": "2025-03-05",
-                        "updated_at": "2025-04-05",
+                        createdAt: "2025-03-05",
+                        updatedAt: "2025-04-05",
                         "inspector": "Mariem Mint Ahmedou",
                         "status": "completed",
-                        "progress_at_inspection": 12,
+                        progressAtInspection: 12,
                         "comments": "Démarrage conforme aux spécifications",
                         "issues": [
                             "Problème d'approvisionnement en matériaux"

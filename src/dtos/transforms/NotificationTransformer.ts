@@ -17,16 +17,16 @@ export class NotificationTransformer {
   static toResponseDto(entity: NotificationData): NotificationDTO {
     return {
       id: entity.id,
-      recipientId: entity.recipient_id,
+      recipientId: entity.recipientId,
       title: entity.title,
       message: entity.message,
       type: entity.type as 'info' | 'success' | 'warning' | 'error' | 'system',
       read: entity.read || false,
-      createdAt: entity.created_at || new Date().toISOString(),
-      updatedAt: entity.updated_at,
+      createdAt: entity.createdAt || new Date().toISOString(),
+      updatedAt: entity.updatedAt,
       priority: entity.priority as 'low' | 'medium' | 'high' || undefined,
-      expiresAt: entity.expires_at || undefined,
-      actionUrl: entity.action_url || undefined,
+      expiresAt: entity.expiresAt || undefined,
+      actionUrl: entity.actionUrl || undefined,
       metadata: entity.metadata || undefined,
     };
   }
@@ -34,16 +34,16 @@ export class NotificationTransformer {
   /**
    * Transform create request DTO to domain entity
    */
-  static fromCreateDtoToDomain(dto: CreateNotificationRequestDTO): Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> {
+  static fromCreateDtoToDomain(dto: CreateNotificationRequestDTO): Omit<NotificationData, 'id' | 'createdAt' | 'updatedAt'> {
     return {
-      recipient_id: dto.recipientId,
+      recipientId: dto.recipientId,
       title: dto.title,
       message: dto.message,
       type: dto.type,
       read: false,
       priority: dto.priority || 'medium',
-      expires_at: dto.expiresAt || null,
-      action_url: dto.actionUrl || null,
+      expiresAt: dto.expiresAt || null,
+      actionUrl: dto.actionUrl || null,
       metadata: dto.metadata || null,
     };
   }
@@ -53,7 +53,7 @@ export class NotificationTransformer {
    */
   static fromUpdateDtoToDomain(dto: UpdateNotificationRequestDTO): Partial<NotificationData> {
     const updateData: Partial<NotificationData> = {
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     if (dto.title !== undefined) updateData.title = dto.title;
@@ -61,8 +61,8 @@ export class NotificationTransformer {
     if (dto.type !== undefined) updateData.type = dto.type;
     if (dto.read !== undefined) updateData.read = dto.read;
     if (dto.priority !== undefined) updateData.priority = dto.priority;
-    if (dto.expiresAt !== undefined) updateData.expires_at = dto.expiresAt;
-    if (dto.actionUrl !== undefined) updateData.action_url = dto.actionUrl;
+    if (dto.expiresAt !== undefined) updateData.expiresAt = dto.expiresAt;
+    if (dto.actionUrl !== undefined) updateData.actionUrl = dto.actionUrl;
     if (dto.metadata !== undefined) updateData.metadata = dto.metadata;
 
     return updateData;

@@ -37,7 +37,7 @@ export class SupabaseRealtimeAdapter implements IRealtimeRepository {
             schema: payload.schema,
             new: payload.new,
             old: payload.old,
-            commit_timestamp: payload.commit_timestamp,
+            commitTimestamp: payload.commit_timestamp,
           };
           subscription.callback(realtimePayload);
         }

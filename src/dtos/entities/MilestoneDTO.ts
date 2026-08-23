@@ -36,11 +36,11 @@ export interface MilestoneTemplateDTO {
   name: string;
   description?: string;
   /** Relative offset in days from phase start */
-  relative_offset_days: number;
+  relativeOffsetDays: number;
   /** Weight for progress calculation (0.1 - 1.0) */
   weight: number;
   /** If true, this milestone is critical for phase completion (CPM) */
-  is_critical: boolean;
+  isCritical: boolean;
   /** Type of milestone according to PM standards */
   type: MilestoneType;
   /** Priority level for scheduling */
@@ -48,11 +48,11 @@ export interface MilestoneTemplateDTO {
   /** Tags/categories for filtering */
   tags?: string[];
   /** Predecessor milestone IDs (for PERT/CPM dependency tracking) */
-  predecessor_ids?: string[];
+  predecessorIds?: string[];
   /** Deliverables expected at this milestone */
   deliverables?: string[];
   /** Approval requirements for gate milestones */
-  approval_requirements?: string[];
+  approvalRequirements?: string[];
   requiresInspection?: true;
 }
 
@@ -165,12 +165,12 @@ export interface MilestoneProgressDTO {
   /** Weighted progress (0-100) */
   weightedProgress: number;
   /** Schedule Performance Index (SPI) = Earned Value / Planned Value */
-  schedulePerformance_index?: number;
+  schedulePerformanceIndex?: number;
   /** Critical path status */
-  criticalPath_status: 'on_track' | 'at_risk' | 'delayed';
+  criticalPathStatus: 'on_track' | 'at_risk' | 'delayed';
   /** Days of float remaining on critical path */
-  criticalPathFloat_days?: number;
-  next_milestone?: MilestoneSummaryDTO;
+  criticalPathFloatDays?: number;
+  nextMilestone?: MilestoneSummaryDTO;
   overdueMilestones: MilestoneSummaryDTO[];
   /** Upcoming milestones in next 14 days */
   upcomingMilestones: MilestoneSummaryDTO[];
@@ -307,68 +307,68 @@ export interface VerificationItemDTO {
   required: boolean;
   /** Poids dans le calcul global (0-1) */
   weight: number;
-  reference_id?: string;
-  reference_type?: 'inspection' | 'document' | 'material' | 'payment' | 'pv';
-  verified_by?: string;
-  verified_at?: string;
+  referenceId?: string;
+  referenceType?: 'inspection' | 'document' | 'material' | 'payment' | 'pv';
+  verifiedBy?: string;
+  verifiedAt?: string;
   completedAt?: string;
   notes?: string;
-  evidence_urls?: string[];
+  evidenceUrls?: string[];
 }
 
 /** Résultat de vérification d'un checkpoint de jalon */
 export interface CheckpointVerificationResultDTO {
-  checkpoint_id: string;
-  milestone_id: string;
-  overall_status: VerificationStatus;
+  checkpointId: string;
+  milestoneId: string;
+  overallStatus: VerificationStatus;
   /** Score 0-100 */
-  verification_score: number;
-  verification_items: VerificationItemDTO[];
-  required_items_count: number;
-  verified_items_count: number;
-  failed_items_count: number;
-  blocking_issues: string[];
+  verificationScore: number;
+  verificationItems: VerificationItemDTO[];
+  requiredItemsCount: number;
+  verifiedItemsCount: number;
+  failedItemsCount: number;
+  blockingIssues: string[];
   warnings: string[];
-  can_proceed: boolean;
-  verified_at?: string;
-  verified_by?: string;
+  canProceed: boolean;
+  verifiedAt?: string;
+  verifiedBy?: string;
 }
 
 /** Checkpoint : vérifications requises rattachées à un jalon */
 export interface CheckpointDTO {
   id: string;
-  project_id: string;
-  phase_id?: string;
-  step_id?: string;
-  milestone_id: string;
+  projectId: string;
+  phaseId?: string;
+  stepId?: string;
+  milestoneId: string;
 
   title: string;
   description?: string;
-  checkpoint_type: CheckpointType;
+  checkpointType: CheckpointType;
 
   /** % de progression qui déclenche ce checkpoint */
-  trigger_progress: number;
+  triggerProgress: number;
   /** % du budget phase lié à ce checkpoint */
-  financial_weight: number;
+  financialWeight: number;
 
   status: VerificationStatus;
   progress: number;
 
-  required_inspections: string[];
-  required_documents: string[];
-  required_approvals: string[];
+  requiredInspections: string[];
+  requiredDocuments: string[];
+  requiredApprovals: string[];
 
-  verification_result?: CheckpointVerificationResultDTO;
+  verificationResult?: CheckpointVerificationResultDTO;
 
-  triggers_payment: boolean;
-  payment_amount?: number;
-  triggers_notification: boolean;
-  notification_recipients?: string[];
+  triggersPayment: boolean;
+  paymentAmount?: number;
+  triggersNotification: boolean;
+  notificationRecipients?: string[];
 
-  target_date?: string;
-  completion_date?: string;
-  created_at: string;
-  updated_at: string;
+  targetDate?: string;
+  completionDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /* --- Requêtes / réponses de vérification --- */

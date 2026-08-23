@@ -18,7 +18,7 @@ export interface RealtimePayload {
   schema: string;
   new?: Record<string, unknown>;
   old?: Record<string, unknown>;
-  commit_timestamp: string;
+  commitTimestamp: string;
 }
 
 export interface IRealtimeRepository {

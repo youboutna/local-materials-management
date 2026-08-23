@@ -19,6 +19,7 @@ import {
 import { IAlertRepository, AlertFilter } from '@/domain/repositories/IAlertRepository';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { camelizeRow, camelizeRows, snakeizeRow } from '@/infrastructure/adapters/rowMapping';
 // ===== Table name =====
 const TABLE_NAME = 'project_alerts';
 
@@ -346,7 +347,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -363,7 +364,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by project');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -380,7 +381,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find active alerts');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -397,7 +398,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by type');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -414,7 +415,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by severity');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -431,7 +432,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by source');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -448,7 +449,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'find alerts by status');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -602,7 +603,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'acknowledge batch alerts');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -626,7 +627,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'resolve batch alerts');
     }
 
-    return ((data || []) as DBAlert[]).map((item) => this.fromDB(item));
+    return (camelizeRows<DBAlert>(data)).map((item) => this.fromDB(item));
   }
 
   /**
@@ -645,7 +646,7 @@ export class SupabaseAlertAdapter implements IAlertRepository {
       this.handleError(error, 'get statistics');
     }
 
-    const alerts = (data || []) as DBAlert[];
+    const alerts = camelizeRows<DBAlert>(data);
     const total = alerts.length;
     const critical = alerts.filter(a => a.severity === 'critical').length;
     const high = alerts.filter(a => a.severity === 'high').length;

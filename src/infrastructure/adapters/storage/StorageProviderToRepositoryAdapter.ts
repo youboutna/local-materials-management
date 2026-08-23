@@ -30,7 +30,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
         path,
         publicUrl: res.url || '',
         size: file.size,
-        content_type: file.type,
+        contentType: file.type,
       },
       error: null,
     };
@@ -67,8 +67,8 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
       path: prefix ? `${prefix}/${f.name}` : f.name,
       bucket,
       size: f.size,
-      created_at: f.created_at,
-      updated_at: f.updated_at,
+      created_at: f.createdAt,
+      updated_at: f.updatedAt,
     }));
     return { files, error: null };
   }

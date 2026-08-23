@@ -173,8 +173,8 @@ export class SupabaseStorageProvider implements IStorageProvider {
       files?: Array<{
         name: string;
         size: number;
-        created_at: string;
-        updated_at: string;
+        createdAt: string;
+        updatedAt: string;
       }>;
       error?: string;
     }> {
@@ -199,8 +199,8 @@ export class SupabaseStorageProvider implements IStorageProvider {
         files: data.map(file => ({
           name: file.name,
           size: (file.metadata?.size as number | undefined) || 0,
-          created_at: file.created_at || '',
-          updated_at: file.updated_at || ''
+          createdAt: file.created_at || '',
+          updatedAt: file.updated_at || ''
         }))
       };
     } catch (error) {

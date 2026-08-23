@@ -8,10 +8,11 @@ import type {
   IProjectResourceRepository,
   ProjectResourceRow,
 } from '@/domain/repositories/IProjectResourceRepository';
+import { camelizeRow, camelizeRows, snakeizeRow } from '@/infrastructure/adapters/rowMapping';
 
 // La table réelle `project_resources` n'a pas de colonne `phase_id`.
 function stripUnsupportedFields(resource: Partial<ProjectResourceRow>): Partial<ProjectResourceRow> {
-  const { phase_id: _phaseId, ...rest } = resource;
+  const { phaseId: _phaseId, ...rest } = resource as Partial<ProjectResourceRow> & { phaseId?: string };
   return rest;
 }
 
@@ -24,7 +25,7 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as ProjectResourceRow[];
+    return camelizeRows<ProjectResourceRow>(data);
   }
 
   async create(resource: Partial<ProjectResourceRow>): Promise<ProjectResourceRow> {
@@ -35,18 +36,18 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
       .single();
 
     if (error) throw error;
-    return data as ProjectResourceRow;
+    return camelizeRow<ProjectResourceRow>(data);
   }
 
   async createMany(resources: Partial<ProjectResourceRow>[]): Promise<ProjectResourceRow[]> {
     if (!resources.length) return [];
     const { data, error } = await btpClient
       .from('project_resources')
-      .insert(resources.map(stripUnsupportedFields) as BtpTablesInsert<'project_resources'>[])
+      .insert(resources.map((r) => snakeizeRow(stripUnsupportedFields(r))) as BtpTablesInsert<'project_resources'>[])
       .select();
 
     if (error) throw error;
-    return (data || []) as ProjectResourceRow[];
+    return camelizeRows<ProjectResourceRow>(data);
   }
 
   async update(id: string, updates: Partial<ProjectResourceRow>): Promise<ProjectResourceRow> {
@@ -58,7 +59,7 @@ export class SupabaseProjectResourceAdapter implements IProjectResourceRepositor
       .single();
 
     if (error) throw error;
-    return data as ProjectResourceRow;
+    return camelizeRow<ProjectResourceRow>(data);
   }
 
   async delete(id: string): Promise<void> {

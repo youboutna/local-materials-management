@@ -38,12 +38,12 @@ function profileToAuthUser(profile: DevUserProfile): AuthUser {
   return {
     id: profile.id,
     email: profile.email,
-    full_name: profile.user_metadata.full_name,
+    fullName: profile.user_metadata.full_name,
     role: profile.user_metadata.role,
     phone: profile.user_metadata.phone,
-    national_id: profile.user_metadata.national_id,
-    created_at: new Date(0).toISOString(),
-    updated_at: new Date().toISOString(),
+    nationalId: profile.user_metadata.national_id,
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -145,9 +145,9 @@ async function buildSession(
     persisted?.expires_at ?? new Date(Date.now() + ttl * 1000).toISOString();
   const accessToken = persisted?.access_token ?? (await mintAccessToken(profile, ttl));
   return {
-    access_token: accessToken,
-    refresh_token: persisted?.refresh_token ?? `dev-refresh-${profile.id}`,
-    expires_at: expiresAt,
+    accessToken: accessToken,
+    refreshToken: persisted?.refresh_token ?? `dev-refresh-${profile.id}`,
+    expiresAt: expiresAt,
     user: profileToAuthUser(profile),
   };
 }

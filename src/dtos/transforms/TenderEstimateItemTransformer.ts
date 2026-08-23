@@ -13,22 +13,22 @@ export class TenderEstimateItemTransformer {
   static toTenderEstimateItemDTO(entity: TenderEstimateItem): TenderEstimateItemDTO {
     return {
       id: entity.id,
-      estimate_id: entity.estimateId,
-      material_id: undefined, // Will be set by service if needed
-      item_code: entity.itemCode,
+      estimateId: entity.estimateId,
+      materialId: undefined, // Will be set by service if needed
+      itemCode: entity.itemCode,
       description: entity.description,
       unit: entity.unit,
       quantity: entity.quantity,
-      unit_price: entity.unitPrice,
-      total_price: entity.totalPrice,
+      unitPrice: entity.unitPrice,
+      totalPrice: entity.totalPrice,
       category: entity.category,
       specifications: entity.specifications,
-      item_type: 'material', // Default item type
+      itemType: 'material', // Default item type
       // Business logic calculated fields
-      margin_percentage: entity.calculateMarginPercentage(),
-      line_total: entity.totalPrice,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt
+      marginPercentage: entity.calculateMarginPercentage(),
+      lineTotal: entity.totalPrice,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -40,16 +40,16 @@ export class TenderEstimateItemTransformer {
     estimateId: string
   ): TenderEstimateItem {
     const id = `item_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
-    const totalPrice = request.quantity * request.unit_price;
+    const totalPrice = request.quantity * request.unitPrice;
 
     return new TenderEstimateItem(
       id,
       estimateId,
-      request.item_code || `ITEM-${id}`,
+      request.itemCode || `ITEM-${id}`,
       request.description || 'Item description',
       request.unit || 'unit',
       request.quantity,
-      request.unit_price,
+      request.unitPrice,
       totalPrice,
       request.category || 'general',
       request.specifications
@@ -71,8 +71,8 @@ export class TenderEstimateItemTransformer {
       entity.updateQuantity(request.quantity);
     }
     
-    if (request.unit_price !== undefined) {
-      entity.updateUnitPrice(request.unit_price);
+    if (request.unitPrice !== undefined) {
+      entity.updateUnitPrice(request.unitPrice);
     }
     
     if (request.category !== undefined) {

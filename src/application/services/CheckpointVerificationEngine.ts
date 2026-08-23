@@ -67,37 +67,37 @@ export class CheckpointVerificationEngine {
 
       // 1. Vérifier les inspections
       const inspectionItems = await this.verifyInspections({
-        requiredInspectionIds: request.checkpoint.required_inspections || [],
-        triggerProgress: request.checkpoint.trigger_progress || 0,
+        requiredInspectionIds: request.checkpoint.requiredInspections || [],
+        triggerProgress: request.checkpoint.triggerProgress || 0,
         projectId
       });
       verificationItems.push(...inspectionItems);
 
       // 2. Vérifier les documents
       const documentItems = await this.verifyDocuments({
-        requiredDocumentIds: request.checkpoint.required_documents || [],
+        requiredDocumentIds: request.checkpoint.requiredDocuments || [],
         projectId
       });
       verificationItems.push(...documentItems);
 
       // 3. Vérifier les approbations
       const approvalItems = await this.verifyApprovals({
-        requiredApprovalIds: request.checkpoint.required_approvals || [],
+        requiredApprovalIds: request.checkpoint.requiredApprovals || [],
         projectId
       });
       verificationItems.push(...approvalItems);
 
       // 4. Vérifier les ressources/matériaux si applicable
-      if (request.checkpoint.step_id) {
+      if (request.checkpoint.stepId) {
         const resourceItems = await this.verifyResources({
-          stepId: request.checkpoint.step_id,
+          stepId: request.checkpoint.stepId,
           projectId
         });
         verificationItems.push(...resourceItems);
       }
 
       // 5. Vérifier le service fait si c'est un gate
-      if (request.checkpoint.checkpoint_type === 'gate') {
+      if (request.checkpoint.checkpointType === 'gate') {
         const serviceFaitItem = await this.verifyServiceFait({
           checkpointId: request.checkpoint.id,
           projectId
@@ -187,7 +187,7 @@ export class CheckpointVerificationEngine {
         status: hasRequiredInspection ? 'verified' : 'pending' as VerificationStatus,
         required: true,
         weight: 0.3,
-        reference_type: 'inspection'
+        referenceType: 'inspection'
       });
 
       // Also add individual required inspections if specified
@@ -201,8 +201,8 @@ export class CheckpointVerificationEngine {
           status: inspection?.status === InspectionStatus.Approved ? 'verified' : 'pending' as VerificationStatus,
           required: true,
           weight: 0.1,
-          reference_id: inspectionId,
-          reference_type: 'inspection'
+          referenceId: inspectionId,
+          referenceType: 'inspection'
         });
       }
 
@@ -249,8 +249,8 @@ export class CheckpointVerificationEngine {
           status: isVerified ? 'verified' : 'pending' as VerificationStatus,
           required: true,
           weight: 0.2 / request.requiredDocumentIds.length,
-          reference_id: documentId,
-          reference_type: 'document'
+          referenceId: documentId,
+          referenceType: 'document'
         });
       }
 
@@ -354,8 +354,8 @@ export class CheckpointVerificationEngine {
         status: isVerified ? 'verified' : 'pending' as VerificationStatus,
         required: true,
         weight: 0.1,
-        reference_id: serviceFaitDoc?.id,
-        reference_type: 'document'
+        referenceId: serviceFaitDoc?.id,
+        referenceType: 'document'
       };
     } catch (error) {
       console.error('CheckpointVerificationEngine.verifyServiceFait failed:', error);
@@ -391,9 +391,9 @@ export class CheckpointVerificationEngine {
 
     // Récupérer le budget de la phase via le repository
     let phaseBudget = 0;
-    if (checkpoint.phase_id) {
+    if (checkpoint.phaseId) {
       try {
-        const phase = await this.phaseRepository.findById(checkpoint.phase_id);
+        const phase = await this.phaseRepository.findById(checkpoint.phaseId);
         if (phase) {
           phaseBudget = phase.estimatedCost || phase.actualCost || 0;
         }
@@ -415,8 +415,8 @@ export class CheckpointVerificationEngine {
     }
 
     // Calculer le montant max basé sur le poids financier
-    const maxAmount = phaseBudget * checkpoint.financial_weight;
-    const retentionRate = DEFAULT_MAURITANIA_RULES.guarantee_retention_rate;
+    const maxAmount = phaseBudget * checkpoint.financialWeight;
+    const retentionRate = DEFAULT_MAURITANIA_RULES.guaranteeRetentionRate;
     const netAmount = maxAmount * (1 - retentionRate);
 
     return {
@@ -442,37 +442,37 @@ export class CheckpointVerificationEngine {
 
       // 1. Vérifier les inspections
       const inspectionItems = await this.verifyInspections({
-        requiredInspectionIds: checkpoint.required_inspections || [],
-        triggerProgress: checkpoint.trigger_progress || 0,
+        requiredInspectionIds: checkpoint.requiredInspections || [],
+        triggerProgress: checkpoint.triggerProgress || 0,
         projectId
       });
       verificationItems.push(...inspectionItems);
 
       // 2. Vérifier les documents
       const documentItems = await this.verifyDocuments({
-        requiredDocumentIds: checkpoint.required_documents || [],
+        requiredDocumentIds: checkpoint.requiredDocuments || [],
         projectId
       });
       verificationItems.push(...documentItems);
 
       // 3. Vérifier les approbations
       const approvalItems = await this.verifyApprovals({
-        requiredApprovalIds: checkpoint.required_approvals || [],
+        requiredApprovalIds: checkpoint.requiredApprovals || [],
         projectId
       });
       verificationItems.push(...approvalItems);
 
       // 4. Vérifier les ressources/matériaux si applicable
-      if (checkpoint.step_id) {
+      if (checkpoint.stepId) {
         const resourceItems = await this.verifyResources({
-          stepId: checkpoint.step_id,
+          stepId: checkpoint.stepId,
           projectId
         });
         verificationItems.push(...resourceItems);
       }
 
       // 5. Vérifier le service fait si c'est un gate
-      if (checkpoint.checkpoint_type === 'gate') {
+      if (checkpoint.checkpointType === 'gate') {
         const serviceFaitItem = await this.verifyServiceFait({
           checkpointId: checkpoint.id,
           projectId
@@ -533,9 +533,9 @@ export class CheckpointVerificationEngine {
 
       // Récupérer le budget de la phase via le repository
       let phaseBudget = 0;
-      if (checkpoint.phase_id) {
+      if (checkpoint.phaseId) {
         try {
-          const phase = await this.phaseRepository.findById(checkpoint.phase_id);
+          const phase = await this.phaseRepository.findById(checkpoint.phaseId);
           if (phase) {
             phaseBudget = phase.estimatedCost || phase.actualCost || 0;
           }
@@ -557,8 +557,8 @@ export class CheckpointVerificationEngine {
       }
 
       // Calculer le montant max basé sur le poids financier
-      const maxAmount = phaseBudget * checkpoint.financial_weight;
-      const retentionRate = DEFAULT_MAURITANIA_RULES.guarantee_retention_rate;
+      const maxAmount = phaseBudget * checkpoint.financialWeight;
+      const retentionRate = DEFAULT_MAURITANIA_RULES.guaranteeRetentionRate;
       const netAmount = maxAmount * (1 - retentionRate);
 
       const result = {

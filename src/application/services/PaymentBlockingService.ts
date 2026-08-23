@@ -54,18 +54,18 @@ export class PaymentBlockingService {
     try {
       // 1. Validation Layer
       PaymentBlockingValidation.validateCreatePaymentBlockRequest(request);
-      PaymentBlockingValidation.validatePaymentRequestId(request.payment_request_id);
+      PaymentBlockingValidation.validatePaymentRequestId(request.paymentRequestId);
 
       // 2. Business Logic - Check for duplicates
-      const existingBlocks = await this.paymentBlockingRepository.getBlocksByPaymentRequest(request.payment_request_id);
-      PaymentBlockingValidation.checkForDuplicateBlocks(existingBlocks, request.payment_request_id);
+      const existingBlocks = await this.paymentBlockingRepository.getBlocksByPaymentRequest(request.paymentRequestId);
+      PaymentBlockingValidation.checkForDuplicateBlocks(existingBlocks, request.paymentRequestId);
 
       // 3. Repository Layer - Create entity
-      const blockData: Omit<PaymentBlock, 'id' | 'created_at' | 'updated_at'> = {
-        payment_request_id: request.payment_request_id,
-        block_reason: request.block_reason,
-        block_type: request.block_type,
-        blocked_amount: request.blocked_amount,
+      const blockData: Omit<PaymentBlock, 'id' | 'createdAt' | 'updatedAt'> = {
+        paymentRequestId: request.paymentRequestId,
+        blockReason: request.blockReason,
+        blockType: request.blockType,
+        blockedAmount: request.blockedAmount,
         status: 'active'
       };
       
@@ -115,7 +115,7 @@ export class PaymentBlockingService {
       PaymentBlockingValidation.validateResolvePaymentBlockRequest(request);
 
       // 2. Repository Layer - Get current block
-      const currentBlock = await this.paymentBlockingRepository.getBlockById(request.block_id);
+      const currentBlock = await this.paymentBlockingRepository.getBlockById(request.blockId);
       if (!currentBlock) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
       }
@@ -125,9 +125,9 @@ export class PaymentBlockingService {
 
       // 4. Repository Layer - Update
       const updatedBlock = await this.paymentBlockingRepository.resolveBlock(
-        request.block_id,
-        request.resolution_notes,
-        request.resolved_by
+        request.blockId,
+        request.resolutionNotes,
+        request.resolvedBy
       );
 
       // 5. Transformer Layer
@@ -213,18 +213,18 @@ export class PaymentBlockingService {
    */
   async createPaymentControlAction(request: CreatePaymentControlActionRequestDto): Promise<PaymentControlActionDTO> {
     try {
-      if (!request.payment_block_id || !request.action_type || !request.description) {
+      if (!request.paymentBlockId || !request.actionType || !request.description) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment block ID, action type, and description are required');
       }
 
-      const actionData: Omit<PaymentControlAction, 'id' | 'created_at'> = {
-        payment_block_id: request.payment_block_id,
-        action_type: request.action_type,
+      const actionData: Omit<PaymentControlAction, 'id' | 'createdAt'> = {
+        paymentBlockId: request.paymentBlockId,
+        actionType: request.actionType,
         description: request.description,
         status: 'pending',
-        assigned_to: request.assigned_to,
-        due_date: request.due_date,
-        created_by: request.created_by || 'system'
+        assignedTo: request.assignedTo,
+        dueDate: request.dueDate,
+        createdBy: request.createdBy || 'system'
       };
 
       const createdAction = await this.paymentBlockingRepository.createAction(actionData);
@@ -303,8 +303,8 @@ export class PaymentBlockingService {
         
         for (const block of activeBlocks) {
           blockingReasons.push({
-            type: block.block_type,
-            description: block.block_reason,
+            type: block.blockType,
+            description: block.blockReason,
             severity: 'critical',
             actionRequired: 'Resolve payment block before proceeding'
           });

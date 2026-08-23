@@ -10,35 +10,35 @@ export class TenderEstimateValidation {
    * Validate create tender estimate request
    */
   static validateCreateTenderEstimateRequest(request: {
-    tender_id: string;
-    submitted_by: string;
-    total_amount: number;
+    tenderId: string;
+    submittedBy: string;
+    totalAmount: number;
     currency: string;
-    validity_period: number;
+    validityPeriod: number;
     notes?: string;
     items?: Array<{
-      item_code: string;
+      itemCode: string;
       description: string;
       unit: string;
       quantity: number;
-      unit_price: number;
+      unitPrice: number;
       category?: string;
       specifications?: string;
     }>;
   }): void {
-    if (!request.tender_id) {
+    if (!request.tenderId) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
     }
 
-    if (!request.submitted_by) {
+    if (!request.submittedBy) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Submitted by is required');
     }
 
-    if (request.total_amount <= 0) {
+    if (request.totalAmount <= 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Total amount must be positive');
     }
 
-    if (request.total_amount > 999999999) {
+    if (request.totalAmount > 999999999) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Total amount too large');
     }
 
@@ -46,7 +46,7 @@ export class TenderEstimateValidation {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Valid currency code (3 characters) is required');
     }
 
-    if (request.validity_period < 1 || request.validity_period > 365) {
+    if (request.validityPeriod < 1 || request.validityPeriod > 365) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Validity period must be between 1 and 365 days');
     }
 
@@ -64,11 +64,11 @@ export class TenderEstimateValidation {
    * Validate tender estimate items
    */
   static validateTenderEstimateItems(items: Array<{
-    item_code: string;
+    itemCode: string;
     description: string;
     unit: string;
     quantity: number;
-    unit_price: number;
+    unitPrice: number;
     category?: string;
     specifications?: string;
   }>): void {
@@ -83,17 +83,17 @@ export class TenderEstimateValidation {
     const itemCodes = new Set<string>();
 
     for (const item of items) {
-      if (!item.item_code || item.item_code.trim().length === 0) {
+      if (!item.itemCode || item.itemCode.trim().length === 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item code is required');
       }
 
-      if (itemCodes.has(item.item_code)) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, `Duplicate item code: ${item.item_code}`);
+      if (itemCodes.has(item.itemCode)) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Duplicate item code: ${item.itemCode}`);
       }
-      itemCodes.add(item.item_code);
+      itemCodes.add(item.itemCode);
 
-      if (item.item_code.length > 50) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, `Item code too long: ${item.item_code}`);
+      if (item.itemCode.length > 50) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, `Item code too long: ${item.itemCode}`);
       }
 
       if (!item.description || item.description.trim().length === 0) {
@@ -120,11 +120,11 @@ export class TenderEstimateValidation {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item quantity too large');
       }
 
-      if (item.unit_price <= 0) {
+      if (item.unitPrice <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit price must be positive');
       }
 
-      if (item.unit_price > 999999) {
+      if (item.unitPrice > 999999) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit price too large');
       }
 
@@ -143,9 +143,9 @@ export class TenderEstimateValidation {
    */
   static validateUpdateTenderEstimateRequest(request: {
     status?: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected';
-    total_amount?: number;
+    totalAmount?: number;
     currency?: string;
-    validity_period?: number;
+    validityPeriod?: number;
     notes?: string;
   }): void {
     if (request.status) {
@@ -155,11 +155,11 @@ export class TenderEstimateValidation {
       }
     }
 
-    if (request.total_amount !== undefined) {
-      if (request.total_amount <= 0) {
+    if (request.totalAmount !== undefined) {
+      if (request.totalAmount <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Total amount must be positive');
       }
-      if (request.total_amount > 999999999) {
+      if (request.totalAmount > 999999999) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Total amount too large');
       }
     }
@@ -168,8 +168,8 @@ export class TenderEstimateValidation {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Valid currency code (3 characters) is required');
     }
 
-    if (request.validity_period !== undefined) {
-      if (request.validity_period < 1 || request.validity_period > 365) {
+    if (request.validityPeriod !== undefined) {
+      if (request.validityPeriod < 1 || request.validityPeriod > 365) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Validity period must be between 1 and 365 days');
       }
     }
@@ -183,15 +183,15 @@ export class TenderEstimateValidation {
    * Validate update tender estimate item request
    */
   static validateUpdateTenderEstimateItemRequest(request: {
-    item_code?: string;
+    itemCode?: string;
     description?: string;
     unit?: string;
     quantity?: number;
-    unit_price?: number;
+    unitPrice?: number;
     category?: string;
     specifications?: string;
   }): void {
-    if (request.item_code && request.item_code.length > 50) {
+    if (request.itemCode && request.itemCode.length > 50) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item code too long (max 50 characters)');
     }
 
@@ -212,11 +212,11 @@ export class TenderEstimateValidation {
       }
     }
 
-    if (request.unit_price !== undefined) {
-      if (request.unit_price <= 0) {
+    if (request.unitPrice !== undefined) {
+      if (request.unitPrice <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit price must be positive');
       }
-      if (request.unit_price > 999999) {
+      if (request.unitPrice > 999999) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Item unit price too large');
       }
     }
@@ -267,7 +267,7 @@ export class TenderEstimateValidation {
     const validTransitions: Record<string, string[]> = {
       'draft': ['submitted', 'rejected'],
       'submitted': ['under_review', 'rejected'],
-      'under_review': ['accepted', 'rejected'],
+      'underReview': ['accepted', 'rejected'],
       'accepted': [], // Terminal state
       'rejected': ['submitted'] // Can be resubmitted
     };
@@ -329,13 +329,13 @@ export class TenderEstimateValidation {
    * Check for duplicate estimates
    */
   static checkForDuplicateEstimates(existingEstimates: Array<{
-    tender_id: string;
-    submitted_by: string;
+    tenderId: string;
+    submittedBy: string;
     status: string;
   }>, newTenderId: string, newSubmittedBy: string): void {
     const activeEstimates = existingEstimates.filter(
-      estimate => estimate.tender_id === newTenderId && 
-               estimate.submitted_by === newSubmittedBy &&
+      estimate => estimate.tenderId === newTenderId && 
+               estimate.submittedBy === newSubmittedBy &&
                ['draft', 'submitted', 'under_review'].includes(estimate.status)
     );
 

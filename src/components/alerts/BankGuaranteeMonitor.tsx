@@ -232,14 +232,14 @@ const BankGuaranteeMonitor: React.FC = () => {
         return;
       }
 
-      const bankName = guarantee.bank_name || guarantee.issuingBank || 'bank';
+      const bankName = guarantee.bankName || guarantee.issuingBank || 'bank';
       const bankGuaranteeData = {
         projectId: delay.projectId,
-        contractorId: guarantee.contractor_id || guarantee.contractorId,
+        contractorId: guarantee.contractorId || guarantee.contractorId,
         bankLiaisonEmail: `contact@${bankName
           .toLowerCase()
           .replace(/\s+/g, "")}.mr`,
-        guaranteeAmount: guarantee.guarantee_amount || guarantee.amount,
+        guaranteeAmount: guarantee.guaranteeAmount || guarantee.amount,
         delayPercentage: delay.delayPercentage,
         contractClause: "Article 15.3 - Garantie de bonne exécution",
       };

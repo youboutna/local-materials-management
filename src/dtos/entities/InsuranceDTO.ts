@@ -110,20 +110,6 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
   // ============================================================
   // Legacy snake_case aliases (PROMPTS.md Pattern 2)
   // ============================================================
-  project_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
-  certificate_url?: string;
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string;
-  updated_by?: string;
 }
 
 /**
@@ -131,8 +117,8 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
  */
 export interface CreateInsuranceCertificateDTO {
   projectId: string;
-  contractorId: string;
-  contractorName: string;
+  contractorId?: string;
+  contractorName?: string;
   insuranceType: InsuranceType | string;
   insuranceCompany: string;
   policyNumber: string;
@@ -144,26 +130,16 @@ export interface CreateInsuranceCertificateDTO {
   notes?: string;
   certificateUrl?: string;
   uploadedBy?: string;
+  createdBy?: string;
   documents?: string[] | Record<string, unknown>[];
-  
-  // Legacy snake_case
-  project_id?: string;
-  contractor_id?: string;
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
-  certificate_url?: string;
-  uploaded_by?: string;
 }
 
 /**
  * Update Insurance Certificate DTO
  */
 export interface UpdateInsuranceCertificateDTO {
+  projectId?: string;
+  contractorId?: string;
   contractorName?: string;
   insuranceType?: InsuranceType | string;
   insuranceCompany?: string;
@@ -175,19 +151,10 @@ export interface UpdateInsuranceCertificateDTO {
   status?: InsuranceStatus;
   notes?: string;
   certificateUrl?: string;
+  lastVerified?: string;
+  verifiedBy?: string;
   updatedBy?: string;
   documents?: string[] | Record<string, unknown>[];
-  
-  // Legacy snake_case
-  contractor_name?: string;
-  insurance_company?: string;
-  policy_number?: string;
-  coverage_amount?: number;
-  coverage_type?: string;
-  valid_from?: string;
-  valid_until?: string;
-  certificate_url?: string;
-  updated_by?: string;
 }
 
 /**
@@ -268,11 +235,11 @@ export interface InsuranceCertificateFormData {
  */
 export function getInsuranceTypeLabel(type: InsuranceType | string): string {
   const labels: Record<string, string> = {
-    'responsabilite_civile': 'Responsabilité Civile',
+    'responsabiliteCivile': 'Responsabilité Civile',
     'decennale': 'Assurance Décennale',
     'vehicules': 'Assurance Véhicules',
     'materiel': 'Assurance Matériel',
-    'tous_risques': 'Tous Risques Chantier'
+    'tousRisques': 'Tous Risques Chantier'
   };
   return labels[type] || type;
 }
@@ -284,12 +251,12 @@ export function getInsuranceStatusLabel(status: InsuranceStatus): string {
   const labels: Record<string, string> = {
     'active': 'Active',
     'expired': 'Expirée',
-    'expiring_soon': 'Expire bientôt',
+    'expiringSoon': 'Expire bientôt',
     'missing': 'Manquante',
     'pending': 'En attente',
     'verified': 'Vérifiée',
     'new': 'Nouveau',
-    'in_progress': 'En cours',
+    'inProgress': 'En cours',
     'cancelled': 'Annulée',
     'archived': 'Archivée',
     'rejected': 'Rejetée',
@@ -297,7 +264,7 @@ export function getInsuranceStatusLabel(status: InsuranceStatus): string {
     'sent': 'Envoyée',
     'received': 'Reçue',
     'test': 'Test',
-    'awaiting_approval': 'En attente d\'approbation'
+    'awaitingApproval': 'En attente d\'approbation'
   };
   return labels[status] || status;
 }
@@ -309,12 +276,12 @@ export function getInsuranceStatusColor(status: InsuranceStatus): string {
   const colors: Record<string, string> = {
     'active': 'bg-success-soft text-success',
     'expired': 'bg-red-100 text-red-800',
-    'expiring_soon': 'bg-orange-100 text-orange-800',
+    'expiringSoon': 'bg-orange-100 text-orange-800',
     'missing': 'bg-gray-100 text-gray-800',
     'pending': 'bg-yellow-100 text-yellow-800',
     'verified': 'bg-blue-100 text-blue-800',
     'new': 'bg-purple-100 text-purple-800',
-    'in_progress': 'bg-blue-200 text-blue-800',
+    'inProgress': 'bg-blue-200 text-blue-800',
     'cancelled': 'bg-red-200 text-red-800',
     'archived': 'bg-gray-200 text-gray-800',
     'rejected': 'bg-red-300 text-red-800',
@@ -322,7 +289,7 @@ export function getInsuranceStatusColor(status: InsuranceStatus): string {
     'sent': 'bg-blue-300 text-blue-800',
     'received': 'bg-success text-success',
     'test': 'bg-red-400 text-red-800',
-    'awaiting_approval': 'bg-yellow-200 text-yellow-800'
+    'awaitingApproval': 'bg-yellow-200 text-yellow-800'
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 }

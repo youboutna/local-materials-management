@@ -939,7 +939,7 @@ export interface ProjectWithPayments extends ProjectDTO {
     date: string;
     status: InspectionStatus;
     inspector?: string;
-    progress_at_inspection?: number;
+    progressAtInspection?: number;
     comments?: string;
   }>;
   payments?: PaymentDTO[];

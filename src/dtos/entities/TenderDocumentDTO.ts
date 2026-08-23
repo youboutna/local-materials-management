@@ -5,17 +5,17 @@
 
 export interface TenderDocumentDTO {
   id: string;
-  project_id: string;
-  document_id?: string;
+  projectId: string;
+  documentId?: string;
   category: string;
   subcategory?: string;
-  is_required: boolean;
-  is_submitted: boolean;
-  submission_date?: string;
-  reviewer_notes?: string;
+  isRequired: boolean;
+  isSubmitted: boolean;
+  submissionDate?: string;
+  reviewerNotes?: string;
   status: TenderDocumentStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type TenderDocumentStatus = 
@@ -26,30 +26,30 @@ export type TenderDocumentStatus =
   | 'rejected';
 
 export interface CreateTenderDocumentDTO {
-  project_id: string;
-  document_id?: string;
+  projectId: string;
+  documentId?: string;
   category: string;
   subcategory?: string;
-  is_required?: boolean;
-  is_submitted?: boolean;
+  isRequired?: boolean;
+  isSubmitted?: boolean;
   status?: TenderDocumentStatus;
 }
 
 export interface UpdateTenderDocumentDTO {
   category?: string;
   subcategory?: string;
-  is_required?: boolean;
-  is_submitted?: boolean;
-  submission_date?: string;
-  reviewer_notes?: string;
+  isRequired?: boolean;
+  isSubmitted?: boolean;
+  submissionDate?: string;
+  reviewerNotes?: string;
   status?: TenderDocumentStatus;
 }
 
 export interface TenderDocumentResponseDTO extends TenderDocumentDTO {
-  document_title?: string;
-  document_url?: string;
-  days_until_deadline?: number;
-  is_overdue?: boolean;
+  documentTitle?: string;
+  documentUrl?: string;
+  daysUntilDeadline?: number;
+  isOverdue?: boolean;
 }
 
 export interface TenderDocumentListDTO {
@@ -58,10 +58,10 @@ export interface TenderDocumentListDTO {
   category: string;
   subcategory?: string;
   status: TenderDocumentStatus;
-  is_required: boolean;
-  is_submitted: boolean;
-  submission_date?: string;
-  document_url?: string;
+  isRequired: boolean;
+  isSubmitted: boolean;
+  submissionDate?: string;
+  documentUrl?: string;
 }
 
 export interface TenderDocumentStatsDTO {

@@ -192,7 +192,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       const startDate = new Date();
       
       for (const template of templates) {
-        const targetDate = addDays(startDate, template.relative_offset_days);
+        const targetDate = addDays(startDate, template.relativeOffsetDays);
         await getMilestoneService().createMilestone({
           project_id: projectId,
           title: template.name,

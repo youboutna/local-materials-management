@@ -211,9 +211,9 @@ export class UnifiedAuthService {
       const profile = UserProfile.create(
         result.user.id,
         result.user.id,
-        data.full_name || 'Unknown',
+        data.fullName || 'Unknown',
         data.phone,
-        data.national_id
+        data.nationalId
       );
       await this.authRepository.upsertProfile(profile);
       const user: UnifiedAuthUser = {
@@ -225,7 +225,7 @@ export class UnifiedAuthService {
         role: profile.isAdmin ? 'admin' : 'user',
         avatarUrl: profile.avatarUrl,
         authProvider: 'supabase',
-        createdAt: result.user.created_at || new Date().toISOString(),
+        createdAt: result.user.createdAt || new Date().toISOString(),
         profile
       };
       return user;

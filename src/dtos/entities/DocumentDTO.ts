@@ -149,31 +149,31 @@ export interface DocumentDTO extends BaseEntityDTO {
  */
 export interface RepositoryDocument {
   id: string;
-  project_id: string | null;
-  phase_id: string | null;
-  inspection_id: string | null;
-  payment_id: string | null;
-  supplier_id: string | null;
+  projectId: string | null;
+  phaseId: string | null;
+  inspectionId: string | null;
+  paymentId: string | null;
+  supplierId: string | null;
   title: string;
   description: string | null;
-  document_type: DocumentTypeUnion;    // ✅ Type string, pas null
+  documentType: DocumentTypeUnion;    // ✅ Type string, pas null
   status: DocumentStatusUnion;         // ✅ Type string, pas null
   priority?: DocumentPriorityUnion;    // ✅ Optionnel
-  file_name: string | null;
-  file_url: string | null;
-  file_size: number | null;
-  mime_type: string | null;
+  fileName: string | null;
+  fileUrl: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
   tags: string[];
-  is_internal_only: boolean;
-  is_shared_with_suppliers: boolean;
-  deadline_date: string | null;
-  assigned_to: string | null;
-  uploaded_by: string | null;
+  isInternalOnly: boolean;
+  isSharedWithSuppliers: boolean;
+  deadlineDate: string | null;
+  assignedTo: string | null;
+  uploadedBy: string | null;
   metadata: Record<string, unknown> | null;
   category: string | null;
   subcategory: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============================================================================

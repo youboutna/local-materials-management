@@ -151,7 +151,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               </div>
               <div>
                 <CardTitle className="text-lg">{step.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">Étape #{step.order_index + 1}</p>
+                <p className="text-sm text-muted-foreground">Étape #{step.orderIndex + 1}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -203,8 +203,8 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
             <div className="p-3 rounded-lg bg-muted/20 border">
               <p className="text-muted-foreground text-xs"><T k="auto.stepdetailpanel.dates" fallback="Dates" /></p>
               <p className="font-medium">
-                {step.start_date ? new Date(step.start_date).toLocaleDateString('fr-FR') : '—'} →{' '}
-                {step.end_date ? new Date(step.end_date).toLocaleDateString('fr-FR') : '—'}
+                {step.startDate ? new Date(step.startDate).toLocaleDateString('fr-FR') : '—'} →{' '}
+                {step.endDate ? new Date(step.endDate).toLocaleDateString('fr-FR') : '—'}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/20 border">
@@ -255,7 +255,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                   preselectedSteps={[{
                     id: phaseId,
                     name: step.name,
-                    order_index: step.order_index,
+                    order_index: step.orderIndex,
                     status: step.status,
                     progress: step.progress
                   }]}

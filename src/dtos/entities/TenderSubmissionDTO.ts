@@ -19,11 +19,11 @@ export interface UploadedDocument {
  * Interface for creating tender submissions
  */
 export interface CreateTenderSubmissionDTO extends BaseEntityDTO {
-  tender_id: string;
-  user_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date?: string;
+  tenderId: string;
+  userId: string;
+  supplierName: string;
+  supplierEmail: string;
+  submissionDate?: string;
   status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
   documents?: UploadedDocument[];
 }
@@ -42,21 +42,21 @@ export interface UpdateTenderSubmissionDTO {
  */
 export interface TenderSubmissionDTO extends BaseEntityDTO {
   id: string;
-  tender_id: string;
-  user_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date?: string;
+  tenderId: string;
+  userId: string;
+  supplierName: string;
+  supplierEmail: string;
+  submissionDate?: string;
   status: 'submitted' | 'under_review' | 'approved' | 'rejected';
   documents?: UploadedDocument[];
-  created_at?: string;
-  updated_at?: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
   notes?: string;
-  is_public?: boolean;
-  submission_secret?: string;
-  submission_hash?: string;
+  isPublic?: boolean;
+  submissionSecret?: string;
+  submissionHash?: string;
 }
 
 export type TenderSubmissionStatus = 'submitted' | 'under_review' | 'approved' | 'rejected';

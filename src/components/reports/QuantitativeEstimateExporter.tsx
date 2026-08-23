@@ -178,20 +178,20 @@ export function QuantitativeEstimateExporter({
 
   const calculateTotals = () => {
     const materialsCost = estimateItems
-      .filter(item => item.item_type === 'material')
-      .reduce((sum, item) => sum + (item.total_price || 0), 0);
+      .filter(item => item.itemType === 'material')
+      .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     
     const laborCost = estimateItems
-      .filter(item => item.item_type === 'labor')
-      .reduce((sum, item) => sum + (item.total_price || 0), 0);
+      .filter(item => item.itemType === 'labor')
+      .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     
     const equipmentCost = estimateItems
-      .filter(item => item.item_type === 'equipment')
-      .reduce((sum, item) => sum + (item.total_price || 0), 0);
+      .filter(item => item.itemType === 'equipment')
+      .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
     const otherCost = estimateItems
-      .filter(item => item.item_type === 'other')
-      .reduce((sum, item) => sum + (item.total_price || 0), 0);
+      .filter(item => item.itemType === 'other')
+      .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
 
     const subtotal = materialsCost + laborCost + equipmentCost + otherCost;
     const taxAmount = subtotal * (estimate.taxRate || 0) / 100;
@@ -274,13 +274,13 @@ export function QuantitativeEstimateExporter({
                   <tr style="page-break-inside: avoid; ${index % 2 === 0 ? 'background: #fafafa;' : ''}">
                     <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px; vertical-align: top;">${item.description || ''}</td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">
-                      <span style="background: ${item.item_type === 'material' ? '#e3f2fd' : item.item_type === 'labor' ? '#f3e5f5' : item.item_type === 'equipment' ? '#e8f5e8' : '#fff3e0'}; 
-                                   color: ${item.item_type === 'material' ? '#1976d2' : item.item_type === 'labor' ? '#7b1fa2' : item.item_type === 'equipment' ? '#388e3c' : '#f57c00'}; 
-                                   padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.item_type || 'autre'}</span>
+                      <span style="background: ${item.itemType === 'material' ? '#e3f2fd' : item.itemType === 'labor' ? '#f3e5f5' : item.itemType === 'equipment' ? '#e8f5e8' : '#fff3e0'}; 
+                                   color: ${item.itemType === 'material' ? '#1976d2' : item.itemType === 'labor' ? '#7b1fa2' : item.itemType === 'equipment' ? '#388e3c' : '#f57c00'}; 
+                                   padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.itemType || 'autre'}</span>
                     </td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">${item.quantity || 0}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; vertical-align: top;">${formatNumber2((item.unit_price || 0))}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${formatNumber2((item.total_price || 0))}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; vertical-align: top;">${formatNumber2((item.unitPrice || 0))}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${formatNumber2((item.totalPrice || 0))}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -318,15 +318,15 @@ export function QuantitativeEstimateExporter({
                 <td style="padding: 8px 0; text-align: right; font-weight: bold;">${formatNumber2(totals.subtotal)} ${estimate.currency}</td>
               </tr>
               <tr>
-                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">TVA (${estimate.tax_rate}%):</td>
+                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">TVA (${estimate.taxRate}%):</td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.taxAmount)} ${estimate.currency}</td>
               </tr>
               <tr>
-                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">Frais généraux (${estimate.overhead_percentage}%):</td>
+                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;">Frais généraux (${estimate.overheadPercentage}%):</td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.overheadAmount)} ${estimate.currency}</td>
               </tr>
               <tr>
-                <td style="padding: 5px 0; border-bottom: 2px solid #333;">Marge bénéficiaire (${estimate.profit_margin_percentage}%):</td>
+                <td style="padding: 5px 0; border-bottom: 2px solid #333;">Marge bénéficiaire (${estimate.profitMarginPercentage}%):</td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 2px solid #333;">${formatNumber2(totals.profitAmount)} ${estimate.currency}</td>
               </tr>
               <tr style="background: #dbeafe;">

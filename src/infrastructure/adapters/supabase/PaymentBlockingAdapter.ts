@@ -21,7 +21,7 @@ type PaymentControlActionRow = BtpTables<'payment_control_actions'>;
 interface BlockingReasonsPayload {
   payment_request_id: string;
   block_reason: string;
-  block_type: PaymentBlock['block_type'];
+  block_type: PaymentBlock['blockType'];
   status: PaymentBlock['status'];
   resolution_notes?: string;
 }
@@ -30,26 +30,26 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
   /**
    * Create a payment block
    */
-  async createBlock(block: Omit<PaymentBlock, 'id' | 'created_at' | 'updated_at'>): Promise<PaymentBlock> {
+  async createBlock(block: Omit<PaymentBlock, 'id' | 'createdAt' | 'updatedAt'>): Promise<PaymentBlock> {
     try {
       const blockingReasons: BlockingReasonsPayload = {
-        payment_request_id: block.payment_request_id,
-        block_reason: block.block_reason,
-        block_type: block.block_type,
+        payment_request_id: block.paymentRequestId,
+        block_reason: block.blockReason,
+        block_type: block.blockType,
         status: block.status,
-        resolution_notes: block.resolution_notes,
+        resolution_notes: block.resolutionNotes,
       };
 
       const { data, error } = await supabase
         .from('payment_blocks')
         .insert({
-          project_id: block.payment_request_id,
-          contractor_id: block.payment_request_id,
-          amount: block.blocked_amount,
+          project_id: block.paymentRequestId,
+          contractor_id: block.paymentRequestId,
+          amount: block.blockedAmount,
           blocking_reasons: blockingReasons as unknown as Json,
-          notes: block.resolution_notes ?? null,
-          resolved_by: block.resolved_by ?? null,
-          resolved_at: block.resolved_at ?? null,
+          notes: block.resolutionNotes ?? null,
+          resolved_by: block.resolvedBy ?? null,
+          resolved_at: block.resolvedAt ?? null,
           blocked_at: new Date().toISOString(),
         })
         .select()
@@ -99,7 +99,7 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
 
       return data
         .map(row => this.mapRowToPaymentBlock(row))
-        .filter(block => block.payment_request_id === paymentRequestId);
+        .filter(block => block.paymentRequestId === paymentRequestId);
     } catch (error) {
       console.error('PaymentBlockingAdapter.getBlocksByPaymentRequest failed:', error);
       throw error;
@@ -141,21 +141,21 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
 
       const merged: PaymentBlock = { ...existing, ...updates };
       const blockingReasons: BlockingReasonsPayload = {
-        payment_request_id: merged.payment_request_id,
-        block_reason: merged.block_reason,
-        block_type: merged.block_type,
+        payment_request_id: merged.paymentRequestId,
+        block_reason: merged.blockReason,
+        block_type: merged.blockType,
         status: merged.status,
-        resolution_notes: merged.resolution_notes,
+        resolution_notes: merged.resolutionNotes,
       };
 
       const { data, error } = await supabase
         .from('payment_blocks')
         .update({
-          amount: merged.blocked_amount,
+          amount: merged.blockedAmount,
           blocking_reasons: blockingReasons as unknown as Json,
-          notes: merged.resolution_notes ?? null,
-          resolved_by: merged.resolved_by ?? null,
-          resolved_at: merged.resolved_at ?? null,
+          notes: merged.resolutionNotes ?? null,
+          resolved_by: merged.resolvedBy ?? null,
+          resolved_at: merged.resolvedAt ?? null,
         })
         .eq('id', blockId)
         .select()
@@ -176,9 +176,9 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
   async resolveBlock(blockId: string, resolutionNotes: string, resolvedBy: string): Promise<PaymentBlock> {
     return this.updateBlock(blockId, {
       status: 'resolved',
-      resolution_notes: resolutionNotes,
-      resolved_by: resolvedBy,
-      resolved_at: new Date().toISOString(),
+      resolutionNotes: resolutionNotes,
+      resolvedBy: resolvedBy,
+      resolvedAt: new Date().toISOString(),
     });
   }
 
@@ -229,9 +229,9 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
         activeBlocks: blocks.filter(block => block.status === 'active').length,
         resolvedBlocks: blocks.filter(block => block.status === 'resolved').length,
         cancelledBlocks: blocks.filter(block => block.status === 'cancelled').length,
-        totalBlockedAmount: blocks.reduce((sum, block) => sum + (block.blocked_amount || 0), 0),
+        totalBlockedAmount: blocks.reduce((sum, block) => sum + (block.blockedAmount || 0), 0),
         blocksByType: blocks.reduce((acc, block) => {
-          const type = block.block_type || 'unknown';
+          const type = block.blockType || 'unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
@@ -247,19 +247,19 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
   /**
    * Create payment control action
    */
-  async createAction(action: Omit<PaymentControlAction, 'id' | 'created_at'>): Promise<PaymentControlAction> {
+  async createAction(action: Omit<PaymentControlAction, 'id' | 'createdAt'>): Promise<PaymentControlAction> {
     try {
       const { data, error } = await supabase
         .from('payment_control_actions')
         .insert({
-          payment_block_id: action.payment_block_id,
-          action_type: action.action_type,
+          payment_block_id: action.paymentBlockId,
+          action_type: action.actionType,
           description: action.description,
-          assigned_to: action.assigned_to ?? null,
-          due_date: action.due_date ?? null,
+          assigned_to: action.assignedTo ?? null,
+          due_date: action.dueDate ?? null,
           status: action.status,
-          created_by: action.created_by,
-          completed_at: action.completed_at ?? null,
+          created_by: action.createdBy,
+          completed_at: action.completedAt ?? null,
         })
         .select()
         .single();
@@ -322,13 +322,13 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
   async updateAction(actionId: string, updates: Partial<PaymentControlAction>): Promise<PaymentControlAction> {
     try {
       const updateData: Partial<PaymentControlActionRow> = {};
-      if (updates.action_type !== undefined) updateData.action_type = updates.action_type;
+      if (updates.actionType !== undefined) updateData.action_type = updates.actionType;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.assigned_to !== undefined) updateData.assigned_to = updates.assigned_to ?? null;
-      if (updates.due_date !== undefined) updateData.due_date = updates.due_date ?? null;
+      if (updates.assignedTo !== undefined) updateData.assigned_to = updates.assignedTo ?? null;
+      if (updates.dueDate !== undefined) updateData.due_date = updates.dueDate ?? null;
       if (updates.status !== undefined) updateData.status = updates.status;
-      if (updates.created_by !== undefined) updateData.created_by = updates.created_by;
-      if (updates.completed_at !== undefined) updateData.completed_at = updates.completed_at ?? null;
+      if (updates.createdBy !== undefined) updateData.created_by = updates.createdBy;
+      if (updates.completedAt !== undefined) updateData.completed_at = updates.completedAt ?? null;
 
       const { data, error } = await supabase
         .from('payment_control_actions')
@@ -400,16 +400,16 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
 
     return {
       id: row.id,
-      payment_request_id: reasons.payment_request_id ?? row.contractor_id,
-      block_reason: reasons.block_reason ?? '',
-      block_type: reasons.block_type ?? 'financial',
+      paymentRequestId: reasons.payment_request_id ?? row.contractor_id,
+      blockReason: reasons.block_reason ?? '',
+      blockType: reasons.block_type ?? 'financial',
       status: reasons.status ?? 'active',
-      blocked_amount: row.amount,
-      resolution_notes: row.notes ?? undefined,
-      resolved_by: row.resolved_by ?? undefined,
-      resolved_at: row.resolved_at ?? undefined,
-      created_at: row.blocked_at,
-      updated_at: row.resolved_at ?? row.blocked_at
+      blockedAmount: row.amount,
+      resolutionNotes: row.notes ?? undefined,
+      resolvedBy: row.resolved_by ?? undefined,
+      resolvedAt: row.resolved_at ?? undefined,
+      createdAt: row.blocked_at,
+      updatedAt: row.resolved_at ?? row.blocked_at
     };
   }
 
@@ -419,15 +419,15 @@ export class PaymentBlockingAdapter implements IPaymentBlockingRepository {
   private mapRowToPaymentControlAction(row: PaymentControlActionRow): PaymentControlAction {
     return {
       id: row.id,
-      payment_block_id: row.payment_block_id,
-      action_type: row.action_type as PaymentControlAction['action_type'],
+      paymentBlockId: row.payment_block_id,
+      actionType: row.action_type as PaymentControlAction['actionType'],
       description: row.description ?? '',
-      assigned_to: row.assigned_to ?? undefined,
-      due_date: row.due_date ?? undefined,
+      assignedTo: row.assigned_to ?? undefined,
+      dueDate: row.due_date ?? undefined,
       status: row.status as PaymentControlAction['status'],
-      created_by: row.created_by ?? '',
-      created_at: row.created_at,
-      completed_at: row.completed_at ?? undefined
+      createdBy: row.created_by ?? '',
+      createdAt: row.created_at,
+      completedAt: row.completed_at ?? undefined
     };
   }
 }

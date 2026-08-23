@@ -30,19 +30,19 @@ export class InsuranceService {
   private mapEntityToDTO(entity: InsuranceCertificateEntity): InsuranceCertificateDTO {
     return {
       id: entity.id,
-      projectId: entity.project_id,
-      contractorId: entity.contractor_id,
-      contractorName: entity.contractor_name,
-      insuranceCompany: entity.insurance_company,
-      insuranceType: entity.coverage_type as any,
-      policyNumber: entity.policy_number,
-      coverageAmount: entity.coverage_amount,
-      coverageType: entity.coverage_type,
-      validFrom: entity.valid_from,
-      validUntil: entity.valid_until,
+      projectId: entity.projectId,
+      contractorId: entity.contractorId,
+      contractorName: entity.contractorName,
+      insuranceCompany: entity.insuranceCompany,
+      insuranceType: entity.coverageType as any,
+      policyNumber: entity.policyNumber,
+      coverageAmount: entity.coverageAmount,
+      coverageType: entity.coverageType,
+      validFrom: entity.validFrom,
+      validUntil: entity.validUntil,
       status: entity.status as any,
-      createdAt: entity.created_at,
-      updatedAt: entity.updated_at
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     } as InsuranceCertificateDTO;
   }
 
@@ -50,7 +50,7 @@ export class InsuranceService {
     try {
       const expiringCerts = await this.insuranceRepository.getExpiringSoon(daysThreshold);
       return expiringCerts.map(cert => {
-        const endDate = new Date(cert.valid_until);
+        const endDate = new Date(cert.validUntil);
         const today = new Date();
         const daysUntilExpiry = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         
@@ -77,8 +77,8 @@ export class InsuranceService {
             ? `Insurance has expired` 
             : `Insurance expires in ${daysUntilExpiry} days`,
           daysUntilExpiry,
-          projectId: cert.project_id,
-          contractorId: cert.contractor_id,
+          projectId: cert.projectId,
+          contractorId: cert.contractorId,
           createdAt: new Date().toISOString()
         };
       });

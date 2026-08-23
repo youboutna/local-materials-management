@@ -38,18 +38,18 @@ export class AwardedTenderTransformer {
         lotLabel: cat || undefined,
         sublotCode: spec || undefined,
         sublotLabel: spec || undefined,
-        itemCode: it.item_code || it.id || 'ITEM',
+        itemCode: it.itemCode || it.id || 'ITEM',
         designation: it.description || '',
         unit: it.unit || 'u',
         quantity: Number(it.quantity) || 0,
-        unitPrice: Number(it.unit_price) || 0,
-        totalPrice: Number(it.total_price) || 0,
+        unitPrice: Number(it.unitPrice) || 0,
+        totalPrice: Number(it.totalPrice) || 0,
         // Métadonnées RH/Prestataires (v10) — propagées vers le payload d'hydratation.
-        resourceKind: it.resource_kind,
-        employeeQualificationId: it.employee_qualification_id,
-        supplierId: it.supplier_id,
-        supplierContractRef: it.supplier_contract_ref,
-        estimatedHours: it.estimated_hours,
+        resourceKind: it.resourceKind,
+        employeeQualificationId: it.employeeQualificationId,
+        supplierId: it.supplierId,
+        supplierContractRef: it.supplierContractRef,
+        estimatedHours: it.estimatedHours,
       } as DqeLine & Record<string, unknown>;
     });
   }

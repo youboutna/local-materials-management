@@ -88,7 +88,7 @@ export class SupplierPortalService {
         message: notification.message,
         type: notification.type,
         read: notification.read,
-        createdAt: notification.created_at
+        createdAt: notification.createdAt
       }));
     } catch (error) {
       console.error('Error getting supplier notifications:', error);
@@ -198,7 +198,7 @@ export class SupplierPortalService {
       
       // Create notification for project manager
       await notificationRepository.createNotification({
-        recipient_id: projectManagerId,
+        recipientId: projectManagerId,
         title: 'Task Completed',
         message: `Task ${taskId} has been marked as completed`,
         type: 'success',
@@ -222,7 +222,7 @@ export class SupplierPortalService {
       const notificationRepository = RepositoryFactory.getNotificationRepository();
       
       await notificationRepository.createNotification({
-        recipient_id: data.supplierId,
+        recipientId: data.supplierId,
         title: data.notificationType === 'task_comment' ? 'New Comment' : 'Task Completed',
         message: data.comment,
         type: 'info',

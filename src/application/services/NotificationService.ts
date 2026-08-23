@@ -52,15 +52,15 @@ export class NotificationService {
   async createNotification(data: CreateNotificationRequestDTO): Promise<NotificationDTO> {
     try {
       // Transform DTO to domain entity
-      const notificationData: Omit<NotificationData, 'id' | 'created_at' | 'updated_at'> = {
-        recipient_id: data.recipientId,
+      const notificationData: Omit<NotificationData, 'id' | 'createdAt' | 'updatedAt'> = {
+        recipientId: data.recipientId,
         title: data.title,
         message: data.message,
         type: normalizeNotificationType(data.type) as NotificationData['type'],
         read: false,
         priority: data.priority || 'medium',
-        expires_at: data.expiresAt || undefined,
-        action_url: data.actionUrl || undefined,
+        expiresAt: data.expiresAt || undefined,
+        actionUrl: data.actionUrl || undefined,
         metadata: data.metadata || undefined
       };
       
@@ -81,16 +81,16 @@ export class NotificationService {
       // Transform domain entity back to DTO
       return {
         id: result.notification.id,
-        recipientId: result.notification.recipient_id,
+        recipientId: result.notification.recipientId,
         title: result.notification.title,
         message: result.notification.message,
         type: result.notification.type,
         read: result.notification.read,
-        createdAt: result.notification.created_at || new Date().toISOString(),
-        updatedAt: result.notification.updated_at,
+        createdAt: result.notification.createdAt || new Date().toISOString(),
+        updatedAt: result.notification.updatedAt,
         priority: result.notification.priority,
-        expiresAt: result.notification.expires_at || undefined,
-        actionUrl: result.notification.action_url || undefined,
+        expiresAt: result.notification.expiresAt || undefined,
+        actionUrl: result.notification.actionUrl || undefined,
         metadata: result.notification.metadata || undefined
       };
     } catch (error) {
@@ -212,16 +212,16 @@ export class NotificationService {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Update notification not supported by repository');
       }
 
-      const patch: Partial<Omit<NotificationData, 'id' | 'created_at'>> = {
-        updated_at: new Date().toISOString(),
+      const patch: Partial<Omit<NotificationData, 'id' | 'createdAt'>> = {
+        updatedAt: new Date().toISOString(),
       };
       if (data.title !== undefined) patch.title = data.title;
       if (data.message !== undefined) patch.message = data.message;
       if (data.type !== undefined) patch.type = normalizeNotificationType(data.type) as NotificationData['type'];
       if (data.read !== undefined) patch.read = data.read;
       if (data.priority !== undefined) patch.priority = data.priority;
-      if (data.expiresAt !== undefined) patch.expires_at = data.expiresAt;
-      if (data.actionUrl !== undefined) patch.action_url = data.actionUrl;
+      if (data.expiresAt !== undefined) patch.expiresAt = data.expiresAt;
+      if (data.actionUrl !== undefined) patch.actionUrl = data.actionUrl;
       if (data.metadata !== undefined) patch.metadata = data.metadata;
 
       const result = await this.notificationRepository.updateNotification(id, patch);
@@ -235,16 +235,16 @@ export class NotificationService {
       const row = result.notification;
       return {
         id: row.id,
-        recipientId: row.recipient_id,
+        recipientId: row.recipientId,
         title: row.title,
         message: row.message,
         type: row.type,
         read: row.read,
-        createdAt: row.created_at || new Date().toISOString(),
-        updatedAt: row.updated_at,
+        createdAt: row.createdAt || new Date().toISOString(),
+        updatedAt: row.updatedAt,
         priority: row.priority,
-        expiresAt: row.expires_at || undefined,
-        actionUrl: row.action_url || undefined,
+        expiresAt: row.expiresAt || undefined,
+        actionUrl: row.actionUrl || undefined,
         metadata: row.metadata || undefined,
       };
     } catch (error) {
@@ -424,16 +424,16 @@ export class NotificationService {
   private mapToDTO(notification: NotificationData): NotificationDTO {
     return {
       id: notification.id,
-      recipientId: notification.recipient_id,
+      recipientId: notification.recipientId,
       title: notification.title,
       message: notification.message,
       type: notification.type,
       read: notification.read,
-      createdAt: notification.created_at || new Date().toISOString(),
-      updatedAt: notification.updated_at || undefined,
+      createdAt: notification.createdAt || new Date().toISOString(),
+      updatedAt: notification.updatedAt || undefined,
       priority: notification.priority || undefined,
-      expiresAt: notification.expires_at || undefined,
-      actionUrl: notification.action_url || undefined,
+      expiresAt: notification.expiresAt || undefined,
+      actionUrl: notification.actionUrl || undefined,
       metadata: notification.metadata || undefined,
     };
   }

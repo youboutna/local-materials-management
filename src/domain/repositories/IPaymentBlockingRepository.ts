@@ -5,36 +5,36 @@
 
 export interface PaymentBlock {
   id: string;
-  payment_request_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
+  paymentRequestId: string;
+  blockReason: string;
+  blockType: 'financial' | 'document' | 'compliance' | 'technical';
   status: 'active' | 'resolved' | 'cancelled';
-  blocked_amount: number;
-  resolution_notes?: string;
-  resolved_by?: string;
-  resolved_at?: string;
-  created_at: string;
-  updated_at: string;
+  blockedAmount: number;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaymentControlAction {
   id: string;
-  payment_block_id: string;
-  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  paymentBlockId: string;
+  actionType: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
   description: string;
-  assigned_to?: string;
-  due_date?: string;
+  assignedTo?: string;
+  dueDate?: string;
   status: 'pending' | 'completed' | 'cancelled';
-  created_by: string;
-  created_at: string;
-  completed_at?: string;
+  createdBy: string;
+  createdAt: string;
+  completedAt?: string;
 }
 
 export interface IPaymentBlockingRepository {
   /**
    * Create a payment block
    */
-  createBlock(block: Omit<PaymentBlock, 'id' | 'created_at' | 'updated_at'>): Promise<PaymentBlock>;
+  createBlock(block: Omit<PaymentBlock, 'id' | 'createdAt' | 'updatedAt'>): Promise<PaymentBlock>;
 
   /**
    * Get all active payment blocks
@@ -86,7 +86,7 @@ export interface IPaymentBlockingRepository {
   /**
    * Create payment control action
    */
-  createAction(action: Omit<PaymentControlAction, 'id' | 'created_at'>): Promise<PaymentControlAction>;
+  createAction(action: Omit<PaymentControlAction, 'id' | 'createdAt'>): Promise<PaymentControlAction>;
 
   /**
    * Get control actions by block ID

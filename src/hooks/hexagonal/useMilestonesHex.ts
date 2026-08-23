@@ -63,11 +63,11 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
     try {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       const result = await milestoneRepo.create({
-        project_id: milestone.projectId,
-        phase_id: milestone.phaseId || undefined,
+        projectId: milestone.projectId,
+        phaseId: milestone.phaseId || undefined,
         title: milestone.title,
         description: milestone.description,
-        target_date: milestone.targetDate,
+        targetDate: milestone.targetDate,
         weight: milestone.weight,
         notes: milestone.notes,
         status: 'pending',
@@ -132,7 +132,7 @@ export function useMilestonesHex(projectId?: string, phaseId?: string) {
       const milestoneRepo = RepositoryFactory.getMilestoneRepository();
       await milestoneRepo.update(id, {
         status: newStatus,
-        completion_date: completionDate || undefined,
+        completionDate: completionDate || undefined,
       });
 
       await fetchMilestones();

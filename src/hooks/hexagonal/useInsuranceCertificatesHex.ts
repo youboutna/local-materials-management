@@ -103,7 +103,7 @@ export function useInsuranceCertificatesHex(projectId?: string) {
       
       // Update certificate with file URL
       await insuranceService.updateCertificate(certificateId, {
-        certificate_url: fileUrl
+        certificateUrl: fileUrl
       });
       
       return { success: true, fileUrl };

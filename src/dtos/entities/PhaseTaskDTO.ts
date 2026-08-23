@@ -48,11 +48,11 @@ export interface PhaseTaskFormData {
   description?: string;
   priority?: string;
   status?: string;
-  due_date?: string;
-  start_date?: string;
-  assigned_to?: string;
-  assignee_name?: string;
-  assignee_email?: string;
-  assignee_type?: string;
+  dueDate?: string;
+  startDate?: string;
+  assignedTo?: string;
+  assigneeName?: string;
+  assigneeEmail?: string;
+  assigneeType?: string;
   notes?: string;
 }

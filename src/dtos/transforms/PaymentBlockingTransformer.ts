@@ -20,16 +20,16 @@ export class PaymentBlockingTransformer {
   static toPaymentBlockDTO(entity: PaymentBlock): PaymentBlockDTO {
     return {
       id: entity.id,
-      payment_request_id: entity.payment_request_id,
-      block_reason: entity.block_reason,
-      block_type: entity.block_type,
+      paymentRequestId: entity.paymentRequestId,
+      blockReason: entity.blockReason,
+      blockType: entity.blockType,
       status: entity.status,
-      blocked_amount: entity.blocked_amount,
-      resolution_notes: entity.resolution_notes,
-      resolved_by: entity.resolved_by,
-      resolved_at: entity.resolved_at,
-      created_at: entity.created_at,
-      updated_at: entity.updated_at
+      blockedAmount: entity.blockedAmount,
+      resolutionNotes: entity.resolutionNotes,
+      resolvedBy: entity.resolvedBy,
+      resolvedAt: entity.resolvedAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -39,16 +39,16 @@ export class PaymentBlockingTransformer {
   static toPaymentBlockEntity(dto: PaymentBlockDTO): PaymentBlock {
     return {
       id: dto.id,
-      payment_request_id: dto.payment_request_id,
-      block_reason: dto.block_reason,
-      block_type: dto.block_type,
+      paymentRequestId: dto.paymentRequestId,
+      blockReason: dto.blockReason,
+      blockType: dto.blockType,
       status: dto.status,
-      blocked_amount: dto.blocked_amount,
-      resolution_notes: dto.resolution_notes,
-      resolved_by: dto.resolved_by,
-      resolved_at: dto.resolved_at,
-      created_at: dto.created_at,
-      updated_at: dto.updated_at
+      blockedAmount: dto.blockedAmount,
+      resolutionNotes: dto.resolutionNotes,
+      resolvedBy: dto.resolvedBy,
+      resolvedAt: dto.resolvedAt,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt
     };
   }
 
@@ -58,15 +58,15 @@ export class PaymentBlockingTransformer {
   static toPaymentControlActionDTO(entity: PaymentControlAction): PaymentControlActionDTO {
     return {
       id: entity.id,
-      payment_block_id: entity.payment_block_id,
-      action_type: entity.action_type,
+      paymentBlockId: entity.paymentBlockId,
+      actionType: entity.actionType,
       description: entity.description,
-      assigned_to: entity.assigned_to,
-      due_date: entity.due_date,
+      assignedTo: entity.assignedTo,
+      dueDate: entity.dueDate,
       status: entity.status,
-      created_by: entity.created_by,
-      created_at: entity.created_at,
-      completed_at: entity.completed_at
+      createdBy: entity.createdBy,
+      createdAt: entity.createdAt,
+      completedAt: entity.completedAt
     };
   }
 
@@ -76,15 +76,15 @@ export class PaymentBlockingTransformer {
   static toPaymentControlActionEntity(dto: PaymentControlActionDTO): PaymentControlAction {
     return {
       id: dto.id,
-      payment_block_id: dto.payment_block_id,
-      action_type: dto.action_type,
+      paymentBlockId: dto.paymentBlockId,
+      actionType: dto.actionType,
       description: dto.description,
-      assigned_to: dto.assigned_to,
-      due_date: dto.due_date,
+      assignedTo: dto.assignedTo,
+      dueDate: dto.dueDate,
       status: dto.status,
-      created_by: dto.created_by,
-      created_at: dto.created_at,
-      completed_at: dto.completed_at
+      createdBy: dto.createdBy,
+      createdAt: dto.createdAt,
+      completedAt: dto.completedAt
     };
   }
 

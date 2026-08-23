@@ -9,9 +9,9 @@ export interface PositionTemplateDTO {
   level: number;
   parent?: string;
   permissions: {
-    can_approve_projects: boolean;
-    can_approve_payments: boolean;
-    can_escalate_to_director: boolean;
+    canApproveProjects: boolean;
+    canApprovePayments: boolean;
+    canEscalateToDirector: boolean;
   };
 }
 

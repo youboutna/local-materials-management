@@ -61,7 +61,7 @@ export class InsuranceCertificatesService {
       // Use transformer to convert update data to entity
       const updateData = insuranceTransform.updateDataToEntity({
         ...data,
-        updated_by: userId
+        updatedBy: userId
       });
       
       await this.insuranceRepository.update(id, updateData);
@@ -113,7 +113,7 @@ export class InsuranceCertificatesService {
     try {
       await this.insuranceRepository.update(certificateId, {
         status: 'active',
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       });
     } catch (error) {
       console.error('Error validating certificate:', error);
@@ -125,7 +125,7 @@ export class InsuranceCertificatesService {
     try {
       await this.insuranceRepository.update(certificateId, {
         status: 'expired',
-        updated_at: new Date().toISOString()
+        updatedAt: new Date().toISOString()
       });
     } catch (error) {
       console.error('Error expiring certificate:', error);

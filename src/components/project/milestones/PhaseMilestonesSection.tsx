@@ -124,7 +124,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
           priority: template.priority === 'normal' ? 'medium' : template.priority,
           type: template.type,
           weight: template.weight,
-          notes: template.approval_requirements?.join(', '),
+          notes: template.approvalRequirements?.join(', '),
         });
       }
       toast({

@@ -61,7 +61,7 @@ function statusToAnswer(status?: string): RegulatoryAnswer {
 }
 
 function itemCodeOf(item: ComplianceItemDTO): string | undefined {
-  return item.subcategory || item.externalReferences?.[0] || item.external_references?.[0];
+  return item.subcategory || item.externalReferences?.[0] || item.externalReferences?.[0];
 }
 
 const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist = false, onChanged }) => {

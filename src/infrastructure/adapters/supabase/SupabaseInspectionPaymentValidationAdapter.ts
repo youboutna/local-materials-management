@@ -4,6 +4,7 @@
  */
 
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import { camelizeRow } from '@/infrastructure/adapters/rowMapping';
 import { 
   IInspectionPaymentValidationRepository, 
   PaymentRequest, 
@@ -42,7 +43,7 @@ export class SupabaseInspectionPaymentValidationAdapter implements IInspectionPa
       return null;
     }
     
-    return inspectionData as InspectionDetails;
+    return camelizeRow<InspectionDetails>(inspectionData);
   }
 
   async getProjectWithStakeholders(projectId: string): Promise<ProjectDetails | null> {

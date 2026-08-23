@@ -23,14 +23,14 @@ const defaultToRow = (
   d: (typeof ESCALATION_THRESHOLD_DEFAULTS)[number]
 ): EscalationThresholdRow => ({
   id: referentialThresholdId(d.thresholdType, d.thresholdName),
-  threshold_type: d.thresholdType,
-  threshold_name: d.thresholdName,
-  threshold_value: d.thresholdValue,
-  threshold_unit: d.thresholdUnit,
-  severity_level: d.severityLevel,
-  escalation_level: d.escalationLevel,
+  thresholdType: d.thresholdType,
+  thresholdName: d.thresholdName,
+  thresholdValue: d.thresholdValue,
+  thresholdUnit: d.thresholdUnit,
+  severityLevel: d.severityLevel,
+  escalationLevel: d.escalationLevel,
   description: d.description,
-  is_active: true,
+  isActive: true,
 });
 
 export class EscalationThresholdService {
@@ -48,16 +48,16 @@ export class EscalationThresholdService {
     const byKey = new Map<string, EscalationThresholdRow>();
     ESCALATION_THRESHOLD_DEFAULTS.forEach((d) => {
       const row = defaultToRow(d);
-      byKey.set(`${row.threshold_type}::${row.threshold_name}`, row);
+      byKey.set(`${row.thresholdType}::${row.thresholdName}`, row);
     });
     persisted.forEach((row) => {
-      byKey.set(`${row.threshold_type}::${row.threshold_name}`, row);
+      byKey.set(`${row.thresholdType}::${row.thresholdName}`, row);
     });
 
     return Array.from(byKey.values()).sort(
       (a, b) =>
-        a.threshold_type.localeCompare(b.threshold_type) ||
-        a.threshold_value - b.threshold_value
+        a.thresholdType.localeCompare(b.thresholdType) ||
+        a.thresholdValue - b.thresholdValue
     );
   }
 
@@ -66,12 +66,12 @@ export class EscalationThresholdService {
     updates: Partial<EscalationThresholdRow>
   ): Promise<EscalationThresholdRow> {
     if (!id) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Threshold ID is required');
-    if (updates.threshold_value !== undefined && updates.threshold_value < 0) {
+    if (updates.thresholdValue !== undefined && updates.thresholdValue < 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Le seuil doit être positif');
     }
     if (
-      updates.escalation_level !== undefined &&
-      (updates.escalation_level < 1 || updates.escalation_level > 4)
+      updates.escalationLevel !== undefined &&
+      (updates.escalationLevel < 1 || updates.escalationLevel > 4)
     ) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, "Le niveau d'escalade doit être entre 1 et 4");
     }

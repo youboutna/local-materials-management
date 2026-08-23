@@ -296,30 +296,30 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   static toRepository(entity: Document): RepositoryDocument {
     return {
       id: entity.id,
-      project_id: entity.projectId,
-      phase_id: entity.phaseId,
-      inspection_id: entity.inspectionId,
-      payment_id: entity.paymentId,
-      supplier_id: entity.supplierId,
+      projectId: entity.projectId,
+      phaseId: entity.phaseId,
+      inspectionId: entity.inspectionId,
+      paymentId: entity.paymentId,
+      supplierId: entity.supplierId,
       title: entity.title,
       description: entity.description,
-      document_type: entity.documentType,
+      documentType: entity.documentType,
       status: entity.status,
-      file_name: entity.fileName,
-      file_url: entity.fileUrl,
-      file_size: entity.fileSize,
-      mime_type: entity.mimeType,
+      fileName: entity.fileName,
+      fileUrl: entity.fileUrl,
+      fileSize: entity.fileSize,
+      mimeType: entity.mimeType,
       tags: entity.tags,
-      is_internal_only: entity.isInternalOnly,
-      is_shared_with_suppliers: entity.isSharedWithSuppliers,
-      deadline_date: toIsoOrNull(entity.deadlineDate),
-      assigned_to: entity.assignedTo,
-      uploaded_by: entity.uploadedBy,
+      isInternalOnly: entity.isInternalOnly,
+      isSharedWithSuppliers: entity.isSharedWithSuppliers,
+      deadlineDate: toIsoOrNull(entity.deadlineDate),
+      assignedTo: entity.assignedTo,
+      uploadedBy: entity.uploadedBy,
       metadata: entity.metadata || null,
       category: null,
       subcategory: null,
-      created_at: toIso(entity.createdAt),
-      updated_at: toIso(entity.updatedAt),
+      createdAt: toIso(entity.createdAt),
+      updatedAt: toIso(entity.updatedAt),
     };
   }
 
@@ -335,30 +335,30 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
     
     return {
       id: crypto.randomUUID(),
-      project_id: dto.projectId || null,
-      phase_id: dto.phaseId || null,
-      inspection_id: dto.inspectionId || null,
-      payment_id: dto.paymentId || null,
-      supplier_id: dto.supplierId || null,
+      projectId: dto.projectId || null,
+      phaseId: dto.phaseId || null,
+      inspectionId: dto.inspectionId || null,
+      paymentId: dto.paymentId || null,
+      supplierId: dto.supplierId || null,
       title: dto.title,
       description: dto.description || null,
-      document_type: documentType as DocumentType,
+      documentType: documentType as DocumentType,
       status: status as DocumentStatus,
-      file_name: dto.fileName || null,
-      file_url: dto.fileUrl || null,
-      file_size: dto.fileSize || null,
-      mime_type: dto.mimeType || null,
+      fileName: dto.fileName || null,
+      fileUrl: dto.fileUrl || null,
+      fileSize: dto.fileSize || null,
+      mimeType: dto.mimeType || null,
       tags: dto.tags || [],
-      is_internal_only: dto.isInternalOnly || false,
-      is_shared_with_suppliers: dto.isSharedWithSuppliers || false,
-      deadline_date: dto.deadlineDate || null,
-      assigned_to: dto.assignedTo || null,
-      uploaded_by: dto.uploadedBy || null,
+      isInternalOnly: dto.isInternalOnly || false,
+      isSharedWithSuppliers: dto.isSharedWithSuppliers || false,
+      deadlineDate: dto.deadlineDate || null,
+      assignedTo: dto.assignedTo || null,
+      uploadedBy: dto.uploadedBy || null,
       metadata: dto.metadata || null,
       category: dto.category || null,
       subcategory: dto.subcategory || null,
-      created_at: now,
-      updated_at: now,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 
@@ -370,23 +370,23 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
     
     if (dto.title !== undefined) updates.title = dto.title;
     if (dto.description !== undefined) updates.description = dto.description;
-    if (dto.documentType !== undefined) updates.document_type = dto.documentType as DocumentType;
+    if (dto.documentType !== undefined) updates.documentType = dto.documentType as DocumentType;
     if (dto.status !== undefined) updates.status = dto.status as DocumentStatus;
-    if (dto.projectId !== undefined) updates.project_id = dto.projectId;
-    if (dto.phaseId !== undefined) updates.phase_id = dto.phaseId;
-    if (dto.inspectionId !== undefined) updates.inspection_id = dto.inspectionId;
-    if (dto.paymentId !== undefined) updates.payment_id = dto.paymentId;
-    if (dto.supplierId !== undefined) updates.supplier_id = dto.supplierId;
-    if (dto.fileName !== undefined) updates.file_name = dto.fileName;
-    if (dto.fileUrl !== undefined) updates.file_url = dto.fileUrl;
-    if (dto.fileSize !== undefined) updates.file_size = dto.fileSize;
-    if (dto.mimeType !== undefined) updates.mime_type = dto.mimeType;
+    if (dto.projectId !== undefined) updates.projectId = dto.projectId;
+    if (dto.phaseId !== undefined) updates.phaseId = dto.phaseId;
+    if (dto.inspectionId !== undefined) updates.inspectionId = dto.inspectionId;
+    if (dto.paymentId !== undefined) updates.paymentId = dto.paymentId;
+    if (dto.supplierId !== undefined) updates.supplierId = dto.supplierId;
+    if (dto.fileName !== undefined) updates.fileName = dto.fileName;
+    if (dto.fileUrl !== undefined) updates.fileUrl = dto.fileUrl;
+    if (dto.fileSize !== undefined) updates.fileSize = dto.fileSize;
+    if (dto.mimeType !== undefined) updates.mimeType = dto.mimeType;
     if (dto.tags !== undefined) updates.tags = dto.tags;
-    if (dto.isInternalOnly !== undefined) updates.is_internal_only = dto.isInternalOnly;
-    if (dto.isSharedWithSuppliers !== undefined) updates.is_shared_with_suppliers = dto.isSharedWithSuppliers;
-    if (dto.deadlineDate !== undefined) updates.deadline_date = dto.deadlineDate;
-    if (dto.assignedTo !== undefined) updates.assigned_to = dto.assignedTo;
-    if (dto.uploadedBy !== undefined) updates.uploaded_by = dto.uploadedBy;
+    if (dto.isInternalOnly !== undefined) updates.isInternalOnly = dto.isInternalOnly;
+    if (dto.isSharedWithSuppliers !== undefined) updates.isSharedWithSuppliers = dto.isSharedWithSuppliers;
+    if (dto.deadlineDate !== undefined) updates.deadlineDate = dto.deadlineDate;
+    if (dto.assignedTo !== undefined) updates.assignedTo = dto.assignedTo;
+    if (dto.uploadedBy !== undefined) updates.uploadedBy = dto.uploadedBy;
     if (dto.metadata !== undefined) updates.metadata = dto.metadata;
     if (dto.category !== undefined) updates.category = dto.category;
     if (dto.subcategory !== undefined) updates.subcategory = dto.subcategory;
@@ -398,10 +398,10 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
     
     // Si le documentType est null, on ne le met pas à jour
     if (dto.documentType === null) {
-      delete updates.document_type;
+      delete updates.documentType;
     }
     
-    updates.updated_at = new Date().toISOString();
+    updates.updatedAt = new Date().toISOString();
     
     return updates;
   }
@@ -416,28 +416,28 @@ export class DocumentTransformer implements EntityToDTOMapper<Document, Document
   static fromRepository(row: RepositoryDocument): Document {
     return new Document(
       row.id,
-      row.project_id,
-      row.phase_id,
-      row.inspection_id,
-      row.payment_id,
-      row.supplier_id,
+      row.projectId,
+      row.phaseId,
+      row.inspectionId,
+      row.paymentId,
+      row.supplierId,
       row.title,
       row.description,
-      row.document_type as DocumentType,
+      row.documentType as DocumentType,
       row.status as DocumentStatus,
       DocumentPriority.MEDIUM,
-      row.file_name,
-      row.file_url,
-      row.file_size,
-      row.mime_type,
+      row.fileName,
+      row.fileUrl,
+      row.fileSize,
+      row.mimeType,
       row.tags || [],
-      row.is_internal_only || false,
-      row.is_shared_with_suppliers || false,
-      row.deadline_date ? new Date(row.deadline_date) : null,
-      row.assigned_to,
-      row.uploaded_by,
-      new Date(row.created_at),
-      new Date(row.updated_at),
+      row.isInternalOnly || false,
+      row.isSharedWithSuppliers || false,
+      row.deadlineDate ? new Date(row.deadlineDate) : null,
+      row.assignedTo,
+      row.uploadedBy,
+      new Date(row.createdAt),
+      new Date(row.updatedAt),
       row.metadata || null
     );
   }

@@ -36,7 +36,7 @@ export function useDevModeCreate<T>(entityType: string) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> => {
+    mutationFn: async (data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>): Promise<T> => {
       if (!shouldUseMockData()) {
         throw new Error('DEV_MODE is not enabled');
       }

@@ -43,9 +43,9 @@ async function fetchBankGuaranteeForProject(projectId: string): Promise<BankGuar
 
     return {
       projectId,
-      contractorId: guarantee.contractorId || guarantee.contractor_id || '',
-      bankLiaisonEmail: (guarantee.issuingBank || guarantee.bank_name)
-        ? `contact@${(guarantee.issuingBank || guarantee.bank_name || '').toLowerCase().replace(/\s+/g, '')}.mr`
+      contractorId: guarantee.contractorId || guarantee.contractorId || '',
+      bankLiaisonEmail: (guarantee.issuingBank || guarantee.bankName)
+        ? `contact@${(guarantee.issuingBank || guarantee.bankName || '').toLowerCase().replace(/\s+/g, '')}.mr`
         : '',
       guaranteeAmount: guarantee.guaranteeAmount || guarantee.amount || 0,
       delayPercentage: 0,

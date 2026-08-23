@@ -91,10 +91,10 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
           
           <div className="flex items-center mt-2 gap-2">
             <Percent className="h-4 w-4 text-adrar-600" />
-            <div className="text-sm font-medium">Progression au moment de l'inspection: {latestInspection.progress_at_inspection}%</div>
+            <div className="text-sm font-medium">Progression au moment de l'inspection: {latestInspection.progressAtInspection}%</div>
           </div>
           
-          <Progress value={latestInspection.progress_at_inspection} className="h-2 mt-1" />
+          <Progress value={latestInspection.progressAtInspection} className="h-2 mt-1" />
           
           {latestInspection.comments && (
             <div className="mt-2 bg-muted p-3 rounded-md border text-sm">
@@ -118,7 +118,7 @@ export function InspectionReportCard({ project }: InspectionReportCardProps) {
                     </div>
                     <div className="flex items-center mt-2 text-sm">
                       <ClipboardCheck className="h-4 w-4 mr-1 text-adrar-600" />
-                      Progression: {inspection.progress_at_inspection}%
+                      Progression: {inspection.progressAtInspection}%
                     </div>
                     {inspection.comments && (
                       <div className="mt-2 text-sm">

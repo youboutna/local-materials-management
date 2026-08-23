@@ -159,19 +159,19 @@ export interface NotificationCenterDTO extends BaseEntityDTO {
 
 export interface NotificationSummaryDTO {
   id: string;
-  recipient_id: string;
+  recipientId: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category: 'system' | 'project' | 'payment' | 'inspection' | 'safety';
   actionable: boolean;
   actions?: NotificationActionDTO[];
-  expires_at?: string;
-  action_url?: string;
+  expiresAt?: string;
+  actionUrl?: string;
   metadata?: Record<string, unknown>;
 }
 

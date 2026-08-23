@@ -35,17 +35,6 @@ export interface ComplianceItemDTO extends BaseEntityDTO {
   mitigationRequired: boolean;
   mitigationPlan?: string;
   // Legacy snake_case aliases for compatibility
-  project_id?: string;
-  bank_guarantee_id?: string;
-  created_by?: string;
-  updated_by?: string;
-  compliance_level?: string;
-  last_reviewed?: string;
-  next_review?: string;
-  external_references?: string[];
-  risk_level?: ComplianceRiskLevel;
-  mitigation_required?: boolean;
-  mitigation_plan?: string;
 }
 
 export interface ComplianceDocumentDTO extends BaseEntityDTO {
@@ -59,12 +48,6 @@ export interface ComplianceDocumentDTO extends BaseEntityDTO {
   fileUrl?: string;
   uploadedAt: string;
   // Legacy snake_case aliases for compatibility
-  compliance_item_id?: string;
-  document_id?: string;
-  is_required?: boolean;
-  uploaded_by?: string;
-  file_url?: string;
-  uploaded_at?: string;
 }
 
 export interface ComplianceNoteDTO extends BaseEntityDTO {
@@ -74,9 +57,6 @@ export interface ComplianceNoteDTO extends BaseEntityDTO {
   createdBy: string;
   createdAt: string;
   // Legacy snake_case aliases for compatibility
-  compliance_item_id?: string;
-  created_by?: string;
-  created_at?: string;
 }
 
 export interface ComplianceAuditEntryDTO extends BaseEntityDTO {
@@ -88,12 +68,6 @@ export interface ComplianceAuditEntryDTO extends BaseEntityDTO {
   changedBy: string;
   changedAt: string;
   // Legacy snake_case aliases for compatibility
-  compliance_item_id?: string;
-  field_name?: string;
-  old_value?: string;
-  new_value?: string;
-  changed_by?: string;
-  changed_at?: string;
 }
 
 export interface ComplianceValidationRuleDTO extends BaseEntityDTO {

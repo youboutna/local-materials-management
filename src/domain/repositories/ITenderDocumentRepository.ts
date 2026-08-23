@@ -8,49 +8,49 @@ import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '..
 // repository boundary; services/DTOs expose camelCase to consumers).
 export interface TenderDocumentJoinedRow {
   id: string;
-  tender_id: string;
-  document_id: string;
+  tenderId: string;
+  documentId: string;
   category: string;
   subcategory?: string;
-  is_required?: boolean;
-  reviewer_notes?: string;
+  isRequired?: boolean;
+  reviewerNotes?: string;
   status?: string;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
   document?: {
     id: string;
     title?: string;
     description?: string;
-    file_url?: string;
-    file_name?: string;
-    mime_type?: string;
-    file_size?: number;
+    fileUrl?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
   } | null;
 }
 
 export interface TenderStepDocumentRow {
   id: string;
-  tender_id: string;
-  document_id: string;
+  tenderId: string;
+  documentId: string;
   category: string;
   subcategory: string;
-  is_required?: boolean;
-  reviewer_notes?: string;
+  isRequired?: boolean;
+  reviewerNotes?: string;
   status?: string;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
   document?: {
     id: string;
     title?: string;
     description?: string;
-    file_url?: string;
-    file_name?: string;
-    mime_type?: string;
-    file_size?: number;
+    fileUrl?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
   } | null;
-  step_info?: {
-    step_title?: string;
-    step_number?: number;
+  stepInfo?: {
+    stepTitle?: string;
+    stepNumber?: number;
   };
 }
 

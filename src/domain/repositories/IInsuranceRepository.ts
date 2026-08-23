@@ -10,7 +10,7 @@ export interface IInsuranceRepository {
   getByProjectId(projectId: string): Promise<InsuranceCertificateEntity[]>;
   getActiveCertificates(): Promise<InsuranceCertificateEntity[]>;
   getById(id: string): Promise<InsuranceCertificateEntity | null>;
-  create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'created_at' | 'updated_at'>): Promise<InsuranceCertificateEntity>;
+  create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<InsuranceCertificateEntity>;
   update(id: string, updates: Partial<InsuranceCertificateEntity>): Promise<InsuranceCertificateEntity>;
   delete(id: string): Promise<void>;
   getExpiringSoon(daysThreshold: number): Promise<InsuranceCertificateEntity[]>;

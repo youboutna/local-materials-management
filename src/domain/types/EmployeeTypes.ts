@@ -37,13 +37,13 @@ export type EmployeeRole =
 // Interface for data structure
 export interface EmployeeData {
   id: string;
-  full_name: string;
+  fullName: string;
   position?: string | null;
   department?: string | null;
   email?: string | null;
   phone?: string | null;
-  employee_id: string;
-  is_active?: boolean;
-  created_at?: string | null;
-  updated_at?: string | null;
+  employeeId: string;
+  isActive?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }

@@ -75,11 +75,11 @@ export class AutomaticDecompteCalculator {
   }
 
   private getRetentionRate(): number {
-    return this.rules.guarantee_retention_rate ?? this.rules.guaranteeRetentionRate ?? 0.10;
+    return this.rules.guaranteeRetentionRate ?? this.rules.guaranteeRetentionRate ?? 0.10;
   }
 
   private getRetentionReleaseRate(): number {
-    return this.rules.retention_release_at_provisional ?? this.rules.retentionReleaseAtProvisional ?? 0.50;
+    return this.rules.retentionReleaseAtProvisional ?? this.rules.retentionReleaseAtProvisional ?? 0.50;
   }
 
   /**
@@ -102,7 +102,7 @@ export class AutomaticDecompteCalculator {
 
       const decompteNumber = previousDecomptes.length + 1;
       const previousCumulative = previousDecomptes.reduce(
-        (sum, d) => sum + (d.current_period_amount ?? d.totalAmount ?? 0),
+        (sum, d) => sum + (d.currentPeriodAmount ?? d.totalAmount ?? 0),
         0
       );
 
@@ -144,12 +144,11 @@ export class AutomaticDecompteCalculator {
       return {
         id: `decompte-${Date.now()}`,
         projectId: projectId,
-        project_id: projectId,
         number: decompteNumber,
-        decompte_number: decompteNumber,
+        decompteNumber: decompteNumber,
         date: now,
         paymentType: paymentType,
-        decompte_type: paymentType,
+        decompteType: paymentType,
         lines,
         totalAmount: currentPeriodAmount,
         retentionAmount: retentionAmount,
@@ -159,31 +158,30 @@ export class AutomaticDecompteCalculator {
         updatedAt: now,
         
         // Extended properties
-        contract_amount: projectFinancials.budget,
-        previous_cumulative: previousCumulative,
-        current_period_amount: currentPeriodAmount,
-        cumulative_amount: previousCumulative + currentPeriodAmount,
-        retention_rate: retentionRate,
-        retention_amount: retentionAmount,
-        previous_retention_released: retentionToRelease,
-        retention_to_release: retentionToRelease,
-        net_payable: netPayable,
-        verified_milestones: verifiedMilestones.map(m => ({
-          milestone_id: m.id,
+        contractAmount: projectFinancials.budget,
+        previousCumulative: previousCumulative,
+        currentPeriodAmount: currentPeriodAmount,
+        cumulativeAmount: previousCumulative + currentPeriodAmount,
+        retentionRate: retentionRate,
+        previousRetentionReleased: retentionToRelease,
+        retentionToRelease: retentionToRelease,
+        netPayable: netPayable,
+        verifiedMilestones: verifiedMilestones.map(m => ({
+          milestoneId: m.id,
           title: m.title,
           weight: m.weight,
           amount: m.amount,
-          verified_at: m.completionDate,
+          verifiedAt: m.completionDate,
         })),
-        progress_at_decompte: Math.round(overallProgress * 100),
-        calculated_at: now,
-        calculation_log: [{
+        progressAtDecompte: Math.round(overallProgress * 100),
+        calculatedAt: now,
+        calculationLog: [{
           timestamp: now,
           action: 'calculated',
           details: {
-            phases_count: phases.length,
-            milestones_count: verifiedMilestones.length,
-            rules_applied: this.rules,
+            phasesCount: phases.length,
+            milestonesCount: verifiedMilestones.length,
+            rulesApplied: this.rules,
           },
         }],
       };
@@ -217,7 +215,7 @@ export class AutomaticDecompteCalculator {
 
       const decompteNumber = previousDecomptes.length + 1;
       const previousCumulative = previousDecomptes.reduce(
-        (sum, d) => sum + (d.current_period_amount ?? d.totalAmount ?? 0),
+        (sum, d) => sum + (d.currentPeriodAmount ?? d.totalAmount ?? 0),
         0
       );
 
@@ -238,14 +236,12 @@ export class AutomaticDecompteCalculator {
       return {
         id: `decompte-phase-${request.phaseId}-${Date.now()}`,
         projectId: projectId,
-        project_id: projectId,
         phaseId: request.phaseId,
-        phase_id: request.phaseId,
         number: decompteNumber,
-        decompte_number: decompteNumber,
+        decompteNumber: decompteNumber,
         date: now,
         paymentType: 'progress',
-        decompte_type: 'progress',
+        decompteType: 'progress',
         lines,
         totalAmount: currentPeriodAmount,
         retentionAmount: retentionAmount,
@@ -254,33 +250,32 @@ export class AutomaticDecompteCalculator {
         createdAt: now,
         updatedAt: now,
         
-        contract_amount: phaseData.estimatedCost,
-        previous_cumulative: previousCumulative,
-        current_period_amount: currentPeriodAmount,
-        cumulative_amount: previousCumulative + currentPeriodAmount,
-        retention_rate: retentionRate,
-        retention_amount: retentionAmount,
-        previous_retention_released: 0,
-        retention_to_release: 0,
-        net_payable: netPayable,
-        verified_milestones: phaseMilestones
+        contractAmount: phaseData.estimatedCost,
+        previousCumulative: previousCumulative,
+        currentPeriodAmount: currentPeriodAmount,
+        cumulativeAmount: previousCumulative + currentPeriodAmount,
+        retentionRate: retentionRate,
+        previousRetentionReleased: 0,
+        retentionToRelease: 0,
+        netPayable: netPayable,
+        verifiedMilestones: phaseMilestones
           .filter(m => m.status === 'completed')
           .map(m => ({
-            milestone_id: m.id,
+            milestoneId: m.id,
             title: m.title,
             weight: m.weight || 0.1,
             amount: (phaseData.estimatedCost * (m.weight || 0.1)),
-            verified_at: m.completionDate || now,
+            verifiedAt: m.completionDate || now,
           })),
-        progress_at_decompte: phaseData.progress,
-        calculated_at: now,
-        calculation_log: [{
+        progressAtDecompte: phaseData.progress,
+        calculatedAt: now,
+        calculationLog: [{
           timestamp: now,
           action: 'phase_decompte_calculated',
           details: {
-            phase_id: request.phaseId,
-            phase_progress: phaseData.progress,
-            milestones_verified: phaseMilestones.filter(m => m.status === 'completed').length,
+            phaseId: request.phaseId,
+            phaseProgress: phaseData.progress,
+            milestonesVerified: phaseMilestones.filter(m => m.status === 'completed').length,
           },
         }],
       };
@@ -310,7 +305,7 @@ export class AutomaticDecompteCalculator {
       // Check if there are new verified milestones not yet included in decomptes
       const previousDecomptes = await this.getPreviousDecomptes(projectId, phaseId);
       const previousMilestoneIds = new Set(
-        previousDecomptes.flatMap(d => (d.verified_milestones ?? []).map(m => m.milestone_id))
+        previousDecomptes.flatMap(d => (d.verifiedMilestones ?? []).map(m => m.milestoneId))
       );
       
       const hasNewMilestones = verifiedMilestones.some(m => !previousMilestoneIds.has(m.id));
@@ -433,7 +428,7 @@ export class AutomaticDecompteCalculator {
     phases: PhaseFinancials[]
   ): { currentPeriodAmount: number; lines: DecompteLineDTO[] } {
     const previousMilestoneIds = new Set(
-      previousDecomptes.flatMap(d => (d.verified_milestones ?? []).map(m => m.milestone_id))
+      previousDecomptes.flatMap(d => (d.verifiedMilestones ?? []).map(m => m.milestoneId))
     );
 
     const newMilestones = verifiedMilestones.filter(m => !previousMilestoneIds.has(m.id));
@@ -445,14 +440,13 @@ export class AutomaticDecompteCalculator {
       quantity: 1,
       unit: 'forfait',
       unitPrice: m.amount,
-      unit_price: m.amount,
       amount: m.amount,
-      total_amount: m.amount,
+      totalAmount: m.amount,
       cumulativeAmount: m.amount,
       previousAmount: 0,
       category: 'works' as const,
-      milestone_id: m.id,
-      verification_status: 'verified',
+      milestoneId: m.id,
+      verificationStatus: 'verified',
     }));
 
     return { currentPeriodAmount, lines };
@@ -472,14 +466,13 @@ export class AutomaticDecompteCalculator {
         quantity: 1,
         unit: 'forfait',
         unitPrice: amount,
-        unit_price: amount,
         amount: amount,
-        total_amount: amount,
+        totalAmount: amount,
         cumulativeAmount: amount,
         previousAmount: 0,
         category: 'works' as const,
-        milestone_id: m.id,
-        verification_status: 'verified',
+        milestoneId: m.id,
+        verificationStatus: 'verified',
       };
     });
   }

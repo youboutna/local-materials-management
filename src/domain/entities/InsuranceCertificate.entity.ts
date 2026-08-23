@@ -7,23 +7,23 @@ import type { InsuranceCertificateStatus, InsuranceType } from '@/dtos/entities/
 
 export interface InsuranceCertificateEntity {
   id: string;
-  project_id: string;
-  contractor_id: string;
-  contractor_name: string;
-  insurance_company: string;
-  policy_number: string;
-  coverage_amount: number;
-  coverage_type: InsuranceType | string;
-  insurance_type?: InsuranceType | string;
-  valid_from: string;
-  valid_until: string;
-  certificate_url?: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  coverageType: InsuranceType | string;
+  insuranceType?: InsuranceType | string;
+  validFrom: string;
+  validUntil: string;
+  certificateUrl?: string;
   status: InsuranceCertificateStatus | string;
-  last_verified?: string;
-  verified_by?: string;
+  lastVerified?: string;
+  verifiedBy?: string;
   notes?: string;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }

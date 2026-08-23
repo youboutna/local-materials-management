@@ -283,7 +283,7 @@ export class PaymentService {
 
   async blockPayment(request: CreatePaymentBlockRequestDto): Promise<PaymentBlockDTO> {
     PaymentBlockingValidation.validateCreatePaymentBlockRequest(request);
-    const payment = await this.getPaymentById(request.payment_request_id);
+    const payment = await this.getPaymentById(request.paymentRequestId);
     if (!payment) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found');
     }
@@ -291,33 +291,33 @@ export class PaymentService {
     const record = await this.paymentBlockRepository.create({
       projectId: payment.projectRef?.id ?? '',
       contractorId,
-      amount: request.blocked_amount,
-      blockingReasons: [{ reason: request.block_reason, description: request.block_type, severity: 'blocking' }],
+      amount: request.blockedAmount,
+      blockingReasons: [{ reason: request.blockReason, description: request.blockType, severity: 'blocking' }],
       blockedBy: 'system',
-      notes: `payment_id:${request.payment_request_id}`,
+      notes: `payment_id:${request.paymentRequestId}`,
     });
     const block: PaymentBlockDTO = {
       id: record.id,
-      payment_request_id: request.payment_request_id,
-      block_reason: request.block_reason,
-      block_type: request.block_type,
-      blocked_amount: record.amount,
+      paymentRequestId: request.paymentRequestId,
+      blockReason: request.blockReason,
+      blockType: request.blockType,
+      blockedAmount: record.amount,
       status: 'active',
-      created_at: record.blockedAt,
-      updated_at: record.blockedAt,
+      createdAt: record.blockedAt,
+      updatedAt: record.blockedAt,
     };
-    await this.updatePayment(request.payment_request_id, { status: 'blocked' });
-    console.log(`Payment ${request.payment_request_id} blocked: ${request.block_reason}`);
+    await this.updatePayment(request.paymentRequestId, { status: 'blocked' });
+    console.log(`Payment ${request.paymentRequestId} blocked: ${request.blockReason}`);
     return block;
   }
 
   async resolvePaymentBlock(request: ResolvePaymentBlockRequestDto): Promise<void> {
     PaymentBlockingValidation.validateResolvePaymentBlockRequest(request);
-    const block = await this.paymentBlockRepository.findById(request.block_id);
+    const block = await this.paymentBlockRepository.findById(request.blockId);
     if (!block) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
     }
-    await this.paymentBlockRepository.updateStatus(request.block_id, 'resolved', request.resolved_by, request.resolution_notes);
+    await this.paymentBlockRepository.updateStatus(request.blockId, 'resolved', request.resolvedBy, request.resolutionNotes);
     const paymentId = block.paymentId;
     if (paymentId) {
       const payment = await this.getPaymentById(paymentId);
@@ -325,12 +325,12 @@ export class PaymentService {
         await this.updatePayment(paymentId, { status: 'pending' });
       }
     }
-    console.log(`Payment block ${request.block_id} resolved`);
+    console.log(`Payment block ${request.blockId} resolved`);
   }
 
   async addControlAction(request: CreatePaymentControlActionRequestDto): Promise<PaymentControlActionDTO> {
     PaymentBlockingValidation.validateCreatePaymentControlActionRequest(request);
-    const block = await this.paymentBlockRepository.findById(request.payment_block_id);
+    const block = await this.paymentBlockRepository.findById(request.paymentBlockId);
     if (!block) {
       throw new AppError(ErrorCode.NOT_FOUND, 'Payment block not found');
     }
@@ -353,30 +353,30 @@ export class PaymentService {
         contractorId,
         amount: payment.amount,
         blockingReasons: [{ reason: 'control_tracking', description: 'Suivi des actions de contrôle', severity: 'warning' }],
-        blockedBy: request.created_by || 'system',
+        blockedBy: request.createdBy || 'system',
         notes: `payment_id:${payment.id}`,
       });
       blockId = anchorBlock.id;
     }
     const actionRecord = await this.paymentControlActionRepository.create({
       paymentBlockId: blockId,
-      actionType: request.action_type,
+      actionType: request.actionType,
       description: request.description,
-      createdBy: request.created_by || 'system',
+      createdBy: request.createdBy || 'system',
       status: 'pending',
     });
     const controlAction: PaymentControlActionDTO = {
       id: actionRecord.id,
-      payment_block_id: request.payment_block_id,
-      action_type: request.action_type,
+      paymentBlockId: request.paymentBlockId,
+      actionType: request.actionType,
       description: request.description,
-      assigned_to: request.assigned_to,
-      due_date: request.due_date,
+      assignedTo: request.assignedTo,
+      dueDate: request.dueDate,
       status: 'pending',
-      created_by: request.created_by || 'system',
-      created_at: actionRecord.createdAt,
+      createdBy: request.createdBy || 'system',
+      createdAt: actionRecord.createdAt,
     };
-    console.log(`Control action added to block ${request.payment_block_id}: ${request.action_type}`);
+    console.log(`Control action added to block ${request.paymentBlockId}: ${request.actionType}`);
     return controlAction;
   }
 
@@ -403,10 +403,10 @@ export class PaymentService {
   async processPaymentWithControls(paymentId: string, performedBy: string): Promise<PaymentDTO> {
     try {
       await this.addControlAction({
-        payment_block_id: paymentId,
-        action_type: 'review',
+        paymentBlockId: paymentId,
+        actionType: 'review',
         description: 'Payment verification before processing',
-        created_by: performedBy,
+        createdBy: performedBy,
       });
       await this.updatePayment(paymentId, { status: 'approved' });
       const updatedPayment = await this.getPaymentById(paymentId);
@@ -414,10 +414,10 @@ export class PaymentService {
         throw new AppError(ErrorCode.NOT_FOUND, 'Payment not found after update');
       }
       await this.addControlAction({
-        payment_block_id: paymentId,
-        action_type: 'approve',
+        paymentBlockId: paymentId,
+        actionType: 'approve',
         description: 'Payment approved and processed',
-        created_by: performedBy,
+        createdBy: performedBy,
       });
       console.log(`Payment ${paymentId} processed successfully`);
       return updatedPayment;

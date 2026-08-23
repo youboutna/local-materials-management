@@ -90,7 +90,7 @@ export class TenderEstimateService {
 
       TenderEstimateValidation.validateCreateTenderEstimateRequest(request);
 
-      TenderEstimateValidation.validateTenderId(request.tender_id);
+      TenderEstimateValidation.validateTenderId(request.tenderId);
 
       TenderEstimateValidation.validateCurrencyCode(request.currency);
 
@@ -98,13 +98,13 @@ export class TenderEstimateService {
 
       // 2. Business Logic - Check for duplicates
 
-      const existingEstimates = await this.tenderEstimateRepository.findByTenderId(request.tender_id);
+      const existingEstimates = await this.tenderEstimateRepository.findByTenderId(request.tenderId);
 
       if (existingEstimates.length > 0) {
 
         const hasDuplicate = existingEstimates.some(estimate => 
 
-          estimate.submittedBy === request.submitted_by && 
+          estimate.submittedBy === request.submittedBy && 
 
           estimate.status !== 'rejected'
 
@@ -127,7 +127,7 @@ export class TenderEstimateService {
 
       const estimateData = {
 
-        tenderId: request.tender_id,
+        tenderId: request.tenderId,
 
         status: 'draft' as TenderEstimateStatus,
 
@@ -143,7 +143,7 @@ export class TenderEstimateService {
 
           projectId: '',
 
-          submittedBy: request.submitted_by,
+          submittedBy: request.submittedBy,
 
           subtotal: 0,
 
@@ -151,9 +151,9 @@ export class TenderEstimateService {
 
           taxRate: 0,
 
-          totalWithTax: request.total_amount,
+          totalWithTax: request.totalAmount,
 
-          finalTotal: request.total_amount,
+          finalTotal: request.totalAmount,
 
           totalMaterialsCost: 0,
 
@@ -189,9 +189,9 @@ export class TenderEstimateService {
 
           await this.createTenderEstimateItem({
 
-            estimate_id: createdEstimate.id,
+            estimateId: createdEstimate.id,
 
-            item_code: itemRequest.item_code,
+            itemCode: itemRequest.itemCode,
 
             description: itemRequest.description,
 
@@ -199,15 +199,15 @@ export class TenderEstimateService {
 
             quantity: itemRequest.quantity,
 
-            unit_price: itemRequest.unit_price,
+            unitPrice: itemRequest.unitPrice,
 
-            total_price: itemRequest.total_price,
+            totalPrice: itemRequest.totalPrice,
 
             category: itemRequest.category,
 
             specifications: itemRequest.specifications,
 
-            item_type: itemRequest.item_type
+            itemType: itemRequest.itemType
 
           });
 
@@ -221,7 +221,7 @@ export class TenderEstimateService {
 
       if (request.items && request.items.length > 0) {
 
-        const totals = await this.calculateEstimateTotals({ estimate_id: createdEstimate.id });
+        const totals = await this.calculateEstimateTotals({ estimateId: createdEstimate.id });
 
         const updatedEstimate = await this.tenderEstimateRepository.update(createdEstimate.id, {
 
@@ -413,28 +413,28 @@ export class TenderEstimateService {
 
   async createTenderEstimateItem(request: CreateTenderEstimateItemRequestDto): Promise<TenderEstimateItemDTO> {
     try {
-      if (!request.estimate_id || request.quantity <= 0 || request.unit_price <= 0) {
+      if (!request.estimateId || request.quantity <= 0 || request.unitPrice <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID, quantity, and unit price are required');
       }
-      const totalPrice = request.total_price ?? request.quantity * request.unit_price;
+      const totalPrice = request.totalPrice ?? request.quantity * request.unitPrice;
       const created = await this.tenderEstimateRepository.createItem({
-        estimateId: request.estimate_id,
-        itemCode: request.item_code,
+        estimateId: request.estimateId,
+        itemCode: request.itemCode,
         description: request.description,
         unit: request.unit,
         quantity: request.quantity,
-        unitPrice: request.unit_price,
+        unitPrice: request.unitPrice,
         totalPrice,
         category: request.category,
         specifications: request.specifications,
-        materialId: request.material_id,
-        itemType: request.item_type,
+        materialId: request.materialId,
+        itemType: request.itemType,
         // Resource anchoring (v10)
-        resourceKind: request.resource_kind,
-        employeeQualificationId: request.employee_qualification_id,
-        supplierId: request.supplier_id,
-        supplierContractRef: request.supplier_contract_ref,
-        estimatedHours: request.estimated_hours,
+        resourceKind: request.resourceKind,
+        employeeQualificationId: request.employeeQualificationId,
+        supplierId: request.supplierId,
+        supplierContractRef: request.supplierContractRef,
+        estimatedHours: request.estimatedHours,
       } as unknown as Parameters<typeof this.tenderEstimateRepository.createItem>[0]);
       return this.mapItemEntityToDTO(created);
     } catch (error) {
@@ -448,10 +448,10 @@ export class TenderEstimateService {
    */
   async getEstimateItems(request: GetTenderEstimateItemsRequestDto): Promise<TenderEstimateItemDTO[]> {
     try {
-      if (!request.estimate_id) {
+      if (!request.estimateId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
-      const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimate_id);
+      const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimateId);
       return items.map(i => this.mapItemEntityToDTO(i));
     } catch (error) {
       console.error('TenderEstimateService.getEstimateItems failed:', error);
@@ -498,10 +498,10 @@ export class TenderEstimateService {
    */
   async getMyEstimates(request: GetMyEstimatesRequestDto): Promise<TenderEstimateDTO[]> {
     try {
-      if (!request.submitted_by) {
+      if (!request.submittedBy) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'User ID is required');
       }
-      const estimates = await this.tenderEstimateRepository.findBySubmittedBy(request.submitted_by);
+      const estimates = await this.tenderEstimateRepository.findBySubmittedBy(request.submittedBy);
       return estimates.map(e => this.transformEntityToDTO(e));
     } catch (error) {
       console.error('TenderEstimateService.getMyEstimates failed:', error);
@@ -514,10 +514,10 @@ export class TenderEstimateService {
    */
   async getEstimatesByProjectId(request: GetEstimatesByProjectIdRequestDto): Promise<TenderEstimateDTO[]> {
     try {
-      if (!request.project_id) {
+      if (!request.projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
-      const estimates = await this.tenderEstimateRepository.findByProjectId(request.project_id);
+      const estimates = await this.tenderEstimateRepository.findByProjectId(request.projectId);
       return estimates.map(e => this.transformEntityToDTO(e));
     } catch (error) {
       console.error('TenderEstimateService.getEstimatesByProjectId failed:', error);
@@ -543,15 +543,15 @@ export class TenderEstimateService {
    */
   async getEstimateStats(request: GetEstimateStatsRequestDto): Promise<EstimateStatsDto> {
     try {
-      if (!request.tender_id) {
+      if (!request.tenderId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID is required');
       }
-      const stats = await this.tenderEstimateRepository.getEstimateStats(request.tender_id);
+      const stats = await this.tenderEstimateRepository.getEstimateStats(request.tenderId);
       return {
-        total_estimates: stats.totalEstimates,
-        total_amount: stats.totalAmount,
-        average_amount: stats.averageAmount,
-        by_status: stats.byStatus,
+        totalEstimates: stats.totalEstimates,
+        totalAmount: stats.totalAmount,
+        averageAmount: stats.averageAmount,
+        byStatus: stats.byStatus,
       };
     } catch (error) {
       console.error('TenderEstimateService.getEstimateStats failed:', error);
@@ -564,11 +564,11 @@ export class TenderEstimateService {
    */
   async calculateEstimateTotals(request: CalculateEstimateTotalsRequestDto): Promise<EstimateTotalsDto> {
     try {
-      if (!request.estimate_id) {
+      if (!request.estimateId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Estimate ID is required');
       }
-      const estimate = await this.tenderEstimateRepository.findById(request.estimate_id);
-      const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimate_id);
+      const estimate = await this.tenderEstimateRepository.findById(request.estimateId);
+      const items = await this.tenderEstimateRepository.findItemsByEstimateId(request.estimateId);
       const subtotal = items.reduce((acc, it) => acc + (Number(it.totalPrice) || 0), 0);
       const discountRate = (estimate as unknown as { discountRate?: number })?.discountRate ?? 0;
       const discountAmount = subtotal * (discountRate / 100);
@@ -688,25 +688,25 @@ export class TenderEstimateService {
     const now = new Date().toISOString();
     return {
       id: e.id,
-      estimate_id: e.estimateId,
-      material_id: e.materialId,
-      item_code: e.itemCode ?? '',
+      estimateId: e.estimateId,
+      materialId: e.materialId,
+      itemCode: e.itemCode ?? '',
       description: e.description ?? '',
       unit: e.unit ?? 'unit',
       quantity: Number(e.quantity) || 0,
-      unit_price: Number(e.unitPrice) || 0,
-      total_price: Number(e.totalPrice) || 0,
+      unitPrice: Number(e.unitPrice) || 0,
+      totalPrice: Number(e.totalPrice) || 0,
       category: e.category,
       specifications: e.specifications,
-      item_type: e.itemType,
-      line_total: Number(e.totalPrice) || 0,
-      resource_kind: e.resource_kind,
-      employee_qualification_id: e.employee_qualification_id,
-      supplier_id: e.supplier_id,
-      supplier_contract_ref: e.supplier_contract_ref,
-      estimated_hours: e.estimated_hours,
-      created_at: e.createdAt ?? now,
-      updated_at: e.updatedAt ?? now,
+      itemType: e.itemType,
+      lineTotal: Number(e.totalPrice) || 0,
+      resourceKind: e.resource_kind,
+      employeeQualificationId: e.employee_qualification_id,
+      supplierId: e.supplier_id,
+      supplierContractRef: e.supplier_contract_ref,
+      estimatedHours: e.estimated_hours,
+      createdAt: e.createdAt ?? now,
+      updatedAt: e.updatedAt ?? now,
     };
   }
 }

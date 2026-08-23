@@ -18,17 +18,17 @@ export class TenderDocumentTransformer {
   static toDTO(entity: TenderDocument): TenderDocumentDTO {
     return {
       id: entity.id,
-      project_id: entity.projectId,
-      document_id: entity.documentId,
+      projectId: entity.projectId,
+      documentId: entity.documentId,
       category: entity.category,
       subcategory: entity.subcategory,
-      is_required: entity.isRequired,
-      is_submitted: entity.isSubmitted,
-      submission_date: entity.submissionDate?.toISOString(),
-      reviewer_notes: entity.reviewerNotes,
+      isRequired: entity.isRequired,
+      isSubmitted: entity.isSubmitted,
+      submissionDate: entity.submissionDate?.toISOString(),
+      reviewerNotes: entity.reviewerNotes,
       status: entity.status,
-      created_at: entity.createdAt.toISOString(),
-      updated_at: entity.updatedAt.toISOString()
+      createdAt: entity.createdAt.toISOString(),
+      updatedAt: entity.updatedAt.toISOString()
     };
   }
 
@@ -36,17 +36,17 @@ export class TenderDocumentTransformer {
   static toEntity(dto: TenderDocumentDTO): TenderDocument {
     return TenderDocument.create({
       id: dto.id,
-      projectId: dto.project_id,
-      documentId: dto.document_id || '',
+      projectId: dto.projectId,
+      documentId: dto.documentId || '',
       category: dto.category as any,
       subcategory: dto.subcategory as any,
-      isRequired: dto.is_required,
-      isSubmitted: dto.is_submitted,
-      submissionDate: dto.submission_date ? new Date(dto.submission_date) : undefined,
-      reviewerNotes: dto.reviewer_notes,
+      isRequired: dto.isRequired,
+      isSubmitted: dto.isSubmitted,
+      submissionDate: dto.submissionDate ? new Date(dto.submissionDate) : undefined,
+      reviewerNotes: dto.reviewerNotes,
       status: dto.status,
-      createdAt: new Date(dto.created_at),
-      updatedAt: new Date(dto.updated_at)
+      createdAt: new Date(dto.createdAt),
+      updatedAt: new Date(dto.updatedAt)
     });
   }
 
@@ -54,12 +54,12 @@ export class TenderDocumentTransformer {
   static fromCreateDtoToEntity(dto: CreateTenderDocumentDTO, id: string): TenderDocument {
     return TenderDocument.create({
       id,
-      projectId: dto.project_id,
-      documentId: dto.document_id || '',
+      projectId: dto.projectId,
+      documentId: dto.documentId || '',
       category: dto.category as any,
       subcategory: dto.subcategory as any,
-      isRequired: dto.is_required ?? false,
-      isSubmitted: dto.is_submitted ?? false,
+      isRequired: dto.isRequired ?? false,
+      isSubmitted: dto.isSubmitted ?? false,
       status: dto.status ?? 'draft'
     });
   }
@@ -75,10 +75,10 @@ export class TenderDocumentTransformer {
     
     return {
       ...dto,
-      document_title: documentTitle,
-      document_url: documentUrl,
-      days_until_deadline: daysUntilDeadline,
-      is_overdue: daysUntilDeadline < 0 && entity.status !== 'approved'
+      documentTitle: documentTitle,
+      documentUrl: documentUrl,
+      daysUntilDeadline: daysUntilDeadline,
+      isOverdue: daysUntilDeadline < 0 && entity.status !== 'approved'
     };
   }
 
@@ -90,10 +90,10 @@ export class TenderDocumentTransformer {
       category: entity.category,
       subcategory: entity.subcategory,
       status: entity.status,
-      is_required: entity.isRequired,
-      is_submitted: entity.isSubmitted,
-      submission_date: entity.submissionDate?.toISOString(),
-      document_url: documentUrl
+      isRequired: entity.isRequired,
+      isSubmitted: entity.isSubmitted,
+      submissionDate: entity.submissionDate?.toISOString(),
+      documentUrl: documentUrl
     };
   }
 
@@ -102,10 +102,10 @@ export class TenderDocumentTransformer {
     return {
       category: dto.category as any,
       subcategory: dto.subcategory as any,
-      isRequired: dto.is_required,
-      isSubmitted: dto.is_submitted,
-      submissionDate: dto.submission_date ? new Date(dto.submission_date) : undefined,
-      reviewerNotes: dto.reviewer_notes,
+      isRequired: dto.isRequired,
+      isSubmitted: dto.isSubmitted,
+      submissionDate: dto.submissionDate ? new Date(dto.submissionDate) : undefined,
+      reviewerNotes: dto.reviewerNotes,
       status: dto.status,
       updatedAt: new Date()
     };

@@ -85,7 +85,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   };
 
   const getEstimatedDuration = (step: PhaseStepDTO | StepItem) => {
-    if ('estimated_duration_days' in step) return (step as PhaseStepDTO).estimated_duration_days || null;
+    if ('estimated_duration_days' in step) return (step as PhaseStepDTO).estimatedDurationDays || null;
     if ('estimatedDuration' in step) return (step as unknown as { estimatedDuration?: number }).estimatedDuration ?? null;
     return null;
   };

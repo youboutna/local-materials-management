@@ -155,11 +155,11 @@ export class BoqDispatchService {
       if (!phaseMilestones.some((m) => m.title === milestoneTitle)) {
         const created = await this.milestones
           .create({
-            project_id: projectId,
-            phase_id: phaseId,
+            projectId: projectId,
+            phaseId: phaseId,
             title: milestoneTitle,
             description: `Jalon généré depuis le DQE (${group.lines.length} poste(s))`,
-            target_date: new Date().toISOString(),
+            targetDate: new Date().toISOString(),
             status: 'pending',
             weight: rule.milestoneWeight,
           })

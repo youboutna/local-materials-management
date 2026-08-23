@@ -47,7 +47,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
     });
   }
 
-  private mapToRow(inspection: Inspection): Omit<InspectionInsert, 'created_at' | 'updated_at'> {
+  private mapToRow(inspection: Inspection): Omit<InspectionInsert, 'createdAt' | 'updatedAt'> {
     const inspectorName = typeof inspection.inspector === 'string'
       ? inspection.inspector
       : inspection.inspector?.name ?? '';

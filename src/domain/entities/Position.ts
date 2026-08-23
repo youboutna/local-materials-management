@@ -4,14 +4,14 @@
 import { UserRole } from './UserRole';
 
 export interface PositionPermissions {
-  can_approve_projects: boolean;
-  can_approve_payments: boolean;
-  can_escalate_to_director: boolean;
-  can_schedule_inspections: boolean;
-  can_execute_inspections: boolean;
-  can_manage_team: boolean;
-  can_manage_users: boolean;
-  can_manage_system: boolean;
+  canApproveProjects: boolean;
+  canApprovePayments: boolean;
+  canEscalateToDirector: boolean;
+  canScheduleInspections: boolean;
+  canExecuteInspections: boolean;
+  canManageTeam: boolean;
+  canManageUsers: boolean;
+  canManageSystem: boolean;
 }
 
 export class Position {
@@ -192,14 +192,14 @@ export class Position {
       'décisionnel',
       1,
       {
-        can_approve_projects: true,
-        can_approve_payments: true,
-        can_escalate_to_director: false,
-        can_schedule_inspections: true,
-        can_execute_inspections: true,
-        can_manage_team: true,
-        can_manage_users: true,
-        can_manage_system: true
+        canApproveProjects: true,
+        canApprovePayments: true,
+        canEscalateToDirector: false,
+        canScheduleInspections: true,
+        canExecuteInspections: true,
+        canManageTeam: true,
+        canManageUsers: true,
+        canManageSystem: true
       },
       null,
       'Responsable de la stratégie globale et de la direction de l\'entreprise'
@@ -214,14 +214,14 @@ export class Position {
       'technique',
       2,
       {
-        can_approve_projects: true,
-        can_approve_payments: true,
-        can_escalate_to_director: true,
-        can_schedule_inspections: true,
-        can_execute_inspections: true,
-        can_manage_team: true,
-        can_manage_users: false,
-        can_manage_system: false
+        canApproveProjects: true,
+        canApprovePayments: true,
+        canEscalateToDirector: true,
+        canScheduleInspections: true,
+        canExecuteInspections: true,
+        canManageTeam: true,
+        canManageUsers: false,
+        canManageSystem: false
       },
       'director-general',
       'Supervision technique des projets et des études'
@@ -236,14 +236,14 @@ export class Position {
       'technique',
       3,
       {
-        can_approve_projects: false,
-        can_approve_payments: false,
-        can_escalate_to_director: false,
-        can_schedule_inspections: true,
-        can_execute_inspections: true,
-        can_manage_team: true,
-        can_manage_users: false,
-        can_manage_system: false
+        canApproveProjects: false,
+        canApprovePayments: false,
+        canEscalateToDirector: false,
+        canScheduleInspections: true,
+        canExecuteInspections: true,
+        canManageTeam: true,
+        canManageUsers: false,
+        canManageSystem: false
       },
       'technical-director',
       'Gestion quotidienne des projets'
@@ -258,14 +258,14 @@ export class Position {
       'opérationnel',
       3,
       {
-        can_approve_projects: false,
-        can_approve_payments: false,
-        can_escalate_to_director: false,
-        can_schedule_inspections: false,
-        can_execute_inspections: true,
-        can_manage_team: false,
-        can_manage_users: false,
-        can_manage_system: false
+        canApproveProjects: false,
+        canApprovePayments: false,
+        canEscalateToDirector: false,
+        canScheduleInspections: false,
+        canExecuteInspections: true,
+        canManageTeam: false,
+        canManageUsers: false,
+        canManageSystem: false
       },
       'technical-director',
       'Supervision des opérations sur chantier'

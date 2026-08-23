@@ -21,15 +21,15 @@ export class AdvancedTenderEstimateTransformer {
   static toDTO(entity: TenderEstimate): TenderEstimateDTO {
     return {
       id: entity.id,
-      tender_id: entity.tenderId,
-      submitted_by: entity.submittedBy || '',
-      submission_date: entity.createdAt,
+      tenderId: entity.tenderId,
+      submittedBy: entity.submittedBy || '',
+      submissionDate: entity.createdAt,
       status: entity.status,
-      total_amount: entity.totalAmount,
+      totalAmount: entity.totalAmount,
       currency: entity.currency,
-      validity_period: entity.validityPeriod,
+      validityPeriod: entity.validityPeriod,
       notes: entity.notes,
-      estimate_type: entity.estimateType,
+      estimateType: entity.estimateType,
       // Financial fields
       subtotal: entity.subtotal,
       taxRate: entity.taxRate,
@@ -46,8 +46,8 @@ export class AdvancedTenderEstimateTransformer {
       totalMaterialsCost: entity.totalMaterialsCost,
       totalLaborCost: entity.totalLaborCost,
       totalEquipmentCost: entity.totalEquipmentCost,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -57,28 +57,28 @@ export class AdvancedTenderEstimateTransformer {
   static toEntity(dto: TenderEstimateDTO): TenderEstimate {
     return new TenderEstimate(
       dto.id,
-      dto.tender_id,
+      dto.tenderId,
       dto.status,
       dto.currency as CurrencyCode,
-      dto.estimate_type || 'standard',
-      dto.created_at,
-      dto.updated_at,
+      dto.estimateType || 'standard',
+      dto.createdAt,
+      dto.updatedAt,
       {
-        submittedBy: dto.submitted_by,
+        submittedBy: dto.submittedBy,
         subtotal: dto.subtotal ?? undefined,
-        taxAmount: (dto.taxAmount ?? dto.tax_amount ?? undefined) as number | undefined,
-        taxRate: dto.taxRate ?? dto.tax_rate ?? undefined,
-        totalWithTax: dto.totalWithTax ?? dto.total_with_tax ?? undefined,
-        finalTotal: dto.finalTotal ?? dto.final_total ?? undefined,
+        taxAmount: (dto.taxAmount ?? dto.taxAmount ?? undefined) as number | undefined,
+        taxRate: dto.taxRate ?? dto.taxRate ?? undefined,
+        totalWithTax: dto.totalWithTax ?? dto.totalWithTax ?? undefined,
+        finalTotal: dto.finalTotal ?? dto.finalTotal ?? undefined,
         discountRate: dto.discountRate,
         discountAmount: dto.discountAmount,
-        totalMaterialsCost: dto.totalMaterialsCost ?? dto.total_materials_cost ?? undefined,
-        totalLaborCost: dto.totalLaborCost ?? dto.total_labor_cost ?? undefined,
-        totalEquipmentCost: dto.totalEquipmentCost ?? dto.total_equipment_cost ?? undefined,
-        overheadPercentage: dto.overheadPercentage ?? dto.overhead_percentage ?? undefined,
-        overheadAmount: dto.overheadAmount ?? dto.overhead_amount ?? undefined,
-        profitMarginPercentage: dto.profitMarginPercentage ?? dto.profit_margin_percentage ?? undefined,
-        profitMarginAmount: dto.profitMarginAmount ?? dto.profit_margin_amount ?? undefined
+        totalMaterialsCost: dto.totalMaterialsCost ?? dto.totalMaterialsCost ?? undefined,
+        totalLaborCost: dto.totalLaborCost ?? dto.totalLaborCost ?? undefined,
+        totalEquipmentCost: dto.totalEquipmentCost ?? dto.totalEquipmentCost ?? undefined,
+        overheadPercentage: dto.overheadPercentage ?? dto.overheadPercentage ?? undefined,
+        overheadAmount: dto.overheadAmount ?? dto.overheadAmount ?? undefined,
+        profitMarginPercentage: dto.profitMarginPercentage ?? dto.profitMarginPercentage ?? undefined,
+        profitMarginAmount: dto.profitMarginAmount ?? dto.profitMarginAmount ?? undefined
       }
     );
   }

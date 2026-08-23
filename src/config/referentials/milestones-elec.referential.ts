@@ -588,7 +588,7 @@ export function getCompleteReferential(): Record<string, MilestoneTemplateDTO[]>
   return {
     ...REFERENTIAL_MILESTONES,
     ...SOMELEC_ELECTRICAL_MILESTONES
-  };
+  } as Record<string, MilestoneTemplateDTO[]>;
 }
 
 /**

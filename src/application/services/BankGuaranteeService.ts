@@ -405,7 +405,7 @@ export class BankGuaranteeService {
       guaranteeNumber: repositoryResult.number || repositoryResult.guaranteeNumber || repositoryResult.guarantee_number || '',
       issuingBank: repositoryResult.issuingBank || repositoryResult.issuing_bank || repositoryResult.bank_name || '',
       beneficiary: repositoryResult.beneficiary || repositoryResult.bank_name || '',
-      bank_name: repositoryResult.bank_name || '',
+      bankName: repositoryResult.bank_name || '',
       issueDate: repositoryResult.issueDate || repositoryResult.issue_date || new Date().toISOString().split('T')[0],
       expiryDate: repositoryResult.expiryDate || repositoryResult.expiry_date || '',
       amount: repositoryResult.amount || repositoryResult.guaranteeAmount || repositoryResult.guarantee_amount || 0,

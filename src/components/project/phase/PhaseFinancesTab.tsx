@@ -88,7 +88,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.estime" fallback="Estimé:" /></span>
-                  <span className="font-medium">{formatCurrency(phase.estimated_cost)}</span>
+                  <span className="font-medium">{formatCurrency(phase.estimatedCost)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.engage" fallback="Engagé:" /></span>
