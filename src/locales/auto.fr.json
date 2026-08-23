@@ -4641,5 +4641,6 @@
   "auto.reportmanager.generer_rapport_d_inspection": "Générer Rapport d\\'Inspection",
   "auto.documentfilters.documents_appel_offres": "Documents d'appel d'offres",
   "auto.reportmanager.generer_rapport_appel_offres": "Générer rapport d'appel d'offres",
-  "auto.resourceselector.main_d_oeuvre": "Main d'œuvre"
+  "auto.resourceselector.main_d_oeuvre": "Main d'œuvre",
+  "auto.organizations.description": "Créer, modifier et hiérarchiser les organisations ; définir l'organisation propriétaire par défaut des projets"
 }
