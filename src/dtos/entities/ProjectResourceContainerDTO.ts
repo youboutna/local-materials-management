@@ -76,4 +76,10 @@ export interface ProjectResourceAggregationInput {
   executedResources?: Array<Record<string, unknown>>;
   /** Matériaux consommés / livrés (btp.project_materials). */
   executedMaterials?: Array<Record<string, unknown>>;
+  /**
+   * Tâches affectées (btp.task_assignments) : une tâche en cours ou terminée
+   * consomme de la ressource (humaine par défaut, matériau/équipement selon `type`).
+   */
+  executedTasks?: Array<Record<string, unknown>>;
 }
+
