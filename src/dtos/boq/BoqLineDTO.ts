@@ -50,6 +50,10 @@ export interface BoqLineDTO {
   documentType?: string | null;
   /** Statut métier de l'étape documentaire (ex. « demande », « signe », « payee »). */
   businessStatus?: string | null;
+  /** Document d'origine (traçabilité DQE → Devis → Contrat…). */
+  sourceDocumentId?: string | null;
+  /** Étape du document d'origine (`dqe`, `devis`, `contrat`…). */
+  sourceDocumentType?: string | null;
   /** TypeCode UNTDID 1001 (310 / 380) porté par le document. */
   facturxTypeCode?: string | null;
   /** Avancement facturé (décompte) en pourcentage. */
