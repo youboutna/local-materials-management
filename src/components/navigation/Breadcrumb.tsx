@@ -58,11 +58,13 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
       if (isUuid) {
         // For UUIDs, we might want to show "Detail" or similar
         crumbs.push({
-          label: "Détails",
+          label: t('common.details') || 'Détails',
           href: index === pathSegments.length - 1 ? undefined : currentPath,
         });
       } else {
-        const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+        const key = routeLabelKeys[segment];
+        const label = (key ? t(key) : '') || segment.charAt(0).toUpperCase() + segment.slice(1);
+
         crumbs.push({
           label,
           href: index === pathSegments.length - 1 ? undefined : currentPath,
