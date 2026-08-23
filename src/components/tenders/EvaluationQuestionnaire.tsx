@@ -14,8 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import { ClipboardCheck, AlertCircle } from 'lucide-react';
-import {
 import { useI18n } from '@/hooks/useI18n';
+import {
   DEFAULT_CATEGORY_WEIGHTS,
   DEFAULT_EVALUATION_CRITERIA,
   computeGlobalScore,
