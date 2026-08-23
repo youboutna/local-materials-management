@@ -14,29 +14,30 @@ interface BreadcrumbProps {
   className?: string;
 }
 
-// Route to label mapping for automatic breadcrumb generation
-const routeLabels: Record<string, string> = {
-  dashboard: "Dashboard",
-  projects: "Projets",
-  create: "Créer",
-  edit: "Modifier",
-  materials: "Matériaux",
-  documents: "Documents",
-  tasks: "Tâches",
-  employees: "Employés",
-  users: "Utilisateurs",
-  suppliers: "Fournisseurs",
-  settings: "Paramètres",
-  profile: "Profil",
-  inspections: "Inspections",
-  phases: "Phases",
-  "tender-management": "Appels d'Offres",
-  "bank-guarantee-monitor": "Garanties Bancaires",
-  "inspection-monitoring": "Suivi Inspections",
-  "notifications-center": "Notifications",
-  "payment-control": "Contrôle Paiements",
-  "insurance-management": "Gestion Assurances",
+// Route to i18n key mapping for automatic breadcrumb generation
+const routeLabelKeys: Record<string, string> = {
+  dashboard: "dashboard.title",
+  projects: "nav.projects",
+  create: "common.create",
+  edit: "common.edit",
+  materials: "nav.materials",
+  documents: "documents.title",
+  tasks: "task.title",
+  employees: "nav.employees",
+  users: "nav.users",
+  suppliers: "nav.suppliers",
+  settings: "settings.title",
+  profile: "nav.profile",
+  inspections: "nav.inspections",
+  phases: "nav.phases",
+  "tender-management": "nav.tender_management",
+  "bank-guarantee-monitor": "bank_guarantee.title",
+  "inspection-monitoring": "inspection_monitoring.title",
+  "notifications-center": "notifications_center.title",
+  "payment-control": "payment_control.title",
+  "insurance-management": "insurance_management.title",
 };
+
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
   const location = useLocation();
@@ -57,11 +58,13 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
       if (isUuid) {
         // For UUIDs, we might want to show "Detail" or similar
         crumbs.push({
-          label: "Détails",
+          label: t('common.details') || 'Détails',
           href: index === pathSegments.length - 1 ? undefined : currentPath,
         });
       } else {
-        const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+        const key = routeLabelKeys[segment];
+        const label = (key ? t(key) : '') || segment.charAt(0).toUpperCase() + segment.slice(1);
+
         crumbs.push({
           label,
           href: index === pathSegments.length - 1 ? undefined : currentPath,
