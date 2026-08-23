@@ -68,12 +68,12 @@ import { T } from '@/components/i18n/T';
 interface PhaseStepsManagerProps {
   // Accept legacy PhaseStepDTO[] or unified StepItem[]
   steps: PhaseStepDTO[] | StepItem[];
-  onAddStep: (step: Omit<PhaseStepDTO, 'id'>) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
-  onUpdateStep: (stepId: string, updates: Partial<PhaseStepDTO>) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
-  onDeleteStep: (stepId: string) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
-  onAddTask: (stepId: string, task: Omit<PhaseTaskDTO, 'id'>) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
-  onUpdateTask: (stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
-  onDeleteTask: (stepId: string, taskId: string) => <T k="auto.phasestepsmanager.promise" fallback="Promise" /><unknown>;
+  onAddStep: (step: Omit<PhaseStepDTO, 'id'>) => Promise<unknown>;
+  onUpdateStep: (stepId: string, updates: Partial<PhaseStepDTO>) => Promise<unknown>;
+  onDeleteStep: (stepId: string) => Promise<unknown>;
+  onAddTask: (stepId: string, task: Omit<PhaseTaskDTO, 'id'>) => Promise<unknown>;
+  onUpdateTask: (stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>) => Promise<unknown>;
+  onDeleteTask: (stepId: string, taskId: string) => Promise<unknown>;
   isUpdating?: boolean;
   /** Required to enable per-step DQE import & manual resource entry. */
   projectId?: string;
