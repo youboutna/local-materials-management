@@ -44,6 +44,9 @@ interface Props {
   /** Project owning the BOQ. Defaults to contextId for project-level sources. */
   projectId?: string;
   trigger: React.ReactNode;
+  /** Ouverture contrôlée (raccourci clavier Ctrl+I depuis le poste DQE). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title?: string;
   onImported?: (count: number) => void;
   onParsed?: (lines: BoqLineDTO[]) => void;
@@ -75,7 +78,9 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 
 export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true }: Props) {
   const { translateTerm } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = props.open ?? openInternal;
+  const setOpen = (v: boolean) => { setOpenInternal(v); props.onOpenChange?.(v); };
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
