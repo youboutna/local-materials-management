@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
 import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
 import { FileText, Settings, CheckCircle2 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface WorkflowStepSelectorProps {
   isOpen: boolean;
@@ -45,18 +46,18 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Sélectionner une Étape du Workflow Officiel</DialogTitle>
+          <DialogTitle><T k="auto.workflowstepselector.selectionner_une_etape_du_workflow_officiel" fallback="Sélectionner une Étape du Workflow Officiel" /></DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Choisissez une phase puis une étape du workflow standard mauritanien :
+            <T k="auto.workflowstepselector.choisissez_une_phase_puis_une_etape_du_workflow_" fallback="Choisissez une phase puis une étape du workflow standard mauritanien :" />
           </p>
           
           <div className="grid grid-cols-2 gap-4">
             {/* Phases Selection */}
             <div className="space-y-2">
-              <h3 className="font-medium text-sm">Phases disponibles:</h3>
+              <h3 className="font-medium text-sm"><T k="auto.workflowstepselector.phases_disponibles" fallback="Phases disponibles:" /></h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {standardWorkflow.map((phase) => {
                   const isSelected = selectedPhase?.id === phase.id;
@@ -113,7 +114,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
                           {isAlreadyAdded && (
                             <Badge variant="secondary" className="flex items-center gap-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              Ajoutée
+                              <T k="auto.workflowstepselector.ajoutee" fallback="Ajoutée" />
                             </Badge>
                           )}
                         </div>
@@ -128,7 +129,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
                 }) : (
                   <div className="text-center text-muted-foreground py-8">
                     <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Sélectionnez d'abord une phase</p>
+                    <p className="text-sm"><T k="auto.workflowstepselector.selectionnez_d_abord_une_phase" fallback="Sélectionnez d'abord une phase" /></p>
                   </div>
                 )}
               </div>
@@ -137,14 +138,14 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: 
           
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>
-              Annuler
+              <T k="auto.workflowstepselector.annuler" fallback="Annuler" />
             </Button>
             <Button 
               onClick={handleConfirmSelection}
               disabled={!selectedPhase || !selectedStage}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter cette Étape
+              <T k="auto.workflowstepselector.ajouter_cette_etape" fallback="Ajouter cette Étape" />
             </Button>
           </div>
         </div>

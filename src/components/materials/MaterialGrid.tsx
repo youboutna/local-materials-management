@@ -4,6 +4,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Package } from 'lucide-react';
 import MaterialCard from './MaterialCard';
 import { MaterialUIDTO } from '@/dtos/transforms';
+import { T } from '@/components/i18n/T';
 
 interface MaterialGridProps {
   materials: MaterialUIDTO[];
@@ -58,10 +59,10 @@ const MaterialGrid: React.FC<MaterialGridProps> = ({
         <CardContent className="text-center py-12">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun matériau trouvé
+            <T k="auto.materialgrid.aucun_materiau_trouve" fallback="Aucun matériau trouvé" />
           </h3>
           <p className="text-muted-foreground">
-            Aucun matériau ne correspond à vos critères de recherche.
+            <T k="auto.materialgrid.aucun_materiau_ne_correspond_a_vos_criteres_de_r" fallback="Aucun matériau ne correspond à vos critères de recherche." />
           </p>
         </CardContent>
       </Card>

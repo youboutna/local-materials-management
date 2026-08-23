@@ -10,6 +10,7 @@ import { Shield, Lock } from 'lucide-react';
 import { SubmissionSecretService } from '@/application/services/SubmissionSecretService';
 import { SubmissionEvaluationPanel } from '@/components/tenders/SubmissionEvaluationPanel';
 import { SecretCodeAccessGate, type GateValidationResult } from '@/components/access/SecretCodeAccessGate';
+import { T } from '@/components/i18n/T';
 
 export const EvaluationAccessPortal: React.FC = () => {
   const handleValidate = async (code: string): Promise<GateValidationResult> => {
@@ -49,7 +50,7 @@ export const EvaluationAccessPortal: React.FC = () => {
       onValidate={handleValidate}
       regulatoryNotice={
         <>
-          <p className="font-medium text-amber-900">Accès Réglementé</p>
+          <p className="font-medium text-amber-900"><T k="auto.evaluationaccessportal.acces_reglemente" fallback="Accès Réglementé" /></p>
           <p>
             Cet accès est réservé aux membres autorisés de la commission d'évaluation.
             Toutes les actions sont tracées et auditées conformément aux réglementations
@@ -67,13 +68,13 @@ export const EvaluationAccessPortal: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <Shield className="h-8 w-8 text-primary" />
                   <div>
-                    <h1 className="text-2xl font-bold">Commission d'Évaluation</h1>
-                    <p className="text-sm text-muted-foreground">Accès sécurisé autorisé</p>
+                    <h1 className="text-2xl font-bold"><T k="auto.evaluationaccessportal.commission_d_evaluation" fallback="Commission d'Évaluation" /></h1>
+                    <p className="text-sm text-muted-foreground"><T k="auto.evaluationaccessportal.acces_securise_autorise" fallback="Accès sécurisé autorisé" /></p>
                   </div>
                 </div>
                 <Button variant="outline" onClick={reset}>
                   <Lock className="h-4 w-4 mr-2" />
-                  Quitter
+                  <T k="auto.evaluationaccessportal.quitter" fallback="Quitter" />
                 </Button>
               </div>
               <SubmissionEvaluationPanel submissionId={submissionId} tenderId={tenderId} />

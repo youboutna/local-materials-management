@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface InspectorSelectorProps {
   projectId?: string;
@@ -48,7 +49,7 @@ export function InspectorSelector({
                 <User className="h-4 w-4" />
                 <span>{selectedInspector.name}</span>
                 {selectedInspector.type === 'supplier' && (
-                  <Badge variant="secondary" className="text-xs">Bureau d'études</Badge>
+                  <Badge variant="secondary" className="text-xs"><T k="auto.inspectorselector.bureau_d_etudes" fallback="Bureau d'études" /></Badge>
                 )}
               </div>
             ) : (
@@ -88,7 +89,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: <TranslatedRole code={inspector.role} /></span>
+                          <span className="text-xs text-muted-foreground"><T k="auto.inspectorselector.role" fallback="Rôle:" /> <TranslatedRole code={inspector.role} /></span>
                         )}
                       </div>
                     </CommandItem>
@@ -118,7 +119,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: <TranslatedRole code={inspector.role} /></span>
+                          <span className="text-xs text-muted-foreground"><T k="auto.inspectorselector.role" fallback="Rôle:" /> <TranslatedRole code={inspector.role} /></span>
                         )}
                       </div>
                     </CommandItem>

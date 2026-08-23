@@ -17,6 +17,7 @@ import { Building, Flag, FolderKanban, ChevronLeft, ChevronRight } from "lucide-
 import { useProjectById } from "@/hooks/hexagonal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { T } from '@/components/i18n/T';
 
 interface PhaseBreadcrumbProps {
   project?: {
@@ -84,7 +85,7 @@ export const PhaseBreadcrumb: React.FC<PhaseBreadcrumbProps> = ({
               onClick={() => navigate("/projects")}
             >
               <FolderKanban className="h-4 w-4" />
-              <span className="hidden sm:inline">Projets</span>
+              <span className="hidden sm:inline"><T k="auto.phasebreadcrumb.projets" fallback="Projets" /></span>
             </BreadcrumbLink>
           </BreadcrumbItem>
 

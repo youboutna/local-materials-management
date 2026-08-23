@@ -10,6 +10,7 @@ import type { EdbBudgetDecision, EdbValidationReport } from '@/dtos/boq/EdbValid
 import { AlertTriangle, CheckCircle2, Wrench } from 'lucide-react';
 
 import { TranslatedStatus, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Props {
   report: EdbValidationReport;
   decision: EdbBudgetDecision;
@@ -28,7 +29,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
       <header className="flex items-center justify-between gap-2">
         <h4 id="edb-validation-title" className="text-sm font-medium flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
-          Validation de l’expression de besoin (EDB)
+          <T k="auto.edbvalidationpanel.validation_de_l_expression_de_besoin_edb" fallback="Validation de l’expression de besoin (EDB)" />
         </h4>
         <Badge variant={report.status === 'READY' ? 'secondary' : 'outline'}><TranslatedStatus code={report.status} /></Badge>
       </header>
@@ -41,7 +42,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
             </span>
             <Button size="sm" variant="outline" onClick={onFixErrors} disabled={disabled}>
               <Wrench className="h-3.5 w-3.5 mr-1" aria-hidden />
-              Corriger automatiquement (forfait)
+              <T k="auto.edbvalidationpanel.corriger_automatiquement_forfait" fallback="Corriger automatiquement (forfait)" />
             </Button>
           </div>
           <ul className="text-xs text-destructive/90 space-y-1 pl-5 list-disc max-h-32 overflow-y-auto">
@@ -75,15 +76,15 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
         <div className="space-y-2">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div className="rounded border p-2">
-              <span className="block text-muted-foreground">Budget projet restant</span>
+              <span className="block text-muted-foreground"><T k="auto.edbvalidationpanel.budget_projet_restant" fallback="Budget projet restant" /></span>
               <strong>{fmt(d.projectBudget)} MRU</strong>
             </div>
             <div className="rounded border p-2">
-              <span className="block text-muted-foreground">Total DQE</span>
+              <span className="block text-muted-foreground"><T k="auto.edbvalidationpanel.total_dqe" fallback="Total DQE" /></span>
               <strong>{fmt(d.dqeTotal)} MRU</strong>
             </div>
             <div className="rounded border p-2">
-              <span className="block text-muted-foreground">Écart</span>
+              <span className="block text-muted-foreground"><T k="auto.edbvalidationpanel.ecart" fallback="Écart" /></span>
               <strong className="text-warning">
                 {d.difference > 0 ? '+' : ''}{fmt(d.difference)} MRU ({d.percentage.toFixed(2)} %)
               </strong>
@@ -91,7 +92,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Décision du validateur</Label>
+            <Label className="text-sm font-medium"><T k="auto.edbvalidationpanel.decision_du_validateur" fallback="Décision du validateur" /></Label>
             <RadioGroup value={decision} onValueChange={(v) => onDecisionChange(v as EdbBudgetDecision)} disabled={disabled}>
               <div className="flex items-start gap-2">
                 <RadioGroupItem value="ADJUST_PROJECT_BUDGET" id="edb-opt-a" />

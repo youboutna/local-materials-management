@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PaymentTransferForm } from './PaymentTransferForm';
 import { ProjectWithPayments } from '@/dtos/entities/ProjectDTO';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
+import { T } from '@/components/i18n/T';
 
 interface PaymentDialogProps {
   project: ProjectWithPayments;
@@ -64,11 +65,11 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Effectuer un paiement</Button>
+        <Button><T k="auto.paymentdialog.effectuer_un_paiement" fallback="Effectuer un paiement" /></Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] max-w-[75vw] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b bg-white sticky top-0 z-10">
-          <DialogTitle className="text-xl">Paiement du projet</DialogTitle>
+          <DialogTitle className="text-xl"><T k="auto.paymentdialog.paiement_du_projet" fallback="Paiement du projet" /></DialogTitle>
           <DialogDescription className="text-base">
             {project.title}
           </DialogDescription>

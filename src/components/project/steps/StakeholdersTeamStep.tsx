@@ -56,6 +56,7 @@ import {
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 type Segment = "all" | "team" | "external" | "contractors";
 
 interface StakeholdersTeamStepProps {
@@ -283,7 +284,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
       <CardHeader className="py-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Users className="h-5 w-5 text-primary" />
-          Parties prenantes du projet
+          <T k="auto.stakeholdersteamstep.parties_prenantes_du_projet" fallback="Parties prenantes du projet" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -300,11 +301,11 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
         {/* Add form */}
         <div className="border rounded-lg p-4 bg-muted/30">
-          <h4 className="font-medium mb-4">Ajouter une partie prenante</h4>
+          <h4 className="font-medium mb-4"><T k="auto.stakeholdersteamstep.ajouter_une_partie_prenante" fallback="Ajouter une partie prenante" /></h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="block text-sm font-medium mb-2">
-                Type de partie prenante
+                <T k="auto.stakeholdersteamstep.type_de_partie_prenante" fallback="Type de partie prenante" />
               </Label>
               <Select
                 value={newStakeholder?.stakeholderType || ""}
@@ -331,7 +332,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
             </div>
 
             <div>
-              <Label className="block text-sm font-medium mb-2">Rôle</Label>
+              <Label className="block text-sm font-medium mb-2"><T k="auto.stakeholdersteamstep.role" fallback="Rôle" /></Label>
               <Select
                 value={(newStakeholder?.role as string) || ""}
                 onValueChange={(value) =>
@@ -398,7 +399,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
             <div className="flex justify-end mt-2 md:col-span-2">
               <Button onClick={addStakeholder} disabled={!canAdd}>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter
+                <T k="auto.stakeholdersteamstep.ajouter" fallback="Ajouter" />
               </Button>
             </div>
           </div>
@@ -427,7 +428,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
         <div className="space-y-3">
           {filtered.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6">
-              Aucune partie prenante dans ce segment.
+              <T k="auto.stakeholdersteamstep.aucune_partie_prenante_dans_ce_segment" fallback="Aucune partie prenante dans ce segment." />
             </p>
           )}
           {filtered.map((stakeholder) => (
@@ -483,7 +484,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     disabled={!projectId}
                   >
                     <FileText className="h-4 w-4 mr-1" />
-                    Documents
+                    <T k="auto.stakeholdersteamstep.documents" fallback="Documents" />
                   </Button>
                   <Button
                     variant="outline"

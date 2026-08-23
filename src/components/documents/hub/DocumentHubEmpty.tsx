@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   title?: string;
@@ -22,7 +23,7 @@ export function DocumentHubEmpty({ title, description, canUpload, onUploadClick 
       </div>
       {canUpload && (
         <Button size="sm" onClick={onUploadClick} className="mt-2">
-          Ajouter un document
+          <T k="auto.documenthubempty.ajouter_un_document" fallback="Ajouter un document" />
         </Button>
       )}
     </div>

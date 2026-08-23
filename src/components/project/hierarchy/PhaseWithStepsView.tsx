@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Layers, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { StepNode } from "./StepNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { T } from '@/components/i18n/T';
 
 interface Step {
   id: string;
@@ -70,14 +71,14 @@ export const PhaseWithStepsView: React.FC<PhaseWithStepsViewProps> = ({
       <Card className={className}>
         <CardContent className="py-12 text-center">
           <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Aucune étape définie</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.phasewithstepsview.aucune_etape_definie" fallback="Aucune étape définie" /></h3>
           <p className="text-muted-foreground mb-4">
-            Cette phase n'a pas encore d'étapes configurées.
+            <T k="auto.phasewithstepsview.cette_phase_n_a_pas_encore_d_etapes_configurees" fallback="Cette phase n'a pas encore d'étapes configurées." />
           </p>
           {onAddStep && (
             <Button onClick={onAddStep}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter une étape
+              <T k="auto.phasewithstepsview.ajouter_une_etape" fallback="Ajouter une étape" />
             </Button>
           )}
         </CardContent>
@@ -101,7 +102,7 @@ export const PhaseWithStepsView: React.FC<PhaseWithStepsViewProps> = ({
               {onAddStep && (
                 <Button variant="ghost" size="sm" onClick={onAddStep}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
+                  <T k="auto.phasewithstepsview.ajouter" fallback="Ajouter" />
                 </Button>
               )}
               <CollapsibleTrigger asChild>

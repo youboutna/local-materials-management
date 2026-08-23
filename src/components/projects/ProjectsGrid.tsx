@@ -7,6 +7,7 @@ import { MapPin, Calendar, Users, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface ProjectsGridProps {
   projects: ProjectDTO[];
   isLoading?: boolean;
@@ -88,7 +89,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
 
               <div className="pt-4">
                 <Link to={`/projects/${project.id}`}>
-                  <Button className="w-full">Voir les détails</Button>
+                  <Button className="w-full"><T k="auto.projectsgrid.voir_les_details" fallback="Voir les détails" /></Button>
                 </Link>
               </div>
             </CardContent>

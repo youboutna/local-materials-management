@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuantityTakeoffService } from '@/application/services/QuantityTakeoffService';
 import { getMaterialService } from '@/application/services/MaterialService';
 import { useQuantityTakeoffSync } from '@/hooks/hexagonal/useQuantityTakeoffSync';
+import { T } from '@/components/i18n/T';
 
 interface QuantityTakeoff {
   id: string;
@@ -196,7 +197,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeo
                 title="Importer un BOQ / DQE (PDF, Excel, CSV)"
                 trigger={
                   <Button size="sm" variant="outline">
-                    <Upload className="mr-2 h-4 w-4" /> Import BOQ
+                    <Upload className="mr-2 h-4 w-4" /> <T k="auto.quantitytakeoffs.import_boq" fallback="Import BOQ" />
                   </Button>
                 }
               />
@@ -208,7 +209,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeo
                 title="Créer les lignes DQE et les ressources de phase à partir des métrés"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${syncToBoq.isPending ? 'animate-spin' : ''}`} />
-                Générer le DQE
+                <T k="auto.quantitytakeoffs.generer_le_dqe" fallback="Générer le DQE" />
               </Button>
               {/* Saisie manuelle : déléguée au module DQE (moteur de métré unifié :
                   types d'ouvrage, ouvertures déduites, recommandations, WBS, fiscalité). */}
@@ -216,7 +217,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeo
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="mr-2 h-4 w-4" />
-                    Saisir via DQE
+                    <T k="auto.quantitytakeoffs.saisir_via_dqe" fallback="Saisir via DQE" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto">

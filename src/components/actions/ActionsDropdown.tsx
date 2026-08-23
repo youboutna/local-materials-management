@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
@@ -261,7 +262,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className={className}>
             <Settings className="h-4 w-4 mr-2" />
-            Actions
+            <T k="auto.actionsdropdown.actions" fallback="Actions" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, FileText, Calculator, FolderUp, Send, AlertTriangle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 export type BidWizardStepCode = 'dpao' | 'dqe' | 'documents' | 'submit';
 
@@ -58,8 +59,8 @@ export function SupplierBidWizard({ tenderTitle, deadlineDate, renderStep, onSub
         <CardContent className="flex items-center gap-3 py-6">
           <AlertTriangle className="h-6 w-6 text-destructive shrink-0" />
           <div>
-            <p className="font-semibold text-destructive">Deadline dépassée</p>
-            <p className="text-sm text-muted-foreground">Cet appel d'offres n'accepte plus de soumissions.</p>
+            <p className="font-semibold text-destructive"><T k="auto.supplierbidwizard.deadline_depassee" fallback="Deadline dépassée" /></p>
+            <p className="text-sm text-muted-foreground"><T k="auto.supplierbidwizard.cet_appel_d_offres_n_accepte_plus_de_soumissions" fallback="Cet appel d'offres n'accepte plus de soumissions." /></p>
           </div>
         </CardContent>
       </Card>
@@ -79,7 +80,7 @@ export function SupplierBidWizard({ tenderTitle, deadlineDate, renderStep, onSub
           )}
           <div className="pt-2">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span>Progression</span>
+              <span><T k="auto.supplierbidwizard.progression" fallback="Progression" /></span>
               <span className="font-semibold">{progress}%</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -134,16 +135,16 @@ export function SupplierBidWizard({ tenderTitle, deadlineDate, renderStep, onSub
         </div>
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={goPrev} disabled={activeIndex === 0}>
-            Précédent
+            <T k="auto.supplierbidwizard.precedent" fallback="Précédent" />
           </Button>
           {active !== 'submit' ? (
-            <Button onClick={goNext}>Suivant</Button>
+            <Button onClick={goNext}><T k="auto.supplierbidwizard.suivant" fallback="Suivant" /></Button>
           ) : (
             <Button
               onClick={async () => { await onSubmit?.(); markComplete(); }}
               disabled={completed.size < STEPS.length - 1}
             >
-              <Send className="h-4 w-4 mr-2" /> Soumettre ma candidature
+              <Send className="h-4 w-4 mr-2" /> <T k="auto.supplierbidwizard.soumettre_ma_candidature" fallback="Soumettre ma candidature" />
             </Button>
           )}
         </div>

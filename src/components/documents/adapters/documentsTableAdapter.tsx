@@ -14,6 +14,7 @@ import {
   DocumentItem,
   UploadInput,
 } from '../hub/types';
+import { T } from '@/components/i18n/T';
 
 export type DocumentsTableFilter =
   | { column: 'project_id'; value: string }

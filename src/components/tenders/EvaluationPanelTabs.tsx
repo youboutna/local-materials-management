@@ -23,6 +23,7 @@ import {
   checkCategoryCompleteness,
   type EvaluationCategory,
 } from '@/config/referentials/tender';
+import { T } from '@/components/i18n/T';
 
 export interface EvaluationPanelTabsProps {
   submissionId: string;
@@ -65,7 +66,7 @@ export function EvaluationPanelTabs({
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             Évaluation {supplierName ? `— ${supplierName}` : ''}
-            {locked && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Verrouillée</Badge>}
+            {locked && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> <T k="auto.evaluationpaneltabs.verrouillee" fallback="Verrouillée" /></Badge>}
           </CardTitle>
           <div className="flex items-center gap-4">
             <ScoreBadge label="Global" value={global.global} highlighted />
@@ -98,7 +99,7 @@ export function EvaluationPanelTabs({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{c.label}</span>
-                      {c.required && <Badge variant="outline" className="h-4 text-[10px]">Requis</Badge>}
+                      {c.required && <Badge variant="outline" className="h-4 text-[10px]"><T k="auto.evaluationpaneltabs.requis" fallback="Requis" /></Badge>}
                       <Badge variant="secondary" className="h-4 text-[10px]">Poids {c.weight}%</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
@@ -133,7 +134,7 @@ export function EvaluationPanelTabs({
 
         {!locked && (
           <div className="flex justify-end mt-4">
-            <Button onClick={() => onSave?.(scores, global.global)}>Enregistrer l'évaluation</Button>
+            <Button onClick={() => onSave?.(scores, global.global)}><T k="auto.evaluationpaneltabs.enregistrer_l_evaluation" fallback="Enregistrer l'évaluation" /></Button>
           </div>
         )}
       </CardContent>

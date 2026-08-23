@@ -8,6 +8,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 const SupplierPasswordReset = () => {
   const [searchParams] = useSearchParams();
@@ -164,16 +165,16 @@ const SupplierPasswordReset = () => {
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2 text-adrar-800">
             <Lock className="h-6 w-6" />
-            Définir votre mot de passe
+            <T k="auto.supplierpasswordreset.definir_votre_mot_de_passe" fallback="Définir votre mot de passe" />
           </CardTitle>
           <p className="text-muted-foreground">
-            Créez un mot de passe sécurisé pour accéder à votre portail fournisseur
+            <T k="auto.supplierpasswordreset.creez_un_mot_de_passe_securise_pour_acceder_a_vo" fallback="Créez un mot de passe sécurisé pour accéder à votre portail fournisseur" />
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Nouveau mot de passe</Label>
+              <Label htmlFor="password"><T k="auto.supplierpasswordreset.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -201,7 +202,7 @@ const SupplierPasswordReset = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirm-password"><T k="auto.supplierpasswordreset.confirmer_le_mot_de_passe" fallback="Confirmer le mot de passe" /></Label>
               <Input
                 id="confirm-password"
                 type="password"

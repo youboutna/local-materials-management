@@ -19,6 +19,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AppLayout } from '@/components/layout';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 const InspectionCreate: React.FC = () => {
   const { t } = useLanguage();
@@ -78,12 +79,12 @@ const InspectionCreate: React.FC = () => {
           aria-label="Revenir à la page précédente"
         >
           <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-          Retour
+          <T k="auto.inspectioncreate.retour" fallback="Retour" />
         </Button>
 
         <Card>
           <CardHeader>
-            <CardTitle>Créer une inspection</CardTitle>
+            <CardTitle><T k="auto.inspectioncreate.creer_une_inspection" fallback="Créer une inspection" /></CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -98,7 +99,7 @@ const InspectionCreate: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phase">Phase</Label>
+                  <Label htmlFor="phase"><T k="auto.inspectioncreate.phase" fallback="Phase" /></Label>
                   <Input
                     id="phase"
                     value={form.phaseId}
@@ -141,7 +142,7 @@ const InspectionCreate: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.inspectioncreate.statut" fallback="Statut" /></Label>
                   <Select
                     value={form.status}
                     onValueChange={(value) =>
@@ -159,7 +160,7 @@ const InspectionCreate: React.FC = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="progress">Avancement attendu (%)</Label>
+                  <Label htmlFor="progress"><T k="auto.inspectioncreate.avancement_attendu" fallback="Avancement attendu (%)" /></Label>
                   <Input
                     id="progress"
                     type="number"
@@ -177,7 +178,7 @@ const InspectionCreate: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="comments">Commentaires</Label>
+                <Label htmlFor="comments"><T k="auto.inspectioncreate.commentaires" fallback="Commentaires" /></Label>
                 <Textarea
                   id="comments"
                   value={form.comments}
@@ -196,7 +197,7 @@ const InspectionCreate: React.FC = () => {
                   onClick={() => navigate(-1)}
                   disabled={isCreating}
                 >
-                  Annuler
+                  <T k="auto.inspectioncreate.annuler" fallback="Annuler" />
                 </Button>
                 <Button type="submit" disabled={isCreating} aria-busy={isCreating}>
                   <Save className="h-4 w-4 mr-2" aria-hidden="true" />

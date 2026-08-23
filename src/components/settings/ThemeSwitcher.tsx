@@ -15,6 +15,7 @@ import {
 import { Check, Moon, Palette, Sun } from 'lucide-react';
 import { useUiTheme } from '@/contexts/UiThemeContext';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 interface ThemeSwitcherProps {
   className?: string;
@@ -39,7 +40,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className, showLabel = fa
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>Thème de l'application</DropdownMenuLabel>
+        <DropdownMenuLabel><T k="auto.themeswitcher.theme_de_l_application" fallback="Thème de l'application" /></DropdownMenuLabel>
         {themes.map((entry) => (
           <DropdownMenuItem
             key={entry.id}

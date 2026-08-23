@@ -54,6 +54,7 @@ import {
     PROJECT_WORKFLOW_STEPS,
     type WorkflowStepIcon,
 } from "@/config/referentials/projects/project-workflow-steps.referential";
+import { T } from '@/components/i18n/T';
 
 const STEP_ICON_MAP: Record<WorkflowStepIcon, React.ComponentType<{ className?: string }>> = {
   building: Building,
@@ -650,12 +651,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
           {currentStep === 7 && (
             <div className="space-y-4">
-              <h3 className="font-semibold">Résumé du Projet</h3>
+              <h3 className="font-semibold"><T k="auto.projectcreationworkflow.resume_du_projet" fallback="Résumé du Projet" /></h3>
               <Card>
                 <CardContent className="pt-6 space-y-2">
-                  <p><strong>Titre:</strong> {formData?.projectData?.title}</p>
-                  <p><strong>Budget:</strong> ${formData?.projectData?.budget || 0}</p>
-                  <p><strong>Dates:</strong> {formData?.projectData?.startDate || 'Non défini'} à {formData?.projectData?.endDate || 'Non défini'}</p>
+                  <p><strong><T k="auto.projectcreationworkflow.titre" fallback="Titre:" /></strong> {formData?.projectData?.title}</p>
+                  <p><strong><T k="auto.projectcreationworkflow.budget" fallback="Budget:" /></strong> ${formData?.projectData?.budget || 0}</p>
+                  <p><strong><T k="auto.projectcreationworkflow.dates" fallback="Dates:" /></strong> {formData?.projectData?.startDate || 'Non défini'} à {formData?.projectData?.endDate || 'Non défini'}</p>
                 </CardContent>
               </Card>
             </div>

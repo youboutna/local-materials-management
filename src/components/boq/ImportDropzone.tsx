@@ -4,6 +4,7 @@
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   onFile: (file: File) => void;
@@ -35,7 +36,7 @@ export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabl
       />
       <p className="text-sm text-muted-foreground mb-3">Déposez PDF / Excel / CSV ou</p>
       <Button type="button" variant="outline" disabled={disabled} onClick={() => ref.current?.click()}>
-        <Upload className="h-4 w-4 mr-2" /> Sélectionner un fichier
+        <Upload className="h-4 w-4 mr-2" /> <T k="auto.importdropzone.selectionner_un_fichier" fallback="Sélectionner un fichier" />
       </Button>
     </div>
   );

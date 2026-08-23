@@ -10,6 +10,7 @@ import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { MAURITANIA_REGIONS, GeographicUnit } from '@/utils/mauritania';
 import { isLocationInRegion, findRegionByLocation } from '@/utils/mauritaniaUtils';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
+import { T } from '@/components/i18n/T';
 
 interface InteractiveMapFiltersProps {
   projects: ProjectData[];
@@ -88,7 +89,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-primary" />
-          Filtres Carte Interactive
+          <T k="auto.interactivemapfilters.filtres_carte_interactive" fallback="Filtres Carte Interactive" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -97,14 +98,14 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
-              Région
+              <T k="auto.interactivemapfilters.region" fallback="Région" />
             </Label>
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger>
                 <SelectValue placeholder="Toutes les régions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les régions</SelectItem>
+                <SelectItem value="all"><T k="auto.interactivemapfilters.toutes_les_regions" fallback="Toutes les régions" /></SelectItem>
                 {MAURITANIA_REGIONS.map((region) => (
                   <SelectItem key={region.code} value={region.code}>
                     {region.name}
@@ -116,13 +117,13 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
 
           {/* Status Filter */}
           <div className="space-y-2">
-            <Label>Statut</Label>
+            <Label><T k="auto.interactivemapfilters.statut" fallback="Statut" /></Label>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="all"><T k="auto.interactivemapfilters.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
                 {availableStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
                     {status}
@@ -136,7 +137,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
                  <DollarSign className="h-4 w-4 text-success" />
-              Budget (MRU)
+              <T k="auto.interactivemapfilters.budget_mru" fallback="Budget (MRU)" />
             </Label>
             <div className="px-2">
               <Slider
@@ -158,7 +159,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
           <div className="space-y-2">
             <Label>&nbsp;</Label>
             <Button variant="outline" onClick={resetFilters} className="w-full">
-              Réinitialiser
+              <T k="auto.interactivemapfilters.reinitialiser" fallback="Réinitialiser" />
             </Button>
           </div>
         </div>

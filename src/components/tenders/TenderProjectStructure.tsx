@@ -32,6 +32,7 @@ import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 interface TenderProjectStructureProps {
   projectId: string;
   onPhaseSelect?: (phaseId: string) => void;
@@ -118,7 +119,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
         <CardContent className="py-8 text-center">
           <FolderTree className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
-            Sélectionnez un projet pour voir sa structure
+            <T k="auto.tenderprojectstructure.selectionnez_un_projet_pour_voir_sa_structure" fallback="Sélectionnez un projet pour voir sa structure" />
           </p>
         </CardContent>
       </Card>
@@ -130,7 +131,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
       <CardHeader className={cn("pb-3", compact && "px-0")}>
         <CardTitle className="flex items-center gap-2 text-lg">
           <FolderTree className="h-5 w-5 text-primary" />
-          Structure du Projet
+          <T k="auto.tenderprojectstructure.structure_du_projet" fallback="Structure du Projet" />
         </CardTitle>
       </CardHeader>
 
@@ -182,7 +183,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
           {/* Progress */}
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-muted-foreground">Progression globale</span>
+              <span className="text-muted-foreground"><T k="auto.tenderprojectstructure.progression_globale" fallback="Progression globale" /></span>
               <span className="font-medium">{project.progress}%</span>
             </div>
             <Progress value={project.progress} className="h-2" />
@@ -259,7 +260,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
                     {phase.steps && phase.steps.length > 0 ? (
                       <div className="space-y-2 mt-3">
                         <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                          Étapes
+                          <T k="auto.tenderprojectstructure.etapes" fallback="Étapes" />
                         </h5>
                         <div className="space-y-1">
                           {phase.steps.map((step) => (
@@ -280,7 +281,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">
-                        Aucune étape définie pour cette phase
+                        <T k="auto.tenderprojectstructure.aucune_etape_definie_pour_cette_phase" fallback="Aucune étape définie pour cette phase" />
                       </p>
                     )}
                   </div>
@@ -307,7 +308,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
                 size="sm"
                 onClick={() => setSelectedPhases(new Set())}
               >
-                Réinitialiser
+                <T k="auto.tenderprojectstructure.reinitialiser" fallback="Réinitialiser" />
               </Button>
             </div>
           </div>

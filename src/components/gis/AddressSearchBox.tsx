@@ -29,6 +29,7 @@ import {
   useAddressSearch,
   type AddressSuggestion,
 } from '@/hooks/hexagonal/useAddressSearch';
+import { T } from '@/components/i18n/T';
 
 // ============================================================================
 // TYPES
@@ -351,7 +352,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                       }}
                     >
                       <Pencil className="h-3.5 w-3.5 mr-1" /> 
-                      Saisir manuellement
+                      <T k="auto.addresssearchbox.saisir_manuellement" fallback="Saisir manuellement" />
                     </Button>
                   </div>
                 )}
@@ -367,7 +368,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
           <div className="flex items-center justify-between">
             <Label className="text-xs flex items-center gap-1">
               <Pencil className="h-3 w-3" /> 
-              Saisie manuelle de la position
+              <T k="auto.addresssearchbox.saisie_manuelle_de_la_position" fallback="Saisie manuelle de la position" />
             </Label>
             <Button
               size="sm"
@@ -396,7 +397,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
             
             <div>
               <Label className="text-[11px]" htmlFor="manual-lat">
-                Latitude
+                <T k="auto.addresssearchbox.latitude" fallback="Latitude" />
               </Label>
               <Input
                 id="manual-lat"
@@ -412,7 +413,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
             
             <div>
               <Label className="text-[11px]" htmlFor="manual-lng">
-                Longitude
+                <T k="auto.addresssearchbox.longitude" fallback="Longitude" />
               </Label>
               <Input
                 id="manual-lng"
@@ -435,14 +436,14 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                 aria-label="Utiliser cette position"
               >
                 <Check className="h-3.5 w-3.5 mr-1" /> 
-                Utiliser cette position
+                <T k="auto.addresssearchbox.utiliser_cette_position" fallback="Utiliser cette position" />
               </Button>
             </div>
           </div>
 
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             <MapPin className="h-3 w-3" /> 
-            Les coordonnées manuelles sont conservées telles quelles.
+            <T k="auto.addresssearchbox.les_coordonnees_manuelles_sont_conservees_telles" fallback="Les coordonnées manuelles sont conservées telles quelles." />
           </p>
         </div>
       )}

@@ -7,6 +7,7 @@ import React from 'react';
 import { DocumentHub } from '@/components/documents/hub';
 import { useMaterialDocumentAdapter } from '@/components/documents/adapters/materialDocumentAdapter';
 import { Badge } from '@/components/ui/badge';
+import { T } from '@/components/i18n/T';
 
 interface MaterialDocumentsPanelProps {
   materialId: string;
@@ -33,7 +34,7 @@ export const MaterialDocumentsPanel: React.FC<MaterialDocumentsPanelProps> = ({
     <div className="space-y-3">
       {(materialName || supplierName) && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>Contexte appliqué aux nouveaux documents :</span>
+          <span><T k="auto.materialdocumentspanel.contexte_applique_aux_nouveaux_documents" fallback="Contexte appliqué aux nouveaux documents :" /></span>
           {materialName && <Badge variant="secondary">{materialName}</Badge>}
           {supplierName && <Badge variant="outline">Fournisseur : {supplierName}</Badge>}
         </div>

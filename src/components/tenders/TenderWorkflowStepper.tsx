@@ -24,6 +24,7 @@ import {
 import { format, parseISO, differenceInDays, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 type WorkflowStep = 
   | 'creation' 
@@ -131,7 +132,7 @@ const TenderWorkflowStepper: React.FC<TenderWorkflowStepperProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <BarChart3 className="h-5 w-5 text-primary" />
-              Processus d'Appel d'Offres
+              <T k="auto.tenderworkflowstepper.processus_d_appel_d_offres" fallback="Processus d'Appel d'Offres" />
             </CardTitle>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
@@ -244,7 +245,7 @@ const TenderWorkflowStepper: React.FC<TenderWorkflowStepperProps> = ({
                         )}
                         {step.status === 'locked' && (
                           <p className="text-xs text-muted-foreground">
-                            Terminez les étapes précédentes
+                            <T k="auto.tenderworkflowstepper.terminez_les_etapes_precedentes" fallback="Terminez les étapes précédentes" />
                           </p>
                         )}
                       </div>
@@ -280,9 +281,9 @@ const TenderWorkflowStepper: React.FC<TenderWorkflowStepperProps> = ({
         {currentIndex === enrichedSteps.length - 1 && enrichedSteps[currentIndex].status === 'completed' && (
           <div className="mt-6 p-4 bg-success/10 border border-success/30 rounded-lg text-center">
             <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-            <p className="font-medium text-success">Processus terminé</p>
+            <p className="font-medium text-success"><T k="auto.tenderworkflowstepper.processus_termine" fallback="Processus terminé" /></p>
             <p className="text-sm text-muted-foreground">
-              L'appel d'offres a été attribué avec succès
+              <T k="auto.tenderworkflowstepper.l_appel_d_offres_a_ete_attribue_avec_succes" fallback="L'appel d'offres a été attribué avec succès" />
             </p>
           </div>
         )}

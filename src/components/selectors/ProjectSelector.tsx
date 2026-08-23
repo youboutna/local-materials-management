@@ -6,6 +6,7 @@ import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useProjectsSelector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 // Local type for project options from selector
 interface ProjectOption {
@@ -126,7 +127,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
       {selectedProject && (
         <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Projet sélectionné:</span>
+            <span className="font-medium"><T k="auto.projectselector.projet_selectionne" fallback="Projet sélectionné:" /></span>
             {!secureMode && selectedProject.status && (
               <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
                 <TranslatedStatus code={selectedProject.status} />

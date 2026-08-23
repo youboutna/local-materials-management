@@ -25,6 +25,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 interface CascadeStep {
   id: string;
@@ -189,7 +190,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Workflow en Cascade
+            <T k="auto.cascadeworkflowview.workflow_en_cascade" fallback="Workflow en Cascade" />
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-success-soft text-success">
@@ -260,11 +261,11 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
         <div className="mt-6 p-4 rounded-lg bg-muted/30 border">
           <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Building className="h-4 w-4" />
-            Règles Métier Mauritanie
+            <T k="auto.cascadeworkflowview.regles_metier_mauritanie" fallback="Règles Métier Mauritanie" />
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div>
-              <p className="font-medium text-muted-foreground mb-1">Paiements</p>
+              <p className="font-medium text-muted-foreground mb-1"><T k="auto.cascadeworkflowview.paiements" fallback="Paiements" /></p>
               <ul className="space-y-1">
                 <li>• Seuils: 25%, 50%, 75%, 100%</li>
                 <li>• Garantie: 10% retenu</li>
@@ -272,7 +273,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
               </ul>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground mb-1">Matériaux</p>
+              <p className="font-medium text-muted-foreground mb-1"><T k="auto.cascadeworkflowview.materiaux" fallback="Matériaux" /></p>
               <ul className="space-y-1">
                 <li>• Priorité locale si dispo &gt; 70%</li>
                 <li>• Certifications obligatoires</li>
@@ -280,7 +281,7 @@ const CascadeWorkflowView: React.FC<CascadeWorkflowViewProps> = ({
               </ul>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground mb-1">Qualité</p>
+              <p className="font-medium text-muted-foreground mb-1"><T k="auto.cascadeworkflowview.qualite" fallback="Qualité" /></p>
               <ul className="space-y-1">
                 <li>• Inspections à chaque seuil</li>
                 <li>• Approbation ingénieur local</li>

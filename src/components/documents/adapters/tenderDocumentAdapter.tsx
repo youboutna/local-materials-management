@@ -24,6 +24,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 const TENDER_CATEGORY_LABELS: Record<string, string> = {
   administrative: 'Administratif',
@@ -255,23 +256,23 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
       return (
         <>
           <div className="space-y-2">
-            <Label>Portée</Label>
+            <Label><T k="auto.tenderdocumentadapter.portee" fallback="Portée" /></Label>
             <Select value={scope} onValueChange={(v) => setExtra('scope', v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tender"><TranslatedCategory code="tender" /></SelectItem>
-                <SelectItem value="common">Commun à tous les lots</SelectItem>
+                <SelectItem value="common"><T k="auto.tenderdocumentadapter.commun_a_tous_les_lots" fallback="Commun à tous les lots" /></SelectItem>
                 <SelectItem value="lot" disabled={lotOptions.length === 0}>
-                  Lot spécifique
+                  <T k="auto.tenderdocumentadapter.lot_specifique" fallback="Lot spécifique" />
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
           {scope === 'lot' && lotOptions.length > 0 && (
             <div className="space-y-2">
-              <Label>Lot</Label>
+              <Label><T k="auto.tenderdocumentadapter.lot" fallback="Lot" /></Label>
               <Select value={lotId} onValueChange={(v) => setExtra('lotId', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir un lot" />

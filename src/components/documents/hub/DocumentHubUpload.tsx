@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DocumentHubContract, UploadInput, formatBytes } from './types';
 import { MimeIcon } from './MimeIcon';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   open: boolean;
@@ -90,9 +91,9 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Ajouter un document</DialogTitle>
+          <DialogTitle><T k="auto.documenthubupload.ajouter_un_document" fallback="Ajouter un document" /></DialogTitle>
           <DialogDescription>
-            Déposez un fichier puis renseignez ses métadonnées.
+            <T k="auto.documenthubupload.deposez_un_fichier_puis_renseignez_ses_metadonne" fallback="Déposez un fichier puis renseignez ses métadonnées." />
           </DialogDescription>
         </DialogHeader>
 
@@ -111,7 +112,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
             >
               <Upload className="h-8 w-8 text-muted-foreground" />
               <div className="text-sm font-medium">
-                Glissez un fichier ici ou <span className="text-primary">parcourir</span>
+                <T k="auto.documenthubupload.glissez_un_fichier_ici_ou" fallback="Glissez un fichier ici ou" /> <span className="text-primary">parcourir</span>
               </div>
               <div className="text-xs text-muted-foreground">
                 PDF, images, documents Office…
@@ -138,7 +139,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="doc-title">Titre</Label>
+            <Label htmlFor="doc-title"><T k="auto.documenthubupload.titre" fallback="Titre" /></Label>
             <Input
               id="doc-title"
               value={title}
@@ -150,7 +151,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
 
           {contract.uploadCategoryOptions && contract.uploadCategoryOptions.length > 0 && (
             <div className="space-y-2">
-              <Label>Catégorie</Label>
+              <Label><T k="auto.documenthubupload.categorie" fallback="Catégorie" /></Label>
               <Select value={category ?? undefined} onValueChange={setCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="Catégorie" />
@@ -172,7 +173,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
           })}
 
           <div className="space-y-2">
-            <Label htmlFor="doc-desc">Description</Label>
+            <Label htmlFor="doc-desc"><T k="auto.documenthubupload.description" fallback="Description" /></Label>
             <Textarea
               id="doc-desc"
               value={description}
@@ -184,7 +185,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleClose(false)}>
-              Annuler
+              <T k="auto.documenthubupload.annuler" fallback="Annuler" />
             </Button>
             <Button type="submit" disabled={!file || !title.trim() || busy}>
               {busy ? 'Ajout…' : 'Ajouter'}

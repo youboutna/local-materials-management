@@ -22,6 +22,7 @@ import {
   ListChecks,
   Eye,
 } from "lucide-react";
+import { T } from '@/components/i18n/T';
 
 interface Milestone {
   id: string;
@@ -230,7 +231,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
               }}
             >
               <ClipboardCheck className="h-3 w-3 mr-1" />
-              <span className="hidden md:inline">Inspection</span>
+              <span className="hidden md:inline"><T k="auto.stepnode.inspection" fallback="Inspection" /></span>
             </Button>
           )}
           {canRequestPayment && (
@@ -244,7 +245,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
               }}
             >
               <DollarSign className="h-3 w-3 mr-1" />
-              <span className="hidden md:inline">Paiement</span>
+              <span className="hidden md:inline"><T k="auto.stepnode.paiement" fallback="Paiement" /></span>
             </Button>
           )}
           <Button
@@ -317,7 +318,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
                       onClick={() => onScheduleInspection(step.id)}
                     >
                       <Play className="h-3 w-3 mr-1" />
-                      Programmer
+                      <T k="auto.stepnode.programmer" fallback="Programmer" />
                     </Button>
                   )}
                   {canAction && (milestone.type === "payment" || milestone.type === "paiement") && onRequestPayment && (
@@ -328,7 +329,7 @@ export const StepNode: React.FC<StepNodeProps> = ({
                       onClick={() => onRequestPayment(step.id)}
                     >
                       <DollarSign className="h-3 w-3 mr-1" />
-                      Initier
+                      <T k="auto.stepnode.initier" fallback="Initier" />
                     </Button>
                   )}
                 </div>

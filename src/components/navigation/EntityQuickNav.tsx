@@ -20,6 +20,7 @@ import {
   CreditCard,
   LucideIcon,
 } from "lucide-react";
+import { T } from '@/components/i18n/T';
 
 interface RelatedEntity {
   type: "project" | "phase" | "material" | "document" | "inspection" | "payment" | "supplier" | "employee";
@@ -129,7 +130,7 @@ export function EntityQuickNav({
       {/* Related entities */}
       {relatedEntities.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Liés:</span>
+          <span className="text-xs text-muted-foreground"><T k="auto.entityquicknav.lies" fallback="Liés:" /></span>
           {relatedEntities.slice(0, 5).map((entity, index) => {
             const Icon = entityIcons[entity.type];
             return (

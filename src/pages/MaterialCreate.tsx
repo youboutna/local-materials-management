@@ -12,6 +12,7 @@ import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { ArrowLeft, Package } from "lucide-react";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { CreateMaterialRequestDto } from "@/dtos/transforms";
+import { T } from '@/components/i18n/T';
 
 
 const MaterialCreate = () => {
@@ -184,16 +185,16 @@ const MaterialCreate = () => {
               aria-label="Retour à la liste des matériaux"
             >
               <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-              Retour aux matériaux
+              <T k="auto.materialcreate.retour_aux_materiaux" fallback="Retour aux matériaux" />
             </Button>
           </div>
           <div className="mt-4">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
               <Package className="h-7 w-7 text-primary" aria-hidden="true" />
-              Nouveau matériau
+              <T k="auto.materialcreate.nouveau_materiau" fallback="Nouveau matériau" />
             </h1>
             <p className="text-muted-foreground mt-2">
-              Ajouter un nouveau matériau à votre inventaire
+              <T k="auto.materialcreate.ajouter_un_nouveau_materiau_a_votre_inventaire" fallback="Ajouter un nouveau matériau à votre inventaire" />
             </p>
           </div>
         </div>
@@ -203,7 +204,7 @@ const MaterialCreate = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           <Card>
             <CardHeader>
-              <CardTitle>Informations du matériau</CardTitle>
+              <CardTitle><T k="auto.materialcreate.informations_du_materiau" fallback="Informations du matériau" /></CardTitle>
             </CardHeader>
             <CardContent>
               <EnhancedMaterialForm
@@ -215,7 +216,7 @@ const MaterialCreate = () => {
               />
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t">
                 <Button variant="outline" onClick={() => navigate("/materials")} disabled={isSubmitting}>
-                  Annuler
+                  <T k="auto.materialcreate.annuler" fallback="Annuler" />
                 </Button>
                 <Button
                   onClick={() => {

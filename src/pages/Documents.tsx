@@ -12,6 +12,7 @@ import {
 } from '@/components/documents/panels';
 import { useSuppliersList } from '@/hooks/hexagonal/useSuppliersCrudHex';
 import { FolderKanban, Gavel, Truck, ShieldCheck } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 type Scope = 'project' | 'tender' | 'supplier';
 
@@ -88,7 +89,7 @@ export default function Documents() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base">Gestion électronique des documents (GED)</CardTitle>
+              <CardTitle className="text-base"><T k="auto.documents.gestion_electronique_des_documents_ged" fallback="Gestion électronique des documents (GED)" /></CardTitle>
             </div>
             <CardDescription>
               Espace unifié — projets, appels d'offres, fournisseurs. Aperçu sécurisé via passerelle (l'URL de stockage n'est pas exposée).

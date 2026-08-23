@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 export interface GateValidationResult {
   isValid: boolean;
@@ -125,7 +126,7 @@ export const SecretCodeAccessGate: React.FC<SecretCodeAccessGateProps> = ({
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="secret-code" className="text-base font-medium">
-                  Code Secret
+                  <T k="auto.secretcodeaccessgate.code_secret" fallback="Code Secret" />
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -161,7 +162,7 @@ export const SecretCodeAccessGate: React.FC<SecretCodeAccessGateProps> = ({
                 {isValidating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Vérification...
+                    <T k="auto.secretcodeaccessgate.verification" fallback="Vérification..." />
                   </>
                 ) : (
                   <>

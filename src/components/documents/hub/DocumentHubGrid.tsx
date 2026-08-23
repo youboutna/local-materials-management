@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DocumentItem, formatBytes } from './types';
 import { MimeIcon } from './MimeIcon';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   items: DocumentItem[];
@@ -105,7 +106,7 @@ export function DocumentHubGrid({ items, categoryLabels, onPreview, onDelete }: 
                           onClick={() => onDelete(item)}
                         >
                           <Trash2 className="mr-2 h-3.5 w-3.5" />
-                          Supprimer
+                          <T k="auto.documenthubgrid.supprimer" fallback="Supprimer" />
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

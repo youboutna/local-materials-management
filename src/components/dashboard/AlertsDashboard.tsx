@@ -18,6 +18,7 @@ import {
 import React from "react";
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const AlertsDashboard: React.FC = () => {
   const { t } = useLanguage();
   const { 
@@ -208,7 +209,7 @@ const AlertsDashboard: React.FC = () => {
                         {alert.message}
                         {alert.projectTitle && (
                           <div className="mt-1 text-sm">
-                            <strong>Projet:</strong> {alert.projectTitle}
+                            <strong><T k="auto.alertsdashboard.projet" fallback="Projet:" /></strong> {alert.projectTitle}
                           </div>
                         )}
                       </AlertDescription>

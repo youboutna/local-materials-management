@@ -32,6 +32,7 @@ import {
   StakeholderType,
   StakeholderRole,
 } from '@/dtos/entities/StakeholderDTO';
+import { T } from '@/components/i18n/T';
 
 interface PhaseStakeholdersTabProps {
   projectId: string;
@@ -136,11 +137,11 @@ const PhaseStakeholdersTab: React.FC<PhaseStakeholdersTabProps> = ({ projectId, 
         <CardContent className="py-12 text-center space-y-3">
           <UsersIcon className="h-10 w-10 text-muted-foreground mx-auto" />
           <p className="text-sm text-muted-foreground">
-            Aucune partie prenante associée à ce projet.
+            <T k="auto.phasestakeholderstab.aucune_partie_prenante_associee_a_ce_projet" fallback="Aucune partie prenante associée à ce projet." />
           </p>
           <Button asChild variant="outline" size="sm">
             <Link to={`/projects/${projectId}?tab=stakeholders`}>
-              Gérer les parties prenantes
+              <T k="auto.phasestakeholderstab.gerer_les_parties_prenantes" fallback="Gérer les parties prenantes" />
             </Link>
           </Button>
         </CardContent>
@@ -194,7 +195,7 @@ const PhaseStakeholdersTab: React.FC<PhaseStakeholdersTabProps> = ({ projectId, 
                         <Icon className="h-4 w-4 text-primary shrink-0" />
                         <span className="truncate">{s.name}</span>
                       </span>
-                      {s.isPrimary && <Badge variant="default">Principal</Badge>}
+                      {s.isPrimary && <Badge variant="default"><T k="auto.phasestakeholderstab.principal" fallback="Principal" /></Badge>}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">

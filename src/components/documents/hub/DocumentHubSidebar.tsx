@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DocumentFacetDef } from './types';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   facets: DocumentFacetDef[];
@@ -20,11 +21,11 @@ export function DocumentHubSidebar({ facets, selected, onToggle, onClear }: Prop
         <div className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Filtres
+              <T k="auto.documenthubsidebar.filtres" fallback="Filtres" />
             </h4>
             {anySelected && (
               <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={onClear}>
-                Réinitialiser
+                <T k="auto.documenthubsidebar.reinitialiser" fallback="Réinitialiser" />
               </Button>
             )}
           </div>

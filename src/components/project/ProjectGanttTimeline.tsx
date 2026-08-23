@@ -2,6 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import type { GanttModel } from '@/application/services/ProjectMetricsOrchestrator';
 import { formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 /**
  * ProjectGanttTimeline — composant Gantt UI UNIQUE et réutilisable
@@ -52,7 +53,7 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
 
       {/* Échelle des années */}
       <div className="flex items-center gap-2">
-        <div className="w-1/3 text-xs text-muted-foreground">Phase (poids)</div>
+        <div className="w-1/3 text-xs text-muted-foreground"><T k="auto.projectgantttimeline.phase_poids" fallback="Phase (poids)" /></div>
         <div className="flex w-2/3 border-b border-border">
           {gantt.years.map((y) => (
             <div key={y} className="flex-1 text-center text-xs text-muted-foreground">
@@ -98,7 +99,7 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
 
       {/* Jalons */}
       <div className="flex items-start gap-2">
-        <div className="w-1/3 text-xs text-muted-foreground">Jalons clés</div>
+        <div className="w-1/3 text-xs text-muted-foreground"><T k="auto.projectgantttimeline.jalons_cles" fallback="Jalons clés" /></div>
         <div className="flex w-2/3">
           {gantt.milestones.map((m) => (
             <div key={m.label} className="flex-1">

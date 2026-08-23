@@ -24,6 +24,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { T } from '@/components/i18n/T';
 
 const MainNavbar = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -65,7 +66,7 @@ const MainNavbar = () => {
          {t('app.name') || 'HadraTech-GPI'}
           {DEV_MODE && (
             <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded">
-              DEV
+              <T k="auto.mainnavbar.dev" fallback="DEV" />
             </span>
           )}
         </Link>

@@ -5,6 +5,7 @@
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   reference: BoqLineDTO[];
@@ -33,10 +34,10 @@ export function BoqComparisonTable({ reference, candidate, labels }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Désignation</TableHead>
+            <TableHead><T k="auto.boqcomparisontable.designation" fallback="Désignation" /></TableHead>
             <TableHead className="text-right">{refLabel} (HT)</TableHead>
             <TableHead className="text-right">{candLabel} (HT)</TableHead>
-            <TableHead className="text-right">Écart</TableHead>
+            <TableHead className="text-right"><T k="auto.boqcomparisontable.ecart" fallback="Écart" /></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

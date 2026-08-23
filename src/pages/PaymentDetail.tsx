@@ -12,6 +12,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const PaymentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const PaymentDetailPage: React.FC = () => {
     <AppLayout pageTitle="💳 Détail du paiement">
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)} aria-label="Revenir à la page précédente">
-          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> Retour
+          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> <T k="auto.paymentdetail.retour" fallback="Retour" />
         </Button>
 
         {isLoading && <Skeleton className="h-64 w-full" />}
@@ -46,7 +47,7 @@ const PaymentDetailPage: React.FC = () => {
         {!isLoading && !payment && !isError && (
           <Card>
             <CardContent className="p-6">
-              Aucun paiement trouvé pour l'identifiant <code>{id}</code>.
+              <T k="auto.paymentdetail.aucun_paiement_trouve_pour_l_identifiant" fallback="Aucun paiement trouvé pour l'identifiant" /> <code>{id}</code>.
             </CardContent>
           </Card>
         )}
@@ -76,21 +77,21 @@ const PaymentDetailPage: React.FC = () => {
                 {payment.projectId && (
                   <Button variant="outline" asChild>
                     <Link to={`/projects/${payment.projectId}`}>
-                      Projet <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.paymentdetail.projet" fallback="Projet" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}
                 {payment.inspectionId && (
                   <Button variant="outline" asChild>
                     <Link to={`/inspections/${payment.inspectionId}`}>
-                      Inspection liée <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.paymentdetail.inspection_liee" fallback="Inspection liée" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}
                 {payment.phaseId && payment.projectId && (
                   <Button variant="outline" asChild>
                     <Link to={`/projects/${payment.projectId}/phases/${payment.phaseId}`}>
-                      Phase <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.paymentdetail.phase" fallback="Phase" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}

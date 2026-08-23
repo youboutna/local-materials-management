@@ -8,6 +8,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { MaterialUIDTO } from '@/dtos/transforms';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface InteractiveMaterialsListProps {
   materials: MaterialUIDTO[];
   onMaterialSelect?: (material: MaterialUIDTO) => void;
@@ -73,10 +74,10 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
         <CardContent className="text-center py-12">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun matériau trouvé
+            <T k="auto.interactivematerialslist.aucun_materiau_trouve" fallback="Aucun matériau trouvé" />
           </h3>
           <p className="text-muted-foreground">
-            Aucun matériau avec coordonnées GPS ne correspond à vos critères.
+            <T k="auto.interactivematerialslist.aucun_materiau_avec_coordonnees_gps_ne_correspon" fallback="Aucun matériau avec coordonnées GPS ne correspond à vos critères." />
           </p>
         </CardContent>
       </Card>
@@ -88,7 +89,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
       <CardHeader className="bg-gradient-to-r from-blue-50 to-success/10 dark:from-blue-950 dark:to-success">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Package className="h-5 w-5 text-primary" />
-          Matériaux avec Coordonnées GPS
+          <T k="auto.interactivematerialslist.materiaux_avec_coordonnees_gps" fallback="Matériaux avec Coordonnées GPS" />
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           {materials.length} matériaux géolocalisés trouvés
@@ -186,7 +187,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                       }}
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      Voir sur la carte
+                      <T k="auto.interactivematerialslist.voir_sur_la_carte" fallback="Voir sur la carte" />
                     </Button>
                   )}
                 </CardContent>

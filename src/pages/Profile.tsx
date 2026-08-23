@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { usePasswordManagement } from "@/hooks/usePasswordManagement";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout";
+import { T } from '@/components/i18n/T';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -98,7 +99,7 @@ const Profile = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">
-                  ID Utilisateur
+                  <T k="auto.profile.id_utilisateur" fallback="ID Utilisateur" />
                 </Label>
                 <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
                   {user?.id?.slice(0, 8)}...{user?.id?.slice(-8)}
@@ -114,26 +115,26 @@ const Profile = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Sécurité du compte
+            <T k="auto.profile.securite_du_compte" fallback="Sécurité du compte" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!showPasswordSection ? (
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                Modifiez votre mot de passe pour sécuriser votre compte.
+                <T k="auto.profile.modifiez_votre_mot_de_passe_pour_securiser_votre" fallback="Modifiez votre mot de passe pour sécuriser votre compte." />
               </p>
               <Button
                 onClick={() => setShowPasswordSection(true)}
                 variant="outline"
               >
-                Changer le mot de passe
+                <T k="auto.profile.changer_le_mot_de_passe" fallback="Changer le mot de passe" />
               </Button>
             </div>
           ) : (
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                <Label htmlFor="newPassword"><T k="auto.profile.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -161,7 +162,7 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
-                  Confirmer le nouveau mot de passe
+                  <T k="auto.profile.confirmer_le_nouveau_mot_de_passe" fallback="Confirmer le nouveau mot de passe" />
                 </Label>
                 <div className="relative">
                   <Input
@@ -204,7 +205,7 @@ const Profile = () => {
                     setConfirmPassword("");
                   }}
                 >
-                  Annuler
+                  <T k="auto.profile.annuler" fallback="Annuler" />
                 </Button>
               </div>
             </form>

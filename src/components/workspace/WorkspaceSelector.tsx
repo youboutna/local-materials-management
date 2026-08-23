@@ -22,6 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
+import { T } from '@/components/i18n/T';
 
 
 interface WorkspaceSelectorProps {
@@ -130,7 +131,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     <div className="space-y-4">
       <div>
         <label className="text-sm font-medium text-foreground mb-2 block">
-          Espace de travail
+          <T k="auto.workspaceselector.espace_de_travail" fallback="Espace de travail" />
         </label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -157,7 +158,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Building className="h-4 w-4" />
-                  <span>Sélectionner un espace de travail</span>
+                  <span><T k="auto.workspaceselector.selectionner_un_espace_de_travail" fallback="Sélectionner un espace de travail" /></span>
                 </div>
               )}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -170,11 +171,11 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                 {workspaces.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Aucun espace de travail disponible</p>
+                    <p><T k="auto.workspaceselector.aucun_espace_de_travail_disponible" fallback="Aucun espace de travail disponible" /></p>
                   </div>
                 ) : (
                   <div className="p-4 text-center text-muted-foreground">
-                    <p>Aucun espace de travail trouvé</p>
+                    <p><T k="auto.workspaceselector.aucun_espace_de_travail_trouve" fallback="Aucun espace de travail trouvé" /></p>
                   </div>
                 )}
               </CommandEmpty>
@@ -217,7 +218,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         
         {workspaces.length === 0 && (
           <p className="text-sm text-destructive mt-2">
-            Aucun espace de travail configuré. Veuillez contacter l'administrateur.
+            <T k="auto.workspaceselector.aucun_espace_de_travail_configure_veuillez_conta" fallback="Aucun espace de travail configuré. Veuillez contacter l'administrateur." />
           </p>
         )}
       </div>
@@ -265,7 +266,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
 
             {selectedWorkspace.contact && (
               <div className="space-y-1">
-                <p className="text-sm font-medium">Contact:</p>
+                <p className="text-sm font-medium"><T k="auto.workspaceselector.contact" fallback="Contact:" /></p>
                 <p className="text-sm text-muted-foreground">{selectedWorkspace.contact.manager}</p>
                 <p className="text-sm text-muted-foreground">{selectedWorkspace.contact.phone}</p>
               </div>
@@ -273,7 +274,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
 
             {selectedWorkspace.facilities && selectedWorkspace.facilities.length > 0 && (
               <div className="space-y-1">
-                <p className="text-sm font-medium">Installations:</p>
+                <p className="text-sm font-medium"><T k="auto.workspaceselector.installations" fallback="Installations:" /></p>
                 <div className="flex flex-wrap gap-1">
                   {selectedWorkspace.facilities.map((facility, index) => (
                     <span

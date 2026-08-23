@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Square, Circle, Pentagon, Trash2 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface Point {
   x: number;
@@ -98,7 +99,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
           className="flex items-center gap-1"
         >
           <Square className="h-4 w-4" />
-          Rectangle
+          <T k="auto.warehouseshapetracer.rectangle" fallback="Rectangle" />
         </Button>
         <Button
           type="button"
@@ -108,7 +109,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
           className="flex items-center gap-1"
         >
           <Circle className="h-4 w-4" />
-          Cercle
+          <T k="auto.warehouseshapetracer.cercle" fallback="Cercle" />
         </Button>
         <Button
           type="button"
@@ -118,7 +119,7 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
           className="flex items-center gap-1"
         >
           <Pentagon className="h-4 w-4" />
-          Forme libre
+          <T k="auto.warehouseshapetracer.forme_libre" fallback="Forme libre" />
         </Button>
         <Button
           type="button"
@@ -128,12 +129,12 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
           className="flex items-center gap-1"
         >
           <Trash2 className="h-4 w-4" />
-          Effacer
+          <T k="auto.warehouseshapetracer.effacer" fallback="Effacer" />
         </Button>
       </div>
 
       <div className="space-y-4">
-        <Label>Tracez la forme de votre entrepôt ou bâtiment</Label>
+        <Label><T k="auto.warehouseshapetracer.tracez_la_forme_de_votre_entrepot_ou_batiment" fallback="Tracez la forme de votre entrepôt ou bâtiment" /></Label>
         
         <div className="border rounded-lg p-4 bg-muted">
           <svg
@@ -175,14 +176,14 @@ const WarehouseShapeTracer: React.FC<WarehouseShapeTracerProps> = ({
         
         {isDrawing && (
           <div className="text-sm text-primary">
-            Cliquez sur le canevas pour ajouter des points. 
+            <T k="auto.warehouseshapetracer.cliquez_sur_le_canevas_pour_ajouter_des_points" fallback="Cliquez sur le canevas pour ajouter des points." /> 
             <Button
               type="button"
               variant="link"
               className="h-auto p-0 ml-2"
               onClick={handleFinishDrawing}
             >
-              Terminer
+              <T k="auto.warehouseshapetracer.terminer" fallback="Terminer" />
             </Button>
           </div>
         )}

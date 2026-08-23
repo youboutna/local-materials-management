@@ -27,6 +27,7 @@ import { Download, ExternalLink, FileText } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -166,7 +167,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
       return (
         <div className="text-center py-8 text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>Aucun document associé à ce projet</p>
+          <p><T k="auto.documentsection.aucun_document_associe_a_ce_projet" fallback="Aucun document associé à ce projet" /></p>
         </div>
       );
     }
@@ -204,7 +205,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                     variant="outline"
                     onClick={() => handleViewDocument(document)}
                   >
-                    Voir
+                    <T k="auto.documentsection.voir" fallback="Voir" />
                   </Button>
                   {document.fileUrl && (
                     <Button
@@ -260,7 +261,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           </TabsTrigger>
           {selectedDocument && (
             <TabsTrigger value="viewer">
-              Visualisation
+              <T k="auto.documentsection.visualisation" fallback="Visualisation" />
             </TabsTrigger>
           )}
         </TabsList>
@@ -278,7 +279,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                 className="absolute top-2 right-2 z-10"
                 onClick={handleCloseViewer}
               >
-                Fermer
+                <T k="auto.documentsection.fermer" fallback="Fermer" />
               </Button>
               <DocumentViewer 
                 document={{

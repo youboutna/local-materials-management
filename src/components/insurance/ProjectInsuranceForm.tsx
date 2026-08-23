@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getInsuranceService } from '@/application/services/InsuranceService';
 import { getInsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
 import { InsuranceType, type InsuranceCertificateDTO, getInsuranceTypeLabel } from '@/dtos/entities/InsuranceDTO';
+import { T } from '@/components/i18n/T';
 
 interface ProjectInsuranceFormProps {
   projectId: string;
@@ -108,7 +109,7 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Shield className="h-4 w-4" />
-        Police rattachée au projet courant
+        <T k="auto.projectinsuranceform.police_rattachee_au_projet_courant" fallback="Police rattachée au projet courant" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -121,7 +122,7 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
           <Input id="policyNumber" value={form.policyNumber} onChange={e => set('policyNumber', e.target.value)} placeholder="POL-2026-0001" />
         </div>
         <div>
-          <Label>Type de garantie</Label>
+          <Label><T k="auto.projectinsuranceform.type_de_garantie" fallback="Type de garantie" /></Label>
           <Select value={form.insuranceType} onValueChange={value => set('insuranceType', value)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -132,7 +133,7 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
           </Select>
         </div>
         <div>
-          <Label htmlFor="coverageAmount">Montant couvert (MRU)</Label>
+          <Label htmlFor="coverageAmount"><T k="auto.projectinsuranceform.montant_couvert_mru" fallback="Montant couvert (MRU)" /></Label>
           <Input id="coverageAmount" type="number" min={0} value={form.coverageAmount} onChange={e => set('coverageAmount', e.target.value)} />
         </div>
         <div>
@@ -140,11 +141,11 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
           <Input id="contractorName" value={form.contractorName} onChange={e => set('contractorName', e.target.value)} placeholder="Nom de l'entreprise" />
         </div>
         <div>
-          <Label htmlFor="contractorId">Référence titulaire</Label>
+          <Label htmlFor="contractorId"><T k="auto.projectinsuranceform.reference_titulaire" fallback="Référence titulaire" /></Label>
           <Input id="contractorId" value={form.contractorId} onChange={e => set('contractorId', e.target.value)} />
         </div>
         <div>
-          <Label htmlFor="validFrom">Valide du</Label>
+          <Label htmlFor="validFrom"><T k="auto.projectinsuranceform.valide_du" fallback="Valide du" /></Label>
           <Input id="validFrom" type="date" value={form.validFrom} onChange={e => set('validFrom', e.target.value)} />
         </div>
         <div>
@@ -167,13 +168,13 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
       </div>
 
       <div>
-        <Label htmlFor="insuranceNotes">Notes</Label>
+        <Label htmlFor="insuranceNotes"><T k="auto.projectinsuranceform.notes" fallback="Notes" /></Label>
         <Textarea id="insuranceNotes" value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} />
       </div>
 
       <div className="flex justify-end gap-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>Annuler</Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}><T k="auto.projectinsuranceform.annuler" fallback="Annuler" /></Button>
         )}
         <Button type="submit" disabled={submitting}>
           {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}

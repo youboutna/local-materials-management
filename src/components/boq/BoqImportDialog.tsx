@@ -32,6 +32,7 @@ import { ImportDropzone } from './ImportDropzone';
 import { ImportMappingWizard } from './ImportMappingWizard';
 import { WbsSelector, type WbsValue } from './WbsSelector';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   source: BoqSource;
@@ -282,7 +283,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
         {!parseResult && (
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-sm font-medium">Format des montants du fichier</Label>
+              <Label className="text-sm font-medium"><T k="auto.boqimportdialog.format_des_montants_du_fichier" fallback="Format des montants du fichier" /></Label>
               <Select value={numberFormat} onValueChange={(v) => applyNumberFormat(v as NumberFormatMode)} disabled={isBusy}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -325,7 +326,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
             <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
-                  Référentiel projet <span className="text-xs text-muted-foreground">(lecture seule)</span>
+                  <T k="auto.boqimportdialog.referentiel_projet" fallback="Référentiel projet" /> <span className="text-xs text-muted-foreground">(lecture seule)</span>
                 </Label>
                 <div className="min-h-9 flex flex-col justify-center rounded-md border bg-muted/40 px-3 py-1.5 text-sm">
                   {projectWbs.length > 0 ? (
@@ -340,7 +341,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                   ) : projectReferentialCode ? (
                     <code className="text-xs">{projectReferentialCode}</code>
                   ) : (
-                    <span className="text-xs text-muted-foreground">Aucun référentiel défini sur le projet</span>
+                    <span className="text-xs text-muted-foreground"><T k="auto.boqimportdialog.aucun_referentiel_defini_sur_le_projet" fallback="Aucun référentiel défini sur le projet" /></span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
@@ -352,7 +353,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
 
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
-                  Référentiel de mapping <span className="text-xs text-muted-foreground">(optionnel)</span>
+                  <T k="auto.boqimportdialog.referentiel_de_mapping" fallback="Référentiel de mapping" /> <span className="text-xs text-muted-foreground">(optionnel)</span>
                 </Label>
                 <Select
                   value={referentialCode ?? '__none__'}
@@ -361,7 +362,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
                 >
                   <SelectTrigger><SelectValue placeholder="Utiliser le référentiel projet" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Aucun (heuristiques FR par défaut)</SelectItem>
+                    <SelectItem value="__none__"><T k="auto.boqimportdialog.aucun_heuristiques_fr_par_defaut" fallback="Aucun (heuristiques FR par défaut)" /></SelectItem>
                     {refOptions.map((o) => (
                       <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                     ))}
@@ -464,7 +465,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}><T k="auto.boqimportdialog.annuler" fallback="Annuler" /></Button>
           <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
             {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Importer {wbsEnrichedDtos.length} ligne(s)

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 interface Phase {
   id: string;
   title?: string;
@@ -99,7 +100,7 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Layers className="h-5 w-5 text-primary" />
-          Structure du Projet
+          <T k="auto.projecthierarchyview.structure_du_projet" fallback="Structure du Projet" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -160,7 +161,7 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
             {onAddPhase && (
               <Button size="sm" variant="outline" onClick={onAddPhase}>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter une phase
+                <T k="auto.projecthierarchyview.ajouter_une_phase" fallback="Ajouter une phase" />
               </Button>
             )}
           </div>
@@ -171,19 +172,19 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
           {onAddPhase && (
             <Button variant="outline" size="sm" onClick={onAddPhase}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter phase
+              <T k="auto.projecthierarchyview.ajouter_phase" fallback="Ajouter phase" />
             </Button>
           )}
           {onGenerateReport && (
             <Button variant="outline" size="sm" onClick={onGenerateReport}>
               <FileText className="h-4 w-4 mr-2" />
-              Rapport
+              <T k="auto.projecthierarchyview.rapport" fallback="Rapport" />
             </Button>
           )}
           {onConfigure && (
             <Button variant="outline" size="sm" onClick={onConfigure}>
               <Settings className="h-4 w-4 mr-2" />
-              Configurer
+              <T k="auto.projecthierarchyview.configurer" fallback="Configurer" />
             </Button>
           )}
         </div>

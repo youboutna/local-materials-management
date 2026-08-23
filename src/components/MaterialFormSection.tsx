@@ -13,6 +13,7 @@ import { Calculator, Package } from 'lucide-react';
 import MaterialSelector from './MaterialSelector';
 import MetreCalculator from './project/MetreCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 interface SelectedMaterial {
   materialId: string;
@@ -47,7 +48,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
           {showMetreCalculator && (
             <TabsTrigger value="metre" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" />
-              Calcul des métrés
+              <T k="auto.materialformsection.calcul_des_metres" fallback="Calcul des métrés" />
               <Badge variant="outline" className="ml-2">Auto/Manuel</Badge>
             </TabsTrigger>
           )}
@@ -102,7 +103,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
                 <CardContent className="p-8 text-center">
                   <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">
-                    Calcul des métrés disponible après création
+                    <T k="auto.materialformsection.calcul_des_metres_disponible_apres_creation" fallback="Calcul des métrés disponible après création" />
                   </h3>
                   <p className="text-muted-foreground">
                     Le calcul automatique et manuel des métrés sera disponible une fois le projet créé.

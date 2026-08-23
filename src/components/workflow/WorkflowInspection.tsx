@@ -38,6 +38,7 @@ import type {
   ProjectWithPaymentsDTO,
   InspectionStatus,
 } from '@/dtos/entities/ProjectWithPaymentsDTO';
+import { T } from '@/components/i18n/T';
 
 interface WorkflowInspectionProps {
   project: ProjectWithPaymentsDTO;
@@ -176,7 +177,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               className="flex items-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
-              Suivi des Inspections
+              <T k="auto.workflowinspection.suivi_des_inspections" fallback="Suivi des Inspections" />
             </Button>
             <InspectionDialog
               project={projectForDialog}

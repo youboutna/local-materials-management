@@ -13,6 +13,7 @@ import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
 // Import DTOs following Rule #4
 import { LocationDTO } from '@/dtos/shared';
 import { LocationDataService } from '@/application/services/LocationDataService';
+import { T } from '@/components/i18n/T';
 
 interface LocationAutocompleteProps {
   value?: string;
@@ -52,7 +53,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   return (
     <div className={className}>
       <Label htmlFor="location-autocomplete" className="text-sm font-medium">
-        Localisation
+        <T k="auto.locationautocomplete.localisation" fallback="Localisation" />
       </Label>
       <Autocomplete
         value={value}

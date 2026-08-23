@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DollarSign, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { formatAmount2, formatPercent2, formatIndex2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 /** Libellés unifiés avec les alertes métier (« CPI non évaluable sans dépense engagée »). */
 const NOT_EVALUABLE = 'Non évaluable';
@@ -44,7 +45,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget Total</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.financialoverview.budget_total" fallback="Budget Total" /></CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -54,7 +55,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Dépensé</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.financialoverview.depense" fallback="Dépensé" /></CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -67,7 +68,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Restant</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.financialoverview.restant" fallback="Restant" /></CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -81,7 +82,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
 
       <Card>
         <CardHeader>
-          <CardTitle>Répartition du budget par phase</CardTitle>
+          <CardTitle><T k="auto.financialoverview.repartition_du_budget_par_phase" fallback="Répartition du budget par phase" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -114,12 +115,12 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
       {financialMetrics ? (
         <Card>
           <CardHeader>
-            <CardTitle>Métriques financières avancées</CardTitle>
+            <CardTitle><T k="auto.financialoverview.metriques_financieres_avancees" fallback="Métriques financières avancées" /></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h4 className="text-sm font-medium mb-2">Variance des coûts (CV)</h4>
+                <h4 className="text-sm font-medium mb-2"><T k="auto.financialoverview.variance_des_couts_cv" fallback="Variance des coûts (CV)" /></h4>
                 <p className={(costVariance ?? 0) < 0 ? "text-destructive" : "text-success"}>
                   {costVariance === null ? NOT_EVALUABLE : formatAmount2(costVariance)}
                 </p>
@@ -128,7 +129,7 @@ const FinancialOverview: React.FC<FinancialOverviewProps> = ({
                 ) : null}
               </div>
               <div>
-                <h4 className="text-sm font-medium mb-2">Indice de performance des coûts (CPI)</h4>
+                <h4 className="text-sm font-medium mb-2"><T k="auto.financialoverview.indice_de_performance_des_couts_cpi" fallback="Indice de performance des coûts (CPI)" /></h4>
                 {cpiAvailable ? (
                   <p>{formatIndex2(cpi, true)}</p>
                 ) : (

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Home, RefreshCw, Search, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 interface ErrorPageProps {
   type: '404' | '403' | '500' | '503' | 'network';
@@ -123,7 +124,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           {showContactSupport && (
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground text-center mb-3">
-                Le problème persiste ?
+                <T k="auto.errorpage.le_probleme_persiste" fallback="Le problème persiste ?" />
               </p>
               <Button
                 variant="outline"
@@ -131,7 +132,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                 className="w-full"
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Contacter le support
+                <T k="auto.errorpage.contacter_le_support" fallback="Contacter le support" />
               </Button>
             </div>
           )}

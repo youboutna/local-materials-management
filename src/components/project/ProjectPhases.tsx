@@ -10,6 +10,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AlertCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import ConstructionPhaseManager, { PhaseData } from './ConstructionPhaseManager';
+import { T } from '@/components/i18n/T';
 
 interface ProjectPhasesProps {
   projectId?: string;
@@ -191,9 +192,9 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Vous devez être connecté pour gérer les phases du projet. 
+            <T k="auto.projectphases.vous_devez_etre_connecte_pour_gerer_les_phases_d" fallback="Vous devez être connecté pour gérer les phases du projet." /> 
             <Button variant="link" className="p-0 h-auto ml-1" onClick={() => window.location.href = '/auth'}>
-              Se connecter
+              <T k="auto.projectphases.se_connecter" fallback="Se connecter" />
             </Button>
           </AlertDescription>
         </Alert>

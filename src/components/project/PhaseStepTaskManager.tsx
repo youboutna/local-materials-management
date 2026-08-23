@@ -19,6 +19,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
+import { T } from '@/components/i18n/T';
 
 // Local type for phase hierarchy view data (snake_case from DB query)
 interface PhaseStepTask {
@@ -172,13 +173,13 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Phases du Projet</CardTitle>
+          <CardTitle><T k="auto.phasesteptaskmanager.phases_du_projet" fallback="Phases du Projet" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune phase créée pour ce projet.</p>
-            <p className="text-sm mt-2">Utilisez le gestionnaire de phases pour créer des phases.</p>
+            <p><T k="auto.phasesteptaskmanager.aucune_phase_creee_pour_ce_projet" fallback="Aucune phase créée pour ce projet." /></p>
+            <p className="text-sm mt-2"><T k="auto.phasesteptaskmanager.utilisez_le_gestionnaire_de_phases_pour_creer_de" fallback="Utilisez le gestionnaire de phases pour créer des phases." /></p>
           </div>
         </CardContent>
       </Card>
@@ -286,15 +287,15 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
                                         )}
                                         <div className="flex items-center gap-1">
                                           <FileText className="h-3 w-3" />
-                                          Documents
+                                          <T k="auto.phasesteptaskmanager.documents" fallback="Documents" />
                                         </div>
                                         <div className="flex items-center gap-1">
                                           <Package className="h-3 w-3" />
-                                          Ressources
+                                          <T k="auto.phasesteptaskmanager.ressources" fallback="Ressources" />
                                         </div>
                                         <div className="flex items-center gap-1">
                                           <Shield className="h-3 w-3" />
-                                          Inspections
+                                          <T k="auto.phasesteptaskmanager.inspections" fallback="Inspections" />
                                         </div>
                                       </div>
                                     </div>
@@ -310,7 +311,7 @@ const PhaseStepTaskManager: React.FC<PhaseStepTaskManagerProps> = ({ projectId }
                                           taskId: task.task_id,
                                         })}
                                       >
-                                        Détails
+                                        <T k="auto.phasesteptaskmanager.details" fallback="Détails" />
                                       </Button>
                                     </div>
                                   </div>

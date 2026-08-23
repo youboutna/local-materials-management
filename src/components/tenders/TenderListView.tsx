@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface TenderRow {
   id: string;
   tender_number?: string | null;
@@ -98,14 +99,14 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
           <SelectContent>
             <SelectItem value="deadline">Deadline ↓</SelectItem>
             <SelectItem value="title">Titre A→Z</SelectItem>
-            <SelectItem value="status">Statut</SelectItem>
+            <SelectItem value="status"><T k="auto.tenderlistview.statut" fallback="Statut" /></SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center text-sm text-muted-foreground py-8">
-          Aucun appel d'offres.
+          <T k="auto.tenderlistview.aucun_appel_d_offres" fallback="Aucun appel d'offres." />
         </div>
       ) : (
         <div className="space-y-2">
@@ -165,7 +166,7 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {projectTitle && (
                     <div className="col-span-2 truncate">
-                      <span className="font-medium">Projet:</span> {projectTitle}
+                      <span className="font-medium"><T k="auto.tenderlistview.projet" fallback="Projet:" /></span> {projectTitle}
                     </div>
                   )}
                   <div className="flex items-center gap-1">

@@ -25,6 +25,7 @@ import {
   formatCurrency,
   calculateRemainingDays,
 } from '@/utils/phaseHelpers';
+import { T } from '@/components/i18n/T';
 
 interface PhaseHeaderCardProps {
   phase: PhaseDTO;
@@ -99,14 +100,14 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
                       <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Rafraîchir</TooltipContent>
+                  <TooltipContent><T k="auto.phaseheadercard.rafraichir" fallback="Rafraîchir" /></TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Edit className="h-4 w-4 mr-2" />
-                Modifier
+                <T k="auto.phaseheadercard.modifier" fallback="Modifier" />
               </Button>
             )}
           </div>
@@ -117,7 +118,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
         {/* Progress Bar */}
         <div className="space-y-2 mb-6">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Progression globale</span>
+            <span className="text-sm font-medium"><T k="auto.phaseheadercard.progression_globale" fallback="Progression globale" /></span>
             <span className="text-2xl font-bold text-primary">{phase.progress || 0}%</span>
           </div>
           <Progress value={phase.progress || 0} className="h-3" />
@@ -136,7 +137,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="h-3.5 w-3.5" />
-              <span>Période</span>
+              <span><T k="auto.phaseheadercard.periode" fallback="Période" /></span>
             </div>
             <p className="text-sm font-medium">
               {formatDate(phase.start_date)} — {formatDate(phase.end_date)}
@@ -147,7 +148,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
-              <span>Temps restant</span>
+              <span><T k="auto.phaseheadercard.temps_restant" fallback="Temps restant" /></span>
             </div>
             <p className={cn(
               "text-sm font-medium",
@@ -163,7 +164,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <DollarSign className="h-3.5 w-3.5" />
-              <span>Budget estimé</span>
+              <span><T k="auto.phaseheadercard.budget_estime" fallback="Budget estimé" /></span>
             </div>
             <p className="text-sm font-medium">
               {formatCurrency(phase.estimated_cost)}
@@ -174,7 +175,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Layers className="h-3.5 w-3.5" />
-              <span>Étapes</span>
+              <span><T k="auto.phaseheadercard.etapes" fallback="Étapes" /></span>
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium">{stepsCount}</p>

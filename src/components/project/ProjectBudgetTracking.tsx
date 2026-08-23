@@ -8,6 +8,7 @@ import { Wallet } from 'lucide-react';
 import { BoqBudgetDashboard, useBoqDocument } from '@/components/boq';
 import { useProjectPhasesHex } from '@/hooks/hexagonal';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
+import { T } from '@/components/i18n/T';
 
 interface Props { projectId: string; projectBudget?: number | null }
 
@@ -34,7 +35,7 @@ const ProjectBudgetTracking: React.FC<Props> = ({ projectId, projectBudget = nul
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Wallet className="h-4 w-4" /> Suivi budgétaire (jalons)
+          <Wallet className="h-4 w-4" /> <T k="auto.projectbudgettracking.suivi_budgetaire_jalons" fallback="Suivi budgétaire (jalons)" />
         </CardTitle>
       </CardHeader>
       <CardContent>

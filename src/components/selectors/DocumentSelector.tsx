@@ -8,6 +8,7 @@ import { Calendar, FileText, Search } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Document {
   id: string;
   title: string;
@@ -150,7 +151,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
       {selectedDocument && (
         <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Document sélectionné:</span>
+            <span className="font-medium"><T k="auto.documentselector.document_selectionne" fallback="Document sélectionné:" /></span>
             {selectedDocument.status && (
               <Badge variant="outline" className={getStatusColor(selectedDocument.status)}>
                 <TranslatedStatus code={selectedDocument.status} />

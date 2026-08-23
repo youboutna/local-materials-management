@@ -16,6 +16,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface InteractiveProjectsListProps {
   projects: ProjectData[];
   onProjectSelect?: (project: ProjectData) => void;
@@ -75,7 +76,7 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
-            Projets avec Coordonnées GPS
+            <T k="auto.interactiveprojectslist.projets_avec_coordonnees_gps" fallback="Projets avec Coordonnées GPS" />
           </div>
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
             {totalItems} projet{totalItems > 1 ? 's' : ''}
@@ -86,9 +87,9 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
         {paginatedProjects.length === 0 ? (
           <div className="text-center py-8">
             <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Aucun projet trouvé</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2"><T k="auto.interactiveprojectslist.aucun_projet_trouve" fallback="Aucun projet trouvé" /></h3>
             <p className="text-muted-foreground">
-              Aucun projet ne correspond aux critères de filtrage sélectionnés.
+              <T k="auto.interactiveprojectslist.aucun_projet_ne_correspond_aux_criteres_de_filtr" fallback="Aucun projet ne correspond aux critères de filtrage sélectionnés." />
             </p>
           </div>
         ) : (
@@ -158,7 +159,7 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
                     {/* Progress Bar */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Progrès</span>
+                        <span className="text-muted-foreground"><T k="auto.interactiveprojectslist.progres" fallback="Progrès" /></span>
                         <span className="text-primary font-medium">{project.progress}%</span>
                       </div>
                       <div className="w-full bg-muted/30 rounded-full h-2">

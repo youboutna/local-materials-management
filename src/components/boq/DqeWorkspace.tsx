@@ -30,6 +30,7 @@ import { BoqContextService, type BoqRouteContext } from '@/application/services/
 import { getBoqDispatchService } from '@/application/services/boq/BoqDispatchService';
 import { toast } from '@/hooks/use-toast';
 import type { ReferentialType } from '@/config/referentials';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   routeContext: BoqRouteContext;
@@ -221,7 +222,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setSelectedDocumentId(null)}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Retour à la liste
+              <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
@@ -279,7 +280,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             <Tabs defaultValue="compare" className="space-y-4">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="compare"><GitCompare className="h-4 w-4 mr-1" /> Comparaison besoin ↔ DQE</TabsTrigger>
-                <TabsTrigger value="budget"><LayoutDashboard className="h-4 w-4 mr-1" /> Suivi budget</TabsTrigger>
+                <TabsTrigger value="budget"><LayoutDashboard className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.suivi_budget" fallback="Suivi budget" /></TabsTrigger>
               </TabsList>
               <TabsContent value="compare">
                 {doc.isLoading || dqeCompare.isLoading ? (

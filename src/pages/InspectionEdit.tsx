@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useInspectionHex, useInspectionsHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 const InspectionEdit = () => {
   const { id } = useParams();
@@ -132,7 +133,7 @@ const InspectionEdit = () => {
           <CardTitle>{t('inspection.edit.title')}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => navigate(`/inspections/${id}`)} aria-label="Consulter le détail de l'inspection">
             <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
-            Consulter
+            <T k="auto.inspectionedit.consulter" fallback="Consulter" />
           </Button>
         </CardHeader>
         <CardContent>

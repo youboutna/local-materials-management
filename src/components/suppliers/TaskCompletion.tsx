@@ -9,6 +9,7 @@ import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 import { useTaskAssignmentsHex } from '@/hooks/hexagonal';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Task {
   id: string;
   title: string;
@@ -132,14 +133,14 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
       <CardContent className="space-y-4">
         {task.description && (
           <div>
-            <h4 className="font-medium text-foreground mb-2">Description</h4>
+            <h4 className="font-medium text-foreground mb-2"><T k="auto.taskcompletion.description" fallback="Description" /></h4>
             <p className="text-muted-foreground text-sm">{task.description}</p>
           </div>
         )}
 
         {task.due_date && (
           <div>
-            <h4 className="font-medium text-foreground mb-1">Échéance</h4>
+            <h4 className="font-medium text-foreground mb-1"><T k="auto.taskcompletion.echeance" fallback="Échéance" /></h4>
             <p className="text-sm text-muted-foreground">
               {new Date(task.due_date).toLocaleDateString('fr-FR')}
             </p>
@@ -150,7 +151,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
           <div className="space-y-3">
             <div>
               <label htmlFor="completion-notes" className="block text-sm font-medium text-foreground mb-2">
-                Notes de completion (optionnel)
+                <T k="auto.taskcompletion.notes_de_completion_optionnel" fallback="Notes de completion (optionnel)" />
               </label>
               <Textarea
                 id="completion-notes"
@@ -179,7 +180,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
             </p>
             {task.notes && (
               <p className="text-sm text-success mt-1">
-                <strong>Notes:</strong> {task.notes}
+                <strong><T k="auto.taskcompletion.notes" fallback="Notes:" /></strong> {task.notes}
               </p>
             )}
           </div>

@@ -12,6 +12,7 @@ import { TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 interface TaskListProps {
   tasks: TaskAssignmentDTO[];
   projectId: string;
@@ -76,10 +77,10 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Tâches du projet</h3>
+        <h3 className="text-lg font-semibold"><T k="auto.tasklist.taches_du_projet" fallback="Tâches du projet" /></h3>
         <Button onClick={() => navigate(`/projects/${projectId}/tasks/new`)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle tâche
+          <T k="auto.tasklist.nouvelle_tache" fallback="Nouvelle tâche" />
         </Button>
       </div>
 
@@ -155,7 +156,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
 
                 {task.dependencies && Array.isArray(task.dependencies) && task.dependencies.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Dépendances:</h4>
+                    <h4 className="text-sm font-medium mb-1"><T k="auto.tasklist.dependances" fallback="Dépendances:" /></h4>
                     <div className="flex gap-1 flex-wrap">
                       {task.dependencies.map((depId: string, depIndex: number) => (
                         <Badge key={depIndex} variant="outline" className="text-xs">
@@ -168,7 +169,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
 
                 {task.priority && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Priorité:</span>
+                    <span className="text-sm font-medium"><T k="auto.tasklist.priorite" fallback="Priorité:" /></span>
                     <Badge variant={
                       task.priority === 'CRITICAL' ? 'destructive' :
                       task.priority === 'HIGH' ? 'default' :
@@ -194,7 +195,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}/tasks/new`)}>
               <Plus className="h-4 w-4 mr-2" />
-              Créer une tâche
+              <T k="auto.tasklist.creer_une_tache" fallback="Créer une tâche" />
             </Button>
           </CardContent>
         </Card>

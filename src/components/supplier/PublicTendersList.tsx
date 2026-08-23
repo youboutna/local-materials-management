@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;
@@ -77,9 +78,9 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground text-center py-8">Chargement…</p>}
-      {isError && <p className="text-sm text-destructive text-center py-8">Erreur lors du chargement.</p>}
+      {isError && <p className="text-sm text-destructive text-center py-8"><T k="auto.publictenderslist.erreur_lors_du_chargement" fallback="Erreur lors du chargement." /></p>}
       {!isLoading && filtered.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">Aucun appel d'offres ouvert actuellement.</p>
+        <p className="text-sm text-muted-foreground text-center py-8"><T k="auto.publictenderslist.aucun_appel_d_offres_ouvert_actuellement" fallback="Aucun appel d'offres ouvert actuellement." /></p>
       )}
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -119,7 +120,7 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
                   )}
                 </div>
                 <Button size="sm" onClick={() => onSelect?.(t.id)} className="mt-2 w-full">
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Consulter et soumissionner
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> <T k="auto.publictenderslist.consulter_et_soumissionner" fallback="Consulter et soumissionner" />
                 </Button>
               </CardContent>
             </Card>

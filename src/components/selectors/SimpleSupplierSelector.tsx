@@ -6,6 +6,7 @@ import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersSelector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface SimpleSupplierSelectorProps {
   value?: string;
@@ -127,7 +128,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
             ))}
             {(!suppliers || suppliers.filter(s => s.id && s.id.trim() !== '').length === 0) && (
               <div className="p-2 text-sm text-muted-foreground text-center">
-                Aucun fournisseur trouvé
+                <T k="auto.simplesupplierselector.aucun_fournisseur_trouve" fallback="Aucun fournisseur trouvé" />
               </div>
             )}
           </SelectContent>

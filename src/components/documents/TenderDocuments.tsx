@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/dtos/entities/TenderDTO';
+import { T } from '@/components/i18n/T';
 
 type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 import { toast } from '@/hooks/use-toast';
@@ -108,15 +109,15 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-terracotta-600" />
-            Documents d'Appel d'Offres
+            <T k="auto.tenderdocuments.documents_d_appel_d_offres" fallback="Documents d'Appel d'Offres" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)} className="tabs-responsive">
             <TabsList className="tabs-list-responsive tabs-list-3">
-              <TabsTrigger value="administrative">Administratifs</TabsTrigger>
-              <TabsTrigger value="technical">Techniques</TabsTrigger>
-              <TabsTrigger value="financial">Financières</TabsTrigger>
+              <TabsTrigger value="administrative"><T k="auto.tenderdocuments.administratifs" fallback="Administratifs" /></TabsTrigger>
+              <TabsTrigger value="technical"><T k="auto.tenderdocuments.techniques" fallback="Techniques" /></TabsTrigger>
+              <TabsTrigger value="financial"><T k="auto.tenderdocuments.financieres" fallback="Financières" /></TabsTrigger>
             </TabsList>
 
             {(['administrative', 'technical', 'financial'] as TenderDocumentCategory[]).map((category) => (
@@ -161,7 +162,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                         
                         {tenderDoc.description && (
                           <div className="text-xs text-muted-foreground mb-3 p-2 bg-muted rounded">
-                            <strong>Notes:</strong> {tenderDoc.description}
+                            <strong><T k="auto.tenderdocuments.notes" fallback="Notes:" /></strong> {tenderDoc.description}
                           </div>
                         )}
 
@@ -173,12 +174,12 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                               onClick={() => handleViewDocument(tenderDoc)}
                             >
                               <Eye className="h-4 w-4 mr-1" />
-                              Voir
+                              <T k="auto.tenderdocuments.voir" fallback="Voir" />
                             </Button>
                           ) : (
                             <Button size="sm" variant="outline">
                               <Upload className="h-4 w-4 mr-1" />
-                              Télécharger
+                              <T k="auto.tenderdocuments.telecharger" fallback="Télécharger" />
                             </Button>
                           )}
                         </div>

@@ -1,4 +1,5 @@
 import type { OrganizationDTO } from '@/dtos/entities/OrganizationDTO';
+import { T } from '@/components/i18n/T';
 
 interface OrganizationListProps {
   organizations: OrganizationDTO[];
@@ -16,8 +17,8 @@ export function OrganizationList({ organizations, onEdit, onDelete }: Organizati
             <div className="text-sm text-muted-foreground">{organization.code || organization.externalRef || 'Sans référence'}</div>
           </div>
           <div className="flex gap-2">
-            {onEdit && <button type="button" onClick={() => onEdit(organization)}>Modifier</button>}
-            {onDelete && <button type="button" onClick={() => onDelete(organization.id)}>Supprimer</button>}
+            {onEdit && <button type="button" onClick={() => onEdit(organization)}><T k="auto.organizationlist.modifier" fallback="Modifier" /></button>}
+            {onDelete && <button type="button" onClick={() => onDelete(organization.id)}><T k="auto.organizationlist.supprimer" fallback="Supprimer" /></button>}
           </div>
         </div>
       ))}

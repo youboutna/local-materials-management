@@ -23,6 +23,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { T } from '@/components/i18n/T';
 
 interface Phase {
   id: string;
@@ -168,19 +169,19 @@ export const ProjectMatrixView: React.FC<ProjectMatrixViewProps> = ({
   return (
     <Card className="border-none shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg">Vue Matrice : Projet × Phases</CardTitle>
+        <CardTitle className="text-lg"><T k="auto.projectmatrixview.vue_matrice_projet_phases" fallback="Vue Matrice : Projet × Phases" /></CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="font-semibold">Phase</TableHead>
-                <TableHead className="text-center font-semibold w-32">Progression</TableHead>
-                <TableHead className="text-center font-semibold">Jalons</TableHead>
-                <TableHead className="text-center font-semibold">Inspections</TableHead>
-                <TableHead className="text-center font-semibold">Paiements</TableHead>
-                <TableHead className="text-center font-semibold w-20">Actions</TableHead>
+                <TableHead className="font-semibold"><T k="auto.projectmatrixview.phase" fallback="Phase" /></TableHead>
+                <TableHead className="text-center font-semibold w-32"><T k="auto.projectmatrixview.progression" fallback="Progression" /></TableHead>
+                <TableHead className="text-center font-semibold"><T k="auto.projectmatrixview.jalons" fallback="Jalons" /></TableHead>
+                <TableHead className="text-center font-semibold"><T k="auto.projectmatrixview.inspections" fallback="Inspections" /></TableHead>
+                <TableHead className="text-center font-semibold"><T k="auto.projectmatrixview.paiements" fallback="Paiements" /></TableHead>
+                <TableHead className="text-center font-semibold w-20"><T k="auto.projectmatrixview.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

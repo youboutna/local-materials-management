@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 import { format, differenceInDays, isPast, isFuture } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface TimelineEvent {
   date: string;
@@ -92,7 +93,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
       <CardContent className="p-6">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          Chronologie de l'appel d'offres
+          <T k="auto.tendertimelinecard.chronologie_de_l_appel_d_offres" fallback="Chronologie de l'appel d'offres" />
         </h3>
         <div className="space-y-4">
           {events.map((event, index) => (

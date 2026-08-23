@@ -13,6 +13,7 @@ import { MaterialDTO, MaterialUnit, MaterialStatus, MaterialCategory } from "@/d
 import type { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { AppLayout } from "@/components/layout";
+import { T } from '@/components/i18n/T';
 
 // Extend window interface for form ref access
 declare global {

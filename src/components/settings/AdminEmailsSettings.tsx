@@ -6,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { Mail, Plus, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAdminEmailsHex } from '@/hooks/hexagonal/useSystemSettingsHex';
+import { T } from '@/components/i18n/T';
 
 export const AdminEmailsSettings = () => {
   const [newEmail, setNewEmail] = useState('');
@@ -88,7 +89,7 @@ export const AdminEmailsSettings = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />
-          Emails de Notification des Administrateurs
+          <T k="auto.adminemailssettings.emails_de_notification_des_administrateurs" fallback="Emails de Notification des Administrateurs" />
         </CardTitle>
         <CardDescription>
           Configurez les adresses email qui recevront les notifications de nouvelles soumissions d'appels d'offres
@@ -112,7 +113,7 @@ export const AdminEmailsSettings = () => {
             ) : (
               <>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter
+                <T k="auto.adminemailssettings.ajouter" fallback="Ajouter" />
               </>
             )}
           </Button>

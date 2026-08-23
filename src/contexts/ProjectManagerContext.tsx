@@ -9,6 +9,7 @@
 import { createContext } from 'react';
 import { Alert, AlertStatistics, ProjectManagerState } from '@/domain/entities/Alert';
 import { AlertService } from '@/application/services/AlertService';
+import { T } from '@/components/i18n/T';
 
 export const defaultState: ProjectManagerState = {
   alerts: [],

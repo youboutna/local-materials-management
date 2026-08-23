@@ -28,6 +28,7 @@ import {
     TrendingUp
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface ProjectMilestoneTimelineProps {
   projectId: string;
@@ -162,7 +163,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Jalons du Projet
+            <T k="auto.projectmilestonetimeline.jalons_du_projet" fallback="Jalons du Projet" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -200,7 +201,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         {progress && (
           <div className="mt-4 space-y-3">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Progression des jalons</span>
+              <span className="text-muted-foreground"><T k="auto.projectmilestonetimeline.progression_des_jalons" fallback="Progression des jalons" /></span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{progress.weightedProgress}%</span>
                 {progress.schedulePerformance_index !== undefined && (
@@ -297,7 +298,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                 <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
                                 {milestone.isCritical && (
                                   <Badge variant="destructive" className="text-xs">
-                                    Critique
+                                    <T k="auto.projectmilestonetimeline.critique" fallback="Critique" />
                                   </Badge>
                                 )}
                               </div>

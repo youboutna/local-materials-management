@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
 import { TranslatedRole, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Phase {
   id: string;
   name: string;
@@ -306,7 +307,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
                   <p className="font-medium">Score de santé: {healthAnalysis.score}%</p>
                   {healthAnalysis.issues.length > 0 && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Problèmes:</p>
+                      <p className="text-xs text-muted-foreground mb-1"><T k="auto.projecthealthcard.problemes" fallback="Problèmes:" /></p>
                       <ul className="text-xs list-disc pl-4">
                         {healthAnalysis.issues.map((issue, i) => (
                           <li key={i}>{issue}</li>
@@ -316,7 +317,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
                   )}
                   {healthAnalysis.strengths.length > 0 && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Points forts:</p>
+                      <p className="text-xs text-muted-foreground mb-1"><T k="auto.projecthealthcard.points_forts" fallback="Points forts:" /></p>
                       <ul className="text-xs list-disc pl-4">
                         {healthAnalysis.strengths.map((s, i) => (
                           <li key={i}>{s}</li>
@@ -333,7 +334,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
         {/* Progress */}
         <div className="space-y-1.5 mb-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Progression</span>
+            <span className="text-muted-foreground"><T k="auto.projecthealthcard.progression" fallback="Progression" /></span>
             <span className="font-medium">{project.progress}%</span>
           </div>
           <Progress value={project.progress} className="h-2" />
@@ -381,7 +382,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
         {/* Stakeholders */}
         {variant === 'detailed' && project.stakeholders && (
           <div className="flex items-center justify-between mt-4 pt-3 border-t">
-            <span className="text-xs text-muted-foreground">Parties prenantes</span>
+            <span className="text-xs text-muted-foreground"><T k="auto.projecthealthcard.parties_prenantes" fallback="Parties prenantes" /></span>
             {renderStakeholders()}
           </div>
         )}

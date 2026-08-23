@@ -8,6 +8,7 @@ import { getPhasesForReferential, type ReferentialType } from '@/config/referent
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 
 
 export interface WbsValue {
@@ -48,7 +49,7 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
-        <Label>Phase</Label>
+        <Label><T k="auto.wbsselector.phase" fallback="Phase" /></Label>
         <Select
           value={value.phaseId ?? NONE}
           onValueChange={(v) => onChange({ phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}
@@ -56,13 +57,13 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
         >
           <SelectTrigger><SelectValue placeholder={translateTerm('wbs_phase')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}>Non assignée</SelectItem>
+            <SelectItem value={NONE}><T k="auto.wbsselector.non_assignee" fallback="Non assignée" /></SelectItem>
             {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
       <div>
-        <Label>Jalon</Label>
+        <Label><T k="auto.wbsselector.jalon" fallback="Jalon" /></Label>
         <Select
           value={value.milestoneId ?? NONE}
           onValueChange={(v) => onChange({ ...value, milestoneId: v === NONE ? null : v, taskId: null })}
@@ -70,13 +71,13 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
         >
           <SelectTrigger><SelectValue placeholder={phase ? 'Jalon' : 'Sélectionner phase'} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}>Non assigné</SelectItem>
+            <SelectItem value={NONE}><T k="auto.wbsselector.non_assigne" fallback="Non assigné" /></SelectItem>
             {phase?.milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
       <div>
-        <Label>Tâche</Label>
+        <Label><T k="auto.wbsselector.tache" fallback="Tâche" /></Label>
         <Select
           value={value.taskId ?? NONE}
           onValueChange={(v) => onChange({ ...value, taskId: v === NONE ? null : v })}
@@ -84,7 +85,7 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
         >
           <SelectTrigger><SelectValue placeholder={milestone ? 'Tâche' : 'Sélectionner jalon'} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}>Non assignée</SelectItem>
+            <SelectItem value={NONE}><T k="auto.wbsselector.non_assignee" fallback="Non assignée" /></SelectItem>
             {milestone?.tasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>

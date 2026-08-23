@@ -1,3 +1,4 @@
+import { T } from '@/components/i18n/T';
 /**
  * PriceSummary — displays Qty × PU = HT + VAT + TTC. Format FR.
  */
@@ -16,7 +17,7 @@ export function PriceSummary({ quantity, unitPrice, vatRate = 0 }: Props) {
   const ttc = ht + vat;
   return (
     <div className="rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-4 gap-3">
-      <div><div className="text-muted-foreground">Quantité</div><div className="font-medium">{quantity}</div></div>
+      <div><div className="text-muted-foreground"><T k="auto.pricesummary.quantite" fallback="Quantité" /></div><div className="font-medium">{quantity}</div></div>
       <div><div className="text-muted-foreground">PU</div><div className="font-medium">{fmt(pu)}</div></div>
       <div><div className="text-muted-foreground">HT</div><div className="font-medium">{fmt(ht)}</div></div>
       <div><div className="text-muted-foreground">TTC ({Math.round((vatRate ?? 0) * 100)}% TVA)</div><div className="font-semibold">{fmt(ttc)}</div></div>

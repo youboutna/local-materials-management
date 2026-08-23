@@ -19,6 +19,7 @@ import {
   getDocumentCategoriesForContext,
   type DocumentTypeCode as DocumentType,
 } from '@/config/referentials/documents/document-types.referential';
+import { T } from '@/components/i18n/T';
 
 
 interface ProjectDocumentUploadProps {
@@ -266,7 +267,7 @@ const ProjectDocumentUpload = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description"><T k="auto.projectdocumentupload.description" fallback="Description" /></Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -277,7 +278,7 @@ const ProjectDocumentUpload = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Statut</Label>
+            <Label htmlFor="status"><T k="auto.projectdocumentupload.statut" fallback="Statut" /></Label>
             <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
               <SelectTrigger>
                 <SelectValue />
@@ -291,7 +292,7 @@ const ProjectDocumentUpload = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">Fichier</Label>
+            <Label htmlFor="file"><T k="auto.projectdocumentupload.fichier" fallback="Fichier" /></Label>
             <div className="flex items-center space-x-4">
               <Input
                 id="file"
@@ -314,12 +315,12 @@ const ProjectDocumentUpload = ({
             {uploading || uploadMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Téléchargement en cours...
+                <T k="auto.projectdocumentupload.telechargement_en_cours" fallback="Téléchargement en cours..." />
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Télécharger le Document
+                <T k="auto.projectdocumentupload.telecharger_le_document" fallback="Télécharger le Document" />
               </>
             )}
           </Button>

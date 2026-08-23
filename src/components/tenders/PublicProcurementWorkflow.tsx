@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
 import { getWorkflowService, WorkflowService, PhaseProgress } from '@/application/services/WorkflowService';
+import { T } from '@/components/i18n/T';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -527,7 +528,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
     return (
       <Card className="w-full">
         <CardContent className="p-6">
-          <div className="text-center">Chargement du workflow...</div>
+          <div className="text-center"><T k="auto.publicprocurementworkflow.chargement_du_workflow" fallback="Chargement du workflow..." /></div>
         </CardContent>
       </Card>
     );
@@ -623,7 +624,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
                                     className="h-8"
                                   >
                                     <Share2 className="h-3 w-3 mr-1" />
-                                    Partager
+                                    <T k="auto.publicprocurementworkflow.partager" fallback="Partager" />
                                   </Button>
                                 )}
                               </div>

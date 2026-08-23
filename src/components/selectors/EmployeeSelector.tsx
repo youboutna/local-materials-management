@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { i18nService } from '@/application/services/I18nService';
 import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface EmployeeSelectorProps {
   value?: string;
@@ -132,7 +133,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                 <SelectItem value="no-employees" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun employé trouvé</span>
+                    <span><T k="auto.employeeselector.aucun_employe_trouve" fallback="Aucun employé trouvé" /></span>
                   </div>
                 </SelectItem>
               )}

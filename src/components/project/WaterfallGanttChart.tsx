@@ -6,6 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSig
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 /**
  * GanttTaskDTO (camelCase strict) consommé par `WaterfallGanttChart`.
  * Le mapping depuis les phases hex/repos est effectué dans le parent.
@@ -132,7 +133,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Taux d'achèvement</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.waterfallganttchart.taux_d_achevement" fallback="Taux d'achèvement" /></p>
                 <p className="text-2xl font-bold">{completionRate.toFixed(1)}%</p>
               </div>
               <BarChart3 className="h-8 w-8 text-primary" />
@@ -144,7 +145,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tâches terminées</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.waterfallganttchart.taches_terminees" fallback="Tâches terminées" /></p>
                 <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
               </div>
               <Clock className="h-8 w-8 text-success" />
@@ -156,7 +157,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tâches en retard</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.waterfallganttchart.taches_en_retard" fallback="Tâches en retard" /></p>
                 <p className="text-2xl font-bold">{delayedTasks}</p>
               </div>
               <Users className="h-8 w-8 text-destructive" />
@@ -168,7 +169,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Budget total</p>
+                <p className="text-sm font-medium text-muted-foreground"><T k="auto.waterfallganttchart.budget_total" fallback="Budget total" /></p>
                 <p className="text-2xl font-bold">{(totalBudget / 1000000).toFixed(1)}M</p>
               </div>
               <DollarSign className="h-8 w-8 text-purple-500" />
@@ -183,7 +184,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Diagramme de Gantt - Gestion Waterfall
+              <T k="auto.waterfallganttchart.diagramme_de_gantt_gestion_waterfall" fallback="Diagramme de Gantt - Gestion Waterfall" />
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
@@ -293,7 +294,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
 
           {/* Procurement Workflow Legend */}
           <div className="mt-6 pt-4 border-t">
-            <h4 className="font-medium mb-3">Workflow Marchés Publics Mauritanie</h4>
+            <h4 className="font-medium mb-3"><T k="auto.waterfallganttchart.workflow_marches_publics_mauritanie" fallback="Workflow Marchés Publics Mauritanie" /></h4>
             <div className="flex flex-wrap gap-2">
               {procurementSteps.map((step) => (
                 <Badge 

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { T } from '@/components/i18n/T';
 
 interface ImportResult {
   success: number;
@@ -220,12 +221,12 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
-            Import d'Appels d'Offres
+            <T k="auto.tenderimportmanager.import_d_appels_d_offres" fallback="Import d'Appels d'Offres" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="file-upload">Fichier Excel</Label>
+            <Label htmlFor="file-upload"><T k="auto.tenderimportmanager.fichier_excel" fallback="Fichier Excel" /></Label>
             <Input
               id="file-upload"
               type="file"
@@ -242,7 +243,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
               className="flex items-center gap-2"
             >
               <FileSpreadsheet className="h-4 w-4" />
-              Télécharger le modèle
+              <T k="auto.tenderimportmanager.telecharger_le_modele" fallback="Télécharger le modèle" />
             </Button>
 
             <Button 
@@ -258,7 +259,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Format requis:</strong>
+              <strong><T k="auto.tenderimportmanager.format_requis" fallback="Format requis:" /></strong>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li><strong>title</strong> (obligatoire): Titre de l'appel d'offres</li>
                 <li><strong>description</strong> (obligatoire): Description détaillée</li>
@@ -291,17 +292,17 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-success-soft rounded-lg">
                 <div className="text-2xl font-bold text-success">{importResult.success}</div>
-                <div className="text-sm text-success">Appels d'offres importés</div>
+                <div className="text-sm text-success"><T k="auto.tenderimportmanager.appels_d_offres_importes" fallback="Appels d'offres importés" /></div>
               </div>
               <div className="text-center p-4 bg-destructive/10 rounded-lg">
                 <div className="text-2xl font-bold text-destructive">{importResult.errors.length}</div>
-                <div className="text-sm text-destructive">Erreurs détectées</div>
+                <div className="text-sm text-destructive"><T k="auto.tenderimportmanager.erreurs_detectees" fallback="Erreurs détectées" /></div>
               </div>
             </div>
 
             {importResult.errors.length > 0 && (
               <div>
-                <h4 className="font-medium text-destructive mb-2">Erreurs détectées:</h4>
+                <h4 className="font-medium text-destructive mb-2"><T k="auto.tenderimportmanager.erreurs_detectees" fallback="Erreurs détectées:" /></h4>
                 <div className="max-h-40 overflow-y-auto space-y-1">
                   {importResult.errors.map((error, index) => (
                     <div key={index} className="text-sm text-destructive bg-destructive/10 p-2 rounded">
