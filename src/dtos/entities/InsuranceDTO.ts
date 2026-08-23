@@ -75,6 +75,8 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
   // Core identifiers
   id: string;
   projectId: string;
+  /** Contexte phase (doctrine : toute entité métier porte projectId + phaseId). */
+  phaseId?: string | null;
   contractorId: string;
   
   // Contractor information
@@ -117,6 +119,7 @@ export interface InsuranceCertificateDTO extends BaseEntityDTO {
  */
 export interface CreateInsuranceCertificateDTO {
   projectId: string;
+  phaseId?: string | null;
   contractorId?: string;
   contractorName?: string;
   insuranceType: InsuranceType | string;
@@ -139,6 +142,7 @@ export interface CreateInsuranceCertificateDTO {
  */
 export interface UpdateInsuranceCertificateDTO {
   projectId?: string;
+  phaseId?: string | null;
   contractorId?: string;
   contractorName?: string;
   insuranceType?: InsuranceType | string;
