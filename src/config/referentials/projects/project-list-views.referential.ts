@@ -13,38 +13,38 @@ export interface ProjectListViewDef {
   key: ProjectListViewKey;
   /** Valeur `TabsTrigger.value` côté UI. */
   uiValue: string;
-  label: { fr: string; en?: string };
+  label: { fr: string; en?: string; ar?: string };
   /** Icône lucide-react à utiliser dans l'UI. */
   icon: 'Grid' | 'Filter' | 'Map';
   order: number;
   /** Description courte (tooltip / aria). */
-  description?: { fr: string; en?: string };
+  description?: { fr: string; en?: string; ar?: string };
 }
 
 export const PROJECT_LIST_VIEWS: Record<ProjectListViewKey, ProjectListViewDef> = {
   grid: {
     key: 'grid',
     uiValue: 'grid',
-    label: { fr: 'Vue Grille' },
+    label: { fr: 'Vue Grille', en: 'Grid view', ar: 'عرض شبكي' },
     icon: 'Grid',
     order: 10,
-    description: { fr: 'Liste paginée des projets avec filtres et sélection multiple' },
+    description: { fr: 'Liste paginée des projets avec filtres et sélection multiple', en: 'Paginated project list with filters and multi-selection', ar: 'قائمة مشاريع مرقّمة مع مرشحات وتحديد متعدد' },
   },
   map: {
     key: 'map',
     uiValue: 'map',
-    label: { fr: 'Carte des Projets' },
+    label: { fr: 'Carte des Projets', en: 'Projects map', ar: 'خريطة المشاريع' },
     icon: 'Map',
     order: 30,
-    description: { fr: 'Carte statique des projets par localisation' },
+    description: { fr: 'Carte statique des projets par localisation', en: 'Static map of projects by location', ar: 'خريطة ثابتة للمشاريع حسب الموقع' },
   },
   interactive: {
     key: 'interactive',
     uiValue: 'interactive',
-    label: { fr: 'Carte Interactive' },
+    label: { fr: 'Carte Interactive', en: 'Interactive map', ar: 'خريطة تفاعلية' },
     icon: 'Map',
     order: 40,
-    description: { fr: 'Carte interactive avec filtres et drill-down' },
+    description: { fr: 'Carte interactive avec filtres et drill-down', en: 'Interactive map with filters and drill-down', ar: 'خريطة تفاعلية مع مرشحات وتفصيل' },
   },
 };
 

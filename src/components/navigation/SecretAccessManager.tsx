@@ -8,6 +8,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,7 +57,7 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
         <Label htmlFor="secret-manager-tender"><T k="auto.secretaccessmanager.appel_d_offres" fallback="Appel d'offres" /></Label>
         <Select value={tenderId} onValueChange={setTenderId} disabled={loading}>
           <SelectTrigger id="secret-manager-tender">
-            <SelectValue placeholder={loading ? 'Chargement…' : "Sélectionner un appel d'offres"} />
+            <SelectValue placeholder={loading ? t('common.loading') : t('tenders.select_placeholder')} />
           </SelectTrigger>
           <SelectContent>
             {tenders.map((t) => (
@@ -73,8 +74,8 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
       ) : (
         <p className="text-sm text-muted-foreground">
           {loading
-            ? 'Chargement des appels d’offres…'
-            : "Aucun appel d'offres disponible : créez-en un pour générer des codes de partage."}
+            ? t('tenders.loading')
+            : t('tenders.none_available_hint')}
         </p>
       )}
     </div>
@@ -85,6 +86,7 @@ export const SecretAccessManager: React.FC<{ className?: string; hideLabel?: boo
   className,
   hideLabel = false,
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const params = useParams();
   const location = useLocation();
@@ -105,19 +107,18 @@ export const SecretAccessManager: React.FC<{ className?: string; hideLabel?: boo
           variant="ghost"
           size="sm"
           className={className}
-          title="Créer et gérer les codes secrets de partage"
+          title={t('secret_access.manage_title')}
         >
           <KeyRound className="h-4 w-4" />
-          {!hideLabel && <span className="truncate text-sm font-medium">Partage &amp; codes</span>}
+          {!hideLabel && <span className="truncate text-sm font-medium">{t('secret_access.button')}</span>}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Partage sécurisé &amp; codes secrets</DialogTitle>
+          <DialogTitle>{t('secret_access.dialog_title')}</DialogTitle>
           <DialogDescription>
-            Créez, copiez, révoquez ou supprimez les codes d'accès du portail fournisseur pour
-            un appel d'offres, sans quitter la page courante.
+{t('secret_access.dialog_description')}
           </DialogDescription>
         </DialogHeader>
         {open && <SecretManagerBody initialTenderId={contextTenderId} />}
