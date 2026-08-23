@@ -19,6 +19,9 @@ export const BOQ_DEFAULT_VALUES = {
 export interface BoqFiscalProfile {
   code: string;
   label: string;
+  /** Libellés multilingues (doctrine i18n : code technique jamais affiché). */
+  labelAr?: string;
+  labelEn?: string;
   currency: string;
   vatRate: number;           // 0.16 = 16%
   withholdingRate: number;   // RAS BIC applied on HT
