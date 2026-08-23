@@ -50,7 +50,7 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
                type === 'supplier_info' ? t('auto.documentfilters.info_fournisseur') :
                type === 'task_assignment' ? t('auto.documentfilters.affectation_de_tache') :
                type === 'employee_record' ? t('auto.documentfilters.dossier_employe') :
-               type === 'tender_documents' ? t('auto.documentfilters.documents_d')appel d\'offres' : type
+               type === 'tender_documents' ? t('auto.documentfilters.documents_appel_offres') : type
       }))
     },
     {

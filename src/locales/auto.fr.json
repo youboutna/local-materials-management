@@ -4638,5 +4638,7 @@
   "auto.phaseworkflowcontainer.impossible_de_programmer_l_inspection": "Impossible de programmer l\\'inspection",
   "auto.inspectiondocumentupload.documents_d_inspection": "Documents d\\'inspection",
   "auto.stepdocumentupload.documents_d_tape": "Documents d\\'étape",
-  "auto.reportmanager.generer_rapport_d_inspection": "Générer Rapport d\\'Inspection"
+  "auto.reportmanager.generer_rapport_d_inspection": "Générer Rapport d\\'Inspection",
+  "auto.documentfilters.documents_appel_offres": "Documents d'appel d'offres",
+  "auto.reportmanager.generer_rapport_appel_offres": "Générer rapport d'appel d'offres"
 }

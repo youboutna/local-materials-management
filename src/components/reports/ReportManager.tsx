@@ -44,7 +44,7 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
       case 'project':
         return t('auto.reportmanager.generer_rapport_de_projet');
       case 'tender':
-        return t('auto.reportmanager.generer_rapport_d')Appel d\t('auto.reportmanager.offres');
+        return t('auto.reportmanager.generer_rapport_appel_offres');
       case 'inspection':
         return t('auto.reportmanager.generer_rapport_d_inspection');
       case 'payment':
