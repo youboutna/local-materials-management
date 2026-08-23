@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
@@ -13,6 +14,7 @@ interface ProjectProgressChartProps {
 }
 
 const ProjectProgressChart: React.FC<ProjectProgressChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
@@ -31,7 +33,7 @@ const ProjectProgressChart: React.FC<ProjectProgressChartProps> = ({ data }) => 
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => [`${value} projets`, 'Nombre']} />
+        <Tooltip formatter={(value) => [`${value} projets`, t('auto.projectprogresschart.nombre')]} />
         <Legend layout="vertical" align="right" verticalAlign="middle" />
       </PieChart>
     </ResponsiveContainer>

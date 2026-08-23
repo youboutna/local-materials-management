@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Lock, Eye, AlertTriangle } from 'lucide-react';
@@ -9,30 +10,31 @@ interface TenderSecurityBadgeProps {
 }
 
 export const TenderSecurityBadge: React.FC<TenderSecurityBadgeProps> = ({ level, className }) => {
+  const { t } = useLanguage();
   const configs = {
     public: {
       icon: Eye,
-      label: 'Public',
+      label: t('auto.tendersecuritybadge.public'),
       variant: 'outline' as const,
-      description: 'Accessible à tous les fournisseurs qualifiés'
+      description: t('auto.tendersecuritybadge.accessible_a_tous_les_fournisseurs_qualifies')
     },
     restricted: {
       icon: Lock,
-      label: 'Restreint',
+      label: t('auto.tendersecuritybadge.restreint'),
       variant: 'secondary' as const,
-      description: 'Accès contrôlé avec code de partage'
+      description: t('auto.tendersecuritybadge.acces_controle_avec_code_de_partage')
     },
     confidential: {
       icon: Shield,
-      label: 'Confidentiel',
+      label: t('auto.tendersecuritybadge.confidentiel'),
       variant: 'default' as const,
-      description: 'Partage sécurisé uniquement'
+      description: t('auto.tendersecuritybadge.partage_securise_uniquement')
     },
     secret: {
       icon: AlertTriangle,
-      label: 'Secret',
+      label: t('auto.tendersecuritybadge.secret'),
       variant: 'destructive' as const,
-      description: 'Niveau de sécurité maximum'
+      description: t('auto.tendersecuritybadge.niveau_de_securite_maximum')
     }
   };
 

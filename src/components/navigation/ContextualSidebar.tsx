@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -57,92 +58,92 @@ interface ContextualSidebarProps {
 
 const navigationItems: NavItem[] = [
   {
-    label: "Dashboard",
+    label: 'auto.contextualsidebar.dashboard',
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    label: "Projets",
+    label: 'auto.contextualsidebar.projets',
     icon: Briefcase,
     children: [
-      { label: "Tous les projets", href: "/projects" },
-      { label: "Créer un projet", href: "/projects/create" },
-      { label: "Importer", href: "/projects/import" },
+      { label: 'auto.contextualsidebar.tous_les_projets', href: "/projects" },
+      { label: 'auto.contextualsidebar.creer_un_projet', href: "/projects/create" },
+      { label: 'auto.contextualsidebar.importer', href: "/projects/import" },
     ],
   },
   {
-    label: "Cycle de vie projet",
+    label: 'auto.contextualsidebar.cycle_de_vie_projet',
     icon: Compass,
     children: [
-      { label: "Planification", href: "/projects?stage=PLANIFICATION", icon: Target },
-      { label: "Exécution", href: "/projects?stage=EXECUTION", icon: HardHat },
-      { label: "Contrôle & Inspections", href: "/inspection-monitoring", icon: ShieldCheck },
-      { label: "Paiements & échéances", href: "/payment-control", icon: CreditCard },
-      { label: "Clôture", href: "/projects?stage=CLOTURE", icon: Flag },
+      { label: 'auto.contextualsidebar.planification', href: "/projects?stage=PLANIFICATION", icon: Target },
+      { label: 'auto.contextualsidebar.execution', href: "/projects?stage=EXECUTION", icon: HardHat },
+      { label: 'auto.contextualsidebar.controle_inspections', href: "/inspection-monitoring", icon: ShieldCheck },
+      { label: 'auto.contextualsidebar.paiements_echeances', href: "/payment-control", icon: CreditCard },
+      { label: 'auto.contextualsidebar.cloture', href: "/projects?stage=CLOTURE", icon: Flag },
     ],
   },
   {
-    label: "Matériaux",
+    label: 'auto.contextualsidebar.materiaux',
     href: "/materials",
     icon: Package,
   },
   {
-    label: "Documents",
+    label: 'auto.contextualsidebar.documents',
     href: "/documents",
     icon: FileText,
   },
   {
-    label: "Tâches",
+    label: 'auto.contextualsidebar.taches',
     href: "/tasks",
     icon: ClipboardList,
   },
   {
-    label: "Équipe",
+    label: 'auto.contextualsidebar.equipe',
     icon: Users,
     children: [
-      { label: "Employés", href: "/employees" },
-      { label: "Organisations", href: "/organizations", roles: ["admin", "director", "manager"] },
-      { label: "Utilisateurs", href: "/users", roles: ["admin", "director"] },
+      { label: 'auto.contextualsidebar.employes', href: "/employees" },
+      { label: 'auto.contextualsidebar.organisations', href: "/organizations", roles: ["admin", "director", "manager"] },
+      { label: 'auto.contextualsidebar.utilisateurs', href: "/users", roles: ["admin", "director"] },
 
     ],
   },
   {
-    label: "Fournisseurs",
+    label: 'auto.contextualsidebar.fournisseurs',
     icon: Building2,
     children: [
-      { label: "Liste", href: "/suppliers" },
+      { label: 'auto.contextualsidebar.liste', href: "/suppliers" },
       { label: "Appels d'offres", href: "/tender-management" },
-      { label: "Partage & codes", action: 'secretManager', icon: KeyRound },
+      { label: 'auto.contextualsidebar.partage_codes', action: 'secretManager', icon: KeyRound },
     ],
   },
   {
-    label: "Surveillance",
+    label: 'auto.contextualsidebar.surveillance',
     icon: Eye,
     children: [
-      { label: "Inspections", href: "/inspection-monitoring" },
-      { label: "Garanties bancaires", href: "/bank-guarantee-monitor" },
-      { label: "Contrôle paiements", href: "/payment-control" },
-      { label: "Assurances", href: "/insurance-management" },
+      { label: 'auto.contextualsidebar.inspections', href: "/inspection-monitoring" },
+      { label: 'auto.contextualsidebar.garanties_bancaires', href: "/bank-guarantee-monitor" },
+      { label: 'auto.contextualsidebar.controle_paiements', href: "/payment-control" },
+      { label: 'auto.contextualsidebar.assurances', href: "/insurance-management" },
     ],
   },
   {
-    label: "Reporting & suivi",
+    label: 'auto.contextualsidebar.reporting_suivi',
     icon: BarChart3,
     children: [
-      { label: "Suivi global", href: "/comprehensive-monitoring" },
-      { label: "Documents", href: "/documents" },
-      { label: "Tâches", href: "/tasks" },
-      { label: "Notifications", href: "/notifications-center" },
-      { label: "Messagerie", href: "/inbox", roles: ["admin", "director", "manager"] },
+      { label: 'auto.contextualsidebar.suivi_global', href: "/comprehensive-monitoring" },
+      { label: 'auto.contextualsidebar.documents', href: "/documents" },
+      { label: 'auto.contextualsidebar.taches', href: "/tasks" },
+      { label: 'auto.contextualsidebar.notifications', href: "/notifications-center" },
+      { label: 'auto.contextualsidebar.messagerie', href: "/inbox", roles: ["admin", "director", "manager"] },
     ],
   },
   {
-    label: "Paramètres",
+    label: 'auto.contextualsidebar.parametres',
     icon: Settings,
     roles: ["admin", "director"],
     children: [
-      { label: "Général", href: "/settings" },
-      { label: "Apparence & thèmes", href: "/settings?tab=appearance", icon: Palette },
+      { label: 'auto.contextualsidebar.general', href: "/settings" },
+      { label: 'auto.contextualsidebar.apparence_themes', href: "/settings?tab=appearance", icon: Palette },
     ],
   },
 ];
@@ -157,6 +158,7 @@ function NavItemComponent({
   collapsed?: boolean;
   depth?: number;
 }) {
+  const { t } = useLanguage();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(() => {
     // Auto-open if current path is within this section
@@ -207,7 +209,7 @@ function NavItemComponent({
         {IconComponent && (
           <IconComponent className={cn("h-4 w-4 flex-shrink-0", isActive && "text-primary")} />
         )}
-        {!collapsed && <span className="truncate">{item.label}</span>}
+        {!collapsed && <span className="truncate">{t(item.label)}</span>}
         {item.badge && !collapsed && (
           <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
             {item.badge}
@@ -236,7 +238,7 @@ function NavItemComponent({
           )}
           {!collapsed && (
             <>
-              <span className="truncate flex-1 text-left">{item.label}</span>
+              <span className="truncate flex-1 text-left">{t(item.label)}</span>
               {isOpen ? (
                 <ChevronDown className="h-4 w-4 flex-shrink-0" />
               ) : (

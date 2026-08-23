@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,8 @@ export const PhaseNode: React.FC<PhaseNodeProps> = ({
   onClick,
   level = 0,
 }) => {
-  const phaseName = phase.title || phase.phase_name || phase.phase || phase.name || "Phase";
+  const { t } = useLanguage();
+  const phaseName = phase.title || phase.phase_name || phase.phase || phase.name || t('auto.phasenode.phase');
   const startDate = phase.startDate || phase.start_date;
   const endDate = phase.endDate || phase.end_date;
   const budget = phase.budget || phase.estimated_cost;
@@ -72,19 +74,19 @@ export const PhaseNode: React.FC<PhaseNodeProps> = ({
     switch (status?.toLowerCase()) {
       case "completed":
         return {
-          label: "Terminée",
+          label: t('auto.phasenode.terminee'),
           className: "bg-success/10 text-success border-success/20",
           icon: <CheckCircle className="h-3 w-3" />,
         };
       case "in_progress":
         return {
-          label: "En cours",
+          label: t('auto.phasenode.en_cours'),
           className: "bg-info/10 text-info border-info/20",
           icon: <Clock className="h-3 w-3" />,
         };
       case "delayed":
         return {
-          label: "En retard",
+          label: t('auto.phasenode.en_retard'),
           className: "bg-destructive/10 text-destructive border-destructive/20",
           icon: <AlertTriangle className="h-3 w-3" />,
         };
@@ -92,7 +94,7 @@ export const PhaseNode: React.FC<PhaseNodeProps> = ({
       case "planned":
       default:
         return {
-          label: "Planifiée",
+          label: t('auto.phasenode.planifiee'),
           className: "bg-muted text-muted-foreground",
           icon: <Target className="h-3 w-3" />,
         };

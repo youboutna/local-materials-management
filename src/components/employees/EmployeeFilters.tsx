@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type EmployeeSortOption = 'name-asc' | 'name-desc' | 'hire-date' | 'department' | 'position';
 
@@ -38,49 +39,50 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'department',
-      label: 'Départements',
-      placeholder: 'Tous les départements',
+      label: t('auto.employeefilters.departements'),
+      placeholder: t('auto.employeefilters.tous_les_departements'),
       value: departmentFilter,
       onChange: onDepartmentChange,
       options: availableDepartments.map(dept => ({ value: dept, label: dept }))
     },
     {
       key: 'position',
-      label: 'Postes',
-      placeholder: 'Tous les postes',
+      label: t('auto.employeefilters.postes'),
+      placeholder: t('auto.employeefilters.tous_les_postes'),
       value: positionFilter,
       onChange: onPositionChange,
       options: availablePositions.map(position => ({ value: position, label: position }))
     },
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.employeefilters.statuts'),
+      placeholder: t('auto.employeefilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'active' ? 'Actif' :
-               status === 'inactive' ? 'Inactif' :
-               status === 'on_leave' ? 'En congé' :
-               status === 'terminated' ? 'Terminé' : status
+        label: status === 'active' ? t('auto.employeefilters.actif') :
+               status === 'inactive' ? t('auto.employeefilters.inactif') :
+               status === 'on_leave' ? t('auto.employeefilters.en_conge') :
+               status === 'terminated' ? t('auto.employeefilters.termine') : status
       }))
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.employeefilters.tri'),
+      placeholder: t('auto.employeefilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as EmployeeSortOption),
       options: [
-        { value: 'name-asc', label: 'Nom (A-Z)' },
-        { value: 'name-desc', label: 'Nom (Z-A)' },
-        { value: 'hire-date', label: 'Date d\'embauche' },
-        { value: 'department', label: 'Département' },
-        { value: 'position', label: 'Poste' }
+        { value: 'name-asc', label: t('auto.employeefilters.nom_a_z') },
+        { value: 'name-desc', label: t('auto.employeefilters.nom_z_a') },
+        { value: 'hire-date', label: t('auto.employeefilters.date_d_embauche') },
+        { value: 'department', label: t('auto.employeefilters.departement') },
+        { value: 'position', label: t('auto.employeefilters.poste') }
       ]
     }
   ];
@@ -89,7 +91,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des employés..."
+      searchPlaceholder={t('auto.employeefilters.rechercher_des_employes')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

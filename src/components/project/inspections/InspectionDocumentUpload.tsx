@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import ProjectDocumentUpload from '../ProjectDocumentUpload';
 
@@ -14,12 +15,13 @@ const InspectionDocumentUpload = ({
   inspectionTitle, 
   onDocumentUploaded 
 }: InspectionDocumentUploadProps) => {
+  const { t } = useLanguage();
   return (
     <ProjectDocumentUpload
       projectId={projectId}
       inspectionId={inspectionId}
       context="inspection"
-      contextLabel={inspectionTitle ? `Inspection: ${inspectionTitle}` : 'Documents d\'inspection'}
+      contextLabel={inspectionTitle ? `Inspection: ${inspectionTitle}` : t('auto.inspectiondocumentupload.documents_d_inspection')}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -20,6 +21,7 @@ interface ReportManagerProps {
 }
 
 export function ReportManager({ data, reportType }: ReportManagerProps) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   const getReportIcon = () => {
@@ -40,15 +42,15 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
   const getReportTitle = () => {
     switch (reportType) {
       case 'project':
-        return 'Générer Rapport de Projet';
+        return t('auto.reportmanager.generer_rapport_de_projet');
       case 'tender':
-        return 'Générer Rapport d\'Appel d\'Offres';
+        return t('auto.reportmanager.generer_rapport_appel_offres');
       case 'inspection':
-        return 'Générer Rapport d\'Inspection';
+        return t('auto.reportmanager.generer_rapport_d_inspection');
       case 'payment':
-        return 'Générer Rapport de Paiements';
+        return t('auto.reportmanager.generer_rapport_de_paiements');
       default:
-        return 'Générer Rapport';
+        return t('auto.reportmanager.generer_rapport');
     }
   };
 

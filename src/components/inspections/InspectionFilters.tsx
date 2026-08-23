@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type InspectionSortOption = 'newest' | 'oldest' | 'project' | 'inspector' | 'status';
 
@@ -38,49 +39,50 @@ const InspectionFilters: React.FC<InspectionFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.inspectionfilters.statuts'),
+      placeholder: t('auto.inspectionfilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'scheduled' ? 'Programmé' :
-               status === 'in_progress' ? 'En cours' :
-               status === 'completed' ? 'Terminé' :
-               status === 'cancelled' ? 'Annulé' : status
+        label: status === 'scheduled' ? t('auto.inspectionfilters.programme') :
+               status === 'in_progress' ? t('auto.inspectionfilters.en_cours') :
+               status === 'completed' ? t('auto.inspectionfilters.termine') :
+               status === 'cancelled' ? t('auto.inspectionfilters.annule') : status
       }))
     },
     {
       key: 'inspector',
-      label: 'Inspecteurs',
-      placeholder: 'Tous les inspecteurs',
+      label: t('auto.inspectionfilters.inspecteurs'),
+      placeholder: t('auto.inspectionfilters.tous_les_inspecteurs'),
       value: inspectorFilter,
       onChange: onInspectorChange,
       options: availableInspectors.map(inspector => ({ value: inspector, label: inspector }))
     },
     {
       key: 'project',
-      label: 'Projets',
-      placeholder: 'Tous les projets',
+      label: t('auto.inspectionfilters.projets'),
+      placeholder: t('auto.inspectionfilters.tous_les_projets'),
       value: projectFilter,
       onChange: onProjectChange,
       options: availableProjects.map(project => ({ value: project.id, label: project.title }))
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.inspectionfilters.tri'),
+      placeholder: t('auto.inspectionfilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as InspectionSortOption),
       options: [
-        { value: 'newest', label: 'Plus récent' },
-        { value: 'oldest', label: 'Plus ancien' },
-        { value: 'project', label: 'Projet' },
-        { value: 'inspector', label: 'Inspecteur' },
-        { value: 'status', label: 'Statut' }
+        { value: 'newest', label: t('auto.inspectionfilters.plus_recent') },
+        { value: 'oldest', label: t('auto.inspectionfilters.plus_ancien') },
+        { value: 'project', label: t('auto.inspectionfilters.projet') },
+        { value: 'inspector', label: t('auto.inspectionfilters.inspecteur') },
+        { value: 'status', label: t('auto.inspectionfilters.statut') }
       ]
     }
   ];
@@ -89,7 +91,7 @@ const InspectionFilters: React.FC<InspectionFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des inspections..."
+      searchPlaceholder={t('auto.inspectionfilters.rechercher_des_inspections')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

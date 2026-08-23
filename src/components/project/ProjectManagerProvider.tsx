@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 // ============================================================
 // src/components/project/ProjectManagerProvider.tsx
 // ============================================================
@@ -41,6 +42,7 @@ export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({
   actionLabels,
   children
 }) => {
+  const { t } = useLanguage();
   // Create AlertService with project context
   const alertContext: ProjectAlertContext = useMemo(() => ({
     projectId: project?.id || '',
@@ -198,7 +200,7 @@ export const ProjectManagerProvider: React.FC<ProjectManagerProviderProps> = ({
       return alertService.getActionLabel(alertType);
     } catch (error) {
       console.error('[ProjectManagerProvider] Erreur getActionLabel:', error);
-      return 'Action';
+      return t('auto.projectmanagerprovider.action');
     }
   }, [alertService]);
 

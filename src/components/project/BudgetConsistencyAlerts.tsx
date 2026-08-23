@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * BudgetConsistencyAlerts — restitution UI des contrôles de cohérence budgétaire.
  * Pure présentation : consomme `BudgetConsistencyService` (aucun accès données).
@@ -21,6 +22,7 @@ const STYLES: Record<BudgetFinding['severity'], { wrapper: string; Icon: typeof 
 };
 
 export const BudgetConsistencyAlerts: React.FC<Props> = ({ findings, okLabel, className }) => {
+  const { t } = useLanguage();
   if (findings.length === 0) {
     if (!okLabel) return null;
     return (
@@ -42,7 +44,7 @@ export const BudgetConsistencyAlerts: React.FC<Props> = ({ findings, okLabel, cl
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{f.label}</span>
                 <Badge variant={s.badge} className="text-xs">
-                  {f.severity === 'error' ? 'Bloquant' : f.severity === 'warning' ? 'Avertissement' : 'Information'}
+                  {f.severity === 'error' ? t('auto.budgetconsistencyalerts.bloquant') : f.severity === 'warning' ? t('auto.budgetconsistencyalerts.avertissement') : t('auto.budgetconsistencyalerts.information')}
                 </Badge>
               </div>
               <p className="mt-1 text-muted-foreground">{f.message}</p>

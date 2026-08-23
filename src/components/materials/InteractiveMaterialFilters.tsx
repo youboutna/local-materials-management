@@ -2,6 +2,7 @@ import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InteractiveMaterialFiltersProps {
   searchTerm: string;
@@ -36,34 +37,35 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
   materialCount,
   gpsCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'category',
-      label: 'Catégorie',
-      placeholder: 'Toutes les catégories',
+      label: t('auto.interactivematerialfilters.categorie'),
+      placeholder: t('auto.interactivematerialfilters.toutes_les_categories'),
       value: selectedCategory,
       onChange: onCategoryChange,
       options: categories.map(category => ({ value: category, label: category }))
     },
     {
       key: 'region',
-      label: 'Région',
-      placeholder: 'Toutes les régions',
+      label: t('auto.interactivematerialfilters.region'),
+      placeholder: t('auto.interactivematerialfilters.toutes_les_regions'),
       value: selectedRegion,
       onChange: onRegionChange,
       options: regions.map(region => ({ value: region, label: region }))
     },
     {
       key: 'stockLevel',
-      label: 'Niveau de Stock',
-      placeholder: 'Tous les niveaux',
+      label: t('auto.interactivematerialfilters.niveau_de_stock'),
+      placeholder: t('auto.interactivematerialfilters.tous_les_niveaux'),
       value: selectedStockLevel,
       onChange: onStockLevelChange,
       options: [
-        { value: 'high', label: 'Stock Élevé' },
-        { value: 'medium', label: 'Stock Moyen' },
-        { value: 'low', label: 'Stock Faible' },
-        { value: 'out', label: 'Rupture de Stock' }
+        { value: 'high', label: t('auto.interactivematerialfilters.stock_eleve') },
+        { value: 'medium', label: t('auto.interactivematerialfilters.stock_moyen') },
+        { value: 'low', label: t('auto.interactivematerialfilters.stock_faible') },
+        { value: 'out', label: t('auto.interactivematerialfilters.rupture_de_stock') }
       ]
     }
   ];
@@ -85,7 +87,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
         searchValue={searchTerm}
         onSearchChange={onSearchChange}
         onSearchSubmit={onSearchSubmit}
-        searchPlaceholder="Recherche fulltext: nom, description, catégorie, région, type..."
+        searchPlaceholder={t('auto.interactivematerialfilters.recherche_fulltext_nom_description_categorie_reg')}
         filters={filters}
         onReset={onReset}
         resultCount={materialCount}

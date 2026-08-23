@@ -8,6 +8,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface ResourceOption {
   id: string;
@@ -26,9 +27,9 @@ interface Props {
 }
 
 const TYPE_LABEL: Record<BoqResourceType, string> = {
-  material: 'Matériau',
-  labor: "Main d'œuvre",
-  equipment: 'Équipement',
+  material: 'auto.resourceselector.materiau',
+  labor: 'auto.resourceselector.main_d_oeuvre',
+  equipment: 'auto.resourceselector.equipement',
 };
 
 export const ResourceSelector: React.FC<Props> = ({
@@ -39,13 +40,14 @@ export const ResourceSelector: React.FC<Props> = ({
   onChange,
   disabled,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-2 gap-2">
       <Select value={resourceType} onValueChange={(v) => onResourceTypeChange(v as BoqResourceType)} disabled={disabled}>
-        <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder={t('auto.resourceselector.type')} /></SelectTrigger>
         <SelectContent>
           {(Object.keys(TYPE_LABEL) as BoqResourceType[]).map((k) => (
-            <SelectItem key={k} value={k}>{TYPE_LABEL[k]}</SelectItem>
+            <SelectItem key={k} value={k}>{t(TYPE_LABEL[k])}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -57,7 +59,7 @@ export const ResourceSelector: React.FC<Props> = ({
         }}
         disabled={disabled || options.length === 0}
       >
-        <SelectTrigger><SelectValue placeholder={options.length ? 'Ressource…' : 'Aucune ressource'} /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder={options.length ? t('auto.resourceselector.ressource') : t('auto.resourceselector.aucune_ressource')} /></SelectTrigger>
         <SelectContent>
           {options.map((o) => (
             <SelectItem key={o.id} value={o.id}>

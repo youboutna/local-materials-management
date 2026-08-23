@@ -1,3 +1,5 @@
+import { translateLabelMap } from '@/lib/i18n/labelMap';
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Adapter GED pour les documents de surveillance contractuelle
  * (garanties bancaires, polices d'assurance).
@@ -26,13 +28,15 @@ const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: string; label: 
   ],
 };
 
-const SCOPE_LABELS: Record<MonitoringDocumentScope, string> = {
-  bank_guarantee: 'Garanties bancaires',
+const SCOPE_LABEL_KEYS: Record<string, string> = {
+  bank_guarantee: 'auto.monitoringdocumentadapter.garanties_bancaires',
   insurance: "Polices d'assurance",
-  payment: 'Paiements',
+  payment: 'auto.monitoringdocumentadapter.paiements',
 };
 
 export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): DocumentHubContract {
+  const { t } = useLanguage();
+  const SCOPE_LABELS = translateLabelMap(SCOPE_LABEL_KEYS, t);
   const scopeLabel = SCOPE_LABELS[scope];
 
   return useDocumentsTableAdapter({
@@ -47,7 +51,7 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
     facets: [
       {
         key: 'category',
-        label: 'Type de document',
+        label: t('auto.monitoringdocumentadapter.type_de_document'),
         options: CATEGORY_OPTIONS[scope],
       },
     ],

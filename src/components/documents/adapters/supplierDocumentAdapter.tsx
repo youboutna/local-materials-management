@@ -1,17 +1,21 @@
+import { translateLabelMap } from '@/lib/i18n/labelMap';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
 
-const SUPPLIER_CATEGORY_LABELS: Record<string, string> = {
-  contract: 'Contrat',
-  certificate: 'Attestation',
-  invoice: 'Facture',
-  supporting_document: 'Pièce justificative',
-  other: 'Autre',
+const SUPPLIER_CATEGORY_LABEL_KEYS: Record<string, string> = {
+  contract: 'auto.supplierdocumentadapter.contrat',
+  certificate: 'auto.supplierdocumentadapter.attestation',
+  invoice: 'auto.supplierdocumentadapter.facture',
+  supporting_document: 'auto.supplierdocumentadapter.piece_justificative',
+  other: 'auto.supplierdocumentadapter.autre',
 };
 
 export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContract {
+  const { t } = useLanguage();
+  const SUPPLIER_CATEGORY_LABELS = translateLabelMap(SUPPLIER_CATEGORY_LABEL_KEYS, t);
   return useDocumentsTableAdapter({
-    scopeLabel: 'Documents du fournisseur',
+    scopeLabel: t('auto.supplierdocumentadapter.documents_du_fournisseur'),
     queryKey: ['documents', 'supplier', supplierId],
     filters: [{ column: 'supplier_id', value: supplierId }],
     pathPrefix: `suppliers/${supplierId}`,
@@ -23,7 +27,7 @@ export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContr
     facets: [
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('auto.supplierdocumentadapter.categorie'),
         options: Object.entries(SUPPLIER_CATEGORY_LABELS).map(([value, label]) => ({
           value,
           label,

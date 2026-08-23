@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * ListToolbar
  * Barre d'outils partagée (recherche libre + filtres rapides) pour les listes
@@ -13,10 +14,10 @@ import { ExpiryFilter } from '@/lib/expiryUx';
 import { cn } from '@/lib/utils';
 
 const EXPIRY_FILTERS: { value: ExpiryFilter; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'active', label: 'Actifs' },
-  { value: 'expiring', label: 'Expire bientôt' },
-  { value: 'expired', label: 'Expirés' },
+  { value: 'all', label: 'auto.listtoolbar.tous' },
+  { value: 'active', label: 'auto.listtoolbar.actifs' },
+  { value: 'expiring', label: 'auto.listtoolbar.expire_bientot' },
+  { value: 'expired', label: 'auto.listtoolbar.expires' },
 ];
 
 interface ListToolbarProps {
@@ -34,13 +35,15 @@ interface ListToolbarProps {
 export function ListToolbar({
   search,
   onSearchChange,
-  searchPlaceholder = 'Rechercher…',
+  searchPlaceholder,
   expiryFilter,
   onExpiryFilterChange,
   children,
   resultCount,
   className,
 }: ListToolbarProps) {
+  const { t } = useLanguage();
+  const placeholder = searchPlaceholder ?? t('auto.listtoolbar.rechercher');
   return (
     <div className={cn('mb-4 flex flex-wrap items-center gap-2', className)}>
       <div className="relative min-w-[16rem] flex-1">
@@ -48,9 +51,9 @@ export function ListToolbar({
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={searchPlaceholder}
+          placeholder={placeholder}
           className="pl-8"
-          aria-label={searchPlaceholder}
+          aria-label={placeholder}
         />
       </div>
 
@@ -63,7 +66,7 @@ export function ListToolbar({
               variant={expiryFilter === f.value ? 'default' : 'outline'}
               onClick={() => onExpiryFilterChange(f.value)}
             >
-              {f.label}
+              {t(f.label)}
             </Button>
           ))}
         </div>

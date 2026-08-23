@@ -25,6 +25,7 @@
 import React from 'react';
 import GeoZoneEditor, { GeoZoneEditorProps } from '@/components/gis/GeoZoneEditor';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * Props pour InterventionZonesPicker
@@ -42,7 +43,7 @@ export type InterventionZonesPickerProps = GeoZoneEditorProps;
  * <InterventionZonesPicker
  *   value={zones}
  *   onChange={setZones}
- *   title="Zones d'intervention"
+ *   title={t('auto.interventionzonespicker.zones_d_intervention')}
  * />
  * 
  * @example
@@ -50,7 +51,7 @@ export type InterventionZonesPickerProps = GeoZoneEditorProps;
  * <InterventionZonesPicker
  *   value={project.interventionZones}
  *   readOnly={true}
- *   title="Zones du projet"
+ *   title={t('auto.interventionzonespicker.zones_du_projet')}
  *   defaultCenter={[18.0735, -15.9582]}
  * />
  * 
@@ -58,6 +59,7 @@ export type InterventionZonesPickerProps = GeoZoneEditorProps;
  * @returns Le composant GeoZoneEditor avec les props passées
  */
 const InterventionZonesPicker: React.FC<InterventionZonesPickerProps> = (props) => {
+  const { t } = useLanguage();
   // Délégation totale à GeoZoneEditor
   return <GeoZoneEditor {...props} />;
 };

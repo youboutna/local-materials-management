@@ -1,15 +1,19 @@
+import { translateLabelMap } from '@/lib/i18n/labelMap';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
 
-const INSPECTION_CATEGORY_LABELS: Record<string, string> = {
-  pv: 'PV',
-  report: 'Rapport',
-  photo: 'Photo',
-  checklist: 'Checklist',
-  other: 'Autre',
+const INSPECTION_CATEGORY_LABEL_KEYS: Record<string, string> = {
+  pv: 'auto.inspectiondocumentadapter.pv',
+  report: 'auto.inspectiondocumentadapter.rapport',
+  photo: 'auto.inspectiondocumentadapter.photo',
+  checklist: 'auto.inspectiondocumentadapter.checklist',
+  other: 'auto.inspectiondocumentadapter.autre',
 };
 
 export function useInspectionDocumentAdapter(inspectionId: string): DocumentHubContract {
+  const { t } = useLanguage();
+  const INSPECTION_CATEGORY_LABELS = translateLabelMap(INSPECTION_CATEGORY_LABEL_KEYS, t);
   return useDocumentsTableAdapter({
     scopeLabel: "Documents de l'inspection",
     queryKey: ['documents', 'inspection', inspectionId],
@@ -23,7 +27,7 @@ export function useInspectionDocumentAdapter(inspectionId: string): DocumentHubC
     facets: [
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('auto.inspectiondocumentadapter.categorie'),
         options: Object.entries(INSPECTION_CATEGORY_LABELS).map(([value, label]) => ({
           value,
           label,
