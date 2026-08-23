@@ -13,6 +13,7 @@ import { ProjectMiniMap } from './ProjectMiniMap';
 import { PhaseGanttBars } from './PhaseGanttBars';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -253,7 +254,7 @@ export function ProjectPDFDocument({
           première page limitée à l'en-tête/pied de page. */}
       <View wrap={false} style={{ marginBottom: 12, padding: 10, backgroundColor: '#eff6ff' }}>
         <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#1e40af', marginBottom: 6 }}>
-          Synthèse du projet
+          <T k="auto.projectpdfdocument.synthese_du_projet" fallback="Synthèse du projet" />
         </Text>
         <Text>Avancement : {metrics.formatted.progress}</Text>
         <Text>Budget : {metrics.formatted.budget}</Text>

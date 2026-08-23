@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -80,7 +81,7 @@ export function PaginationControls({
         
         {showItemsPerPage && onItemsPerPageChange && (
           <div className="flex items-center gap-2">
-            <span>Éléments par page:</span>
+            <span><T k="auto.pagination_controls.elements_par_page" fallback="Éléments par page:" /></span>
             <Select
               value={itemsPerPage.toString()}
               onValueChange={(value) => onItemsPerPageChange(parseInt(value))}
@@ -117,7 +118,7 @@ export function PaginationControls({
           disabled={currentPage === 1}
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only ml-1">Précédent</span>
+          <span className="sr-only sm:not-sr-only ml-1"><T k="auto.pagination_controls.precedent" fallback="Précédent" /></span>
         </Button>
 
         <div className="flex items-center gap-1">
@@ -146,7 +147,7 @@ export function PaginationControls({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          <span className="sr-only sm:not-sr-only mr-1">Suivant</span>
+          <span className="sr-only sm:not-sr-only mr-1"><T k="auto.pagination_controls.suivant" fallback="Suivant" /></span>
           <ChevronRight className="h-4 w-4" />
         </Button>
         

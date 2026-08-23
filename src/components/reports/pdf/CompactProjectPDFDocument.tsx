@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ProjectMiniMap } from './ProjectMiniMap';
 import { ReportFooter, ReportHeader } from './ReportPageFrame';
+import { T } from '@/components/i18n/T';
 
 
 // Local types for PDF rendering
@@ -794,21 +795,21 @@ export function CompactProjectPDFDocument({
             {/* Info Grid */}
             <View style={styles.infoGrid}>
               <View style={styles.infoBox}>
-                <Text style={styles.infoLabel}>Localisation</Text>
+                <Text style={styles.infoLabel}><T k="auto.compactprojectpdfdocument.localisation" fallback="Localisation" /></Text>
                 <Text style={styles.infoValue}>{project.location || 'Non définie'}</Text>
               </View>
               <View style={styles.infoBox}>
-                <Text style={styles.infoLabel}>Budget</Text>
+                <Text style={styles.infoLabel}><T k="auto.compactprojectpdfdocument.budget" fallback="Budget" /></Text>
                 <Text style={styles.infoValue}>{formatBudget(project.budget || 0)}</Text>
               </View>
               <View style={styles.infoBox}>
-                <Text style={styles.infoLabel}>Statut</Text>
+                <Text style={styles.infoLabel}><T k="auto.compactprojectpdfdocument.statut" fallback="Statut" /></Text>
                 <Text style={[styles.infoValue, { color: getStatusColor(project.status) }]}>
                   {getStatusText(project.status)}
                 </Text>
               </View>
               <View style={styles.infoBox}>
-                <Text style={styles.infoLabel}>Dates</Text>
+                <Text style={styles.infoLabel}><T k="auto.compactprojectpdfdocument.dates" fallback="Dates" /></Text>
                 <Text style={styles.infoValue}>
                   {project.startDate ? format(new Date(project.startDate), 'dd/MM/yy') : '--/--/--'} - {project.endDate ? format(new Date(project.endDate), 'dd/MM/yy') : '--/--/--'}
                 </Text>
@@ -832,7 +833,7 @@ export function CompactProjectPDFDocument({
             {/* Particularity */}
             {project.description && (
               <View style={styles.particularityBox}>
-                <Text style={styles.particularityTitle}>Particularité</Text>
+                <Text style={styles.particularityTitle}><T k="auto.compactprojectpdfdocument.particularite" fallback="Particularité" /></Text>
                 <Text style={styles.particularityText}>
                   {project.description.length > 120 ? project.description.substring(0, 120) + '...' : project.description}
                 </Text>
@@ -845,16 +846,16 @@ export function CompactProjectPDFDocument({
               <View style={styles.column}>
                 {/* Informations générales */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Informations générales</Text>
+                  <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.informations_generales" fallback="Informations générales" /></Text>
                   <View style={styles.sectionContent}>
                     <View style={{ marginBottom: 3 }}>
-                      <Text style={{ fontSize: 6, color: colors.muted }}>Contractant principal</Text>
+                      <Text style={{ fontSize: 6, color: colors.muted }}><T k="auto.compactprojectpdfdocument.contractant_principal" fallback="Contractant principal" /></Text>
                       <Text style={{ fontSize: 7, color: colors.dark }}>
                         {Array.isArray(project.contacts) ? (project.contacts.find((c: any) => c.role === 'contractor')?.name || project.contacts[0]?.name || 'Non défini') : 'Non défini'}
                       </Text>
                     </View>
                     <View>
-                      <Text style={{ fontSize: 6, color: colors.muted }}>Source de financement</Text>
+                      <Text style={{ fontSize: 6, color: colors.muted }}><T k="auto.compactprojectpdfdocument.source_de_financement" fallback="Source de financement" /></Text>
                       <Text style={{ fontSize: 7, color: colors.dark }}>
                         {Array.isArray(project.stakeholders) ? (project.stakeholders.find((s: any) => s.role === 'bailleur')?.organization || 'Non définie') : 'Non définie'}
                       </Text>
@@ -866,13 +867,13 @@ export function CompactProjectPDFDocument({
                 {activeSections.financial && (
                 <View style={styles.section}>
 
-                  <Text style={styles.sectionTitle}>Dépenses Engagées</Text>
+                  <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.depenses_engagees" fallback="Dépenses Engagées" /></Text>
                   <View style={styles.table}>
                     <View style={styles.tableHeader}>
-                      <Text style={[styles.tableHeaderCell, { width: '35%' }]}>Phase</Text>
-                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Engagé</Text>
-                      <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Taux</Text>
-                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Fournisseur</Text>
+                      <Text style={[styles.tableHeaderCell, { width: '35%' }]}><T k="auto.compactprojectpdfdocument.phase" fallback="Phase" /></Text>
+                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}><T k="auto.compactprojectpdfdocument.engage" fallback="Engagé" /></Text>
+                      <Text style={[styles.tableHeaderCell, { width: '15%' }]}><T k="auto.compactprojectpdfdocument.taux" fallback="Taux" /></Text>
+                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}><T k="auto.compactprojectpdfdocument.fournisseur" fallback="Fournisseur" /></Text>
                     </View>
                     {phases.slice(0, expensesMaxRows).map((phase: any, idx: number) => (
                       <View key={idx} style={styles.tableRow}>
@@ -893,7 +894,7 @@ export function CompactProjectPDFDocument({
                     {phases.length === 0 && (
                       <View style={styles.tableRow}>
                         <Text style={[styles.tableCell, { width: '100%', textAlign: 'center', color: colors.muted }]}>
-                          Aucune dépense enregistrée
+                          <T k="auto.compactprojectpdfdocument.aucune_depense_enregistree" fallback="Aucune dépense enregistrée" />
                         </Text>
                       </View>
                     )}
@@ -909,12 +910,12 @@ export function CompactProjectPDFDocument({
                 {activeSections.risks && (
                 <View style={styles.section}>
 
-                  <Text style={styles.sectionTitle}>Risques Identifiés</Text>
+                  <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.risques_identifies" fallback="Risques Identifiés" /></Text>
                   <View style={styles.table}>
                     <View style={styles.tableHeader}>
-                      <Text style={[styles.tableHeaderCell, { width: '50%' }]}>Description</Text>
-                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Impact</Text>
-                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Prob.</Text>
+                      <Text style={[styles.tableHeaderCell, { width: '50%' }]}><T k="auto.compactprojectpdfdocument.description" fallback="Description" /></Text>
+                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}><T k="auto.compactprojectpdfdocument.impact" fallback="Impact" /></Text>
+                      <Text style={[styles.tableHeaderCell, { width: '25%' }]}><T k="auto.compactprojectpdfdocument.prob" fallback="Prob." /></Text>
                     </View>
                     {[...risks].sort((a: any, b: any) => ((b?.impact || 0) * (b?.probability || 0)) - ((a?.impact || 0) * (a?.probability || 0))).slice(0, risksMaxRows).map((risk: any, idx: number) => {
                       const riskColor = getRiskColor(risk.impact > 70 ? 'élevé' : risk.impact > 40 ? 'moyen' : 'faible');
@@ -935,7 +936,7 @@ export function CompactProjectPDFDocument({
                     {risks.length === 0 && (
                       <View style={styles.tableRow}>
                         <Text style={[styles.tableCell, { width: '100%', textAlign: 'center', color: colors.muted }]}>
-                          Aucun risque identifié
+                          <T k="auto.compactprojectpdfdocument.aucun_risque_identifie" fallback="Aucun risque identifié" />
                         </Text>
                       </View>
                     )}
@@ -980,7 +981,7 @@ export function CompactProjectPDFDocument({
                       <>
                         <View style={styles.conformityGrid}>
                           <View style={styles.conformityItem}>
-                            <Text style={styles.conformityLabel}>Documents validés</Text>
+                            <Text style={styles.conformityLabel}><T k="auto.compactprojectpdfdocument.documents_valides" fallback="Documents validés" /></Text>
                             <View style={[styles.conformityBadge, { backgroundColor: docBadge.bg }]}>
                               <Text style={{ fontSize: 6, color: docBadge.color }}>
                                 {docBadge.label} ({formatDecimal(docRate)}%)
@@ -988,7 +989,7 @@ export function CompactProjectPDFDocument({
                             </View>
                           </View>
                           <View style={styles.conformityItem}>
-                            <Text style={styles.conformityLabel}>Inspections conformes</Text>
+                            <Text style={styles.conformityLabel}><T k="auto.compactprojectpdfdocument.inspections_conformes" fallback="Inspections conformes" /></Text>
                             <View style={[styles.conformityBadge, { backgroundColor: inspBadge.bg }]}>
                               <Text style={{ fontSize: 6, color: inspBadge.color }}>
                                 {inspBadge.label} ({formatDecimal(inspRate)}%)
@@ -998,13 +999,13 @@ export function CompactProjectPDFDocument({
                         </View>
                         <View style={styles.conformityGrid}>
                           <View style={styles.conformityItem}>
-                            <Text style={styles.conformityLabel}>Inspections</Text>
+                            <Text style={styles.conformityLabel}><T k="auto.compactprojectpdfdocument.inspections" fallback="Inspections" /></Text>
                             <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
                               {inspectionsList.length}
                             </Text>
                           </View>
                           <View style={styles.conformityItem}>
-                            <Text style={styles.conformityLabel}>Documents</Text>
+                            <Text style={styles.conformityLabel}><T k="auto.compactprojectpdfdocument.documents" fallback="Documents" /></Text>
                             <Text style={[styles.conformityLabel, { fontWeight: 'bold' }]}>
                               {documentsList.length}
                             </Text>
@@ -1023,22 +1024,22 @@ export function CompactProjectPDFDocument({
             {activeSections.evmAnalysis && (
             <View style={styles.section}>
 
-              <Text style={styles.sectionTitle}>Analyse EVM (Earned Value Management)</Text>
+              <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.analyse_evm_earned_value_management" fallback="Analyse EVM (Earned Value Management)" /></Text>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>PV (Valeur Planifiée)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.pv_valeur_planifiee" fallback="PV (Valeur Planifiée)" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.plannedValue || 0)}</Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>EV (Valeur Acquise)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.ev_valeur_acquise" fallback="EV (Valeur Acquise)" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.earnedValue || 0)}</Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>AC (Coût Réel)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.ac_cout_reel" fallback="AC (Coût Réel)" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.actualCost || 0)}</Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>SPI</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.spi" fallback="SPI" /></Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true) }]}>
                     {formatDecimal(evmMetrics?.schedulePerformanceIndex || 0)}
                   </Text>
@@ -1046,19 +1047,19 @@ export function CompactProjectPDFDocument({
               </View>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>SV (Écart délai)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.sv_ecart_delai" fallback="SV (Écart délai)" /></Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.scheduleVariance || 0) }]}>
                     {formatBudget(evmMetrics?.scheduleVariance || 0)}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>CV (Écart coût)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.cv_ecart_cout" fallback="CV (Écart coût)" /></Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.costVariance || 0) }]}>
                     {formatBudget(evmMetrics?.costVariance || 0)}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>CPI</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.cpi" fallback="CPI" /></Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
                     {(evmMetrics as any)?.hasActualCost === false || !(evmMetrics?.costPerformanceIndex)
                       ? 'N/A'
@@ -1066,27 +1067,27 @@ export function CompactProjectPDFDocument({
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>BAC</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.bac" fallback="BAC" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.budgetAtCompletion || project.budget || 0)}</Text>
                 </View>
               </View>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>EAC (Est. achèvement)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.eac_est_achevement" fallback="EAC (Est. achèvement)" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.estimateAtCompletion || 0)}</Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>ETC (Est. restant)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.etc_est_restant" fallback="ETC (Est. restant)" /></Text>
                   <Text style={styles.evmValue}>{formatBudget(evmMetrics?.estimateToComplete || 0)}</Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>VAC (Variance)</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.vac_variance" fallback="VAC (Variance)" /></Text>
                   <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.varianceAtCompletion || 0) }]}>
                     {formatBudget(evmMetrics?.varianceAtCompletion || 0)}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Phase actuelle</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.phase_actuelle" fallback="Phase actuelle" /></Text>
                   <Text style={styles.evmValue}>{getCurrentPhase(phases).substring(0, 15)}</Text>
                 </View>
               </View>
@@ -1098,14 +1099,14 @@ export function CompactProjectPDFDocument({
             <View style={styles.kpiSection}>
 
               <Text style={[styles.sectionTitle, { backgroundColor: 'transparent', borderLeftWidth: 0, marginBottom: 6 }]}>
-                Indicateurs de Performance (KPI)
+                <T k="auto.compactprojectpdfdocument.indicateurs_de_performance_kpi" fallback="Indicateurs de Performance (KPI)" />
               </Text>
               <View style={styles.kpiGrid}>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true) }]}>
                     {formatDecimal(evmMetrics?.schedulePerformanceIndex || 0)}
                   </Text>
-                  <Text style={styles.kpiLabel}>Indice SPI</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.indice_spi" fallback="Indice SPI" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
@@ -1113,20 +1114,20 @@ export function CompactProjectPDFDocument({
                       ? 'N/A'
                       : formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
                   </Text>
-                  <Text style={styles.kpiLabel}>Indice CPI</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.indice_cpi" fallback="Indice CPI" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costVariance || 0) }]}>
                     {formatDecimal(((evmMetrics?.costVariance || 0) / (project.budget || 1)) * 100)}%
                   </Text>
-                  <Text style={styles.kpiLabel}>Écart Budget</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.ecart_budget" fallback="Écart Budget" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: colors.primary }]}>
                     {formatDecimal(project.progress || 0)}%
 
                   </Text>
-                  <Text style={styles.kpiLabel}>Progression</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.progression" fallback="Progression" /></Text>
                 </View>
               </View>
               <View style={[styles.kpiGrid, { marginTop: 4 }]}>
@@ -1134,7 +1135,7 @@ export function CompactProjectPDFDocument({
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true), fontSize: 8 }]}>
                     {(evmMetrics?.schedulePerformanceIndex || 0) >= 1 ? 'En avance' : (evmMetrics?.schedulePerformanceIndex || 0) >= 0.9 ? 'À temps' : 'En retard'}
                   </Text>
-                  <Text style={styles.kpiLabel}>Perf. délai</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.perf_delai" fallback="Perf. délai" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true), fontSize: 8 }]}>
@@ -1142,13 +1143,13 @@ export function CompactProjectPDFDocument({
                       ? 'N/A (aucun coût engagé)'
                       : (evmMetrics?.costPerformanceIndex || 0) >= 1 ? 'Sous budget' : (evmMetrics?.costPerformanceIndex || 0) >= 0.9 ? 'Dans budget' : 'Dépassement'}
                   </Text>
-                  <Text style={styles.kpiLabel}>Perf. coût</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.perf_cout" fallback="Perf. coût" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={[styles.kpiValue, { fontSize: 8 }]}>
                     {getTrendIcon(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0)}
                   </Text>
-                  <Text style={styles.kpiLabel}>Tendance</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.tendance" fallback="Tendance" /></Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <View style={[styles.statusBadge, { backgroundColor: getGlobalStatus(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0).color + '20' }]}>
@@ -1156,7 +1157,7 @@ export function CompactProjectPDFDocument({
                       {getGlobalStatus(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0).text}
                     </Text>
                   </View>
-                  <Text style={styles.kpiLabel}>Statut global</Text>
+                  <Text style={styles.kpiLabel}><T k="auto.compactprojectpdfdocument.statut_global" fallback="Statut global" /></Text>
                 </View>
               </View>
             </View>
@@ -1166,7 +1167,7 @@ export function CompactProjectPDFDocument({
             {activeSections.milestones && milestonesDensity === 'line' && (
               <View style={styles.synthLine}>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Prochain jalon:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.prochain_jalon" fallback="Prochain jalon:" /></Text>
                   <Text style={styles.synthValue}>
                     {milestoneSummary.nextLabel
                       ? `${milestoneSummary.nextLabel.substring(0, 28)} (${milestoneSummary.nextDate})`
@@ -1174,13 +1175,13 @@ export function CompactProjectPDFDocument({
                   </Text>
                 </View>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Atteints:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.atteints" fallback="Atteints:" /></Text>
                   <Text style={styles.synthValue}>
                     {milestoneSummary.done}/{milestoneSummary.total}
                   </Text>
                 </View>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>En retard:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.en_retard" fallback="En retard:" /></Text>
                   <Text
                     style={[
                       styles.synthValue,
@@ -1196,7 +1197,7 @@ export function CompactProjectPDFDocument({
             {/* Micro-Gantt — timeline horizontale des phases (repère « aujourd'hui ») */}
             {activeSections.ganttChart && gantt && (
               <View style={styles.ganttWrapper}>
-                <Text style={styles.sectionTitle}>Planning (Gantt condensé)</Text>
+                <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.planning_gantt_condense" fallback="Planning (Gantt condensé)" /></Text>
                 {gantt.bars.map((bar, idx) => (
                   <View key={idx} style={styles.ganttRow}>
                     <Text style={styles.ganttLabel}>{bar.label}</Text>
@@ -1213,7 +1214,7 @@ export function CompactProjectPDFDocument({
                 ))}
                 <View style={styles.ganttAxis}>
                   <Text style={styles.ganttAxisText}>{gantt.start}</Text>
-                  <Text style={styles.ganttAxisText}>Aujourd'hui</Text>
+                  <Text style={styles.ganttAxisText}><T k="auto.compactprojectpdfdocument.aujourd_hui" fallback="Aujourd'hui" /></Text>
                   <Text style={styles.ganttAxisText}>{gantt.end}</Text>
                 </View>
               </View>
@@ -1223,25 +1224,25 @@ export function CompactProjectPDFDocument({
             {activeSections.pertAnalysis && pertDensity === 'line' && (
               <View style={styles.synthLine}>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Durée attendue:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.duree_attendue" fallback="Durée attendue:" /></Text>
                   <Text style={styles.synthValue}>
                     {formatDecimal(getPertExpectedDuration(pertAnalysis))} j
                   </Text>
                 </View>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Écart-type:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.ecart_type" fallback="Écart-type:" /></Text>
                   <Text style={styles.synthValue}>
                     {formatDecimal(Math.sqrt(getPertTotalVariance(pertAnalysis)))}
                   </Text>
                 </View>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Chemin critique:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.chemin_critique" fallback="Chemin critique:" /></Text>
                   <Text style={styles.synthValue}>
                     {pertAnalysis?.criticalPath?.length || 0} tâches
                   </Text>
                 </View>
                 <View style={styles.synthItem}>
-                  <Text style={styles.synthLabel}>Phase:</Text>
+                  <Text style={styles.synthLabel}><T k="auto.compactprojectpdfdocument.phase" fallback="Phase:" /></Text>
                   <Text style={styles.synthValue}>{getCurrentPhase(phases).substring(0, 22)}</Text>
                 </View>
               </View>
@@ -1251,28 +1252,28 @@ export function CompactProjectPDFDocument({
             {activeSections.pertAnalysis && pertDensity !== 'line' && (
             <View style={styles.section}>
 
-              <Text style={styles.sectionTitle}>Analyse PERT</Text>
+              <Text style={styles.sectionTitle}><T k="auto.compactprojectpdfdocument.analyse_pert" fallback="Analyse PERT" /></Text>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Durée attendue</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.duree_attendue" fallback="Durée attendue" /></Text>
                   <Text style={styles.evmValue}>
                     {formatDecimal(getPertExpectedDuration(pertAnalysis))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Variance totale</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.variance_totale" fallback="Variance totale" /></Text>
                   <Text style={styles.evmValue}>
                     {formatDecimal(getPertTotalVariance(pertAnalysis))}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Écart-type</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.ecart_type" fallback="Écart-type" /></Text>
                   <Text style={styles.evmValue}>
                     {formatDecimal(Math.sqrt(getPertTotalVariance(pertAnalysis)))}
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Chemin critique</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.chemin_critique" fallback="Chemin critique" /></Text>
                   <Text style={styles.evmValue}>
                     {pertAnalysis?.criticalPath?.length || 0} tâches
                   </Text>
@@ -1280,23 +1281,23 @@ export function CompactProjectPDFDocument({
               </View>
               <View style={styles.evmGrid}>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Prob. 95%</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.prob_95" fallback="Prob. 95%" /></Text>
                   <Text style={styles.evmValue}>
                     {formatDecimal(getPertExpectedDuration(pertAnalysis) + 1.65 * Math.sqrt(getPertTotalVariance(pertAnalysis)))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Prob. 99%</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.prob_99" fallback="Prob. 99%" /></Text>
                   <Text style={styles.evmValue}>
                     {formatDecimal(getPertExpectedDuration(pertAnalysis) + 2.33 * Math.sqrt(getPertTotalVariance(pertAnalysis)))} j
                   </Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Gantt</Text>
-                  <Text style={[styles.evmValue, { color: colors.success }]}>À jour</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.gantt" fallback="Gantt" /></Text>
+                  <Text style={[styles.evmValue, { color: colors.success }]}><T k="auto.compactprojectpdfdocument.a_jour" fallback="À jour" /></Text>
                 </View>
                 <View style={styles.evmItem}>
-                  <Text style={styles.evmLabel}>Phase actuelle</Text>
+                  <Text style={styles.evmLabel}><T k="auto.compactprojectpdfdocument.phase_actuelle" fallback="Phase actuelle" /></Text>
                   <Text style={styles.evmValue}>{getCurrentPhase(phases).substring(0, 12)}</Text>
                 </View>
               </View>
@@ -1309,17 +1310,17 @@ export function CompactProjectPDFDocument({
             {/* Footer Section */}
             <View style={styles.footerSection}>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Phase:</Text>
+                <Text style={styles.footerLabel}><T k="auto.compactprojectpdfdocument.phase" fallback="Phase:" /></Text>
                 <Text style={styles.footerValue}>{getCurrentPhase(phases)}</Text>
               </View>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Durée PERT:</Text>
+                <Text style={styles.footerLabel}><T k="auto.compactprojectpdfdocument.duree_pert" fallback="Durée PERT:" /></Text>
                 <Text style={[styles.footerValue, { color: getPertExpectedDuration(pertAnalysis) > 0 ? colors.primary : colors.muted }]}>
                   {formatDecimal(getPertExpectedDuration(pertAnalysis))} jours
                 </Text>
               </View>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Criticité:</Text>
+                <Text style={styles.footerLabel}><T k="auto.compactprojectpdfdocument.criticite" fallback="Criticité:" /></Text>
                 <Text style={[styles.footerValue, { color: (pertAnalysis?.criticalPath?.length || 0) > 3 ? colors.warning : colors.success }]}>
                   {pertAnalysis?.criticalPath?.length || 0} tâches critiques
                 </Text>

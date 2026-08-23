@@ -3,6 +3,7 @@ import { Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import type { GanttModel } from '@/application/services/ProjectMetricsOrchestrator';
 import { formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 /**
  * PhaseGanttBars — composant Gantt PDF UNIQUE et réutilisable.
@@ -32,7 +33,7 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
 
       {/* Frise des années */}
       <View style={{ flexDirection: 'row', marginBottom: 2 }}>
-        <Text style={{ width: '30%', fontSize: 7, color: '#6b7280' }}>Phase (poids)</Text>
+        <Text style={{ width: '30%', fontSize: 7, color: '#6b7280' }}><T k="auto.phaseganttbars.phase_poids" fallback="Phase (poids)" /></Text>
         <View
           style={{
             width: '70%',
@@ -102,7 +103,7 @@ export const PhaseGanttBars: React.FC<{ gantt: GanttModel; title?: string }> = (
 
       {/* Jalons de progression */}
       <View style={{ flexDirection: 'row', marginTop: 4 }}>
-        <Text style={{ width: '30%', fontSize: 6, color: '#6b7280' }}>Jalons</Text>
+        <Text style={{ width: '30%', fontSize: 6, color: '#6b7280' }}><T k="auto.phaseganttbars.jalons" fallback="Jalons" /></Text>
         <View style={{ width: '70%', flexDirection: 'row' }}>
           {gantt.milestones.map((m) => (
             <View key={m.label} style={{ flex: 1 }}>
