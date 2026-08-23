@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { EnumBadge } from '@/components/i18n/EnumText';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarClock, Gavel } from 'lucide-react';
 import { usePublicOpenTenders } from '@/hooks/hexagonal/usePublicTendersHex';
@@ -51,7 +51,7 @@ export const ConsultantTendersPanel: React.FC = () => {
               {typeof tender.budgetMax === 'number' && tender.budgetMax > 0 && (
                 <span className="text-sm font-semibold">{formatCurrency(tender.budgetMax)}</span>
               )}
-              <Badge variant="secondary">{tender.status}</Badge>
+              <EnumBadge enumName="tender_status" code={tender.status} />
             </div>
           </div>
         ))}
