@@ -53,7 +53,7 @@ export function ListToolbar({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={placeholder}
           className="pl-8"
-          aria-label={searchPlaceholder}
+          aria-label={placeholder}
         />
       </div>
 
