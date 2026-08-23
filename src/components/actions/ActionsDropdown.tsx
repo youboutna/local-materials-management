@@ -29,15 +29,16 @@ const actionIcons = {
   blockchain_verification: Shield,
 };
 
-const actionLabels = {
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-  sms: 'Envoyer SMS',
-  call: 'Programmer appel',
-  email: 'Envoyer email',
-  mail: 'Courrier postal',
-  export_receipt: 'Exporter reçu',
-  blockchain_verification: 'Vérification blockchain',
+/** Doctrine i18n : le code technique reste la clé, le libellé est résolu via le registre. */
+const actionLabelKeys = {
+  task_assignment: 'auto.actions.task_assignment',
+  hierarchy_notification: 'auto.actions.hierarchy_notification',
+  sms: 'auto.actions.sms',
+  call: 'auto.actions.call',
+  email: 'auto.actions.email',
+  mail: 'auto.actions.mail',
+  export_receipt: 'auto.actions.export_receipt',
+  blockchain_verification: 'auto.actions.blockchain_verification',
 };
 
 export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({

@@ -2,6 +2,7 @@ import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
@@ -62,48 +63,57 @@ PaginationLink.displayName = "PaginationLink"
 const PaginationPrevious = ({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink>) => {
+  const { t } = useLanguage()
+  return (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-label={t('auto.pagination.previous')}
     size="default"
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span>Précédent</span>
+    <span>{t('auto.pagination.previous')}</span>
   </PaginationLink>
-)
+  )
+}
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}: React.ComponentProps<typeof PaginationLink>) => {
+  const { t } = useLanguage()
+  return (
   <PaginationLink
-    aria-label="Go to next page"
+    aria-label={t('auto.pagination.next')}
     size="default"
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >
-    <span>Suivant</span>
+    <span>{t('auto.pagination.next')}</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
-)
+  )
+}
 PaginationNext.displayName = "PaginationNext"
 
 const PaginationEllipsis = ({
   className,
   ...props
-}: React.ComponentProps<"span">) => (
+}: React.ComponentProps<"span">) => {
+  const { t } = useLanguage()
+  return (
   <span
     aria-hidden
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">Plus de pages</span>
+    <span className="sr-only">{t('auto.pagination.more_pages')}</span>
   </span>
-)
+  )
+}
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
 export {
