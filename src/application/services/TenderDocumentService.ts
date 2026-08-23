@@ -260,7 +260,7 @@ export class TenderDocumentService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project statistics');
     }
   }
-}
+
 
   /**
    * Get tender documents joined with their linked document metadata.
