@@ -4,25 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useI18n } from '@/hooks/useI18n';
 import { alertSeverityLabel } from '@/config/referentials/notifications/alerts.referential';
 import { useManagementActionsHex, ActionItem } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 
 const ManagementActions: React.FC = () => {
-  const { t } = useLanguage();
-  const { language, formatDate } = useI18n();
+  const { t, language, formatDate } = useI18n();
   const urgencyLabel = (code: string, lang: string) => alertSeverityLabel(code, lang as 'fr' | 'ar' | 'en');
   const { actions: actionItems, loading } = useManagementActionsHex();
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'critical': return 'bg-destructive text-destructive-foreground';
+      case 'high': return 'bg-warning text-warning-foreground';
+      case 'medium': return 'bg-secondary text-secondary-foreground';
+      case 'low': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -38,11 +36,11 @@ const ManagementActions: React.FC = () => {
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'approval': return t('management_actions.category_validation') || 'Validation';
-      case 'task': return t('management_actions.category_task') || 'Tâche';
-      case 'review': return t('management_actions.category_review') || 'Revue';
-      case 'decision': return t('management_actions.category_decision') || 'Décision';
-      default: return t('management_actions.category_action') || 'Action';
+      case 'approval': return t('management_actions.category_validation');
+      case 'task': return t('management_actions.category_task');
+      case 'review': return t('management_actions.category_review');
+      case 'decision': return t('management_actions.category_decision');
+      default: return t('management_actions.category_action');
     }
   };
 

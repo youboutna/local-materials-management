@@ -5,6 +5,7 @@
 
 import type { BudgetAnalytics, EVMCalculations } from '@/dtos/entities/CalculationsDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getMonitoringAlertService } from '@/application/services/MonitoringAlertService';
 import { useQuery } from '@tanstack/react-query';
 
 export interface CriticalAlert {
@@ -24,8 +25,8 @@ export interface CriticalAlert {
 }
 
 export interface KPIMetrics {
-  spi: number;
-  cpi: number;
+  spi: number | null;
+  cpi: number | null;
   projectsOnTrack: number;
   projectsDelayed: number;
   projectsAtRisk: number;
@@ -45,21 +46,20 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const projectRepo = RepositoryFactory.getProjectRepository();
     const paymentRepo = RepositoryFactory.getPaymentRepository();
     const milestoneRepo = RepositoryFactory.getMilestoneRepository();
-    const alertRepo = RepositoryFactory.getAlertRepository();
+    const alertService = getMonitoringAlertService();
 
-    const [projects, payments, milestones, alerts] = await Promise.all([
+    const [projects, payments, alerts] = await Promise.all([
       projectRepo.findAll(),
       paymentRepo.findAll(),
-      milestoneRepo.findByProjectId('').catch(() => []),
-      (alertRepo.findAll ? alertRepo.findAll() : alertRepo.find()).then((all: any[]) => 
-        (all || []).filter((a: any) => !a.resolved && !a.acknowledged).slice(0, 5)
-      ).catch(() => []),
+      alertService.getAllAlerts(),
     ]);
 
     const projectsList = (projects || []) as any[];
     const paymentsList = (payments || []) as any[];
-    const milestonesList = (milestones || []) as any[];
-    const alertsList = (alerts || []) as any[];
+    const milestonesList = (await Promise.all(
+      projectsList.map((project) => milestoneRepo.findByProjectId(project.id))
+    )).flat();
+    const alertsList = (alerts || []).filter((alert) => !alert.acknowledged).slice(0, 5);
 
     const totalBudget = projectsList.reduce((sum, p) => sum + (p.budget || 0), 0);
     const totalProgress = projectsList.length > 0 
@@ -77,7 +77,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const milestonesCompleted = milestonesList.filter(m => m.status === 'completed').length;
     const milestonesPending = milestonesList.filter(m => m.status === 'pending' || m.status === 'in_progress').length;
     const milestonesOverdue = milestonesList.filter(m => {
-      const targetDate = (m.target_date || m.targetDate) ? new Date(m.target_date || m.targetDate) : null;
+      const targetDate = m.targetDate ? new Date(m.targetDate) : null;
       return targetDate && targetDate < new Date() && m.status !== 'completed';
     }).length;
 
@@ -94,8 +94,10 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
 
       const rawStart = project.startDate || project.start_date;
       const rawEnd = project.endDate || project.end_date;
-      const start = rawStart ? new Date(rawStart).getTime() : today - 180 * DAY;
-      const end = rawEnd ? new Date(rawEnd).getTime() : start + 180 * DAY;
+       if (!rawStart || !rawEnd) continue;
+       const start = new Date(rawStart).getTime();
+       const end = new Date(rawEnd).getTime();
+       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
       const duration = Math.max(DAY, end - start);
       const timeProgress = Math.min(1, Math.max(0, (today - start) / duration));
 
@@ -105,8 +107,8 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
 
     const scheduleVariance = earnedValue - plannedValue;
     const costVariance = earnedValue - totalSpent;
-    const schedulePerformanceIndex = plannedValue > 0 ? clampIndex(earnedValue / plannedValue) : 1;
-    const costPerformanceIndex = totalSpent > 0 ? clampIndex(earnedValue / totalSpent) : 1;
+    const schedulePerformanceIndex = plannedValue > 0 ? clampIndex(earnedValue / plannedValue) : 0;
+    const costPerformanceIndex = totalSpent > 0 ? clampIndex(earnedValue / totalSpent) : 0;
     const budgetAtCompletion = totalBudget;
     const estimateAtCompletion =
       costPerformanceIndex > 0.01 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
@@ -128,19 +130,23 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     };
 
     const criticalAlerts: CriticalAlert[] = alertsList.map((alert: any) => ({
-      id: alert.id,
-      type: mapAlertType(alert.type || alert.alert_type || alert.alertType || ''),
+       id: alert.id,
+       type: mapAlertType(alert.type || ''),
       title: alert.title,
       description: alert.description || '',
       message: alert.description || '',
       severity: (alert.severity === 'critical' || alert.severity === 'high') ? 'critical' : 'warning',
       priority: alert.severity === 'critical' ? 'critical' : alert.severity === 'high' ? 'high' : 'medium',
-      status: alert.resolved ? 'resolved' : alert.acknowledged ? 'acknowledged' : 'active',
-      createdAt: alert.created_at || alert.createdAt,
+       status: alert.status === 'resolved' ? 'resolved' : alert.acknowledged ? 'acknowledged' : 'active',
+       createdAt: alert.createdAt || alert.timestamp,
+       entityId: alert.projectId || alert.relatedEntityId,
+       entityType: alert.phaseId ? 'phase' : alert.projectId ? 'project' : undefined,
+       actionUrl: alert.projectId ? `/projects/${alert.projectId}${alert.phaseId ? `?phase=${alert.phaseId}` : ''}` : undefined,
     }));
 
     return {
-      spi: schedulePerformanceIndex, cpi: costPerformanceIndex,
+      spi: plannedValue > 0 ? schedulePerformanceIndex : null,
+      cpi: totalSpent > 0 ? costPerformanceIndex : null,
       projectsOnTrack, projectsDelayed, projectsAtRisk,
       totalBudget, totalSpent, budgetVariance: budget.costVariance,
       milestonesCompleted, milestonesPending, milestonesOverdue,
@@ -148,7 +154,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     };
   } catch (error) {
     console.error('Error fetching KPI metrics:', error);
-    return getDefaultMetrics();
+    throw error;
   }
 };
 
@@ -158,17 +164,6 @@ function mapAlertType(alertType: string): 'payment' | 'milestone' | 'delay' | 'i
     'inspection': 'inspection', 'guarantee': 'guarantee'
   };
   return typeMap[alertType] || 'delay';
-}
-
-function getDefaultMetrics(): KPIMetrics {
-  return {
-    spi: 1, cpi: 1, projectsOnTrack: 0, projectsDelayed: 0, projectsAtRisk: 0,
-    totalBudget: 0, totalSpent: 0, budgetVariance: 0,
-    milestonesCompleted: 0, milestonesPending: 0, milestonesOverdue: 0,
-    criticalAlerts: [],
-    evm: { plannedValue: 0, earnedValue: 0, actualCost: 0, scheduleVariance: 0, costVariance: 0, schedulePerformanceIndex: 1, costPerformanceIndex: 1, budgetAtCompletion: 0, estimateAtCompletion: 0, estimateToComplete: 0, varianceAtCompletion: 0, },
-    budget: { totalBudget: 0, spentAmount: 0, remainingBudget: 0, budgetUtilization: 0, estimatedTotalCost: 0, costVariance: 0, tasksOverBudget: [], averageCostPerTask: 0, },
-  };
 }
 
 export function useKPIMetricsHex() {

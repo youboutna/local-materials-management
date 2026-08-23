@@ -9,10 +9,6 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
-const STATUS_PRIORITY: Partial<Record<BoqStatus, number>> = {
-  draft: 1, submitted: 2, validated: 3, invoiced: 4, paid: 5,
-};
-
 function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
   const map = new Map<string, BoqLineDTO[]>();
   for (const l of lines) {
@@ -31,6 +27,14 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
     const totalHt = group.reduce((s, l) => s + (l.totalHt ?? 0), 0);
     const createdAt = group.map((g) => g.createdAt ?? '').sort()[0] ?? '';
     const title = group.find((g) => g.title)?.title ?? '';
+    const readOnly = group.some((line) => {
+      const metadata = line.metadata as {
+        transfer?: { transferredAt?: string };
+        signature?: { signedAt?: string };
+      } | null;
+      return Boolean(metadata?.transfer?.transferredAt || metadata?.signature?.signedAt) ||
+        ['validated', 'invoiced', 'paid', 'archived'].includes(line.status ?? 'draft');
+    });
     list.push({
       documentId,
       reference: documentId.slice(0, 8).toUpperCase(),
@@ -39,6 +43,7 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
       totalHt,
       lineCount: group.length,
       createdAt,
+      readOnly,
     });
   }
   return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

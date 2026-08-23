@@ -4952,5 +4952,11 @@
   "users.updated": "Utilisateur mis à jour",
   "users.updated_success": "L'utilisateur a été mis à jour avec succès",
   "wbs.select_milestone_first": "Sélectionner un jalon",
-  "wbs.select_phase_first": "Sélectionner une phase"
+  "wbs.select_phase_first": "Sélectionner une phase",
+  "alerts.phase_label": "Phase",
+  "dashboard.kpi.load_error": "Les indicateurs ne sont pas disponibles. Vérifiez les sources de données.",
+  "dashboard.kpi.not_evaluable": "Non évaluable",
+  "dqe.fiscal.vat": "TVA",
+  "dqe.save_success": "Brouillon enregistré",
+  "dqe.status.mixed": "Statuts multiples"
 }

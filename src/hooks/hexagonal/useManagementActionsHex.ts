@@ -2,10 +2,9 @@
 // Uses EnhancedActionService for event-driven action management
 
 import { EnhancedActionService } from '@/application/services/enhancedActionService';
-import { InspectionService, getInspectionService} from '@/application/services/InspectionService';
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { getInspectionService} from '@/application/services/InspectionService';
+import { getProjectService} from '@/application/services/ProjectService';
 import { EnhancedActionDTO } from '@/dtos/entities/ActionDTO';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface ActionItem {
@@ -38,6 +37,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
       inspectionService.getAllInspections(),
       projectService.getAllProjects(),
     ]);
+    const projectsById = new Map(allProjects.map((project) => [project.id, project]));
 
     // Process pending/in-progress inspections
     const pendingInspections = allInspections
@@ -54,9 +54,9 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         status: 'pending',
         urgency: (inspection.status as string) === 'in_progress' ? 'high' : 'medium',
         category: 'approval',
-        createdAt: new Date().toISOString(),
+        createdAt: inspection.createdAt.toISOString(),
         projectId: inspection.projectId || '',
-        projectName: '',
+        projectName: inspection.projectId ? projectsById.get(inspection.projectId)?.title : undefined,
         inspectionId: inspection.id,
         dueDate: new Date(inspection.date),
       });
@@ -79,32 +79,10 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
         status: 'pending',
         urgency: daysPast > 7 ? 'high' : 'medium',
         category: 'task',
-        createdAt: new Date().toISOString(),
+        createdAt: inspection.createdAt.toISOString(),
         projectId: inspection.projectId || '',
-        projectName: '',
+        projectName: inspection.projectId ? projectsById.get(inspection.projectId)?.title : undefined,
         dueDate: new Date(inspection.date),
-      });
-    });
-
-    // Projects with high progress needing budget review
-    const highProgressProjects = allProjects
-      .filter(p => (p.progress || 0) > 80)
-      .slice(0, 2);
-
-    highProgressProjects.forEach(project => {
-      actions.push({
-        id: `budget-${project.id}`,
-        title: 'Revue budgétaire',
-        description: `Projet à ${project.progress}% - Vérification budget requise`,
-        type: 'review',
-        priority: 'medium',
-        status: 'pending',
-        urgency: 'medium',
-        category: 'review',
-        createdAt: new Date().toISOString(),
-        projectId: project.id,
-        projectName: project.title,
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       });
     });
 
@@ -131,6 +109,7 @@ async function fetchManagementActions(): Promise<ActionItem[]> {
     });
   } catch (error) {
     console.error('Error fetching management actions:', error);
+    throw error;
   }
 
   return actions;
@@ -177,9 +156,6 @@ export function useManagementActionsHex() {
       await enhancedActionService.executeAction(actionEvent);
       return actionEvent;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['management-actions'] });
-    }
   });
 
   // Mutation for creating enhanced actions
@@ -231,18 +207,26 @@ export function useManagementActionsHex() {
       
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['management-actions'] });
-    }
   });
+
+  const executeAction = async (data: Parameters<typeof executeActionMutation.mutateAsync>[0]) => {
+    const result = await executeActionMutation.mutateAsync(data);
+    await queryClient.invalidateQueries({ queryKey: ['management-actions'] });
+    return result;
+  };
+  const createAction = async (data: Parameters<typeof createActionMutation.mutateAsync>[0]) => {
+    const result = await createActionMutation.mutateAsync(data);
+    await queryClient.invalidateQueries({ queryKey: ['management-actions'] });
+    return result;
+  };
 
   return {
     actions: data || [],
     loading: isLoading,
     error,
     refetch,
-    executeAction: executeActionMutation.mutate,
-    createAction: createActionMutation.mutate,
+    executeAction,
+    createAction,
     isExecuting: executeActionMutation.isPending || createActionMutation.isPending
   };
 }

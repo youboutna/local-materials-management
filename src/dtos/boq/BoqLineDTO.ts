@@ -80,4 +80,6 @@ export interface BoqDocumentSummary {
   totalHt: number;
   lineCount: number;
   createdAt: string;
+  /** Vrai uniquement après signature ou transfert métier effectif. */
+  readOnly: boolean;
 }

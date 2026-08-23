@@ -105,67 +105,26 @@ export function useAlertsHex(): UseAlertsHexResult {
   // Create alert mutation
   const createAlertMutation = useMutation({
     mutationFn: (alertData: Partial<AlertData>) => alertService.createAlert(alertData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été créée avec succès.");
-    },
-    onError: (error) => {
-      console.error('Error creating alert:', error);
-      toast.error("Impossible de créer l'alerte.");
-    }
   });
 
   // Update alert mutation
   const updateAlertMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<AlertData> }) => 
-      alertService.updateAlert(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été mise à jour.");
-    },
-    onError: (error) => {
-      console.error('Error updating alert:', error);
-      toast.error("Impossible de mettre à jour l'alerte.");
-    }
+    mutationFn: ({ id, data }: { id: string; data: Partial<AlertData> }) => alertService.updateAlert(id, data),
   });
 
   // Delete alert mutation
   const deleteAlertMutation = useMutation({
     mutationFn: (id: string) => alertService.deleteAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été supprimée.");
-    },
-    onError: (error) => {
-      console.error('Error deleting alert:', error);
-      toast.error("Impossible de supprimer l'alerte.");
-    }
   });
 
   // Acknowledge alert mutation
   const acknowledgeAlertMutation = useMutation({
     mutationFn: (id: string) => alertService.acknowledgeAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été marquée comme reconnue.");
-    },
-    onError: (error) => {
-      console.error('Error acknowledging alert:', error);
-      toast.error("Impossible de marquer l'alerte comme reconnue.");
-    }
   });
 
   // Resolve alert mutation
   const resolveAlertMutation = useMutation({
     mutationFn: (id: string) => alertService.resolveAlert(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      toast.success("L'alerte a été résolue.");
-    },
-    onError: (error: Error) => {
-      console.error('Error resolving alert:', error);
-      toast.error("Impossible de résoudre l'alerte.");
-    }
   });
 
   // Helper functions
@@ -198,12 +157,30 @@ export function useAlertsHex(): UseAlertsHexResult {
     totalAlerts: stats.total,
     criticalAlerts: stats.critical,
     trends: [],
-    averageResolutionTime: 24 // Mock data - to be implemented with real analytics
+    averageResolutionTime: (() => {
+      const resolved = alerts.filter((alert) => alert.resolvedAt && alert.createdAt);
+      if (!resolved.length) return 0;
+      return resolved.reduce((sum, alert) => sum + Math.max(0, new Date(alert.resolvedAt as string).getTime() - new Date(alert.createdAt).getTime()), 0) / resolved.length / 3_600_000;
+    })()
   });
 
   const validateAlertWithReferential = async (alert: AlertData, referentialType: string): Promise<ValidationResult> => {
-    // Validation logic can be extended based on referential type
-    return { isValid: true, errors: [], warnings: [] };
+    const errors = [!alert.id ? 'missing_id' : '', !alert.type ? 'missing_type' : '', !alert.severity ? 'missing_severity' : ''].filter(Boolean);
+    const warnings = [!alert.projectId ? 'missing_project_context' : '', referentialType === '' ? 'missing_referential' : ''].filter(Boolean);
+    return { isValid: errors.length === 0, errors, warnings };
+  };
+
+  const runMutation = async <T,>(operation: () => Promise<T>, success: string, failure: string): Promise<T | undefined> => {
+    try {
+      const result = await operation();
+      await queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      toast.success(success);
+      return result;
+    } catch (mutationError) {
+      console.error(failure, mutationError);
+      toast.error(failure);
+      return undefined;
+    }
   };
 
   const generateAlertReport = (alert: AlertData): AlertReport => {
@@ -224,11 +201,11 @@ export function useAlertsHex(): UseAlertsHexResult {
     stats,
     refetch,
     filterAlertsByType,
-    createAlert: createAlertMutation.mutate,
-    updateAlert: updateAlertMutation.mutate,
-    deleteAlert: deleteAlertMutation.mutate,
-    acknowledgeAlert: acknowledgeAlertMutation.mutate,
-    resolveAlert: resolveAlertMutation.mutate,
+    createAlert: (data) => { void runMutation(() => createAlertMutation.mutateAsync(data), "L'alerte a été créée avec succès.", "Impossible de créer l'alerte."); },
+    updateAlert: (input) => { void runMutation(() => updateAlertMutation.mutateAsync(input), "L'alerte a été mise à jour.", "Impossible de mettre à jour l'alerte."); },
+    deleteAlert: (id) => { void runMutation(() => deleteAlertMutation.mutateAsync(id), "L'alerte a été supprimée.", "Impossible de supprimer l'alerte."); },
+    acknowledgeAlert: (id) => { void runMutation(() => acknowledgeAlertMutation.mutateAsync(id), "L'alerte a été marquée comme reconnue.", "Impossible de marquer l'alerte comme reconnue."); },
+    resolveAlert: (id) => { void runMutation(() => resolveAlertMutation.mutateAsync(id), "L'alerte a été résolue.", "Impossible de résoudre l'alerte."); },
     isCreating: createAlertMutation.isPending,
     isUpdating: updateAlertMutation.isPending,
     isDeleting: deleteAlertMutation.isPending,
