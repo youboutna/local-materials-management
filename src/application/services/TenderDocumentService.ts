@@ -291,8 +291,10 @@ export class TenderDocumentService {
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get workflow step documents');
     }
   }
+}
 
 let tenderDocumentServiceInstance: TenderDocumentService | null = null;
+
 export function getTenderDocumentService(): TenderDocumentService {
   if (!tenderDocumentServiceInstance) {
     tenderDocumentServiceInstance = new TenderDocumentService();
