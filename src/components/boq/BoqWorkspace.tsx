@@ -39,7 +39,7 @@ import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/re
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
-import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
+import type { BoqResourceType, BoqSource, BoqStatus } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
