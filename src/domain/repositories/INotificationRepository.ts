@@ -11,6 +11,9 @@ export interface NotificationData {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
+  /** Contexte métier (doctrine : toute entité porte projectId + phaseId). */
+  projectId?: string | null;
+  phaseId?: string | null;
   createdAt?: string;
   updatedAt?: string;
   priority?: 'low' | 'medium' | 'high';
@@ -18,6 +21,7 @@ export interface NotificationData {
   actionUrl?: string | null;
   metadata?: Record<string, any> | null;
 }
+
 
 export interface EmailData {
   to: string | string[];

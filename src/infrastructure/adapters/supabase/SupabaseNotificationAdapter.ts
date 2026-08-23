@@ -26,11 +26,14 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         message: notification.message,
         type: notification.type,
         read: notification.read ?? false,
+        project_id: notification.projectId ?? null,
+        phase_id: notification.phaseId ?? null,
         priority: notification.priority ?? 'medium',
         expires_at: notification.expiresAt ?? null,
         action_url: notification.actionUrl ?? null,
         metadata: notification.metadata ?? {},
       };
+
 
       const { data, error } = await supabase
         .from('notifications')
