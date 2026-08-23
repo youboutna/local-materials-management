@@ -13,7 +13,7 @@ import {
     PerformanceMetricsDTO,
     PerformanceSummaryDTO
 } from '@/dtos/entities/PerformanceMetricsDTO';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+// Direct Supabase access removed for Hexagonal Architecture
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // Event-driven interfaces for performance monitoring

@@ -11,7 +11,7 @@ import {
     RiskAssessmentDTO
 } from '@/dtos/types/reportTypes';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+// Direct Supabase access removed for Hexagonal Architecture
 import { ReportCalculations } from '@/utils/reportCalculations';
 
 export class EnhancedReportingService {
