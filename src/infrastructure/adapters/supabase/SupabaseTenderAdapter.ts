@@ -18,6 +18,9 @@ export class SupabaseTenderAdapter implements ITenderRepository {
       currentPhase: data.current_phase ?? null,
       currentStage: data.current_stage ?? null,
       procurementType: data.procurement_type ?? null,
+      // Traçabilité chaîne « DQE validé → appel d'offres → portails ».
+      sourceDqeDocumentId: data.source_dqe_document_id ?? null,
+      portalPublishedAt: data.portal_published_at ?? null,
     });
     return entity;
   }
@@ -83,6 +86,8 @@ export class SupabaseTenderAdapter implements ITenderRepository {
       currentStage: 'current_stage',
       procurementType: 'procurement_type',
       estimatedValue: 'estimated_value',
+      sourceDqeDocumentId: 'source_dqe_document_id',
+      portalPublishedAt: 'portal_published_at',
     };
 
     const updatePayload: Record<string, any> = {};

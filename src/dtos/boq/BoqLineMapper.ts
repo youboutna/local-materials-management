@@ -61,6 +61,8 @@ export interface BoqDbRow {
   dqe_type?: string | null;
   document_type?: string | null;
   business_status?: string | null;
+  source_document_id?: string | null;
+  source_document_type?: string | null;
   facturx_type_code?: string | null;
   billed_percentage?: number | null;
   line_status?: string | null;
@@ -144,6 +146,8 @@ export class BoqLineMapper {
       dqeType: row.dqe_type ?? null,
       documentType: row.document_type ?? row.dqe_type ?? null,
       businessStatus: row.business_status ?? null,
+      sourceDocumentId: row.source_document_id ?? null,
+      sourceDocumentType: row.source_document_type ?? null,
       facturxTypeCode: row.facturx_type_code ?? null,
       billedPercentage: row.billed_percentage ?? null,
       metadata: row.metadata ?? null,
@@ -197,6 +201,8 @@ export class BoqLineMapper {
       dqe_type: dto.dqeType ? normalizeDQEType(dto.dqeType) : null,
       document_type: dto.documentType ?? (dto.dqeType ? normalizeDQEType(dto.dqeType) : null),
       business_status: dto.businessStatus ?? null,
+      source_document_id: dto.sourceDocumentId ?? null,
+      source_document_type: dto.sourceDocumentType ?? null,
       facturx_type_code: dto.facturxTypeCode ?? null,
       billed_percentage: dto.billedPercentage ?? null,
       sender_id: dto.submittedBy ?? null,

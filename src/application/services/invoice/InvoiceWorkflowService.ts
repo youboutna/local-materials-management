@@ -161,6 +161,9 @@ export const InvoiceWorkflowService = {
         // sans dépendre du contenu de `metadata`.
         documentType: def.code,
         businessStatus: def.initialStatus,
+        // Traçabilité P0 : le document cible référence son document source.
+        sourceDocumentId: l.documentId ?? null,
+        sourceDocumentType: input.fromType,
         facturxTypeCode: def.facturxTypeCode,
         billedPercentage: def.requiresPercentage ? clampPct(input.percentage) : null,
         metadata: {

@@ -56,6 +56,7 @@ export const DQE_ACTIONS_REFERENTIAL: DqeActionDefinition[] = [
   // --- Workflow ---
   { key: 'dispatchWbs', labelKey: 'dqe.action.dispatch_wbs', group: 'workflow' },
   { key: 'validateGate', labelKey: 'dqe.action.validate_gate', group: 'workflow' },
+  { key: 'procurementChain', labelKey: 'dqe.action.procurement_chain', group: 'workflow' },
   { key: 'decompte', labelKey: 'dqe.action.create_decompte', group: 'workflow' },
   { key: 'distribute', labelKey: 'dqe.action.distribute', group: 'workflow', capability: 'distribute' },
   { key: 'attachToSubmission', labelKey: 'dqe.action.attach_submission', group: 'workflow', capability: 'attachToSubmission' },
