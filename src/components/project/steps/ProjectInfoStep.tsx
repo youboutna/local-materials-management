@@ -23,6 +23,7 @@ import {
   PROJECT_STATUS_LABELS,
 } from "@/dtos/entities/ProjectDTO";
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
+import { T } from '@/components/i18n/T';
 
 interface ProjectInfoStepProps {
   workflowData: ProjectWorkflowData | null;
@@ -71,7 +72,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
         {/* Ligne 1 : Référence (compacte) + Titre (large) + Statut */}
         <div className="grid grid-cols-12 gap-3">
           <div className="form-group col-span-12 sm:col-span-3">
-            <Label htmlFor="project-ref">Référence</Label>
+            <Label htmlFor="project-ref"><T k="auto.projectinfostep.reference" fallback="Référence" /></Label>
             <Input
               id="project-ref"
               placeholder="REF-2025-001"
@@ -83,7 +84,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
           </div>
           <div className="form-group col-span-12 sm:col-span-6">
             <Label htmlFor="project-title">
-              Titre du projet <span className="text-destructive">*</span>
+              <T k="auto.projectinfostep.titre_du_projet" fallback="Titre du projet" /> <span className="text-destructive">*</span>
             </Label>
             <Input
               id="project-title"
@@ -94,7 +95,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             />
           </div>
           <div className="form-group col-span-12 sm:col-span-3">
-            <Label htmlFor="project-status">Statut</Label>
+            <Label htmlFor="project-status"><T k="auto.projectinfostep.statut" fallback="Statut" /></Label>
             <Select
               value={projectData.status || ProjectStatus.EN_ATTENTE}
               onValueChange={(value) =>
@@ -118,7 +119,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
         {/* Description */}
         <div className="form-group">
           <Label htmlFor="project-desc">
-            Description détaillée <span className="text-destructive">*</span>
+            <T k="auto.projectinfostep.description_detaillee" fallback="Description détaillée" /> <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="project-desc"
@@ -134,7 +135,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
         <div className="grid grid-cols-12 gap-3">
           <div className="form-group col-span-12 sm:col-span-4">
             <Label htmlFor="project-budget">
-              Budget total (MRU) <span className="text-destructive">*</span>
+              <T k="auto.projectinfostep.budget_total_mru" fallback="Budget total (MRU)" /> <span className="text-destructive">*</span>
             </Label>
             <Input
               id="project-budget"
@@ -154,7 +155,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
           </div>
           <div className="form-group col-span-12 sm:col-span-4">
             <Label htmlFor="project-market">
-              Type de marché <span className="text-destructive">*</span>
+              <T k="auto.projectinfostep.type_de_marche" fallback="Type de marché" /> <span className="text-destructive">*</span>
             </Label>
             <Select
               value={projectData.marketType ?? ""}
@@ -164,16 +165,16 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectValue placeholder="Type de marché" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="public">Marché public</SelectItem>
-                <SelectItem value="private">Marché privé</SelectItem>
-                <SelectItem value="ppp">PPP</SelectItem>
-                <SelectItem value="concession">Concession</SelectItem>
-                <SelectItem value="delegation">Délégation</SelectItem>
+                <SelectItem value="public"><T k="auto.projectinfostep.marche_public" fallback="Marché public" /></SelectItem>
+                <SelectItem value="private"><T k="auto.projectinfostep.marche_prive" fallback="Marché privé" /></SelectItem>
+                <SelectItem value="ppp"><T k="auto.projectinfostep.ppp" fallback="PPP" /></SelectItem>
+                <SelectItem value="concession"><T k="auto.projectinfostep.concession" fallback="Concession" /></SelectItem>
+                <SelectItem value="delegation"><T k="auto.projectinfostep.delegation" fallback="Délégation" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="form-group col-span-12 sm:col-span-4">
-            <Label htmlFor="project-selection">Mode de sélection</Label>
+            <Label htmlFor="project-selection"><T k="auto.projectinfostep.mode_de_selection" fallback="Mode de sélection" /></Label>
             <Select
               value={projectData.selectionMode || ""}
               onValueChange={(value) => handleUpdate({ selectionMode: value })}
@@ -182,16 +183,16 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectValue placeholder="Mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="open">Appel d'offres ouvert</SelectItem>
+                <SelectItem value="open"><T k="auto.projectinfostep.appel_d_offres_ouvert" fallback="Appel d'offres ouvert" /></SelectItem>
                 <SelectItem value="restricted">
-                  Appel d'offres restreint
+                  <T k="auto.projectinfostep.appel_d_offres_restreint" fallback="Appel d'offres restreint" />
                 </SelectItem>
-                <SelectItem value="negotiated">Procédure négociée</SelectItem>
+                <SelectItem value="negotiated"><T k="auto.projectinfostep.procedure_negociee" fallback="Procédure négociée" /></SelectItem>
                 <SelectItem value="competitive">
-                  Dialogue compétitif
+                  <T k="auto.projectinfostep.dialogue_competitif" fallback="Dialogue compétitif" />
                 </SelectItem>
                 <SelectItem value="innovation">
-                  Partenariat d'innovation
+                  <T k="auto.projectinfostep.partenariat_d_innovation" fallback="Partenariat d'innovation" />
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -201,7 +202,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
         {/* Ligne 3 : Financement + Chef de projet + Équipe */}
         <div className="grid grid-cols-12 gap-3">
           <div className="form-group col-span-12 sm:col-span-4">
-            <Label htmlFor="project-financing">Source de financement</Label>
+            <Label htmlFor="project-financing"><T k="auto.projectinfostep.source_de_financement" fallback="Source de financement" /></Label>
             <Select
               value={projectData.financingSource || ""}
               onValueChange={(value) =>
@@ -212,14 +213,14 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectValue placeholder="Source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="budget_state">Budget de l'État</SelectItem>
+                <SelectItem value="budget_state"><T k="auto.projectinfostep.budget_de_l_etat" fallback="Budget de l'État" /></SelectItem>
                 <SelectItem value="budget_local">
-                  Budget collectivité locale
+                  <T k="auto.projectinfostep.budget_collectivite_locale" fallback="Budget collectivité locale" />
                 </SelectItem>
-                <SelectItem value="eu_funds">Fonds européens</SelectItem>
-                <SelectItem value="private">Financement privé</SelectItem>
-                <SelectItem value="mixed">Financement mixte</SelectItem>
-                <SelectItem value="loan">Emprunt</SelectItem>
+                <SelectItem value="eu_funds"><T k="auto.projectinfostep.fonds_europeens" fallback="Fonds européens" /></SelectItem>
+                <SelectItem value="private"><T k="auto.projectinfostep.financement_prive" fallback="Financement privé" /></SelectItem>
+                <SelectItem value="mixed"><T k="auto.projectinfostep.financement_mixte" fallback="Financement mixte" /></SelectItem>
+                <SelectItem value="loan"><T k="auto.projectinfostep.emprunt" fallback="Emprunt" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -235,7 +236,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             />
           </div>
           <div className="form-group col-span-12 sm:col-span-3">
-            <Label htmlFor="project-team">Taille équipe</Label>
+            <Label htmlFor="project-team"><T k="auto.projectinfostep.taille_equipe" fallback="Taille équipe" /></Label>
             <Input
               id="project-team"
               type="number"
@@ -257,7 +258,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
         {/* Ligne 4 : Dates + Avancement */}
         <div className="grid grid-cols-12 gap-3">
           <div className="form-group col-span-6 sm:col-span-3">
-            <Label htmlFor="project-start">Date début</Label>
+            <Label htmlFor="project-start"><T k="auto.projectinfostep.date_debut" fallback="Date début" /></Label>
             <Input
               id="project-start"
               type="date"
@@ -266,7 +267,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             />
           </div>
           <div className="form-group col-span-6 sm:col-span-3">
-            <Label htmlFor="project-end">Date fin</Label>
+            <Label htmlFor="project-end"><T k="auto.projectinfostep.date_fin" fallback="Date fin" /></Label>
             <Input
               id="project-end"
               type="date"
@@ -275,7 +276,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             />
           </div>
           <div className="form-group col-span-12 sm:col-span-6">
-            <Label htmlFor="project-progress">Avancement</Label>
+            <Label htmlFor="project-progress"><T k="auto.projectinfostep.avancement" fallback="Avancement" /></Label>
             <div className="flex items-center gap-3">
               <Progress
                 value={projectData.progress || 0}
@@ -309,13 +310,13 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               }
             />
             <Label htmlFor="allowsInitialPayment" className="cursor-pointer">
-              Autoriser un paiement initial
+              <T k="auto.projectinfostep.autoriser_un_paiement_initial" fallback="Autoriser un paiement initial" />
             </Label>
           </div>
           {Boolean(projectData.allowsInitialPayment) && (
             <div className="flex items-center gap-2">
               <Label htmlFor="initialPaymentPct" className="whitespace-nowrap">
-                Pourcentage :
+                <T k="auto.projectinfostep.pourcentage" fallback="Pourcentage :" />
               </Label>
               <Input
                 id="initialPaymentPct"

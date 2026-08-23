@@ -41,6 +41,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface NotificationData {
   id: string;
@@ -173,11 +174,11 @@ const NotificationsCenterPage = () => {
           </Badge>
           <Button variant="outline" onClick={markAllAsRead}>
             <CheckCircle className="h-4 w-4 mr-2" />
-            Marquer tout lu
+            <T k="auto.notificationscenter.marquer_tout_lu" fallback="Marquer tout lu" />
           </Button>
           <Button variant="outline" onClick={fetchAllNotifications}>
             <TrendingUp className="h-4 w-4 mr-2" />
-            Actualiser
+            <T k="auto.notificationscenter.actualiser" fallback="Actualiser" />
           </Button>
         </div>
       }
@@ -190,7 +191,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.total" fallback="Total" /></p>
                     <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
                   <Bell className="h-8 w-8 text-primary" />
@@ -202,7 +203,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Non lues</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.non_lues" fallback="Non lues" /></p>
                     <p className="text-2xl font-bold text-warning">{stats.unread}</p>
                   </div>
                   <EyeOff className="h-8 w-8 text-warning" />
@@ -214,7 +215,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Urgentes</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.urgentes" fallback="Urgentes" /></p>
                     <p className="text-2xl font-bold text-destructive">{stats.urgent}</p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-destructive" />
@@ -226,7 +227,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Inspections</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.inspections" fallback="Inspections" /></p>
                     <p className="text-2xl font-bold text-success">{stats.inspections}</p>
                   </div>
                   <Eye className="h-8 w-8 text-success" />
@@ -238,7 +239,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Projets</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.projets" fallback="Projets" /></p>
                     <p className="text-2xl font-bold text-purple-600">{stats.projects}</p>
                   </div>
                   <FileText className="h-8 w-8 text-purple-500" />
@@ -250,7 +251,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Paiements</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.paiements" fallback="Paiements" /></p>
                     <p className="text-2xl font-bold text-success">{stats.payments}</p>
                   </div>
                   <CreditCard className="h-8 w-8 text-success" />
@@ -262,7 +263,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Tâches</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.taches" fallback="Tâches" /></p>
                     <p className="text-2xl font-bold text-primary">{stats.tasks}</p>
                   </div>
                   <CheckSquare className="h-8 w-8 text-primary" />
@@ -274,7 +275,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Documents</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.documents" fallback="Documents" /></p>
                     <p className="text-2xl font-bold text-indigo-600">{stats.documents}</p>
                   </div>
                   <Share className="h-8 w-8 text-indigo-500" />
@@ -286,7 +287,7 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Système</p>
+                    <p className="text-sm font-medium text-muted-foreground"><T k="auto.notificationscenter.systeme" fallback="Système" /></p>
                     <p className="text-2xl font-bold text-warning">{stats.system}</p>
                   </div>
                   <Settings className="h-8 w-8 text-warning" />
@@ -310,7 +311,7 @@ const NotificationsCenterPage = () => {
                 </div>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Filtres
+                  <T k="auto.notificationscenter.filtres" fallback="Filtres" />
                 </Button>
               </div>
             </CardContent>
@@ -321,39 +322,39 @@ const NotificationsCenterPage = () => {
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4 lg:grid-cols-9">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
-                Toutes
+                <T k="auto.notificationscenter.toutes" fallback="Toutes" />
               </TabsTrigger>
               <TabsTrigger value="role-based" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Par Rôle
+                <T k="auto.notificationscenter.par_role" fallback="Par Rôle" />
               </TabsTrigger>
               <TabsTrigger value="inspections" className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                Inspections
+                <T k="auto.notificationscenter.inspections" fallback="Inspections" />
               </TabsTrigger>
               <TabsTrigger value="projects" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Projets
+                <T k="auto.notificationscenter.projets" fallback="Projets" />
               </TabsTrigger>
               <TabsTrigger value="payments" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
-                Paiements
+                <T k="auto.notificationscenter.paiements" fallback="Paiements" />
               </TabsTrigger>
               <TabsTrigger value="tasks" className="flex items-center gap-2">
                 <CheckSquare className="h-4 w-4" />
-                Tâches
+                <T k="auto.notificationscenter.taches" fallback="Tâches" />
               </TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2">
                 <Share className="h-4 w-4" />
-                Documents
+                <T k="auto.notificationscenter.documents" fallback="Documents" />
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                Système
+                <T k="auto.notificationscenter.systeme" fallback="Système" />
               </TabsTrigger>
               <TabsTrigger value="management" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
-                Gestion
+                <T k="auto.notificationscenter.gestion" fallback="Gestion" />
               </TabsTrigger>
             </TabsList>
 
@@ -367,7 +368,7 @@ const NotificationsCenterPage = () => {
               <Alert className="mb-6">
                 <Users className="h-4 w-4" />
                 <AlertDescription>
-                  Notifications filtrées selon votre rôle et vos responsabilités dans le système
+                  <T k="auto.notificationscenter.notifications_filtrees_selon_votre_role_et_vos_r" fallback="Notifications filtrées selon votre rôle et vos responsabilités dans le système" />
                 </AlertDescription>
               </Alert>
               <RoleBasedNotificationCenter />
@@ -379,7 +380,7 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Eye className="h-5 w-5" />
-                    Notifications d'Inspection
+                    <T k="auto.notificationscenter.notifications_d_inspection" fallback="Notifications d'Inspection" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -390,7 +391,7 @@ const NotificationsCenterPage = () => {
                   ) : inspectionNotifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune notification d'inspection</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_notification_d_inspection" fallback="Aucune notification d'inspection" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -407,9 +408,9 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -451,22 +452,22 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Notifications de Projet
+                    <T k="auto.notificationscenter.notifications_de_projet" fallback="Notifications de Projet" />
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-4">
                     <Button variant="outline" size="sm">
                       <PlayCircle className="h-4 w-4 mr-2" />
-                      Démarrer Projet
+                      <T k="auto.notificationscenter.demarrer_projet" fallback="Démarrer Projet" />
                     </Button>
                      <Button variant="outline" size="sm" asChild>
                        <Link to="/projects" className="flex items-center">
                          <ExternalLink className="h-4 w-4 mr-2" />
-                         Voir Projet
+                         <T k="auto.notificationscenter.voir_projet" fallback="Voir Projet" />
                        </Link>
                      </Button>
                     <Button variant="outline" size="sm">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Planifier Étape
+                      <T k="auto.notificationscenter.planifier_etape" fallback="Planifier Étape" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -478,7 +479,7 @@ const NotificationsCenterPage = () => {
                   ) : projectNotifications.length === 0 ? (
                     <div className="text-center py-8">
                       <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune notification de projet</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_notification_de_projet" fallback="Aucune notification de projet" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -495,9 +496,9 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                   {notification.metadata?.project_phase && (
                                     <Badge variant="outline">{notification.metadata.project_phase}</Badge>
@@ -524,7 +525,7 @@ const NotificationsCenterPage = () => {
                                 {notification.metadata?.completion_percentage && (
                                   <div className="mb-2">
                                     <div className="flex items-center justify-between text-sm">
-                                      <span>Progression</span>
+                                      <span><T k="auto.notificationscenter.progression" fallback="Progression" /></span>
                                       <span>{notification.metadata.completion_percentage}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -561,20 +562,20 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Notifications de Paiement
+                    <T k="auto.notificationscenter.notifications_de_paiement" fallback="Notifications de Paiement" />
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-4">
                     <Button variant="outline" size="sm">
                       <DollarSign className="h-4 w-4 mr-2" />
-                      Traiter Paiement
+                      <T k="auto.notificationscenter.traiter_paiement" fallback="Traiter Paiement" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Approuver
+                      <T k="auto.notificationscenter.approuver" fallback="Approuver" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      Voir Détails
+                      <T k="auto.notificationscenter.voir_details" fallback="Voir Détails" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -586,7 +587,7 @@ const NotificationsCenterPage = () => {
                   ) : paymentNotifications.length === 0 ? (
                     <div className="text-center py-8">
                       <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune notification de paiement</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_notification_de_paiement" fallback="Aucune notification de paiement" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -603,18 +604,18 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                   {notification.type.includes('completed') && (
-                                    <Badge variant="default" className="bg-success-soft text-success">Terminé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success"><T k="auto.notificationscenter.termine" fallback="Terminé" /></Badge>
                                   )}
                                   {notification.type.includes('failed') && (
-                                    <Badge variant="destructive">Échec</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.echec" fallback="Échec" /></Badge>
                                   )}
                                   {notification.type.includes('blocked') && (
-                                    <Badge variant="destructive">Bloqué</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.bloque" fallback="Bloqué" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -671,20 +672,20 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckSquare className="h-5 w-5" />
-                    Notifications de Tâches
+                    <T k="auto.notificationscenter.notifications_de_taches" fallback="Notifications de Tâches" />
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-4">
                     <Button variant="outline" size="sm">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Marquer Terminé
+                      <T k="auto.notificationscenter.marquer_termine" fallback="Marquer Terminé" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <Users className="h-4 w-4 mr-2" />
-                      Assigner
+                      <T k="auto.notificationscenter.assigner" fallback="Assigner" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Échéance
+                      <T k="auto.notificationscenter.echeance" fallback="Échéance" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -696,7 +697,7 @@ const NotificationsCenterPage = () => {
                   ) : taskNotifications.length === 0 ? (
                     <div className="text-center py-8">
                       <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune notification de tâche</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_notification_de_tache" fallback="Aucune notification de tâche" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -713,15 +714,15 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                   {notification.type.includes('completed') && (
-                                    <Badge variant="default" className="bg-success-soft text-success">Terminé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success"><T k="auto.notificationscenter.termine" fallback="Terminé" /></Badge>
                                   )}
                                   {notification.type.includes('overdue') && (
-                                    <Badge variant="destructive">En retard</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.en_retard" fallback="En retard" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -782,24 +783,24 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Share className="h-5 w-5" />
-                    Notifications de Documents
+                    <T k="auto.notificationscenter.notifications_de_documents" fallback="Notifications de Documents" />
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-4">
                     <Button variant="outline" size="sm">
                       <Download className="h-4 w-4 mr-2" />
-                      Télécharger
+                      <T k="auto.notificationscenter.telecharger" fallback="Télécharger" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" />
-                      Téléverser
+                      <T k="auto.notificationscenter.televerser" fallback="Téléverser" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <Send className="h-4 w-4 mr-2" />
-                      Partager
+                      <T k="auto.notificationscenter.partager" fallback="Partager" />
                     </Button>
                     <Button variant="outline" size="sm">
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Approuver
+                      <T k="auto.notificationscenter.approuver" fallback="Approuver" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -811,7 +812,7 @@ const NotificationsCenterPage = () => {
                   ) : documentNotifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Share className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune notification de document</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_notification_de_document" fallback="Aucune notification de document" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -828,18 +829,18 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                   {notification.type.includes('approved') && (
-                                    <Badge variant="default" className="bg-success-soft text-success">Approuvé</Badge>
+                                    <Badge variant="default" className="bg-success-soft text-success"><T k="auto.notificationscenter.approuve" fallback="Approuvé" /></Badge>
                                   )}
                                   {notification.type.includes('rejected') && (
-                                    <Badge variant="destructive">Rejeté</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.rejete" fallback="Rejeté" /></Badge>
                                   )}
                                   {notification.type.includes('shared') && (
-                                    <Badge variant="outline" className="bg-primary/10 text-primary">Partagé</Badge>
+                                    <Badge variant="outline" className="bg-primary/10 text-primary"><T k="auto.notificationscenter.partage" fallback="Partagé" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -891,7 +892,7 @@ const NotificationsCenterPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Alertes Système
+                    <T k="auto.notificationscenter.alertes_systeme" fallback="Alertes Système" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -902,7 +903,7 @@ const NotificationsCenterPage = () => {
                   ) : systemAlerts.length === 0 ? (
                     <div className="text-center py-8">
                       <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucune alerte système</p>
+                      <p className="text-muted-foreground"><T k="auto.notificationscenter.aucune_alerte_systeme" fallback="Aucune alerte système" /></p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -919,9 +920,9 @@ const NotificationsCenterPage = () => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="font-medium">{notification.title}</h4>
-                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {!notification.read && <Badge variant="secondary"><T k="auto.notificationscenter.nouveau" fallback="Nouveau" /></Badge>}
                                   {notification.metadata?.priority === 'urgent' && (
-                                    <Badge variant="destructive">Urgent</Badge>
+                                    <Badge variant="destructive"><T k="auto.notificationscenter.urgent" fallback="Urgent" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
@@ -947,7 +948,7 @@ const NotificationsCenterPage = () => {
               <Alert className="mb-6">
                 <Wrench className="h-4 w-4" />
                 <AlertDescription>
-                  Interface de gestion pour créer et configurer les notifications système
+                  <T k="auto.notificationscenter.interface_de_gestion_pour_creer_et_configurer_le" fallback="Interface de gestion pour créer et configurer les notifications système" />
                 </AlertDescription>
               </Alert>
               <NotificationCrud />

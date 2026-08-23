@@ -29,6 +29,7 @@ import { Progress } from '@/components/ui/progress';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface PaymentTransferFormProps {
   project: ProjectWithPayments;
@@ -186,7 +187,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {validationError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erreur de validation</AlertTitle>
+          <AlertTitle><T k="auto.paymenttransferform.erreur_de_validation" fallback="Erreur de validation" /></AlertTitle>
           <AlertDescription>{validationError}</AlertDescription>
         </Alert>
       )}
@@ -196,25 +197,25 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
-            Résumé du projet
+            <T k="auto.paymenttransferform.resume_du_projet" fallback="Résumé du projet" />
           </CardTitle>
           <CardDescription>
-            Informations financières et progression
+            <T k="auto.paymenttransferform.informations_financieres_et_progression" fallback="Informations financières et progression" />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
-                <span className="text-sm text-muted-foreground">Budget total</span>
+                <span className="text-sm text-muted-foreground"><T k="auto.paymenttransferform.budget_total" fallback="Budget total" /></span>
                 <span className="font-semibold text-lg">{formatAmount2(project.budget)}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
-                <span className="text-sm text-muted-foreground">Déjà payé</span>
+                <span className="text-sm text-muted-foreground"><T k="auto.paymenttransferform.deja_paye" fallback="Déjà payé" /></span>
                 <span className="font-semibold text-lg text-destructive">{formatAmount2(totalPaid)}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
-                <span className="text-sm text-muted-foreground">Progression</span>
+                <span className="text-sm text-muted-foreground"><T k="auto.paymenttransferform.progression" fallback="Progression" /></span>
                 <span className="font-semibold text-lg text-primary">{project.progress}%</span>
               </div>
             </div>
@@ -222,17 +223,17 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             <div className="space-y-3">
               {isInitialPaymentPhase ? (
                 <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
-                  <span className="text-sm text-success">Paiement initial autorisé</span>
+                  <span className="text-sm text-success"><T k="auto.paymenttransferform.paiement_initial_autorise" fallback="Paiement initial autorisé" /></span>
                   <span className="font-bold text-lg text-success">{formatAmount2(maxInitialPayment)}</span>
                 </div>
               ) : (
                 <div className="flex justify-between items-center p-3 bg-primary/10 rounded-lg border border-primary/30">
-                  <span className="text-sm text-primary">Montant basé sur progression</span>
+                  <span className="text-sm text-primary"><T k="auto.paymenttransferform.montant_base_sur_progression" fallback="Montant basé sur progression" /></span>
                   <span className="font-bold text-lg text-primary">{formatAmount2(progressBasedAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
-                <span className="text-sm text-success">Maximum autorisé (1.5x)</span>
+                <span className="text-sm text-success"><T k="auto.paymenttransferform.maximum_autorise_1_5x" fallback="Maximum autorisé (1.5x)" /></span>
                 <span className="font-bold text-xl text-success">
                   {formatAmount2(maxToleranceAmount)}
                 </span>
@@ -244,7 +245,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Progression du paiement vs budget</span>
+                <span><T k="auto.paymenttransferform.progression_du_paiement_vs_budget" fallback="Progression du paiement vs budget" /></span>
                 <span className="font-medium">{formatPercent2(paymentProgressPercent)}</span>
               </div>
               <Progress value={paymentProgressPercent} className="h-3" />
@@ -253,7 +254,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             {!isInitialPaymentPhase && (
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Progression vs paiement attendu</span>
+                  <span><T k="auto.paymenttransferform.progression_vs_paiement_attendu" fallback="Progression vs paiement attendu" /></span>
                   <span className="font-medium">{formatPercent2(paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0)}</span>
                 </div>
                 <Progress 
@@ -270,7 +271,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {isInitialPaymentPhase && (
         <Alert className="bg-success-soft border-success/30">
           <CreditCard className="h-4 w-4 text-success" />
-          <AlertTitle className="text-success">Paiement initial autorisé</AlertTitle>
+          <AlertTitle className="text-success"><T k="auto.paymenttransferform.paiement_initial_autorise" fallback="Paiement initial autorisé" /></AlertTitle>
           <AlertDescription className="text-success">
             Ce projet autorise un paiement initial de {initialPaymentPercentage}% du budget total 
             ({formatAmount2(maxInitialPayment)}) selon les termes du contrat.
@@ -281,7 +282,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {paymentStatus === "inspection_required" && (
         <Alert variant="destructive" className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-warning">Inspection requise</AlertTitle>
+          <AlertTitle className="text-warning"><T k="auto.paymenttransferform.inspection_requise" fallback="Inspection requise" /></AlertTitle>
           <AlertDescription className="text-warning">
             Une inspection approuvée est requise avant de pouvoir effectuer un paiement pour ce projet 
             avec une progression ≥ 25%.
@@ -292,7 +293,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {paymentStatus === "requires_changes" && (
         <Alert variant="destructive" className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-warning">Paiement avec tolérance étendue</AlertTitle>
+          <AlertTitle className="text-warning"><T k="auto.paymenttransferform.paiement_avec_tolerance_etendue" fallback="Paiement avec tolérance étendue" /></AlertTitle>
           <AlertDescription className="text-warning">
             L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à 
             {formatAmount2(maxToleranceAmount)} (1.5x le montant basé sur la progression).
@@ -303,7 +304,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {paymentStatus === "rejected" && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Paiement impossible</AlertTitle>
+          <AlertTitle><T k="auto.paymenttransferform.paiement_impossible" fallback="Paiement impossible" /></AlertTitle>
           <AlertDescription>
             L'inspection a été rejetée. Aucun paiement ne peut être effectué jusqu'à ce qu'une 
             nouvelle inspection soit approuvée.
@@ -316,7 +317,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           {/* Contractor Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Sélection du contractant</CardTitle>
+              <CardTitle className="text-base"><T k="auto.paymenttransferform.selection_du_contractant" fallback="Sélection du contractant" /></CardTitle>
             </CardHeader>
             <CardContent>
               <SupplierSelector
@@ -339,7 +340,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           {/* Payment Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Détails du paiement</CardTitle>
+              <CardTitle className="text-base"><T k="auto.paymenttransferform.details_du_paiement" fallback="Détails du paiement" /></CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -348,7 +349,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Montant (MRU)</FormLabel>
+                      <FormLabel><T k="auto.paymenttransferform.montant_mru" fallback="Montant (MRU)" /></FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -369,7 +370,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                   name="paymentDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date du paiement</FormLabel>
+                      <FormLabel><T k="auto.paymenttransferform.date_du_paiement" fallback="Date du paiement" /></FormLabel>
                       <FormControl>
                         <Input 
                           type="date" 
@@ -389,9 +390,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           {/* Payment Method Selection - Enhanced design */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Méthode de paiement</CardTitle>
+              <CardTitle className="text-base"><T k="auto.paymenttransferform.methode_de_paiement" fallback="Méthode de paiement" /></CardTitle>
               <CardDescription>
-                Choisissez votre méthode de paiement préférée
+                <T k="auto.paymenttransferform.choisissez_votre_methode_de_paiement_preferee" fallback="Choisissez votre méthode de paiement préférée" />
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -445,7 +446,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2 text-primary">
                   <Building className="h-5 w-5" />
-                  Informations bancaires
+                  <T k="auto.paymenttransferform.informations_bancaires" fallback="Informations bancaires" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -455,7 +456,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="bankName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nom de la banque</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.nom_de_la_banque" fallback="Nom de la banque" /></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: BMCI, BNM, GBM..." />
                         </FormControl>
@@ -468,7 +469,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="accountNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Numéro de compte</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.numero_de_compte" fallback="Numéro de compte" /></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Numéro de compte du bénéficiaire" />
                         </FormControl>
@@ -486,7 +487,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2 text-success">
                   <CreditCard className="h-5 w-5" />
-                  Informations du chèque
+                  <T k="auto.paymenttransferform.informations_du_cheque" fallback="Informations du chèque" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -496,7 +497,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="checkNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Numéro du chèque</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.numero_du_cheque" fallback="Numéro du chèque" /></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Numéro du chèque" />
                         </FormControl>
@@ -509,7 +510,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="receiverName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nom du bénéficiaire</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.nom_du_beneficiaire" fallback="Nom du bénéficiaire" /></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Nom sur le chèque" />
                         </FormControl>
@@ -527,7 +528,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2 text-purple-800">
                   <Smartphone className="h-5 w-5" />
-                  Paiement mobile
+                  <T k="auto.paymenttransferform.paiement_mobile" fallback="Paiement mobile" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -537,7 +538,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="mobileOperator"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Opérateur mobile</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.operateur_mobile" fallback="Opérateur mobile" /></FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -545,11 +546,11 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="mauritel">Mauritel Money</SelectItem>
-                            <SelectItem value="mattel">Mattel Money</SelectItem>
-                            <SelectItem value="chinguitel">Chinguitel</SelectItem>
-                            <SelectItem value="bankily">Bankily</SelectItem>
-                            <SelectItem value="masrvi">Masrvi</SelectItem>
+                            <SelectItem value="mauritel"><T k="auto.paymenttransferform.mauritel_money" fallback="Mauritel Money" /></SelectItem>
+                            <SelectItem value="mattel"><T k="auto.paymenttransferform.mattel_money" fallback="Mattel Money" /></SelectItem>
+                            <SelectItem value="chinguitel"><T k="auto.paymenttransferform.chinguitel" fallback="Chinguitel" /></SelectItem>
+                            <SelectItem value="bankily"><T k="auto.paymenttransferform.bankily" fallback="Bankily" /></SelectItem>
+                            <SelectItem value="masrvi"><T k="auto.paymenttransferform.masrvi" fallback="Masrvi" /></SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -561,7 +562,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     name="mobileNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Numéro de téléphone</FormLabel>
+                        <FormLabel><T k="auto.paymenttransferform.numero_de_telephone" fallback="Numéro de téléphone" /></FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: 22234567" />
                         </FormControl>
@@ -579,7 +580,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2 text-warning">
                   <Banknote className="h-5 w-5" />
-                  Paiement en espèces
+                  <T k="auto.paymenttransferform.paiement_en_especes" fallback="Paiement en espèces" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -588,7 +589,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                   name="receiverName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nom du bénéficiaire</FormLabel>
+                      <FormLabel><T k="auto.paymenttransferform.nom_du_beneficiaire" fallback="Nom du bénéficiaire" /></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Nom de la personne qui reçoit" />
                       </FormControl>
@@ -609,12 +610,12 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Traitement en cours...
+                <T k="auto.paymenttransferform.traitement_en_cours" fallback="Traitement en cours..." />
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Effectuer le paiement
+                <T k="auto.paymenttransferform.effectuer_le_paiement" fallback="Effectuer le paiement" />
               </div>
             )}
           </Button>

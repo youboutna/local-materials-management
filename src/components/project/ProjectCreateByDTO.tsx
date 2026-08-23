@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface ProjectCreateByDTOProps {
   onSave: (project: ProjectData) => void;
   onCancel: () => void;
@@ -229,11 +230,11 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Créer un nouveau projet</h1>
+        <h1 className="text-3xl font-bold"><T k="auto.projectcreatebydto.creer_un_nouveau_projet" fallback="Créer un nouveau projet" /></h1>
         <div className="flex gap-2">
           <Button onClick={onCancel} variant="outline" disabled={loading}>
             <X className="h-4 w-4 mr-2" />
-            Annuler
+            <T k="auto.projectcreatebydto.annuler" fallback="Annuler" />
           </Button>
           <Button onClick={handleSave} disabled={loading}>
             <Save className="h-4 w-4 mr-2" />
@@ -244,16 +245,16 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
-          <TabsTrigger value="basic">Informations de base</TabsTrigger>
-          <TabsTrigger value="phases">Phases</TabsTrigger>
-          <TabsTrigger value="milestones">Jalons</TabsTrigger>
-          <TabsTrigger value="preview">Aperçu</TabsTrigger>
+          <TabsTrigger value="basic"><T k="auto.projectcreatebydto.informations_de_base" fallback="Informations de base" /></TabsTrigger>
+          <TabsTrigger value="phases"><T k="auto.projectcreatebydto.phases" fallback="Phases" /></TabsTrigger>
+          <TabsTrigger value="milestones"><T k="auto.projectcreatebydto.jalons" fallback="Jalons" /></TabsTrigger>
+          <TabsTrigger value="preview"><T k="auto.projectcreatebydto.apercu" fallback="Aperçu" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Informations générales</CardTitle>
+              <CardTitle><T k="auto.projectcreatebydto.informations_generales" fallback="Informations générales" /></CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -302,7 +303,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="startDate">Date de début</Label>
+                  <Label htmlFor="startDate"><T k="auto.projectcreatebydto.date_de_debut" fallback="Date de début" /></Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -312,7 +313,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                 </div>
 
                 <div>
-                  <Label htmlFor="endDate">Date de fin prévue</Label>
+                  <Label htmlFor="endDate"><T k="auto.projectcreatebydto.date_de_fin_prevue" fallback="Date de fin prévue" /></Label>
                   <Input
                     id="endDate"
                     type="date"
@@ -324,7 +325,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="teamSize">Taille de l'équipe</Label>
+                  <Label htmlFor="teamSize"><T k="auto.projectcreatebydto.taille_de_l_equipe" fallback="Taille de l'équipe" /></Label>
                   <Input
                     id="teamSize"
                     type="number"
@@ -335,7 +336,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                 </div>
 
                 <div>
-                  <Label htmlFor="financingSource">Source de financement</Label>
+                  <Label htmlFor="financingSource"><T k="auto.projectcreatebydto.source_de_financement" fallback="Source de financement" /></Label>
                   <Input
                     id="financingSource"
                     value={projectData.financingSource || ''}
@@ -345,15 +346,15 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                 </div>
 
                 <div>
-                  <Label htmlFor="marketType">Type de marché</Label>
+                  <Label htmlFor="marketType"><T k="auto.projectcreatebydto.type_de_marche" fallback="Type de marché" /></Label>
                   <Select value={projectData.marketType || ''} onValueChange={(value) => handleBasicInfoChange('marketType', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Privé</SelectItem>
-                      <SelectItem value="mixed">Mixte</SelectItem>
+                      <SelectItem value="public"><T k="auto.projectcreatebydto.public" fallback="Public" /></SelectItem>
+                      <SelectItem value="private"><T k="auto.projectcreatebydto.prive" fallback="Privé" /></SelectItem>
+                      <SelectItem value="mixed"><T k="auto.projectcreatebydto.mixte" fallback="Mixte" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -364,10 +365,10 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
         <TabsContent value="phases" className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Phases du projet</h2>
+            <h2 className="text-xl font-semibold"><T k="auto.projectcreatebydto.phases_du_projet" fallback="Phases du projet" /></h2>
             <Button onClick={addPhase} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter une phase
+              <T k="auto.projectcreatebydto.ajouter_une_phase" fallback="Ajouter une phase" />
             </Button>
           </div>
 
@@ -390,7 +391,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Nom de la phase</Label>
+                    <Label><T k="auto.projectcreatebydto.nom_de_la_phase" fallback="Nom de la phase" /></Label>
                     <Input
                       value={phase.name || ''}
                       onChange={(e) => updatePhase(index, 'name', e.target.value)}
@@ -400,7 +401,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label>Date de début</Label>
+                      <Label><T k="auto.projectcreatebydto.date_de_debut" fallback="Date de début" /></Label>
                       <Input
                         type="date"
                         value={phase.startDate ? format(new Date(phase.startDate), 'yyyy-MM-dd') : ''}
@@ -409,7 +410,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     </div>
 
                     <div>
-                      <Label>Date de fin</Label>
+                      <Label><T k="auto.projectcreatebydto.date_de_fin" fallback="Date de fin" /></Label>
                       <Input
                         type="date"
                         value={phase.endDate ? format(new Date(phase.endDate), 'yyyy-MM-dd') : ''}
@@ -430,7 +431,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     </div>
 
                     <div>
-                      <Label>Niveau de risque</Label>
+                      <Label><T k="auto.projectcreatebydto.niveau_de_risque" fallback="Niveau de risque" /></Label>
                       <Select 
                         value={phase.riskLevel || 'low'} 
                         onValueChange={(value) => updatePhase(index, 'riskLevel', value)}
@@ -454,10 +455,10 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
         <TabsContent value="milestones" className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Jalons du projet</h2>
+            <h2 className="text-xl font-semibold"><T k="auto.projectcreatebydto.jalons_du_projet" fallback="Jalons du projet" /></h2>
             <Button onClick={addMilestone} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter un jalon
+              <T k="auto.projectcreatebydto.ajouter_un_jalon" fallback="Ajouter un jalon" />
             </Button>
           </div>
 
@@ -480,7 +481,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Titre du jalon</Label>
+                    <Label><T k="auto.projectcreatebydto.titre_du_jalon" fallback="Titre du jalon" /></Label>
                     <Input
                       value={milestone.title || ''}
                       onChange={(e) => updateMilestone(index, 'title', e.target.value)}
@@ -489,7 +490,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                   </div>
 
                   <div>
-                    <Label>Description</Label>
+                    <Label><T k="auto.projectcreatebydto.description" fallback="Description" /></Label>
                     <Textarea
                       value={milestone.description || ''}
                       onChange={(e) => updateMilestone(index, 'description', e.target.value)}
@@ -500,7 +501,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label>Date cible</Label>
+                      <Label><T k="auto.projectcreatebydto.date_cible" fallback="Date cible" /></Label>
                       <Input
                         type="date"
                         value={milestone.targetDate ? format(new Date(milestone.targetDate), 'yyyy-MM-dd') : ''}
@@ -509,7 +510,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     </div>
 
                     <div>
-                      <Label>Priorité</Label>
+                      <Label><T k="auto.projectcreatebydto.priorite" fallback="Priorité" /></Label>
                       <Select 
                         value={milestone.priority || 'medium'} 
                         onValueChange={(value) => updateMilestone(index, 'priority', value)}
@@ -527,7 +528,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     </div>
 
                     <div>
-                      <Label>Étape</Label>
+                      <Label><T k="auto.projectcreatebydto.etape" fallback="Étape" /></Label>
                       <Select 
                         value={milestone.stage || 'conception'} 
                         onValueChange={(value) => updateMilestone(index, 'stage', value)}
@@ -536,11 +537,11 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="conception">Conception</SelectItem>
-                          <SelectItem value="preparation">Préparation</SelectItem>
-                          <SelectItem value="execution">Exécution</SelectItem>
-                          <SelectItem value="validation">Validation</SelectItem>
-                          <SelectItem value="livraison">Livraison</SelectItem>
+                          <SelectItem value="conception"><T k="auto.projectcreatebydto.conception" fallback="Conception" /></SelectItem>
+                          <SelectItem value="preparation"><T k="auto.projectcreatebydto.preparation" fallback="Préparation" /></SelectItem>
+                          <SelectItem value="execution"><T k="auto.projectcreatebydto.execution" fallback="Exécution" /></SelectItem>
+                          <SelectItem value="validation"><T k="auto.projectcreatebydto.validation" fallback="Validation" /></SelectItem>
+                          <SelectItem value="livraison"><T k="auto.projectcreatebydto.livraison" fallback="Livraison" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -554,7 +555,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
         <TabsContent value="preview" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Aperçu du projet</CardTitle>
+              <CardTitle><T k="auto.projectcreatebydto.apercu_du_projet" fallback="Aperçu du projet" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

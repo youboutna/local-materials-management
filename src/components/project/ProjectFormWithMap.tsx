@@ -32,6 +32,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
@@ -257,38 +258,38 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-1 h-auto p-1 bg-muted/50 rounded-lg overflow-x-auto">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Building className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Informations</span>
-            <span className="sm:hidden font-medium">Info</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.informations" fallback="Informations" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.info" fallback="Info" /></span>
           </TabsTrigger>
           <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Construction</span>
-            <span className="sm:hidden font-medium">Phases</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.construction" fallback="Construction" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.phases" fallback="Phases" /></span>
           </TabsTrigger>
           <TabsTrigger value="team" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <User className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Équipe</span>
-            <span className="sm:hidden font-medium">Team</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.equipe" fallback="Équipe" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.team" fallback="Team" /></span>
           </TabsTrigger>
           <TabsTrigger value="timeline" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Chronologie</span>
-            <span className="sm:hidden font-medium">Dates</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.chronologie" fallback="Chronologie" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.dates" fallback="Dates" /></span>
           </TabsTrigger>
           <TabsTrigger value="payment" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Paiement</span>
-            <span className="sm:hidden font-medium">Pay</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.paiement" fallback="Paiement" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.pay" fallback="Pay" /></span>
           </TabsTrigger>
           <TabsTrigger value="location" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Localisation</span>
-            <span className="sm:hidden font-medium">Map</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.localisation" fallback="Localisation" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.map" fallback="Map" /></span>
           </TabsTrigger>
           <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Détails</span>
-            <span className="sm:hidden font-medium">Plus</span>
+            <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.details" fallback="Détails" /></span>
+            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.plus" fallback="Plus" /></span>
           </TabsTrigger>
         </TabsList>
 
@@ -298,13 +299,13 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5" />
-                Informations du projet
+                <T k="auto.projectformwithmap.informations_du_projet" fallback="Informations du projet" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Titre du projet</Label>
+                  <Label htmlFor="title"><T k="auto.projectformwithmap.titre_du_projet" fallback="Titre du projet" /></Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -313,7 +314,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="location">Localisation</Label>
+                  <Label htmlFor="location"><T k="auto.projectformwithmap.localisation" fallback="Localisation" /></Label>
                   <Input
                     id="location"
                     value={formData.location}
@@ -324,7 +325,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
 
               <div>
-                <Label htmlFor="projectReference">Référence du projet</Label>
+                <Label htmlFor="projectReference"><T k="auto.projectformwithmap.reference_du_projet" fallback="Référence du projet" /></Label>
                 <Input
                   id="projectReference"
                   value={formData.projectReference}
@@ -334,7 +335,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
               
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description"><T k="auto.projectformwithmap.description" fallback="Description" /></Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -346,24 +347,24 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.projectformwithmap.statut" fallback="Statut" /></Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Planning">Planification</SelectItem>
-                      <SelectItem value="InProgress">En cours</SelectItem>
-                      <SelectItem value="Pending">En attente</SelectItem>
-                      <SelectItem value="OnHold">En pause</SelectItem>
-                      <SelectItem value="Completed">Terminé</SelectItem>
-                      <SelectItem value="Cancelled">Annulé</SelectItem>
+                      <SelectItem value="Planning"><T k="auto.projectformwithmap.planification" fallback="Planification" /></SelectItem>
+                      <SelectItem value="InProgress"><T k="auto.projectformwithmap.en_cours" fallback="En cours" /></SelectItem>
+                      <SelectItem value="Pending"><T k="auto.projectformwithmap.en_attente" fallback="En attente" /></SelectItem>
+                      <SelectItem value="OnHold"><T k="auto.projectformwithmap.en_pause" fallback="En pause" /></SelectItem>
+                      <SelectItem value="Completed"><T k="auto.projectformwithmap.termine" fallback="Terminé" /></SelectItem>
+                      <SelectItem value="Cancelled"><T k="auto.projectformwithmap.annule" fallback="Annulé" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <Label htmlFor="budget">Budget (MRU)</Label>
+                  <Label htmlFor="budget"><T k="auto.projectformwithmap.budget_mru" fallback="Budget (MRU)" /></Label>
                   <Input
                     id="budget"
                     type="number"
@@ -375,7 +376,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 </div>
                 
                 <div>
-                  <Label htmlFor="teamSize">Taille de l'équipe</Label>
+                  <Label htmlFor="teamSize"><T k="auto.projectformwithmap.taille_de_l_equipe" fallback="Taille de l'équipe" /></Label>
                   <Input
                     id="teamSize"
                     type="number"
@@ -406,7 +407,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Équipe et Contractants
+                <T k="auto.projectformwithmap.equipe_et_contractants" fallback="Équipe et Contractants" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -421,9 +422,9 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                       <SelectValue placeholder="Sélectionner un manager" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-[100]">
-                      <SelectItem value="no-selection">Aucun manager assigné</SelectItem>
+                      <SelectItem value="no-selection"><T k="auto.projectformwithmap.aucun_manager_assigne" fallback="Aucun manager assigné" /></SelectItem>
                       {loadingEmployees ? (
-                        <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                        <SelectItem value="loading" disabled><T k="auto.projectformwithmap.chargement" fallback="Chargement..." /></SelectItem>
                       ) : (
                         employees.map((employee) => (
                           <SelectItem key={employee.id} value={employee.id}>
@@ -444,25 +445,25 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground">
-                    Sélectionnez l'employé responsable de ce projet
+                    <T k="auto.projectformwithmap.selectionnez_l_employe_responsable_de_ce_projet" fallback="Sélectionnez l'employé responsable de ce projet" />
                   </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Contractant principal</Label>
+                  <Label><T k="auto.projectformwithmap.contractant_principal" fallback="Contractant principal" /></Label>
                   <SupplierSelector
                     value={contractorSupplier}
                     onChange={handleContractorChange}
                     allowCustom={true}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Sélectionnez un fournisseur existant ou saisissez un contractant personnalisé
+                    <T k="auto.projectformwithmap.selectionnez_un_fournisseur_existant_ou_saisisse" fallback="Sélectionnez un fournisseur existant ou saisissez un contractant personnalisé" />
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Consultant Ingénierie</h3>
+                <h3 className="text-lg font-semibold text-foreground"><T k="auto.projectformwithmap.consultant_ingenierie" fallback="Consultant Ingénierie" /></h3>
                 <div className="space-y-2">
                   <Label>Bureau d'études / Consultant</Label>
                   <SupplierSelector
@@ -471,7 +472,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     allowCustom={true}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Bureau d'études ou consultant technique pour le projet.
+                    <T k="auto.projectformwithmap.bureau_d_etudes_ou_consultant_technique_pour_le_" fallback="Bureau d'études ou consultant technique pour le projet." />
                   </p>
                 </div>
               </div>
@@ -485,13 +486,13 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Chronologie
+                <T k="auto.projectformwithmap.chronologie" fallback="Chronologie" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="startDate">Date de début</Label>
+                  <Label htmlFor="startDate"><T k="auto.projectformwithmap.date_de_debut" fallback="Date de début" /></Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -502,7 +503,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 </div>
                 
                 <div>
-                  <Label htmlFor="endDate">Date de fin</Label>
+                  <Label htmlFor="endDate"><T k="auto.projectformwithmap.date_de_fin" fallback="Date de fin" /></Label>
                   <Input
                     id="endDate"
                     type="date"
@@ -521,7 +522,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Détails du projet
+                <T k="auto.projectformwithmap.details_du_projet" fallback="Détails du projet" />
               </CardTitle>
             </CardHeader>
             <TenderProjectFields
@@ -555,7 +556,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Paramètres de paiement
+                <T k="auto.projectformwithmap.parametres_de_paiement" fallback="Paramètres de paiement" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -566,14 +567,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   onCheckedChange={(checked) => handleChange('allowsInitialPayment', checked)}
                 />
                 <Label htmlFor="allowsInitialPayment" className="text-sm font-medium">
-                  Autoriser le paiement initial (0-30%)
+                  <T k="auto.projectformwithmap.autoriser_le_paiement_initial_0_30" fallback="Autoriser le paiement initial (0-30%)" />
                 </Label>
               </div>
               
               {formData.allowsInitialPayment && (
                 <div className="space-y-4 p-4 bg-primary/10 rounded-lg border border-primary/30">
                   <div>
-                    <Label htmlFor="initialPaymentPercentage">Pourcentage de paiement initial autorisé (%)</Label>
+                    <Label htmlFor="initialPaymentPercentage"><T k="auto.projectformwithmap.pourcentage_de_paiement_initial_autorise" fallback="Pourcentage de paiement initial autorisé (%)" /></Label>
                     <Input
                       id="initialPaymentPercentage"
                       type="number"
@@ -590,7 +591,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
                     <p className="text-sm text-warning">
-                      <strong>Note :</strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement. 
+                      <strong><T k="auto.projectformwithmap.note" fallback="Note :" /></strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement. 
                       Cette option facilite le démarrage des projets nécessitant des investissements initiaux importants.
                     </p>
                   </div>
@@ -637,13 +638,13 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Données de localisation
+                  <T k="auto.projectformwithmap.donnees_de_localisation" fallback="Données de localisation" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {facilitiesMapData.center && (
                   <div className="bg-success-soft p-3 rounded-md">
-                    <p className="text-sm font-medium text-success">Position GPS du projet:</p>
+                    <p className="text-sm font-medium text-success"><T k="auto.projectformwithmap.position_gps_du_projet" fallback="Position GPS du projet:" /></p>
                     <p className="text-sm text-success font-mono">
                       Latitude: {facilitiesMapData.center.lat.toFixed(6)}, 
                       Longitude: {facilitiesMapData.center.lng.toFixed(6)}
@@ -653,7 +654,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 
                 {facilitiesMapData.warehouseShape && facilitiesMapData.warehouseShape.length > 0 && (
                   <div className="bg-primary/10 p-3 rounded-md">
-                    <p className="text-sm font-medium text-primary">Zone d'entrepôt tracée:</p>
+                    <p className="text-sm font-medium text-primary"><T k="auto.projectformwithmap.zone_d_entrepot_tracee" fallback="Zone d'entrepôt tracée:" /></p>
                     <p className="text-sm text-primary">
                       Type: {facilitiesMapData.shapeType || 'polygone'} - {facilitiesMapData.warehouseShape.length} points
                     </p>
@@ -662,14 +663,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 
                 {facilitiesMapData.address && (
                   <div className="bg-muted p-3 rounded-md">
-                    <p className="text-sm font-medium text-foreground">Adresse:</p>
+                    <p className="text-sm font-medium text-foreground"><T k="auto.projectformwithmap.adresse" fallback="Adresse:" /></p>
                     <p className="text-sm text-foreground">{facilitiesMapData.address}</p>
                   </div>
                 )}
 
                 {formData.interventionZones && formData.interventionZones.length > 0 && (
                   <div className="bg-purple-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-purple-800">Zones d'intervention:</p>
+                    <p className="text-sm font-medium text-purple-800"><T k="auto.projectformwithmap.zones_d_intervention" fallback="Zones d'intervention:" /></p>
                     <p className="text-sm text-purple-700">
                       {formData.interventionZones.length} zone(s) définie(s)
                     </p>
@@ -685,7 +686,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
       <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-border">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <CheckCircle className="h-4 w-4" />
-          <span>Tous les champs obligatoires sont remplis</span>
+          <span><T k="auto.projectformwithmap.tous_les_champs_obligatoires_sont_remplis" fallback="Tous les champs obligatoires sont remplis" /></span>
         </div>
         <Button 
           type="submit" 
@@ -696,12 +697,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span className="font-medium">Enregistrement en cours...</span>
+                <span className="font-medium"><T k="auto.projectformwithmap.enregistrement_en_cours" fallback="Enregistrement en cours..." /></span>
               </>
             ) : (
               <>
                 <Save className="h-5 w-5 transition-transform group-hover:rotate-12" />
-                <span className="font-medium">Enregistrer le projet</span>
+                <span className="font-medium"><T k="auto.projectformwithmap.enregistrer_le_projet" fallback="Enregistrer le projet" /></span>
               </>
             )}
           </div>

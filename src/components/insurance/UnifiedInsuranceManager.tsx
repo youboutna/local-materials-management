@@ -46,6 +46,7 @@ import { AlertTriangle, Bell, Calendar, CheckCircle, Download, Edit, Eye, FileTe
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { T } from '@/components/i18n/T';
 
 // ============================================================
 // Validation Schema
@@ -527,7 +528,7 @@ const UnifiedInsuranceManager = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Chargement des données d'assurance...</p>
+          <p className="mt-2 text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.chargement_des_donnees_d_assurance" fallback="Chargement des données d'assurance..." /></p>
         </div>
       </div>
     );
@@ -540,10 +541,10 @@ const UnifiedInsuranceManager = () => {
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            Gestion des Assurances
+            <T k="auto.unifiedinsurancemanager.gestion_des_assurances" fallback="Gestion des Assurances" />
           </h2>
           <p className="text-muted-foreground">
-            Surveillance automatique des expirations et gestion unifiée des certificats
+            <T k="auto.unifiedinsurancemanager.surveillance_automatique_des_expirations_et_gest" fallback="Surveillance automatique des expirations et gestion unifiée des certificats" />
           </p>
         </div>
         <div className="flex gap-2">
@@ -561,7 +562,7 @@ const UnifiedInsuranceManager = () => {
             setIsDialogOpen(true);
           }}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouveau Certificat
+            <T k="auto.unifiedinsurancemanager.nouveau_certificat" fallback="Nouveau Certificat" />
           </Button>
         </div>
       </div>
@@ -571,31 +572,31 @@ const UnifiedInsuranceManager = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold text-primary">{stats.total}</div>
-            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.total" fallback="Total" /></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold text-success">{stats.active}</div>
-            <p className="text-sm text-muted-foreground">Actifs</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.actifs" fallback="Actifs" /></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold text-warning">{stats.expiring}</div>
-            <p className="text-sm text-muted-foreground">Expire bientôt</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.expire_bientot" fallback="Expire bientôt" /></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold text-destructive">{stats.expired}</div>
-            <p className="text-sm text-muted-foreground">Expirés</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.expires" fallback="Expirés" /></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold text-muted-foreground">{stats.missing}</div>
-            <p className="text-sm text-muted-foreground">Manquants</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.manquants" fallback="Manquants" /></p>
           </CardContent>
         </Card>
         <Card>
@@ -603,7 +604,7 @@ const UnifiedInsuranceManager = () => {
             <div className="text-2xl font-bold text-primary">
               {stats.coverageTotal.toLocaleString()} MRU
             </div>
-            <p className="text-sm text-muted-foreground">Couverture totale</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.couverture_totale" fallback="Couverture totale" /></p>
           </CardContent>
         </Card>
       </div>
@@ -624,7 +625,7 @@ const UnifiedInsuranceManager = () => {
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
                   <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Aucune alerte d'expiration</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.unifiedinsurancemanager.aucune_alerte_d_expiration" fallback="Aucune alerte d'expiration" /></p>
                 </div>
               </CardContent>
             </Card>
@@ -657,10 +658,10 @@ const UnifiedInsuranceManager = () => {
                     <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">
-                          <strong>Expiration:</strong> {alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString('fr-FR') : 'N/A'}
+                          <strong><T k="auto.unifiedinsurancemanager.expiration" fallback="Expiration:" /></strong> {alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString('fr-FR') : 'N/A'}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          <strong>Jours restants:</strong> {(alert.daysRemaining ?? 0) < 0 ? 'Expirée' : alert.daysRemaining ?? 'N/A'}
+                          <strong><T k="auto.unifiedinsurancemanager.jours_restants" fallback="Jours restants:" /></strong> {(alert.daysRemaining ?? 0) < 0 ? 'Expirée' : alert.daysRemaining ?? 'N/A'}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -669,13 +670,13 @@ const UnifiedInsuranceManager = () => {
                           if (cert) openViewDialog(cert);
                         }}>
                           <Eye className="h-4 w-4 mr-1" />
-                          Voir
+                          <T k="auto.unifiedinsurancemanager.voir" fallback="Voir" />
                         </Button>
                         <Button size="sm" onClick={() => {
                           const cert = certificates.find(c => c.policyNumber === alert.policyNumber);
                           if (cert) handleRenewCertificate(cert);
                         }}>
-                          Renouveler
+                          <T k="auto.unifiedinsurancemanager.renouveler" fallback="Renouveler" />
                         </Button>
                         <ActionsDropdown
                           entityType="insurance"
@@ -714,14 +715,14 @@ const UnifiedInsuranceManager = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Projet</TableHead>
-                    <TableHead>Contractant</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Police</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Expiration</TableHead>
-                    <TableHead>Jours restants</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.projet" fallback="Projet" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.contractant" fallback="Contractant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.type" fallback="Type" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.police" fallback="Police" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.montant" fallback="Montant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.expiration" fallback="Expiration" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.jours_restants" fallback="Jours restants" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.actions" fallback="Actions" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -752,7 +753,7 @@ const UnifiedInsuranceManager = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
-                            Renouveler
+                            <T k="auto.unifiedinsurancemanager.renouveler" fallback="Renouveler" />
                           </Button>
                           <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
@@ -782,14 +783,14 @@ const UnifiedInsuranceManager = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Projet</TableHead>
-                    <TableHead>Contractant</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Police</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Expiration</TableHead>
-                    <TableHead>Jours restants</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.projet" fallback="Projet" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.contractant" fallback="Contractant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.type" fallback="Type" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.police" fallback="Police" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.montant" fallback="Montant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.expiration" fallback="Expiration" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.jours_restants" fallback="Jours restants" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.actions" fallback="Actions" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -813,7 +814,7 @@ const UnifiedInsuranceManager = () => {
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button size="sm" onClick={() => handleRenewCertificate(cert)}>
-                            Renouveler
+                            <T k="auto.unifiedinsurancemanager.renouveler" fallback="Renouveler" />
                           </Button>
                           <InsuranceDocumentCell certificate={cert} onChanged={loadInsuranceData} />
                           <ActionsDropdown
@@ -851,15 +852,15 @@ const UnifiedInsuranceManager = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Projet</TableHead>
-                    <TableHead>Contractant</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Police</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Expiration</TableHead>
-                    <TableHead>Jours restants</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.projet" fallback="Projet" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.contractant" fallback="Contractant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.type" fallback="Type" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.police" fallback="Police" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.montant" fallback="Montant" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.expiration" fallback="Expiration" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.jours_restants" fallback="Jours restants" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.statut" fallback="Statut" /></TableHead>
+                    <TableHead><T k="auto.unifiedinsurancemanager.actions" fallback="Actions" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -895,7 +896,7 @@ const UnifiedInsuranceManager = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(cert)}>
-                            Renouveler
+                            <T k="auto.unifiedinsurancemanager.renouveler" fallback="Renouveler" />
                           </Button>
                           <Button size="sm" variant="destructive" onClick={() => handleDelete(cert.id!)}>
                             <Trash2 className="h-4 w-4" />
@@ -951,13 +952,13 @@ const UnifiedInsuranceManager = () => {
             <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Statut</p>
+                  <p className="text-muted-foreground"><T k="auto.unifiedinsurancemanager.statut" fallback="Statut" /></p>
                   <Badge className={getStatusColor(selectedCertificate.status || '')}>
                     {getStatusLabel(selectedCertificate.status || '')}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Expiration</p>
+                  <p className="text-muted-foreground"><T k="auto.unifiedinsurancemanager.expiration" fallback="Expiration" /></p>
                   <p className="font-medium">
                     {selectedCertificate.validUntil
                       ? new Date(selectedCertificate.validUntil).toLocaleDateString('fr-FR')
@@ -965,11 +966,11 @@ const UnifiedInsuranceManager = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Jours restants</p>
+                  <p className="text-muted-foreground"><T k="auto.unifiedinsurancemanager.jours_restants" fallback="Jours restants" /></p>
                   <ExpiryCountdown expiryDate={selectedCertificate.validUntil} />
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Montant couvert</p>
+                  <p className="text-muted-foreground"><T k="auto.unifiedinsurancemanager.montant_couvert" fallback="Montant couvert" /></p>
                   <p className="font-medium">
                     {(selectedCertificate.coverageAmount || 0).toLocaleString('fr-FR', {
                       minimumFractionDigits: 2,
@@ -982,10 +983,10 @@ const UnifiedInsuranceManager = () => {
                 <InsuranceDocumentCell certificate={selectedCertificate} onChanged={loadInsuranceData} />
                 <Button size="sm" variant="outline" onClick={() => openEditDialog(selectedCertificate)}>
                   <Edit className="h-4 w-4 mr-1" />
-                  Modifier
+                  <T k="auto.unifiedinsurancemanager.modifier" fallback="Modifier" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(selectedCertificate)}>
-                  Renouveler
+                  <T k="auto.unifiedinsurancemanager.renouveler" fallback="Renouveler" />
                 </Button>
                 <ActionsDropdown
                   entityType="insurance"
@@ -1008,7 +1009,7 @@ const UnifiedInsuranceManager = () => {
                   name="projectId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Projet</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.projet" fallback="Projet" /></FormLabel>
                       <FormControl>
                         <ProjectSelector
                           value={field.value}
@@ -1027,7 +1028,7 @@ const UnifiedInsuranceManager = () => {
                   name="contractorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contractant</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.contractant" fallback="Contractant" /></FormLabel>
                       <FormControl>
                         <SupplierSelector
                           value={{
@@ -1056,7 +1057,7 @@ const UnifiedInsuranceManager = () => {
                   name="insuranceCompany"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Compagnie d'Assurance</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.compagnie_d_assurance" fallback="Compagnie d'Assurance" /></FormLabel>
                       <FormControl>
                         <Input placeholder="Assurances Générales..." {...field} disabled={isViewMode} />
                       </FormControl>
@@ -1069,7 +1070,7 @@ const UnifiedInsuranceManager = () => {
                   name="policyNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Numéro de Police</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.numero_de_police" fallback="Numéro de Police" /></FormLabel>
                       <FormControl>
                         <Input placeholder="POL-789..." {...field} disabled={isViewMode} />
                       </FormControl>
@@ -1085,7 +1086,7 @@ const UnifiedInsuranceManager = () => {
                   name="coverageType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type de Couverture</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.type_de_couverture" fallback="Type de Couverture" /></FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isViewMode}>
                         <FormControl>
                           <SelectTrigger>
@@ -1109,7 +1110,7 @@ const UnifiedInsuranceManager = () => {
                   name="coverageAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Montant Couverture (MRU)</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.montant_couverture_mru" fallback="Montant Couverture (MRU)" /></FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -1131,7 +1132,7 @@ const UnifiedInsuranceManager = () => {
                   name="validFrom"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date de Début</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.date_de_debut" fallback="Date de Début" /></FormLabel>
                       <FormControl>
                         <Input type="date" {...field} disabled={isViewMode} />
                       </FormControl>
@@ -1144,7 +1145,7 @@ const UnifiedInsuranceManager = () => {
                   name="validUntil"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date d'Expiration</FormLabel>
+                      <FormLabel><T k="auto.unifiedinsurancemanager.date_d_expiration" fallback="Date d'Expiration" /></FormLabel>
                       <FormControl>
                         <Input type="date" {...field} disabled={isViewMode} />
                       </FormControl>
@@ -1159,7 +1160,7 @@ const UnifiedInsuranceManager = () => {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes (optionnel)</FormLabel>
+                    <FormLabel><T k="auto.unifiedinsurancemanager.notes_optionnel" fallback="Notes (optionnel)" /></FormLabel>
                     <FormControl>
                       <Textarea placeholder="Notes additionnelles..." {...field} disabled={isViewMode} />
                     </FormControl>
@@ -1171,7 +1172,7 @@ const UnifiedInsuranceManager = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Annuler
+                    <T k="auto.unifiedinsurancemanager.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer Certificat'}

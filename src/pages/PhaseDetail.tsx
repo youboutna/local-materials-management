@@ -41,6 +41,7 @@ import {
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
   ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 
 const PhaseDetail: React.FC = () => {
@@ -129,9 +130,9 @@ const PhaseDetail: React.FC = () => {
     return (
       <AppLayout pageTitle="Phase">
         <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-2">Phase non trouvée</h1>
+          <h1 className="text-2xl font-bold text-destructive mb-2"><T k="auto.phasedetail.phase_non_trouvee" fallback="Phase non trouvée" /></h1>
           {error && <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>}
-          <Button onClick={() => navigate(`/projects/${projectId}`)}>Retour au projet</Button>
+          <Button onClick={() => navigate(`/projects/${projectId}`)}><T k="auto.phasedetail.retour_au_projet" fallback="Retour au projet" /></Button>
         </div>
       </AppLayout>
     );
@@ -163,7 +164,7 @@ const PhaseDetail: React.FC = () => {
               className="flex items-center gap-2"
               aria-label="Retour au projet"
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Retour
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <T k="auto.phasedetail.retour" fallback="Retour" />
             </Button>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
@@ -183,7 +184,7 @@ const PhaseDetail: React.FC = () => {
               onClick={() => setIsEditing(true)}
               aria-label="Modifier la phase"
             >
-              <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> Modifier
+              <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.modifier" fallback="Modifier" />
             </Button>
           </div>
 
@@ -193,7 +194,7 @@ const PhaseDetail: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
-              <CardTitle className="text-xs font-medium">Progression</CardTitle>
+              <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.progression" fallback="Progression" /></CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
@@ -203,7 +204,7 @@ const PhaseDetail: React.FC = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
-              <CardTitle className="text-xs font-medium">Budget</CardTitle>
+              <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.budget" fallback="Budget" /></CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
@@ -212,7 +213,7 @@ const PhaseDetail: React.FC = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
-              <CardTitle className="text-xs font-medium">Durée</CardTitle>
+              <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.duree" fallback="Durée" /></CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
@@ -222,7 +223,7 @@ const PhaseDetail: React.FC = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
-              <CardTitle className="text-xs font-medium">Localisation</CardTitle>
+              <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.localisation" fallback="Localisation" /></CardTitle>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
@@ -234,7 +235,7 @@ const PhaseDetail: React.FC = () => {
         {/* Écarts planifié vs réalisé (DeviationEngine + deviation-rules) */}
         <Card>
           <CardContent className="py-3 px-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground mr-1">Écarts :</span>
+            <span className="text-xs font-medium text-muted-foreground mr-1"><T k="auto.phasedetail.ecarts" fallback="Écarts :" /></span>
             <DeviationBadges
               scope="phase"
               input={{
@@ -252,18 +253,18 @@ const PhaseDetail: React.FC = () => {
         {/* Cross-module quick navigation */}
         <Card>
           <CardContent className="py-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground mr-2">Navigation rapide :</span>
+            <span className="text-xs font-medium text-muted-foreground mr-2"><T k="auto.phasedetail.navigation_rapide" fallback="Navigation rapide :" /></span>
             <Button size="sm" variant="ghost" aria-label="Voir les inspections de la phase" onClick={() => navigate(`/inspection-monitoring?phase=${phaseId}&project=${projectId}`)}>
-              <ClipboardCheck className="h-4 w-4 mr-1" aria-hidden="true" /> Inspections <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+              <ClipboardCheck className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.inspections" fallback="Inspections" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les paiements de la phase" onClick={() => navigate(`/payment-control?phase=${phaseId}&project=${projectId}`)}>
-              <CreditCard className="h-4 w-4 mr-1" aria-hidden="true" /> Paiements <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+              <CreditCard className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.paiements" fallback="Paiements" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les documents de la phase" onClick={() => navigate(`/documents?phase=${phaseId}&project=${projectId}`)}>
-              <FileText className="h-4 w-4 mr-1" aria-hidden="true" /> Documents <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+              <FileText className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.documents" fallback="Documents" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
             <Button size="sm" variant="ghost" aria-label="Voir les rapports liés à la phase" onClick={() => navigate(`/monitoring?phase=${phaseId}&project=${projectId}`)}>
-              <BarChart3 className="h-4 w-4 mr-1" aria-hidden="true" /> Rapports <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
+              <BarChart3 className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.rapports" fallback="Rapports" /> <ExternalLink className="h-3 w-3 ml-1" aria-hidden="true" />
             </Button>
           </CardContent>
         </Card>
@@ -272,16 +273,16 @@ const PhaseDetail: React.FC = () => {
         <Tabs value={defaultStageTab} onValueChange={onStageChange} className="space-y-6">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
             <TabsTrigger value="planification" className="flex items-center gap-2">
-              <Compass className="h-4 w-4" /> <span className="hidden sm:inline">Planification</span>
+              <Compass className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.planification" fallback="Planification" /></span>
             </TabsTrigger>
             <TabsTrigger value="execution" className="flex items-center gap-2">
-              <HardHat className="h-4 w-4" /> <span className="hidden sm:inline">Exécution</span>
+              <HardHat className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.execution" fallback="Exécution" /></span>
             </TabsTrigger>
             <TabsTrigger value="controle" className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline">Contrôle</span>
+              <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.controle" fallback="Contrôle" /></span>
             </TabsTrigger>
             <TabsTrigger value="cloture" className="flex items-center gap-2">
-              <Flag className="h-4 w-4" /> <span className="hidden sm:inline">Clôture</span>
+              <Flag className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.cloture" fallback="Clôture" /></span>
             </TabsTrigger>
           </TabsList>
 
@@ -289,16 +290,16 @@ const PhaseDetail: React.FC = () => {
           <TabsContent value="planification" className="space-y-6">
             <Tabs defaultValue="steps" className="space-y-4">
               <WorkspaceTabsList variant="underline">
-                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" />Étapes</TabsTrigger>
-                <TabsTrigger value="tasks">Tâches</TabsTrigger>
+                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
+                <TabsTrigger value="tasks"><T k="auto.phasedetail.taches" fallback="Tâches" /></TabsTrigger>
                 <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
-                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
-                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" />Intervenants</TabsTrigger>
-                <TabsTrigger value="gantt">Gantt</TabsTrigger>
-                <TabsTrigger value="pert">PERT</TabsTrigger>
-                <TabsTrigger value="critical">Chemin critique</TabsTrigger>
-                <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" />Jalons</TabsTrigger>
-                <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" />Équipe</TabsTrigger>
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
+                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" /><T k="auto.phasedetail.intervenants" fallback="Intervenants" /></TabsTrigger>
+                <TabsTrigger value="gantt"><T k="auto.phasedetail.gantt" fallback="Gantt" /></TabsTrigger>
+                <TabsTrigger value="pert"><T k="auto.phasedetail.pert" fallback="PERT" /></TabsTrigger>
+                <TabsTrigger value="critical"><T k="auto.phasedetail.chemin_critique" fallback="Chemin critique" /></TabsTrigger>
+                <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" /><T k="auto.phasedetail.jalons" fallback="Jalons" /></TabsTrigger>
+                <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" /><T k="auto.phasedetail.equipe" fallback="Équipe" /></TabsTrigger>
               </WorkspaceTabsList>
               <TabsContent value="steps">
                 <PhaseStepsManager
@@ -356,10 +357,10 @@ const PhaseDetail: React.FC = () => {
           <TabsContent value="execution" className="space-y-6">
             <Tabs defaultValue="resources" className="space-y-4">
               <WorkspaceTabsList variant="underline">
-                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" />Ressources</TabsTrigger>
-                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" />Finances</TabsTrigger>
-                <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" />Livrables</TabsTrigger>
-                <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" />Échéances</TabsTrigger>
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
+                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" /><T k="auto.phasedetail.finances" fallback="Finances" /></TabsTrigger>
+                <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" /><T k="auto.phasedetail.livrables" fallback="Livrables" /></TabsTrigger>
+                <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" /><T k="auto.phasedetail.echeances" fallback="Échéances" /></TabsTrigger>
               </WorkspaceTabsList>
               <TabsContent value="resources">
                 <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
@@ -387,7 +388,7 @@ const PhaseDetail: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Flag className="h-5 w-5" /> Clôture de la phase
+                  <Flag className="h-5 w-5" /> <T k="auto.phasedetail.cloture_de_la_phase" fallback="Clôture de la phase" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
