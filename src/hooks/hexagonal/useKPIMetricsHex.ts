@@ -77,7 +77,7 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const milestonesCompleted = milestonesList.filter(m => m.status === 'completed').length;
     const milestonesPending = milestonesList.filter(m => m.status === 'pending' || m.status === 'in_progress').length;
     const milestonesOverdue = milestonesList.filter(m => {
-      const targetDate = (m.target_date || m.targetDate) ? new Date(m.target_date || m.targetDate) : null;
+      const targetDate = m.targetDate ? new Date(m.targetDate) : null;
       return targetDate && targetDate < new Date() && m.status !== 'completed';
     }).length;
 
