@@ -192,13 +192,12 @@ export function BoqDevisDialog({
     setLoading(true);
     try {
       const { blob, fileName } = await buildPdfBlob();
-      const buf = await blob.arrayBuffer();
-      let bin = ''; const bytes = new Uint8Array(buf);
-      for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
-      const b64 = btoa(bin);
-      const { error } = await RepositoryFactory.getNotificationGateway().invokeFunction('send-email-notification', {
+      const b64 = await blobToBase64(blob);
+      const result = await CommunicationService.sendEmail({
           to: config.recipientEmail,
           subject: `${label} — ${config.title}`,
+          message: `Veuillez trouver ci-joint le ${label.toLowerCase()} ${config.title}. Total TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU.`,
+          actionType: `boq-${mode}`,
           html: `<p>Bonjour,</p>
                  <p>Veuillez trouver ci-joint le ${label.toLowerCase()} <strong>${config.title}</strong>.</p>
                  <p>Total HT : ${totals.totalHt.toLocaleString('fr-FR')} MRU<br/>
@@ -209,13 +208,14 @@ export function BoqDevisDialog({
             { filename: fileName, content: b64, contentType: 'application/pdf', encoding: 'base64' },
             ...(attachCsv && csvContent ? [{
               filename: fileName.replace(/\.pdf$/, '.csv'),
-              content: btoa(unescape(encodeURIComponent(`\uFEFF${csvContent}`))),
+              content: textToBase64(`\uFEFF${csvContent}`),
               contentType: 'text/csv',
-              encoding: 'base64',
+              encoding: 'base64' as const,
             }] : []),
           ],
       });
-      if (error) throw error;
+      if (!result.success) throw new Error("L'envoi de l'email a échoué");
+
       toast({ title: 'Email envoyé', description: config.recipientEmail });
       setOpen(false);
     } catch (e) {
