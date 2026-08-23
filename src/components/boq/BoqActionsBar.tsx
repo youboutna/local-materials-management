@@ -311,7 +311,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     toast({
       title: t('dqe.action.procurement_chain', "Chaîne appel d'offres"),
       description: [
-        `${res.planning.phases ?? 0} phases`,
+        `${res.planning.phasesCreated + res.planning.phasesReused} phases`,
         `budget ${res.forecast.dqeTotal}`,
         res.tender.tenderId ? 'AO publié' : 'AO non créé',
         ...res.warnings,
