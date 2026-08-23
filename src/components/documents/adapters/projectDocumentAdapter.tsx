@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
 
@@ -13,8 +14,9 @@ const PROJECT_CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function useProjectDocumentAdapter(projectId: string): DocumentHubContract {
+  const { t } = useLanguage();
   return useDocumentsTableAdapter({
-    scopeLabel: 'Documents du projet',
+    scopeLabel: t('auto.projectdocumentadapter.documents_du_projet'),
     queryKey: ['documents', 'project', projectId],
     filters: [{ column: 'project_id', value: projectId }],
     pathPrefix: `projects/${projectId}`,
@@ -26,7 +28,7 @@ export function useProjectDocumentAdapter(projectId: string): DocumentHubContrac
     facets: [
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('auto.projectdocumentadapter.categorie'),
         options: Object.entries(PROJECT_CATEGORY_LABELS).map(([value, label]) => ({
           value,
           label,
@@ -34,7 +36,7 @@ export function useProjectDocumentAdapter(projectId: string): DocumentHubContrac
       },
       {
         key: 'phase',
-        label: 'Phase',
+        label: t('auto.projectdocumentadapter.phase'),
         options: [],
       },
     ],

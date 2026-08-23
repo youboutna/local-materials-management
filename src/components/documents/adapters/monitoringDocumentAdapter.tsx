@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Adapter GED pour les documents de surveillance contractuelle
  * (garanties bancaires, polices d'assurance).
@@ -33,6 +34,7 @@ const SCOPE_LABELS: Record<MonitoringDocumentScope, string> = {
 };
 
 export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): DocumentHubContract {
+  const { t } = useLanguage();
   const scopeLabel = SCOPE_LABELS[scope];
 
   return useDocumentsTableAdapter({
@@ -47,7 +49,7 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
     facets: [
       {
         key: 'category',
-        label: 'Type de document',
+        label: t('auto.monitoringdocumentadapter.type_de_document'),
         options: CATEGORY_OPTIONS[scope],
       },
     ],

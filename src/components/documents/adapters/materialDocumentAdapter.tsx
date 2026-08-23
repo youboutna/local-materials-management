@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
 
@@ -22,6 +23,7 @@ export interface MaterialDocumentContext {
 export function useMaterialDocumentAdapter(
   materialId: string,
   context: MaterialDocumentContext = {},
+  const { t } = useLanguage();
 ): DocumentHubContract {
   const { materialName, supplierId, supplierName } = context;
 
@@ -46,7 +48,7 @@ export function useMaterialDocumentAdapter(
     facets: [
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('auto.materialdocumentadapter.categorie'),
         options: Object.entries(MATERIAL_CATEGORY_LABELS).map(([value, label]) => ({
           value,
           label,

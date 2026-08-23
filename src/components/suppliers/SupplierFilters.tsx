@@ -43,24 +43,24 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
   const filters: FilterField[] = [
     {
       key: 'category',
-      label: 'Catégories',
-      placeholder: 'Toutes les catégories',
+      label: t('auto.supplierfilters.categories'),
+      placeholder: t('auto.supplierfilters.toutes_les_categories'),
       value: categoryFilter,
       onChange: onCategoryChange,
       options: availableCategories.map(category => ({ value: category, label: category }))
     },
     {
       key: 'region',
-      label: 'Régions',
-      placeholder: 'Toutes les régions',
+      label: t('auto.supplierfilters.regions'),
+      placeholder: t('auto.supplierfilters.toutes_les_regions'),
       value: regionFilter,
       onChange: onRegionChange,
       options: availableRegions.map(region => ({ value: region, label: region }))
     },
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.supplierfilters.statuts'),
+      placeholder: t('auto.supplierfilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
@@ -73,16 +73,16 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.supplierfilters.tri'),
+      placeholder: t('auto.supplierfilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as SupplierSortOption),
       options: [
-        { value: 'name-asc', label: 'Nom (A-Z)' },
-        { value: 'name-desc', label: 'Nom (Z-A)' },
-        { value: 'newest', label: 'Plus récent' },
-        { value: 'oldest', label: 'Plus ancien' },
-        { value: 'rating', label: 'Évaluation' }
+        { value: 'name-asc', label: t('auto.supplierfilters.nom_a_z') },
+        { value: 'name-desc', label: t('auto.supplierfilters.nom_z_a') },
+        { value: 'newest', label: t('auto.supplierfilters.plus_recent') },
+        { value: 'oldest', label: t('auto.supplierfilters.plus_ancien') },
+        { value: 'rating', label: t('auto.supplierfilters.evaluation') }
       ]
     }
   ];

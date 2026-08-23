@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useMemo, useState } from 'react';
 import { DocumentHubContract, DocumentItem } from './types';
 import { DocumentHubToolbar, SortKey, ViewMode } from './DocumentHubToolbar';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function DocumentHub({ contract, heading, className }: Props) {
+  const { t } = useLanguage();
   const { data: rawItems = [], isLoading } = contract.useDocuments();
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('date_desc');
@@ -109,9 +111,9 @@ export function DocumentHub({ contract, heading, className }: Props) {
     if (!window.confirm(`Supprimer « ${item.title} » ?`)) return;
     try {
       await contract.onDelete(item);
-      toast({ title: 'Document supprimé' });
+      toast({ title: t('auto.documenthub.document_supprime') });
     } catch (err: any) {
-      toast({ title: 'Erreur', description: err?.message ?? 'Suppression impossible', variant: 'destructive' });
+      toast({ title: t('auto.documenthub.erreur'), description: err?.message ?? 'Suppression impossible', variant: 'destructive' });
     }
   };
 

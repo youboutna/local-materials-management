@@ -43,24 +43,24 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   const filters: FilterField[] = [
     {
       key: 'department',
-      label: 'Départements',
-      placeholder: 'Tous les départements',
+      label: t('auto.employeefilters.departements'),
+      placeholder: t('auto.employeefilters.tous_les_departements'),
       value: departmentFilter,
       onChange: onDepartmentChange,
       options: availableDepartments.map(dept => ({ value: dept, label: dept }))
     },
     {
       key: 'position',
-      label: 'Postes',
-      placeholder: 'Tous les postes',
+      label: t('auto.employeefilters.postes'),
+      placeholder: t('auto.employeefilters.tous_les_postes'),
       value: positionFilter,
       onChange: onPositionChange,
       options: availablePositions.map(position => ({ value: position, label: position }))
     },
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.employeefilters.statuts'),
+      placeholder: t('auto.employeefilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
@@ -73,16 +73,16 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.employeefilters.tri'),
+      placeholder: t('auto.employeefilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as EmployeeSortOption),
       options: [
-        { value: 'name-asc', label: 'Nom (A-Z)' },
-        { value: 'name-desc', label: 'Nom (Z-A)' },
+        { value: 'name-asc', label: t('auto.employeefilters.nom_a_z') },
+        { value: 'name-desc', label: t('auto.employeefilters.nom_z_a') },
         { value: 'hire-date', label: 'Date d\'embauche' },
-        { value: 'department', label: 'Département' },
-        { value: 'position', label: 'Poste' }
+        { value: 'department', label: t('auto.employeefilters.departement') },
+        { value: 'position', label: t('auto.employeefilters.poste') }
       ]
     }
   ];

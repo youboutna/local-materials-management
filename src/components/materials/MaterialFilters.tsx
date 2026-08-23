@@ -33,16 +33,16 @@ const MaterialFilters: React.FC<MaterialFiltersProps> = ({
   const filters: FilterField[] = [
     {
       key: 'category',
-      label: 'Catégories',
-      placeholder: 'Toutes les catégories',
+      label: t('auto.materialfilters.categories'),
+      placeholder: t('auto.materialfilters.toutes_les_categories'),
       value: selectedCategory,
       onChange: onCategoryChange,
       options: categories.map(category => ({ value: category, label: category }))
     },
     {
       key: 'localType',
-      label: 'Types locaux',
-      placeholder: 'Tous les types',
+      label: t('auto.materialfilters.types_locaux'),
+      placeholder: t('auto.materialfilters.tous_les_types'),
       value: selectedLocalType,
       onChange: onLocalTypeChange,
       options: localTypes.map(type => ({ value: type, label: type }))

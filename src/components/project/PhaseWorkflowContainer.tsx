@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import PhaseWorkflowOrchestrator from './PhaseWorkflowOrchestrator';
 import { usePhaseWorkflow } from '@/hooks/usePhaseWorkflow';
@@ -44,6 +45,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
   latestApprovedInspection,
   auditEntries,
 }) => {
+  const { t } = useLanguage();
   const {
     calculateDecompte,
     getStepWorkflowStatus,
@@ -67,11 +69,11 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
       });
       if (created && created.id) {
         // orchestrator / other UI can open dialogs using events or callbacks
-        toast({ title: 'Inspection programmée', description: 'Inspection créée.' });
+        toast({ title: t('auto.phaseworkflowcontainer.inspection_programmee'), description: t('auto.phaseworkflowcontainer.inspection_creee') });
       }
     } catch (err) {
       console.error('Erreur scheduleInspection', err);
-      toast({ title: 'Erreur', description: 'Impossible de programmer l\'inspection', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: 'Impossible de programmer l\'inspection', variant: 'destructive' });
     }
   };
 
@@ -80,10 +82,10 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
     try {
       const nextProgress = 10; // caller can implement more advanced UI
       await updateStepProgress({ stepId, progress: nextProgress });
-      toast({ title: 'Progression mise à jour' });
+      toast({ title: t('auto.phaseworkflowcontainer.progression_mise_a_jour') });
     } catch (err) {
       console.error('Erreur updateStepProgress', err);
-      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la progression', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_mettre_a_jour_la_progression'), variant: 'destructive' });
     }
   };
 
@@ -101,18 +103,18 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
           contractorContact: rawPhaseData?.contractor_contact || '',
         },
       });
-      toast({ title: 'Paiement créé', description: 'Demande de paiement enregistrée.' });
+      toast({ title: t('auto.phaseworkflowcontainer.paiement_cree'), description: t('auto.phaseworkflowcontainer.demande_de_paiement_enregistree') });
       if (onActionComplete) onActionComplete();
     } catch (err) {
       console.error('Erreur createPayment', err);
-      toast({ title: 'Erreur', description: 'Impossible de créer le paiement', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_creer_le_paiement'), variant: 'destructive' });
     }
   };
 
   const handleGenerateDecompte = async () => {
     const decompte = calculateDecompte(rawPhaseData?.estimated_cost || 0, 5);
     // Orchestrator can open preview using a callback/event; here we simply notify
-    toast({ title: 'Décompte prêt', description: `Net payable: ${decompte.netPayable}`, variant: 'default' });
+    toast({ title: t('auto.phaseworkflowcontainer.decompte_pret'), description: `Net payable: ${decompte.netPayable}`, variant: 'default' });
   };
 
   const handleGeneratePV = async () => {
@@ -161,19 +163,19 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
               );
             }
 
-            toast({ title: 'PV généré', description: 'Le PV a été généré et stocké.' });
+            toast({ title: t('auto.phaseworkflowcontainer.pv_genere'), description: t('auto.phaseworkflowcontainer.le_pv_a_ete_genere_et_stocke') });
             if (onActionComplete) onActionComplete();
           } catch (docErr) {
             console.error('Error creating PV document record', docErr);
-            toast({ title: 'Erreur', description: "PV généré mais impossible d'enregistrer le document.", variant: 'destructive' });
+            toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: "PV généré mais impossible d'enregistrer le document.", variant: 'destructive' });
           }
         } else {
-          toast({ title: 'Erreur upload', description: "Impossible d'uploader le PV.", variant: 'destructive' });
+          toast({ title: t('auto.phaseworkflowcontainer.erreur_upload'), description: "Impossible d'uploader le PV.", variant: 'destructive' });
         }
       }
     } catch (err) {
       console.error('handleGeneratePV error', err);
-      toast({ title: 'Erreur', description: 'Impossible de générer le PV.', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_generer_le_pv'), variant: 'destructive' });
     } finally {
       setIsProcessingPV(false);
     }

@@ -37,8 +37,8 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
   const filters: FilterField[] = [
     {
       key: 'type',
-      label: 'Types',
-      placeholder: 'Tous les types',
+      label: t('auto.documentfilters.types'),
+      placeholder: t('auto.documentfilters.tous_les_types'),
       value: typeFilter,
       onChange: onTypeChange,
       options: availableTypes.map(type => ({ 
@@ -55,8 +55,8 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
     },
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.documentfilters.statuts'),
+      placeholder: t('auto.documentfilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
@@ -69,16 +69,16 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.documentfilters.tri'),
+      placeholder: t('auto.documentfilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as DocumentSortOption),
       options: [
-        { value: 'newest', label: 'Plus récent' },
-        { value: 'oldest', label: 'Plus ancien' },
-        { value: 'name-asc', label: 'Nom (A-Z)' },
-        { value: 'name-desc', label: 'Nom (Z-A)' },
-        { value: 'size-desc', label: 'Taille (grande)' }
+        { value: 'newest', label: t('auto.documentfilters.plus_recent') },
+        { value: 'oldest', label: t('auto.documentfilters.plus_ancien') },
+        { value: 'name-asc', label: t('auto.documentfilters.nom_a_z') },
+        { value: 'name-desc', label: t('auto.documentfilters.nom_z_a') },
+        { value: 'size-desc', label: t('auto.documentfilters.taille_grande') }
       ]
     }
   ];

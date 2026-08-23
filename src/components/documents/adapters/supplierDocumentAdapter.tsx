@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
 
@@ -10,8 +11,9 @@ const SUPPLIER_CATEGORY_LABELS: Record<string, string> = {
 };
 
 export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContract {
+  const { t } = useLanguage();
   return useDocumentsTableAdapter({
-    scopeLabel: 'Documents du fournisseur',
+    scopeLabel: t('auto.supplierdocumentadapter.documents_du_fournisseur'),
     queryKey: ['documents', 'supplier', supplierId],
     filters: [{ column: 'supplier_id', value: supplierId }],
     pathPrefix: `suppliers/${supplierId}`,
@@ -23,7 +25,7 @@ export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContr
     facets: [
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('auto.supplierdocumentadapter.categorie'),
         options: Object.entries(SUPPLIER_CATEGORY_LABELS).map(([value, label]) => ({
           value,
           label,

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -16,10 +17,11 @@ export function SubmissionProgressTracker({
   uploadedDocuments = 0,
   error
 }: SubmissionProgressTrackerProps) {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'creating', label: 'Création de la soumission', step: 1 },
-    { id: 'uploading', label: 'Téléchargement des documents', step: 2 },
-    { id: 'generating', label: 'Génération du code secret', step: 3 }
+    { id: 'creating', label: t('auto.submissionprogresstracker.creation_de_la_soumission'), step: 1 },
+    { id: 'uploading', label: t('auto.submissionprogresstracker.telechargement_des_documents'), step: 2 },
+    { id: 'generating', label: t('auto.submissionprogresstracker.generation_du_code_secret'), step: 3 }
   ];
 
   const getCurrentStepIndex = () => {

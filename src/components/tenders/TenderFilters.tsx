@@ -37,8 +37,8 @@ const TenderFilters: React.FC<TenderFiltersProps> = ({
   const filters: FilterField[] = [
     {
       key: 'status',
-      label: 'Statuts',
-      placeholder: 'Tous les statuts',
+      label: t('auto.tenderfilters.statuts'),
+      placeholder: t('auto.tenderfilters.tous_les_statuts'),
       value: statusFilter,
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
@@ -51,24 +51,24 @@ const TenderFilters: React.FC<TenderFiltersProps> = ({
     },
     {
       key: 'marketType',
-      label: 'Types de marché',
-      placeholder: 'Tous les types',
+      label: t('auto.tenderfilters.types_de_marche'),
+      placeholder: t('auto.tenderfilters.tous_les_types'),
       value: marketTypeFilter,
       onChange: onMarketTypeChange,
       options: availableMarketTypes.map(type => ({ value: type, label: type }))
     },
     {
       key: 'sort',
-      label: 'Tri',
-      placeholder: 'Trier par...',
+      label: t('auto.tenderfilters.tri'),
+      placeholder: t('auto.tenderfilters.trier_par'),
       value: sortOption,
       onChange: (value) => onSortChange(value as TenderSortOption),
       options: [
-        { value: 'newest', label: 'Plus récent' },
-        { value: 'oldest', label: 'Plus ancien' },
-        { value: 'deadline', label: 'Échéance proche' },
-        { value: 'budget-high', label: 'Budget élevé' },
-        { value: 'budget-low', label: 'Budget faible' }
+        { value: 'newest', label: t('auto.tenderfilters.plus_recent') },
+        { value: 'oldest', label: t('auto.tenderfilters.plus_ancien') },
+        { value: 'deadline', label: t('auto.tenderfilters.echeance_proche') },
+        { value: 'budget-high', label: t('auto.tenderfilters.budget_eleve') },
+        { value: 'budget-low', label: t('auto.tenderfilters.budget_faible') }
       ]
     }
   ];
