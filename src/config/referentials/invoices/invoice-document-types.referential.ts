@@ -22,6 +22,12 @@ export interface InvoiceDocumentTypeDef {
   dqeType: string;
   statuses: string[];
   initialStatus: string;
+  /** Statut terminal ouvrant l'étape suivante (DQE : validé ; devis : accepté…). */
+  validationStatus: string;
+  /** Statut requis sur le document source pour produire cette étape. */
+  requiredSourceStatus?: string;
+  /** `source` de `btp.boq_lines` portant cette étape (résolution UI / PDF). */
+  boqSources: string[];
   /** Étape suivante du workflow (null = terminal). */
   next: InvoiceDocumentType | null;
   /** Acteurs autorisés à produire ce document. */
@@ -35,17 +41,20 @@ export interface InvoiceDocumentTypeDef {
 export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'dqe',
-    label: 'DQE / Expression de besoin',
-    labelAr: 'الكشف الكمي التقديري / التعبير عن الحاجة',
-    labelEn: 'BoQ / Statement of needs',
+    label: 'Expression de besoin (DQE)',
+    labelAr: 'التعبير عن الحاجة (الكشف الكمي التقديري)',
+    labelEn: 'Statement of needs (BoQ)',
     facturxTypeCode: '310',
     dqeType: 'previsionnel',
-    statuses: ['brouillon', 'pour_validation', 'valide'],
+    // Workflow maîtrise d'ouvrage : exprimer puis valider le besoin.
+    statuses: ['brouillon', 'soumis', 'valide'],
     initialStatus: 'brouillon',
+    validationStatus: 'valide',
+    boqSources: ['dqe', 'quantity_takeoff', 'tender_estimate'],
     next: 'devis',
     actors: ['manager'],
     requiresPercentage: false,
-    nextActionLabel: 'Transformer en devis',
+    nextActionLabel: 'Lancer la consultation (devis)',
   },
   {
     code: 'devis',
@@ -54,13 +63,19 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     labelEn: 'Quotation',
     facturxTypeCode: '310',
     dqeType: 'devis',
-    statuses: ['brouillon', 'soumis', 'en_negociation', 'accepte', 'rejete'],
-    initialStatus: 'brouillon',
+    // Workflow prestataire : l'offre est reçue, analysée puis acceptée/rejetée.
+    statuses: ['recu', 'en_analyse', 'accepte', 'rejete'],
+    initialStatus: 'recu',
+    validationStatus: 'accepte',
+    // Un devis ne peut être émis qu'après validation du DQE.
+    requiredSourceStatus: 'valide',
+    boqSources: ['supplier_bid'],
     next: 'contrat',
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
     nextActionLabel: 'Transformer en contrat',
   },
+
   {
     code: 'contrat',
     label: 'Contrat',
