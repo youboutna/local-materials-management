@@ -287,7 +287,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.unit && <p className="text-xs text-destructive mt-1"><TranslatedUnit code={fieldErrors.unit} /></p>}
+            {fieldErrors.unit && <p className="text-xs text-destructive mt-1">{fieldErrors.unit}</p>}
           </div>
 
           <div>
