@@ -62,12 +62,15 @@ export const InvoiceGenerationService = {
       billedPercentage: def.requiresPercentage
         ? input.percentage ?? input.lines[0]?.billedPercentage ?? null
         : input.documentContext.billedPercentage ?? null,
+      fiscalProfileCode: input.fiscalProfileCode ?? input.documentContext.fiscalProfileCode ?? null,
+      issueDate: identity.issueDateTimeIso,
       reference,
     });
 
     const ctx: FacturXContext = {
       documentType: def.code,
       reference,
+      issueDate: identity.issueDateTimeIso,
       currency: undefined,
       fiscalProfileCode: input.fiscalProfileCode ?? null,
       seller: input.seller,
@@ -75,6 +78,7 @@ export const InvoiceGenerationService = {
       percentage: input.percentage ?? null,
       note: input.documentContext.title ?? null,
     };
+
     const content = FacturXTransformer.toCiiXml(input.lines, ctx);
 
     return {
