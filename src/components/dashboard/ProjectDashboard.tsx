@@ -250,7 +250,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load project data: {String(projectsError)}
+          {t('dashboard.project.load_error')}: {String(projectsError)}
         </AlertDescription>
       </Alert>
     );
