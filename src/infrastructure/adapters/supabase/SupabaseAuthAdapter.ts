@@ -301,4 +301,30 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       return { error: error as Error };
     }
   }
+
+  /** Flux réactif de session (remplace tout usage direct de supabase.auth dans l'UI). */
+  onAuthStateChange(callback: (session: AuthSession | null) => void): () => void {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        callback(null);
+        return;
+      }
+      callback({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token || '',
+        expires_at: session.expires_at?.toString() || '',
+        user: {
+          id: session.user.id,
+          email: session.user.email || undefined,
+          full_name: session.user.user_metadata?.full_name || undefined,
+          role: session.user.user_metadata?.role || undefined,
+          phone: session.user.phone || undefined,
+          national_id: session.user.user_metadata?.national_id || undefined,
+          created_at: session.user.created_at,
+          updated_at: session.user.updated_at,
+        },
+      } as AuthSession);
+    });
+    return () => data.subscription.unsubscribe();
+  }
 }
