@@ -85,11 +85,11 @@ export const DocumentIdentityService = {
     for (const raw of candidates) {
       const value = String(raw ?? '').trim();
       if (!value) continue;
-      if (TECHNICAL_LABEL.test(value) || UUID_LIKE.test(value)) continue;
+      if (TECHNICAL_LABEL.test(value) || NUMERIC_CODE.test(value) || UUID_LIKE.test(value)) continue;
       return value;
     }
     const code = String(line.btpCode ?? line.code ?? '').trim();
-    if (code && !TECHNICAL_LABEL.test(code)) return code;
+    if (code && !TECHNICAL_LABEL.test(code) && !NUMERIC_CODE.test(code)) return code;
     return `Poste n° ${index + 1}`;
   },
 
